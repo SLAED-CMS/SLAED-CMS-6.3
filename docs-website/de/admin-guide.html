@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin-Leitfaden - SLAED CMS Dokumentation</title>
+    <meta name="description" content="Vollständiger Administrationsleitfaden für SLAED CMS. Erfahren Sie, wie Sie Administratoren, Blöcke, Kategorien, Kommentare, Konfigurationen, Datenbank, Editor, Favoriten, Felder, Gruppen, Sprache, Module, Nachrichten, Newsletter, private Nachrichten, Bewertungen, Empfehlungen, Wortersetzungen, RSS, Sicherheit, Sitemap, Statistiken, Vorlagen, Uploads und Benutzer verwalten.">
+    <link rel="canonical" href="https://slaed.de/admin-guide.html">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Dokumentation durchsuchen...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Design umschalten" title="Design umschalten">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.info" class="slaed-link" aria-label="English Version" title="English Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Offizielle SLAED CMS Seite" title="Offizielle SLAED CMS Seite">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS auf GitHub" title="SLAED CMS auf GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Erste Schritte</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="index.html" class="nav-link">Einführung</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="installation.html" class="nav-link">Installation</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="configuration.html" class="nav-link">Konfiguration</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="upgrade.html" class="nav-link">Upgrade-Anleitung</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Grundkonzepte</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="architecture.html" class="nav-link">Architektur</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="modules.html" class="nav-link">Module</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="templates.html" class="nav-link">Vorlagen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database.html" class="nav-link">Datenbank</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">API Referenz</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="core-functions.html" class="nav-link">Kernfunktionen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database-api.html" class="nav-link">Datenbank</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="template-api.html" class="nav-link">Vorlage</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security-api.html" class="nav-link">Sicherheit</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-api.html" class="nav-link">Administrator</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Leitfäden</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="creating-modules.html" class="nav-link">Module erstellen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="custom-themes.html" class="nav-link">Benutzerdefinierte Designs</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="performance.html" class="nav-link">Leistung</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security.html" class="nav-link">Sicherheit</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-guide.html" class="nav-link active">Admin-Leitfaden</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Über</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="eduard-laas.html" class="nav-link">Schöpfer</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="history.html" class="nav-link">Geschichte</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Datenschutzbestimmungen</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Startseite</a></li>
+                                <li><a href="index.html">Dokumentation</a></li>
+                                <li><a href="#">Leitfäden</a></li>
+                                <li aria-current="page">Admin-Leitfaden</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Admin-Leitfaden</h1>
+                        <p class="lead">Dieser Leitfaden beschreibt die Funktionen und Möglichkeiten des SLAED CMS Administrationsbereichs. Er dient als Referenz für Administratoren, die die verschiedenen Bereiche des CMS verwalten möchten.</p>
+                        
+                        <div class="toc">
+                            <h2>Inhaltsverzeichnis</h2>
+                            <ul>
+                                <li><a href="#admins">Administratoren</a></li>
+                                <li><a href="#blocks">Blöcke und Banner</a></li>
+                                <li><a href="#categories">Kategorien</a></li>
+                                <li><a href="#comments">Kommentare</a></li>
+                                <li><a href="#configuration">Konfigurationen</a></li>
+                                <li><a href="#database">Datenbank</a></li>
+                                <li><a href="#editor">Editor</a></li>
+                                <li><a href="#favorites">Meine Favoriten</a></li>
+                                <li><a href="#fields">Zusätzliche Felder</a></li>
+                                <li><a href="#groups">Gruppen</a></li>
+                                <li><a href="#language">Sprachverwaltung</a></li>
+                                <li><a href="#modules">Module</a></li>
+                                <li><a href="#messages">Nachrichten</a></li>
+                                <li><a href="#newsletter">Newsletter</a></li>
+                                <li><a href="#private-messages">Private Nachrichten</a></li>
+                                <li><a href="#ratings">Bewertungen</a></li>
+                                <li><a href="#referrals">Empfehlungen</a></li>
+                                <li><a href="#word-replacement">Wortersetzungen</a></li>
+                                <li><a href="#rss">RSS-Kanäle</a></li>
+                                <li><a href="#security">Sicherheit</a></li>
+                                <li><a href="#sitemap">Sitemap</a></li>
+                                <li><a href="#statistics">Statistiken</a></li>
+                                <li><a href="#templates">Vorlagen</a></li>
+                                <li><a href="#uploads">Uploads und Vorlagen</a></li>
+                                <li><a href="#users">Benutzer</a></li>
+                            </ul>
+                        </div>
+                        
+                        <h2 id="admins">Administratoren</h2>
+                        <p>Der Bereich "Administratoren" wird zur Verwaltung der Benutzer des Administrationsbereichs verwendet. Administratoren können je nach zugewiesenen Zugriffsrechten auf verschiedene Module zugreifen.</p>
+                        
+                        <h3>Hinzufügen eines Administrators</h3>
+                        <p>Um einen neuen Administrator hinzuzufügen, wechseln Sie zur Registerkarte "Hinzufügen" und füllen Sie die Informationen für den neuen Administrator aus.</p>
+                        
+                        <p>Erklärungen der Formularfelder:</p>
+                        <ul>
+                            <li><strong>Nick</strong> – Textfeld, der Nickname wird als Login verwendet.</li>
+                            <li><strong>Titel</strong> – Textfeld für den Titel des Administrators (z. B. Position, Rolle).</li>
+                            <li><strong>E-Mail</strong> – E-Mail des Administrators, auch für die Passwortwiederherstellung verwendet.</li>
+                            <li><strong>Link</strong> – Link zur Website des Administrators (z. B. sein Profil auf Facebook).</li>
+                            <li><strong>Passwort</strong> – Wird für die Anmeldung verwendet. Es wird empfohlen, ein alphanumerisches Passwort mit mindestens 6 Zeichen zu verwenden.</li>
+                            <li><strong>E-Mails und Benachrichtigungen erhalten?</strong> – Legt fest, ob der Administrator Benachrichtigungen erhält (z. B. für neue Kommentare).</li>
+                            <li><strong>Benachrichtigung an die E-Mail des Benutzers senden</strong> – Wenn aktiviert, wird nach dem Hinzufügen des Benutzers eine E-Mail mit dem im Feld "Nachrichtentext" angegebenen Text an die angegebene E-Mail-Adresse gesendet.</li>
+                            <li><strong>Nachrichtentext</strong> – Vorlage für die E-Mail-Nachricht, die an den Administrator gesendet wird, wenn die Option "Benachrichtigung senden" aktiviert ist.</li>
+                            <li><strong>Verwendung des Editors</strong> – Auswahl des Texteditors, der standardmäßig vom Administrator verwendet wird.</li>
+                            <li><strong>Sprache</strong> – Auswahl der Sprache, in der der Administrationsbereich standardmäßig angezeigt wird (kann in der linken oberen Ecke des Administrationsbereichs geändert werden).</li>
+                            <li><strong>Berechtigungen</strong> – Festlegung, auf welche Module der Administrator Zugriff hat. Bei Auswahl von "Vollzugriff" erhält der Administrator Zugriff auf alle Module.</li>
+                        </ul>
+                        
+                        <p>Beim Hinzufügen eines Administrators müssen folgende Felder ausgefüllt werden: Nickname, E-Mail, Passwort und Passwortbestätigung.</p>
+                        
+                        <h3>Verwalten von Administratoren</h3>
+                        <p>Die Verwaltung bestehender Administratoren erfolgt in der Registerkarte "Hauptseite". Um die Informationen eines Administrators zu ändern, klicken Sie in der Spalte "Funktionen" auf "Vollständige Bearbeitung". Um ein Administratorkonto zu löschen, klicken Sie in der Spalte "Funktionen" auf "Objekt löschen".</p>
+            
+            <article id="blocks">
+                <h2 id="blocks">Blöcke und Banner</h2>
+                <p>Der Bereich "Blöcke und Banner" ermöglicht es Ihnen, die Website aus "Bausteinen" namens "Blöcke" aufzubauen.</p>
+                
+                <p>Es gibt folgende Arten von Blöcken:</p>
+                <ul>
+                    <li><strong>Standardblöcke</strong> – Werden an festen Positionen auf der Website platziert.</li>
+                    <li><strong>Freie Blöcke (fly)</strong> – Können an beliebigen Stellen, in Vorlagen oder Systemmodulen verwendet werden.</li>
+                </ul>
+                
+                <p>Die meisten Anforderungen an die Website-Funktionalität können durch Standardblöcke abgedeckt werden, aber in einigen Fällen können freie Blöcke verwendet werden.</p>
+                
+                <h3>Standardblöcke</h3>
+                <p>Standardblöcke können nach folgenden Eigenschaften unterteilt werden:</p>
+                <ul>
+                    <li><strong>Nach Typ:</strong>
+                        <ul>
+                            <li>Datei – Blöcke, deren Informationen durch HTML- und PHP-Funktionen aus der entsprechenden Datei ausgegeben werden.</li>
+                            <li>HTML – Blöcke, deren Informationen durch HTML-Funktionen aus dem Blockinhalt ausgegeben werden.</li>
+                            <li>RSS – Blöcke, die Informationen von einem RSS-Link ausgeben.</li>
+                            <li>System – Systemblöcke umfassen: Admin, UserBox.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Nach Zugriff (wer sieht es):</strong> Alle Benutzer, nur Benutzer, nur Administratoren, nur anonyme.</li>
+                    <li><strong>Nach Position:</strong> Links, Unten Mitte, Oben Mitte, Rechts, Oberes Banner, Unteres Banner.</li>
+                </ul>
+                
+                <h3>Erstellen eines Dateiblocks</h3>
+                <p>Um einen Dateiblock hinzuzufügen, müssen folgende Schritte durchgeführt werden:</p>
+                
+                <p><strong>1.</strong> Erstellen Sie eine Blockdatei.<br>
+                Eine Blockdatei kann auf zwei Arten erstellt werden: über die Administrationsoberfläche oder über die Dateistruktur der Website.</p>
+                
+                <p><em>Erstellen einer Datei über die Administrationsoberfläche</em><br>
+                Wechseln Sie zur Registerkarte "Dateiblock hinzufügen", die ein Formular zur Erstellung eines neuen Dateiblocks anzeigt.<br>
+                Geben Sie den Namen der zu erstellenden Datei an (z. B. "mysite"), wobei SLAED CMS automatisch das Präfix "block-" voranstellt.<br>
+                Wählen Sie den Typ der zu erstellenden Datei aus.<br>
+                Klicken Sie auf die Schaltfläche "Block erstellen", die ein Formular lädt, in das der Blockcode eingefügt werden muss.</p>
+                
+                <div class="warning">
+                    <p><strong>Achtung!</strong><br>
+                    Im Programmcode des Blocks muss die Variable $content für die Ausgabe anstelle der Standardmethoden echo oder print verwendet werden. Das ist die einzige Besonderheit. Der Rest wird mit Standard-PHP- und HTML-Methoden und -Funktionen implementiert. Bei der Implementierung von Blöcken ist zu beachten, dass jeder PHP-Code mit &lt;?php beginnen und mit ?&gt; enden muss.</p>
+                </div>
+                
+                <p>Nach dem Einfügen klicken Sie auf die Schaltfläche "Speichern", wodurch die entsprechende Datei in der Dateistruktur der Website erstellt wird (z. B. block-mysite.php in unserem Beispiel).</p>
+                
+                <div class="warning">
+                    <p><strong>Achtung!</strong><br>
+                    Beim Erstellen einer Blockdatei müssen die Berechtigungen CHMOD 777 für den Ordner blocks/ und dann CHMOD 666 für die erstellte Datei festgelegt werden.</p>
+                </div>
+                
+                <p><em>Erstellen einer Datei über die Dateistruktur der Website</em><br>
+                PHP-Dateien für Dateiblöcke werden im Verzeichnis "blocks" gespeichert, das sich im Hauptverzeichnis der Website befindet. In diesem Verzeichnis kann eine PHP-Datei erstellt werden, die im Format "block-name_des_blocks.php" benannt werden muss (bei abweichendem Format ist die Datei beim Hinzufügen des Blocks nicht in der Liste sichtbar).</p>
+                
+                <p><strong>2.</strong> Verknüpfung zwischen der erstellten Datei und dem Block herstellen.<br>
+                Um eine Verknüpfung zwischen einer Datei und einem Dateiblock herzustellen, muss ein neuer Block hinzugefügt werden, indem zur Registerkarte "Block hinzufügen" gewechselt wird.</p>
+                
+                <p>Das Formular zum Hinzufügen enthält folgende Felder:</p>
+                <ul>
+                    <li><strong>Überschrift</strong> – Geben Sie die Blocküberschrift ein (die eingegebene Überschrift wird auch angezeigt).</li>
+                    <li><strong>RSS-Kanal-Link</strong> – Wenn ein bestimmter RSS-Feed im Block ausgegeben werden soll, geben Sie den Link an oder wählen Sie aus der Standardliste. Beim Eingeben eines RSS-Links ist es nicht notwendig, eine Datei im Feld "Dateiname" auszuwählen und den "Inhalt" auszufüllen. Beim Erstellen eines Dateiblocks bleibt dieses Feld unverändert.</li>
+                    <li><strong>Aktualisierungszeit</strong> – Legt fest, wie häufig der RSS-Feed aktualisiert werden soll. Beim Erstellen eines Dateiblocks bleibt dieses Feld unverändert.</li>
+                    <li><strong>Dateiname</strong> – Beim Erstellen eines Dateiblocks wird die vorab erstellte Datei ausgewählt.</li>
+                    <li><strong>Inhalt</strong> – Wird nur beim Erstellen eines HTML-Blocks ausgefüllt (beim Ausfüllen des Inhalts ist es nicht notwendig, eine Datei auszuwählen). Beim Erstellen eines Dateiblocks bleibt dieses Feld unverändert.</li>
+                    <li><strong>Position</strong> – Wählen Sie die Position aus, an der der Block angezeigt werden soll.</li>
+                    <li><strong>Block in Modulen anzeigen</strong> – Wählen Sie die Liste der Module aus, in denen der Block angezeigt werden soll.</li>
+                    <li><strong>Sprache</strong> – Wählen Sie die Sprachversion aus, in der der Block angezeigt werden soll.</li>
+                    <li><strong>Aktivieren</strong> – "Ja" – Block wird angezeigt, "Nein" – Block wird nicht angezeigt.</li>
+                    <li><strong>Laufzeit in Tagen</strong> – Geben Sie die Anzahl der Tage an, die der Block aktiv sein soll. 0 – Block ist unbegrenzt aktiv.</li>
+                    <li><strong>Nach Ablauf</strong> – Wählen Sie aus, was das System nach Ablauf der Laufzeit automatisch mit dem Block tun soll.</li>
+                    <li><strong>Wer sieht es?</strong> – Legen Sie fest, welche Benutzerkategorien den Block sehen können.</li>
+                </ul>
+            </article>
+            
+            <article id="categories">
+                <h2 id="categories">Kategorien</h2>
+                <p>Der Bereich "Kategorien" ermöglicht es Ihnen, thematische Zweige (Kategorien) für Systemmodule zu erstellen. Das Erstellen von Kategorien ist für folgende Module möglich:</p>
+                <ul>
+                    <li>Fragen und Antworten – faq</li>
+                    <li>Dateikatalog – files</li>
+                    <li>Forum – forum</li>
+                    <li>Hilfe – help</li>
+                    <li>Witze – jokes</li>
+                    <li>Website-Katalog – links</li>
+                    <li>Medienkatalog – media</li>
+                    <li>Nachrichten – news</li>
+                    <li>Artikel – pages</li>
+                    <li>Shop – shop</li>
+                </ul>
+                
+                <p>Um die Kategorien eines Moduls anzuzeigen, wählen Sie das Modul in der oberen rechten Liste in der Registerkarte "Hauptseite" aus (die Aktualisierung der Kategorieliste erfolgt automatisch).</p>
+                
+                <h3>Verwalten von Kategorien und Unterkategorien</h3>
+                <p>Die Liste der Kategorien und Unterkategorien wird in der Registerkarte "Hauptseite" angezeigt.<br>
+                Wenn eine Unterkategorie angezeigt wird, wird der Wert "<span style="color:green">Ja</span>" in der Spalte "Subk..." angezeigt, wenn eine Kategorie angezeigt wird – "<span style="color:red">Nein</span>".<br>
+                Beim Ausgeben einer Unterkategorie zeigt die Spalte "Kategorie" auch die hierarchische Struktur der Zugehörigkeit der Unterkategorie zu Kategorien an, d. h. zuerst wird der Kategoriename ausgegeben, dann die Namen der Unterkategorien.<br>
+                Wenn für eine Kategorie oder Unterkategorie ein Bild festgelegt ist, wird der Wert "<span style="color:green">Ja</span>" in der Spalte "Bild..." angezeigt, wenn kein Bild festgelegt ist – "<span style="color:red">Nein</span>".</p>
+            </article>
+            
+            <article id="comments">
+                <h2 id="comments">Kommentare</h2>
+                <p>Der Bereich "Kommentare" wird zur Verwaltung von Kommentaren verwendet, die von Benutzern auf der Website abgegeben wurden (Moderation).</p>
+                
+                <h3>Verwalten von Kommentaren</h3>
+                <p>Die Kommentarverwaltung erfolgt in folgenden Registerkarten:</p>
+                <ul>
+                    <li><strong>Hauptseite</strong> – Verwaltung aller auf der Website veröffentlichten Kommentare.</li>
+                    <li><strong>Warten auf Überprüfung</strong> – Verwaltung von Kommentaren, die von Website-"Gästen" (unautorisierten Besuchern) abgegeben wurden. Kommentare von "Gästen" werden zur Überprüfung gesendet, wenn die entsprechende Option in der Kommentarkonfiguration festgelegt ist.</li>
+                </ul>
+                
+                <p>Folgende Aktionen sind für jeden veröffentlichten Kommentar möglich:</p>
+                <ul>
+                    <li><strong>Detaillierte Ansicht</strong> – Öffnet den Kommentar auf der Website (Seite des Materials, zu dem der Kommentar hinzugefügt wurde).</li>
+                    <li><strong>Vollständige Bearbeitung</strong> – Öffnet ein Formular zur Änderung des Kommentartexts.</li>
+                    <li><strong>Objekt löschen</strong> – Löscht den Kommentar.</li>
+                </ul>
+            </article>
+            
+            <article id="configuration">
+                <h2 id="configuration">Konfigurationen</h2>
+                <p>Der Bereich "Konfigurationen" wird zur Verwaltung der Haupteinstellungen (Konfigurationen) der Website verwendet und besteht aus folgenden Registerkarten:</p>
+                <ul>
+                    <li><strong>Basis</strong> – Festlegen der grundlegenden Website-Einstellungen</li>
+                    <li><strong>SEO</strong> – Einstellungen für die Suchmaschinenoptimierung der Website</li>
+                    <li><strong>Sprache</strong> – Verwaltung der Einstellungen für die Mehrsprachigkeit der Website</li>
+                    <li><strong>Zensur</strong> – Einstellungen für das Ausschließen unerwünschter Wörter und Wortkombinationen</li>
+                    <li><strong>Suche</strong> – Einstellungen für die Website-Suche</li>
+                    <li><strong>Suchmaschinen-Bots</strong> – Festlegen des Formats für die Ausgabe von Informationen über Suchmaschinen-Bots auf der Website</li>
+                    <li><strong>Caching</strong> – Festlegen von Parametern für das Caching von Website-Seiten</li>
+                    <li><strong>Mail</strong> – Festlegen der Haupt-E-Mail-Vorlage</li>
+                </ul>
+                
+                <h3>Basis</h3>
+                <ul>
+                    <li><strong>Systemversion</strong> – Anzeige des Namens und der Versionsnummer des Systems, auf dem die Website basiert.</li>
+                    <li><strong>Website-Name</strong> – Festlegen des Website-Namens, der z. B. in Seitentiteln angezeigt wird.</li>
+                    <li><strong>Website-Adresse</strong> – Angeben der vollständigen URL-Adresse der Website.</li>
+                    <li><strong>Website-Logo festlegen</strong> – Auswählen des Logos aus dem Verzeichnis: images/logos/. Das Logo wird je nach Website-Theme im Design verwendet.</li>
+                    <li><strong>Beschreibung</strong> – Diese Beschreibung wird im "description" HTML-Tag der Website-Seiten verwendet (dieses Feld wird auch von Suchmaschinen analysiert).</li>
+                    <li><strong>Administrator-Notizen</strong> – Informationen, die für alle Autoren (Benutzer des Administrationsbereichs) verfügbar sind. Die Anzeige dieser Informationen erfolgt im oberen Teil des Administratorpanels des Systems.</li>
+                    <li><strong>Website-Eröffnungsdatum</strong> – Datum, an dem die Website gestartet wurde.</li>
+                    <li><strong>Administrator-E-Mail</strong> – Wird beim Senden von Informationsnachrichten an den Website-Administrator verwendet (auch für die Passwortwiederherstellung). Beim Verteilen von Nachrichten an Benutzer wird diese E-Mail im Feld "Von" angegeben.</li>
+                </ul>
+            </article>
+            
+            <article id="database">
+                <h2 id="database">Datenbank</h2>
+                <p>Dieser Bereich wird zur Durchführung grundlegender Datenbankverwaltungsoperationen für die Website verwendet.</p>
+                
+                <p>Folgende Aktionen können in diesem Bereich durchgeführt werden:</p>
+                <ul>
+                    <li><strong>Datenbank optimieren</strong> – Die Aktion wird direkt nach dem Wechseln zur entsprechenden Registerkarte ausgeführt. Die regelmäßige Datenbankoptimierung reduziert deren Größe und erhöht entsprechend die Geschwindigkeit der Informationssuche in der Datenbank.<br>
+                    Es wird empfohlen, diese Funktion mindestens einmal pro Woche zu verwenden.</li>
+                    <li><strong>Datenbank reparieren</strong> – Die Aktion wird direkt nach dem Wechseln zur entsprechenden Registerkarte ausgeführt. Wenn der MySQL-Server während der Ausführung bestimmter Aktionen unerwartet stoppt, kann die Struktur von Datenbanktabellen beschädigt werden. Mit dieser Funktion werden die beschädigten Tabellen repariert.</li>
+                </ul>
+                
+                <div class="info">
+                    <p><strong>Bitte beachten!</strong><br>
+                    In den Registerkarten "Datenbank optimieren" und "Datenbank reparieren" wird die Spalte "Kosten" angezeigt, die Informationen über den freien Speicherplatz anzeigt, der nach der Datenbankoptimierung oder -reparatur freigegeben wurde.</p>
+                </div>
+                
+                <ul>
+                    <li><strong>Datenbankabfrage</strong> – Ermöglicht die Ausführung beliebiger Abfragen in der Datenbank. Über das Formular in der Registerkarte können praktisch alle Abfragen ausgeführt werden, außer Datenabfrageabfragen (SELECT).</li>
+                </ul>
+            </article>
+            
+            <article id="editor">
+                <h2 id="editor">Editor</h2>
+                <div class="warning">
+                    <p><strong>Achtung!</strong><br>
+                    Dieser Bereich ist nur für Administratoren gedacht, die mit Serversoftware und der PHP-Sprache vertraut sind.</p>
+                </div>
+                
+                <p>Der Bereich "Editor" ermöglicht die direkte Verwaltung wichtiger Systemdateien über den Administrationsbereich. Die Dateiverwaltung erfolgt in folgenden Registerkarten:</p>
+                <ul>
+                    <li><strong>Systemkern</strong> – Datei für die Einbindung in den Systemkern: config_core.php. In der Registerkarte kann Code hinzugefügt werden, der in den Systemkern platziert wird.</li>
+                    <li><strong>Systemkopf</strong> – Datei für die Einbindung in den Systemkopf: config_header.php. In der Registerkarte kann Code eingefügt werden, der in den Kopf des Systems eingebunden wird. Diese Datei wird typischerweise zur Einbindung von JavaScripts und Meta-Tags verwendet.</li>
+                    <li><strong>System-SEO</strong> – Datei mit Konfigurationen für SEO-Regeln auf Systemebene: config_rewrite.php. In der Registerkarte können die Standardregeln für die Umwandlung von Browser-Adresszeilen geändert oder ergänzt werden. Diese Funktion wird nur unterstützt, wenn Mod Rewrite auf dem Server installiert ist.</li>
+                    <li><strong>Server-SEO</strong> – Datei mit Konfigurationen für SEO-Regeln auf Serverebene: .htaccess. In der Registerkarte können die Standardregeln für die Umwandlung von Browser-Adresszeilen auf Serverebene geändert oder ergänzt werden. Diese Funktion wird nur unterstützt, wenn Mod Rewrite auf dem Server installiert ist.</li>
+                    <li><strong>Bot-Regeln</strong> – Datei mit Konfigurationen für Anweisungen und Parameter für die Indexierung durch Suchmaschinen-Bots: robots.txt. In der Registerkarte kann die Textdatei geändert oder ergänzt werden, die sich im Hauptverzeichnis der Website befindet und spezielle Anweisungen für Suchmaschinen-Bots enthält. Diese Anweisungen können die Indexierung bestimmter Bereiche oder Seiten der Website verbieten, das richtige Domain-"Spiegeln" empfehlen, Suchmaschinen-Bots bitten, ein bestimmtes Zeitintervall zwischen dem Herunterladen von Dokumenten vom Server einzuhalten usw. In dieser Datei können die Indexierungsparameter der Website für alle Bots gleichzeitig oder individuell für jede Suchmaschine angegeben werden.</li>
+                </ul>
+            </article>
+            
+            <article id="favorites">
+                <h2 id="favorites">Meine Favoriten</h2>
+                <p>Der Bereich "Meine Favoriten" wird zur Anzeige und Verwaltung der Liste von Materialien verwendet, die von Website-Benutzern zu ihren Favoriten hinzugefügt wurden. Darüber hinaus können in diesem Bereich Einstellungen für "Meine Favoriten" konfiguriert werden.</p>
+                
+                <h3>Registerkarte "Hauptseite"</h3>
+                <p>Zeigt eine Liste der Materialfavoriten an, die von Website-Benutzern hinzugefügt wurden. Folgende Informationen werden in der Liste angezeigt:</p>
+                <ul>
+                    <li><strong>Modul</strong> – Zu welchem Modul das Favoritenmaterial gehört.</li>
+                    <li><strong>Überschrift</strong> – Entsprechend die Überschrift des Favoritenmaterials. Wird als Hyperlink angezeigt, der zur Materialansicht führt.</li>
+                    <li><strong>Veröffentlicht von</strong> – Anzeige des Nicknames des Benutzers, der das Material zu seiner Favoritenliste hinzugefügt hat.</li>
+                </ul>
+            </article>
+            
+            <article id="fields">
+                <h2 id="fields">Zusätzliche Felder</h2>
+                <p>Mit diesem Bereich können Sie unabhängig und einfach die Möglichkeiten zur Informationsausfüllung für folgende Module erweitern: Profil (Benutzerprofil), Inhalt, Forum, Hilfe, Nachrichten.</p>
+                
+                <div class="info">
+                    <p><strong>Bitte beachten!</strong><br>
+                    Zusätzliche Felder für das Forum-Modul funktionieren nur im Systemforum (im SLAED Forum). In integrierten Foren (z. B. phpbb) werden zusätzliche Felder nicht angezeigt.</p>
+                </div>
+                
+                <p>Um ein zusätzliches Feld im gewünschten Modul hinzuzufügen, wechseln Sie zur Registerkarte, die dem Modulnamen entspricht. Felder folgender Typen können hinzugefügt werden:</p>
+                <ul>
+                    <li>Einzelzeile</li>
+                    <li>Textfeld</li>
+                    <li>Liste mit Auswahl</li>
+                    <li>Datum: Jahr-Monat-Tag Stunden:Minuten (z. B. 01-11-1900 12:34)</li>
+                    <li>Datum: Jahr-Monat-Tag (z. B. 01-11-1900)</li>
+                </ul>
+            </article>
+            
+            <article id="groups">
+                <h2 id="groups">Gruppen</h2>
+                <p>Gruppen werden verwendet, um Benutzer entweder nach der Anzahl der gesammelten Punkte oder durch Zuweisung zu einer speziellen Gruppe zu unterteilen.</p>
+                <p>Jeder autorisierte Benutzer auf der Website führt bestimmte Aktionen durch (seitenaufrufe, Kommentare usw.), für die er eine bestimmte Anzahl von Punkten (Punkte) in den Einstellungen erhält und dadurch in die entsprechende Benutzergruppe (Rangfolge) eintritt.</p>
+                
+                <h3>Punkteverwaltung</h3>
+                <p>Die Verwaltung der Punktwerte wird in der Registerkarte "Punkte" festgelegt. Geben Sie die Anzahl der Punkte ein, die für die Durchführung bestimmter Aktionen auf der Website vergeben werden, und klicken Sie auf die Schaltfläche "Speichern".</p>
+            </article>
+            
+            <article id="language">
+                <h2 id="language">Sprachverwaltung</h2>
+                <p>Dieser Bereich wird zur Verwaltung von Systemtexten verwendet, die in allen Modulen der Website in allen Sprachversionen angezeigt werden.</p>
+                
+                <h3>Textverwaltung</h3>
+                <p>Die Verwaltung von Sprachmodultexten erfolgt in der Registerkarte "Hauptseite", die eine Liste von Modulen enthält, in denen Systemtexte für Sprachversionen festgelegt werden können.</p>
+                
+                <p>Erklärungen für die in der Registerkarte "Hauptseite" angezeigte Tabelle:</p>
+                <ul>
+                    <li><strong>Modul</strong> – Anzeige des Systemmodulnamens.</li>
+                    <li><strong>Wer sieht es</strong> – Anzeige, ob Informationen aus diesem Modul von allen Website-Besuchern oder nur von Benutzern (autorisierte Besucher) gesehen werden.</li>
+                    <li><strong>Status</strong> – Ist das Modul derzeit aktiviert (Aktiviert), d. h. auf der Website sichtbar, oder nicht (Deaktiviert).</li>
+                </ul>
+            </article>
+            
+            <article id="modules">
+                <h2 id="modules">Module</h2>
+                <p>Der Bereich "Module" wird zur Verwaltung der Bereiche (Module) der Website verwendet.</p>
+                <p>Für alle Module sind Bearbeitungs- und Aktivierungs-/Deaktivierungsfunktionen verfügbar. Für das "Nachrichten"-Modul sind folgende zusätzliche Funktionen verfügbar:</p>
+                <ul>
+                    <li><strong>Datenbanktabellen aktualisieren</strong> – Aktualisieren der Datenbanktabellen des Moduls</li>
+                    <li><strong>Datenbanktabellen löschen</strong> – Löschen der Datenbanktabellen des Moduls</li>
+                    <li><strong>Datenbanktabellen hinzufügen</strong> – Hinzufügen der Datenbanktabellen des Moduls (verfügbar nach dem Löschen)</li>
+                    <li><strong>Datenbanktabellen bereinigen</strong> – Löschen des Inhalts der Datenbanktabellen des Moduls ohne Änderung der Struktur (Datenbereinigung)</li>
+                </ul>
+            </article>
+            
+            <article id="messages">
+                <h2 id="messages">Nachrichten</h2>
+                <p>Dieser Bereich wird zur Verwaltung von Informationsnachrichten verwendet, die auf der Hauptseite der Website angezeigt werden.</p>
+                <p>Nachrichten können nützlich sein für:</p>
+                <ul>
+                    <li>Begrüßung von Benutzern</li>
+                    <li>Veröffentlichung wichtiger Ankündigungen (z. B. dass die Website zu einem bestimmten Datum modernisiert wird)</li>
+                    <li>Veröffentlichung "dringender" Ankündigungen</li>
+                </ul>
+                
+                <h3>Hinzufügen einer Nachricht</h3>
+                <p>Um eine Nachricht hinzuzufügen, wechseln Sie zur Registerkarte "Hinzufügen" und füllen Sie das Formular mit folgenden Feldern aus:</p>
+                <ul>
+                    <li><strong>Überschrift</strong> – Kurz und klar angeben</li>
+                    <li><strong>Text</strong> – Beachten Sie, dass der Nachrichtentext direkt nach der Überschrift auf der Website angezeigt wird und nicht auf einer separaten Seite</li>
+                    <li><strong>Sprache</strong> – Wählen Sie die Sprachversion aus, in der die Nachricht angezeigt werden soll</li>
+                    <li><strong>Laufzeit, in Tagen</strong> – Wie viele Tage die Nachricht aktiv sein soll. 0 bedeutet, dass die Zeit nicht begrenzt ist</li>
+                    <li><strong>Wer sieht es?</strong> – Wählen Sie aus, welche Benutzertypen die Nachricht sehen können</li>
+                    <li><strong>Aktivieren?</strong> – Wählen Sie aus, ob die Nachricht angezeigt werden soll oder nicht</li>
+                </ul>
+            </article>
+            
+            <article id="newsletter">
+                <h2 id="newsletter">Newsletter</h2>
+                <p>Der Bereich "Newsletter" ermöglicht das Erstellen von Informationsnachrichten und das Senden an Benutzergruppen (z. B. Projektneuigkeiten, Informationen über Rabatte, Promotionen usw.). E-Mails werden entsprechend der Anzahl der Website-Besucher gesendet: Wenn eine Website-Seite angefordert wird, wird das Senden von E-Mails an aktive Verteilungen gestartet.</p>
+                
+                <h3>Hinzufügen eines Newsletters</h3>
+                <p>Um einen Newsletter hinzuzufügen, wechseln Sie zur Registerkarte "Hinzufügen" und füllen Sie die Newsletter-Informationen aus:</p>
+                <ul>
+                    <li><strong>Überschrift</strong> – Die Überschrift wird als E-Mail-Betreff verwendet.</li>
+                    <li><strong>Text</strong> – Der E-Mail-Text, der an die Newsletter-Empfänger gesendet wird.</li>
+                    <li><strong>Newsletter erhalten</strong> – Wählen Sie die Benutzergruppe aus, an die der Newsletter gesendet wird. Die Anzahl der Benutzer in der Gruppe wird rechts neben dem Gruppennamen angezeigt. Erklärungen für einige Gruppen:</li>
+                </ul>
+            </article>
+            
+            <article id="private-messages">
+                <h2 id="private-messages">Private Nachrichten</h2>
+                <p>Der Bereich "Private Nachrichten" wird zur Verwaltung und Konfiguration von privaten Nachrichten der Website-Benutzer verwendet.</p>
+                
+                <p>Dem Administrator stehen folgende Optionen zur Verfügung:</p>
+                <ul>
+                    <li>Anzeige des Nachrichtentexts</li>
+                    <li>Anzeige des Nachrichtenlesestatus</li>
+                    <li>Löschen von Nachrichten</li>
+                    <li>Bereichskonfiguration</li>
+                </ul>
+                
+                <h3>Nachrichtenliste</h3>
+                <p>Die paginierte Liste aller privaten Nachrichten wird in Form einer Tabelle in der Registerkarte "Hauptseite" angezeigt. Erklärungen für einige Tabellenspalten:</p>
+                <ul>
+                    <li><strong>Überschrift</strong> – Anzeige der Nachrichtenüberschrift sowie eines Symbols (i), das beim Überfahren den vollständigen Nachrichtentext anzeigt.<br>
+                    Die Tiefe der Korrespondenz kann an der Nachrichtenüberschrift ermittelt werden: Beim Antworten auf eine Nachricht wird der Wert "Antwort:" zur Bezeichnung hinzugefügt.</li>
+                    <li><strong>Absender, Empfänger</strong> – Anzeige des Nicknames des Benutzers (Systemname) in Form eines Hyperlinks, dessen Klick die Seite mit Benutzerprofilinformationen öffnet.</li>
+                    <li><strong>Status</strong> – Wenn die Nachricht vom Empfänger gelesen wurde, wird das Symbol (i) für gelesene Nachricht angezeigt. Wenn nicht gelesen – (!) für ungelesene Nachricht</li>
+                    <li><strong>Funktionen</strong> – Der Administrator kann jede Nachricht löschen, indem er auf "Objekt löschen" klickt.</li>
+                </ul>
+            </article>
+            
+            <article id="ratings">
+                <h2 id="ratings">Bewertungen</h2>
+                <p>Mit dem Bereich "Bewertungen" kann die Teilnahme von Inhalten der folgenden Module verwaltet werden:</p>
+                <ul>
+                    <li><strong>Profil</strong> – Bewertung des Profils (persönliche Informationen) jedes Benutzers</li>
+                    <li><strong>Fragen und Antworten</strong> – Bewertung der Einträge im Modul "Fragen und Antworten"</li>
+                    <li><strong>Dateikatalog</strong> – Bewertung der Einträge (Dateien) im Modul "Dateikatalog"</li>
+                    <li><strong>Forum</strong> – Bewertung der Themen im Modul "Forum" (Antworten innerhalb von Themen werden nicht bewertet)</li>
+                    <li><strong>Hilfe</strong> – Bewertung der Nachrichten im Modul "Hilfe"</li>
+                    <li><strong>Witze</strong> – Bewertung der Einträge (Witze) im Modul "Witze"</li>
+                    <li><strong>Website-Katalog</strong> – Bewertung der Einträge (Websites) im Modul "Website-Katalog"</li>
+                    <li><strong>Medienkatalog</strong> – Bewertung der Einträge im Modul "Medienkatalog"</li>
+                    <li><strong>Nachrichten</strong> – Bewertung der Einträge im Modul "Nachrichten"</li>
+                    <li><strong>Artikel</strong> – Bewertung der Einträge im Modul "Artikel"</li>
+                    <li><strong>Shop</strong> – Bewertung der Produkte im Modul "Shop"</li>
+                </ul>
+            </article>
+            
+            <article id="referrals">
+                <h2 id="referrals">Empfehlungen</h2>
+                <p>Der Bereich "Empfehlungen" wird zur Anzeige von Statistiken von Benutzer- und Suchmaschinen-Bot-Übergängen von anderen Websites verwendet. Er ermöglicht die Bewertung der Effektivität des Platzierens eines Links auf der Website auf einer bestimmten Ressource.</p>
+                
+                <h3>Registerkarte "Hauptseite"</h3>
+                <p>Die Übergangsstatistiken werden in Form einer Tabelle dargestellt, die folgende Informationen enthält:</p>
+                <ul>
+                    <li><strong>Nick</strong> – Wenn der übergreifende Benutzer auf der Website registriert ist, wird sein Nickname angezeigt. Wenn nicht registriert, dann die IP-Adresse. Wenn der Übergang von einem Suchmaschinen-Bot erfolgt, wird der Suchmaschinenname angezeigt.</li>
+                    <li><strong>IP-Adresse</strong> – Anzeige der IP-Adresse der übergreifenden Person.</li>
+                    <li><strong>Empfehlungsadressen</strong> – Von welcher Seite der Übergang zur Website erfolgte.</li>
+                    <li><strong>Eingangsadressen</strong> – Zu welcher spezifischen Seite der Übergang erfolgte.</li>
+                    <li><strong>Datum</strong> – Datum und Uhrzeit des Übergangs.</li>
+                </ul>
+            </article>
+            
+            <article id="word-replacement">
+                <h2 id="word-replacement">Wortersetzungen</h2>
+                <p>Der Bereich "Wortersetzungen" wird verwendet, um Regeln für das Ersetzen von Wörtern durch beliebige Inhalte festzulegen, die vom Administrator definiert wurden.</p>
+                <p>Die Wortersetzung wird typischerweise für die Suchmaschinenoptimierung von Seiteninhalten verwendet. Zum Beispiel können Regeln festgelegt werden, bei denen die Erwähnung des Wortes "slaed" durch einen Link zur Website [url=https://slaed.net]slaed.net[/url] ersetzt wird.</p>
+                
+                <h3>Festlegen von Ersetzungswörtern</h3>
+                <p>Die Regeln für die Wortersetzung werden in den Registerkarten "Inhalt" und "Nachrichten" festgelegt.</p>
+                <ul>
+                    <li><strong>Inhalt</strong> – Festlegen von Regeln für die Wortersetzung in Texten, die im Modul "Inhalt" erstellt wurden.</li>
+                    <li><strong>Nachrichten</strong> – Festlegen von Regeln für die Wortersetzung in Nachrichtentexten.</li>
+                </ul>
+            </article>
+            
+            <article id="rss">
+                <h2 id="rss">RSS-Kanäle</h2>
+                <p>RSS ist ein internationales Format, das speziell für die Übertragung von Daten von einer Website zu einer anderen erstellt wurde. Darüber hinaus können Nachrichten über RSS mit speziellen Programmen - Nachrichtenaggregatoren - gelesen werden, um schnell über Website-Aktualisierungen informiert zu werden.</p>
+                <p>Im Bereich RSS-Kanäle können die Einstellungen der RSS-Kanäle der Website angepasst werden. Es gibt zwei Möglichkeiten, den RSS-Kanal zu verwenden.</p>
+                <ol>
+                    <li>Direkter Zugriff. Die Exportdatei index.php?go=rss befindet sich im Hauptverzeichnis der Website. Link zum RSS-Kanal: http://site_adresse/index.php?go=rss</li>
+                    <li>Über das Modul rss_info, wo Benutzer oder Besucher der Website selbst interessante Kanäle auswählen oder Kanäle von anderen Websites anzeigen können.</li>
+                </ol>
+            </article>
+            
+            <article id="security">
+                <h2 id="security">Sicherheit</h2>
+                <p>Der Bereich "Sicherheit" ist ein leistungsstarkes Werkzeug zum Schutz der Website vor verschiedenen Angriffen, von SQL-Injection bis zum Hochladen externer Skripte in das Website-Verzeichnis. Dieser Bereich hilft dabei, einen Angreifer sowie jeden anderen Benutzer oder Besucher des Projekts zu verfolgen, zu identifizieren und optional zu blockieren.</p>
+                
+                <h3>Registerkarte "Hauptseite"</h3>
+                <p>Liefert Website-Nutzungsstatistiken. Um die Statistiken anzuzeigen, klicken Sie auf den Wert (Information) neben der entsprechenden Statistikdatei, wo die Informationen unterhalb der Liste der Statistikdateien angezeigt werden.</p>
+                <p>Um die Informationen als txt-Datei herunterzuladen, klicken Sie auf den Wert (Herunterladen).</p>
+                <p>Um die Statistikdatei zu löschen, klicken Sie auf den Wert (Objekt löschen).</p>
+                <p>Um den Speicherpfad und Namen der Statistikdatei auf dem Server anzuzeigen, klicken Sie auf das Symbol (i) links neben dem entsprechenden Statistiknamen.</p>
+            </article>
+            
+            <article id="sitemap">
+                <h2 id="sitemap">Sitemap</h2>
+                <p>Der Bereich "Sitemap" ermöglicht die Verwaltung von Einstellungen für die Generierung der sitemap.xml-Datei. Diese Datei ermöglicht Suchmaschinen zu erfahren, wie Ihre Website-Inhalte organisiert sind. Suchmaschinen-Roboter crawlen diese Datei, um Abteilungen und Seiten genauer zu indexieren.</p>
+                
+                <p>Sitemap-Dateien können auch verwendet werden, um Suchmaschinen Metadaten über Ihre Seiten zur Verfügung zu stellen. Dazu gehören Informationen wie das Datum der letzten Änderung, die Häufigkeit der Inhaltsaktualisierung und die Seitenvorrangigkeit im Vergleich zu anderen auf der Website.</p>
+            </article>
+            
+            <article id="statistics">
+                <h2 id="statistics">Statistiken</h2>
+                <p>Der Bereich "Statistiken" wird zur Anzeige von Website-Besucherstatistiken verwendet.</p>
+                
+                <h3>Registerkarte "Hauptseite"</h3>
+                <h4>Histogramm</h4>
+                <p>In dem Histogramm (Balken) werden Informationen über Besucherstatistiken für den ausgewählten Zeitraum angezeigt.</p>
+                <p>Standardmäßig werden Informationen für den aktuellen Monat angezeigt, aber der Zeitraum kann in der Dropdown-Liste "Statistiken anzeigen für:" festgelegt werden.</p>
+                <p>Unter jedem Balken wird eine statistische Zusammenfassung in der Reihenfolge bereitgestellt, die der Reihenfolge der Spalten in der Tabelle entspricht.</p>
+            </article>
+            
+            <article id="templates">
+                <h2 id="templates">Vorlagen</h2>
+                <h3>Verwendung von Themes</h3>
+                <p>Um das Website-Design zu ändern, können Themes verwendet werden.</p>
+                <p>Ein Theme ist eine Sammlung von Dateien, die für das visuelle Erscheinungsbild von Website-Seiten verantwortlich sind. Ein Theme umfasst: CSS-Dateien (Cascading Style Sheets), die Farbe, Hintergrund, Schriftgröße und andere Schlüsselelemente von Seiten festlegen, Vorlagendateien der Hauptseitenelemente und Grafikdateien. Um das Website-Design zu ändern, ändern Sie einfach das grafische Theme im Administrationsbereich in ein neues.</p>
+                
+                <div class="info">
+                    <p><strong>Bitte beachten!</strong><br>
+                    In SLAED CMS werden Themes im Verzeichnis "templates" gespeichert.</p>
+                </div>
+                
+                <p>Wenn der Administrator Kenntnisse in Webdesign und Layout hat, kann er selbst ein Theme für die Website erstellen. Es ist auch möglich, bereits erstellte Themes auf der eigenen Website anzusehen und zu testen, die aus dem Dateikatalog der Website [url=https://slaed.net]slaed.net[/url] heruntergeladen werden können.</p>
+            </article>
+            
+            <article id="uploads">
+                <h2 id="uploads">Uploads und Vorlagen</h2>
+                <p>Der Bereich "Uploads und Vorlagen" wird zur Verwaltung von Dateien verwendet, die in Modulverzeichnisse hochgeladen wurden, einschließlich: Verwalten hochgeladener Dateien, Hochladen neuer Dateien, Verwalten von Vorlagen für die Anzeige von Dateien auf Website-Seiten.</p>
+                
+                <h3>Registerkarte "Dateikatalog"</h3>
+                <p>Folgende Aktionen können in dieser Registerkarte durchgeführt werden:</p>
+                <ul>
+                    <li>Hochladen von Dateien in das Verzeichnis des ausgewählten Moduls (Verzeichnis/Modul wird in der oberen rechten Ecke ausgewählt)</li>
+                    <li>Verwalten der Liste der in das Hauptverzeichnis des Moduls hochgeladenen Dateien<br>
+                    <strong>Hauptverzeichnis</strong> – Dateien, die vom Administrator, Besuchern und Benutzern abhängig vom ausgewählten Modul hochgeladen wurden</li>
+                    <li>Verwalten der Liste der in das zusätzliche Verzeichnis des Moduls hochgeladenen Dateien<br>
+                    <strong>Zusätzliches Verzeichnis</strong> – Dies bezieht sich normalerweise auf Vorschaudateien (Miniaturansichten), die automatisch vom System erstellt wurden. Diese Funktion ist verfügbar, wenn Bilder mit dem BB-Editor veröffentlicht werden. Die Größe der automatischen Bildgrößenänderung (Breite, Höhe) kann individuell für jedes Modul in den Konfigurationen festgelegt werden</li>
+                </ul>
+            </article>
+            
+            <article id="users">
+                <h2 id="users">Benutzer</h2>
+                <p>Der Bereich "Benutzer" wird zur Verwaltung von Website-Benutzern verwendet.</p>
+                
+                <h3>Benutzerverwaltung</h3>
+                <p>Die Verwaltung bestehender Benutzer erfolgt in der Registerkarte "Hauptseite".</p>
+                <ul>
+                    <li><strong>Vollständige Bearbeitung</strong> – Ändern von Benutzerinformationen</li>
+                    <li><strong>Objekt löschen</strong> – Löschen des Benutzerkontos</li>
+                    <li><strong>IP-Adresse blockieren</strong> – Blockieren der IP-Adresse des Benutzers. Die Verwaltung blockierter IP-Adressen erfolgt im Bereich "Sicherheit" (dort können Sie auch die Nachricht festlegen, die beim Versuch der Anmeldung von einer blockierten IP-Adresse angezeigt wird)</li>
+                </ul>
+            </article>
+                        
+                        <div class="doc-footer">
+                            <div class="next-prev">
+                                <a href="configuration.html" class="prev-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                                        <polyline points="12 19 5 12 12 5"></polyline>
+                                    </svg>
+                                    Zurück
+                                </a>
+                                <a href="modules.html" class="next-link">
+                                    Weiter
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </a>
+                            </div>
+                            
+                            <div class="read-next">
+                                <h3>Weiterlesen</h3>
+                                <div class="read-next-links">
+                                    <a href="eduard-laas.html">Schöpfer</a>
+                                    <a href="history.html">Geschichte</a>
+                                    <a href="privacy-policy.html">Datenschutzbestimmungen</a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Datenschutzbestimmungen">Datenschutz</a></li>
+                        <li><a href="history.html" title="Geschichte von SLAED CMS">Geschichte</a></li>
+                        <li><a href="https://slaed.net" title="Offizielle Website von SLAED CMS">Offiziell</a></li>
+                        <li><a href="eduard-laas.html" title="Schöpfer und Chefentwickler von SLAED CMS">Über</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS auf GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. Alle Rechte vorbehalten.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

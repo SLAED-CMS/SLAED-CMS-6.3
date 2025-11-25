@@ -1,0 +1,521 @@
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387507
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-D9ZssO6VaK-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:27
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387518
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:38
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387529
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-D9ZssO6VaK-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:49
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387530
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/slaed_pro_5_0.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:50
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387580
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:39:40
+----
+GET: Array
+(
+    [error] => 403
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387606
+)
+Ошибка: HTTP/1.1 403 Forbidden
+IP Адрес: 127.0.0.1
+Ссылка: /?op=JavaScript&gt;script&gt;
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:40:06
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387613
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-D9ZssO6VaK-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:40:13
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387616
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:40:16
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388893
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:01:33
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388929
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /slaed_admin/
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:09
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388935
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-D9ZssO6VaK-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:15
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388936
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-jmV7UCsRu5-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:16
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388946
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:26
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388951
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:31
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388952
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kVUh391Sto-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:32
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388959
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-6izs9XIf1j-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:39
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638389016
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-6izs9XIf1j-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:03:36
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638389277
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:07:57
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389293
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:13
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389297
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:17
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389335
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/slaed_pro_5_0.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:55
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389338
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/slaed_pro_5_0.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:58
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389339
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:59
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392231
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:11
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392250
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:30
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+)
+SESSION: Array
+(
+    [flood] => 1638392392
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/slaed_pro_5_0.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:59:52
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => esehjr2f6u8prm6uvm5tvrhrttj292g2
+)
+SESSION: Array
+(
+    [flood] => 1638392548
+)
+Ошибка: HTTP/1.1 404 Not Found
+IP Адрес: 127.0.0.1
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:02:28
+----

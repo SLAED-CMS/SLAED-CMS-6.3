@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datenbank-API - SLAED CMS Dokumentation</title>
+    <meta name="description" content="API-Referenz für Datenbankoperationen in SLAED CMS. Erfahren Sie, wie Sie die Datenbank-Abstraktionsschicht verwenden, Abfragen durchführen, Ergebnisse verarbeiten und Datenbankverbindungen sicher verwalten.">
+    <link rel="canonical" href="https://slaed.de/database-api.html">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Dokumentation durchsuchen...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Design umschalten" title="Design umschalten">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.info" class="slaed-link" aria-label="English Version" title="English Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Offizielle SLAED CMS Seite" title="Offizielle SLAED CMS Seite">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS auf GitHub" title="SLAED CMS auf GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Erste Schritte</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="index.html" class="nav-link">Einführung</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="installation.html" class="nav-link">Installation</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="configuration.html" class="nav-link">Konfiguration</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="upgrade.html" class="nav-link">Upgrade-Anleitung</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Grundkonzepte</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="architecture.html" class="nav-link">Architektur</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="modules.html" class="nav-link">Module</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="templates.html" class="nav-link">Vorlagen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database.html" class="nav-link">Datenbank</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">API Referenz</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="core-functions.html" class="nav-link">Kernfunktionen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database-api.html" class="nav-link active">Datenbank</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="template-api.html" class="nav-link">Vorlage</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security-api.html" class="nav-link">Sicherheit</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-api.html" class="nav-link">Admin</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Leitfäden</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="creating-modules.html" class="nav-link">Module erstellen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="custom-themes.html" class="nav-link">Benutzerdefinierte Designs</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="performance.html" class="nav-link">Leistung</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security.html" class="nav-link">Sicherheit</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-guide.html" class="nav-link">Admin-Leitfaden</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Über</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="eduard-laas.html" class="nav-link">Schöpfer</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="history.html" class="nav-link">Geschichte</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Datenschutzbestimmungen</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Startseite</a></li>
+                                <li><a href="index.html">Dokumentation</a></li>
+                                <li><a href="#">API Referenz</a></li>
+                                <li aria-current="page">Datenbank-API</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Datenbank-API</h1>
+                        <p class="lead">Die SLAED CMS Datenbank-API bietet eine umfassende Schnittstelle für die Interaktion mit der Datenbankschicht und bietet sowohl traditionelle Abfragemethoden als auch moderne Prepared Statements für Sicherheit.</p>
+                        
+                        <div class="toc">
+                            <h2>Inhaltsverzeichnis</h2>
+                            <ul>
+                                <li><a href="#connection">Datenbankverbindung</a></li>
+                                <li><a href="#queries">Grundlegende Abfragen</a></li>
+                                <li><a href="#prepared">Prepared Statements</a></li>
+                                <li><a href="#transactions">Transaktionen</a></li>
+                                <li><a href="#utilities">Hilfsfunktionen</a></li>
+                            </ul>
+                        </div>
+                        
+                        <h2 id="connection">Datenbankverbindung</h2>
+                        <p>SLAED CMS verwendet ein globales Datenbankverbindungsobjekt, das im gesamten System verfügbar ist:</p>
+                        
+                        <pre><code class="language-php">global $db, $prefix;
+
+// $db - Datenbankverbindungsobjekt
+// $prefix - Tabellenpräfix (während der Installation konfiguriert)</code></pre>
+                        
+                        <h2 id="queries">Grundlegende Abfragen</h2>
+                        <p>Die traditionellen Abfragemethoden sind immer noch für einfache Operationen verfügbar:</p>
+                        
+                        <pre><code class="language-php">global $db, $prefix;
+
+// Grundlegende Abfrageausführung
+$result = $db->sql_query("SELECT * FROM {$prefix}_table");
+
+// Einzelne Zeile als Array abrufen
+$row = $db->sql_fetchrow($result);
+
+// Einzelne Zeile als assoziatives Array abrufen
+$assoc_row = $db->sql_fetchassoc($result);
+
+// Anzahl der Zeilen abrufen
+$num_rows = $db->sql_numrows($result);
+
+// Letzte Einfüge-ID abrufen
+$insert_id = $db->sql_insertid();
+
+// String maskieren (veraltet - verwenden Sie Prepared Statements)
+$safe_string = $db->sql_escape_string($string);</code></pre>
+                        
+                        <h2 id="prepared">Prepared Statements</h2>
+                        <p>Für Sicherheit und Leistung werden Prepared Statements für alle Datenbankoperationen empfohlen:</p>
+                        
+                        <h3>SELECT mit Prepared Statements</h3>
+                        <pre><code class="language-php">// SELECT mit Prepared Statement
+$stmt = $db->prepare("SELECT id, title, content FROM {$prefix}_news WHERE category = ? AND active = ?");
+$stmt->bind_param("ii", $category_id, $active);
+$stmt->execute();
+$result = $stmt->get_result();
+
+while ($row = $result->fetch_assoc()) {
+    echo $row['title'];
+}</code></pre>
+                        
+                        <h3>INSERT mit Prepared Statements</h3>
+                        <pre><code class="language-php">// INSERT mit Prepared Statement
+$stmt = $db->prepare("INSERT INTO {$prefix}_news (title, content, author_id, created) VALUES (?, ?, ?, NOW())");
+$stmt->bind_param("ssi", $title, $content, $author_id);
+$stmt->execute();
+$new_id = $stmt->insert_id;</code></pre>
+                        
+                        <h3>UPDATE mit Prepared Statements</h3>
+                        <pre><code class="language-php">// UPDATE mit Prepared Statement
+$stmt = $db->prepare("UPDATE {$prefix}_news SET title = ?, content = ? WHERE id = ?");
+$stmt->bind_param("ssi", $title, $content, $id);
+$stmt->execute();
+$affected_rows = $stmt->affected_rows;</code></pre>
+                        
+                        <h3>DELETE mit Prepared Statements</h3>
+                        <pre><code class="language-php">// DELETE mit Prepared Statement
+$stmt = $db->prepare("DELETE FROM {$prefix}_news WHERE id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();</code></pre>
+                        
+                        <h2 id="transactions">Transaktionen</h2>
+                        <p>SLAED CMS unterstützt Datenbanktransaktionen zur Gewährleistung der Datenkonsistenz:</p>
+                        
+                        <pre><code class="language-php">// Transaktion beginnen
+global $db;
+$db->begin_transaction();
+
+try {
+    // Mehrere Datenbankoperationen
+    $stmt1 = $db->prepare("INSERT INTO {$prefix}_table1 (data) VALUES (?)");
+    $stmt1->bind_param("s", $data1);
+    $stmt1->execute();
+    
+    $stmt2 = $db->prepare("UPDATE {$prefix}_table2 SET status = ? WHERE id = ?");
+    $stmt2->bind_param("si", $status, $id);
+    $stmt2->execute();
+    
+    // Transaktion committen
+    $db->commit();
+    echo "Transaktion erfolgreich abgeschlossen";
+    
+} catch (Exception $e) {
+    // Bei Fehler zurückrollen
+    $db->rollback();
+    echo "Transaktion fehlgeschlagen: " . $e->getMessage();
+}</code></pre>
+                        
+                        <h2 id="utilities">Hilfsfunktionen</h2>
+                        <p>SLAED CMS bietet mehrere Hilfsfunktionen für gängige Datenbankoperationen:</p>
+                        
+                        <h3>Eingabevalidierung</h3>
+                        <pre><code class="language-php">// Eingabevariablen sicher abrufen und filtern
+$id = getVar('get', 'id', 'num');          // Numerischen Wert aus GET abrufen
+$title = getVar('post', 'title', 'text');   // Gefilterten Text aus POST abrufen
+$email = getVar('post', 'email', 'email');  // E-Mail mit Validierung abrufen
+$website = getVar('post', 'website', 'url'); // URL mit Validierung abrufen</code></pre>
+                        
+                        <h3>Fehlerbehandlung</h3>
+                        <pre><code class="language-php">// Auf Datenbankfehler prüfen
+if ($db->errno) {
+    echo "Datenbankfehler: " . $db->error;
+}
+
+// Betroffene Zeilen abrufen
+$affected = $stmt->affected_rows;
+
+// Prüfen, ob Abfrage erfolgreich war
+if ($result) {
+    // Ergebnisse verarbeiten
+} else {
+    // Fehler behandeln
+}</code></pre>
+                        
+                        <div class="doc-footer">
+                            <div class="next-prev">
+                                <a href="core-functions.html" class="prev-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                                        <polyline points="12 19 5 12 12 5"></polyline>
+                                    </svg>
+                                    Zurück
+                                </a>
+                                <a href="template-api.html" class="next-link">
+                                    Weiter
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </a>
+                            </div>
+                            
+                            <div class="read-next">
+                                <h3>Weiterlesen</h3>
+                                <div class="read-next-links">
+                                    <a href="template-api.html">Vorlagen-API</a>
+                                    <a href="security-api.html">Sicherheits-API</a>
+                                    <a href="admin-api.html">Admin-API</a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Datenschutzbestimmungen">Datenschutz</a></li>
+                        <li><a href="history.html" title="Geschichte von SLAED CMS">Geschichte</a></li>
+                        <li><a href="https://slaed.net" title="Offizielle Website von SLAED CMS">Offiziell</a></li>
+                        <li><a href="eduard-laas.html" title="Schöpfer und Chefentwickler von SLAED CMS">Über</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS auf GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. Alle Rechte vorbehalten.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

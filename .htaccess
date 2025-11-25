@@ -1,0 +1,53 @@
+# Author: Eduard Laas
+# Copyright © 2005 - 2022 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
+
+# Default charset
+AddDefaultCharset utf-8
+
+# Errors
+ErrorDocument 400 /index.php?error=400
+ErrorDocument 401 /index.php?error=401
+ErrorDocument 403 /index.php?error=403
+ErrorDocument 404 /index.php?error=404
+ErrorDocument 500 /index.php?error=500
+ErrorDocument 503 /index.php?error=503
+
+# Security, warning: This feature has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 5.4.0
+# php_flag register_globals off
+# php_flag safe_mode on
+# php_flag magic_quotes_gpc on
+
+# Deflate compression and expires by mime type
+# <IfModule mod_deflate.c>
+# <FilesMatch "\.(js|jpg|jpeg|gif|png|css)$">
+# ExpiresActive On
+# ExpiresDefault "access plus 1 month"
+# SetOutputFilter DEFLATE
+# </FilesMatch>
+# </IfModule>
+
+# Mod rewrite on
+RewriteEngine On
+RewriteBase /
+
+# Rewrite rules to block out some common exploits
+RewriteCond %{QUERY_STRING} base64_encode[^(]*\([^)]*\) [OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+RewriteRule .* index.php [F]
+
+# Redirecting non-www to www
+# RewriteCond %{HTTP_HOST} ^[^.]+\.[^.]+$
+# RewriteCond %{HTTPS}s ^on(s)|
+# RewriteRule ^ http%1://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# The requested path and file doesn't directly match a physical file or a physical folder internally, rewrite the request to the index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^.*$ index.php [QSA,L]
+
+# HTTP Authentication
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]

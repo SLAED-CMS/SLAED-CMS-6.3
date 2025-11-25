@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - SLAED CMS Documentation</title>
+    <meta name="description" content="Search results for SLAED CMS documentation. Find information about installation, configuration, modules, templates, and other aspects of SLAED CMS.">
+    <link rel="canonical" href="https://slaed.info/search.html">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/" title="SLAED CMS">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img" title="SLAED CMS Logo">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search documentation...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.de" class="slaed-link" aria-label="Deutsche Version" title="Deutsche Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Official SLAED CMS page" title="Official SLAED CMS page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS on GitHub" title="SLAED CMS on GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Navigation</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="index.html" class="nav-link">Documentation Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Privacy Policy</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Home</a></li>
+                                <li><a href="index.html">Documentation</a></li>
+                                <li aria-current="page">Search Results</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Search Results</h1>
+                        <div id="search-results">
+                            <p>Enter a search term to find relevant documentation.</p>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Privacy Policy">Privacy</a></li>
+                        <li><a href="history.html" title="History of SLAED CMS">History</a></li>
+                        <li><a href="https://slaed.net" title="Official website of SLAED CMS">Official</a></li>
+                        <li><a href="eduard-laas.html" title="Creator and Lead Developer of SLAED CMS">About</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS on GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Handle search functionality on the search results page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get search query from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const query = urlParams.get('q');
+            
+            if (query) {
+                // Update search input with the query
+                const searchInput = document.querySelector('.search-input');
+                if (searchInput) {
+                    searchInput.value = decodeURIComponent(query);
+                }
+                
+                // Display search results
+                displaySearchResults(decodeURIComponent(query));
+            }
+            
+            // Add event listeners for search input and button
+            const searchInput = document.querySelector('.search-input');
+            const searchButton = document.querySelector('.search-button');
+            
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        performSearch(this.value.trim());
+                    }
+                });
+            }
+            
+            if (searchButton) {
+                searchButton.addEventListener('click', function() {
+                    const input = this.closest('.search-container').querySelector('.search-input');
+                    if (input) {
+                        performSearch(input.value.trim());
+                    }
+                });
+            }
+        });
+        
+        // Function to perform search
+        function performSearch(query) {
+            if (query) {
+                // Redirect to search results page with the query
+                window.location.href = `search.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+        
+        // Function to display search results
+        function displaySearchResults(query) {
+            const resultsContainer = document.getElementById('search-results');
+            
+            // Simple search implementation - in a real app, this would search page content
+            const pages = [
+                { title: 'Introduction', url: 'index.html', description: 'SLAED CMS is a professional content management system developed since 2005 with a focus on performance, stability, efficiency, and security.' },
+                { title: 'Installation Guide', url: 'installation.html', description: 'This guide will walk you through the complete installation process of SLAED CMS.' },
+                { title: 'Configuration', url: 'configuration.html', description: 'Learn how to configure SLAED CMS for your specific needs.' },
+                { title: 'Upgrade Guide', url: 'upgrade.html', description: 'How to upgrade your existing SLAED CMS installation.' },
+                { title: 'Architecture', url: 'architecture.html', description: 'Understanding the architecture of SLAED CMS.' },
+                { title: 'Modules', url: 'modules.html', description: 'Learn about the modular architecture of SLAED CMS.' },
+                { title: 'Templates', url: 'templates.html', description: 'How to work with templates in SLAED CMS.' },
+                { title: 'Database', url: 'database.html', description: 'Database configuration and management in SLAED CMS.' },
+                { title: 'Core Functions', url: 'core-functions.html', description: 'Reference for core functions in SLAED CMS.' },
+                { title: 'Database API', url: 'database-api.html', description: 'API reference for database operations.' },
+                { title: 'Template API', url: 'template-api.html', description: 'API reference for template functions.' },
+                { title: 'Security API', url: 'security-api.html', description: 'API reference for security functions.' },
+                { title: 'Creating Modules', url: 'creating-modules.html', description: 'Guide to creating custom modules for SLAED CMS.' },
+                { title: 'Custom Themes', url: 'custom-themes.html', description: 'How to create custom themes for SLAED CMS.' },
+                { title: 'Performance', url: 'performance.html', description: 'Optimizing performance in SLAED CMS.' },
+                { title: 'Security Guide', url: 'security.html', description: 'Comprehensive security guide for SLAED CMS.' },
+                { title: 'About Eduard Laas', url: 'eduard-laas.html', description: 'Learn about the creator of SLAED CMS.' }
+            ];
+            
+            // Filter pages based on query (simple search)
+            const filteredPages = pages.filter(page => 
+                page.title.toLowerCase().includes(query.toLowerCase()) || 
+                page.description.toLowerCase().includes(query.toLowerCase())
+            );
+            
+            if (filteredPages.length > 0) {
+                let resultsHTML = `
+                    <div class="search-results-header">
+                        <h2>Search Results for: "${query}"</h2>
+                        <p>Found <strong>${filteredPages.length}</strong> results</p>
+                    </div>
+                    
+                    <div class="search-results-list">
+                `;
+                
+                filteredPages.forEach(page => {
+                    resultsHTML += `
+                        <div class="search-result-item">
+                            <h3><a href="${page.url}">${page.title}</a></h3>
+                            <p>${page.description}</p>
+                        </div>
+                    `;
+                });
+                
+                resultsHTML += `</div>`;
+                resultsContainer.innerHTML = resultsHTML;
+            } else {
+                resultsContainer.innerHTML = `
+                    <div class="search-results-header">
+                        <h2>Search Results for: "${query}"</h2>
+                        <p>Found <strong>0</strong> results</p>
+                    </div>
+                    
+                    <div class="search-results-content">
+                        <p>Your search for "<strong>${query}</strong>" did not match any documentation.</p>
+                        <p>Suggestions:</p>
+                        <ul>
+                            <li>Make sure all words are spelled correctly.</li>
+                            <li>Try different keywords.</li>
+                            <li>Try more general keywords.</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

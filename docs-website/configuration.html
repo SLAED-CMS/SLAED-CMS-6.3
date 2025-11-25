@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration - SLAED CMS Documentation</title>
+    <meta name="description" content="Learn how to configure SLAED CMS for your specific needs. This guide covers database configuration, security settings, performance optimization, and other important configuration options.">
+    <link rel="canonical" href="https://slaed.info/configuration.html">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search documentation...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.de" class="slaed-link" aria-label="Deutsche Version" title="Deutsche Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Official SLAED CMS page" title="Official SLAED CMS page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS on GitHub" title="SLAED CMS on GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Getting Started</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="index.html" class="nav-link">Introduction</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="installation.html" class="nav-link">Installation</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="configuration.html" class="nav-link active">Configuration</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="upgrade.html" class="nav-link">Upgrade Guide</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Core Concepts</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="architecture.html" class="nav-link">Architecture</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="modules.html" class="nav-link">Modules</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="templates.html" class="nav-link">Templates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database.html" class="nav-link">Database</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">API Reference</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="core-functions.html" class="nav-link">Core Functions</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database-api.html" class="nav-link">Database</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="template-api.html" class="nav-link">Template</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security-api.html" class="nav-link">Security</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-api.html" class="nav-link">Admin</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Guides</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="creating-modules.html" class="nav-link">Creating Modules</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="custom-themes.html" class="nav-link">Custom Themes</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="performance.html" class="nav-link">Performance</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security.html" class="nav-link">Security</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-guide.html" class="nav-link">Admin Guide</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">About</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="eduard-laas.html" class="nav-link">Creator</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="history.html" class="nav-link">History</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Privacy Policy</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Home</a></li>
+                                <li><a href="index.html">Documentation</a></li>
+                                <li><a href="#">Getting Started</a></li>
+                                <li aria-current="page">Configuration</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Configuration Guide</h1>
+                        <p class="lead">SLAED CMS uses a modular configuration system where each aspect of the system is configured through separate configuration files.</p>
+                        
+                        <div class="toc">
+                            <h2>Table of Contents</h2>
+                            <ul>
+                                <li><a href="#structure">Configuration Structure</a></li>
+                                <li><a href="#main">Main Configuration</a></li>
+                                <li><a href="#core">Core Settings</a></li>
+                                <li><a href="#security">Security Settings</a></li>
+                                <li><a href="#uploads">Upload Configuration</a></li>
+                                <li><a href="#modules">Module Configuration</a></li>
+                                <li><a href="#caching">Caching Configuration</a></li>
+                            </ul>
+                        </div>
+                        
+                        <h2 id="structure">Configuration Structure</h2>
+                        <p>SLAED CMS configuration files are organized in the <code>config/</code> directory:</p>
+                        
+                        <pre><code class="language-bash">config/
+├── config_db.php          # Database settings
+├── config_global.php      # Global settings
+├── config_core.php        # Core settings
+├── config_security.php    # Security parameters
+├── config_*.php           # Module configurations
+├── cache/                 # Cached files
+└── logs/                  # Log files</code></pre>
+                        
+                        <h2 id="main">Main Configuration</h2>
+                        <p>The main database configuration is stored in <code>config/config_db.php</code>:</p>
+                        
+                        <pre><code class="language-php">&lt;?php
+if (!defined('FUNC_FILE')) die('Illegal file access');
+
+$confdb = array();
+$confdb['host'] = "localhost";              // Database host
+$confdb['uname'] = "username";              // Database username
+$confdb['pass'] = "password";               // Database password
+$confdb['name'] = "database";               // Database name
+$confdb['type'] = "mysqli";                 // Database type (mysqli)
+$confdb['engine'] = "InnoDB";               // Database engine
+$confdb['charset'] = "utf8mb4";             // Character set
+$confdb['collate'] = "utf8mb4_unicode_ci";  // Collation
+$confdb['prefix'] = "slaed";                // Table prefix
+$confdb['sync'] = "0";                      // Time synchronization
+$confdb['mode'] = "0";                      // MySQL strict mode
+
+$prefix = "slaed";                          // Prefix (duplicate)
+$admin_file = "admin";                      // Admin file name
+?&gt;</code></pre>
+                        
+                        <h2 id="core">Core Settings</h2>
+                        <p>Core settings are configured in <code>config/config_core.php</code>:</p>
+                        
+                        <pre><code class="language-php">&lt;?php
+if (!defined('FUNC_FILE')) die('Illegal file access');
+
+$conf = array(
+    // Caching
+    'cache_b' => '1',                       // Block caching
+    'cache_d' => '7',                       // Cache days
+    'cache_t' => '3600',                    // Cache time (seconds)
+    'cache_css' => '1',                     // CSS caching
+    'cache_script' => '1',                  // JavaScript caching
+    
+    // Compression
+    'css_c' => '1',                         // CSS compression
+    'css_h' => '0',                         // CSS in header (inline)
+    'css_e' => '0',                         // CSS with base64 images
+    'script_c' => '1',                      // JavaScript compression
+    'script_h' => '0',                      // JavaScript in header
+    'script_a' => '1',                      // Asynchronous JS loading
+    'html_compress' => '1',                 // HTML compression
+    
+    // File loading
+    'css_f' => 'templates/[theme]/css/,plugins/system/',  // CSS files
+    'script_f' => 'plugins/jquery/jquery.min.js,plugins/system/core.js', // JS files
+    
+    // Additional settings
+    'variables' => '0,1,0',                 // Variable display (debug)
+    'foot_time' => '1',                     // Generation time in footer
+    'foot_queries' => '1',                  // Query count in footer
+);
+?&gt;</code></pre>
+                        
+                        <h2 id="security">Security Settings</h2>
+                        <p>Security parameters are configured in <code>config/config_security.php</code>:</p>
+                        
+                        <pre><code class="language-php">&lt;?php
+if (!defined('FUNC_FILE')) die('Illegal file access');
+
+$confs = array(
+    // General protection
+    'protection' => '1',                    // Enable protection
+    'flood_enable' => '1',                  // Flood protection
+    'flood_time' => '30',                   // Action interval (seconds)
+    'flood_attempts' => '5',                // Number of attempts
+    
+    // Authentication
+    'login_attempts' => '5',                // Login attempts
+    'login_ban_time' => '3600',             // Ban time (seconds)
+    'session_lifetime' => '86400',          // Session lifetime
+    'remember_time' => '2592000',           // "Remember me" time
+    
+    // CAPTCHA
+    'captcha_enable' => '1',                // Enable CAPTCHA
+    'captcha_type' => 'recaptcha3',         // CAPTCHA type
+    'recaptcha_site_key' => '',             // reCAPTCHA site key
+    'recaptcha_secret_key' => '',           // reCAPTCHA secret key
+    'recaptcha_score' => '0.5',             // Minimum score for v3
+    
+    // Attack protection
+    'csrf_protection' => '1',               // CSRF protection
+    'xss_filter' => '1',                    // XSS filter
+    'sql_injection_filter' => '1',          // SQL injection filter
+    'file_upload_check' => '1',             // File upload check
+    
+    // IP filtering
+    'ip_ban_enable' => '1',                 // IP ban
+    'ip_whitelist' => '',                   // IP whitelist
+    'ip_blacklist' => '',                   // IP blacklist
+    
+    // Logging
+    'log_failed_logins' => '1',             // Log failed logins
+    'log_admin_actions' => '1',             // Log admin actions
+    'log_file_uploads' => '1',              // Log file uploads
+    
+    // Additional
+    'password_min_length' => '6',           // Minimum password length
+    'password_require_special' => '0',      // Require special characters
+    'password_require_numbers' => '1',      // Require numbers
+    'max_upload_size' => '10240',           // Max upload size (KB)
+);
+?&gt;</code></pre>
+                        
+                        <h2 id="uploads">Upload Configuration</h2>
+                        <p>File upload settings are configured in <code>config/config_uploads.php</code>:</p>
+                        
+                        <pre><code class="language-php">&lt;?php
+if (!defined('FUNC_FILE')) die('Illegal file access');
+
+// Format: 'module' => 'size_KB|file_types|thumbnail|user_folders|active'
+$confup = array(
+    // Content modules
+    'news' => '2048|jpg,jpeg,png,gif|1|0|1',           // News
+    'pages' => '5120|jpg,jpeg,png,gif,pdf|1|0|1',      // Pages
+    'forum' => '1024|jpg,jpeg,png,gif|1|1|1',          // Forum
+    'shop' => '5120|jpg,jpeg,png,gif|1|1|1',           // Shop
+    
+    // Media content
+    'media' => '10240|jpg,jpeg,png,gif,mp4,avi|1|1|1', // Media
+    'files' => '51200|zip,rar,pdf,doc,docx,xls,xlsx|0|1|1', // Files
+    'links' => '512|jpg,jpeg,png,gif|1|0|1',           // Links
+    
+    // Users
+    'avatars' => '512|jpg,jpeg,png,gif|1|1|1',         // Avatars
+    'account' => '2048|jpg,jpeg,png,gif,pdf|1|1|1',    // Accounts
+    
+    // System
+    'content' => '5120|jpg,jpeg,png,gif,pdf|1|0|1',    // Content
+    'voting' => '1024|jpg,jpeg,png,gif|1|0|1',         // Voting
+);
+
+// Image processing settings
+$conf_images = array(
+    'quality' => '85',                      // JPEG quality (1-100)
+    'thumb_width' => '150',                 // Thumbnail width
+    'thumb_height' => '150',                // Thumbnail height
+    'thumb_crop' => '1',                    // Crop to size
+    'watermark_enable' => '0',              // Watermarks
+    'watermark_file' => 'watermark.png',    // Watermark file
+    'watermark_position' => 'bottom-right', // Watermark position
+);
+?&gt;</code></pre>
+                        
+                        <h2 id="modules">Module Configuration</h2>
+                        <p>Each module has its own configuration file. For example, news module configuration in <code>config/config_news.php</code>:</p>
+                        
+                        <pre><code class="language-php">&lt;?php
+if (!defined('FUNC_FILE')) die('Illegal file access');
+
+$confn = array(
+    'storyhome' => '5',                     // News on homepage
+    'storypage' => '10',                    // News per page
+    'readmore' => '500',                    // Characters for "read more"
+    'anonymous' => '1',                     // Anonymous comments
+    'moderation' => '0',                    // Comment moderation
+    'rating' => '1',                        // News rating
+    'views' => '1',                         // View counter
+    'social' => '1',                        // Social buttons
+    'rss' => '1',                           // RSS feed
+    'sitemap' => '1',                       // Include in sitemap
+);
+?&gt;</code></pre>
+                        
+                        <h2 id="caching">Caching Configuration</h2>
+                        <p>File caching configuration:</p>
+                        
+                        <pre><code class="language-php">// In config_core.php
+$conf = array(
+    'cache_enable' => '1',                  // Enable caching
+    'cache_lifetime' => '3600',             // Lifetime (seconds)
+    'cache_compress' => '1',                // Compress cache
+    'cache_prefix' => 'slaed_',             // Cache prefix
+);
+
+// Cache directories
+define('CACHE_DIR', BASE_DIR.'/config/cache');
+define('CACHE_BLOCKS_DIR', CACHE_DIR.'/blocks');
+define('CACHE_PAGES_DIR', CACHE_DIR.'/pages');
+define('CACHE_QUERIES_DIR', CACHE_DIR.'/queries');</code></pre>
+                        
+                        <div class="doc-footer">
+                            <div class="next-prev">
+                                <a href="installation.html" class="prev-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                                        <polyline points="12 19 5 12 12 5"></polyline>
+                                    </svg>
+                                    Previous
+                                </a>
+                                <a href="upgrade.html" class="next-link">
+                                    Next
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </a>
+                            </div>
+                            
+                            <div class="read-next">
+                                <h3>Read Next</h3>
+                                <div class="read-next-links">
+                                    <a href="upgrade.html">Upgrade Guide</a>
+                                    <a href="architecture.html">Architecture</a>
+                                    <a href="modules.html">Modules</a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Privacy Policy">Privacy</a></li>
+                        <li><a href="history.html" title="History of SLAED CMS">History</a></li>
+                        <li><a href="https://slaed.net" title="Official website of SLAED CMS">Official</a></li>
+                        <li><a href="eduard-laas.html" title="Creator and Lead Developer of SLAED CMS">About</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS on GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,4909 @@
+GET: Array
+(
+    [op] => security_pass
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638384210
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_pass
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 19:56:52
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638385013357
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385013
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638385013357
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 19:56:53
+----
+POST: Array
+(
+    [admin_mask] => 4
+    [admin_ip] => 
+    [login] => f#v2bSa&5ajDw9&z4*Lo
+    [password] => R&v4bPe#5wjXv9&i3*Bo
+    [op] => security_pass_save
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385013
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 19:57:14
+----
+GET: Array
+(
+    [op] => security_pass
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385013
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_pass
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 19:57:14
+----
+GET: Array
+(
+    [op] => security_pass
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385013
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_pass
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 19:57:23
+----
+GET: Array
+(
+    [op] => security_pass
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385013
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_pass
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 19:59:33
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638385174484
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385174
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638385174484
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 19:59:34
+----
+POST: Array
+(
+    [admin_mask] => 4
+    [admin_ip] => 
+    [login] => fg1v2bSa5ajD1w9z4L4o
+    [password] => Rv4bPeg5w1jX7v9i3B7k
+    [op] => security_pass_save
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385174
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 20:00:12
+----
+GET: Array
+(
+    [op] => security_pass
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385174
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_pass
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 20:00:12
+----
+GET: Array
+(
+    [op] => security_pass
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385174
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_pass
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 20:00:21
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638385222556
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385222
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638385222556
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 20:00:22
+----
+SESSION: Array
+(
+    [flood] => 1638387506
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:26
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387507
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-D9ZssO6VaK-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:27
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638387507715
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387508
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638387507715
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:28
+----
+GET: Array
+(
+    [go] => search
+)
+SESSION: Array
+(
+    [flood] => 1638387508
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=search
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:28
+----
+GET: Array
+(
+    [script] => 
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387517
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?script
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:37
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387518
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:38
+----
+GET: Array
+(
+    [script!] => 
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387528
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?script!
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:48
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387529
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-D9ZssO6VaK-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:49
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387530
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/slaed_pro_5_0.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:38:50
+----
+GET: Array
+(
+    [op] => security_pass
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638385222
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_pass
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 20:38:58
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638387539798
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638387539
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638387539798
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 20:38:59
+----
+GET: Array
+(
+    [op] => security_conf
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638387539
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_conf
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 20:39:01
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638387542988
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638387543
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638387542988
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 20:39:03
+----
+GET: Array
+(
+    [op] => script!
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387579
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=script!
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:39:39
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387580
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:39:40
+----
+GET: Array
+(
+    [error] => 403
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387606
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=JavaScript&gt;script&gt;
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:40:06
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387612
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:40:12
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387613
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-D9ZssO6VaK-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:40:13
+----
+GET: Array
+(
+    [op] => script!
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387615
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=script!
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:40:15
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387616
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:40:16
+----
+GET: Array
+(
+    [op] => admins_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387666
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=admins_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:41:06
+----
+GET: Array
+(
+    [op] => admins_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+)
+SESSION: Array
+(
+    [flood] => 1638387713
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=admins_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:41:53
+----
+GET: Array
+(
+    [op] => admins_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388598
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=admins_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:56:38
+----
+GET: Array
+(
+    [op] => admins_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388624
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=admins_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:57:04
+----
+GET: Array
+(
+    [op] => admins_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388669
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=admins_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:57:49
+----
+GET: Array
+(
+    [op] => admins_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388673
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=admins_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:57:53
+----
+GET: Array
+(
+    [op] => admins_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388674
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=admins_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:57:54
+----
+GET: Array
+(
+    [op] => admins_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388675
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /?op=admins_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:57:55
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388678
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:57:58
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388681
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:58:01
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388796
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 20:59:56
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388850
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:50
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388851
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:51
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388852
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:52
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388853
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:53
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388854
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:54
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388855
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:55
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388856
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:56
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388857
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:57
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388858
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:58
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388859
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:00:59
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 0g3dasfmunj6fb2pggab59mgi4vit35p
+    [banned] => block
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638388860
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:01:00
+----
+SESSION: Array
+(
+    [flood] => 1638388892
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:01:32
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388893
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:01:33
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638388893774
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388894
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638388893774
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:01:34
+----
+GET: Array
+(
+    [go] => search
+)
+SESSION: Array
+(
+    [flood] => 1638388894
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=search
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:01:34
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388929
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /slaed_admin/
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:09
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388934
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:14
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388935
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-D9ZssO6VaK-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:15
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388936
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-jmV7UCsRu5-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:16
+----
+GET: Array
+(
+    [slaed_admin] => 
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388945
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?slaed_admin
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:25
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388946
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:26
+----
+GET: Array
+(
+    [slaed_admins] => 
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388950
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?slaed_admins
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:30
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388951
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:31
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388952
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kVUh391Sto-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:32
+----
+GET: Array
+(
+    [op] => slaed_admins
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388958
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?op=slaed_admins
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:38
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638388959
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-6izs9XIf1j-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:02:39
+----
+GET: Array
+(
+    [op] => slaed_admins
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638389014
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?op=slaed_admins
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:03:34
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638389016
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-6izs9XIf1j-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:03:36
+----
+GET: Array
+(
+    [op] => admins_add
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638389035
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?op=admins_add
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:03:55
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+)
+SESSION: Array
+(
+    [flood] => 1638389046
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:06
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389074
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:34
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389077
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:37
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389078
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:38
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389079
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:39
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389080
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:40
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389081
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:41
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389082
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:42
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389083
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:43
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389084
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:44
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389087
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:47
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389088
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:48
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389089
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:49
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389091
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:51
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389092
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:52
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389093
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:53
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389094
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:54
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389095
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:55
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389097
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:57
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389098
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:58
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389099
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:04:59
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389100
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:05:00
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389101
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:05:01
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389103
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:05:03
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => ligmv7vhmi5i7lg5sh5vcvnpsb2ln5uc
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389104
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:05:04
+----
+SESSION: Array
+(
+    [flood] => 1638389136
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:05:36
+----
+SESSION: Array
+(
+    [flood] => 1638389139
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:05:39
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389214
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:06:54
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389243
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:07:23
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389254
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:07:34
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389257
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:07:37
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389258
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:07:38
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389261
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:07:41
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389264
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:07:44
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638389276
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:07:56
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638389277
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:07:57
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638389277756
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638389278
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638389277756
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:07:58
+----
+GET: Array
+(
+    [go] => 1
+    [op] => rating
+    [id] => 617
+    [typ] => 
+    [mod] => news
+    [_] => 1638389277757
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638389283
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=1&amp;op=rating&amp;id=617&amp;typ=&amp;mod=news&amp;_=1638389277757
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:03
+----
+GET: Array
+(
+    [op] => logout
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638389283
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=logout
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:07
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389283
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:07
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638389287262
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389287
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638389287262
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:07
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389292
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:12
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389293
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:13
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389296
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:16
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389297
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:17
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389334
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:54
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389335
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/slaed_pro_5_0.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:55
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389337
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:57
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389338
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/slaed_pro_5_0.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:58
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389339
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:08:59
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+)
+SESSION: Array
+(
+    [flood] => 1638389378
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:09:38
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389422
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:10:22
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389494
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:11:34
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389497
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:11:37
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389498
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:11:38
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389499
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:11:39
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389500
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:11:40
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389422
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:27:18
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391152
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:39:12
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391153
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:39:13
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391154
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:39:14
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391158
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:39:18
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391159
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:39:19
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391182
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:39:42
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391183
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:39:43
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391184
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:39:44
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391297
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:37
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391298
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:38
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391299
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:39
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391300
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:40
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391301
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:41
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391306
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:46
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391308
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:48
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391309
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:49
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391310
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:50
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391311
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:41:51
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391495
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:44:55
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391497
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:44:57
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391498
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:44:58
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391509
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:45:09
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => v893c6ssifk601d6e5rjddrohk56flmu
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638391534
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:45:34
+----
+SESSION: Array
+(
+    [flood] => 1638392230
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:10
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392231
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:11
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392231711
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392232
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392231711
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:12
+----
+POST: Array
+(
+    [user_name] => test
+    [user_password] => test
+    [refer] => 1
+    [op] => login
+)
+GET: Array
+(
+    [name] => account
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392240
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?name=account
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:20
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392241758
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392242
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392241758
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:22
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392249
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:29
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392250
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:30
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392250783
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392251
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392250783
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:31
+----
+POST: Array
+(
+    [user_name] => test
+    [user_password] => test
+    [refer] => 1
+    [op] => login
+)
+GET: Array
+(
+    [name] => account
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392261
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?name=account
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:41
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392262156
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392262
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392262156
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:57:42
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 5g28d01feqv926nrh1ic9bkav4mqnoo3
+    [configure] => 7
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638389422
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:57:54
+----
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:06
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392286641
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [flood] => 1638392287
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392286641
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:07
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 03AGdBq27jD9cg3rE6I02JlRjXUw74Flz8sHxrn4SB0IrRlDRGVk-qvOeK50i8i4pv0xxdI1HjHTTKQA3XZ1ci0TUQbUOuyN8i5TjswRH2-GSLTqL3UHACCRbFID09gq6YBfjRGYPohUNchYi0QkckTZ4DwBxYCv4Ki2Bg-jEO8M8IF-coyu-bUR-noIx66osSf36ppudQ4M11_Ua7YmkbQcUj8pkVdX8vke58TC45vjsXtcIeAnuOOgFLkV6ABlrzJx34CDEDw6muJhhcdXleVgowDxErFNAE260OlC-YGniS8dA1_DMK53ItkN2prmkm0s6ycQeVeNkRrITCot7zWBoi9vvd7fI1KwPmaoigpoTK1wrB7c4d_994OT1Xlo6TFELi-muBgB7RHhKId9XYzjAH0UAISWYtWRQh91pYI-p5OGkASTG2DWuXZC9MS0MygX6OiJj8P7lM
+    [op] => check_admin
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [flood] => 1638392287
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:10
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392290395
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [flood] => 1638392290
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392290395
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:10
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 03AGdBq26Q14upolHnsc20IrzpyXp5IjmTKYpIJWbOWBTxmzUqlwMsKUoG411jjYByqZskTthXwea0jkjeBOxvUDONGbtYHMXLYVcbzXPkZDBqSf6XzL554RaL-YLhKAwdb6Ok9C8J64_n295EtnQ-zN_y1ZJFCBkQewyEa-0uAKpb9W73wJaSArcWHASSypvd18TXqtNyXoz8wi7brHTDTuBtfz-VnUTDO_9L-K6vp3L5b5wJd41IcdvR4j1dQBWORYKJGfldhJ94kPW6Da7-yw358o7PlI-vskQu-kOn6Ka8oRO3vAxrs6HgYQ3NDTiTqCMKNwxCSUhln-WUzFqMgsghWGlgu091_m5YDfU_3aMsgfqWkiPEWjYwwW0ITn28eh1S5uZVVrwJ-12JEfucATPW4NZ_W84eJ9Hvvxyx3ITWkTNzC-Bse75hXlqzes6PmRWytSTPfWpE
+    [op] => check_admin
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [flood] => 1638392290
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:16
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [flood] => 1638392290
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:16
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392298141
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392298
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392298141
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:18
+----
+GET: Array
+(
+    [op] => users_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392298
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=users_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:21
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392302179
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392302
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392302179
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:22
+----
+GET: Array
+(
+    [op] => users_add
+    [id] => 31495
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392302
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=users_add&amp;id=31495
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:30
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392311279
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392311
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392311279
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:31
+----
+POST: Array
+(
+    [user_name] => slaed
+    [user_rank] => Test
+    [user_email] => test@slaed.net
+    [user_website] => http://proslaed-utf.loc/
+    [user_avatar] => default/00.gif
+    [user_regdate] => 2017-04-08 23:46
+    [user_occ] => 
+    [user_from] => 
+    [user_interests] => 
+    [user_sig] => 
+    [file] => Array
+        (
+            [0] => 
+        )
+
+    [user_viewemail] => 0
+    [user_storynum] => 3
+    [user_blockon] => 0
+    [user_block] => 
+    [user_theme] => default
+    [user_newsletter] => 0
+    [user_lang] => 
+    [user_points] => 0
+    [user_warnings] => Array
+        (
+            [0] => 
+            [1] => 
+            [2] => 
+            [3] => 
+            [4] => 
+        )
+
+    [user_acess] => 0
+    [user_group] => 0
+    [user_birthday] => 2017-04-08
+    [user_gender] => 0
+    [field] => Array
+        (
+            [0] => 
+            [1] => Андрей
+            [2] => email@domain.net
+        )
+
+    [user_password] => slaed
+    [user_password2] => slaed
+    [mailtext] => Здравствуйте!
+Информация для доступа
+
+Ник: [login]
+Пароль: [pass]
+
+
+SLAED CMS - Support
+http://www.slaed.net
+support@slaed.net
+    [user_id] => 31495
+    [op] => users_add_save
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392311
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:58:43
+----
+GET: Array
+(
+    [op] => users_add
+    [id] => 31495
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392311
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=users_add&amp;id=31495
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:59:11
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392352873
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392352
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392352873
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 21:59:12
+----
+POST: Array
+(
+    [user_name] => slaed
+    [user_password] => slaed
+    [op] => login
+)
+GET: Array
+(
+    [name] => account
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392365
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?name=account
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:59:25
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392366469
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392366
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392366469
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:59:26
+----
+POST: Array
+(
+    [user_name] => SLAED CMS
+    [user_password] => e20011976l
+    [refer] => 1
+    [op] => login
+)
+GET: Array
+(
+    [name] => account
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+)
+SESSION: Array
+(
+    [flood] => 1638392386
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?name=account
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:59:46
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+)
+SESSION: Array
+(
+    [flood] => 1638392391
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:59:51
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+)
+SESSION: Array
+(
+    [flood] => 1638392392
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /uploads/news/slaed_pro_5_0.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 21:59:52
+----
+GET: Array
+(
+    [name] => account
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+)
+SESSION: Array
+(
+    [flood] => 1638392400
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php?name=account
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:00:00
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392401656
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+)
+SESSION: Array
+(
+    [flood] => 1638392401
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392401656
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:00:01
+----
+GET: Array
+(
+    [name] => account
+    [op] => view
+    [id] => 7885
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+)
+SESSION: Array
+(
+    [flood] => 1638392404
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php?name=account&amp;op=view&amp;id=7885
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:00:04
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392406064
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+)
+SESSION: Array
+(
+    [flood] => 1638392406
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392406064
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:00:06
+----
+GET: Array
+(
+    [op] => security_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392352
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:16
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392417882
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392417
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392417882
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:17
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392417
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:20
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392421370
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392421
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392421370
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:21
+----
+GET: Array
+(
+    [go] => 1
+    [op] => get_user
+    [term] => SLA
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392426
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=1&amp;op=get_user&amp;term=SLA
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:26
+----
+GET: Array
+(
+    [go] => 1
+    [op] => get_user
+    [term] => SLAED
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392427
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=1&amp;op=get_user&amp;term=SLAED
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:27
+----
+GET: Array
+(
+    [go] => 1
+    [op] => get_user
+    [term] => SLAED CMS
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392428
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=1&amp;op=get_user&amp;term=SLAED CMS
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:28
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [time] => 7
+    [info] => Тупо тестю
+    [mail] => 1
+    [mailtext] => Здравствуйте!
+Вам запрещён доступ на сайт!
+
+До конца блокировки осталось: [time]
+Причина блокировки: [info]
+
+
+SLAED CMS - Support
+http://www.slaed.net
+support@slaed.net
+    [file] => Array
+        (
+            [0] => 
+        )
+
+    [op] => security_block_save
+    [id] => 4
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392428
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:48
+----
+GET: Array
+(
+    [op] => security_block
+    [send] => 1
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392428
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block&amp;send=1
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:48
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392449479
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392449
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392449479
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:00:49
+----
+GET: Array
+(
+    [name] => account
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+)
+SESSION: Array
+(
+    [flood] => 1638392463
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php?name=account
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:01:03
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638392505
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:01:45
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638392512
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:01:52
+----
+GET: Array
+(
+    [op] => security_block_save
+    [name] => SLAED CMS
+    [time] => 1638997248
+    [id] => 3
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392449
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block_save&amp;name=SLAED CMS&amp;time=1638997248&amp;id=3
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:02:03
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392449
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:02:03
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392524544
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392524
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392524544
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:02:04
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638392528
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:02:08
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638392529
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:02:09
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638392530
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:02:10
+----
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 2cln9idm4odgbs78af39h7pv8duj9s8h
+    [slaed-account] => Nzg4NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MjA6MTpsaXRl
+    [slaed-banned] => block
+)
+SESSION: Array
+(
+    [flood] => 1638392531
+)
+IP Адрес: 127.0.0.1
+Пользователь: SLAED CMS
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:02:11
+----
+SESSION: Array
+(
+    [flood] => 1638392546
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:02:26
+----
+GET: Array
+(
+    [error] => 404
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => esehjr2f6u8prm6uvm5tvrhrttj292g2
+)
+SESSION: Array
+(
+    [flood] => 1638392548
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /uploads/news/news-kYUsUTeAFo-7885.png
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:02:28
+----
+GET: Array
+(
+    [name] => news
+    [op] => view
+    [id] => 617
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => esehjr2f6u8prm6uvm5tvrhrttj292g2
+)
+SESSION: Array
+(
+    [flood] => 1638392585
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?name=news&amp;op=view&amp;id=617
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:03:05
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392586425
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => esehjr2f6u8prm6uvm5tvrhrttj292g2
+)
+SESSION: Array
+(
+    [flood] => 1638392586
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392586425
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36 Edg/96.0.1054.34
+Дата: 01.12.2021 22:03:06
+----
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:03:51
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392631427
+)
+SESSION: Array
+(
+    [flood] => 1638392631
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392631427
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:03:51
+----
+GET: Array
+(
+    [op] => security_block_save
+    [name] => slaed
+    [time] => 1667938972
+    [id] => 3
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392524
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block_save&amp;name=slaed&amp;time=1667938972&amp;id=3
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:27
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392524
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:27
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392668339
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392668
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392668339
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:28
+----
+GET: Array
+(
+    [op] => security_block_save
+    [name] => tezzzst
+    [time] => 1313606444
+    [id] => 3
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392668
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block_save&amp;name=tezzzst&amp;time=1313606444&amp;id=3
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:30
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392668
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:30
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392672087
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392672
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392672087
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:32
+----
+GET: Array
+(
+    [op] => security_block_save
+    [name] => tehhhst
+    [time] => 1313606444
+    [id] => 3
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392672
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block_save&amp;name=tehhhst&amp;time=1313606444&amp;id=3
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:35
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392672
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:35
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392676298
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392676
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392676298
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:36
+----
+GET: Array
+(
+    [op] => security_block_save
+    [name] => tesvvvt
+    [time] => 1313606444
+    [id] => 3
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392676
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block_save&amp;name=tesvvvt&amp;time=1313606444&amp;id=3
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:38
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392676
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:38
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392679829
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392679
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392679829
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:39
+----
+GET: Array
+(
+    [op] => security_block_save
+    [name] => teqqqst
+    [time] => 1313606444
+    [id] => 3
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392679
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block_save&amp;name=teqqqst&amp;time=1313606444&amp;id=3
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:42
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392679
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:42
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392683839
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392683
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392683839
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:43
+----
+GET: Array
+(
+    [op] => security_block_save
+    [name] => teswwt
+    [time] => 1313606444
+    [id] => 3
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392683
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block_save&amp;name=teswwt&amp;time=1313606444&amp;id=3
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:45
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392683
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:46
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392687141
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392687
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392687141
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:47
+----
+GET: Array
+(
+    [op] => security_block_save
+    [name] => test
+    [time] => 1313606444
+    [id] => 3
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392687
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block_save&amp;name=test&amp;time=1313606444&amp;id=3
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:49
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392687
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:49
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392690652
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 1
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392690
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392690652
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:04:50
+----
+GET: Array
+(
+    [op] => security_block
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392690
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_block
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:05:08
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392709515
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392709
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392709515
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:05:09
+----
+GET: Array
+(
+    [op] => security_show
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392709
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_show
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:05:13
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392714538
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392714
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392714538
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:05:14
+----
+GET: Array
+(
+    [op] => security_pass
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392714
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_pass
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:05:16
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392718029
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392718
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392718029
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:05:18
+----
+GET: Array
+(
+    [op] => security_conf
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392718
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_conf
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:05:20
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1638392721202
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392721
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1638392721202
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:05:21
+----
+POST: Array
+(
+    [flood] => 0
+    [error] => 2
+    [flood_t] => 1
+    [blocker_cookie] => banned
+    [afile] => admin
+    [max_vars] => 4000
+    [log_size] => 1048576
+    [sess_d] => 1440
+    [sess_b] => 1440
+    [log_b] => 0
+    [error_db] => 1
+    [error_java] => 0
+    [error_log] => 0
+    [url_get] => 1
+    [url_post] => 0
+    [ref_post] => 1
+    [mail] => 1
+    [mail_w] => 0
+    [mail_d] => 1
+    [write_h] => 1
+    [write_w] => 0
+    [log] => 0
+    [log_d] => 1
+    [log_a] => 1
+    [log_u] => 0
+    [block] => 1
+    [op] => security_conf_save
+)
+COOKIE: Array
+(
+    [slaed-language] => russian
+    [PHPSESSID] => 1uq1pethprmvmg8gkkce4p2m7v0ctb7p
+    [sl_close_9] => 0
+    [securitys] => 0
+    [slaed-close-security] => 1
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+    [flood] => 1638392721
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 01.12.2021 22:06:44
+----
+GET: Array
+(
+    [op] => security_conf
+)
+COOKIE: Array
+(
+    [PHPSESSID] => 6pg45nhremdfavk2t02cprgapupk87n3
+    [ne-617] => 617
+    [slaed-language] => russian
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_conf
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 09.12.2021 18:26:22
+----
+GET: Array
+(
+    [go] => 3
+    [op] => backup
+    [_] => 1639070783783
+)
+COOKIE: Array
+(
+    [sl_close_1] => 1
+    [PHPSESSID] => 6pg45nhremdfavk2t02cprgapupk87n3
+    [ne-617] => 617
+    [slaed-language] => russian
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=backup&amp;_=1639070783783
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 09.12.2021 18:26:23
+----
+POST: Array
+(
+    [flood] => 0
+    [error] => 2
+    [flood_t] => 1
+    [blocker_cookie] => banned
+    [afile] => admin
+    [max_vars] => 4000
+    [log_size] => 1048576
+    [sess_d] => 1440
+    [sess_b] => 1440
+    [log_b] => 0
+    [error_db] => 0
+    [error_java] => 1
+    [error_log] => 1
+    [url_get] => 1
+    [url_post] => 1
+    [ref_post] => 1
+    [mail] => 1
+    [mail_w] => 1
+    [mail_d] => 1
+    [write_h] => 1
+    [write_w] => 1
+    [log] => 1
+    [log_d] => 1
+    [log_a] => 1
+    [log_u] => 1
+    [block] => 1
+    [op] => security_conf_save
+)
+COOKIE: Array
+(
+    [PHPSESSID] => 6pg45nhremdfavk2t02cprgapupk87n3
+    [ne-617] => 617
+    [slaed-language] => russian
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 09.12.2021 18:26:57
+----
+GET: Array
+(
+    [op] => security_conf
+)
+COOKIE: Array
+(
+    [PHPSESSID] => 6pg45nhremdfavk2t02cprgapupk87n3
+    [ne-617] => 617
+    [slaed-language] => russian
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_conf
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 09.12.2021 18:26:57
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1639070819090
+)
+COOKIE: Array
+(
+    [sl_close_1] => 1
+    [PHPSESSID] => 6pg45nhremdfavk2t02cprgapupk87n3
+    [ne-617] => 617
+    [slaed-language] => russian
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1639070819090
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 09.12.2021 18:26:59
+----
+GET: Array
+(
+    [op] => security_conf
+)
+COOKIE: Array
+(
+    [PHPSESSID] => 6pg45nhremdfavk2t02cprgapupk87n3
+    [ne-617] => 617
+    [slaed-language] => russian
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /admin.php?op=security_conf
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 09.12.2021 18:27:01
+----
+GET: Array
+(
+    [go] => 3
+    [op] => newsletter
+    [_] => 1639070822476
+)
+COOKIE: Array
+(
+    [sl_close_1] => 1
+    [PHPSESSID] => 6pg45nhremdfavk2t02cprgapupk87n3
+    [ne-617] => 617
+    [slaed-language] => russian
+)
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MQ==
+)
+IP Адрес: 127.0.0.1
+Пользователь: Guest
+Ссылка: /index.php?go=3&amp;op=newsletter&amp;_=1639070822476
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0
+Дата: 09.12.2021 18:27:02
+----

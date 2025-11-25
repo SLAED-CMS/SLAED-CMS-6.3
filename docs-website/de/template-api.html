@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vorlagen-API - SLAED CMS Dokumentation</title>
+    <meta name="description" content="API-Referenz für Vorlagenfunktionen in SLAED CMS. Erfahren Sie, wie Sie das Vorlagensystem verwenden, benutzerdefinierte Vorlagen erstellen, Blöcke verwalten und Vorlagenvariablen und -funktionen nutzen.">
+    <link rel="canonical" href="https://slaed.de/template-api.html">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Dokumentation durchsuchen...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Design umschalten" title="Design umschalten">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.info" class="slaed-link" aria-label="English Version" title="English Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Offizielle SLAED CMS Seite" title="Offizielle SLAED CMS Seite">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS auf GitHub" title="SLAED CMS auf GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Erste Schritte</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="index.html" class="nav-link">Einführung</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="installation.html" class="nav-link">Installation</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="configuration.html" class="nav-link">Konfiguration</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="upgrade.html" class="nav-link">Upgrade-Anleitung</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Grundkonzepte</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="architecture.html" class="nav-link">Architektur</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="modules.html" class="nav-link">Module</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="templates.html" class="nav-link">Vorlagen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database.html" class="nav-link">Datenbank</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">API Referenz</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="core-functions.html" class="nav-link">Kernfunktionen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database-api.html" class="nav-link">Datenbank</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="template-api.html" class="nav-link active">Vorlage</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security-api.html" class="nav-link">Sicherheit</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-api.html" class="nav-link">Admin</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Leitfäden</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="creating-modules.html" class="nav-link">Module erstellen</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="custom-themes.html" class="nav-link">Benutzerdefinierte Designs</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="performance.html" class="nav-link">Leistung</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security.html" class="nav-link">Sicherheit</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-guide.html" class="nav-link">Admin-Leitfaden</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Über</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="eduard-laas.html" class="nav-link">Schöpfer</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="history.html" class="nav-link">Geschichte</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Datenschutzbestimmungen</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Startseite</a></li>
+                                <li><a href="index.html">Dokumentation</a></li>
+                                <li><a href="#">API Referenz</a></li>
+                                <li aria-current="page">Vorlagen-API</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Vorlagen-API</h1>
+                        <p class="lead">Die SLAED CMS Vorlagen-API bietet Funktionen für das Rendern von Seiten, die Verwaltung von Designs und die Handhabung von Benutzeroberflächenelementen.</p>
+                        
+                        <div class="toc">
+                            <h2>Inhaltsverzeichnis</h2>
+                            <ul>
+                                <li><a href="#basics">Grundlegende Vorlagenfunktionen</a></li>
+                                <li><a href="#rendering">Vorlagen-Rendering</a></li>
+                                <li><a href="#navigation">Navigation und Paginierung</a></li>
+                                <li><a href="#messages">Nachrichten und Warnungen</a></li>
+                                <li><a href="#structure">Seitenstruktur</a></li>
+                            </ul>
+                        </div>
+                        
+                        <h2 id="basics">Grundlegende Vorlagenfunktionen</h2>
+                        <p>Kernvorlagenfunktionen für die Designverwaltung:</p>
+                        
+                        <pre><code class="language-php">// Design-Dateien einbinden
+function setThemeInclude() {
+    global $theme;
+    $theme = get_theme();
+    include_once('templates/'.$theme.'/index.php');
+    include_once('core/template.php');
+}
+
+// Aktuelles Design abrufen
+$current_theme = get_theme();
+
+// Bild in Design-Verzeichnissen finden
+function img_find($image_name, $default = '') {
+    $paths = array(
+        'uploads/'.$image_name,
+        'templates/'.get_theme().'/images/'.$image_name,
+        'templates/default/images/'.$image_name
+    );
+    
+    foreach ($paths as $path) {
+        if (file_exists($path)) {
+            return $path;
+        }
+    }
+    return $default;
+}</code></pre>
+                        
+                        <h2 id="rendering">Vorlagen-Rendering</h2>
+                        <p>Funktionen für das Rendern von Vorlagenelementen:</p>
+                        
+                        <pre><code class="language-php">// Grundlegendes Vorlagen-Rendering
+function setTemplateBasic($type, $values = array()) {
+    // $type: 'title', 'content', 'pagination', etc.
+    // $values: Array von Platzhalter => Wert Paaren
+}
+
+// Seitentitel
+$content = setTemplateBasic('title', array('{%title%}' => 'Seitentitel'));
+
+// Inhaltsblock
+$content = setTemplateBasic('content', array(
+    '{%title%}' => $title,
+    '{%content%}' => $content,
+    '{%author%}' => $author,
+    '{%date%}' => format_time($timestamp)
+));</code></pre>
+                        
+                        <h2 id="navigation">Navigation und Paginierung</h2>
+                        <p>Funktionen für die Handhabung von Navigationselementen:</p>
+                        
+                        <pre><code class="language-php">// Seitenzahlen generieren
+function setPageNumbers($current, $module, $total_items, $total_pages, $per_page, $param = '', $max_links = 8, $anchor = '') {
+    // Gibt HTML für Paginierung zurück
+}
+
+// Beispielverwendung
+$page = getVar('get', 'page', 'num', 1);
+$per_page = 10;
+$total_items = 150;
+$total_pages = ceil($total_items / $per_page);
+
+$pagination = setPageNumbers($page, 'news', $total_items, $total_pages, $per_page);
+echo $pagination;
+
+// Untere Navigation (zurück, Start, nach oben)
+echo setNaviLower('modul_name');</code></pre>
+                        
+                        <h2 id="messages">Nachrichten und Warnungen</h2>
+                        <p>Funktionen für die Anzeige von Systemnachrichten:</p>
+                        
+                        <pre><code class="language-php">// Warnungs-/Nachrichtenvorlagen
+function setTemplateWarning($type, $values = array()) {
+    // $type: 'info', 'warn', 'error', 'success'
+    // $values: Nachrichtenparameter
+}
+
+// Erfolgsmeldung
+echo setTemplateWarning('success', array(
+    'text' => 'Vorgang erfolgreich abgeschlossen',
+    'url' => 'index.php?name=module',
+    'time' => '3'
+));
+
+// Fehlermeldung
+echo setTemplateWarning('error', array(
+    'text' => 'Ein Fehler ist aufgetreten',
+    'url' => 'javascript:history.back()',
+    'time' => '5'
+));</code></pre>
+                        
+                        <h2 id="structure">Seitenstruktur</h2>
+                        <p>Funktionen für die Verwaltung der Seitenstruktur:</p>
+                        
+                        <pre><code class="language-php">// HTML-Ausgabe starten (Header, Navigation)
+head();
+
+// Ihr Inhalt hier
+echo 'Modulinhalt';
+echo 'Ihr Modulinhalt...';
+
+// HTML-Ausgabe beenden (Footer)
+foot();</code></pre>
+                        
+                        <p>Die Vorlagen-API sorgt für konsistentes Rendering in allen Modulen und Designs und bietet gleichzeitig Flexibilität für Anpassungen.</p>
+                        
+                        <div class="doc-footer">
+                            <div class="next-prev">
+                                <a href="database-api.html" class="prev-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                                        <polyline points="12 19 5 12 12 5"></polyline>
+                                    </svg>
+                                    Zurück
+                                </a>
+                                <a href="security-api.html" class="next-link">
+                                    Weiter
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </a>
+                            </div>
+                            
+                            <div class="read-next">
+                                <h3>Weiterlesen</h3>
+                                <div class="read-next-links">
+                                    <a href="security-api.html">Sicherheits-API</a>
+                                    <a href="admin-api.html">Admin-API</a>
+                                    <a href="creating-modules.html">Module erstellen</a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Datenschutzbestimmungen">Datenschutz</a></li>
+                        <li><a href="history.html" title="Geschichte von SLAED CMS">Geschichte</a></li>
+                        <li><a href="https://slaed.net" title="Offizielle Website von SLAED CMS">Offiziell</a></li>
+                        <li><a href="eduard-laas.html" title="Schöpfer und Chefentwickler von SLAED CMS">Über</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS auf GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. Alle Rechte vorbehalten.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

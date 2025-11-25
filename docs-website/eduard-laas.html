@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eduard Laas - SLAED CMS Documentation</title>
+    <meta name="description" content="Learn about Eduard Laas, the creator of SLAED CMS. Discover the history of SLAED CMS, its development philosophy, and the vision behind this professional content management system.">
+    <link rel="canonical" href="https://slaed.info/eduard-laas.html">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search documentation...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.de" class="slaed-link" aria-label="Deutsche Version" title="Deutsche Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Official SLAED CMS page" title="Official SLAED CMS page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS on GitHub" title="SLAED CMS on GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Getting Started</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="index.html" class="nav-link">Introduction</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="installation.html" class="nav-link">Installation</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="configuration.html" class="nav-link">Configuration</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="upgrade.html" class="nav-link">Upgrade Guide</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Core Concepts</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="architecture.html" class="nav-link">Architecture</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="modules.html" class="nav-link">Modules</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="templates.html" class="nav-link">Templates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database.html" class="nav-link">Database</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">API Reference</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="core-functions.html" class="nav-link">Core Functions</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database-api.html" class="nav-link">Database</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="template-api.html" class="nav-link">Template</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security-api.html" class="nav-link">Security</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-api.html" class="nav-link">Admin</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Guides</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="creating-modules.html" class="nav-link">Creating Modules</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="custom-themes.html" class="nav-link">Custom Themes</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="performance.html" class="nav-link">Performance</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security.html" class="nav-link">Security</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">About</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="eduard-laas.html" class="nav-link active">Creator</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="history.html" class="nav-link">History</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Privacy Policy</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Home</a></li>
+                                <li><a href="index.html">Documentation</a></li>
+                                <li><a href="#">About</a></li>
+                                <li aria-current="page">Eduard Laas</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Eduard Laas</h1>
+                        <p class="lead">Creator and Lead Developer of SLAED CMS since 2005</p>
+                        
+                        <div class="toc">
+                            <h2>Table of Contents</h2>
+                            <ul>
+                                <li><a href="#introduction">Introduction</a></li>
+                                <li><a href="#background">Background</a></li>
+                                <li><a href="#philosophy">Development Philosophy</a></li>
+                                <li><a href="#contributions">Contributions to SLAED CMS</a></li>
+                                <li><a href="#vision">Vision for the Future</a></li>
+                            </ul>
+                        </div>
+                        
+                        <h2 id="introduction">Introduction</h2>
+                        <p>Eduard Laas is the creator and lead developer of SLAED CMS, a professional content management system that has been in active development since 2005. With nearly two decades of experience in web development, Eduard has dedicated his career to creating efficient, secure, and high-performance web solutions.</p>
+                        
+                        <h2 id="background">Background</h2>
+                        <p>Starting his journey in web development in the early 2000s, Eduard recognized the need for a content management system that prioritized performance, stability, and security over flashy features. This vision led to the creation of SLAED CMS in 2005, which has since evolved into a robust platform used by developers and organizations worldwide.</p>
+                        
+                        <p>Based in Germany, Eduard has built SLAED CMS from the ground up, focusing on creating a system that embodies the principles of efficiency and reliability. His approach to software development emphasizes clean code, optimized performance, and long-term maintainability.</p>
+                        
+                        <h2 id="philosophy">Development Philosophy</h2>
+                        <p>Eduard's development philosophy centers around several core principles:</p>
+                        
+                        <h3>Performance Above All</h3>
+                        <p>Eduard believes that website performance is critical to user experience and search engine optimization. SLAED CMS is designed to be lightweight and fast, ensuring optimal loading times and resource usage.</p>
+                        
+                        <h3>Stability and Reliability</h3>
+                        <p>With a focus on thorough testing and proven solutions, SLAED CMS maintains high stability standards. Eduard ensures that each release undergoes rigorous testing to maintain system reliability.</p>
+                        
+                        <h3>Security by Default</h3>
+                        <p>Security is not an afterthought in SLAED CMS. Eduard implements multi-layered security measures throughout the system, providing secure defaults and protecting against common web vulnerabilities.</p>
+                        
+                        <h3>No Redundancy</h3>
+                        <p>Eduard follows the principle of including only necessary functionality, avoiding feature bloat that can compromise performance and maintainability. This approach results in a clean, efficient codebase.</p>
+                        
+                        <h2 id="contributions">Contributions to SLAED CMS</h2>
+                        <p>Over the years, Eduard has made significant contributions to SLAED CMS:</p>
+                        
+                        <ul>
+                            <li><strong>Core Architecture</strong> - Designed the modular architecture that allows for flexible, scalable development</li>
+                            <li><strong>Performance Optimization</strong> - Implemented numerous optimizations that make SLAED CMS one of the fastest CMS solutions available</li>
+                            <li><strong>Security Framework</strong> - Developed a comprehensive security system with protection against SQL injection, XSS, CSRF, and other common attacks</li>
+                            <li><strong>Template System</strong> - Created a flexible template engine that allows complete customization without modifying core code</li>
+                            <li><strong>Database Abstraction</strong> - Built an efficient database layer with support for prepared statements and transactions</li>
+                            <li><strong>Module System</strong> - Designed a modular system that enables developers to extend functionality easily</li>
+                        </ul>
+                        
+                        <h2 id="vision">Vision for the Future</h2>
+                        <p>Eduard continues to evolve SLAED CMS with a focus on modern web standards while maintaining the core principles that have made it successful:</p>
+                        
+                        <ul>
+                            <li><strong>Microservices Architecture</strong> - Exploring ways to further modularize the system for better scalability</li>
+                            <li><strong>GraphQL API</strong> - Developing modern API interfaces for better integration capabilities</li>
+                            <li><strong>PWA Support</strong> - Enhancing mobile experience with Progressive Web App features</li>
+                            <li><strong>Machine Learning Integration</strong> - Investigating opportunities to incorporate AI/ML features for content optimization</li>
+                        </ul>
+                        
+                        <p>Eduard remains committed to the core values that have guided SLAED CMS development: performance, stability, security, and efficiency. His ongoing work ensures that SLAED CMS continues to be a leading choice for developers who value these principles.</p>
+                        
+                        <div class="doc-footer">
+                            <div class="next-prev">
+                                <a href="index.html" class="prev-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                                        <polyline points="12 19 5 12 12 5"></polyline>
+                                    </svg>
+                                    Previous
+                                </a>
+                                <a href="index.html" class="next-link">
+                                    Next
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </a>
+                            </div>
+                            
+                            <div class="read-next">
+                                <h3>Read Next</h3>
+                                <div class="read-next-links">
+                                    <a href="history.html">History</a>
+                                    <a href="privacy-policy.html">Privacy Policy</a>
+                                    <a href="index.html">Introduction</a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Privacy Policy">Privacy</a></li>
+                        <li><a href="history.html" title="History of SLAED CMS">History</a></li>
+                        <li><a href="https://slaed.net" title="Official website of SLAED CMS">Official</a></li>
+                        <li><a href="eduard-laas.html" title="Creator and Lead Developer of SLAED CMS">About</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS on GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

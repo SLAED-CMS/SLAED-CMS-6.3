@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link-Prüfer - SLAED CMS Dokumentation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+    <style>
+        .link-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .link-ok {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .link-broken {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #7f1d1d;
+        }
+        .link-checking {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e3a8a;
+        }
+        .check-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 20px 0;
+        }
+        .check-button:hover {
+            background-color: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html" title="SLAED CMS">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img" title="SLAED CMS Logo">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Dokumentation durchsuchen...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Design umschalten" title="Design umschalten">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.info" class="slaed-link" aria-label="English Version" title="English Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Offizielle SLAED CMS Seite" title="Offizielle SLAED CMS Seite">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS auf GitHub" title="SLAED CMS auf GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Werkzeuge</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="link-checker.html" class="nav-link active">Link-Prüfer</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="link-checker-enhanced.html" class="nav-link">Erweiterter Link-Prüfer</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Datenschutzbestimmungen</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Startseite</a></li>
+                                <li><a href="index.html">Dokumentation</a></li>
+                                <li aria-current="page">Link-Prüfer</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Link-Prüfer</h1>
+                        <p class="lead">Dieses Werkzeug prüft alle Dokumentationslinks auf fehlerhafte Verweise.</p>
+                        
+                        <div class="info">
+                            <p><strong>So funktioniert es:</strong> Dieses Werkzeug sendet HTTP HEAD-Anfragen an jede Dokumentationsseite, um zu überprüfen, ob die Links funktionieren. Ein Statuscode im Bereich 200-399 zeigt einen funktionierenden Link an.</p>
+                            <p><strong>Hinweis:</strong> Für zuverlässigere Ergebnisse verwenden Sie den <a href="link-checker-enhanced.html">Erweiterten Link-Prüfer</a>, der serverseitiges PHP verwendet.</p>
+                        </div>
+                        
+                        <button id="checkLinks" class="check-button">Alle Links prüfen</button>
+                        
+                        <div id="results"></div>
+                        
+                        <h2>Link-Status</h2>
+                        <div id="linkList">
+                            <div class="link-status link-checking">Links werden geprüft...</div>
+                        </div>
+                        
+                        <h2>Fehlerbehebung</h2>
+                        <div class="info">
+                            <p><strong>Wenn Links als fehlerhaft angezeigt werden:</strong></p>
+                            <ul>
+                                <li>Überprüfen Sie, ob die Datei im Dokumentationsverzeichnis existiert</li>
+                                <li>Stellen Sie sicher, dass der Dateiname genau übereinstimmt (Groß-/Kleinschreibung beachten)</li>
+                                <li>Vergewissern Sie sich, dass keine Tippfehler im Dateinamen vorhanden sind</li>
+                                <li>Bei lokaler Ausführung können einige Browser diese Anfragen aufgrund von Sicherheitseinschränkungen blockieren</li>
+                            </ul>
+                            <p><strong>Hinweis:</strong> Bei lokaler Ausführung dieses Werkzeugs können einige Browser aufgrund von CORS-Einschränkungen falsche Ergebnisse anzeigen. Für genaue Ergebnisse führen Sie dieses Werkzeug auf einem Webserver aus.</p>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // List of all documentation pages
+        const pages = [
+            'index.html',
+            'installation.html',
+            'configuration.html',
+            'architecture.html',
+            'modules.html',
+            'templates.html',
+            'database.html',
+            'core-functions.html',
+            'database-api.html',
+            'template-api.html',
+            'security-api.html',
+            'creating-modules.html',
+            'custom-themes.html',
+            'performance.html',
+            'security.html',
+            'upgrade.html',
+            'admin-api.html',
+            'admin-guide.html',
+            'eduard-laas.html',
+            'history.html',
+            'privacy-policy.html'
+        ];
+        
+        // Function to check if a file exists
+        function checkLink(url) {
+            return new Promise((resolve) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('HEAD', url, true);
+                xhr.timeout = 5000; // 5 second timeout
+                
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        resolve({
+                            url: url,
+                            status: xhr.status,
+                            exists: xhr.status >= 200 && xhr.status < 400
+                        });
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    resolve({
+                        url: url,
+                        status: 0,
+                        exists: false,
+                        error: 'Netzwerkfehler'
+                    });
+                };
+                
+                xhr.ontimeout = function() {
+                    resolve({
+                        url: url,
+                        status: 0,
+                        exists: false,
+                        error: 'Zeitüberschreitung'
+                    });
+                };
+                
+                try {
+                    xhr.send();
+                } catch (e) {
+                    resolve({
+                        url: url,
+                        status: 0,
+                        exists: false,
+                        error: 'Ausnahme: ' + e.message
+                    });
+                }
+            });
+        }
+        
+        // Function to check all links
+        async function checkAllLinks() {
+            const resultsDiv = document.getElementById('results');
+            const linkListDiv = document.getElementById('linkList');
+            
+            resultsDiv.innerHTML = '<p>Alle Dokumentationslinks werden geprüft...</p>';
+            linkListDiv.innerHTML = '';
+            
+            let workingLinks = 0;
+            let brokenLinks = 0;
+            let timeoutLinks = 0;
+            let errorLinks = 0;
+            
+            // Check each page
+            for (const page of pages) {
+                const linkDiv = document.createElement('div');
+                linkDiv.className = 'link-status link-checking';
+                linkDiv.innerHTML = `Prüfung von ${page}...`;
+                linkListDiv.appendChild(linkDiv);
+                
+                try {
+                    const result = await checkLink(page);
+                    if (result.exists) {
+                        linkDiv.className = 'link-status link-ok';
+                        linkDiv.innerHTML = `✓ ${page} (Status: ${result.status})`;
+                        workingLinks++;
+                    } else if (result.error === 'Zeitüberschreitung') {
+                        linkDiv.className = 'link-status link-broken';
+                        linkDiv.innerHTML = `✗ ${page} (Zeitüberschreitung - möglicherweise Serverproblem)`;
+                        timeoutLinks++;
+                    } else {
+                        linkDiv.className = 'link-status link-broken';
+                        linkDiv.innerHTML = `✗ ${page} (Status: ${result.status || result.error})`;
+                        brokenLinks++;
+                    }
+                } catch (error) {
+                    linkDiv.className = 'link-status link-broken';
+                    linkDiv.innerHTML = `✗ ${page} (Fehler: ${error.message})`;
+                    errorLinks++;
+                }
+            }
+            
+            // Show summary
+            resultsDiv.innerHTML = `
+                <h2>Prüfung abgeschlossen</h2>
+                <p>Insgesamt geprüfte Links: ${pages.length}</p>
+                <p>Arbeitende Links: ${workingLinks}</p>
+                <p>Fehlerhafte Links: ${brokenLinks}</p>
+                ${timeoutLinks > 0 ? `<p>Zeitüberschreitungs-Links: ${timeoutLinks} (möglicherweise Serverprobleme)</p>` : ''}
+                ${errorLinks > 0 ? `<p>Fehler-Links: ${errorLinks}</p>` : ''}
+                ${(brokenLinks + errorLinks) > 0 ? '<p class="link-broken">Einige Links sind fehlerhaft. Bitte korrigieren Sie diese.</p>' : '<p class="link-ok">Alle Links funktionieren korrekt!</p>'}
+            `;
+        }
+        
+        // Run check when button is clicked
+        document.getElementById('checkLinks').addEventListener('click', checkAllLinks);
+        
+        // Run check on page load
+        window.addEventListener('load', function() {
+            setTimeout(checkAllLinks, 1000);
+        });
+    </script>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Datenschutzbestimmungen">Datenschutz</a></li>
+                        <li><a href="history.html" title="Geschichte von SLAED CMS">Geschichte</a></li>
+                        <li><a href="https://slaed.net" title="Offizielle Website von SLAED CMS">Offiziell</a></li>
+                        <li><a href="eduard-laas.html" title="Schöpfer und Chefentwickler von SLAED CMS">Über</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS auf GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. Alle Rechte vorbehalten.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
