@@ -20,13 +20,24 @@ function changelog(): void {
 	// Git-Log abrufen
 	$gitlog = [];
 	$git_dir = realpath(__DIR__.'/../../');
+	$git_exe = 'C:\\Program Files\\Git\\cmd\\git.exe';
+
+	// Fallback wenn Git nicht im Standard-Pfad
+	if (!file_exists($git_exe)) $git_exe = 'git';
+
 	$old_dir = getcwd();
 	chdir($git_dir);
-	exec('git log --pretty=format:"%h||%ad||%an||%s" --date=format:"%Y-%m-%d %H:%M" -50 2>&1', $gitlog, $return_code);
+	$cmd = '"'.$git_exe.'" log --pretty=format:"%h||%ad||%an||%s" --date=format:"%Y-%m-%d %H:%M" -50 2>&1';
+	exec($cmd, $gitlog, $return_code);
 	chdir($old_dir);
 
 	if ($return_code !== 0 || empty($gitlog)) {
-		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Git-Historie konnte nicht geladen werden. Prüfe ob Git installiert ist und das Repository initialisiert wurde.<br>Git-Verzeichnis: '.$git_dir]);
+		$error_msg = 'Git-Historie konnte nicht geladen werden.<br>';
+		$error_msg .= 'Git-Verzeichnis: '.$git_dir.'<br>';
+		$error_msg .= 'Git-Executable: '.$git_exe.'<br>';
+		$error_msg .= 'Return Code: '.$return_code;
+		if (!empty($gitlog)) $error_msg .= '<br>Output: '.implode('<br>', $gitlog);
+		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $error_msg]);
 	} else {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_list_sort"><thead><tr><th>Commit</th><th>Datum</th><th>Autor</th><th>Änderung</th></tr></thead><tbody>';
