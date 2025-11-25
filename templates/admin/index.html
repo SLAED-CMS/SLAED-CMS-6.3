@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="{%lang%}">
+<head>
+{%META%}
+{%LINK%}
+<link rel="stylesheet" href="plugins/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="plugins/codemirror/addon/hint/show-hint.css">
+{%SCRIPT%}
+<script src="templates/{%theme%}/js/tabs.js"></script>
+<script src="templates/{%theme%}/js/jquery.metadata.js"></script>
+</head>
+<body>
+	<div class="wrapper">
+		<div class="wraptop"></div>
+		<div class="wrapmid">
+			<div class="header">
+				<div class="lcolomn leftside"><h1><a href="//slaed.net" target="_blank" class="thide" title="SLAED CMS">SLAED CMS</a></h1></div>
+				<div class="rcolomn midside">
+					<div class="toolbar">
+						<div>
+							<ul class="reset">{%menu%}</ul>
+							<span class="rcolomn language">{%langs%}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="vsep">
+				<div class="vsep">
+					<div class="container">
+						<div class="lcolomn leftside">{%blocks%}</div>
+						<div class="rcolomn midside">{%MODULE%}</div>
+						<div class="clr"></div>
+					</div>
+				</div>
+			</div>
+			<div class="footer">
+				<div class="copyright">{%BLOCKS time%}<br>{%LICENSE%}</div>
+				<span><a OnClick="Upper('html, body', 600);" title="{%upper%}" class="thide">{%upper%}</a></span>
+			</div>
+		</div>
+		<div class="wrapfoot"></div>
+		{%BLOCKS variables%}
+	</div>
+</body>
+</html>

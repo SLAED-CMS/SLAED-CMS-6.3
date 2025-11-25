@@ -1,0 +1,43 @@
+<div class="comment">
+	<div class="com-left">
+		<div class="com-ava"><a title="{%name%}" class="sl_avatar" style="background-image: url({%avatar%});"></a></div>
+		<div class="min-rate">
+			<div class="rate-like-box">{%rating%}</div>
+		</div>
+		<ul class="fp-user-info">
+			<li>{%urank%}</li>
+			<li>{%rank%}</li>
+		</ul>
+	</div>
+	<div class="com-right">
+		<div class="com-top">
+			<div class="carg dropdown">
+				<a OnClick="HideShow('i-form', 'blind', 'up', 500);"><b>{%name%}</b></a>
+				<div id="i-form" class="dropdown-form">
+					<ul class="list-text">
+						<li>{%cid%}: {%id%}</li>
+						<li>{%cip%}: {%ip%}</li>
+					</ul>
+				</div>
+			</div>
+			<div class="carg">{%admin%}{%privat%}{%profil%}{%goback%}</div>
+		</div>
+		<div class="com-cont clrfix">
+			<table class="table-acc-info">
+				<tr><td>{%cmail%}:</td><td>{%mail%}</td><td>{%cbirth%}:</td><td>{%birth%}</td></tr>
+				<tr><td>{%csite%}:</td><td>{%site%}</td><td>{%cfrom%}:</td><td>{%from%}</td></tr>
+				<tr><td>{%cregdate%}:</td><td>{%regdate%}</td><td>{%cgender%}:</td><td>{%gender%}</td></tr>
+				<tr><td>{%clastvisit%}:</td><td>{%lastvisit%}</td><td>{%clang%}:</td><td>{%lang%}</td></tr>
+				<tr><td>{%cpoints%}:</td><td>{%points%}</td><td>{%csgroup%}:</td><td>{%sgroup%}</td></tr>
+				<tr><td colspan="4"><hr>{%coccup%}: {%occup%}</td></tr>
+				<tr><td colspan="4">{%cinter%}: {%inter%}</td></tr>
+				<tr><td colspan="4">{%cgroups%}: {%groups%}</td></tr>
+				<tr><td colspan="4">{%cwarn%}: {%warn%}</td></tr>
+				<tr><td colspan="4"><hr>{%field%}</td></tr>
+				<tr><td colspan="4">{%cagent%}: {%agent%}</td></tr>
+				<tr><td colspan="4">{%sign%}</td></tr>
+			</table>
+		</div>
+	</div>
+</div>
+{%tabs%}

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security API - SLAED CMS Documentation</title>
+    <meta name="description" content="API reference for security functions in SLAED CMS. Learn how to implement authentication, authorization, input validation, and other security measures in your modules and custom code.">
+    <link rel="canonical" href="https://slaed.info/security-api.html">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="/">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search documentation...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.de" class="slaed-link" aria-label="Deutsche Version" title="Deutsche Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Official SLAED CMS page" title="Official SLAED CMS page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS on GitHub" title="SLAED CMS on GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Getting Started</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="index.html" class="nav-link">Introduction</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="installation.html" class="nav-link">Installation</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="configuration.html" class="nav-link">Configuration</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="upgrade.html" class="nav-link">Upgrade Guide</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Core Concepts</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="architecture.html" class="nav-link">Architecture</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="modules.html" class="nav-link">Modules</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="templates.html" class="nav-link">Templates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database.html" class="nav-link">Database</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">API Reference</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="core-functions.html" class="nav-link">Core Functions</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="database-api.html" class="nav-link">Database</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="template-api.html" class="nav-link">Template</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security-api.html" class="nav-link active">Security</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-api.html" class="nav-link">Admin</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">Guides</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="creating-modules.html" class="nav-link">Creating Modules</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="custom-themes.html" class="nav-link">Custom Themes</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="performance.html" class="nav-link">Performance</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="security.html" class="nav-link">Security</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="admin-guide.html" class="nav-link">Admin Guide</a>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="nav-section">
+                        <h3 class="nav-title">About</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="eduard-laas.html" class="nav-link">Creator</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="history.html" class="nav-link">History</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Privacy Policy</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Home</a></li>
+                                <li><a href="index.html">Documentation</a></li>
+                                <li><a href="#">API Reference</a></li>
+                                <li aria-current="page">Security API</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Security API</h1>
+                        <p class="lead">The SLAED CMS Security API provides comprehensive protection against common web vulnerabilities including SQL injection, XSS, CSRF, and more.</p>
+                        
+                        <div class="toc">
+                            <h2>Table of Contents</h2>
+                            <ul>
+                                <li><a href="#input">Input Validation</a></li>
+                                <li><a href="#csrf">CSRF Protection</a></li>
+                                <li><a href="#captcha">Captcha Integration</a></li>
+                                <li><a href="#xss">XSS Protection</a></li>
+                                <li><a href="#sessions">Session Security</a></li>
+                            </ul>
+                        </div>
+                        
+                        <h2 id="input">Input Validation</h2>
+                        <p>SLAED CMS provides robust input validation through the <code>getVar</code> function and additional filtering functions:</p>
+                        
+                        <pre><code class="language-php">// Analyze string for security
+function analyze($string) {
+    return preg_replace('#[^a-zA-Z0-9_-]#', '', $string);
+}
+
+// XSS protection
+function xss_clean($string) {
+    return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+}
+
+// Filter HTML content
+function filter_html($html, $allowed_tags = '&lt;p&gt;&lt;br&gt;&lt;strong&gt;&lt;em&gt;&lt;u&gt;&lt;a&gt;&lt;img&gt;&lt;ul&gt;&lt;ol&gt;&lt;li&gt;') {
+    return strip_tags($html, $allowed_tags);
+}</code></pre>
+                        
+                        <h2 id="csrf">CSRF Protection</h2>
+                        <p>Cross-Site Request Forgery protection is implemented through token generation and verification:</p>
+                        
+                        <pre><code class="language-php">// Generate CSRF token
+function generate_csrf_token() {
+    if (!isset($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+// Verify CSRF token
+function verify_csrf_token($token) {
+    return isset($_SESSION['csrf_token']) &amp;&amp; hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// CSRF token form field
+function csrf_token_field() {
+    return '&lt;input type=&quot;hidden&quot; name=&quot;csrf_token&quot; value=&quot;'.generate_csrf_token().'&quot;&gt;';
+}
+
+// Usage in forms
+echo '&lt;form method=&quot;post&quot;&gt;';
+echo csrf_token_field();
+echo '&lt;input type=&quot;text&quot; name=&quot;title&quot;&gt;';
+echo '&lt;input type=&quot;submit&quot; value=&quot;Submit&quot;&gt;';
+echo '&lt;/form&gt;';
+
+// Verification in processing
+if (!verify_csrf_token(getVar('post', 'csrf_token', 'text'))) {
+    die('CSRF token verification failed');
+}</code></pre>
+                        <h2 id="captcha">Captcha Integration</h2>
+                        <p>Integration with Google reCAPTCHA for bot protection:</p>
+                        
+                        <pre><code class="language-php">// Get captcha HTML
+function getCaptcha($level) {
+    global $conf;
+    if ($conf['gfx_chk'] >= '1' && ($level == 2 || ($level == 1 && !is_user()))) {
+        // Google reCAPTCHA v3
+        $html = '<script src="https://www.google.com/recaptcha/api.js?render='.$conf['capkey'].'"></script>';
+        $html .= '<script>
+            grecaptcha.ready(function() {
+                grecaptcha.execute("'.$conf['capkey'].'", {action: "submit"}).then(function(token) {
+                    document.getElementById("recaptcha").value = token;
+                });
+            });
+        </script>';
+        $html .= '<input type="hidden" id="recaptcha" name="recaptcha">';
+        return $html;
+    }
+    return '';
+}
+
+// Verify captcha
+function checkCaptcha($level) {
+    global $conf;
+    if ($conf['gfx_chk'] >= '1' && ($level == 2 || ($level == 1 && !is_user()))) {
+        $response = getVar('post', 'recaptcha', 'text');
+        // Verify with Google API
+        return verify_recaptcha($response);
+    }
+    return true;
+}</code></pre>
+                        
+                        <h2 id="xss">XSS Protection</h2>
+                        <p>Multiple layers of XSS protection are implemented:</p>
+                        
+                        <pre><code class="language-php">// Automatic HTML escaping in templates
+$title = xss_clean($title);
+
+// Content filtering for user-generated content
+$filtered_content = filter_html($user_content);
+
+// Output encoding
+echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');</code></pre>
+                        
+                        <h2 id="sessions">Session Security</h2>
+                        <p>Secure session management functions:</p>
+                        
+                        <pre><code class="language-php">// Secure session initialization
+function init_secure_session() {
+    session_start();
+    
+    // Regenerate session ID regularly
+    if (!isset($_SESSION['initiated'])) {
+        session_regenerate_id(true);
+        $_SESSION['initiated'] = true;
+    }
+    
+    // IP address validation
+    if (isset($_SESSION['user_ip']) && $_SESSION['user_ip'] !== getIp()) {
+        session_destroy();
+        return false;
+    }
+    $_SESSION['user_ip'] = getIp();
+    
+    // User agent validation
+    if (isset($_SESSION['user_agent']) && $_SESSION['user_agent'] !== getUserAgent()) {
+        session_destroy();
+        return false;
+    }
+    $_SESSION['user_agent'] = getUserAgent();
+    
+    return true;
+}
+
+// Set secure cookies
+setCookies($name, $value, $expire_time);
+
+// Get client IP address
+$ip = getIp();
+
+// Get user agent
+$user_agent = getUserAgent();</code></pre>
+                        
+                        <p>The Security API ensures that SLAED CMS applications are protected against the most common web vulnerabilities while maintaining ease of use for developers.</p><div class="doc-footer">
+                            <div class="next-prev">
+                                <a href="template-api.html" class="prev-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                                        <polyline points="12 19 5 12 12 5"></polyline>
+                                    </svg>
+                                    Previous
+                                </a>
+                                <a href="creating-modules.html" class="next-link">
+                                    Next
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </a>
+                            </div>
+                            
+                            <div class="read-next">
+                                <h3>Read Next</h3>
+                                <div class="read-next-links">
+                                    <a href="creating-modules.html">Creating Modules</a>
+                                    <a href="custom-themes.html">Custom Themes</a>
+                                    <a href="performance.html">Performance</a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Privacy Policy">Privacy</a></li>
+                        <li><a href="history.html" title="History of SLAED CMS">History</a></li>
+                        <li><a href="https://slaed.net" title="Official website of SLAED CMS">Official</a></li>
+                        <li><a href="eduard-laas.html" title="Creator and Lead Developer of SLAED CMS">About</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS on GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

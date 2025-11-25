@@ -1,0 +1,168 @@
+<?php
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
+
+if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+
+function database_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    panel();
+    $ops = ['database', 'database&amp;type=optimize', 'database&amp;type=repair', 'database_dump', 'database_info'];
+    $lang = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
+    return getAdminTabs(_DATABASE, 'database.png', '', $ops, $lang, [], [], $tab, $subtab);
+}
+
+function database(): void {
+    global $db, $confdb, $admin_file;
+    $type = getVar('get', 'type', 'var');
+    $ftitleth = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
+    $content ='<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TABLE.'</th><th>'._TYPE.'</th><th>'._DBCOLL.'</th><th>'._ROWS.'</th><th>'._DATE.'</th><th>'._SIZE.'</th><th>'._DBFREE.'</th><th class="{sorter: false}">'.$ftitleth.'</th></tr></thead><tbody>';
+    $total = 0;
+    $totalfree = 0;
+    $i = 0;
+    $result = $db->sql_query('SHOW TABLE STATUS FROM `'.$confdb['name'].'`');
+    while ($info = $db->sql_fetchrow($result)) {
+        $name = $info['Name'];
+        $tabeng = $info['Engine'];
+        $tabloc = $info['Collation'];
+        $tabsize = $info['Data_length'] + $info['Index_length'];
+        $total += $tabsize;
+        $tabsizefr = $info['Data_free'] ?: 0;
+        if ($tabeng === 'InnoDB') {
+            $tabsizefrc = '<div class="sl_hidden">'.files_size($tabsizefr).'</div>';
+        } else {
+            $tabsizefrc = ($tabsizefr) ? '<div class="sl_red">'.files_size($tabsizefr).'</div>' : '<div class="sl_green">'.files_size($tabsizefr).'</div>';
+        }
+        $totalfree += $tabsizefr;
+        $crtime = $info['Create_time'];
+        $rows = $info['Rows'];
+        if ($type === 'optimize') {
+            $db->sql_query('ANALYZE TABLE `'.$name.'`');
+            $oresult = $db->sql_query('OPTIMIZE TABLE `'.$name.'`');
+            if (!$oresult) {
+                $ftitletd = '<div class="sl_red">'._ERROR.'</div>';
+            } elseif ($tabeng === 'InnoDB') {
+                $ftitletd = '<div class="sl_green">'._OPTIMIZED.'</div>';
+            } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
+                $ftitletd = '<div class="sl_red">'._ALREADYOPTIMIZED.'</div>';
+            } else {
+                $ftitletd = '<div class="sl_green">'._OPTIMIZED.'</div>';
+            }
+        } elseif ($type === 'repair') {
+            if ($tabeng === 'InnoDB') {
+                $ftitletd = '<div class="sl_hidden">'._NO.'</div>';
+            } else {
+                $rresult = $db->sql_query('REPAIR TABLE `'.$name.'`');
+                $ftitletd = (!$rresult) ? '<div class="sl_red">'._ERROR.'</div>' : '<div class="sl_green">'._OK.'</div>';
+            }
+        } else {
+            $ftitletd = add_menu('<a href="'.$admin_file.'.php?op=database_del&amp;tb='.$name.'&amp;id=1" OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.$name.'&quot;?\');" title="'._CLEAN.'">'._CLEAN.'</a>||<a href="'.$admin_file.'.php?op=database_del&amp;tb='.$name.'&amp;id=2" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
+        }
+        $i++;
+        $content .= '<tr><td>'.$i.'</td><td>'.$name.'</td><td>'.$tabeng.'</td><td>'.$tabloc.'</td><td>'.$rows.'</td><td>'.format_time($crtime, _TIMESTRING).'</td><td>'.files_size($tabsize).'</td><td>'.$tabsizefrc.'</td><td>'.$ftitletd.'</td></tr>';
+    }
+    $content .= '</tbody></table>';
+    head();
+    if (empty($type)) {
+        $cont = database_navi(0, 0, 0, 0);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _OPTTEXT]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _REPTEXT]);
+    } elseif ($type === 'optimize') {
+        $db->sql_query('FLUSH TABLES');
+        $cont = database_navi(0, 1, 0, 0);
+        $totalspace = $total - $totalfree;
+        $info = _OPTIMIZE.': '.$confdb['name'].'<br>'._TOTALSPACE.': '.files_size($totalspace).'<br>'._TOTALFREE.': '.files_size($totalfree);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
+    } elseif ($type === 'repair') {
+        $cont = database_navi(0, 2, 0, 0);
+        $info = _REPAIR.': '.$confdb['name'].'<br>'._TOTALSPACE.': '.files_size($total);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
+    }
+    echo $cont.setTemplateBasic('open').$content.setTemplateBasic('close');
+    foot();
+}
+
+function database_dump(): void {
+    global $db, $confdb, $admin_file;
+    $type = getVar('post', 'type', 'var', '');
+    $pstring = filter_input(INPUT_POST, 'string', FILTER_UNSAFE_RAW) ?? '';
+    head();
+    $cont = database_navi(0, 3, 0, 0);
+    if ($type === 'dump' && !empty($pstring)) {
+        $replacements = ['{prefix}' => $confdb['prefix'], '{engine}' => $confdb['engine'], '{charset}' => $confdb['charset'], '{collate}' => $confdb['collate']];
+        $info = '';
+        $queries = array_filter(array_map('trim', explode(';', $pstring)));
+        foreach ($queries as $query) {
+            $stringdb = str_replace(array_keys($replacements), array_values($replacements), $query);
+            $stringdb = stripslashes($stringdb);
+            $result = $db->sql_query($stringdb);
+            if (preg_match('#^\s*(ALTER|ANALYZE|CREATE|DELETE|DROP|INSERT|OPTIMIZE|RENAME|REPAIR|REPLACE|SET|TRUNCATE|UPDATE)\s#i', $stringdb, $matches)) {
+                $tablename = '';
+                if (preg_match('#`([^`]+)`#', $stringdb, $tablematch)) $tablename = $tablematch[1];
+                if ($result) {
+                    $status = '<span class="sl_green">'._OK.'</span>';
+                } else {
+                    $error = $db->sql_error();
+                    $errmsg = htmlspecialchars($error['message']);
+                    $errinfo = $error['sqlstate'].' / '.$error['code'];
+                    $status = '<span class="sl_red">'._ERROR.' - '.$errinfo.' - '.$errmsg.'</span>';
+                }
+                $info .= _TABLE.': '.$tablename.'<br>'._STATUS.': '.$status.'<br>';
+            }
+        }
+        $cont .= !empty($info) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INQUIRY.': '.$confdb['name'].'<br>'.$info]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _DBERROR]);
+    } else {
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _DBINFO]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _DBWARN]);
+    }
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form action="'.$admin_file.'.php" method="post">
+        <table class="sl_table_edit">
+            <tr>
+                <td>'.textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($pstring)).'</td>
+            </tr>
+            <tr>
+                <td class="sl_center">
+                    <input type="hidden" name="op" value="database_dump">
+                    <input type="hidden" name="type" value="dump">
+                    <input type="submit" value="'._EXECUTE.'" class="sl_but_blue">
+                </td>
+            </tr>
+        </table>
+    </form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
+}
+
+function database_info(): void {
+    head();
+    echo database_navi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'database').'</div>';
+    foot();
+}
+
+switch ($op) {
+    case 'database':
+    database();
+    break;
+
+    case 'database_dump':
+    database_dump();
+    break;
+
+    case 'database_del':
+    $tb = getVar('get', 'tb', 'var');
+    $delid = getVar('get', 'id', 'num');
+    if ($tb && $delid == 1) {
+        $db->sql_query('TRUNCATE TABLE `'.$tb.'`');
+    } elseif ($tb && $delid == 2) {
+        $db->sql_query('DROP TABLE `'.$tb.'`');
+    }
+    header('Location: '.$admin_file.'.php?op=database');
+    break;
+
+    case 'database_info':
+    database_info();
+    break;
+}

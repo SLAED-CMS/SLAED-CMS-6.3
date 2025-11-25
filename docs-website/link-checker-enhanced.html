@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Link Checker - SLAED CMS Documentation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Preload dark theme to prevent flash of white -->
+    <script src="theme-preload.js"></script>
+    <style>
+        .link-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .link-ok {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .link-broken {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #7f1d1d;
+        }
+        .link-checking {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e3a8a;
+        }
+        .check-button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            margin: 20px 0;
+        }
+        .check-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #000;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <a href="index.html" title="SLAED CMS">
+                        <img src="logo.png" alt="SLAED CMS Logo" class="logo-img" title="SLAED CMS Logo">
+                        <span class="logo-text">SLAED CMS</span>
+                    </a>
+                </div>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search documentation...">
+                    <button class="search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                    <a href="https://slaed.de" class="slaed-link" aria-label="Deutsche Version" title="Deutsche Version">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </a>
+                    <a href="https://slaed.net" class="slaed-link" aria-label="Official SLAED CMS page" title="Official SLAED CMS page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                    </a>
+                    <a href="https://github.com/SLAED-CMS" class="github-link" aria-label="SLAED CMS on GitHub" title="SLAED CMS on GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-layout">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="sidebar-nav">
+                    <div class="nav-section">
+                        <h3 class="nav-title">Tools</h3>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="link-checker.html" class="nav-link">Link Checker</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="link-checker-enhanced.html" class="nav-link active">Enhanced Link Checker</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="privacy-policy.html" class="nav-link">Privacy Policy</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <nav class="breadcrumbs" aria-label="Breadcrumbs">
+                            <ol>
+                                <li><a href="index.html">Home</a></li>
+                                <li><a href="index.html">Documentation</a></li>
+                                <li aria-current="page">Enhanced Link Checker</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    
+                    <article class="doc-content">
+                        <h1>Enhanced Link Checker</h1>
+                        <p class="lead">This tool checks all documentation links for broken references using server-side PHP.</p>
+                        
+                        <div class="info">
+                            <p><strong>How it works:</strong> This tool uses a PHP script to check if documentation files exist on the server. This method is more reliable than client-side JavaScript checking.</p>
+                        </div>
+                        
+                        <button id="checkLinks" class="check-button">
+                            <span id="buttonText">Check All Links</span>
+                            <span id="spinner" class="spinner hidden"></span>
+                        </button>
+                        
+                        <div id="results"></div>
+                        
+                        <h2>Link Status</h2>
+                        <div id="linkList">
+                            <div class="link-status link-checking">Ready to check links. Click the button above to start.</div>
+                        </div>
+                        
+                        <h2>Troubleshooting</h2>
+                        <div class="info">
+                            <p><strong>If links show as broken:</strong></p>
+                            <ul>
+                                <li>Verify the file exists in the documentation directory</li>
+                                <li>Check that the filename matches exactly (case-sensitive)</li>
+                                <li>Ensure there are no typos in the filename</li>
+                                <li>Check file permissions (must be readable by the web server)</li>
+                            </ul>
+                        </div>
+                    </article>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <ul class="footer-links">
+                        <li><a href="privacy-policy.html" title="Privacy Policy">Privacy</a></li>
+                        <li><a href="history.html" title="History of SLAED CMS">History</a></li>
+                        <li><a href="https://slaed.net" title="Official website of SLAED CMS">Official</a></li>
+                        <li><a href="eduard-laas.html" title="Creator and Lead Developer of SLAED CMS">About</a></li>
+                        <li><a href="https://github.com/SLAED-CMS" target="_blank" title="SLAED CMS on GitHub">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="footer-info">
+                    <p>&copy; 2005-<span id="current-year">2026</span> Eduard Laas. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Function to check all links using PHP script
+        async function checkAllLinks() {
+            const buttonText = document.getElementById('buttonText');
+            const spinner = document.getElementById('spinner');
+            const resultsDiv = document.getElementById('results');
+            const linkListDiv = document.getElementById('linkList');
+            
+            // Show loading state
+            buttonText.textContent = 'Checking...';
+            spinner.classList.remove('hidden');
+            document.getElementById('checkLinks').disabled = true;
+            
+            resultsDiv.innerHTML = '<p>Checking all documentation links...</p>';
+            linkListDiv.innerHTML = '';
+            
+            try {
+                const response = await fetch('check-links.php');
+                const data = await response.json();
+                
+                let workingLinks = data.working_links;
+                let brokenLinks = data.broken_links;
+                
+                // Display individual link status
+                data.results.forEach(result => {
+                    const linkDiv = document.createElement('div');
+                    if (result.status === 'OK') {
+                        linkDiv.className = 'link-status link-ok';
+                        linkDiv.innerHTML = `✓ ${result.url} (Status: ${result.http_code})${result.file_size ? ` - ${Math.round(result.file_size/1024)}KB` : ''}`;
+                    } else {
+                        linkDiv.className = 'link-status link-broken';
+                        linkDiv.innerHTML = `✗ ${result.url} (Status: ${result.http_code}) - ${result.error}`;
+                    }
+                    linkListDiv.appendChild(linkDiv);
+                });
+                
+                // Show summary
+                resultsDiv.innerHTML = `
+                    <h2>Check Complete</h2>
+                    <p>Timestamp: ${data.timestamp || 'N/A'}</p>
+                    <p>Total links checked: ${data.total_links}</p>
+                    <p>Working links: ${workingLinks}</p>
+                    <p>Broken links: ${brokenLinks}</p>
+                    ${brokenLinks > 0 ? '<p class="link-broken">Some links are broken. Please fix them.</p>' : '<p class="link-ok">All links are working correctly!</p>'}
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `<p class="link-broken">Error checking links: ${error.message}</p>`;
+                linkListDiv.innerHTML = '<div class="link-status link-broken">Failed to check links.</div>';
+            } finally {
+                // Reset button state
+                buttonText.textContent = 'Check All Links';
+                spinner.classList.add('hidden');
+                document.getElementById('checkLinks').disabled = false;
+            }
+        }
+        
+        // Run check when button is clicked
+        document.getElementById('checkLinks').addEventListener('click', checkAllLinks);
+        
+        // Run check on page load
+        window.addEventListener('load', function() {
+            // Optionally run check automatically on page load
+            // setTimeout(checkAllLinks, 1000);
+        });
+    </script>
+</body>
+</html>
