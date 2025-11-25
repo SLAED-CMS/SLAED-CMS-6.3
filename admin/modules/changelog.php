@@ -19,10 +19,14 @@ function changelog(): void {
 
 	// Git-Log abrufen
 	$gitlog = [];
+	$git_dir = realpath(__DIR__.'/../../');
+	$old_dir = getcwd();
+	chdir($git_dir);
 	exec('git log --pretty=format:"%h||%ad||%an||%s" --date=format:"%Y-%m-%d %H:%M" -50 2>&1', $gitlog, $return_code);
+	chdir($old_dir);
 
 	if ($return_code !== 0 || empty($gitlog)) {
-		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Git-Historie konnte nicht geladen werden. Ist Git installiert?']);
+		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Git-Historie konnte nicht geladen werden. Prüfe ob Git installiert ist und das Repository initialisiert wurde.<br>Git-Verzeichnis: '.$git_dir]);
 	} else {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_list_sort"><thead><tr><th>Commit</th><th>Datum</th><th>Autor</th><th>Änderung</th></tr></thead><tbody>';
@@ -34,8 +38,8 @@ function changelog(): void {
 				$cont .= '<tr>';
 				$cont .= '<td><code>'.$hash.'</code></td>';
 				$cont .= '<td>'.$date.'</td>';
-				$cont .= '<td>'.$author.'</td>';
-				$cont .= '<td>'.$message.'</td>';
+				$cont .= '<td>'.htmlspecialchars($author).'</td>';
+				$cont .= '<td>'.htmlspecialchars($message).'</td>';
 				$cont .= '</tr>';
 			}
 		}
