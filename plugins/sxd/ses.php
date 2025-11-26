@@ -1,0 +1,33 @@
+<?php
+$SES = array (
+  '0b019628cd16d48d303d43bf872d8260' => 
+  array (
+    'cfg' => 
+    array (
+      'charsets' => 'utf8mb4 utf8 latin1 cp1251',
+      'lang' => 'ru',
+      'time_web' => '600',
+      'time_cron' => '600',
+      'backup_path' => '../../storage/backup/',
+      'backup_url' => '../../storage/backup/',
+      'only_create' => 'MRG_MyISAM MERGE HEAP MEMORY',
+      'globstat' => 0,
+      'my_host' => 'MariaDB-11.8',
+      'my_port' => 3306,
+      'my_user' => 'root',
+      'my_pass' => '',
+      'my_comp' => 0,
+      'my_db' => '',
+      'auth' => 'mysql cfg',
+      'user' => '',
+      'pass' => '',
+      'confirm' => '30',
+      'exitURL' => './',
+      'outfile_path' => '../../storage/backup/',
+      'outfile_size' => '64',
+      'debug' => false,
+    ),
+    'time' => 1764014142,
+    'lng' => 'ru',
+  ),
+);
