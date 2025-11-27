@@ -795,12 +795,27 @@ function getUrlMeta() {
  *
  * @param string $var     'post', 'get' oder 'req'
  * @param string $key     Name des Parameters
- * @param string $type    Typ für Filterung: num, let, word, name, title, text, field, url, var, bool
+ * @param string $type    Typ für Filterung: num, let, word, name, title, text, field, url, var, bool, array
  * @param mixed  $default Standardwert, falls Parameter fehlt
  * @return mixed Gefilterter Wert oder Default / false
  */
 function getVar(string $var, string $key, string $type = '', mixed $default = '', int|string|null $index = null): mixed {
     global $conf;
+
+    // Array-Zugriff: Ganzes Array zurückgeben
+    if ($type === 'array' && $index === null) {
+        $p = $_POST[$key] ?? [];
+        $g = $_GET[$key] ?? [];
+
+        $value = match(strtolower($var)) {
+            'post' => $p,
+            'get'  => $g,
+            'req'  => (!empty($p)) ? $p : $g,
+            default => [],
+        };
+
+        return is_array($value) ? $value : ($default ?: []);
+    }
 
     // Array-Index-Zugriff für mehrdimensionale Arrays
     // filter_input() unterstützt keine mehrdimensionalen Arrays, daher direkter Zugriff
