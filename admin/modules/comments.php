@@ -143,7 +143,7 @@ switch($op) {
 
     case 'comm_act':
     $get_id = getVar('get', 'id', 'num');
-    $id = getVar('post', 'id', 'array') ?: ($get_id ? [$get_id] : []);
+    $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
     if (is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
