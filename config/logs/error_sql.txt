@@ -27269,3 +27269,103 @@ IP Адрес: 127.0.0.1
 Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
 Дата: 24.11.2025 14:44:27
 ----
+GET: Array
+(
+    [op] => module
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 18fba0fdb7c35683b40f3e229622ae01
+    [fields] => 0
+)
+
+SESSION: Array
+(
+    [panel] => MTpzbGFlZDo0OWYzYTY4Mjk3Yjc3NzY3YTRjYmZmNmI5ZDAwMDFjYzox
+)
+Ошибка: 0.00045 сек. - [PDO] - 42S02/1146 - Table 'slaed_new.sport_clients_down' doesn't exist
+SQL: SELECT Count(*) FROM sport_clients_down
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php?op=module
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 25.11.2025 15:46:13
+----
+GET: Array
+(
+    [op] => module
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 18fba0fdb7c35683b40f3e229622ae01
+    [fields] => 0
+)
+
+SESSION: Array
+(
+    [panel] => MTpzbGFlZDo0OWYzYTY4Mjk3Yjc3NzY3YTRjYmZmNmI5ZDAwMDFjYzox
+)
+Ошибка: 0.00025 сек. - [PDO] - 42S02/1146 - Table 'slaed_new.sport_whois' doesn't exist
+SQL: SELECT Count(*) FROM sport_whois
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php?op=module
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 25.11.2025 15:46:13
+----
+GET: Array
+(
+    [op] => module
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 18fba0fdb7c35683b40f3e229622ae01
+    [fields] => 0
+)
+
+SESSION: Array
+(
+    [panel] => MTpzbGFlZDo0OWYzYTY4Mjk3Yjc3NzY3YTRjYmZmNmI5ZDAwMDFjYzox
+)
+Ошибка: 0.00043 сек. - [PDO] - 42S02/1146 - Table 'slaed_new.sport_clients_down' doesn't exist
+SQL: SELECT Count(*) FROM sport_clients_down
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php?op=module
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 25.11.2025 15:47:34
+----
+GET: Array
+(
+    [op] => module
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 18fba0fdb7c35683b40f3e229622ae01
+    [fields] => 0
+)
+
+SESSION: Array
+(
+    [panel] => MTpzbGFlZDo0OWYzYTY4Mjk3Yjc3NzY3YTRjYmZmNmI5ZDAwMDFjYzox
+)
+Ошибка: 0.00023 сек. - [PDO] - 42S02/1146 - Table 'slaed_new.sport_whois' doesn't exist
+SQL: SELECT Count(*) FROM sport_whois
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php?op=module
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 25.11.2025 15:47:34
+----
