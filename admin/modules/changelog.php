@@ -8,9 +8,17 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/changelog.php';
 
 function changelog_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    global $conflog;
     panel();
-    $ops = ['changelog', 'changelog_conf', 'changelog_info'];
-    $lang = [_HOME, _PREFERENCES, _INFO];
+
+    if ($conflog['export_enabled'] ?? true) {
+        $ops = ['changelog', 'changelog_conf', 'changelog_export_txt', 'changelog_export_md', 'changelog_info'];
+        $lang = [_HOME, _PREFERENCES, 'Export TXT', 'Export Markdown', _INFO];
+    } else {
+        $ops = ['changelog', 'changelog_conf', 'changelog_info'];
+        $lang = [_HOME, _PREFERENCES, _INFO];
+    }
+
     return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
@@ -41,22 +49,15 @@ function changelog(): void {
     $cont .= '<div style="background: #f9f9f9; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">';
     $cont .= '<strong>Filter & Suche:</strong><br><br>';
     $cont .= '<table class="sl_table_conf"><tr>';
-    $cont .= '<td><input type="text" name="search" value="'.htmlspecialchars($search).'" placeholder="Suche in Commits..." class="sl_conf"></td>';
-    $cont .= '<td><input type="text" name="author" value="'.htmlspecialchars($author).'" placeholder="Autor..." class="sl_conf"></td>';
-    $cont .= '<td><input type="text" name="file" value="'.htmlspecialchars($file).'" placeholder="Datei..." class="sl_conf"></td>';
+    $cont .= '<td><input type="text" name="search" value="'.htmlspecialchars($search).'" placeholder="Suche in Commits..." class="sl_conf" style="width: 200px;"></td>';
+    $cont .= '<td><input type="text" name="author" value="'.htmlspecialchars($author).'" placeholder="Autor..." class="sl_conf" style="width: 180px;"></td>';
+    $cont .= '<td><input type="text" name="file" value="'.htmlspecialchars($file).'" placeholder="Datei..." class="sl_conf" style="width: 180px;"></td>';
     $cont .= '</tr><tr>';
-    $cont .= '<td><input type="date" name="date_from" value="'.htmlspecialchars($date_from).'" placeholder="Von Datum" class="sl_conf"></td>';
-    $cont .= '<td><input type="date" name="date_to" value="'.htmlspecialchars($date_to).'" placeholder="Bis Datum" class="sl_conf"></td>';
+    $cont .= '<td><input type="date" name="date_from" value="'.htmlspecialchars($date_from).'" placeholder="Von Datum" class="sl_conf" style="width: 150px;"></td>';
+    $cont .= '<td><input type="date" name="date_to" value="'.htmlspecialchars($date_to).'" placeholder="Bis Datum" class="sl_conf" style="width: 150px;"></td>';
     $cont .= '<td><button type="submit" class="sl_but_blue">Filtern</button> ';
     $cont .= '<a href="'.$admin_file.'.php?op=changelog" class="sl_but_gray">Zurücksetzen</a></td>';
     $cont .= '</tr></table>';
-    if ($conflog['export_enabled']) {
-        $cont .= '<div style="margin-top: 10px;">';
-        $cont .= '<strong>Export:</strong> ';
-        $cont .= '<a href="'.$admin_file.'.php?op=changelog&export=txt" class="sl_but_gray">TXT</a> ';
-        $cont .= '<a href="'.$admin_file.'.php?op=changelog&export=md" class="sl_but_gray">Markdown</a>';
-        $cont .= '</div>';
-    }
     $cont .= '</div></form>';
 
     // Git-Log abrufen
@@ -432,22 +433,30 @@ function changelog_info(): void {
 
 switch($op) {
     case 'changelog':
-        changelog();
-        break;
+    changelog();
+    break;
 
     case 'changelog_conf':
-        changelog_conf();
-        break;
+    changelog_conf();
+    break;
 
     case 'changelog_save_conf':
-        changelog_save_conf();
-        break;
+    changelog_save_conf();
+    break;
 
     case 'changelog_info':
-        changelog_info();
-        break;
+    changelog_info();
+    break;
+
+    case 'changelog_export_txt':
+    changelog_export('txt');
+    break;
+
+    case 'changelog_export_md':
+    changelog_export('md');
+    break;
 
     default:
-        changelog();
-        break;
+    changelog();
+    break;
 }

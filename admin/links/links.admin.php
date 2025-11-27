@@ -6,7 +6,7 @@
 
 if (!defined('ADMIN_FILE')) die('Illegal file access');
 
-adminmenu($admin_file.'.php?op=changelog', _USERS, 'users.png');
+adminmenu($admin_file.'.php?op=changelog', 'Changelog', 'editor.png');
 adminmenu($admin_file.'.php?op=admins_show', _EDITADMINS, 'admins.png');
 adminmenu($admin_file.'.php?op=blocks_show', _BLOCKS, 'blocks.png');
 adminmenu($admin_file.'.php?op=cat_show', _CATEGORIES, 'categories.png');
