@@ -71,9 +71,7 @@ function groups_add(): void {
     head();
     $cont = groups_navi(0, 1, 0, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _GROUPSI]);
-    if ($stop) {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-    }
+    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._NAME.':</td><td><input type="text" name="grname" value="'.$grname.'" maxlength="255" class="sl_form" placeholder="'._NAME.'" required></td></tr>'
@@ -114,13 +112,9 @@ function groups_save(): void {
         $points = ($grextra == '1') ? '0' : $points;
         $rank = str_replace('templates/'.$conf['theme'].'/images/ranks/', '', $rank);
         if ($id) {
-            $db->sql_query('UPDATE '.$prefix.'_groups SET name = :name, description = :description, points = :points, extra = :extra, rank = :rank, color = :color WHERE id = :id', [
-                'name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $id
-            ]);
+            $db->sql_query('UPDATE '.$prefix.'_groups SET name = :name, description = :description, points = :points, extra = :extra, rank = :rank, color = :color WHERE id = :id', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $id]);
         } else {
-            $db->sql_query('INSERT INTO '.$prefix.'_groups (name, description, points, extra, rank, color) VALUES (:name, :description, :points, :extra, :rank, :color)', [
-                'name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color
-            ]);
+            $db->sql_query('INSERT INTO '.$prefix.'_groups (name, description, points, extra, rank, color) VALUES (:name, :description, :points, :extra, :rank, :color)', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
         }
         header('Location: '.$admin_file.'.php?op=groups');
     } else {
@@ -155,7 +149,7 @@ function groups_points_save(): void {
     if ($spoints) {
         $npoints = implode(',', $spoints);
         $cont = ['points' => $npoints];
-        setConfigFile('users.php', 'confu', $cont);
+        setConfigFile('users.php', 'confu', $cont, $confu);
     }
     header('Location: '.$admin_file.'.php?op=groups_points');
 }
