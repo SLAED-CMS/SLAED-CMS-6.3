@@ -455,8 +455,4 @@ switch($op) {
     case 'changelog_export_md':
     changelog_export('md');
     break;
-
-    default:
-    changelog();
-    break;
 }
