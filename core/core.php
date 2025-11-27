@@ -2230,7 +2230,7 @@ function deflang($con) {
 # Fields in
 function fields_in($fieldb, $mod) {
     global $conf;
-    include('config/config_fields.php');
+    require_once CONFIG_DIR.'/fields.php';
     $mod = strtolower($mod);
     $style = (defined('ADMIN_FILE')) ? 'sl_field sl_form' : 'sl_field '.$conf['style'];
     $fieldc = $conffi[$mod];
@@ -2280,7 +2280,7 @@ function fields_in($fieldb, $mod) {
 
 # Fields out
 function fields_out($fieldb, $mod) {
-    include("config/config_fields.php");
+    require_once CONFIG_DIR.'/fields.php';
     $mod = strtolower($mod);
     if ($fieldb && $mod) {
         $fieldc = $conffi[$mod];
