@@ -12,7 +12,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 require_once BASE_DIR.'/config/config_global.php';
 
 # Users config file include
-require_once BASE_DIR.'/config/config_users.php';
+require_once BASE_DIR.'/config/users.php';
 
 # SEO config file include
 require_once BASE_DIR.'/config/config_seo.php';

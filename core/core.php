@@ -483,20 +483,23 @@ function setCategories($mod, $sub, $desc, $id='') {
 }
 
 # Generation of article numbers
-function setArticleNumbers() {
+function setArticleNumbers(string $name, string $mod, int $limit, string $url, string $cntfld, string $tbl, string $catfld = '', string $where = '', int $maxpg = 10, array $params = []): string {
     global $prefix, $db, $conf, $currentlang;
-    $arg = func_get_args();
-    if (!defined("ADMIN_FILE") && $arg[6] && $arg[7]) {
-        $lwhere = ($conf['multilingual']) ? "WHERE modul = '".$arg[1]."' AND (language = '".$currentlang."' OR language = '')" : "WHERE modul = '".$arg[1]."'";
-        $result = $db->sql_query("SELECT id, auth_read FROM ".$prefix."_categories ".$lwhere." ORDER BY id");
-        while (list($cid, $auth_read) = $db->sql_fetchrow($result)) if (is_acess($auth_read)) $catid[] = $cid;
-        $where = ($catid) ? " WHERE ".$arg[6]." IN (".implode(", ", $catid).") AND ".$arg[7] : " WHERE ".$arg[7];
+    if (!defined('ADMIN_FILE') && $catfld && $where) {
+        $lng_where = $conf['multilingual'] ? 'WHERE modul=\''.$mod.'\' AND (language=\''.$currentlang.'\' OR language=\'\')' : 'WHERE modul=\''.$mod.'\'';
+        $res = $db->sql_query('SELECT id, auth_read FROM '.$prefix.'_categories '.$lng_where.' ORDER BY id');
+        $catid = [];
+        while (list($cid, $auth) = $db->sql_fetchrow($res)) {
+            if (is_acess($auth)) $catid[] = (int)$cid;
+        }
+        $where = (!empty($catid)) ? ' WHERE '.$catfld.' IN ('.implode(', ',$catid).') AND '.$where : ' WHERE '.$where;
     } else {
-        $where = ($arg[7]) ? " WHERE ".$arg[7] : "";
+        $where = $where ? ' WHERE '.$where : '';
     }
-    list($nstories) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(".$arg[4].") FROM ".$prefix.$arg[5].$where));
-    $npages = ceil($nstories / $arg[2]);
-    return setPageNumbers($arg[0], $arg[1], $nstories, $npages, $arg[2], $arg[3], $arg[8], '', '', '');
+    $sql = 'SELECT COUNT('.$cntfld.') FROM '.$prefix.$tbl.$where;
+    list($cnt) = $db->sql_fetchrow($db->sql_query($sql,$params));
+    $pages = $cnt > 0 ? (int)ceil($cnt / $limit) : 1;
+    return setPageNumbers($name,$mod,$cnt,$pages,$limit,$url,$maxpg,'','','');
 }
 
 # Generation of page numbers
