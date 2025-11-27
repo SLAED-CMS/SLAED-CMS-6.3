@@ -799,12 +799,19 @@ function getUrlMeta() {
  * @param mixed  $default Standardwert, falls Parameter fehlt
  * @return mixed Gefilterter Wert oder Default / false
  */
-function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
+function getVar(string $var, string $key, string $type = '', mixed $default = '', int|string|null $index = null): mixed {
     global $conf;
-    
-    // Rohwerte aus POST / GET
-    $p = filter_input(INPUT_POST, $key, FILTER_DEFAULT) ?? '';
-    $g = filter_input(INPUT_GET, $key, FILTER_DEFAULT) ?? '';
+
+    // Array-Index-Zugriff für mehrdimensionale Arrays
+    // filter_input() unterstützt keine mehrdimensionalen Arrays, daher direkter Zugriff
+    if ($index !== null) {
+        $p = $_POST[$key][$index] ?? '';
+        $g = $_GET[$key][$index] ?? '';
+    } else {
+        // Rohwerte aus POST / GET
+        $p = filter_input(INPUT_POST, $key, FILTER_DEFAULT) ?? '';
+        $g = filter_input(INPUT_GET, $key, FILTER_DEFAULT) ?? '';
+    }
 
     // Rewrite-URL Parsing, wenn $g leer
     if (!empty($conf['rewrite']) && !$g) {

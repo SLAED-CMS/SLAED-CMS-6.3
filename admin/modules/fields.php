@@ -84,21 +84,21 @@ function fields_save_conf(): void {
             $fields = '';
             for ($i = 0; $i < 10; $i++) {
                 $ident = ($i == 0) ? '' : '||';
-                $field1 = getVar('post', 'field1'.$a, 'arr', [], $i);
-                $field2 = getVar('post', 'field2'.$a, 'arr', [], $i);
-                $field3 = getVar('post', 'field3'.$a, 'arr', [], $i);
-                $field4 = getVar('post', 'field4'.$a, 'arr', [], $i);
-                $field1 = ($field1 !== '') ? $field1 : 0;
-                $field2 = ($field2 !== '') ? $field2 : 0;
-                $field3 = ($field3 !== '') ? $field3 : 0;
-                $field4 = ($field4 !== '') ? $field4 : 0;
+                $field1 = getVar('post', 'field1'.$a, '', '', $i);
+                $field2 = getVar('post', 'field2'.$a, '', '', $i);
+                $field3 = getVar('post', 'field3'.$a, '', '', $i);
+                $field4 = getVar('post', 'field4'.$a, '', '', $i);
+                $field1 = ($field1 != '') ? $field1 : 0;
+                $field2 = ($field2 != '') ? $field2 : 0;
+                $field3 = ($field3 != '') ? $field3 : 0;
+                $field4 = ($field4 != '') ? $field4 : 0;
                 $fields .= $ident.$field1.'|'.$field2.'|'.$field3.'|'.$field4;
             }
             $a++;
             $cont[$val] = $fields;
         }
     }
-    setConfigFile('config_fields.php', 'conffi', $cont);
+    setConfigFile('fields.php', 'conffi', $cont);
     header('Location: '.$admin_file.'.php?op=fields');
 }
 
