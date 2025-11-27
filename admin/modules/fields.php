@@ -11,7 +11,7 @@ function fields_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 
 	panel();
 	$ops = ($opt == 1) ? ['fields', 'fields', 'fields', 'fields', 'fields', 'fields', 'fields_info'] : ['', '', '', '', '', '', 'fields_info'];
 	$lang = [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO];
-	return navi_gen(_FIELDS, 'fields.png', '', $ops, $lang, '', '', $opt, $tab, $subtab, $legacy, $extra);
+	return getAdminTabs(_FIELDS, 'fields.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);
 }
 
 function fields(): void {
