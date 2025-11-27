@@ -557,50 +557,34 @@ function users_conf(): void {
 function users_save(): void {
     global $admin_file, $confu;
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
-    $anonym = getVar('post', 'anonym', 'title');
-    $adirectory = getVar('post', 'adirectory', 'title');
-    $atypefile = getVar('post', 'atypefile', 'title');
-    $amaxsize = getVar('post', 'amaxsize', 'num');
-    $awidth = getVar('post', 'awidth', 'num');
-    $aheight = getVar('post', 'aheight', 'num');
-    $user_t = getVar('post', 'user_t', 'num');
-    $anum = getVar('post', 'anum', 'num');
-    $anump = getVar('post', 'anump', 'num');
-    $minpass = getVar('post', 'minpass', 'num');
-    $enter = getVar('post', 'enter', 'num');
-    $point = getVar('post', 'point', 'num');
-    $aupload = getVar('post', 'aupload', 'num');
-    $nomail = getVar('post', 'nomail', 'num');
-    $news = getVar('post', 'news', 'num');
-    $check = getVar('post', 'check', 'num');
-    $reg = getVar('post', 'reg', 'num');
-    $theme = getVar('post', 'theme', 'num');
-    $prof = getVar('post', 'prof', 'num');
-    $network = getVar('post', 'network', 'num');
-    $rule = getVar('post', 'rule', 'num');
-    $rules = getVar('post', 'rules', 'text');
-    $network_c = getVar('post', 'network_c', 'text');
-    $name_b = getVar('post', 'name_b', 'text');
-    $mail_b = getVar('post', 'mail_b', 'text');
-
-    // String-Felder mit Defaults
-    $xatypefile = $atypefile ?: 'gif,jpg,jpeg,png';
-    $xatypefile = strtolower(strtr($xatypefile, $protect));
-
-    // Numerische Felder mit Defaults (getVar 'num' gibt bereits int zurück)
-    $xamaxsize = $amaxsize ?: 51200;
-    $xawidth = $awidth ?: 100;
-    $xaheight = $aheight ?: 100;
-    $xuser_t = $user_t ? intval($user_t * 86400) : 2592000;
-    $xanum = $anum ?: 50;
-    $xanump = $anump ?: 10;
-
-    // String-Felder ohne Defaults
-    $xname_b = strtolower(strtr($name_b, $protect));
-    $xmail_b = strtolower(strtr($mail_b, $protect));
-    $xnetwork_c = "<<<HTML\n{$network_c}\nHTML";
-
-    $cont = ['anonym' => $anonym, 'adirectory' => $adirectory, 'atypefile' => $xatypefile, 'amaxsize' => $xamaxsize, 'awidth' => $xawidth, 'aheight' => $xaheight, 'user_t' => $xuser_t, 'anum' => $xanum, 'anump' => $xanump, 'minpass' => $minpass, 'enter' => $enter, 'point' => $point, 'aupload' => $aupload, 'nomail' => $nomail, 'news' => $news, 'check' => $check, 'reg' => $reg, 'theme' => $theme, 'prof' => $prof, 'network' => $network, 'rule' => $rule, 'rules' => $rules, 'network_c' => $xnetwork_c, 'name_b' => $xname_b, 'mail_b' => $xmail_b, 'points' => $confu['points']];
+    $cont = [
+        'anonym' => getVar('post', 'anonym', 'title'),
+        'adirectory' => getVar('post', 'adirectory', 'title'),
+        'atypefile' => strtolower(strtr(getVar('post', 'atypefile', 'title') ?: 'gif,jpg,jpeg,png', $protect)),
+        'amaxsize' => getVar('post', 'amaxsize', 'num') ?: 51200,
+        'awidth' => getVar('post', 'awidth', 'num') ?: 100,
+        'aheight' => getVar('post', 'aheight', 'num') ?: 100,
+        'user_t' => ($t = getVar('post', 'user_t', 'num')) ? intval($t * 86400) : 2592000,
+        'anum' => getVar('post', 'anum', 'num') ?: 50,
+        'anump' => getVar('post', 'anump', 'num') ?: 10,
+        'minpass' => getVar('post', 'minpass', 'num'),
+        'enter' => getVar('post', 'enter', 'num'),
+        'point' => getVar('post', 'point', 'num'),
+        'aupload' => getVar('post', 'aupload', 'num'),
+        'nomail' => getVar('post', 'nomail', 'num'),
+        'news' => getVar('post', 'news', 'num'),
+        'check' => getVar('post', 'check', 'num'),
+        'reg' => getVar('post', 'reg', 'num'),
+        'theme' => getVar('post', 'theme', 'num'),
+        'prof' => getVar('post', 'prof', 'num'),
+        'network' => getVar('post', 'network', 'num'),
+        'rule' => getVar('post', 'rule', 'num'),
+        'rules' => getVar('post', 'rules', 'text'),
+        'network_c' => "<<<HTML\n".getVar('post', 'network_c', 'text')."\nHTML",
+        'name_b' => strtolower(strtr(getVar('post', 'name_b', 'text'), $protect)),
+        'mail_b' => strtolower(strtr(getVar('post', 'mail_b', 'text'), $protect)),
+        'points' => $confu['points']
+    ];
     setConfigFile('users.php', 'confu', $cont);
     header('Location: '.$admin_file.'.php?op=users_conf');
 }
