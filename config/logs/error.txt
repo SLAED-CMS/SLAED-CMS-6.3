@@ -32038,3 +32038,3527 @@ IP Адрес: 127.0.0.1
 Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
 Дата: 25.11.2025 14:27:37
 ----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+)
+Ошибка: WARNING: Undefined array key "agraph" Line: 2814 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:40:56
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+)
+Ошибка: WARNING: Undefined array key "aschema" Line: 2838 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:40:56
+----
+GET: Array
+(
+    [go] => 3
+    [op] => filereport
+    [_] => 1764232857427
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: mail(): Failed to connect to mailserver at &quot;localhost&quot; port 25, verify your &quot;SMTP&quot; and &quot;smtp_port&quot; setting in php.ini or use ini_set() Line: 1105 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /index.php?go=3&amp;op=filereport&amp;_=1764232857427
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:42:51
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "agraph" Line: 2814 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "aschema" Line: 2838 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:19
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "agraph" Line: 2814 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "aschema" Line: 2838 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 1646 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key "dletter" Line: 1382 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined variable $durl Line: 1415 in file C:\OSPanel\home\slaed.loc\public\core\core.php
+IP Адрес: 127.0.0.1
+Ссылка: /
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:30
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 397 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 397 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 397 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 397 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 397 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 397 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 397 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 397 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: WARNING: Undefined array key 3 Line: 1050 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [name] => SLAED CMS
+    [pwd] => e20011976l
+    [recaptcha] => 0cAFcWeA6FzqBW21rEx08dSHXKutEkkUkWevg6aTRcDKkWs9aES-G23KDkFPnBzTrwRs8I1JzzcXve8fxEWIgadFDS2-ie-vFhDYtWVl1SCUecAfJYVIZcPa0vognQygb_CfzJgBTbfUPxVyac0RSx4pfOj1cuL6_AiC6Ruh3y3jGwzQavB5yd4rhwaxfZhjWcLwXDZwEM9s3bMzPWFFnBLVyX3f-pNQWNB4cLXhpFmCNdAgUoAL9jVJTo_hg3MLgHekvWsltD694UZx-xz4OzfuSIlJ0jlls5Ye693t37WbZV5s7kjxdHBALcgkomE9eEfBs23431XkNA0z3xoCVlyfEOt9SJG4FxdxWyGxDc0YbwMODgqpdosk8jUSIzh8wCBXE8jb96PryOSrCskQNtA48gq6DQJT6XGcqBa9PyyLTEqVENXPBfyfkRvvq13vwepNxFehGlNvmjfV0SKICnQfFI_-pnOZQQP4bM2fHnPomdW9g0mV0Ws3uSAOUidEfkaYw_4VIZyAWiz1fkq0Us8TTCN5lNySjJDfzikDHm1WV0vWKjiYO-etJN1EcGE0EhXSppj0BL9vgQAtzKIMa-G0E7RWBcKqniVnAFIpxgDRmPJ0ezW-gAzoYLoUcEbtTej6Jd19h3OIP54l_kcBV9-led6P0Ydo47CAndFPzKsM8DzX1_AFTM3uDf3T8nxmlgjQD1D8ffI6jGneTt2vyZWCIgGibXD3X_8YHdwc6y6u8QKoyrzL6jptAw8A6T95tjHwJ5Yvyh3GowE7Xs_ckK-pzSoIuk9d1G_cerZJuF4vZYBIunI751cIs
+    [op] => check_admin
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+)
+Ошибка: DEPRECATED: substr(): Passing null to parameter #1 ($string) of type string is deprecated Line: 1050 in file C:\OSPanel\home\slaed.loc\public\core\security.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:53:59
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: foreach() argument must be of type array|object, false given Line: 344 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+POST: Array
+(
+    [sitename] => Название сайта
+    [homeurl] => https://slaed.loc
+    [site_logo] => templates/lite/images/logos/slaed_logo_256x340.png
+    [slogan] => SLAED CMS - Content Management System. Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.
+    [admininfo] => Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.
+    [startdate] => 2013-06-17 00:00
+    [adminmail] => slaedpro@mail.ru
+    [user_c] => slaed
+    [admin_c] => panel
+    [user_c_t] => 30
+    [sess_t] => 15
+    [forum_link] => http://0
+    [forum_mess] => http://0
+    [ip_link] => https://whatismyipaddress.com/ip/
+    [forum] => 
+    [theme] => lite
+    [module] => Array
+        (
+            [0] => forum
+        )
+
+    [amod] => news
+    [gfx_chk] => 6
+    [quality] => 4
+    [capkey] => 6Lc7qf8cAAAAAOPyBdjLMe_3AaO9kPSVqQzZQ0nI
+    [capsec] => 6Lc7qf8cAAAAAJ_X0LuY2FFJziwWWDnuNd3g-nR9
+    [redaktor] => 1
+    [gtime] => Europe/Berlin
+    [var_view] => 1
+    [syntax] => 2
+    [admcol] => 5
+    [dbsync] => 0
+    [session] => 1
+    [message] => 1
+    [db_t] => 1
+    [sblock] => 1
+    [adminfo] => 1
+    [close] => 0
+    [defis] => -
+    [keys] => slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web
+    [dkeys] => quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это
+    [kwords] => 15
+    [kletter] => 3
+    [dletter] => 160
+    [akeys] => 1
+    [kmix] => 0
+    [ksep] => 0
+    [ltitle] => 1
+    [adesc] => 1
+    [sep] => -
+    [rewrite] => 0
+    [language] => german
+    [multilingual] => 1
+    [flags] => 1
+    [geo_ip] => 1
+    [alang] => 0
+    [censor] => 1
+    [censor_r] => ***
+    [censor_l] => antislaed,netlevel,sunvas
+    [clickable] => 0
+    [search] => Array
+        (
+            [0] => 0
+        )
+
+    [slet] => 3
+    [snum] => 25
+    [snump] => 5
+    [asearch] => 0
+    [bots] => AdsBot-Google=AdsBot Google,Aport Catalog Robot=Aport Catalog Bot,Aport=Aport Bot,AportCatalogRobot/2.0=Aport Catalog Bot,archive_org=Archive.org Bot,Ask Jeeves=Ask Jeeves Bot,AutoLuba/1.0=Yandex-MNT Bot,Baiduspider+=Baidu Spider,Begun Robot=Begun Bot,BlogPulse=BlogPulse Bot,booch=Booch Bot,CazoodleBot/=CazoodleBot,Crawler=SEO Crawler,FeedBurner/=FeedBurner,Feedfetcher-Google=Google Feedfetcher,FeedValidator=FeedValidator,GetSmart=Get Smart Bot,GigaBlast=Gigablast Bot,Gigabot/=Gigabot Bot,Google Desktop=Google Desktop,Googlebot=Google Bot,Googlebot-Image/=Google Image Bot,grub-client=Grub Client Bot,ia_archiver=IA.Archiver Bot,igdeSpyder=Igde Bot,Jetbot=Jet Bot,libwww=Punto Bot,libwww-perl/=Rambler Feed,liveinternet spider=Liveinternet Bot,Lycos=Lycos Bot,Mail.Ru=Mail.Ru Bot,Mediapartners-Google=Google Adsense Bot,MJ12bot/=Majestic-12 Bot,MLBot=MLBot,MnoGoSearch=Mno Go Search Bot,msnbot/=MSN Bot,msnbot-media/=MSNbot Media,msnbot-NewsBlogs/=MSN NewsBlogs,msnbot-webmaster/=Live Bot,NaverBot=Naver Bot,oBot=oBot,OOZBOT/=Setooz Bot,Openbot=Openfind Bot,psbot/=Psbot,Rambler=Rambler Bot,Scooter/=Alta Vista Bot,slurp@inktomi=Hot Bot,Speedy Spider=Speedy Spider,StackRambler=Stack Rambler Bot,TurnitinBot=Turnitin Bot,TurtleScanner=Turtle Scanner Bot,Twiceler-0.9=Cuill Bot,VadixBot=VadixBot Bot,Validome XML-Validator=Validome XML-Validator,Vampire=Net Vampire Bot,W3 SiteSearch Crawler=W3 Sitesearch,W3C_CSS_Validator_JFouffa/=W3C CSS Validator,W3C_Validator/=W3C Validator,W3C-checklink/=W3C Link Checker,WebAlta Crawler/=WebAlta Bot,WebCrawler=Fast Bot,Web-sniffer/=Web-sniffer,WebZIP=WebZIP Bot,WhatUSeek=What You Seek Bot,www.cys.ru=CYS Bot,XML Sitemaps Generator=XML Sitemaps Generator,YaDirectBot/=Yandex Direct,Yahoo! Slurp=Yahoo Bot,Yahoo!=Yahoo Bot,YahooFeedSeeker/=YahooSeeker Bot,Yahoo-MMCrawler/=Yahoo MMCrawler Bot,Yandex=Yandex Bot,YandexBlog/=YandexBlog Bot,Yanga WorldSearch Bot=Yanga WorldSearch Bot,ZipppBot=Zippp Bot
+    [fbots] => 21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com
+    [botsact] => 1
+    [cache] => 0
+    [cache_t] => 600
+    [cache_d] => 7
+    [cache_c] => 0
+    [cache_b] => 0
+    [cache_css] => 0
+    [css_f] => templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/
+    [css_h] => 0
+    [css_c] => 0
+    [css_e] => 0
+    [cache_script] => 0
+    [script_f] => plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js
+    [script_h] => 0
+    [script_c] => 0
+    [script_a] => 0
+    [script_b] => 0
+    [mtemp] => Здравствуйте!
+
+[text]
+
+С наилучшими пожеланиями,
+
+SLAED CMS - Support
+https://slaed.net
+support@slaed.net
+    [op] => configure_save
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Undefined variable $fvar Line: 352 in file C:\OSPanel\home\slaed.loc\public\admin\modules\configure.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 09:54:28
+----
+GET: Array
+(
+    [op] => changelog
+    [export] => txt
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+    [fields] => 5
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Cannot modify header information - headers already sent by (output started at C:\OSPanel\home\slaed.loc\public\core\core.php:2883) Line: 345 in file C:\OSPanel\home\slaed.loc\public\admin\modules\changelog.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php?op=changelog&amp;export=txt
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 10:41:13
+----
+GET: Array
+(
+    [op] => changelog
+    [export] => txt
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+    [fields] => 5
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Cannot modify header information - headers already sent by (output started at C:\OSPanel\home\slaed.loc\public\core\core.php:2883) Line: 346 in file C:\OSPanel\home\slaed.loc\public\admin\modules\changelog.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php?op=changelog&amp;export=txt
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 10:41:13
+----
+GET: Array
+(
+    [op] => changelog
+    [export] => md
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+    [fields] => 5
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Cannot modify header information - headers already sent by (output started at C:\OSPanel\home\slaed.loc\public\core\core.php:2883) Line: 345 in file C:\OSPanel\home\slaed.loc\public\admin\modules\changelog.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php?op=changelog&amp;export=md
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 10:41:26
+----
+GET: Array
+(
+    [op] => changelog
+    [export] => md
+)
+
+COOKIE: Array
+(
+    [autoTrans] => 1
+    [slaed-language] => russian
+    [sl_close_9] => 0
+    [PHPSESSID] => 263f1d90ee7b705f1785ec7b11d9fdad
+    [configure] => 0
+    [fields] => 5
+)
+
+SESSION: Array
+(
+    [panel] => NTpTTEFFRCBDTVM6ZTA3NGIxNTQzYzczOTI1MDk2NmZkZDg1NDAwNTRmNzk6MA==
+)
+Ошибка: WARNING: Cannot modify header information - headers already sent by (output started at C:\OSPanel\home\slaed.loc\public\core\core.php:2883) Line: 346 in file C:\OSPanel\home\slaed.loc\public\admin\modules\changelog.php
+IP Адрес: 127.0.0.1
+Ссылка: /admin.php?op=changelog&amp;export=md
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 27.11.2025 10:41:26
+----

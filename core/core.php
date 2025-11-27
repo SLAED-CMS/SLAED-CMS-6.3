@@ -3064,7 +3064,7 @@ function login_report($id, $typ, $login, $pass) {
     }
 }
 
-# Backup DB
+# Backup DB for MySQL 8.0+ & MariaDB 10+
 function addBackupDb(): bool {
 	global $confs, $confdb, $db;
 	
@@ -3232,7 +3232,7 @@ function addBackupDb(): bool {
 
 	// FIX: Path Traversal Sicherheitslücke
 	$safe_dbname = preg_replace('/[^a-zA-Z0-9_-]/', '_', $confdb['name']);
-	$name = $safe_dbname."_".date("Y-m-d_H-i");
+	$name = $safe_dbname."_".date("Y-m-d_H-i-s");
 	
 	// FIX: Verzeichnis-Check
 	$backup_dir = BACKUP_DIR.'/';
@@ -3273,13 +3273,8 @@ function addBackupDb(): bool {
 		$res = $db->sql_query("SHOW CREATE TABLE `{$table}`");
 		$tab = $res->fetch(PDO::FETCH_NUM);
 		
-		// nur auf $tab[1] anwenden
+		// Для MariaDB 10+ НЕ используем условные комментарии
 		if (isset($tab[1])) {
-			$tab[1] = preg_replace(
-				'/(default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP|DEFAULT CHARSET=\w+|COLLATE=\w+|character set \w+|collate \w+)/i',
-				'/*!40101 \\1 */',
-				$tab[1]
-			);
 			fwrite($fp, "DROP TABLE IF EXISTS `{$table}`;\n{$tab[1]};\n\n");
 		}
 
@@ -3307,6 +3302,12 @@ function addBackupDb(): bool {
 					$countThisBatch++;
 					$i++;
 					
+					// ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем разделение ПЕРЕД записью строки
+					if ($i > 1 && ($i - 1) % 10000 == 0) {
+						// Закрываем предыдущий INSERT и начинаем новый
+						fwrite($fp, ";\n\nINSERT INTO `{$table}` VALUES");
+					}
+					
 					for ($k = 0; $k < $fields; $k++) {
 						if ($NumericColumn[$k]) {
 							$row[$k] = isset($row[$k]) ? $row[$k] : "NULL";
@@ -3315,12 +3316,9 @@ function addBackupDb(): bool {
 						}
 					}
 					
-					fwrite($fp, ($i == 1 ? "" : ",")."\n(".implode(", ", $row).")");
-					
-					// FIX: Memory-Schutz - INSERT bei großen Tabellen aufteilen
-					if ($i % 10000 == 0 && $i > 0) {
-						fwrite($fp, ";\n\nINSERT INTO `{$table}` VALUES");
-					}
+					// Добавляем запятую ПЕРЕД строкой (кроме первой и после разделения)
+					$is_first_in_block = ($i == 1) || (($i - 1) % 10000 == 0);
+					fwrite($fp, ($is_first_in_block ? "\n" : ",\n")."(".implode(",", $row).")");
 				}
 				
 				if ($countThisBatch < $limit) break;
@@ -3332,7 +3330,7 @@ function addBackupDb(): bool {
 	}
 
 	fclose($fp);
-	addCompress($backup_dir, $filepath, $name, 'auto', false);
+	addCompress($backup_dir, $filepath, $name, 'auto', true);
 	
 	// Performance-Logging
 	$duration = round(microtime(true) - $backup_start, 2);
