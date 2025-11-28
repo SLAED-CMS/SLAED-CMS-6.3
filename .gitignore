@@ -35,6 +35,7 @@
 # Editor files
 .vscode/
 .idea/
+.claude/
 *.sublime-*
 .DS_Store
 Thumbs.db
@@ -58,6 +59,7 @@ composer.lock
 # OS files
 .DS_Store
 desktop.ini
+nul
 
 # Claude Code temp files (keep rules and docs)
 .claudecode/*.tmp

@@ -4,6 +4,7 @@
 **Project:** SLAED CMS 6.3
 **Target:** PHP 8.4+ & MySQL 8.0+ / MariaDB 10+
 **Purpose:** Systematic code modernization without hallucinations
+**Based on:** Real code migration patterns and verified refactoring examples
 
 ---
 
@@ -120,7 +121,45 @@ function sumNumbers(int ...$numbers): int {
 sumNumbers(1, 2, 3, 4, 5); // Returns 15
 ```
 
-### 2.3 Array Access with Proper Checks
+### 2.3 Quote Style Consistency
+
+**ALWAYS use single quotes (') for strings**
+
+**BEFORE (double quotes):**
+```php
+if (!defined("ADMIN_FILE")) die("Illegal file access");
+$ops = array("admins_show", "admins_add");
+```
+
+**AFTER (single quotes):**
+```php
+if (!defined('ADMIN_FILE')) die('Illegal file access');
+$ops = ['admins_show', 'admins_add'];
+```
+
+**Rule:** Replace ALL `"..."` with `'...'` except when necessary (e.g., escaped quotes inside)
+
+### 2.4 Array Syntax Modernization
+
+**Use short array syntax [] instead of array()**
+
+**BEFORE:**
+```php
+$ops = array("admins_show", "admins_add", "admins_info");
+$lang = array(_HOME, _ADD, _INFO);
+$stop = array();
+```
+
+**AFTER:**
+```php
+$ops = ['admins_show', 'admins_add', 'admins_info'];
+$lang = [_HOME, _ADD, _INFO];
+$stop = [];
+```
+
+**Rule:** Replace `array(...)` with `[...]` everywhere
+
+### 2.5 Array Access with Proper Checks
 
 **BEFORE (risky):**
 ```php
@@ -134,7 +173,86 @@ $value = getVar('get', 'key', 'var', '');
 $value = $_GET['key'] ?? '';
 ```
 
-### 2.4 String Concatenation Rules
+### 2.6 Input Validation with getVar()
+
+**Replace direct $_GET/$_POST/$_REQUEST access with getVar() helper**
+
+**BEFORE (unsafe):**
+```php
+if (isset($_REQUEST['id'])) {
+    $id = intval($_REQUEST['id']);
+}
+$aid = isset($_POST['aid']) ? $_POST['aid'] : "";
+$name = isset($_POST['name']) ? $_POST['name'] : "";
+$url = isset($_POST['url']) ? $_POST['url'] : "http://";
+```
+
+**AFTER (safe):**
+```php
+$id = getVar('req', 'id', 'num');
+$aid = getVar('post', 'aid', 'num', '');
+$name = getVar('post', 'name', 'name', '');
+$url = getVar('post', 'url', 'url', 'https://');
+```
+
+**Rules:**
+- Use `getVar('get', 'key', 'type', 'default')` for $_GET
+- Use `getVar('post', 'key', 'type', 'default')` for $_POST
+- Use `getVar('req', 'key', 'type', 'default')` for $_REQUEST
+- Always specify type: 'num', 'name', 'url', 'text', 'var', 'bool'
+
+**Type mapping:**
+- `'num'` - integers
+- `'name'` - usernames (25 chars max)
+- `'title'` - titles (filtered)
+- `'url'` - URLs
+- `'text'` - long text
+- `'var'` - variables
+- `'bool'` - boolean
+
+**Array inputs (checkboxes, multi-select):**
+
+**BEFORE:**
+```php
+$modules = isset($_POST['amodules']) ? implode(",", $_POST['amodules']) : "";
+```
+
+**AFTER:**
+```php
+$amodules = getVar('post', 'amodules[]', 'num') ?: [];
+$modules = $amodules ? implode(',', $amodules) : '';
+```
+
+**Boolean values:**
+
+**BEFORE:**
+```php
+$super = empty($_POST['super']) ? 0 : 1;
+$smail = empty($_POST['smail']) ? 0 : 1;
+```
+
+**AFTER:**
+```php
+$super = getVar('post', 'super', 'bool') ? 1 : 0;
+$smail = getVar('post', 'smail', 'bool') ? 1 : 0;
+```
+
+**Text processing:**
+
+**BEFORE:**
+```php
+$msg = nl2br(bb_decode(str_replace("[pass]", $pwd, str_replace("[login]", $name, $_POST['mailtext'])), "account"), false);
+```
+
+**AFTER:**
+```php
+$mailtext = getVar('post', 'mailtext', 'text');
+$msg = nl2br(bb_decode(str_replace('[pass]', $pwd, str_replace('[login]', $name, $mailtext)), 'account'), false);
+```
+
+**Rule:** Extract input with `getVar()` first, then process/transform the validated input. Keeps security and processing separate.
+
+### 2.7 String Concatenation Rules
 
 **Follow SLAED standards:**
 ```php
@@ -147,7 +265,9 @@ $html = "<div class=\"{$cls}\">{$text}</div>";
 $sql = "SELECT * FROM {$prefix}_table WHERE id={$id}";
 ```
 
-### 2.5 Modern PHP Features to Use
+**Rule:** No spaces around concatenation operator (`.`)
+
+### 2.8 Modern PHP Features to Use
 
 **Null coalescing:**
 ```php
@@ -175,17 +295,44 @@ $filtered = array_filter($arr, fn($x) => $x > 0);
 
 ### 3.1 Always Use Prepared Statements
 
-**BEFORE (vulnerable):**
+**ALWAYS use prepared statements with named placeholders**
+
+**BEFORE (VULNERABLE):**
 ```php
-$sql = "SELECT * FROM users WHERE id=".$id;
-$result = $db->sql_query($sql);
+$result = $db->sql_query("SELECT id, name FROM ".$prefix."_admins WHERE id = '".$id."'");
+$db->sql_query("DELETE FROM ".$prefix."_admins WHERE id = '".$id."'");
+$db->sql_query("UPDATE ".$prefix."_admins SET name = '".$name."', email = '".$email."' WHERE id = '".$aid."'");
 ```
 
-**AFTER (secure):**
+**AFTER (SECURE):**
 ```php
-$sql = 'SELECT * FROM users WHERE id=?';
-$result = $db->sql_query($sql, [$id]);
+$result = $db->sql_query('SELECT id, name FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
+$db->sql_query('DELETE FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
+$db->sql_query('UPDATE '.$prefix.'_admins SET name = :name, email = :email WHERE id = :id', [
+    'name' => $name, 'email' => $email, 'id' => $aid
+]);
 ```
+
+**Rules:**
+1. Use `:placeholder` syntax in SQL
+2. Pass values as second parameter array
+3. Never concatenate variables into SQL strings
+4. Use single quotes for SQL strings
+
+**INSERT statements:**
+
+**BEFORE:**
+```php
+INSERT INTO table (id, name, email) VALUES (NULL, '".$name."', '".$email."')
+```
+
+**AFTER:**
+```php
+INSERT INTO table (name, email) VALUES (:name, :email)
+// Pass: ['name' => $name, 'email' => $email]
+```
+
+**Note:** Remove `id` column from INSERT if it's auto-increment, remove `NULL` value
 
 ### 3.2 UTF8MB4 Collation
 
@@ -347,7 +494,81 @@ $settings = [];
 - UTF-8 encoding
 - LF line endings (\n)
 
-### 7.2 Comments
+### 7.2 Copyright Headers
+
+**ALWAYS update copyright year to current range**
+
+**BEFORE:**
+```php
+# Copyright © 2005 - 2017 SLAED
+```
+
+**AFTER:**
+```php
+# Copyright © 2005 - 2026 SLAED
+```
+
+**Rule:** Change end year to 2026 or current year + 1
+
+### 7.3 Switch Statement Formatting
+
+**Consistent switch formatting**
+
+**BEFORE (mixed style with tabs):**
+```php
+switch ($op) {
+	case "admins_show":
+	admins_show();
+	break;
+
+	case "admins_add":
+	admins_add();
+	break;
+}
+```
+
+**AFTER (consistent with 4 spaces):**
+```php
+switch ($op) {
+    case 'admins_show':
+    admins_show();
+    break;
+
+    case 'admins_add':
+    admins_add();
+    break;
+}
+```
+
+**Rules:**
+- Single quotes for case values
+- 4 spaces indentation (not tabs)
+- Empty line between cases (optional but cleaner)
+
+### 7.4 Closing PHP Tag
+
+**Remove closing ?> tag**
+
+**BEFORE:**
+```php
+	case "admins_info":
+	admins_info();
+	break;
+}
+?>
+```
+
+**AFTER:**
+```php
+    case 'admins_info':
+    admins_info();
+    break;
+}
+```
+
+**Rule:** Files containing only PHP code should NOT have closing `?>` tag (prevents accidental whitespace output)
+
+### 7.5 Comments
 
 **File headers:**
 ```php
@@ -479,21 +700,119 @@ $lng_wh = getVar('get', 'lng_wh', 'var', '');
 
 ---
 
-## 10. Testing & Validation
+## 10. Real-World Migration Examples
 
-### 10.1 Syntax Check
+### 10.1 Complete Function Transformation
+
+**Navigation Function Evolution:**
+
+**BEFORE:**
+```php
+function admins_navi() {
+    panel();
+    $narg = func_get_args();
+    $ops = array("admins_show", "admins_add", "admins_info");
+    $lang = array(_HOME, _ADD, _INFO);
+    return navi_gen(_EDITADMINS, "admins.png", "", $ops, $lang, "", "", $narg[0], $narg[1], $narg[2], $narg[3]);
+}
+```
+
+**AFTER:**
+```php
+function admins_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    panel();
+    $ops = ['admins_show', 'admins_add', 'admins_info'];
+    $lang = [_HOME, _ADD, _INFO];
+    return getAdminTabs(_EDITADMINS, 'admins.png', '', $ops, $lang, [], [], $tab, $subtab);
+}
+```
+
+**Changes applied:**
+1. ✅ Removed `func_get_args()` → explicit typed parameters
+2. ✅ Added return type `: string`
+3. ✅ Double quotes → single quotes
+4. ✅ `array()` → `[]` syntax
+5. ✅ Function rename: `navi_gen()` → `getAdminTabs()` (verb+noun pattern)
+6. ✅ Direct parameter usage instead of `$narg[0]`, `$narg[1]`, etc.
+
+### 10.2 Template Function Modernization
+
+**BEFORE:**
+```php
+$cont .= tpl_eval("open");
+$cont .= tpl_warn("warn", _MAIL_SEND, "", "", "info");
+$cont .= tpl_eval("close", "");
+```
+
+**AFTER:**
+```php
+$cont .= setTemplateBasic('open');
+$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
+$cont .= setTemplateBasic('close');
+```
+
+**Function name changes:**
+- `tpl_eval()` → `setTemplateBasic()`
+- `tpl_warn()` → `setTemplateWarning()`
+
+**Parameter changes:**
+- String parameters → array with named keys
+- More explicit parameter naming
+
+### 10.3 Conditional Checks Modernization
+
+**BEFORE:**
+```php
+if (isset($_GET['send'])) $cont .= tpl_warn("warn", _MAIL_SEND, "", "", "info");
+```
+
+**AFTER:**
+```php
+if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
+```
+
+**Changes:**
+- `isset($_GET['key'])` → `getVar('get', 'key', 'type')`
+- Old template function → new template function
+- Consistent quote style
+
+### 10.4 Complete Transformation Summary
+
+**Input Validation Evolution:**
+```php
+// OLD
+$name = isset($_POST['name']) ? $_POST['name'] : "";
+
+// NEW
+$name = getVar('post', 'name', 'name', '');
+```
+
+**SQL Security Evolution:**
+```php
+// OLD (VULNERABLE)
+$db->sql_query("SELECT * FROM ".$prefix."_admins WHERE id = '".$id."'");
+
+// NEW (SECURE)
+$db->sql_query('SELECT * FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
+```
+
+---
+
+## 11. Testing & Validation
+
+### 11.1 Syntax Check
 ```bash
 php -l path/to/file.php
 ```
 
-### 10.2 Look for Common Issues
+### 11.2 Look for Common Issues
 - Undefined variables
 - Undefined constants (check language files)
 - Missing semicolons
 - Incorrect quotes (' vs ")
 - SQL syntax errors
 
-### 10.3 Functional Testing
+### 11.3 Functional Testing
 - Test in browser if web module
 - Check admin panel functionality
 - Verify database operations
@@ -571,19 +890,81 @@ function getData(int $id): array|false {
 
 ---
 
-## 13. Checklist for Each Refactoring
+## 13. Common Mistakes to Avoid
 
+❌ **Don't mix old and new styles:**
+```php
+// BAD - mixed quotes
+$arr = array('item1', "item2");
+
+// GOOD - consistent
+$arr = ['item1', 'item2'];
+```
+
+❌ **Don't forget parameter types:**
+```php
+// BAD
+function doSomething($id) { }
+
+// GOOD
+function doSomething(int $id): void { }
+```
+
+❌ **Don't leave SQL vulnerable:**
+```php
+// BAD
+"WHERE id = '".$id."'"
+
+// GOOD
+'WHERE id = :id', ['id' => $id]
+```
+
+❌ **Don't forget array type for getVar():**
+```php
+// BAD - might fail if not array
+$modules = getVar('post', 'amodules[]', 'num');
+
+// GOOD - ensures array type
+$amodules = getVar('post', 'amodules[]', 'num') ?: [];
+```
+
+---
+
+## 14. Complete Migration Checklist
+
+When migrating any old file to new standards:
+
+**Code Style:**
+- [ ] Update copyright year (2005 - 2026)
+- [ ] Change all `"..."` to `'...'`
+- [ ] Change all `array(...)` to `[...]`
+- [ ] Verify 4-space indentation (no tabs)
+- [ ] Check max 120 chars per line
+- [ ] Remove closing `?>` tag
+
+**Functions:**
+- [ ] Add type hints to all function parameters
+- [ ] Add return types to all functions (`: void`, `: string`, etc.)
+- [ ] Remove all `func_get_args()` usage
+- [ ] Rename functions to verb+noun pattern if needed
+
+**Security:**
+- [ ] Replace all `isset($_GET/$_POST)` with `getVar()`
+- [ ] Convert all SQL queries to prepared statements
+- [ ] Test for SQL injection vulnerabilities
+- [ ] Validate all user inputs
+
+**Modernization:**
+- [ ] Rename template functions (tpl_eval → setTemplateBasic)
+- [ ] Change http:// defaults to https://
+- [ ] Update function calls to modern equivalents
+
+**Quality:**
 - [ ] File read completely before editing
 - [ ] Function usage searched in codebase
-- [ ] Type hints added to all parameters
-- [ ] Return type declared
-- [ ] func_get_args() removed if present
-- [ ] Prepared statements used for SQL
-- [ ] Input validation with getVar() or filters
 - [ ] Constants verified in language files
 - [ ] String concatenation follows SLAED rules
 - [ ] Variable names follow conventions (no camelCase)
-- [ ] Code formatted: 4 spaces, max 120 chars
 - [ ] Comments in English
 - [ ] Syntax check passed (php -l)
 - [ ] Functional testing done (if applicable)
@@ -592,7 +973,25 @@ function getData(int $id): array|false {
 
 ---
 
-## 14. When in Doubt
+## 15. Performance Considerations
+
+**No performance degradation from these changes:**
+
+- ✅ Type hints: Zero runtime cost (compile-time checks)
+- ✅ Prepared statements: Actually FASTER (query plan caching)
+- ✅ getVar(): Minimal overhead, huge security benefit
+- ✅ Short array syntax: Identical performance to array()
+- ✅ Single quotes: Slightly faster (no variable interpolation parsing)
+
+**Benefits:**
+- Much more secure (SQL injection prevention)
+- Better IDE autocomplete and error detection
+- Easier maintenance and debugging
+- Modern PHP 8.4 compatibility
+
+---
+
+## 16. When in Doubt
 
 **ASK the developer instead of guessing!**
 
@@ -608,12 +1007,22 @@ Questions to ask:
 
 ## End Notes
 
-These rules ensure:
-- ✅ Consistent refactoring approach
+**This document combines:**
+- Refactoring methodology and best practices
+- Real migration patterns from actual code modernization
+- Anti-hallucination rules for AI-assisted refactoring
+- Complete checklists for systematic modernization
+
+**These rules ensure:**
+- ✅ Consistent refactoring approach across all modules
 - ✅ No breaking changes unless intended
-- ✅ Full PHP 8.4 compatibility
+- ✅ Full PHP 8.4+ and MySQL 8.0+ compatibility
 - ✅ Enhanced security and type safety
-- ✅ Maintainable, clean code
-- ✅ **Zero hallucinations**
+- ✅ Maintainable, clean, production-ready code
+- ✅ **Zero hallucinations** - everything verified before modification
+
+**Every pattern is extracted from REAL migration work.**
+**Every change has been verified and tested.**
+**Follow these rules consistently across ALL SLAED CMS modules.**
 
 Last updated: 2025-01-28
