@@ -152,6 +152,23 @@ function isUserActive(int $id): bool {}
 ❌ Falsch: übermäßiges Logging
 ✅ Richtig: minimale, schnelle Meldungen
 
+❌ Falsch: func_get_args() verwenden
+✅ Richtig: Spread Operator ... (seit PHP 5.6+)
+
+**Beispiel Spread Operator:**
+```php
+// ❌ Veraltet
+function doSomething() {
+    $args = func_get_args();
+}
+
+// ✅ Modern (explizite Parameter - bevorzugt)
+function doSomething(string $param1 = '', int $param2 = 0): void {}
+
+// ✅ Modern (variadic - wenn wirklich nötig)
+function doSomething(string ...$params): void {}
+```
+
 ---
 
 ## 16. Funktionsschreibweise
