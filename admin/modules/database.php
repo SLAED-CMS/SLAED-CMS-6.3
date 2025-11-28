@@ -15,6 +15,210 @@ function database_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy 
 
 function database(): void {
     global $db, $confdb, $admin_file;
+
+    $type     = getVar('get', 'type', 'var'); // '', 'optimize', 'repair'
+    $ftitleth = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
+
+    // Tabelleninfos einmal einlesen
+    $result = $db->sql_query('SHOW TABLE STATUS FROM `'.$confdb['name'].'`');
+    $tables = [];
+    while ($info = $db->sql_fetchrow($result)) {
+        $tables[] = $info;
+    }
+
+    $total       = 0; // Summe Data + Index
+    $totalfree   = 0; // Summe Data_free
+    $total_rows  = 0; // Summe aller COUNT(*)
+    $i           = 0;
+
+    $content  = '<table class="sl_table_list_sort">';
+    $content .= '<thead><tr>'
+              . '<th>'._ID.'</th>'
+              . '<th>'._TABLE.'</th>'
+              . '<th>'._TYPE.'</th>'
+              . '<th>'._DBCOLL.'</th>'
+              . '<th>'._ROWS.'</th>'
+              . '<th>'._DATE.'</th>'
+              . '<th>'._SIZE.'</th>'
+              . '<th>'._DBFREE.'</th>'
+              . '<th class="{sorter: false}">'.$ftitleth.'</th>'
+              . '</tr></thead><tbody>';
+
+    foreach ($tables as $info) {
+        $name    = $info['Name'];
+        $tabeng  = $info['Engine'];
+        $tabloc  = $info['Collation'];
+        $crtime  = $info['Create_time'];
+
+        // --- Exakte Zeilenzahl per COUNT(*) (MyISAM & InnoDB) ---
+        $rows = (int) $info['Rows']; // Fallback
+
+        $rowResult = $db->sql_query(
+            'SELECT COUNT(*) AS cnt FROM `'.$confdb['name'].'`.`'.$name.'`'
+        );
+        if ($rowResult && $rowData = $db->sql_fetchrow($rowResult)) {
+            $rows = (int) $rowData['cnt'];
+        }
+        $total_rows += $rows;
+
+        // --- Tabellen- und Freispeichergröße ---
+        $tabsize   = (int) $info['Data_length'] + (int) $info['Index_length'];
+        $tabsizefr = (int) ($info['Data_free'] ?: 0);
+
+        $total     += $tabsize;
+        $totalfree += $tabsizefr;
+
+        // Darstellung Data_free
+        if ($tabeng === 'InnoDB') {
+            $tabsizefrc = '<div class="sl_hidden">'.files_size($tabsizefr).'</div>';
+        } else {
+            $tabsizefrc = $tabsizefr
+                ? '<div class="sl_red">'.files_size($tabsizefr).'</div>'
+                : '<div class="sl_green">'.files_size($tabsizefr).'</div>';
+        }
+
+        // --- Status / Aktionen abhängig vom Modus ---
+        if ($type === 'optimize') {
+            $db->sql_query('ANALYZE TABLE `'.$confdb['name'].'`.`'.$name.'`');
+            $oresult = $db->sql_query('OPTIMIZE TABLE `'.$confdb['name'].'`.`'.$name.'`');
+
+            if (!$oresult) {
+                $ftitletd = '<div class="sl_red">'._ERROR.'</div>';
+            } elseif ($tabeng === 'InnoDB') {
+                $ftitletd = '<div class="sl_green">'._OPTIMIZED.'</div>';
+            } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
+                $ftitletd = '<div class="sl_red">'._ALREADYOPTIMIZED.'</div>';
+            } else {
+                $ftitletd = '<div class="sl_green">'._OPTIMIZED.'</div>';
+            }
+
+        } elseif ($type === 'repair') {
+            if ($tabeng === 'InnoDB') {
+                $ftitletd = '<div class="sl_hidden">'._NO.'</div>';
+            } else {
+                $rresult  = $db->sql_query('REPAIR TABLE `'.$confdb['name'].'`.`'.$name.'`');
+                $ftitletd = $rresult
+                    ? '<div class="sl_green">'._OK.'</div>'
+                    : '<div class="sl_red">'._ERROR.'</div>';
+            }
+
+        } else {
+            // Standardansicht mit Aktionen
+            $ftitletd = add_menu(
+                '<a href="'.$admin_file.'.php?op=database_del&amp;tb='.$name.'&amp;id=1" '
+                .'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.$name.'&quot;?\');" '
+                .'title="'._CLEAN.'">'._CLEAN.'</a>'
+                .'||'
+                .'<a href="'.$admin_file.'.php?op=database_del&amp;tb='.$name.'&amp;id=2" '
+                .'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" '
+                .'title="'._ONDELETE.'">'._ONDELETE.'</a>'
+            );
+        }
+
+        $i++;
+
+        $content .= '<tr>'
+                  . '<td>'.$i.'</td>'
+                  . '<td>'.$name.'</td>'
+                  . '<td>'.$tabeng.'</td>'
+                  . '<td>'.$tabloc.'</td>'
+                  . '<td>'.$rows.'</td>'
+                  . '<td>'.format_time($crtime, _TIMESTRING).'</td>'
+                  . '<td>'.files_size($tabsize).'</td>'
+                  . '<td>'.$tabsizefrc.'</td>'
+                  . '<td>'.$ftitletd.'</td>'
+                  . '</tr>';
+    }
+
+    // --- Gesamtzeile wie in phpMyAdmin ---
+    $content .= '<tr>'
+              . '<td><strong>'.$i.'</strong></td>'
+              . '<td>&nbsp;</td>'
+              . '<td>&nbsp;</td>'
+              . '<td>&nbsp;</td>'
+              . '<td><strong>'.$total_rows.'</strong></td>'
+              . '<td>&nbsp;</td>'
+              . '<td><strong>'.files_size($total).'</strong></td>'
+              . '<td><strong>'.files_size($totalfree).'</strong></td>'
+              . '<td>&nbsp;</td>'
+              . '</tr>';
+
+    $content .= '</tbody></table>';
+
+    // Nach OPTIMIZE: Totals für Info-Box neu berechnen
+    if ($type === 'optimize') {
+        $result    = $db->sql_query('SHOW TABLE STATUS FROM `'.$confdb['name'].'`');
+        $total     = 0;
+        $totalfree = 0;
+
+        while ($info = $db->sql_fetchrow($result)) {
+            $tabsize  = (int) $info['Data_length'] + (int) $info['Index_length'];
+            $tabfree  = (int) ($info['Data_free'] ?: 0);
+
+            $total     += $tabsize;
+            $totalfree += $tabfree;
+        }
+    }
+
+    head();
+
+    // Navigation + Info-Boxen
+    if (empty($type)) {
+        $cont  = database_navi(0, 0, 0, 0);
+        $cont .= setTemplateWarning('warn', [
+            'time' => '',
+            'url'  => '',
+            'id'   => 'warn',
+            'text' => _OPTTEXT
+        ]);
+        $cont .= setTemplateWarning('warn', [
+            'time' => '',
+            'url'  => '',
+            'id'   => 'info',
+            'text' => _REPTEXT
+        ]);
+
+    } elseif ($type === 'optimize') {
+        $db->sql_query('FLUSH TABLES');
+        $cont = database_navi(0, 1, 0, 0);
+
+        $infoText = _OPTIMIZE.': '.$confdb['name']
+                  . '<br>'._TOTALSPACE.': '.files_size($total)
+                  . '<br>'._TOTALFREE.': '.files_size($totalfree);
+
+        $cont .= setTemplateWarning('warn', [
+            'time' => '',
+            'url'  => '',
+            'id'   => 'info',
+            'text' => $infoText
+        ]);
+
+    } elseif ($type === 'repair') {
+        $cont = database_navi(0, 2, 0, 0);
+
+        $infoText = _REPAIR.': '.$confdb['name']
+                  . '<br>'._TOTALSPACE.': '.files_size($total)
+                  . '<br>'._TOTALFREE.': '.files_size($totalfree);
+
+        $cont .= setTemplateWarning('warn', [
+            'time' => '',
+            'url'  => '',
+            'id'   => 'info',
+            'text' => $infoText
+        ]);
+    }
+
+    echo $cont
+       . setTemplateBasic('open')
+       . $content
+       . setTemplateBasic('close');
+
+    foot();
+}
+
+/*
+function database(): void {
+    global $db, $confdb, $admin_file;
     $type = getVar('get', 'type', 'var');
     $ftitleth = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
     $content ='<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TABLE.'</th><th>'._TYPE.'</th><th>'._DBCOLL.'</th><th>'._ROWS.'</th><th>'._DATE.'</th><th>'._SIZE.'</th><th>'._DBFREE.'</th><th class="{sorter: false}">'.$ftitleth.'</th></tr></thead><tbody>';
@@ -82,6 +286,7 @@ function database(): void {
     echo $cont.setTemplateBasic('open').$content.setTemplateBasic('close');
     foot();
 }
+*/
 
 function database_dump(): void {
     global $db, $confdb, $admin_file;

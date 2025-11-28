@@ -125,7 +125,7 @@ function sitemap_conf(): void {
 
 function sitemap_save(): void {
 	global $admin_file;
-	$mod = filter_input(INPUT_POST, 'mod', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) ?? [];
+	$mod = getVar('post', 'mod[]', 'num') ?: [];
 	$cont = [
 		'mod' => empty($mod[0]) ? '0' : implode(',', $mod),
 		'fr_h' => getVar('post', 'fr_h', 'var'),

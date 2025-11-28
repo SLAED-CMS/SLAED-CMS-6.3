@@ -44,8 +44,8 @@ function admins_add(): void {
         $title = getVar('post', 'title', 'title', '');
         $email = getVar('post', 'email', '', '');
         $url = getVar('post', 'url', 'url', 'https://');
-        $amodules = filter_input(INPUT_POST, 'amodules', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) ?? [];
-        $modules = is_array($amodules) ? implode(',', array_map('intval', $amodules)) : '';
+        $amodules = getVar('post', 'amodules[]', 'num') ?: [];
+        $modules = $amodules ? implode(',', $amodules) : '';
         $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
         $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
         $smail = getVar('post', 'smail', '', '');
@@ -104,8 +104,8 @@ function admins_save(): void {
     $pwd = getVar('post', 'pwd', '', 0);
     $pwd2 = getVar('post', 'pwd2', '', 0);
     $lang = getVar('post', 'lang');
-    $amodules = filter_input(INPUT_POST, 'amodules', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) ?? [];
-    $modules = is_array($amodules) ? implode(',', array_map('intval', $amodules)) : '';
+    $amodules = getVar('post', 'amodules[]', 'num') ?: [];
+    $modules = $amodules ? implode(',', $amodules) : '';
     $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
     $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
     $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
