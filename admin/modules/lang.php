@@ -30,7 +30,7 @@ function lang_main(): void {
 	}
 	head();
 	$cont = lang_navi(0, 0, 0, 0);
-	$cont .= tpl_eval('open');
+	$cont .= setTemplateBasic('open');
 	$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._NAME."</th><th>"._MODUL."</th><th>"._VIEW."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>"
 	."<tr><td>1</td><td>"._SYSTEM."</td><td>"._ALL."</td><td>"._MVALL."</td><td>".ad_status("", 1)."</td><td>".add_menu("<a href=\"".$admin_file.".php?op=lang_file&amp;lng_wh=admin/\" title=\""._FULLEDIT."\">"._ADMIN."</a>||<a href=\"".$admin_file.".php?op=lang_file\" title=\""._FULLEDIT."\">"._MODUL."</a>")."</td></tr>";
 	$handle = opendir("modules");
@@ -63,7 +63,7 @@ function lang_main(): void {
 		$cont .= "<td>".add_menu($eadmin.$emodul)."</td></tr>";
 	}
 	$cont .= "</tbody></table>";
-	$cont .= tpl_eval("close", "");
+	$cont .= setTemplateBasic('close');
 	echo $cont;
 	foot();
 }
@@ -83,7 +83,7 @@ function lang_file(): void {
 	}
 	closedir($dir);
 	$gl_tmp = $cnst_arr;
-	$cnst_arr = array();
+	$cnst_arr = [];
 	$cj = count($lng_cn);
 	for ($j = 0; $j < $cj; $j++) {
 		$lng_src = $mod_dir.$lng_wh."language/lang-".$lng_cn[$j].".php";
@@ -100,7 +100,7 @@ function lang_file(): void {
 		$cnst_arr = array_merge($cnst_arr, $cnst_tmp);
 		unset($cnst_tmp);
 	}
-	$sch_tmp = array();
+	$sch_tmp = [];
 	unset($out);
 	$gl_tmp = array_keys($gl_tmp);
 	$cnst_arr = array_merge($cnst_arr, $sch_tmp);
