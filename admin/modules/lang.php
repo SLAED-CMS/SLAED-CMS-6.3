@@ -86,16 +86,16 @@ function lang_file(): void {
 	$cnst_arr = [];
 	$cj = count($lng_cn);
 	for ($j = 0; $j < $cj; $j++) {
-		$lng_src = $mod_dir.$lng_wh."language/lang-".$lng_cn[$j].".php";
+		$lng_src = $mod_dir.$lng_wh.'language/lang-'.$lng_cn[$j].'.php';
 		$permtest = end_chmod($lng_src, 666);
-		if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+		if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
 		$lng = file_get_contents($lng_src);
 		preg_match_all("#define\(\"(.*)\"(.*),(.*)\"(.*)\"\);#iU", $lng, $out);
 		unset($out[0]);
 		$ci = count($out[1]);
 		for ($i = 0; $i < $ci; $i++) {
 			$lng_arr[$lng_cn[$j]][$out[1][$i]] = $out[4][$i];
-			$cnst_tmp[$out[1][$i]] = "";
+			$cnst_tmp[$out[1][$i]] = '';
 		}
 		$cnst_arr = array_merge($cnst_arr, $cnst_tmp);
 		unset($cnst_tmp);
@@ -113,18 +113,18 @@ function lang_file(): void {
 	$ci = count($cnst_arr) + $confla['count'];
 	for ($i = 0; $i < $ci; $i++) {
 		$n = $i + 1;
-		$hr = ($i == "0") ? "" : "<tr><td colspan=\"3\"><hr></td></tr>";
-		$valc = isset($cnst_arr[$i]) ? $cnst_arr[$i] : "";
+		$hr = ($i == '0') ? '' : '<tr><td colspan="3"><hr></td></tr>';
+		$valc = isset($cnst_arr[$i]) ? $cnst_arr[$i] : '';
 		$cont .= $hr."<tr id=\"".$n."\"><td>"._CONST.":</td><td><input type=\"text\" name=\"cnst[]\" value=\"".$valc."\" class=\"sl_form\" placeholder=\""._CONST."\"></td><td><a href=\"#".$n."\" title=\""._ID.": ".$n."\" class=\"sl_pnum\">".$n."</a></td></tr>";
 		$cj = count($lng_cn);
 		for ($j = 0; $j < $cj; $j++) {
-			$val = ($valc) ? trim(str_replace('\"', "&quot;", $lng_arr[$lng_cn[$j]][$cnst_arr[$i]])) : "";
+			$val = ($valc) ? trim(str_replace('\"', '&quot;', $lng_arr[$lng_cn[$j]][$cnst_arr[$i]])) : '';
 			if ($lng_cn[$j] == $confla['lang']) {
-				$class = "from_".$i;
-				$button = "";
+				$class = 'from_'.$i;
+				$button = '';
 			} else {
-				$class = "to_".$i."-".$j;
-				$langs = ["german" => "de", "polish" => "pl"];
+				$class = 'to_'.$i.'-'.$j;
+				$langs = ['german' => 'de', 'polish' => 'pl'];
 				$floc = substr(strtr($confla['lang'], $langs), 0, 2);
 				$tloc = substr(strtr($lng_cn[$j], $langs), 0, 2);
 				$button = "<input type=\"button\" OnClick=\"TranslateLang('from_".$i."', 'to_".$i."-".$j."', '".$floc."-".$tloc."', '"._ERRORTR."', '".$confla['key']."');\" value=\""._OK."\" title=\""._EAUTOTR."\" class=\"sl_but_blue\">";
@@ -165,20 +165,20 @@ function lang_save(): void {
 			$cont = trim(str_replace($in, $ou, $out[2][$lng_cnj][$i]));
 			$lng_str .= "define(\"".$cons."\",\"".$cont."\");\r\n";
 		}
-		$lng_str .= "?>";
-		$lng_src = $mod_dir.$lng_wh."language/lang-".$lng_cnj.".php";
-		$handle = fopen($lng_src, "wb");
+		$lng_str .= '?>';
+		$lng_src = $mod_dir.$lng_wh.'language/lang-'.$lng_cnj.'.php';
+		$handle = fopen($lng_src, 'wb');
 		fwrite($handle,$lng_str);
 		fclose($handle);
 	}
-	referer($admin_file.".php?op=lang_main");
+	referer($admin_file.'.php?op=lang_main');
 }
 
 function lang_conf(): void {
 	global $admin_file, $confla;
 	head();
 	$cont = lang_navi(0, 1, 0, 0);
-	$permtest = end_chmod("config/config_lang.php", 666);
+	$permtest = end_chmod('config/config_lang.php', 666);
 	if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
 	$cont .= setTemplateBasic('open');
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
