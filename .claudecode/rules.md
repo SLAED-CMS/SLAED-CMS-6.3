@@ -286,9 +286,74 @@ define('_ERR_COPY', 'Kopieren fehlgeschlagen: %1$s → %2$s');
 
 ---
 
-## 20. KI-Checkliste
+## 20. Git Commit Messages
+
+1. **Sprache:** Immer Englisch
+2. **Format:** Detailliert und strukturiert
+
+**Struktur:**
+
+```
+Brief summary (50-72 chars)
+
+Detailed description of what changed and why:
+- First change with explanation
+- Second change with context
+- Third change with reasoning
+- Impact on system/performance/security
+
+Technical details:
+- Files modified and their purpose
+- Functions/methods affected
+- Database changes (if any)
+- Dependencies updated (if any)
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Beispiel:**
+
+```
+Refactor user authentication system for PHP 8.4
+
+Modernize authentication to leverage PHP 8.4 features:
+- Replace procedural auth functions with AuthService class
+- Add strict type declarations and return types
+- Implement password hashing with Argon2id algorithm
+- Add session token validation with CSRF protection
+
+Technical changes:
+- New file: core/classes/AuthService.php
+- Modified: core/user.php, core/security.php
+- Updated: config/config_security.php
+
+Security improvements:
+- Stronger password hashing (bcrypt → Argon2id)
+- Session fixation prevention
+- CSRF token validation
+
+Performance impact: ~15% faster auth checks
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+3. **Pflicht:** Immer detailliert, nie kurz wie "fix bug" oder "update code"
+4. **Was beschreiben:**
+   - Was wurde geändert (What)
+   - Warum wurde es geändert (Why)
+   - Welche Dateien betroffen (Where)
+   - Welche Auswirkungen (Impact)
+
+---
+
+## 21. KI-Checkliste
 
 1. [ ] Funktion beginnt mit einem der 8 Verben?
 2. [ ] Kommunikation auf Russisch/Deutsch?
 3. [ ] Code schnell und effizient?
 4. [ ] Type-Hints hinzugefügt?
+5. [ ] Git Commit auf Englisch und detailliert?
