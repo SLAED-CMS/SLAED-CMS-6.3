@@ -316,6 +316,289 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 
 ---
 
+## 11. Modern PHP Array Syntax
+
+**ALT (PHP 5.x):**
+```php
+$ops = array('admins_show', 'admins_add', 'admins_info');
+$lang = array(_HOME, _ADD, _INFO);
+$stop = array();
+```
+
+**NEU (PHP 7+):**
+```php
+$ops = ['admins_show', 'admins_add', 'admins_info'];
+$lang = [_HOME, _ADD, _INFO];
+$stop = [];
+```
+
+**Regel:** Verwende immer `[]` statt `array()` für moderne Syntax
+
+---
+
+## 12. Function Return Types
+
+### void für Funktionen ohne Rückgabewert
+
+**ALT:**
+```php
+function admins_show() {
+    // ...
+    echo $cont;
+    foot();
+}
+```
+
+**NEU:**
+```php
+function admins_show(): void {
+    // ...
+    echo $cont;
+    foot();
+}
+```
+
+**Regel:** Alle Funktionen sollten Return-Types haben (void, string, int, array, bool)
+
+---
+
+## 13. getVar() mit 'req' Source
+
+**Verwendung:** Holt Wert aus GET ODER POST (in dieser Reihenfolge)
+
+```php
+$id = getVar('req', 'id', 'num');
+// Prüft zuerst $_GET['id'], dann $_POST['id']
+```
+
+**Anwendungsfall:** Wenn Parameter sowohl per GET als auch POST kommen können (z.B. bei Edit-Formularen)
+
+**Beispiel aus admins.php:**
+```php
+function admins_add(): void {
+    $id = getVar('req', 'id', 'num');  // Edit-ID aus GET
+    if ($id) {
+        // Lade existierenden Admin aus DB
+    } else {
+        // Hole Form-Daten aus POST
+        $name = getVar('post', 'name', 'name', '');
+    }
+}
+```
+
+---
+
+## 14. PDO Prepared Statements - Parameter-Formatierung
+
+### Kurze Queries: Inline Parameters
+
+```php
+$db->sql_query('DELETE FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
+$db->sql_query('SELECT * FROM '.$prefix.'_users WHERE name = :name', ['name' => $name]);
+```
+
+### Lange Queries: Multi-line Parameters
+
+**Bei vielen Parametern:**
+```php
+$db->sql_query('UPDATE '.$prefix.'_admins SET name = :name, title = :title, url = :url, email = :email, pwd = :pwd, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
+    'name' => $name,
+    'title' => $title,
+    'url' => $url,
+    'email' => $email,
+    'pwd' => $newpass,
+    'super' => $super,
+    'editor' => $editor,
+    'smail' => $smail,
+    'modules' => $modules,
+    'lang' => $lang,
+    'id' => $aid
+]);
+```
+
+**Regel:**
+- Bis 3 Parameter → Inline: `['id' => $id, 'name' => $name]`
+- Ab 4 Parametern → Multi-line mit Einrückung für Lesbarkeit
+
+---
+
+## 15. Boolean zu Integer Konvertierung für DB
+
+**Problem:** Datenbank erwartet TINYINT(1) für 0/1, aber getVar('bool') gibt true/false
+
+**Lösung:**
+```php
+$super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
+$smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
+```
+
+**Anwendung:**
+- Bei Checkboxen in Formularen
+- DB-Felder vom Typ TINYINT(1)
+- Explizite 0/1 Werte für Kompatibilität
+
+---
+
+## 16. Template-Funktionen (Modern)
+
+### setTemplateWarning()
+
+**Verwendung:** Warnungen/Infos anzeigen
+
+```php
+if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
+```
+
+**Parameter:**
+- `'warn'` - Type (warn, info, error)
+- Array mit: time, url, id, text
+
+### setTemplateBasic()
+
+**Verwendung:** Content-Container öffnen/schließen
+
+```php
+$cont .= setTemplateBasic('open');
+// ... Content hier ...
+$cont .= setTemplateBasic('close');
+```
+
+**Ersetzt:** `tpl_eval('open')` / `tpl_eval('close')`
+
+---
+
+## 17. getAdminTabs() statt navi_gen()
+
+**ALT:**
+```php
+return navi_gen(_EDITADMINS, 'admins.png', '', $ops, $lang, '', '', $opt, $tab, $subtab, $legacy);
+```
+
+**NEU:**
+```php
+return getAdminTabs(_EDITADMINS, 'admins.png', '', $ops, $lang, [], [], $tab, $subtab);
+```
+
+**Unterschiede:**
+- Leere Strings `''` → Leere Arrays `[]`
+- Kürzere Parameterliste (kein $opt, $legacy)
+- Modernere API
+
+---
+
+## 18. Header Redirects mit dynamischen Query-Parametern
+
+**Pattern:**
+```php
+if ($mail) {
+    // Mail-Logik
+    $send = '&send=1';
+}
+header('Location: '.$admin_file.'.php?op=admins_show'.$send);
+```
+
+**Besser mit Null Coalescing:**
+```php
+header('Location: '.$admin_file.'.php?op=admins_show'.($send ?? ''));
+```
+
+---
+
+## 19. Validation Arrays
+
+**Pattern für Fehlersammlung:**
+```php
+$stop = [];
+if (!$aid && !$pwd && !$pwd2) $stop[] = _NOPASS;
+if ($name) {
+    list($adid, $adname) = $db->sql_fetchrow($db->sql_query('SELECT id, name FROM '.$prefix.'_admins WHERE name = :name', ['name' => $name]));
+    if ($aid != $adid && $name == $adname) $stop[] = _USEREXIST;
+}
+if (!$stop) {
+    // Save-Logik
+} else {
+    // Zeige Form mit Fehlern
+}
+```
+
+**Vorteile:**
+- Sammle alle Fehler
+- Zeige alle auf einmal
+- Bessere UX
+
+---
+
+## 20. Zusammenfassung erweiterte Regeln
+
+### ✅ DO (Zusätzlich)
+
+1. **Modern Array Syntax**: `[]` statt `array()`
+2. **Return Types**: Alle Funktionen typisieren (void, string, int, array)
+3. **getVar('req', ...)**: Für GET/POST-flexible Parameter
+4. **PDO Multi-line**: Ab 4+ Parametern formatieren
+5. **Boolean → Int**: `? 1 : 0` für DB-Kompatibilität
+6. **setTemplateWarning/Basic**: Statt tpl_eval()
+7. **getAdminTabs()**: Statt navi_gen()
+8. **Validation Arrays**: $stop[] für Fehlersammlung
+
+### ❌ DON'T (Zusätzlich)
+
+1. Keine `array()` Syntax mehr
+2. Keine Funktionen ohne Return Type
+3. Kein direkter `$_GET/$_POST` Zugriff
+4. Keine `tpl_eval()` für Basic-Templates
+5. Keine Boolean direkt in DB speichern (immer 0/1)
+
+---
+
+## 21. Vollständiges Beispiel (admins.php Style)
+
+```php
+function admins_save(): void {
+    global $prefix, $db, $admin_file, $conf, $stop;
+
+    // Input mit getVar
+    $aid = getVar('post', 'aid', 'num', 0);
+    $name = getVar('post', 'name', 'name');
+    $amodules = getVar('post', 'amodules[]', 'num') ?: [];
+    $modules = $amodules ? implode(',', $amodules) : '';
+    $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
+
+    // Validation
+    $stop = [];
+    if (!$name) $stop[] = _ERROR_ALL;
+    if (!analyze_name($name)) $stop[] = _ERRORINVNICK;
+
+    if (!$stop) {
+        if ($aid) {
+            // Update mit Multi-line Parameters
+            $db->sql_query('UPDATE '.$prefix.'_admins SET name = :name, title = :title, super = :super, modules = :modules WHERE id = :id', [
+                'name' => $name,
+                'title' => $title,
+                'super' => $super,
+                'modules' => $modules,
+                'id' => $aid
+            ]);
+        } else {
+            // Insert
+            $db->sql_query('INSERT INTO '.$prefix.'_admins (name, title, super, modules) VALUES (:name, :title, :super, :modules)', [
+                'name' => $name,
+                'title' => $title,
+                'super' => $super,
+                'modules' => $modules
+            ]);
+        }
+        header('Location: '.$admin_file.'.php?op=admins_show');
+    } else {
+        admins_add();  // Zeige Form mit Fehlern
+    }
+}
+```
+
+---
+
 **Erstellt:** 2025-11-27
-**Version:** 1.0
+**Version:** 2.0
 **Projekt:** SLAED CMS 6.3.0 Phoenix Modernisierung
+**Ergänzt:** Modern Array Syntax, Return Types, PDO Formatting, Templates
