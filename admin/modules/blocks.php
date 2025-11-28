@@ -154,7 +154,7 @@ function blocks_add(): void {
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
     $url = ($headline) ? $headline : $url;
-    $blockwhere = filter_input(INPUT_POST, 'blockwhere', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) ?? [];
+    $blockwhere = getVar('post', 'blockwhere[]', 'num') ?: [];
     list($weight) = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.$prefix.'_blocks WHERE bposition = :bposition ORDER BY weight DESC', ['bposition' => $bposition]));
     $weight++;
     $bkey = '';
@@ -418,7 +418,7 @@ function blocks_edit_save(): void {
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
-    $blockwhere = filter_input(INPUT_POST, 'blockwhere', FILTER_DEFAULT, FILTER_REQUIRE_ARRAY) ?? [];
+    $blockwhere = getVar('post', 'blockwhere[]', 'num') ?: [];
     if (isset($blockwhere)) {
         $which = '';
         if (in_array('all', $blockwhere)) $which = 'all';

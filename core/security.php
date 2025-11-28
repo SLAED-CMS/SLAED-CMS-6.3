@@ -12,7 +12,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 require_once BASE_DIR.'/config/config_global.php';
 
 # Users config file include
-require_once BASE_DIR.'/config/config_users.php';
+require_once BASE_DIR.'/config/users.php';
 
 # SEO config file include
 require_once BASE_DIR.'/config/config_seo.php';
@@ -794,17 +794,84 @@ function getUrlMeta() {
  * Sauberer Zugriff auf POST, GET oder Request-Parameter
  *
  * @param string $var     'post', 'get' oder 'req'
- * @param string $key     Name des Parameters
+ * @param string $key     Name des Parameters (Bracket-Notation: field[0], field[])
  * @param string $type    Typ für Filterung: num, let, word, name, title, text, field, url, var, bool
  * @param mixed  $default Standardwert, falls Parameter fehlt
  * @return mixed Gefilterter Wert oder Default / false
  */
 function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
     global $conf;
-    
-    // Rohwerte aus POST / GET
-    $p = filter_input(INPUT_POST, $key, FILTER_DEFAULT) ?? '';
-    $g = filter_input(INPUT_GET, $key, FILTER_DEFAULT) ?? '';
+
+    // Bracket-Notation parsen: field[0] oder field[]
+    $array_index = null;
+    $is_array_all = false;
+
+    if (preg_match('/^([^\[]+)\[(\d*)\]$/', $key, $matches)) {
+        $key = $matches[1];  // field
+        if ($matches[2] === '') {
+            $is_array_all = true;  // field[] → ganzes Array
+        } else {
+            $array_index = (int)$matches[2];  // field[0] → Index
+        }
+    }
+
+    // Filter-Definitionen (einmalig für Einzelwerte und Arrays)
+    $filters = [
+        'num'   => fn($v) => num_filter($v),
+        'let'   => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
+        'word'  => fn($v) => is_string($v) ? text_filter(trim($v)) : $v,
+        'name'  => fn($v) => is_string($v) ? text_filter(mb_substr(trim($v), 0, 25, 'utf-8')) : $v,
+        'title' => fn($v) => is_string($v) ? save_text(trim($v), 1) : $v,
+        'text'  => fn($v) => is_string($v) ? save_text(trim($v)) : $v,
+        'field' => fn($v) => is_string($v) ? fields_save(trim($v)) : $v,
+        'url'   => fn($v) => is_string($v) ? url_filter(trim($v)) : $v,
+        'var'   => fn($v) => is_string($v) ? isVar($v) : $v,
+        'bool'  => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),
+    ];
+
+    // Ganzes Array mit Element-Filterung: field[] + type
+    if ($is_array_all) {
+        $p = $_POST[$key] ?? [];
+        $g = $_GET[$key] ?? [];
+
+        $value = match(strtolower($var)) {
+            'post' => $p,
+            'get'  => $g,
+            'req'  => (!empty($p)) ? $p : $g,
+            default => [],
+        };
+
+        if (!is_array($value)) {
+            return $default ?: [];
+        }
+
+        // Element-Filterung anwenden
+        if ($type) {
+            $filtered = [];
+            foreach ($value as $item) {
+                if (isset($filters[$type])) {
+                    $item = $filters[$type]($item);
+                }
+                if ($item !== false && $item !== null && $item !== '') {
+                    $filtered[] = $item;
+                }
+            }
+            return $filtered;
+        }
+
+        // Ohne Filterung: Rohes Array
+        return $value;
+    }
+
+    // Array-Index-Zugriff: field[0]
+    if ($array_index !== null) {
+        $p = $_POST[$key][$array_index] ?? '';
+        $g = $_GET[$key][$array_index] ?? '';
+    } else {
+        // Normaler Einzelwert
+        $p = filter_input(INPUT_POST, $key, FILTER_DEFAULT) ?? '';
+        $g = filter_input(INPUT_GET, $key, FILTER_DEFAULT) ?? '';
+    }
 
     // Rewrite-URL Parsing, wenn $g leer
     if (!empty($conf['rewrite']) && !$g) {
@@ -827,20 +894,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
     // Falls Wert leer, Default nutzen
     $value = ($value !== null && $value !== '') ? $value : $default;
 
-    // Typfilter / Trim direkt integriert
-    $filters = [
-        'num'   => fn($v) => num_filter($v),
-        'let'   => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
-        'word'  => fn($v) => is_string($v) ? text_filter(trim($v)) : $v,
-        'name'  => fn($v) => is_string($v) ? text_filter(mb_substr(trim($v), 0, 25, 'utf-8')) : $v,
-        'title' => fn($v) => is_string($v) ? save_text(trim($v), 1) : $v,
-        'text'  => fn($v) => is_string($v) ? save_text(trim($v)) : $v,
-        'field' => fn($v) => is_string($v) ? fields_save(trim($v)) : $v,
-        'url'   => fn($v) => is_string($v) ? url_filter(trim($v)) : $v,
-        'var'   => fn($v) => is_string($v) ? isVar($v) : $v,
-        'bool'  => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),
-    ];
-
+    // Typfilter anwenden
     if ($type && isset($filters[$type])) {
         $value = $filters[$type]($value);
     } else {
