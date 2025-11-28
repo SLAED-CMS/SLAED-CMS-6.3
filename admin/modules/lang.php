@@ -8,12 +8,11 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 include('config/config_lang.php');
 
-function lang_navi() {
+function lang_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
 	panel();
-	$narg = func_get_args();
 	$ops = array('lang_main', 'lang_conf', 'lang_info');
 	$lang = array(_HOME, _PREFERENCES, _INFO);
-	return navi_gen(_LANG_EDIT, 'lang.png', '', $ops, $lang, '', '', $narg[0], $narg[1], $narg[2], $narg[3]);
+	return navi_gen(_LANG_EDIT, 'lang.png', '', $ops, $lang, '', '', $opt, $tab, $subtab, $legacy);
 }
 
 function lang_main() {
@@ -73,9 +72,9 @@ function lang_file() {
 	global $admin_file, $confla;
 	head();
 	$cont = lang_navi(0, 0, 0, 0);
-	$mod_dir = isset($_GET['mod_dir']) ? $_GET['mod_dir'] : '';
-	$adm_fl = isset($_GET['adm_fl']) ? true : false;
-	$lng_wh = isset($_GET['lng_wh']) ? $_GET['lng_wh'] : '';
+	$mod_dir = getVar('get', 'mod_dir', 'var', '');
+	$adm_fl = getVar('get', 'adm_fl', 'bool', false);
+	$lng_wh = getVar('get', 'lng_wh', 'var', '');
 	$lng_cn = array();
 	$cnst_arr = array();
 	$dir = opendir($mod_dir.$lng_wh."language");
@@ -146,13 +145,12 @@ function lang_file() {
 
 function lang_save() {
 	global $admin_file;
-	$mod_dir = $_POST['mod_dir'];
-	$lng_wh = $_POST['lwh'];
-	$lng_cn = array();
-	$lng_cn = $_POST['lcn'];
+	$mod_dir = getVar('post', 'mod_dir', 'var', '');
+	$lng_wh = getVar('post', 'lwh', 'var', '');
+	$lng_cn = getVar('post', 'lcn[]', 'var') ?: [];
 	$out = array();
-	$out[1] = $_POST['cnst'];
-	$out[2] = $_POST['lng'];
+	$out[1] = getVar('post', 'cnst[]', 'var') ?: [];
+	$out[2] = getVar('post', 'lng', 'var', []);
 	$cj = count($lng_cn);
 	for ($j = 0; $j < $cj; $j++) {
 		$lng_cnj = $lng_cn[$j];
@@ -193,14 +191,15 @@ function lang_conf() {
 	foot();
 }
 
-function lang_conf_save() {
-	global $admin_file;
-	$content = "\$confla = array();\n"
-	."\$confla['key'] = \"".$_POST['key']."\";\n"
-	."\$confla['lang'] = \"".$_POST['lang']."\";\n"
-	."\$confla['count'] = \"".$_POST['count']."\";\n";
-	save_conf("config/config_lang.php", $content);
-	header("Location: ".$admin_file.".php?op=lang_conf");
+function lang_conf_save(): void {
+	global $admin_file, $confla;
+	$cont = [
+		'key' => getVar('post', 'key', 'var', ''),
+		'lang' => getVar('post', 'lang', 'var', ''),
+		'count' => getVar('post', 'count', 'num', 0)
+	];
+	setConfigFile('config_lang.php', 'confla', $cont, $confla);
+	header('Location: '.$admin_file.'.php?op=lang_conf');
 }
 
 function lang_info() {
