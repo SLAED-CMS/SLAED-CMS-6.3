@@ -10,12 +10,12 @@ include('config/config_lang.php');
 
 function lang_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
 	panel();
-	$ops = array('lang_main', 'lang_conf', 'lang_info');
-	$lang = array(_HOME, _PREFERENCES, _INFO);
+	$ops = ['lang_main', 'lang_conf', 'lang_info'];
+	$lang = [_HOME, _PREFERENCES, _INFO];
 	return navi_gen(_LANG_EDIT, 'lang.png', '', $ops, $lang, '', '', $opt, $tab, $subtab, $legacy);
 }
 
-function lang_main() {
+function lang_main(): void {
 	global $prefix, $db, $admin_file;
 	$result = $db->sql_query("SELECT title, active, view FROM ".$prefix."_modules ORDER BY title ASC");
 	while (list($ttl, $act, $view) = $db->sql_fetchrow($result)) {
@@ -68,15 +68,15 @@ function lang_main() {
 	foot();
 }
 
-function lang_file() {
+function lang_file(): void {
 	global $admin_file, $confla;
 	head();
 	$cont = lang_navi(0, 0, 0, 0);
 	$mod_dir = getVar('get', 'mod_dir', 'var', '');
 	$adm_fl = getVar('get', 'adm_fl', 'bool', false);
 	$lng_wh = getVar('get', 'lng_wh', 'var', '');
-	$lng_cn = array();
-	$cnst_arr = array();
+	$lng_cn = [];
+	$cnst_arr = [];
 	$dir = opendir($mod_dir.$lng_wh."language");
 	while (($file = readdir($dir)) !== false) {
 		if (preg_match("#^lang\-(.+)\.php#", $file, $matches)) $lng_cn[] = $matches[1];
@@ -108,7 +108,7 @@ function lang_file() {
 	$cnst_arr = array_diff($cnst_arr, $gl_tmp);
 	unset($gl_tmp, $sch_tmp, $cnst_tmp);
 	sort($cnst_arr);
-	$cont .= tpl_eval("open");
+	$cont .= setTemplateBasic('open');
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_form\">";
 	$ci = count($cnst_arr) + $confla['count'];
 	for ($i = 0; $i < $ci; $i++) {
@@ -124,7 +124,7 @@ function lang_file() {
 				$button = "";
 			} else {
 				$class = "to_".$i."-".$j;
-				$langs = array("german" => "de", "polish" => "pl");
+				$langs = ["german" => "de", "polish" => "pl"];
 				$floc = substr(strtr($confla['lang'], $langs), 0, 2);
 				$tloc = substr(strtr($lng_cn[$j], $langs), 0, 2);
 				$button = "<input type=\"button\" OnClick=\"TranslateLang('from_".$i."', 'to_".$i."-".$j."', '".$floc."-".$tloc."', '"._ERRORTR."', '".$confla['key']."');\" value=\""._OK."\" title=\""._EAUTOTR."\" class=\"sl_but_blue\">";
@@ -138,17 +138,17 @@ function lang_file() {
 		$cont .= "<input type=\"hidden\" name=\"lcn[]\" value=\"".$lng_cn[$j]."\">";
 	}
 	$cont .= "<input type=\"hidden\" name=\"lwh\" value=\"".$lng_wh."\"><input type=\"hidden\" name=\"mod_dir\" value=\"".$mod_dir."\"><input type=\"hidden\" name=\"op\" value=\"lang_save\"><input type=\"hidden\" name=\"refer\" value=\"1\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
-	$cont .= tpl_eval("close", "");
+	$cont .= setTemplateBasic('close');
 	echo $cont;
 	foot();
 }
 
-function lang_save() {
+function lang_save(): void {
 	global $admin_file;
 	$mod_dir = getVar('post', 'mod_dir', 'var', '');
 	$lng_wh = getVar('post', 'lwh', 'var', '');
 	$lng_cn = getVar('post', 'lcn[]', 'var') ?: [];
-	$out = array();
+	$out = [];
 	$out[1] = getVar('post', 'cnst[]', 'var') ?: [];
 	$out[2] = getVar('post', 'lng', 'var', []);
 	$cj = count($lng_cn);
@@ -160,8 +160,8 @@ function lang_save() {
 			if (empty($out[2][$lng_cnj][$i])) continue;
 			if (empty($out[1][$i])) continue;
 			$cons = trim($out[1][$i]);
-			$in = array("\'", "\\$", "<?php", "?>");
-			$ou = array("'", "\$", "&lt;?php", "?&gt;");
+			$in = ["\'", "\\$", "<?php", "?>"];
+			$ou = ["'", "\$", "&lt;?php", "?&gt;"];
 			$cont = trim(str_replace($in, $ou, $out[2][$lng_cnj][$i]));
 			$lng_str .= "define(\"".$cons."\",\"".$cont."\");\r\n";
 		}
@@ -174,19 +174,19 @@ function lang_save() {
 	referer($admin_file.".php?op=lang_main");
 }
 
-function lang_conf() {
+function lang_conf(): void {
 	global $admin_file, $confla;
 	head();
 	$cont = lang_navi(0, 1, 0, 0);
 	$permtest = end_chmod("config/config_lang.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
-	$cont .= tpl_eval("open");
+	if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
+	$cont .= setTemplateBasic('open');
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._LANGKEY.":<div class=\"sl_small\">"._LANGKEYI."</div></td><td><input type=\"text\" name=\"key\" value=\"".$confla['key']."\" class=\"sl_conf\" placeholder=\""._LANGKEY."\" required></td></tr>"
 	."<tr><td>"._LANGTR.":</td><td><select name=\"lang\" class=\"sl_conf\">".language($confla['lang'], 1)."</select></td></tr>"
 	."<tr><td>"._LANGCOUNT.":</td><td><input type=\"number\" name=\"count\" value=\"".$confla['count']."\" class=\"sl_conf\" placeholder=\""._LANGCOUNT."\" required></td></tr>"
 	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"lang_conf_save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
-	$cont .= tpl_eval("close", "");
+	$cont .= setTemplateBasic('close');
 	echo $cont;
 	foot();
 }
@@ -202,7 +202,7 @@ function lang_conf_save(): void {
 	header('Location: '.$admin_file.'.php?op=lang_conf');
 }
 
-function lang_info() {
+function lang_info(): void {
 	head();
 	echo lang_navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'lang').'</div>';
 	foot();
