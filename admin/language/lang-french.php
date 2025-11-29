@@ -276,7 +276,6 @@ define("_KWORDSI","Nombre de peuplement, le site de mots clés. Cette option est
 define("_LADATE","Établir la date");
 define("_LANGCOUNT","Le nombre de nouveaux champs de constantes linguistiques");
 define("_LANGKEY","API-Key");
-define("_LANGKEYI","Recommander à définir leur propre, vous pouvez obtenir la clé gratuitement sur ce site: https://translate.yandex.ru/developers/keys");
 define("_LANGTR","Langue, qui sera utilisé traduction");
 define("_LANG_EDIT","Éditeur de langues");
 define("_LEFT","Gauche");

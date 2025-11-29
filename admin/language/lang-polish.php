@@ -276,7 +276,6 @@ define("_KWORDSI","Ilość wyświetlanych słów kluczowych witryny. Opcja ta je
 define("_LADATE","Ustaw bieżącą datę");
 define("_LANGCOUNT","Liczba nowych pól stałych językowych");
 define("_LANGKEY","API-Key");
-define("_LANGKEYI","Poleć ustawić własną rękę, możesz dostać klucz za darmo na tej stronie: https://translate.yandex.ru/developers/keys");
 define("_LANGTR","Język, który będzie używany tłumaczenie");
 define("_LANG_EDIT","Edytor języków");
 define("_LEFT","Po lewej stronie");
