@@ -267,7 +267,88 @@ $sql = "SELECT * FROM {$prefix}_table WHERE id={$id}";
 
 **Rule:** No spaces around concatenation operator (`.`)
 
-### 2.8 Modern PHP Features to Use
+### 2.8 Remove Error Suppression Operator (@)
+
+**NEVER use @ operator - handle errors properly**
+
+**BEFORE (bad practice):**
+```php
+$dir = @opendir($path);
+$content = @file_get_contents($file);
+```
+
+**AFTER (proper error handling):**
+```php
+$dir = opendir($path);
+if ($dir === false) {
+    // Handle error properly
+    return;
+}
+
+$content = file_get_contents($file);
+if ($content === false) {
+    // Handle error
+}
+```
+
+**Rule:** Remove @ and check return values explicitly
+
+### 2.9 Compact Code Style (One-liners)
+
+**For simple conditions, use compact syntax**
+
+**BEFORE (verbose):**
+```php
+foreach ($files as $file) {
+    if ($file !== '.' && $file !== '..' && is_file($file)) {
+        $mod[] = $file;
+    }
+}
+
+if (is_dir($path.'/language')) {
+    $eadmin = '<a href="...">'._ADMIN.'</a>';
+}
+```
+
+**AFTER (compact):**
+```php
+foreach ($files as $file) {
+    if ($file !== '.' && $file !== '..' && is_file($file)) $mod[] = $file;
+}
+
+if (is_dir($path.'/language')) $eadmin = '<a href="...">'._ADMIN.'</a>';
+```
+
+**Rule:** Simple single-statement conditions can be one-liners (max 120 chars)
+
+### 2.10 Config File Modernization
+
+**Use new config helper functions and naming**
+
+**BEFORE:**
+```php
+include('config/config_lang.php');
+$permtest = end_chmod('config/config_lang.php', 666);
+if ($permtest) $cont .= setTemplateWarning(...);
+```
+
+**AFTER:**
+```php
+require_once CONFIG_DIR.'/lang.php';
+checkConfigFile('lang.php');
+```
+
+**Config file naming:**
+- `config_lang.php` → `lang.php`
+- `config_users.php` → `users.php`
+- `config_fields.php` → `fields.php`
+
+**Rule:**
+- Use `require_once CONFIG_DIR.'/filename.php'` for includes
+- Use `checkConfigFile('filename.php')` to verify permissions
+- Remove `config_` prefix from new config files
+
+### 2.11 Modern PHP Features to Use
 
 **Null coalescing:**
 ```php
@@ -941,6 +1022,8 @@ When migrating any old file to new standards:
 - [ ] Verify 4-space indentation (no tabs)
 - [ ] Check max 120 chars per line
 - [ ] Remove closing `?>` tag
+- [ ] Remove all `@` error suppression operators
+- [ ] Use compact one-liners for simple if/for/while (max 120 chars)
 
 **Functions:**
 - [ ] Add type hints to all function parameters
@@ -958,6 +1041,9 @@ When migrating any old file to new standards:
 - [ ] Rename template functions (tpl_eval → setTemplateBasic)
 - [ ] Change http:// defaults to https://
 - [ ] Update function calls to modern equivalents
+- [ ] Update config includes: `include('config/config_X.php')` → `require_once CONFIG_DIR.'/X.php'`
+- [ ] Use `checkConfigFile()` instead of `end_chmod()` for config permissions
+- [ ] Rename config files: remove `config_` prefix where applicable
 
 **Quality:**
 - [ ] File read completely before editing

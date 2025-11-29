@@ -5,14 +5,13 @@
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+require_once CONFIG_DIR.'/lang.php';
 
-include('config/config_lang.php');
-
-function lang_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function lang_navi(int $tab = 0, int $subtab = 0): string {
     panel();
     $ops = ['lang_main', 'lang_conf', 'lang_info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
-    return navi_gen(_LANG_EDIT, 'lang.png', '', $ops, $lang, '', '', $opt, $tab, $subtab, $legacy);
+    return getAdminTabs(_LANG_EDIT, 'lang.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function lang_get_path(string $mod, string $typ): array {
@@ -23,7 +22,6 @@ function lang_get_path(string $mod, string $typ): array {
 
 function lang_main(): void {
     global $prefix, $db, $admin_file;
-
     $modbase = [];
     $who_view = [];
     $result = $db->sql_query('SELECT title, active, view FROM '.$prefix.'_modules ORDER BY title ASC');
@@ -39,7 +37,7 @@ function lang_main(): void {
     }
 
     head();
-    $cont = lang_navi(0, 0, 0, 0);
+    $cont = lang_navi(0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr>'
         .'<th>'._ID.'</th>'
@@ -48,7 +46,7 @@ function lang_main(): void {
         .'<th>'._VIEW.'</th>'
         .'<th class="{sorter: false}">'._STATUS.'</th>'
         .'<th class="{sorter: false}">'._FUNCTIONS.'</th>'
-        .'</tr></thead><tbody>';
+    .'</tr></thead><tbody>';
 
     $sys_admin = '<a href="'.$admin_file.'.php?op=lang_file&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
     $sys_modul = '<a href="'.$admin_file.'.php?op=lang_file" title="'._FULLEDIT.'">'._MODUL.'</a>';
@@ -59,43 +57,35 @@ function lang_main(): void {
         .'<td>'._MVALL.'</td>'
         .'<td>'.ad_status('', 1).'</td>'
         .'<td>'.add_menu($sys_admin.'||'.$sys_modul).'</td>'
-        .'</tr>';
+    .'</tr>';
 
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
     foreach ($files as $file) {
-        if ($file !== '.' && $file !== '..' && is_file(BASE_DIR.'/modules/'.$file.'/index.php')) {
-            $mod[] = $file;
-        }
+        if ($file !== '.' && $file !== '..' && is_file(BASE_DIR.'/modules/'.$file.'/index.php')) $mod[] = $file;
     }
     sort($mod);
-
     $ci = count($mod);
     for ($i = 0; $i < $ci; $i++) {
         $a = $i + 2;
         $act = isset($modbase[$mod[$i]]) && $modbase[$mod[$i]] ? 1 : 0;
         $view = isset($who_view[$i]) ? $who_view[$i] : _MVALL;
-
         $cont .= '<tr>'
             .'<td>'.$a.'</td>'
             .'<td>'.deflmconst($mod[$i]).'</td>'
             .'<td>'.$mod[$i].'</td>'
             .'<td>'.$view.'</td>'
             .'<td>'.ad_status('', $act).'</td>';
-
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $eadmin = '';
         $emodul = '';
-        if (is_dir($mod_path.'/admin/language')) {
-            $eadmin = '<a href="'.$admin_file.'.php?op=lang_file&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
-        }
+        if (is_dir($mod_path.'/admin/language')) $eadmin = '<a href="'.$admin_file.'.php?op=lang_file&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
         if (is_dir($mod_path.'/language')) {
             $sep = $eadmin ? '||' : '';
             $emodul = $sep.'<a href="'.$admin_file.'.php?op=lang_file&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
         }
         $cont .= '<td>'.add_menu($eadmin.$emodul).'</td></tr>';
     }
-
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -105,7 +95,7 @@ function lang_main(): void {
 function lang_file(): void {
     global $admin_file, $confla;
     head();
-    $cont = lang_navi(0, 0, 0, 0);
+    $cont = lang_navi(0, 0);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     [$mod_dir, $lng_wh] = lang_get_path($mod, $typ);
@@ -114,17 +104,15 @@ function lang_file(): void {
     $lng_cn = [];
     $cnst_arr = [];
     $lang_path = BASE_DIR.'/'.$mod_dir.$lng_wh.'language';
-    $dir = @opendir($lang_path);
+    $dir = opendir($lang_path);
     if ($dir === false) {
-        $cont = lang_navi(0, 0, 0, 0);
+        $cont = lang_navi(0, 0);
         $cont .= setTemplateWarning('error', ['time' => '', 'url' => '', 'id' => 'error', 'text' => 'Sprachverzeichnis nicht gefunden: '.$lang_path]);
         echo $cont;
         foot();
         return;
     }
-    while (($file = readdir($dir)) !== false) {
-        if (preg_match('#^lang\-(.+)\.php#', $file, $matches)) $lng_cn[] = $matches[1];
-    }
+    while (($file = readdir($dir)) !== false) if (preg_match('#^lang\-(.+)\.php#', $file, $matches)) $lng_cn[] = $matches[1];
     closedir($dir);
     $gl_tmp = $cnst_arr;
     $cnst_arr = [];
@@ -202,9 +190,7 @@ function lang_file(): void {
     }
     $cont .= '<tr><td colspan="3" class="sl_center">';
     $cj = count($lng_cn);
-    for ($j = 0; $j < $cj; $j++) {
-        $cont .= '<input type="hidden" name="lcn[]" value="'.$lng_cn[$j].'">';
-    }
+    for ($j = 0; $j < $cj; $j++) $cont .= '<input type="hidden" name="lcn[]" value="'.$lng_cn[$j].'">';
     $cont .= '<input type="hidden" name="typ" value="'.$typ.'">';
     $cont .= '<input type="hidden" name="mod" value="'.$mod.'">';
     $cont .= '<input type="hidden" name="page" value="'.$page.'">';
@@ -258,16 +244,12 @@ function lang_save(): void {
         foreach ($existing as $cons => $cont) {
             $cons_esc = str_replace("'", "\\'", $cons);
             $cont_esc = str_replace("'", "\\'", $cont);
-            $lng_str .= "define('".$cons_esc."','".$cont_esc."');\r\n";
+            $lng_str .= 'define(\''.$cons_esc.'\',\''.$cont_esc.'\');'.PHP_EOL;
         }
-        $lng_str .= '?>';
-
         $handle = fopen($lng_src, 'wb');
         fwrite($handle, $lng_str);
         fclose($handle);
     }
-
-    // Redirect back to same page
     $url = $admin_file.'.php?op=lang_file&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
     header('Location: '.$url);
 }
@@ -275,12 +257,11 @@ function lang_save(): void {
 function lang_conf(): void {
     global $admin_file, $confla;
     head();
-    $cont = lang_navi(0, 1, 0, 0);
-    $permtest = end_chmod('config/config_lang.php', 666);
-    if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
+    checkConfigFile('lang.php');
+    $cont = lang_navi(1, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._LANGKEY.':<div class="sl_small">'._LANGKEYI.'</div></td><td><input type="text" name="key" value="'.$confla['key'].'" class="sl_conf" placeholder="'._LANGKEY.'" required></td></tr>'
+    .'<tr><td>'._LANGKEY.':</td><td><input type="text" name="key" value="'.$confla['key'].'" class="sl_conf" placeholder="'._LANGKEY.'" required></td></tr>'
     .'<tr><td>'._LANGTR.':</td><td><select name="lang" class="sl_conf">'.language($confla['lang'], 1).'</select></td></tr>'
     .'<tr><td>'._LANGCOUNT.':</td><td><input type="number" name="count" value="'.$confla['count'].'" class="sl_conf" placeholder="'._LANGCOUNT.'" required></td></tr>'
     .'<tr><td>Konstanten pro Seite:<div class="sl_small">Max. Konstanten pro Seite (empfohlen: 100)</div></td><td><input type="number" name="per_page" value="'.($confla['per_page'] ?? 100).'" class="sl_conf" placeholder="100" min="10" max="500" required></td></tr>'
@@ -298,13 +279,13 @@ function lang_conf_save(): void {
         'count' => getVar('post', 'count', 'num', 0),
         'per_page' => getVar('post', 'per_page', 'num', 100)
     ];
-    setConfigFile('config_lang.php', 'confla', $cont, $confla);
+    setConfigFile('lang.php', 'confla', $cont, $confla);
     header('Location: '.$admin_file.'.php?op=lang_conf');
 }
 
 function lang_info(): void {
     head();
-    echo lang_navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'lang').'</div>';
+    echo lang_navi(2, 0).'<div id="repadm_info">'.adm_info(1, 0, 'lang').'</div>';
     foot();
 }
 
