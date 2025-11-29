@@ -321,21 +321,34 @@ if (is_dir($path.'/language')) $eadmin = '<a href="...">'._ADMIN.'</a>';
 
 **Rule:** Simple single-statement conditions can be one-liners (max 120 chars)
 
-### 2.10 Config File Modernization
+### 2.10 System File Validation and Config Modernization
 
-**Use new config helper functions and naming**
+**Use checkConfigFile() for all editable system files (config files, language files, etc.)**
 
-**BEFORE:**
+**BEFORE (config files):**
 ```php
 include('config/config_lang.php');
 $permtest = end_chmod('config/config_lang.php', 666);
 if ($permtest) $cont .= setTemplateWarning(...);
 ```
 
-**AFTER:**
+**AFTER (config files):**
 ```php
 require_once CONFIG_DIR.'/lang.php';
 checkConfigFile('lang.php');
+```
+
+**BEFORE (language files):**
+```php
+$lng_src = $lang_path.'/lang-'.$lng_cn.'.php';
+$permtest = end_chmod($lng_src, 666);
+if ($permtest) $cont .= setTemplateWarning('warn', [...]);
+```
+
+**AFTER (language files):**
+```php
+$lng_src = $lang_path.'/lang-'.$lng_cn.'.php';
+checkConfigFile($lng_src);
 ```
 
 **Config file naming:**
@@ -343,9 +356,12 @@ checkConfigFile('lang.php');
 - `config_users.php` → `users.php`
 - `config_fields.php` → `fields.php`
 
-**Rule:**
-- Use `require_once CONFIG_DIR.'/filename.php'` for includes
-- Use `checkConfigFile('filename.php')` to verify permissions
+**Rules:**
+- Use `checkConfigFile()` instead of `end_chmod()` for **all editable system files**:
+  - Config files in `/config/` directory
+  - Language files (`lang-*.php`)
+  - Any writable system files requiring permission validation
+- Use `require_once CONFIG_DIR.'/filename.php'` for config includes
 - Remove `config_` prefix from new config files
 
 ### 2.11 Modern PHP Features to Use
