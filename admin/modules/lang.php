@@ -14,10 +14,11 @@ function lang_navi(int $tab = 0, int $subtab = 0): string {
     return getAdminTabs(_LANG_EDIT, 'lang.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function lang_get_path(string $mod, string $typ): array {
-    $mod_dir = $mod ? 'modules/'.$mod.'/' : '';
-    $lng_wh = $typ ? $typ.'/' : '';
-    return [$mod_dir, $lng_wh];
+function getLangPath(string $mod = '', string $typ = ''): string {
+    $base = BASE_DIR;
+    $module = $mod ? '/modules/'.$mod : '';
+    $type = $typ ? '/'.$typ : '';
+    return $base.$module.$type.'/language';
 }
 
 function lang_main(): void {
@@ -98,12 +99,11 @@ function lang_file(): void {
     $cont = lang_navi(0, 0);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
-    [$mod_dir, $lng_wh] = lang_get_path($mod, $typ);
     $page = getVar('get', 'page', 'num', 1);
     $per_page = $confla['per_page'] ?? 100;
     $lng_cn = [];
     $cnst_arr = [];
-    $lang_path = BASE_DIR.'/'.$mod_dir.$lng_wh.'language';
+    $lang_path = getLangPath($mod, $typ);
     $dir = opendir($lang_path);
     if ($dir === false) {
         $cont = lang_navi(0, 0);
@@ -118,7 +118,7 @@ function lang_file(): void {
     $cnst_arr = [];
     $cj = count($lng_cn);
     for ($j = 0; $j < $cj; $j++) {
-        $lng_src = BASE_DIR.'/'.$mod_dir.$lng_wh.'language/lang-'.$lng_cn[$j].'.php';
+        $lng_src = $lang_path.'/lang-'.$lng_cn[$j].'.php';
         $permtest = end_chmod($lng_src, 666);
         if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
         $lng = file_get_contents($lng_src);
@@ -206,15 +206,15 @@ function lang_save(): void {
     global $admin_file;
     $mod = getVar('post', 'mod', 'var', '');
     $typ = getVar('post', 'typ', 'var', '');
-    [$mod_dir, $lng_wh] = lang_get_path($mod, $typ);
     $lng_cn = getVar('post', 'lcn[]', 'var') ?: [];
     $page = getVar('post', 'page', 'num', 1);
     $cnst = getVar('post', 'cnst[]', 'var') ?: [];
     $translations = getVar('post', 'lng', 'var', []);
+    $lang_path = getLangPath($mod, $typ);
     $cj = count($lng_cn);
     for ($j = 0; $j < $cj; $j++) {
         $lng_cnj = $lng_cn[$j];
-        $lng_src = BASE_DIR.'/'.$mod_dir.$lng_wh.'language/lang-'.$lng_cnj.'.php';
+        $lng_src = $lang_path.'/lang-'.$lng_cnj.'.php';
 
         // Read existing constants from file
         $existing = [];
