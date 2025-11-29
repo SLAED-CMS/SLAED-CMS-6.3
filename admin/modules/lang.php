@@ -105,13 +105,6 @@ function lang_file(): void {
     $cnst_arr = [];
     $lang_path = getLangPath($mod, $typ);
     $dir = opendir($lang_path);
-    if ($dir === false) {
-        $cont = lang_navi(0, 0);
-        $cont .= setTemplateWarning('error', ['time' => '', 'url' => '', 'id' => 'error', 'text' => 'Sprachverzeichnis nicht gefunden: '.$lang_path]);
-        echo $cont;
-        foot();
-        return;
-    }
     while (($file = readdir($dir)) !== false) if (preg_match('#^lang\-(.+)\.php#', $file, $matches)) $lng_cn[] = $matches[1];
     closedir($dir);
     $gl_tmp = $cnst_arr;
@@ -119,8 +112,7 @@ function lang_file(): void {
     $cj = count($lng_cn);
     for ($j = 0; $j < $cj; $j++) {
         $lng_src = $lang_path.'/lang-'.$lng_cn[$j].'.php';
-        $permtest = end_chmod($lng_src, 666);
-        if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
+        checkConfigFile($lng_src);
         $lng = file_get_contents($lng_src);
         preg_match_all('#define\(["\']([^"\']+)["\']\s*,\s*["\'](.*)["\']\);#sU', $lng, $out);
         unset($out[0]);
