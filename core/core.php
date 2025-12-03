@@ -392,15 +392,15 @@ function isDate($str) {
 
 # Generating categories for modules
 function setCategories($mod, $sub, $desc, $id='') {
-    global $prefix, $db, $user, $conf, $currentlang;
+    global $prefix, $db, $user, $conf, $locale;
     if (analyze($mod)) {
         $id = (intval($id)) ? $id : 0;
         if ($id) {
             $where = "WHERE modul = '".$mod."' AND parentid = '".$id."'";
         } elseif ($id && $conf['multilingual']) {
-            $where = "WHERE modul = '".$mod."' AND parentid = '".$id."' AND (language = '".$currentlang."' OR language = '')";
+            $where = "WHERE modul = '".$mod."' AND parentid = '".$id."' AND (language = '".$locale."' OR language = '')";
         } elseif ($conf['multilingual']) {
-            $where = "WHERE modul = '".$mod."' AND (language = '".$currentlang."' OR language = '')";
+            $where = "WHERE modul = '".$mod."' AND (language = '".$locale."' OR language = '')";
         } else {
             $where = "WHERE modul = '".$mod."'";
         }
@@ -484,9 +484,9 @@ function setCategories($mod, $sub, $desc, $id='') {
 
 # Generation of article numbers
 function setArticleNumbers(string $name, string $mod, int $limit, string $url, string $cntfld, string $tbl, string $catfld = '', string $where = '', int $maxpg = 10, array $params = []): string {
-    global $prefix, $db, $conf, $currentlang;
+    global $prefix, $db, $conf, $locale;
     if (!defined('ADMIN_FILE') && $catfld && $where) {
-        $lng_where = $conf['multilingual'] ? 'WHERE modul=\''.$mod.'\' AND (language=\''.$currentlang.'\' OR language=\'\')' : 'WHERE modul=\''.$mod.'\'';
+        $lng_where = $conf['multilingual'] ? 'WHERE modul=\''.$mod.'\' AND (language=\''.$locale.'\' OR language=\'\')' : 'WHERE modul=\''.$mod.'\'';
         $res = $db->sql_query('SELECT id, auth_read FROM '.$prefix.'_categories '.$lng_where.' ORDER BY id');
         $catid = [];
         while (list($cid, $auth) = $db->sql_fetchrow($res)) {
@@ -1084,8 +1084,8 @@ function getCompressCodeOld($cont) {
 
 # Voting view
 function getVoting() {
-    global $db, $prefix, $admin_file, $user, $currentlang, $conf, $confv;
-    $querylang = ($conf['multilingual'] == 1) ? "(language = '".$currentlang."' OR language = '') AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+    global $db, $prefix, $admin_file, $user, $locale, $conf, $confv;
+    $querylang = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
     $arg = func_get_args();
     $id = (isset($arg[0])) ? intval($arg[0]) : intval($_GET['id']);
     $votid = (isset($arg[1])) ? ((isset($arg[1])) ? analyze($arg[1]) : "voting") : ((isset($_POST['votid'])) ? analyze($_POST['votid']) : "voting");
@@ -2226,7 +2226,7 @@ function deflmconst($con) {
 
 # Defined lang constant
 function deflang($con) {
-    $val = array('english' => _ENGLISH, 'french' => _FRENCH, 'german' => _GERMAN, 'polish' => _POLISH, 'russian' => _RUSSIAN, 'ukrainian' => _UKRAINIAN);
+    $val = array('en' => _ENGLISH, 'fr' => _FRENCH, 'de' => _GERMAN, 'pl' => _POLISH, 'ru' => _RUSSIAN, 'uk' => _UKRAINIAN);
     return strtr($con, $val);
 }
 
@@ -3447,9 +3447,9 @@ function catids() {
 
 # Format categories IDs from module
 function catmids() {
-    global $prefix, $db, $conf, $currentlang;
+    global $prefix, $db, $conf, $locale;
     $arg = func_get_args();
-    $where = ($conf['multilingual']) ? "WHERE modul = '".$arg[0]."' AND (language = '".$currentlang."' OR language = '')" : "WHERE modul = '".$arg[0]."'";
+    $where = ($conf['multilingual']) ? "WHERE modul = '".$arg[0]."' AND (language = '".$locale."' OR language = '')" : "WHERE modul = '".$arg[0]."'";
     $result = $db->sql_query("SELECT id, auth_read FROM ".$prefix."_categories ".$where." ORDER BY id");
     while (list($cid, $auth_read) = $db->sql_fetchrow($result)) if (is_acess($auth_read)) $catid[] = $cid;
     $where = ($catid) ? "AND ".$arg[1]." IN (".implode(", ", $catid).")" : "";
@@ -3760,7 +3760,7 @@ function search_replace($sourse, $mod) {
 
 # Admin mail add info
 function addmail() {
-    global $prefix, $db, $conf, $confu, $currentlang;
+    global $prefix, $db, $conf, $confu, $locale;
     $arg = func_get_args();
     $mod = analyze($arg[1]);
     if ($arg[0] && $mod) {
@@ -3768,7 +3768,7 @@ function addmail() {
         $puname = ($arg[2]) ? text_filter(substr($arg[2], 0, 25)) : $confu['anonym'];
         $message = (isset($arg[4]) == 1) ? str_replace("[text]", sprintf(_ADDMAILC, $puname, $arg[3], $arg[5]), $conf['mtemp']) : str_replace("[text]", sprintf(_ADDMAIL, $puname, $arg[3]), $conf['mtemp']);
         list($mid) = $db->sql_fetchrow($db->sql_query("SELECT mid FROM ".$prefix."_modules WHERE title = '".$mod."'"));
-        $wlang = ($conf['multilingual']) ? "AND (lang = '".$currentlang."' OR lang = '')" : "";
+        $wlang = ($conf['multilingual']) ? "AND (lang = '".$locale."' OR lang = '')" : "";
         $result = $db->sql_query("SELECT email, super, modules FROM ".$prefix."_admins WHERE smail = '1' ".$wlang." ORDER BY id");
         while (list($email, $super, $modules) = $db->sql_fetchrow($result)) {
             if ($super) {
@@ -3873,9 +3873,9 @@ function addblocks($str) {
 
 # Format block
 function blocks($side, $fly="") {
-    global $prefix, $db, $conf, $currentlang, $name, $home, $pos, $b_id, $blockfile;
+    global $prefix, $db, $conf, $locale, $name, $home, $pos, $b_id, $blockfile;
     static $barr;
-    $querylang = ($conf['multilingual'] == 1) ? "AND (blanguage = '".$currentlang."' OR blanguage = '')" : "";
+    $querylang = ($conf['multilingual'] == 1) ? "AND (blanguage = '".$locale."' OR blanguage = '')" : "";
     $pos = strtolower($side[0]);
     $side = $pos;
     if (!isset($barr)) {
@@ -4735,7 +4735,7 @@ function language($lang='', $typ='') {
     $dir = opendir("language");
     $cont = (!$typ) ? "<option value=\"\">"._ALL."</option>" : "";
     while (false !== ($file = readdir($dir))) {
-        if (preg_match("#^lang\-(.+)\.php#", $file, $matches)) {
+        if (preg_match("#^(.+)\.php#", $file, $matches)) {
             $langf = $matches[1];
             $title = deflang($langf);
             $sel = ($lang == $langf) ? " selected" : "";
@@ -4814,7 +4814,7 @@ function redaktor($id, $name, $class, $editor, $submit) {
 
 # Show comments
 function ashowcom() {
-    global $prefix, $db, $admin_file, $conf, $confu, $confc, $confpr, $user, $currentlang;
+    global $prefix, $db, $admin_file, $conf, $confu, $confc, $confpr, $user, $locale;
     $arg = func_get_args();
     $cid = isset($arg[0]) ? intval($arg[0]) : "";
     $mod = isset($arg[1]) ? analyze($arg[1]) : "";
@@ -5063,10 +5063,10 @@ function numcom() {
 
 # Voting result save
 function avoting_save() {
-    global $db, $prefix, $user, $currentlang, $conf, $confv;
+    global $db, $prefix, $user, $locale, $conf, $confv;
     $id = intval($_POST['id']);
     $questions = $_POST['questions'];
-    $querylang = ($conf['multilingual'] == 1) ? "(language = '".$currentlang."' OR language = '') AND date <= NOW() AND enddate >= NOW()" : "date <= NOW() AND enddate >= NOW()";
+    $querylang = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND date <= NOW() AND enddate >= NOW()" : "date <= NOW() AND enddate >= NOW()";
     $result = $db->sql_query("SELECT id FROM ".$prefix."_voting WHERE id = '".$id."' AND ".$querylang);
     if ($db->sql_numrows($result) > 0) {
         if (!$questions) {

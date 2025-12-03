@@ -1,16 +1,18 @@
 <?php
-# Copyright © 2005 - 2014 SLAED
-# Website: http://www.slaed.net
+# Author: Eduard Laas
+# Copyright Â© 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
 if (!defined("BLOCK_FILE")) {
 	header("Location: ../index.php");
 	exit;
 }
 
-global $conf, $currentlang;
+global $conf, $locale;
 $handle = opendir('language');
 while (false !== ($file = readdir($handle))) {
-	if (preg_match("/^lang\-(.+)\.php/", $file, $matches)) {
+	if (preg_match("/^(.+)\.php/", $file, $matches)) {
 		$langlist[] = $matches[1];
 	}
 }
@@ -30,10 +32,9 @@ if ($conf['flags'] == 1) {
 	for ($i=0; $i < count($langlist); $i++) {
 		if ($langlist[$i] != "") {
 			$content .= "<option value=\"index.php?newlang=".$langlist[$i]."\" ";
-			if ($langlist[$i] == $currentlang) $content .= " selected";
+			if ($langlist[$i] == $locale) $content .= " selected";
 			$content .= ">".deflang($langlist[$i])."</option>\n";
 		}
 	}
 	$content .= "</select></form>";
 }
-?>

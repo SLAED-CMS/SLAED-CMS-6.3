@@ -20,7 +20,7 @@ function blocks_show(): void {
 }
 
 function blocks_new(): void {
-    global $prefix, $db, $currentlang, $conf, $admin_file;
+    global $prefix, $db, $locale, $conf, $admin_file;
     head();
     $cont = blocks_navi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');

@@ -118,7 +118,7 @@ function adminmenu($url, $title, $image) {
 }
 
 function panelblock() {
-	global $prefix, $db, $conf, $panel, $admin_file, $content_am, $currentlang, $class;
+	global $prefix, $db, $conf, $panel, $admin_file, $content_am, $locale, $class;
 	if (!$panel) {
 		if (is_admin_god()) {
 			$dir = opendir('admin/links');
@@ -137,7 +137,7 @@ function panelblock() {
 				if (file_exists('modules/'.$title.'/admin/index.php') && file_exists('modules/'.$title.'/admin/links.php')) {
 					$class = (!$active) ? ' sl_hidden' : '';
 					include('modules/'.$title.'/admin/links.php');
-					if (file_exists('modules/'.$title.'/admin/language/lang-'.$currentlang.'.php')) include('modules/'.$title.'/admin/language/lang-'.$currentlang.'.php');
+					if (file_exists('modules/'.$title.'/admin/language/lang-'.$locale.'.php')) include('modules/'.$title.'/admin/language/lang-'.$locale.'.php');
 				}
 			}
 		}
@@ -148,7 +148,7 @@ function panelblock() {
 }
 
 function panel() {
-	global $prefix, $db, $conf, $panel, $count, $admin_file, $currentlang, $class;
+	global $prefix, $db, $conf, $panel, $count, $admin_file, $locale, $class;
 	if (file_exists('setup.php')) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _DELSETUP));
 	$minver = '5.6';
 	$info = sprintf(_PHPSETUP, $minver);
@@ -176,7 +176,7 @@ function panel() {
 				if (file_exists("modules/".$title."/admin/index.php") && file_exists("modules/".$title."/admin/links.php")) {
 					$class = (!$active) ? " sl_hidden" : "";
 					include("modules/".$title."/admin/links.php");
-					if (file_exists("modules/".$title."/admin/language/lang-".$currentlang.".php")) include("modules/".$title."/admin/language/lang-".$currentlang.".php");
+					if (file_exists("modules/".$title."/admin/language/lang-".$locale.".php")) include("modules/".$title."/admin/language/lang-".$locale.".php");
 				}
 			}
 		}

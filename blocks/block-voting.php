@@ -9,8 +9,8 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $prefix, $db, $currentlang, $conf, $confv;
-$querylang = ($conf['multilingual'] == 1) ? "(language = '".$currentlang."' OR language = '') AND modul = '' AND date <= now()" : "modul = '' AND date <= now()";
+global $prefix, $db, $locale, $conf, $confv;
+$querylang = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND modul = '' AND date <= now()" : "modul = '' AND date <= now()";
 if ($confv['block'] <= 1) {
 	$querylang = ($confv['block'] == 1) ? $querylang." AND enddate <= now() AND status = '1'" : $querylang." AND enddate >= now()";
 	$result = $db->sql_query("SELECT id FROM ".$prefix."_voting WHERE ".$querylang." ORDER BY id DESC LIMIT 0, 1");

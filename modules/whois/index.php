@@ -19,7 +19,7 @@ function navigate($title, $cat='') {
 }
 
 function mwhois() {
-	global $prefix, $db, $admin_file, $user, $conf, $confu, $confw, $home, $currentlang;
+	global $prefix, $db, $admin_file, $user, $conf, $confu, $confw, $home, $locale;
 	global $domain_whois, $ext, $nomatch, $server, $domain_option;
 	$domain_licens = getVar('req', 'domain_licens', 'word');
 	

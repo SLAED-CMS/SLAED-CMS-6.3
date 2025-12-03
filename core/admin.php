@@ -507,7 +507,7 @@ function scatacess($auth) {
 }
 
 function ajax_block() {
-	global $prefix, $db, $currentlang, $conf, $admin_file;
+	global $prefix, $db, $locale, $conf, $admin_file;
 	$fcont = "";
 	$result = $db->sql_query("SELECT a.bid, a.bkey, a.title, a.url, a.bposition, a.weight, a.active, a.blanguage, a.blockfile, a.view, a.expire, a.action, b.bid, b.bposition, b.weight, c.bid, c.bposition, c.weight FROM ".$prefix."_blocks AS a LEFT JOIN ".$prefix."_blocks AS b ON (b.bposition = a.bposition AND b.weight = a.weight-1) LEFT JOIN ".$prefix."_blocks AS c ON (c.bposition = a.bposition AND c.weight = a.weight+1) ORDER BY a.bposition, a.weight");
 	while (list($bid, $bkey, $title, $url, $bposition, $weight, $active, $blanguage, $blockfile, $view, $expire, $action, $con1, $bposition1, $weight1, $con2, $bposition2, $weight2) = $db->sql_fetchrow($result)) {
@@ -822,10 +822,10 @@ function com_access() {
 
 # Add voting
 function add_voting() {
-	global $prefix, $db, $currentlang, $conf;
+	global $prefix, $db, $locale, $conf;
 	$arg = func_get_args();
 	$modul = analyze($arg[0]);
-	$querylang = ($conf['multilingual'] == 1) ? "(language = '".$currentlang."' OR language = '') AND modul = '".$modul."' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '".$modul."' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+	$querylang = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND modul = '".$modul."' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '".$modul."' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
 	$class = ($arg[3]) ? "sl_field ".$arg[3] : "sl_field";
 	$cont = "<select name=\"".$arg[1]."\" class=\"".$class."\"><option value=\"0\">"._NO."</option>";
 	$result = $db->sql_query("SELECT id, title FROM ".$prefix."_voting WHERE ".$querylang." ORDER BY id DESC");
@@ -859,7 +859,7 @@ function edit_list() {
 
 # View and edit info
 function adm_info() {
-	global $currentlang, $conf;
+	global $locale, $conf;
 	$arg = func_get_args();
 	$obj = empty($arg[0]) ? 0 : 1;
 	$id = isset($_POST['id']) ? intval($_POST['id']) : 0;
@@ -878,7 +878,7 @@ function adm_info() {
 	} else {
 		$mod = ($arg[1]) ? "modules/".$arg[1]."/" : "";
 		$file = ($arg[2]) ? $arg[2]."-" : "";
-		$name = $file.$currentlang;
+		$name = $file.$locale;
 		$dir = $mod."admin/info/".$name.".html";
 		$thefile = (file_exists($dir)) ? file_get_contents($dir) : _NO_INFO;
 		if ($conf['adminfo']) {

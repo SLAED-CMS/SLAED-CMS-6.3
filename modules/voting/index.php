@@ -10,8 +10,8 @@ if (!defined('MODULE_FILE')) {
 }
 
 function voting() {
-	global $prefix, $db, $admin_file, $currentlang, $conf, $confv;
-	$onum = ($conf['multilingual'] == 1) ? "(language = '".$currentlang."' OR language = '') AND modul = '' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+	global $prefix, $db, $admin_file, $locale, $conf, $confv;
+	$onum = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND modul = '' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $confv['num'];
 	head();

@@ -224,7 +224,7 @@ function network() {
 }
 
 function activate() {
-	global $db, $prefix, $conf, $currentlang;
+	global $db, $prefix, $conf, $locale;
 	$uname = htmlspecialchars(substr(urldecode(getVar('get', 'user', 'text')), 0, 25));
 	$cnum = htmlspecialchars(substr(getVar('get', 'num', 'text'), 0, 40));
 	$past = time() - 86400;
@@ -236,7 +236,7 @@ function activate() {
 		if ($cnum == $check_num) {
 			$uip = getIp();
 			$uagent = getAgent();
-			$db->sql_query("INSERT INTO ".$prefix."_users (user_id, user_name, user_email, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_agent) VALUES (NULL, '".$user_name."', '".$user_email."', 'default/00.gif', '".$user_regdate."', '".md5_salt($user_password)."', '".$currentlang."', '".$uip."', '".$uagent."')");
+			$db->sql_query("INSERT INTO ".$prefix."_users (user_id, user_name, user_email, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_agent) VALUES (NULL, '".$user_name."', '".$user_email."', 'default/00.gif', '".$user_regdate."', '".md5_salt($user_password)."', '".$locale."', '".$uip."', '".$uagent."')");
 			$db->sql_query("DELETE FROM ".$prefix."_users_temp WHERE user_name = '".$user_name."' AND check_num = '".$check_num."'");
 			$db->sql_query("DELETE FROM ".$prefix."_session WHERE uname = '".$uip."' AND guest = '0'");
 			if ($conf['forum']) new_user($user_name, $user_password, $user_email);

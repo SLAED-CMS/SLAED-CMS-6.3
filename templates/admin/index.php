@@ -13,7 +13,7 @@ function setTemplateHead($sub, $val = '') {
 		if ($conf['multilingual'] == 1) {
 			$dir = opendir('language');
 			while (false !== ($file = readdir($dir))) {
-				if (preg_match('#^lang\-(.+)\.php#', $file, $matches)) {
+				if (preg_match('#^(.+)\.php#', $file, $matches)) {
 					$lfound = $matches[1];
 					$title = deflang($lfound);
 					$langs .= '<a href="'.$admin_file.'.php?newlang='.$lfound.'"><img src="'.img_find('language/'.$lfound.'_mini.png').'" alt="'.$title.'" title="'.$title.'"></a>';

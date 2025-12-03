@@ -163,35 +163,28 @@ function changelog(): void {
 
         $cont .= '</div>';
 
-        // Pagination Links
-        if ($total_pages > 1) {
-            $cont .= '<div style="margin: 20px 0; text-align: center;">';
-            $query = http_build_query(array_filter([
-                'op' => 'changelog',
-                'author' => $author,
-                'file' => $file,
-                'search' => $search,
-                'date_from' => $date_from,
-                'date_to' => $date_to
-            ]));
-
-            if ($page > 1) {
-                $cont .= '<a href="'.$admin_file.'.php?'.$query.'&page='.($page-1).'" class="sl_but_blue">« Vorherige</a> ';
-            }
-
-            for ($p = max(1, $page - 5); $p <= min($total_pages, $page + 5); $p++) {
-                if ($p == $page) {
-                    $cont .= '<strong style="padding: 5px 10px; background: #4CAF50; color: white; margin: 0 2px;">'.$p.'</strong> ';
-                } else {
-                    $cont .= '<a href="'.$admin_file.'.php?'.$query.'&page='.$p.'" class="sl_but_gray">'.$p.'</a> ';
-                }
-            }
-
-            if ($page < $total_pages) {
-                $cont .= '<a href="'.$admin_file.'.php?'.$query.'&page='.($page+1).'" class="sl_but_blue">Nächste »</a>';
-            }
-            $cont .= '</div>';
-        }
+        // Pagination via setPageNumbers()
+        $query = http_build_query(array_filter([
+            'op' => 'changelog',
+            'author' => $author,
+            'file' => $file,
+            'search' => $search,
+            'date_from' => $date_from,
+            'date_to' => $date_to
+        ]));
+        $url = $query ? $query.'&' : 'op=changelog&';
+        $cont .= setPageNumbers(
+            'pagenum',
+            'changelog',
+            $total_commits,
+            $total_pages,
+            $per_page,
+            $url,
+            10,
+            $page,
+            '',
+            'page'
+        );
 
         $cont .= setTemplateBasic('close');
     }
