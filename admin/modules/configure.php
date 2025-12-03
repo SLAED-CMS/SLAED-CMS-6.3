@@ -219,7 +219,7 @@ function configure() {
 	."<tr><td>"._SELLANGUAGE.":</td><td><select name=\"language\" class=\"sl_conf\">";
 	$dir = opendir("language");
 	while (false !== ($file = readdir($dir))) {
-		if (preg_match("/^lang\-(.+)\.php/", $file, $matches)) {
+		if (preg_match("/^(.+)\.php/", $file, $matches)) {
 			$langfound = $matches[1];
 			$selected = ($conf['language'] == $langfound) ? "selected" : "";
 			$cont .= "<option value=\"".$langfound."\" ".$selected.">".deflang($langfound)."</option>";

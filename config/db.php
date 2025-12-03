@@ -11,10 +11,9 @@ $confdb = array (
   'collate' => 'utf8mb4_unicode_ci',
   'engine' => 'InnoDB',
   'host' => 'MariaDB-11.7',
-  'mode' => '0',
   'name' => 'slaed',
   'pass' => '',
   'prefix' => 'sport',
-  'sync' => '0',
+  'sync' => '1',
   'uname' => 'root',
 );

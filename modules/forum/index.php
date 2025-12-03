@@ -12,15 +12,15 @@ get_lang($conf['name']);
 include('config/config_forum.php');
 
 function forum() {
-	global $prefix, $db, $user, $conf, $confu, $conffo, $currentlang;
+	global $prefix, $db, $user, $conf, $confu, $conffo, $locale;
 	$mod = ($conf['name']) ? analyze($conf['name']) : 0;
 	$id = (isset($_POST['cat'])) ? ((isset($_POST['cat'])) ? intval($_POST['cat']) : 0) : ((isset($_GET['cat'])) ? intval($_GET['cat']) : 0);
 	if ($id) {
 		$where = "WHERE c.modul = '".$mod."' AND (c.parentid = '".$id."' OR c.id = '".$id."')";
 	} elseif ($id && $conf['multilingual']) {
-		$where = "WHERE c.modul = '".$mod."' AND (c.parentid = '".$id."' OR c.id = '".$id."') AND (c.language = '".$currentlang."' OR c.language = '')";
+		$where = "WHERE c.modul = '".$mod."' AND (c.parentid = '".$id."' OR c.id = '".$id."') AND (c.language = '".$locale."' OR c.language = '')";
 	} elseif ($conf['multilingual']) {
-		$where = "WHERE c.modul = '".$mod."' AND (c.language = '".$currentlang."' OR c.language = '')";
+		$where = "WHERE c.modul = '".$mod."' AND (c.language = '".$locale."' OR c.language = '')";
 	} else {
 		$where = "WHERE c.modul = '".$mod."'";
 	}
@@ -113,7 +113,7 @@ function forum() {
 			if (!$a) {
 				if ($isview) {
 					$cat = intval($id);
-					$lang = ($conf['multilingual']) ? "AND (c.language = '".$currentlang."' OR c.language = '') AND s.catid = '".$cat."'" : "AND s.catid = '".$cat."'";
+					$lang = ($conf['multilingual']) ? "AND (c.language = '".$locale."' OR c.language = '') AND s.catid = '".$cat."'" : "AND s.catid = '".$cat."'";
 					$listnum = intval($conffo['listnum']);
 					$ordern = (is_moder($conf['name'])) ? "WHERE s.pid = '0'" : "WHERE s.pid = '0' AND s.time <= NOW() AND s.status != '0'";
 					$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
@@ -218,7 +218,7 @@ function forum() {
 }
 
 function view() {
-	global $prefix, $db, $admin_file, $user, $conf, $confu, $confpr, $conffo, $currentlang;
+	global $prefix, $db, $admin_file, $user, $conf, $confu, $confpr, $conffo, $locale;
 	$id = (isset($_GET['id'])) ? intval($_GET['id']) : 0;
 	$last = (isset($_GET['last'])) ? 1 : 0;
 	$ordern = (is_moder($conf['name'])) ? "WHERE (id = '".$id."' OR pid = '".$id."')" : "WHERE (id = '".$id."' OR pid = '".$id."') AND time <= NOW() AND status != '0'";

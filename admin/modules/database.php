@@ -131,7 +131,7 @@ function database(): void {
     }
 
     // --- Gesamtzeile wie in phpMyAdmin ---
-    $content .= '<tr class="sl_total">'
+    $content .= '<tr>'
               . '<td><strong>'.$i.'</strong></td>'
               . '<td>&nbsp;</td>'
               . '<td>&nbsp;</td>'

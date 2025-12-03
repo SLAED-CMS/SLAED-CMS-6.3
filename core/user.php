@@ -8,7 +8,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Show comments and form
 function setComShow() {
-	global $prefix, $db, $admin_file, $conf, $confu, $confc, $user, $currentlang;
+	global $prefix, $db, $admin_file, $conf, $confu, $confc, $user, $locale;
 	$arg = func_get_args();
 	$cont = '<a id="comm"></a><div id="repcsave">'.ashowcom($arg[0], $conf['name']).'</div>';
 	if (!is_user() && $confc['anonpost'] == 0) {
@@ -33,9 +33,9 @@ function setComShow() {
 
 # Showing messages on the home page
 function setMessageShow() {
-	global $prefix, $db, $admin_file, $conf, $currentlang, $user;
+	global $prefix, $db, $admin_file, $conf, $locale, $user;
 	if ($conf['message'] == 1) {
-		$querylang = ($conf['multilingual'] == 1) ? "AND (mlanguage = '".$currentlang."' OR mlanguage = '')" : '';
+		$querylang = ($conf['multilingual'] == 1) ? "AND (mlanguage = '".$locale."' OR mlanguage = '')" : '';
 		$result = $db->sql_query("SELECT mid, title, content, expire, view FROM ".$prefix."_message WHERE active = '1' ".$querylang);
 		if ($db->sql_numrows($result) > 0) {
 			while (list($mid, $title, $content, $expire, $view) = $db->sql_fetchrow($result)) {
@@ -289,7 +289,7 @@ function editpost() {
 
 # Private messages input view
 function prmess() {
-	global $prefix, $db, $user, $conf, $confu, $confpr, $currentlang;
+	global $prefix, $db, $user, $conf, $confu, $confpr, $locale;
 	$arg = func_get_args();
 	$obj = analyze($arg[0]);
 	$stop = $arg[1];

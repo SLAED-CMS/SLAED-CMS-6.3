@@ -9,7 +9,7 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $prefix, $db, $currentlang, $conf, $confu, $conffav, $confpr;
+global $prefix, $db, $locale, $conf, $confu, $conffav, $confpr;
 if (is_user()) {
 	$userinfo = getusrinfo();
 	$uname = $userinfo['user_name'];
@@ -20,7 +20,7 @@ if (is_user()) {
 		list($prin) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".$prefix."_privat WHERE uidin='".$user_id."' AND status = '0'"));
 		list($prout) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".$prefix."_privat WHERE uidout='".$user_id."' AND status = '0'"));
 		if ($prin > 0) {
-			$content .= '<audio src="sound/privat-'.$currentlang.'.mp3" autoplay="autoplay" preload="auto"></audio>
+			$content .= '<audio src="sound/privat-'.$locale.'.mp3" autoplay="autoplay" preload="auto"></audio>
 			<script src="plugins/jquery/tinycon.js"></script>
 			<script>
 			$(document).ready(function() {
