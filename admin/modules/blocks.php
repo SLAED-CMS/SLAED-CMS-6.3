@@ -6,23 +6,23 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function blocks_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function blocksNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     panel();
-    $ops = ['blocks_show', 'blocks_new', 'blocks_file', 'blocks_file_edit', 'blocks_fix', 'blocks_info'];
+    $ops = ['show', 'new', 'file', 'fileedit', 'fix', 'info'];
     $lang = [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO];
-    return getAdminTabs(_BLOCKS, 'blocks.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_BLOCKS, 'blocks.png', 'name=blocks', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function blocks_show(): void {
+function blocksShow(): void {
     head();
-    echo blocks_navi(0, 0, 0, 0).setTemplateBasic('open').'<div id="repajax_block">'.ajax_block().'</div>'.setTemplateBasic('close');
+    echo blocksNavi(0, 0, 0, 0).setTemplateBasic('open').'<div id="repajax_block">'.ajax_block().'</div>'.setTemplateBasic('close');
     foot();
 }
 
-function blocks_new(): void {
+function blocksNew(): void {
     global $prefix, $db, $locale, $conf, $admin_file;
     head();
-    $cont = blocks_navi(0, 1, 0, 0);
+    $cont = blocksNavi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post">'
     .'<table class="sl_table_form">'
@@ -80,32 +80,32 @@ function blocks_new(): void {
     $privs = [_MVALL, _MVUSERS, _MVADMIN, _MVANON];
     foreach ($privs as $key => $value) $cont .= '<option value="'.$key.'">'.$value.'</option>';
     $cont .= '</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="blocks_add"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="add"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function blocks_file(): void {
+function blocksFile(): void {
     global $admin_file;
     head();
-    $cont = blocks_navi(0, 2, 0, 0);
+    $cont = blocksNavi(0, 2, 0, 0);
     $permtest = end_chmod('blocks/', 777);
     if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><input type="text" name="bf" maxlength="200" class="sl_form" placeholder="'._FILENAME.'" required></td></tr>'
     .'<tr><td>'._TYPE.':</td><td><input type="radio" name="flag" value="php" checked> PHP <input type="radio" name="flag" value="html"> HTML</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="blocks_bfile"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="bfile"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function blocks_file_edit(): void {
+function blocksFileEdit(): void {
     global $prefix, $db, $admin_file;
     head();
-    $cont = blocks_navi(0, 3, 0, 0);
+    $cont = blocksNavi(0, 3, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><select name="bf" class="sl_form">';
@@ -117,13 +117,13 @@ function blocks_file_edit(): void {
     }
     closedir($handle);
     $cont .= '</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="blocks_bfile"><input type="submit" value="'._EDITBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="bfile"><input type="submit" value="'._EDITBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function blocks_fix(): void {
+function blocksFix(): void {
     global $prefix, $db, $admin_file;
     $pos = ['b', 'c', 'd', 'f', 'l', 'r'];
     foreach ($pos as $val) {
@@ -136,10 +136,10 @@ function blocks_fix(): void {
             }
         }
     }
-    header('Location: '.$admin_file.'.php?op=blocks_show');
+    header('Location: '.$admin_file.'.php?name=blocks&op=show');
 }
 
-function blocks_add(): void {
+function blocksAdd(): void {
     global $prefix, $db, $admin_file;
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
@@ -169,7 +169,7 @@ function blocks_add(): void {
     }
     if (($content == '') && ($blockfile == '')) {
         head();
-        echo blocks_navi(0, 1, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _RSSFAIL]).setTemplateBasic('open').'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.setTemplateBasic('close');
+        echo blocksNavi(0, 1, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _RSSFAIL]).setTemplateBasic('open').'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.setTemplateBasic('close');
         foot();
     } else {
         if ($expire == '' || $expire == 0) {
@@ -186,11 +186,11 @@ function blocks_add(): void {
         $db->sql_query('INSERT INTO '.$prefix.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bposition, :weight, :active, :refresh, :btime, :blanguage, :blockfile, :view, :expire, :action, :which)', [
             'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
         ]);
-        header('Location: '.$admin_file.'.php?op=blocks_show');
+        header('Location: '.$admin_file.'.php?name=blocks&op=show');
     }
 }
 
-function blocks_bfile(): void {
+function blocksBfile(): void {
     global $prefix, $db, $admin_file;
     $bf = getVar('post', 'bf', 'var', '');
     if ($bf != '') {
@@ -212,7 +212,7 @@ function blocks_bfile(): void {
             }
         }
         head();
-        $cont = blocks_navi(0, 3, 0, 0);
+        $cont = blocksNavi(0, 3, 0, 0);
         $permtest = end_chmod('blocks/', 777);
         if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _BLOCK.': '.$bf]);
@@ -227,17 +227,18 @@ function blocks_bfile(): void {
         .'<tr><td>'.textarea_code('code', 'blocktext', 'sl_form', 'text/x-php', trim($out[1])).'</td></tr>'
         .'<tr><td class="sl_center"><input type="hidden" name="bf" value="'.$bf.'">'
         .'<input type="hidden" name="flag" value="'.$flaged.'">'
-        .'<input type="hidden" name="op" value="blocks_bfile_save">'
+        .'<input type="hidden" name="name" value="blocks">'
+        .'<input type="hidden" name="op" value="bfilesave">'
         .'<input type="submit" value="'._SAVE.'" class="sl_but_blue"> '._GOBACK.'</td></tr></table></form>';
         $cont .= setTemplateBasic('close');
         echo $cont;
         foot();
     } else {
-        header('Location: '.$admin_file.'.php?op=blocks_file');
+        header('Location: '.$admin_file.'.php?name=blocks&op=file');
     }
 }
 
-function blocks_bfile_save(): void {
+function blocksBfileSave(): void {
     global $prefix, $db, $admin_file;
     $blocktext = filter_input(INPUT_POST, 'blocktext', FILTER_UNSAFE_RAW);
     $bf = getVar('post', 'bf', 'var', '');
@@ -251,16 +252,16 @@ function blocks_bfile_save(): void {
                 $html_e = "\r\nBLOCKHTML;\r\n";
             }
             fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
-            header('Location: '.$admin_file.'.php?op=blocks_show');
+            header('Location: '.$admin_file.'.php?name=blocks&op=show');
             fclose($handle);
         }
     }
 }
 
-function blocks_edit(): void {
+function blocksEdit(): void {
     global $prefix, $db, $admin_file, $conf;
     head();
-    $cont = blocks_navi(0, 1, 0, 0);
+    $cont = blocksNavi(0, 1, 0, 0);
     $bid = getVar('get', 'bid', 'num');
     list($bkey, $title, $content, $url, $bposition, $weight, $active, $refresh, $blanguage, $blockfile, $view, $expire, $action, $which) = $db->sql_fetchrow($db->sql_query('SELECT bkey, title, content, url, bposition, weight, active, refresh, blanguage, blockfile, view, expire, action, which FROM '.$prefix.'_blocks WHERE bid = :bid', ['bid' => $bid]));
     if ($url != '') {
@@ -393,14 +394,15 @@ function blocks_edit(): void {
     .'<input type="hidden" name="newexpire" value="'.$newexpire.'">'
     .'<input type="hidden" name="bkey" value="'.$bkey.'">'
     .'<input type="hidden" name="weight" value="'.$weight.'">'
-    .'<input type="hidden" name="op" value="blocks_edit_save">'
+    .'<input type="hidden" name="name" value="blocks">'
+    .'<input type="hidden" name="op" value="editsave">'
     .'<input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function blocks_edit_save(): void {
+function blocksEditSave(): void {
     global $prefix, $db, $admin_file;
     $newexpire = getVar('post', 'newexpire', 'num', 0);
     $bid = getVar('post', 'bid', 'num');
@@ -476,7 +478,7 @@ function blocks_edit_save(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
             ]);
         }
-        header('Location: '.$admin_file.'.php?op=blocks_show');
+        header('Location: '.$admin_file.'.php?name=blocks&op=show');
     } else {
         if ($oldposition != $bposition) {
             $result = $db->sql_query('SELECT bid FROM '.$prefix.'_blocks WHERE weight >= :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
@@ -509,71 +511,71 @@ function blocks_edit_save(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
             ]);
         }
-        header('Location: '.$admin_file.'.php?op=blocks_show');
+        header('Location: '.$admin_file.'.php?name=blocks&op=show');
     }
 }
 
-function blocks_change(): void {
+function blocksChange(): void {
     global $prefix, $db, $admin_file;
     $bid = getVar('get', 'bid', 'num');
     $act = getVar('get', 'act', 'num', 0);
     $active = ($act) ? 0 : 1;
     $db->sql_query('UPDATE '.$prefix.'_blocks SET active = :active WHERE bid = :bid', ['active' => $active, 'bid' => $bid]);
-    header('Location: '.$admin_file.'.php?op=blocks_show');
+    header('Location: '.$admin_file.'.php?name=blocks&op=show');
 }
 
-function blocks_info(): void {
+function blocksInfo(): void {
     head();
-    echo blocks_navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'blocks').'</div>';
+    echo blocksNavi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'blocks').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'blocks_show':
-    blocks_show();
+    case 'show':
+    blocksShow();
     break;
 
-    case 'blocks_new':
-    blocks_new();
+    case 'new':
+    blocksNew();
     break;
 
-    case 'blocks_file':
-    blocks_file();
+    case 'file':
+    blocksFile();
     break;
 
-    case 'blocks_file_edit':
-    blocks_file_edit();
+    case 'fileedit':
+    blocksFileEdit();
     break;
 
-    case 'blocks_fix':
-    blocks_fix();
+    case 'fix':
+    blocksFix();
     break;
 
-    case 'blocks_add':
-    blocks_add();
+    case 'add':
+    blocksAdd();
     break;
 
-    case 'blocks_bfile':
-    blocks_bfile();
+    case 'bfile':
+    blocksBfile();
     break;
 
-    case 'blocks_bfile_save':
-    blocks_bfile_save();
+    case 'bfilesave':
+    blocksBfileSave();
     break;
 
-    case 'blocks_edit':
-    blocks_edit();
+    case 'edit':
+    blocksEdit();
     break;
 
-    case 'blocks_edit_save':
-    blocks_edit_save();
+    case 'editsave':
+    blocksEditSave();
     break;
 
-    case 'blocks_change':
-    blocks_change();
+    case 'change':
+    blocksChange();
     break;
 
-    case 'blocks_delete':
+    case 'delete':
     $id = getVar('get', 'id', 'num');
     list($bposition, $weight) = $db->sql_fetchrow($db->sql_query('SELECT bposition, weight FROM '.$prefix.'_blocks WHERE bid = :id', ['id' => $id]));
     $result = $db->sql_query('SELECT bid FROM '.$prefix.'_blocks WHERE weight > :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
@@ -582,10 +584,10 @@ switch($op) {
         $weight++;
     }
     $db->sql_query('DELETE FROM '.$prefix.'_blocks WHERE bid = :id', ['id' => $id]);
-    header('Location: '.$admin_file.'.php?op=blocks_show');
+    header('Location: '.$admin_file.'.php?name=blocks&op=show');
     break;
 
-    case 'blocks_info':
-    blocks_info();
+    case 'info':
+    blocksInfo();
     break;
 }
