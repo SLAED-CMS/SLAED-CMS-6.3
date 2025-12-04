@@ -204,14 +204,28 @@ function panel() {
 	if ($panel) {
 		$count = 1;
 		if (is_admin_god()) {
-			$dir = opendir("admin/links");
+			// Auto-discover admin modules
+			$modules = [];
+			$dir = opendir('admin/modules');
 			while (false !== ($file = readdir($dir))) {
-				if (substr($file, 0, 6) == "links.") $files[] = $file;
+				if (preg_match('/^([a-z]+)\.php$/i', $file, $matches)) {
+					$modules[] = $matches[1];
+				}
 			}
 			closedir($dir);
-			sort($files);
+			sort($modules);
+
+			// Generate menu entries
+			$module_meta = getAdminModuleMeta();
 			ob_start();
-			foreach ($files as $entry) include("admin/links/".$entry);
+			foreach ($modules as $module) {
+				$meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png', 'op' => 'show'];
+				adminmenu(
+					$admin_file.'.php?name='.$module.'&op='.$meta['op'],
+					$meta['title'],
+					$meta['icon']
+				);
+			}
 			$cont = ob_get_clean();
 			echo tpl_eval("panel-admin", _ADMINMENU, $cont);
 		}
@@ -248,7 +262,7 @@ if (is_admin()) {
 		logout();
 	} elseif ($panel) {
 		// Show admin panel - no specific module requested
-		// panelblock() will handle displaying the menu
+		panel();
 	} else {
 		// Load specific admin module
 		if (is_admin_god()) {
