@@ -6,17 +6,17 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function newsletter_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function newsletterNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     panel();
-    $ops = ['newsletter', 'newsletter_add', 'newsletter_info'];
+    $ops = ['show', 'add', 'info'];
     $lang = [_HOME, _ADD, _INFO];
-    return getAdminTabs(_NEWSLETTER, 'newsletter.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_NEWSLETTER, 'newsletter.png', 'name=newsletter', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function newsletter(): void {
     global $prefix, $db, $admin_file, $conf;
     head();
-    $cont = newsletter_navi(0, 0, 0, 0);
+    $cont = newsletterNavi(0, 0, 0, 0);
     $result = $db->sql_query('SELECT id, title, content, mails, send, time, endtime FROM '.$prefix.'_newsletter ORDER BY id');
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
@@ -29,7 +29,7 @@ function newsletter(): void {
             .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.display_time($sendtime)).$title.'</td>'
             .'<td>'.$sended.' '._NLUSER.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu('<a href="'.$admin_file.'.php?op=newsletter_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=newsletter_delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu('<a href="'.$admin_file.'.php?name=newsletter&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?name=newsletter&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setTemplateBasic('close');
@@ -40,7 +40,7 @@ function newsletter(): void {
     foot();
 }
 
-function newsletter_add(): void {
+function newsletterAdd(): void {
     global $prefix, $db, $admin_file, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
@@ -55,7 +55,7 @@ function newsletter_add(): void {
     $count = getVar('post', 'count', 'num', '');
     $send = getVar('post', 'send', '', '');
     head();
-    $cont = newsletter_navi(0, 1, 0, 0);
+    $cont = newsletterNavi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($content) $cont .= preview($title, $content, '', '', 'all');
     list($num) = $db->sql_fetchrow($db->sql_query('SELECT Count(user_id) FROM '.$prefix.'_users'));
@@ -192,13 +192,13 @@ function newsletter_add(): void {
     }
     $cont .= '</select></td></tr>';
     $cont .= '<tr><td>'._NLSEND.'</td><td>'.radio_form($send, 'send').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center">'.ad_save('nid', $nid, 'newsletter_save').'</td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="nid" value="'.$nid.'"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function newsletter_save(): void {
+function newsletterSave(): void {
     global $prefix, $db, $admin_file, $conf, $stop;
     $id = getVar('post', 'nid', 'num', 0);
     $title = getVar('post', 'title', 'title');
@@ -234,37 +234,37 @@ function newsletter_save(): void {
         }
         $cont = ['newsletter' => $send, 'newslettercount' => $count];
         doConfig('config/config_global.php', 'conf', $cont, $conf, '');
-        header('Location: '.$admin_file.'.php?op=newsletter');
+        header('Location: '.$admin_file.'.php?name=newsletter&op=show');
     } else {
-        newsletter_add();
+        newsletterAdd();
     }
 }
 
-function newsletter_info(): void {
+function newsletterInfo(): void {
     head();
-    echo newsletter_navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'newsletter').'</div>';
+    echo newsletterNavi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'newsletter').'</div>';
     foot();
 }
 
 switch ($op) {
-    case 'newsletter':
+    case 'show':
     newsletter();
     break;
 
-    case 'newsletter_add':
-    newsletter_add();
+    case 'add':
+    newsletterAdd();
     break;
 
-    case 'newsletter_save':
-    newsletter_save();
+    case 'save':
+    newsletterSave();
     break;
 
-    case 'newsletter_delete':
+    case 'delete':
     $db->sql_query('DELETE FROM '.$prefix.'_newsletter WHERE id = :id', ['id' => $id]);
-    header('Location: '.$admin_file.'.php?op=newsletter');
+    header('Location: '.$admin_file.'.php?name=newsletter&op=show');
     break;
 
-    case 'newsletter_info':
-    newsletter_info();
+    case 'info':
+    newsletterInfo();
     break;
 }

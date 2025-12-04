@@ -6,18 +6,17 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function msg_navi() {
+function msgNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
 	panel();
-	$narg = func_get_args();
-	$ops = array("msg", "msg_add", "msg_info");
-	$lang = array(_HOME, _ADD, _INFO);
-	return navi_gen(_MESSAGES, "messages.png", "", $ops, $lang, "", "", $narg[0], $narg[1], $narg[2], $narg[3]);
+	$ops = ['show', 'add', 'info'];
+	$lang = [_HOME, _ADD, _INFO];
+	return getAdminTabs(_MESSAGES, 'messages.png', 'name=messages', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function msg() {
 	global $prefix, $db, $conf, $admin_file;
 	head();
-	$cont = msg_navi(0, 0, 0, 0);
+	$cont = msgNavi(0, 0, 0, 0);
 	$result = $db->sql_query("SELECT mid, title, content, expire, active, view, mlanguage FROM ".$prefix."_message ORDER BY mid");
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
@@ -42,7 +41,7 @@ function msg() {
 			."<td>".$exp."</td>"
 			."<td>".$mview."</td>"
 			."<td>".deflang($mlanguage)."</td>"
-			."<td>".ad_status("", $active)."</td><td>".add_menu(ad_status($admin_file.".php?op=msg_status&amp;id=".$mid."&amp;act=".$act, $active)."||<a href=\"".$admin_file.".php?op=msg_add&amp;id=".$mid."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=msg_delete&amp;id=".$mid."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>")."</td></tr>";
+			."<td>".ad_status("", $active)."</td><td>".add_menu(ad_status($admin_file.".php?name=messages&amp;op=status&amp;id=".$mid."&amp;act=".$act, $active)."||<a href=\"".$admin_file.".php?name=messages&amp;op=add&amp;id=".$mid."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?name=messages&amp;op=delete&amp;id=".$mid."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>")."</td></tr>";
 		}
 		$cont .= "</tbody></table>";
 		$cont .= tpl_eval("close", "");
@@ -53,7 +52,7 @@ function msg() {
 	foot();
 }
 
-function msg_add() {
+function msgAdd() {
 	global $prefix, $db, $conf, $admin_file, $stop;
 	if (isset($_REQUEST['id'])) {
 		$mid = intval($_REQUEST['id']);
@@ -68,7 +67,7 @@ function msg_add() {
 		$mlanguage = isset($_POST['mlanguage']) ? $_POST['mlanguage'] : "";
 	}
 	head();
-	$cont = msg_navi(0, 1, 0, 0);
+	$cont = msgNavi(0, 1, 0, 0);
 	if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
 	if ($content) $cont .= preview($title, $content, "", "", "all");
 	$cont .= tpl_eval("open");
@@ -96,13 +95,13 @@ function msg_add() {
 	}
 	$cont .= "</select></td></tr>"
 	."<tr><td>"._ACTIVATE2."</td><td>".radio_form($active, "active")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\">".ad_save("mid", $mid, "msg_save")."<input type=\"hidden\" name=\"newexpire\" value=\"".$newexpire."\"></td></tr></table></form>";
+	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"mid\" value=\"".$mid."\"><input type=\"hidden\" name=\"name\" value=\"messages\"><input type=\"hidden\" name=\"op\" value=\"save\"><input type=\"hidden\" name=\"posttype\" value=\"save\"><input type=\"submit\" value=\""._SAVE."\" class=\"sl_but_blue\"><input type=\"hidden\" name=\"newexpire\" value=\"".$newexpire."\"></td></tr></table></form>";
 	$cont .= tpl_eval("close", "");
 	echo $cont;
 	foot();
 }
 
-function msg_save() {
+function msgSave() {
 	global $prefix, $db, $admin_file, $stop;
 	$mid = isset($_POST['mid']) ? intval($_POST['mid']) : 0;
 	$title = save_text($_POST['title'], 1);
@@ -121,52 +120,52 @@ function msg_save() {
 		} else {
 			$result = $db->sql_query("INSERT INTO ".$prefix."_message VALUES (NULL, '".$title."', '".$content."', '".$expire."', '".$active."', '".$view."', '".$mlanguage."')");
 		}
-		header("Location: ".$admin_file.".php?op=msg");
+		header("Location: ".$admin_file.".php?name=messages&op=show");
 	} elseif ($_POST['posttype'] == "delete") {
-		msg_delete($mid);
+		msgDelete($mid);
 	} else {
-		msg_add();
+		msgAdd();
 	}
 }
 
-function msg_delete() {
+function msgDelete() {
 	global $prefix, $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) $db->sql_query("DELETE FROM ".$prefix."_message WHERE mid = '".$id."'");
-	header("Location: ".$admin_file.".php?op=msg");
+	header("Location: ".$admin_file.".php?name=messages&op=show");
 }
 
-function msg_info() {
+function msgInfo() {
 	head();
-	echo msg_navi(0, 2, 0, 0)."<div id=\"repadm_info\">".adm_info(1, 0, "msg")."</div>";
+	echo msgNavi(0, 2, 0, 0)."<div id=\"repadm_info\">".adm_info(1, 0, "msg")."</div>";
 	foot();
 }
 
 switch ($op) {
-	case "msg":
+	case "show":
 	msg();
 	break;
-	
-	case "msg_add":
-	msg_add();
+
+	case "add":
+	msgAdd();
 	break;
-	
-	case "msg_status":
+
+	case "status":
 	$db->sql_query("UPDATE ".$prefix."_message SET active = '".$act."' WHERE mid = '".$id."'");
-	header("Location: ".$admin_file.".php?op=msg");
+	header("Location: ".$admin_file.".php?name=messages&op=show");
 	break;
-	
-	case "msg_delete":
-	msg_delete();
+
+	case "delete":
+	msgDelete();
 	break;
-	
-	case "msg_save":
-	msg_save();
+
+	case "save":
+	msgSave();
 	break;
-	
-	case "msg_info":
-	msg_info();
+
+	case "info":
+	msgInfo();
 	break;
 }
 ?>
