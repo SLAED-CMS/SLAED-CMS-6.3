@@ -8,9 +8,9 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/lang.php';
 
 function langNavi(int $tab = 0, int $subtab = 0): string {
-    $ops = ['name=lang&amp;op=main', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
+    $ops = ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
-    return getAdminTabs(_LANG_EDIT, 'lang.png', 'name=lang', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_LANG_EDIT, 'lang.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function getLangPath(string $mod = '', string $typ = ''): string {
@@ -73,7 +73,7 @@ function lang(): void {
     foot();
 }
 
-function file(): void {
+function edit(): void {
     global $admin_file, $confla;
     head();
     $cont = langNavi(0, 0);
@@ -253,7 +253,7 @@ function info(): void {
 switch($op) {
     default: lang(); break;
     case 'main': lang(); break;
-    case 'file': file(); break;
+    case 'file': edit(); break;
     case 'save': save(); break;
     case 'conf': conf(); break;
     case 'confsave': confsave(); break;
