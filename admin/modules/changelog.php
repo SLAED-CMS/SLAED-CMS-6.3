@@ -7,26 +7,26 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/changelog.php';
 
-function changelog_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function changelogNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $conflog;
     panel();
 
     if ($conflog['export_enabled'] ?? true) {
-        $ops = ['changelog', 'changelog_conf', 'changelog_export_txt', 'changelog_export_md', 'changelog_info'];
+        $ops = ['show', 'conf', 'exporttxt', 'exportmd', 'info'];
         $lang = [_HOME, _PREFERENCES, 'Export TXT', 'Export Markdown', _INFO];
     } else {
-        $ops = ['changelog', 'changelog_conf', 'changelog_info'];
+        $ops = ['show', 'conf', 'info'];
         $lang = [_HOME, _PREFERENCES, _INFO];
     }
 
-    return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs('Changelog', 'editor.png', 'name=changelog', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function changelog(): void {
+function changelogShow(): void {
     global $admin_file, $conflog;
     head();
     checkConfigFile('changelog.php');
-    $cont = changelog_navi(0, 0, 0, 0);
+    $cont = changelogNavi(0, 0, 0, 0);
 
     //  Filter-Parameter
     $page = getVar('get', 'page', 'num', 1);
@@ -39,13 +39,14 @@ function changelog(): void {
 
     // Export-Handling
     if ($export && $conflog['export_enabled']) {
-        changelog_export($export);
+        changelogExport($export);
         return;
     }
 
     // Filter-Formular
     $cont .= '<form action="'.$admin_file.'.php" method="get" class="sl_filter_form">';
-    $cont .= '<input type="hidden" name="op" value="changelog">';
+    $cont .= '<input type="hidden" name="name" value="changelog">';
+    $cont .= '<input type="hidden" name="op" value="show">';
     $cont .= '<div style="background: #f9f9f9; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">';
     $cont .= '<strong>Filter & Suche:</strong><br><br>';
     $cont .= '<table class="sl_table_conf"><tr>';
@@ -56,7 +57,7 @@ function changelog(): void {
     $cont .= '<td><input type="date" name="date_from" value="'.htmlspecialchars($date_from).'" placeholder="Von Datum" class="sl_conf" style="width: 150px;"></td>';
     $cont .= '<td><input type="date" name="date_to" value="'.htmlspecialchars($date_to).'" placeholder="Bis Datum" class="sl_conf" style="width: 150px;"></td>';
     $cont .= '<td><button type="submit" class="sl_but_blue">Filtern</button> ';
-    $cont .= '<a href="'.$admin_file.'.php?op=changelog" class="sl_but_gray">Zurücksetzen</a></td>';
+    $cont .= '<a href="'.$admin_file.'.php?name=changelog&op=show" class="sl_but_gray">Zurücksetzen</a></td>';
     $cont .= '</tr></table>';
     $cont .= '</div></form>';
 
@@ -146,7 +147,7 @@ function changelog(): void {
 
         // Datum-Gruppierung
         if ($conflog['group_by_date']) {
-            $commits_page = group_commits_by_date($commits_page);
+            $commits_page = groupCommitsByDate($commits_page);
         }
 
         $i = 0;
@@ -157,7 +158,7 @@ function changelog(): void {
                 $cont .= '</div>';
                 continue;
             }
-            $cont .= render_commit($commit, $i, $conflog);
+            $cont .= renderCommit($commit, $i, $conflog);
             $i++;
         }
 
@@ -165,14 +166,15 @@ function changelog(): void {
 
         // Pagination via setPageNumbers()
         $query = http_build_query(array_filter([
-            'op' => 'changelog',
+            'name' => 'changelog',
+            'op' => 'show',
             'author' => $author,
             'file' => $file,
             'search' => $search,
             'date_from' => $date_from,
             'date_to' => $date_to
         ]));
-        $url = $query ? $query.'&' : 'op=changelog&';
+        $url = $query ? $query.'&' : 'name=changelog&op=show&';
         $cont .= setPageNumbers(
             'pagenum',
             'changelog',
@@ -193,7 +195,7 @@ function changelog(): void {
     foot();
 }
 
-function group_commits_by_date(array $commits): array {
+function groupCommitsByDate(array $commits): array {
     $grouped = [];
     $last_date = '';
     $today = date('Y-m-d');
@@ -223,7 +225,7 @@ function group_commits_by_date(array $commits): array {
     return $grouped;
 }
 
-function render_commit(array $commit, int $index, array $conflog): string {
+function renderCommit(array $commit, int $index, array $conflog): string {
     $cont = '<div class="sl_commit" style="border: 1px solid #ddd; margin: 10px 0; padding: 15px; background: '.($index % 2 ? '#f9f9f9' : '#fff').'">';
 
     // Header
@@ -296,7 +298,7 @@ function render_commit(array $commit, int $index, array $conflog): string {
     return $cont;
 }
 
-function changelog_export(string $format): void {
+function changelogExport(string $format): void {
     global $conflog;
 
     $gitlog = [];
@@ -368,11 +370,11 @@ function changelog_export(string $format): void {
     exit;
 }
 
-function changelog_conf(): void {
+function changelogConf(): void {
     global $admin_file, $conflog;
     head();
     checkConfigFile('changelog.php');
-    $cont = changelog_navi(0, 1, 0, 0);
+    $cont = changelogNavi(0, 1, 0, 0);
 
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post">';
@@ -383,7 +385,7 @@ function changelog_conf(): void {
     $cont .= '<tr><td><strong>Dateien anzeigen:</strong></td><td><input type="checkbox" name="show_files" value="1" '.($conflog['show_files'] ? 'checked' : '').'></td></tr>';
     $cont .= '<tr><td><strong>Statistiken anzeigen:</strong></td><td><input type="checkbox" name="show_stats" value="1" '.($conflog['show_stats'] ? 'checked' : '').'></td></tr>';
     $cont .= '<tr><td><strong>Export aktivieren:</strong></td><td><input type="checkbox" name="export_enabled" value="1" '.($conflog['export_enabled'] ? 'checked' : '').'></td></tr>';
-    $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="changelog_save_conf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>';
+    $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="changelog"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>';
     $cont .= '</table></form>';
     $cont .= setTemplateBasic('close');
 
@@ -391,7 +393,7 @@ function changelog_conf(): void {
     foot();
 }
 
-function changelog_save_conf(): void {
+function changelogSaveConf(): void {
     global $admin_file;
 
     $cont = [
@@ -404,10 +406,10 @@ function changelog_save_conf(): void {
     ];
 
     setConfigFile('changelog.php', 'conflog', $cont);
-    header('Location: '.$admin_file.'.php?op=changelog_conf');
+    header('Location: '.$admin_file.'.php?name=changelog&op=conf');
 }
 
-function changelog_info(): void {
+function changelogInfo(): void {
     head();
     $info = '<h3>Changelog Modul</h3>
     <p>Dieses Modul zeigt die Git-Historie des SLAED CMS an.</p>
@@ -420,32 +422,32 @@ function changelog_info(): void {
     <li><strong>Konfigurierbar:</strong> Alle Einstellungen im Preferences-Tab anpassbar</li>
     <li><strong>Statistiken:</strong> Zeigt +/- Zeilen und geänderte Dateien</li>
     </ul>';
-    echo changelog_navi(0, 0, 2, 0).'<div id="repadm_info">'.$info.'</div>';
+    echo changelogNavi(0, 0, 2, 0).'<div id="repadm_info">'.$info.'</div>';
     foot();
 }
 
 switch($op) {
-    case 'changelog':
-    changelog();
+    case 'show':
+    changelogShow();
     break;
 
-    case 'changelog_conf':
-    changelog_conf();
+    case 'conf':
+    changelogConf();
     break;
 
-    case 'changelog_save_conf':
-    changelog_save_conf();
+    case 'saveconf':
+    changelogSaveConf();
     break;
 
-    case 'changelog_info':
-    changelog_info();
+    case 'info':
+    changelogInfo();
     break;
 
-    case 'changelog_export_txt':
-    changelog_export('txt');
+    case 'exporttxt':
+    changelogExport('txt');
     break;
 
-    case 'changelog_export_md':
-    changelog_export('md');
+    case 'exportmd':
+    changelogExport('md');
     break;
 }

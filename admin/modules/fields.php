@@ -7,18 +7,18 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/fields.php';
 
-function fields_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
+function fieldsNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
     panel();
-    $ops = ($opt == 1) ? ['fields', 'fields', 'fields', 'fields', 'fields', 'fields', 'fields_info'] : ['', '', '', '', '', '', 'fields_info'];
+    $ops = ($opt == 1) ? ['show', 'show', 'show', 'show', 'show', 'show', 'info'] : ['', '', '', '', '', '', 'info'];
     $lang = [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO];
-    return getAdminTabs(_FIELDS, 'fields.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);
+    return getAdminTabs(_FIELDS, 'fields.png', 'name=fields', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);
 }
 
 function fields(): void {
     global $admin_file, $conffi;
     head();
     checkConfigFile('fields.php');
-    $cont = fields_navi(0, 0, 0, 0, 'fields');
+    $cont = fieldsNavi(0, 0, 0, 0, 'fields');
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
     $content = '';
     $k = 0;
@@ -62,7 +62,7 @@ function fields(): void {
     }
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _FIELDINFO]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$admin_file.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="op" value="fields_save_conf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
+    $cont .= '<form action="'.$admin_file.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="fields"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
     .'<script>
         var countries=new ddtabcontent("fields")
         countries.setpersist(true)
@@ -74,7 +74,7 @@ function fields(): void {
     foot();
 }
 
-function fields_save_conf(): void {
+function fieldsSaveConf(): void {
     global $admin_file;
     $cont = [];
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
@@ -99,25 +99,25 @@ function fields_save_conf(): void {
         }
     }
     setConfigFile('fields.php', 'conffi', $cont);
-    header('Location: '.$admin_file.'.php?op=fields');
+    header('Location: '.$admin_file.'.php?name=fields&op=show');
 }
 
-function fields_info(): void {
+function fieldsInfo(): void {
     head();
-    echo fields_navi(1, 6, 0, 0, '').'<div id="repadm_info">'.adm_info(1, 0, 'fields').'</div>';
+    echo fieldsNavi(1, 6, 0, 0, '').'<div id="repadm_info">'.adm_info(1, 0, 'fields').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'fields':
+    case 'show':
     fields();
     break;
 
-    case 'fields_save_conf':
-    fields_save_conf();
+    case 'saveconf':
+    fieldsSaveConf();
     break;
 
-    case 'fields_info':
-    fields_info();
+    case 'info':
+    fieldsInfo();
     break;
 }

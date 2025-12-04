@@ -6,24 +6,23 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_god()) die("Illegal file access");
 
-function privat_navi() {
+function privatNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
 	panel();
-	$narg = func_get_args();
-	$ops = array("privat", "privat_conf", "privat_info");
-	$lang = array(_HOME, _PREFERENCES, _INFO);
-	return navi_gen(_PRIVAT, "privat.png", "", $ops, $lang, "", "", $narg[0], $narg[1], $narg[2], $narg[3]);
+	$ops = ['show', 'conf', 'info'];
+	$lang = [_HOME, _PREFERENCES, _INFO];
+	return getAdminTabs(_PRIVAT, 'privat.png', 'name=privat', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function privat() {
 	head();
-	echo privat_navi(0, 0, 0, 0).tpl_eval("open")."<div id=\"repajax_privat\">".ajax_privat(1)."</div>".tpl_eval("close", "");
+	echo privatNavi(0, 0, 0, 0).tpl_eval("open")."<div id=\"repajax_privat\">".ajax_privat(1)."</div>".tpl_eval("close", "");
 	foot();
 }
 
-function privat_conf() {
+function privatConf() {
 	global $admin_file;
 	head();
-	$cont = privat_navi(0, 1, 0, 0);
+	$cont = privatNavi(0, 1, 0, 0);
 	include("config/config_privat.php");
 	$permtest = end_chmod("config/config_privat.php", 666);
 	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
@@ -42,13 +41,13 @@ function privat_conf() {
 	."<tr><td>"._VPROFIL."</td><td>".radio_form($confpr['profil'], "profil")."</td></tr>"
 	."<tr><td>"._VWEB."</td><td>".radio_form($confpr['web'], "web")."</td></tr>"
 	."<tr><td>"._PRACT."</td><td>".radio_form($confpr['act'], "act")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"privat_conf_save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
+	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"name\" value=\"privat\"><input type=\"hidden\" name=\"op\" value=\"confsave\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
 	$cont .= tpl_eval("close", "");
 	echo $cont;
 	foot();
 }
 
-function privat_conf_save() {
+function privatConfSave() {
 	global $admin_file;
 	$xnum = (!intval($_POST['num'])) ? 50 : $_POST['num'];
 	$xanum = (!intval($_POST['anum'])) ? 50 : $_POST['anum'];
@@ -78,30 +77,30 @@ function privat_conf_save() {
 	."\$confpr['web'] = \"".$xweb."\";\n"
 	."\$confpr['act'] = \"".$xact."\";\n";
 	save_conf("config/config_privat.php", $content);
-	header("Location: ".$admin_file.".php?op=privat_conf");
+	header("Location: ".$admin_file.".php?name=privat&op=conf");
 }
 
-function privat_info() {
+function privatInfo() {
 	head();
-	echo privat_navi(0, 2, 0, 0)."<div id=\"repadm_info\">".adm_info(1, 0, "privat")."</div>";
+	echo privatNavi(0, 2, 0, 0)."<div id=\"repadm_info\">".adm_info(1, 0, "privat")."</div>";
 	foot();
 }
 
 switch($op) {
-	case "privat":
+	case "show":
 	privat();
 	break;
-	
-	case "privat_conf":
-	privat_conf();
+
+	case "conf":
+	privatConf();
 	break;
-	
-	case "privat_conf_save":
-	privat_conf_save();
+
+	case "confsave":
+	privatConfSave();
 	break;
-	
-	case "privat_info":
-	privat_info();
+
+	case "info":
+	privatInfo();
 	break;
 }
 ?>

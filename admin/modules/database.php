@@ -6,11 +6,11 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function database_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function databaseNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     panel();
-    $ops = ['database', 'database&amp;type=optimize', 'database&amp;type=repair', 'database_dump', 'database_info'];
+    $ops = ['show', 'show&amp;type=optimize', 'show&amp;type=repair', 'dump', 'info'];
     $lang = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
-    return getAdminTabs(_DATABASE, 'database.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_DATABASE, 'database.png', 'name=database', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function database(): void {
@@ -105,11 +105,11 @@ function database(): void {
         } else {
             // Standardansicht mit Aktionen
             $ftitletd = add_menu(
-                '<a href="'.$admin_file.'.php?op=database_del&amp;tb='.$name.'&amp;id=1" '
+                '<a href="'.$admin_file.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=1" '
                 .'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._CLEAN.'">'._CLEAN.'</a>'
                 .'||'
-                .'<a href="'.$admin_file.'.php?op=database_del&amp;tb='.$name.'&amp;id=2" '
+                .'<a href="'.$admin_file.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=2" '
                 .'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._ONDELETE.'">'._ONDELETE.'</a>'
             );
@@ -164,7 +164,7 @@ function database(): void {
 
     // Navigation + Info-Boxen
     if (empty($type)) {
-        $cont  = database_navi(0, 0, 0, 0);
+        $cont  = databaseNavi(0, 0, 0, 0);
         $cont .= setTemplateWarning('warn', [
             'time' => '',
             'url'  => '',
@@ -180,7 +180,7 @@ function database(): void {
 
     } elseif ($type === 'optimize') {
         $db->sql_query('FLUSH TABLES');
-        $cont = database_navi(0, 1, 0, 0);
+        $cont = databaseNavi(0, 1, 0, 0);
 
         $infoText = _OPTIMIZE.': '.$confdb['name']
                   . '<br>'._TOTALSPACE.': '.files_size($total)
@@ -194,7 +194,7 @@ function database(): void {
         ]);
 
     } elseif ($type === 'repair') {
-        $cont = database_navi(0, 2, 0, 0);
+        $cont = databaseNavi(0, 2, 0, 0);
 
         $infoText = _REPAIR.': '.$confdb['name']
                   . '<br>'._TOTALSPACE.': '.files_size($total)
@@ -269,17 +269,17 @@ function database(): void {
     $content .= '</tbody></table>';
     head();
     if (empty($type)) {
-        $cont = database_navi(0, 0, 0, 0);
+        $cont = databaseNavi(0, 0, 0, 0);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _OPTTEXT]);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _REPTEXT]);
     } elseif ($type === 'optimize') {
         $db->sql_query('FLUSH TABLES');
-        $cont = database_navi(0, 1, 0, 0);
+        $cont = databaseNavi(0, 1, 0, 0);
         $totalspace = $total - $totalfree;
         $info = _OPTIMIZE.': '.$confdb['name'].'<br>'._TOTALSPACE.': '.files_size($totalspace).'<br>'._TOTALFREE.': '.files_size($totalfree);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
     } elseif ($type === 'repair') {
-        $cont = database_navi(0, 2, 0, 0);
+        $cont = databaseNavi(0, 2, 0, 0);
         $info = _REPAIR.': '.$confdb['name'].'<br>'._TOTALSPACE.': '.files_size($total);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
     }
@@ -288,12 +288,12 @@ function database(): void {
 }
 */
 
-function database_dump(): void {
+function databaseDump(): void {
     global $db, $confdb, $admin_file;
     $type = getVar('post', 'type', 'var', '');
     $pstring = filter_input(INPUT_POST, 'string', FILTER_UNSAFE_RAW) ?? '';
     head();
-    $cont = database_navi(0, 3, 0, 0);
+    $cont = databaseNavi(0, 3, 0, 0);
     if ($type === 'dump' && !empty($pstring)) {
         $replacements = ['{prefix}' => $confdb['prefix'], '{engine}' => $confdb['engine'], '{charset}' => $confdb['charset'], '{collate}' => $confdb['collate']];
         $info = '';
@@ -329,7 +329,8 @@ function database_dump(): void {
             </tr>
             <tr>
                 <td class="sl_center">
-                    <input type="hidden" name="op" value="database_dump">
+                    <input type="hidden" name="name" value="database">
+                    <input type="hidden" name="op" value="dump">
                     <input type="hidden" name="type" value="dump">
                     <input type="submit" value="'._EXECUTE.'" class="sl_but_blue">
                 </td>
@@ -341,22 +342,22 @@ function database_dump(): void {
     foot();
 }
 
-function database_info(): void {
+function databaseInfo(): void {
     head();
-    echo database_navi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'database').'</div>';
+    echo databaseNavi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'database').'</div>';
     foot();
 }
 
 switch ($op) {
-    case 'database':
+    case 'show':
     database();
     break;
 
-    case 'database_dump':
-    database_dump();
+    case 'dump':
+    databaseDump();
     break;
 
-    case 'database_del':
+    case 'del':
     $tb = getVar('get', 'tb', 'var');
     $delid = getVar('get', 'id', 'num');
     if ($tb && $delid == 1) {
@@ -364,10 +365,10 @@ switch ($op) {
     } elseif ($tb && $delid == 2) {
         $db->sql_query('DROP TABLE `'.$tb.'`');
     }
-    header('Location: '.$admin_file.'.php?op=database');
+    header('Location: '.$admin_file.'.php?name=database&op=show');
     break;
 
-    case 'database_info':
-    database_info();
+    case 'info':
+    databaseInfo();
     break;
 }
