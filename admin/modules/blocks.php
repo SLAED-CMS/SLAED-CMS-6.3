@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=blocks', 'name=blocks&amp;op=new', 'name=blocks&amp;op=file', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'];
+    $ops = ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'];
     $lang = [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO];
     return getAdminTabs(_BLOCKS, 'blocks.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
@@ -79,7 +79,7 @@ function add(): void {
     $privs = [_MVALL, _MVUSERS, _MVADMIN, _MVANON];
     foreach ($privs as $key => $value) $cont .= '<option value="'.$key.'">'.$value.'</option>';
     $cont .= '</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="add"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
@@ -533,14 +533,14 @@ switch($op) {
     default: blocks(); break;
 
     // Block operations
-    case 'new': add(); break;
-    case 'add': addsave(); break;
+    case 'add': add(); break;
+    case 'addsave': addsave(); break;
     case 'edit': edit(); break;
     case 'editsave': editsave(); break;
     case 'change': change(); break;
 
     // File block operations
-    case 'file': fileadd(); break;
+    case 'fileadd': fileadd(); break;
     case 'fileedit': fileedit(); break;
     case 'filecode': filecode(); break;
     case 'filecodesave': filecodesave(); break;
