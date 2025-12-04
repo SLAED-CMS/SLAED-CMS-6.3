@@ -196,6 +196,7 @@ function getAdminModuleMeta(): array {
 
 function panel() {
 	global $prefix, $db, $conf, $panel, $count, $admin_file, $locale, $class;
+	head();
 	if (file_exists('setup.php')) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _DELSETUP));
 	$minver = '5.6';
 	$info = sprintf(_PHPSETUP, $minver);
@@ -245,6 +246,7 @@ function panel() {
 		$cont = ob_get_clean();
 		echo tpl_eval("panel-modul", _MODULESADMIN, $cont);
 	}
+	foot();
 }
 
 if (is_admin()) {
