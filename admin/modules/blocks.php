@@ -18,7 +18,7 @@ function blocks(): void {
     foot();
 }
 
-function new(): void {
+function newBlock(): void {
     global $prefix, $db, $locale, $conf, $admin_file;
     head();
     $cont = blocksNavi(0, 1, 0, 0);
@@ -531,7 +531,7 @@ function info(): void {
 
 switch($op) {
     default: blocks(); break;
-    case 'new': new(); break;
+    case 'new': newBlock(); break;
     case 'file': file(); break;
     case 'fileedit': fileedit(); break;
     case 'fix': fix(); break;
