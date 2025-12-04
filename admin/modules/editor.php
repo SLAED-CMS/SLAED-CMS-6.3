@@ -8,12 +8,12 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function editorNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     panel();
-    $ops = ['function', 'header', 'rewrite', 'htaccess', 'robots', 'info'];
+    $ops = ['name=editor&amp;op=function', 'name=editor&amp;op=header', 'name=editor&amp;op=rewrite', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
     $lang = [_EFUNCN, _EHEADN, _EREWN, _EHTN, _ERON, _INFO];
     return getAdminTabs(_EDITOR_IN, 'editor.png', 'name=editor', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function editorFunction(): void {
+function editor(): void {
     global $admin_file;
     head();
     $cont = editorNavi(0, 0, 0, 0);
@@ -31,7 +31,7 @@ function editorFunction(): void {
     foot();
 }
 
-function editorHeader(): void {
+function header(): void {
     global $admin_file;
     head();
     $cont = editorNavi(0, 1, 0, 0);
@@ -49,7 +49,7 @@ function editorHeader(): void {
     foot();
 }
 
-function editorRewrite(): void {
+function rewrite(): void {
     global $admin_file;
     head();
     $cont = editorNavi(0, 2, 0, 0);
@@ -67,7 +67,7 @@ function editorRewrite(): void {
     foot();
 }
 
-function editorHtaccess(): void {
+function htaccess(): void {
     global $admin_file;
     head();
     $cont = editorNavi(0, 3, 0, 0);
@@ -84,7 +84,7 @@ function editorHtaccess(): void {
     foot();
 }
 
-function editorRobots(): void {
+function robots(): void {
     global $admin_file;
     head();
     $cont = editorNavi(0, 4, 0, 0);
@@ -101,32 +101,19 @@ function editorRobots(): void {
     foot();
 }
 
-function editorInfo(): void {
+function info(): void {
     head();
     echo editorNavi(1, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'editor').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'function':
-    editorFunction();
-    break;
-
-    case 'header':
-    editorHeader();
-    break;
-
-    case 'rewrite':
-    editorRewrite();
-    break;
-
-    case 'htaccess':
-    editorHtaccess();
-    break;
-
-    case 'robots':
-    editorRobots();
-    break;
+    default: editor(); break;
+    case 'function': editor(); break;
+    case 'header': header(); break;
+    case 'rewrite': rewrite(); break;
+    case 'htaccess': htaccess(); break;
+    case 'robots': robots(); break;
 
     case 'save':
     $editor = getVar('post', 'editor', 'var');
@@ -142,7 +129,5 @@ switch($op) {
     header('Location: '.$admin_file.'.php?name=editor&op='.$editor);
     break;
 
-    case 'info':
-    editorInfo();
-    break;
+    case 'info': info(); break;
 }

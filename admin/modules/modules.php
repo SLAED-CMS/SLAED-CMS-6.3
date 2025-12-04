@@ -8,12 +8,12 @@ if (!defined("ADMIN_FILE") || !is_admin_god()) die("Illegal file access");
 
 function moduleNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
 	panel();
-	$ops = ['show', 'info'];
+	$ops = ['name=modules&amp;op=show', 'name=modules&amp;op=info'];
 	$lang = [_HOME, _INFO];
 	return getAdminTabs(_MODULES, 'modules.png', 'name=modules', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function module() {
+function modules() {
 	global $prefix, $db, $admin_file, $infos;
 	head();
 	$cont = moduleNavi(0, 0, 0, 0);
@@ -93,7 +93,7 @@ function module() {
 	foot();
 }
 
-function moduleEdit() {
+function edit() {
 	global $prefix, $db, $admin_file;
 	$mid = intval($_GET['mid']);
 	list($title, $view, $inmenu, $mod_group, $blocks_m, $blocks_mc) = $db->sql_fetchrow($db->sql_query("SELECT title, view, inmenu, mod_group, blocks, blocks_c FROM ".$prefix."_modules WHERE mid = '".$mid."'"));
@@ -147,15 +147,19 @@ function moduleEdit() {
 	foot();
 }
 
-function moduleInfo() {
+function info() {
 	head();
 	echo moduleNavi(0, 1, 0, 0)."<div id=\"repadm_info\">".adm_info(1, 0, "modules")."</div>";
 	foot();
 }
 
 switch ($op) {
+	default:
+	modules();
+	break;
+
 	case "show":
-	module();
+	modules();
 	break;
 
 	case "status":
@@ -164,7 +168,7 @@ switch ($op) {
 	break;
 
 	case "edit":
-	moduleEdit();
+	edit();
 	break;
 
 	case "editsave":
@@ -201,11 +205,11 @@ switch ($op) {
 		}
 		$infos = $ttitle.": ".$module."<br><br>".$info;
 	}
-	module();
+	modules();
 	break;
 
 	case "info":
-	moduleInfo();
+	info();
 	break;
 }
 ?>

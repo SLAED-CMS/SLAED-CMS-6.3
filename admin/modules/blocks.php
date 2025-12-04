@@ -8,18 +8,18 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function blocksNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     panel();
-    $ops = ['show', 'new', 'file', 'fileedit', 'fix', 'info'];
+    $ops = ['name=blocks&amp;op=show', 'name=blocks&amp;op=new', 'name=blocks&amp;op=file', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'];
     $lang = [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO];
-    return getAdminTabs(_BLOCKS, 'blocks.png', 'name=blocks', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_BLOCKS, 'blocks.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function blocksShow(): void {
+function blocks(): void {
     head();
     echo blocksNavi(0, 0, 0, 0).setTemplateBasic('open').'<div id="repajax_block">'.ajax_block().'</div>'.setTemplateBasic('close');
     foot();
 }
 
-function blocksNew(): void {
+function new(): void {
     global $prefix, $db, $locale, $conf, $admin_file;
     head();
     $cont = blocksNavi(0, 1, 0, 0);
@@ -86,7 +86,7 @@ function blocksNew(): void {
     foot();
 }
 
-function blocksFile(): void {
+function file(): void {
     global $admin_file;
     head();
     $cont = blocksNavi(0, 2, 0, 0);
@@ -102,7 +102,7 @@ function blocksFile(): void {
     foot();
 }
 
-function blocksFileEdit(): void {
+function fileedit(): void {
     global $prefix, $db, $admin_file;
     head();
     $cont = blocksNavi(0, 3, 0, 0);
@@ -123,7 +123,7 @@ function blocksFileEdit(): void {
     foot();
 }
 
-function blocksFix(): void {
+function fix(): void {
     global $prefix, $db, $admin_file;
     $pos = ['b', 'c', 'd', 'f', 'l', 'r'];
     foreach ($pos as $val) {
@@ -139,7 +139,7 @@ function blocksFix(): void {
     header('Location: '.$admin_file.'.php?name=blocks&op=show');
 }
 
-function blocksAdd(): void {
+function add(): void {
     global $prefix, $db, $admin_file;
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
@@ -190,7 +190,7 @@ function blocksAdd(): void {
     }
 }
 
-function blocksBfile(): void {
+function bfile(): void {
     global $prefix, $db, $admin_file;
     $bf = getVar('post', 'bf', 'var', '');
     if ($bf != '') {
@@ -238,7 +238,7 @@ function blocksBfile(): void {
     }
 }
 
-function blocksBfileSave(): void {
+function bfilesave(): void {
     global $prefix, $db, $admin_file;
     $blocktext = filter_input(INPUT_POST, 'blocktext', FILTER_UNSAFE_RAW);
     $bf = getVar('post', 'bf', 'var', '');
@@ -258,7 +258,7 @@ function blocksBfileSave(): void {
     }
 }
 
-function blocksEdit(): void {
+function edit(): void {
     global $prefix, $db, $admin_file, $conf;
     head();
     $cont = blocksNavi(0, 1, 0, 0);
@@ -402,7 +402,7 @@ function blocksEdit(): void {
     foot();
 }
 
-function blocksEditSave(): void {
+function editsave(): void {
     global $prefix, $db, $admin_file;
     $newexpire = getVar('post', 'newexpire', 'num', 0);
     $bid = getVar('post', 'bid', 'num');
@@ -515,7 +515,7 @@ function blocksEditSave(): void {
     }
 }
 
-function blocksChange(): void {
+function change(): void {
     global $prefix, $db, $admin_file;
     $bid = getVar('get', 'bid', 'num');
     $act = getVar('get', 'act', 'num', 0);
@@ -524,56 +524,24 @@ function blocksChange(): void {
     header('Location: '.$admin_file.'.php?name=blocks&op=show');
 }
 
-function blocksInfo(): void {
+function info(): void {
     head();
     echo blocksNavi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'blocks').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'show':
-    blocksShow();
-    break;
-
-    case 'new':
-    blocksNew();
-    break;
-
-    case 'file':
-    blocksFile();
-    break;
-
-    case 'fileedit':
-    blocksFileEdit();
-    break;
-
-    case 'fix':
-    blocksFix();
-    break;
-
-    case 'add':
-    blocksAdd();
-    break;
-
-    case 'bfile':
-    blocksBfile();
-    break;
-
-    case 'bfilesave':
-    blocksBfileSave();
-    break;
-
-    case 'edit':
-    blocksEdit();
-    break;
-
-    case 'editsave':
-    blocksEditSave();
-    break;
-
-    case 'change':
-    blocksChange();
-    break;
+    default: blocks(); break;
+    case 'new': new(); break;
+    case 'file': file(); break;
+    case 'fileedit': fileedit(); break;
+    case 'fix': fix(); break;
+    case 'add': add(); break;
+    case 'bfile': bfile(); break;
+    case 'bfilesave': bfilesave(); break;
+    case 'edit': edit(); break;
+    case 'editsave': editsave(); break;
+    case 'change': change(); break;
 
     case 'delete':
     $id = getVar('get', 'id', 'num');
@@ -587,7 +555,5 @@ switch($op) {
     header('Location: '.$admin_file.'.php?name=blocks&op=show');
     break;
 
-    case 'info':
-    blocksInfo();
-    break;
+    case 'info': info(); break;
 }

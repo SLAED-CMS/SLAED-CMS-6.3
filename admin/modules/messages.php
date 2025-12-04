@@ -8,12 +8,12 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function msgNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
 	panel();
-	$ops = ['show', 'add', 'info'];
+	$ops = ['name=messages&amp;op=show', 'name=messages&amp;op=add', 'name=messages&amp;op=info'];
 	$lang = [_HOME, _ADD, _INFO];
 	return getAdminTabs(_MESSAGES, 'messages.png', 'name=messages', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function msg() {
+function messages() {
 	global $prefix, $db, $conf, $admin_file;
 	head();
 	$cont = msgNavi(0, 0, 0, 0);
@@ -52,7 +52,7 @@ function msg() {
 	foot();
 }
 
-function msgAdd() {
+function add() {
 	global $prefix, $db, $conf, $admin_file, $stop;
 	if (isset($_REQUEST['id'])) {
 		$mid = intval($_REQUEST['id']);
@@ -101,7 +101,7 @@ function msgAdd() {
 	foot();
 }
 
-function msgSave() {
+function save() {
 	global $prefix, $db, $admin_file, $stop;
 	$mid = isset($_POST['mid']) ? intval($_POST['mid']) : 0;
 	$title = save_text($_POST['title'], 1);
@@ -122,13 +122,13 @@ function msgSave() {
 		}
 		header("Location: ".$admin_file.".php?name=messages&op=show");
 	} elseif ($_POST['posttype'] == "delete") {
-		msgDelete($mid);
+		delete($mid);
 	} else {
-		msgAdd();
+		add();
 	}
 }
 
-function msgDelete() {
+function delete() {
 	global $prefix, $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
@@ -136,19 +136,23 @@ function msgDelete() {
 	header("Location: ".$admin_file.".php?name=messages&op=show");
 }
 
-function msgInfo() {
+function info() {
 	head();
 	echo msgNavi(0, 2, 0, 0)."<div id=\"repadm_info\">".adm_info(1, 0, "msg")."</div>";
 	foot();
 }
 
 switch ($op) {
+	default:
+	messages();
+	break;
+
 	case "show":
-	msg();
+	messages();
 	break;
 
 	case "add":
-	msgAdd();
+	add();
 	break;
 
 	case "status":
@@ -157,15 +161,15 @@ switch ($op) {
 	break;
 
 	case "delete":
-	msgDelete();
+	delete();
 	break;
 
 	case "save":
-	msgSave();
+	save();
 	break;
 
 	case "info":
-	msgInfo();
+	info();
 	break;
 }
 ?>

@@ -8,9 +8,9 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function databaseNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     panel();
-    $ops = ['show', 'show&amp;type=optimize', 'show&amp;type=repair', 'dump', 'info'];
+    $ops = ['name=database&amp;op=show', 'name=database&amp;op=show&amp;type=optimize', 'name=database&amp;op=show&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
     $lang = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
-    return getAdminTabs(_DATABASE, 'database.png', 'name=database', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_DATABASE, 'database.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function database(): void {
@@ -288,7 +288,7 @@ function database(): void {
 }
 */
 
-function databaseDump(): void {
+function dump(): void {
     global $db, $confdb, $admin_file;
     $type = getVar('post', 'type', 'var', '');
     $pstring = filter_input(INPUT_POST, 'string', FILTER_UNSAFE_RAW) ?? '';
@@ -342,20 +342,15 @@ function databaseDump(): void {
     foot();
 }
 
-function databaseInfo(): void {
+function info(): void {
     head();
     echo databaseNavi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'database').'</div>';
     foot();
 }
 
 switch ($op) {
-    case 'show':
-    database();
-    break;
-
-    case 'dump':
-    databaseDump();
-    break;
+    default: database(); break;
+    case 'dump': dump(); break;
 
     case 'del':
     $tb = getVar('get', 'tb', 'var');
@@ -368,7 +363,5 @@ switch ($op) {
     header('Location: '.$admin_file.'.php?name=database&op=show');
     break;
 
-    case 'info':
-    databaseInfo();
-    break;
+    case 'info': info(); break;
 }
