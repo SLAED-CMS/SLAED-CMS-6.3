@@ -95,7 +95,7 @@ function fileadd(): void {
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><input type="text" name="bf" maxlength="200" class="sl_form" placeholder="'._FILENAME.'" required></td></tr>'
     .'<tr><td>'._TYPE.':</td><td><input type="radio" name="flag" value="php" checked> PHP <input type="radio" name="flag" value="html"> HTML</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="bfile"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
@@ -116,7 +116,7 @@ function fileedit(): void {
     }
     closedir($handle);
     $cont .= '</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="bfile"><input type="submit" value="'._EDITBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode"><input type="submit" value="'._EDITBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
@@ -189,7 +189,7 @@ function addsave(): void {
     }
 }
 
-function bfile(): void {
+function filecode(): void {
     global $prefix, $db, $admin_file;
     $bf = getVar('post', 'bf', 'var', '');
     if ($bf != '') {
@@ -227,7 +227,7 @@ function bfile(): void {
         .'<tr><td class="sl_center"><input type="hidden" name="bf" value="'.$bf.'">'
         .'<input type="hidden" name="flag" value="'.$flaged.'">'
         .'<input type="hidden" name="name" value="blocks">'
-        .'<input type="hidden" name="op" value="bfilesave">'
+        .'<input type="hidden" name="op" value="filecodesave">'
         .'<input type="submit" value="'._SAVE.'" class="sl_but_blue"> '._GOBACK.'</td></tr></table></form>';
         $cont .= setTemplateBasic('close');
         echo $cont;
@@ -237,7 +237,7 @@ function bfile(): void {
     }
 }
 
-function bfilesave(): void {
+function filecodesave(): void {
     global $prefix, $db, $admin_file;
     $blocktext = filter_input(INPUT_POST, 'blocktext', FILTER_UNSAFE_RAW);
     $bf = getVar('post', 'bf', 'var', '');
@@ -531,16 +531,23 @@ function info(): void {
 
 switch($op) {
     default: blocks(); break;
+
+    // Block operations
     case 'new': add(); break;
-    case 'file': fileadd(); break;
-    case 'fileedit': fileedit(); break;
-    case 'fix': fix(); break;
     case 'add': addsave(); break;
-    case 'bfile': bfile(); break;
-    case 'bfilesave': bfilesave(); break;
     case 'edit': edit(); break;
     case 'editsave': editsave(); break;
     case 'change': change(); break;
+
+    // File block operations
+    case 'file': fileadd(); break;
+    case 'fileedit': fileedit(); break;
+    case 'filecode': filecode(); break;
+    case 'filecodesave': filecodesave(); break;
+
+    // Other operations
+    case 'fix': fix(); break;
+    case 'info': info(); break;
 
     case 'delete':
     $id = getVar('get', 'id', 'num');
@@ -553,6 +560,4 @@ switch($op) {
     $db->sql_query('DELETE FROM '.$prefix.'_blocks WHERE bid = :id', ['id' => $id]);
     header('Location: '.$admin_file.'.php?name=blocks&op=show');
     break;
-
-    case 'info': info(); break;
 }
