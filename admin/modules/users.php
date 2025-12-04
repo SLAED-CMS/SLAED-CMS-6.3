@@ -8,7 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function users_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $admin_file;
-    panel();
     $psearch = getVar('post', 'search');
     $chng_user = getVar('post', 'chng_user');
     $ops = ['users_show', 'users_add', 'users_new', 'users_null', 'users_conf', 'users_info'];

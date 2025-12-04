@@ -7,7 +7,6 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function databaseNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    panel();
     $ops = ['name=database&amp;op=show', 'name=database&amp;op=show&amp;type=optimize', 'name=database&amp;op=show&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
     $lang = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
     return getAdminTabs(_DATABASE, 'database.png', '', $ops, $lang, [], [], $tab, $subtab);

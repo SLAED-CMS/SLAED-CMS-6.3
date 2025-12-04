@@ -8,7 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 include('config/config_global.php');
 
 function configNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
-	panel();
 	$ops = ($opt == 1) ? ['name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=info'] : ['', '', '', '', '', '', '', '', 'name=config&amp;op=info'];
 	$lang = [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _SEARCH, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO];
 	return getAdminTabs(_PREFERENCES, 'preferences.png', 'name=config', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);

@@ -7,7 +7,6 @@
 if (!defined("ADMIN_FILE") || !is_admin_god()) die("Illegal file access");
 
 function moduleNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-	panel();
 	$ops = ['name=modules&amp;op=show', 'name=modules&amp;op=info'];
 	$lang = [_HOME, _INFO];
 	return getAdminTabs(_MODULES, 'modules.png', 'name=modules', $ops, $lang, [], [], $tab, $subtab);

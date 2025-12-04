@@ -7,7 +7,6 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function commNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    panel();
     $ops = ['name=comments&amp;op=show', 'name=comments&amp;op=show&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'];
     $lang = [_HOME, _WAITINGCONT, _PREFERENCES, _INFO];
     return getAdminTabs(_COMMENTS, 'comments.png', '', $ops, $lang, [], [], $tab, $subtab);

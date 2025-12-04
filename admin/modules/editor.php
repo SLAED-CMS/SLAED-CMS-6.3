@@ -7,7 +7,6 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function editorNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    panel();
     $ops = ['name=editor&amp;op=function', 'name=editor&amp;op=header', 'name=editor&amp;op=rewrite', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
     $lang = [_EFUNCN, _EHEADN, _EREWN, _EHTN, _ERON, _INFO];
     return getAdminTabs(_EDITOR_IN, 'editor.png', 'name=editor', $ops, $lang, [], [], $tab, $subtab);

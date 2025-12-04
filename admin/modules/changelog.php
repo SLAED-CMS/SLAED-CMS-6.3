@@ -9,13 +9,12 @@ require_once CONFIG_DIR.'/changelog.php';
 
 function changelogNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $conflog;
-    panel();
 
     if ($conflog['export_enabled'] ?? true) {
-        $ops = ['name=changelog&amp;op=show', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'];
+        $ops = ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'];
         $lang = [_HOME, _PREFERENCES, 'Export TXT', 'Export Markdown', _INFO];
     } else {
-        $ops = ['name=changelog&amp;op=show', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'];
+        $ops = ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'];
         $lang = [_HOME, _PREFERENCES, _INFO];
     }
 

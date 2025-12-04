@@ -88,7 +88,7 @@ function getAdminTabs(
 
                 $ssel = ($l === $act_sub) ? ' class="selected"' : '';
                 $href_sub = !empty($subops[$l])
-                    ? 'href="'.$admin_file.'.php?op='.$subops[$l].'"'
+                    ? 'href="'.$admin_file.'.php?'.$subops[$l].'"'
                     : 'rel="tabcs'.$l.'" href="#"';
 
                 $scnt .= '<li><a '.$href_sub.$ssel.'><b>'.$stab.'</b></a></li>';
@@ -99,7 +99,7 @@ function getAdminTabs(
         }
 
         $href = !empty($ops[$k])
-            ? 'href="'.$admin_file.'.php?op='.$ops[$k].'"'
+            ? 'href="'.$admin_file.'.php?'.$ops[$k].'"'
             : 'rel="tabc'.$k.'" href="#"';
 
         $cnt .= '<li><a '.$href.$sel.'><b>'.$tab.'</b></a></li>';

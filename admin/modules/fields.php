@@ -8,7 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/fields.php';
 
 function fieldsNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
-    panel();
     $ops = ($opt == 1) ? ['show', 'show', 'show', 'show', 'show', 'show', 'info'] : ['', '', '', '', '', '', 'info'];
     $lang = [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO];
     return getAdminTabs(_FIELDS, 'fields.png', 'name=fields', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);

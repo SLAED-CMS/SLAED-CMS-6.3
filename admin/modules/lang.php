@@ -8,7 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/lang.php';
 
 function langNavi(int $tab = 0, int $subtab = 0): string {
-    panel();
     $ops = ['name=lang&amp;op=main', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
     return getAdminTabs(_LANG_EDIT, 'lang.png', 'name=lang', $ops, $lang, [], [], $tab, $subtab);

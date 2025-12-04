@@ -198,7 +198,7 @@ function panel() {
 	global $prefix, $db, $conf, $panel, $count, $admin_file, $locale, $class;
 	head();
 	if (file_exists('setup.php')) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _DELSETUP));
-	$minver = '5.6';
+	$minver = '8.5.0';
 	$info = sprintf(_PHPSETUP, $minver);
 	if (PHP_VERSION < $minver) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $info));
 	if ($conf['admininfo']) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => $conf['admininfo']));
