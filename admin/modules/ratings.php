@@ -7,7 +7,6 @@
 if (!defined("ADMIN_FILE") || !is_admin_god()) die("Illegal file access");
 
 function ratings_navi() {
-	panel();
 	$narg = func_get_args();
 	$ops = array("ratings", "ratings_info");
 	$lang = array(_HOME, _INFO);

@@ -7,7 +7,6 @@
 if (!defined("ADMIN_FILE") || !is_admin_god()) die("Illegal file access");
 
 function privatNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-	panel();
 	$ops = ['show', 'conf', 'info'];
 	$lang = [_HOME, _PREFERENCES, _INFO];
 	return getAdminTabs(_PRIVAT, 'privat.png', 'name=privat', $ops, $lang, [], [], $tab, $subtab);

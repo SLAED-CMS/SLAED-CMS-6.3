@@ -7,7 +7,6 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function newsletterNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    panel();
     $ops = ['show', 'add', 'info'];
     $lang = [_HOME, _ADD, _INFO];
     return getAdminTabs(_NEWSLETTER, 'newsletter.png', 'name=newsletter', $ops, $lang, [], [], $tab, $subtab);
