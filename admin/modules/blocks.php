@@ -18,7 +18,7 @@ function blocks(): void {
     foot();
 }
 
-function newBlock(): void {
+function add(): void {
     global $prefix, $db, $locale, $conf, $admin_file;
     head();
     $cont = blocksNavi(0, 1, 0, 0);
@@ -138,7 +138,7 @@ function fix(): void {
     header('Location: '.$admin_file.'.php?name=blocks&op=show');
 }
 
-function add(): void {
+function addsave(): void {
     global $prefix, $db, $admin_file;
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
@@ -531,11 +531,11 @@ function info(): void {
 
 switch($op) {
     default: blocks(); break;
-    case 'new': newBlock(); break;
+    case 'new': add(); break;
     case 'file': file(); break;
     case 'fileedit': fileedit(); break;
     case 'fix': fix(); break;
-    case 'add': add(); break;
+    case 'add': addsave(); break;
     case 'bfile': bfile(); break;
     case 'bfilesave': bfilesave(); break;
     case 'edit': edit(); break;
