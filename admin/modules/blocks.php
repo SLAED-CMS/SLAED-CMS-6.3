@@ -523,33 +523,8 @@ function change(): void {
     header('Location: '.$admin_file.'.php?name=blocks&op=show');
 }
 
-function info(): void {
-    head();
-    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'blocks').'</div>';
-    foot();
-}
-
-switch($op) {
-    default: blocks(); break;
-
-    // Block operations
-    case 'add': add(); break;
-    case 'addsave': addsave(); break;
-    case 'edit': edit(); break;
-    case 'editsave': editsave(); break;
-    case 'change': change(); break;
-
-    // File block operations
-    case 'fileadd': fileadd(); break;
-    case 'fileedit': fileedit(); break;
-    case 'filecode': filecode(); break;
-    case 'filecodesave': filecodesave(); break;
-
-    // Other operations
-    case 'fix': fix(); break;
-    case 'info': info(); break;
-
-    case 'delete':
+function del(): void {
+    global $prefix, $db, $admin_file;
     $id = getVar('get', 'id', 'num');
     list($bposition, $weight) = $db->sql_fetchrow($db->sql_query('SELECT bposition, weight FROM '.$prefix.'_blocks WHERE bid = :id', ['id' => $id]));
     $result = $db->sql_query('SELECT bid FROM '.$prefix.'_blocks WHERE weight > :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
@@ -559,5 +534,26 @@ switch($op) {
     }
     $db->sql_query('DELETE FROM '.$prefix.'_blocks WHERE bid = :id', ['id' => $id]);
     header('Location: '.$admin_file.'.php?name=blocks&op=show');
-    break;
+}
+
+function info(): void {
+    head();
+    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'blocks').'</div>';
+    foot();
+}
+
+switch($op) {
+    default: blocks(); break;
+    case 'add': add(); break;
+    case 'addsave': addsave(); break;
+    case 'edit': edit(); break;
+    case 'editsave': editsave(); break;
+    case 'change': change(); break;
+    case 'fileadd': fileadd(); break;
+    case 'fileedit': fileedit(); break;
+    case 'filecode': filecode(); break;
+    case 'filecodesave': filecodesave(); break;
+    case 'fix': fix(); break;
+    case 'del': del(); break;
+    case 'info': info(); break;
 }

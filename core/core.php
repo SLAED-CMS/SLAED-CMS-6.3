@@ -3809,7 +3809,7 @@ function addblocks($str) {
             case 'l':
             if ($blocks == "" || $blocks == "0"|| $blocks == "1") {
                 ob_start();
-                blocks('l');
+                getBlocks('l');
                 $blk[1][$i] = ob_get_clean();
             } else {
                 $blk[1][$i] = "";
@@ -3818,7 +3818,7 @@ function addblocks($str) {
             case 'r':
             if ($blocks == "" || $blocks == "0"|| $blocks == "2") {
                 ob_start();
-                blocks('r');
+                getBlocks('r');
                 $blk[1][$i] = ob_get_clean();
             } else {
                 $blk[1][$i] = "";
@@ -3827,7 +3827,7 @@ function addblocks($str) {
             case 'c':
             if ($blocks_c == "" || $blocks_c == "0" || $blocks_c == "1") {
                 ob_start();
-                blocks('c');
+                getBlocks('c');
                 $blk[1][$i] = ob_get_clean();
             } else {
                 $blk[1][$i] = "";
@@ -3836,18 +3836,18 @@ function addblocks($str) {
             case 'd':
             if ($blocks_c == "" || $blocks_c == "0"|| $blocks_c == "2") {
                 ob_start();
-                blocks('d');
+                getBlocks('d');
                 $blk[1][$i] = ob_get_clean();
             } else {
                 $blk[1][$i] = "";
             }
             break;
             case 'b':
-            blocks('b');
+            getBlocks('b');
             $blk[1][$i] = $showbanners;
             break;
             case 'f':
-            blocks('f');
+            getBlocks('f');
             $blk[1][$i] = $foot;
             break;
             case 'm':
@@ -3863,7 +3863,7 @@ function addblocks($str) {
             default:
             $telo = explode(",", $telo);
             ob_start();
-            blocks($telo[0], $telo[1]);
+            getBlocks($telo[0], $telo[1]);
             $blk[1][$i] = ob_get_clean();
             break;
         }
@@ -3872,7 +3872,7 @@ function addblocks($str) {
 }
 
 # Format block
-function blocks($side, $fly="") {
+function getBlocks($side, $fly="") {
     global $prefix, $db, $conf, $locale, $name, $home, $pos, $b_id, $blockfile;
     static $barr;
     $querylang = ($conf['multilingual'] == 1) ? "AND (blanguage = '".$locale."' OR blanguage = '')" : "";

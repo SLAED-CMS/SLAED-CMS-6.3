@@ -135,9 +135,9 @@ function panelblock() {
 			// Generate menu entries for admin modules
 			$module_meta = getAdminModuleMeta();
 			foreach ($modules as $module) {
-				$meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png', 'op' => 'show'];
+				$meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png'];
 				adminmenu(
-					$admin_file.'.php?name='.$module.'&op='.$meta['op'],
+					$admin_file.'.php?name='.$module,
 					$meta['title'],
 					$meta['icon']
 				);
@@ -165,32 +165,32 @@ function panelblock() {
 
 function getAdminModuleMeta(): array {
 	return [
-		'admins' => ['title' => _EDITADMINS, 'icon' => 'admins.png', 'op' => 'show'],
-		'blocks' => ['title' => _BLOCKS, 'icon' => 'blocks.png', 'op' => 'show'],
-		'categories' => ['title' => _CATEGORIES, 'icon' => 'categories.png', 'op' => 'show'],
-		'changelog' => ['title' => 'Changelog', 'icon' => 'editor.png', 'op' => 'show'],
-		'comments' => ['title' => _COMMENTS, 'icon' => 'comments.png', 'op' => 'show'],
-		'config' => ['title' => _PREFERENCES, 'icon' => 'preferences.png', 'op' => 'show'],
-		'database' => ['title' => _DATABASE, 'icon' => 'database.png', 'op' => 'show'],
-		'editor' => ['title' => _EDITOR_IN, 'icon' => 'editor.png', 'op' => 'function'],
-		'favorites' => ['title' => _FAVORITES, 'icon' => 'favorites.png', 'op' => 'show'],
-		'fields' => ['title' => _FIELDS, 'icon' => 'fields.png', 'op' => 'show'],
-		'groups' => ['title' => _UGROUPS, 'icon' => 'groups.png', 'op' => 'show'],
-		'lang' => ['title' => _LANG_EDIT, 'icon' => 'lang.png', 'op' => 'main'],
-		'messages' => ['title' => _MESSAGES, 'icon' => 'messages.png', 'op' => 'show'],
-		'modules' => ['title' => _MODULES, 'icon' => 'modules.png', 'op' => 'show'],
-		'newsletter' => ['title' => _NEWSLETTER, 'icon' => 'newsletter.png', 'op' => 'show'],
-		'privat' => ['title' => _PRIVAT, 'icon' => 'privat.png', 'op' => 'show'],
-		'ratings' => ['title' => _RATINGS, 'icon' => 'ratings.png', 'op' => 'show'],
-		'referers' => ['title' => _REFERERS, 'icon' => 'referers.png', 'op' => 'show'],
-		'replace' => ['title' => _REPLACE, 'icon' => 'replace.png', 'op' => 'show'],
+		'admins' => ['title' => _EDITADMINS, 'icon' => 'admins.png'],
+		'blocks' => ['title' => _BLOCKS, 'icon' => 'blocks.png'],
+		'categories' => ['title' => _CATEGORIES, 'icon' => 'categories.png'],
+		'changelog' => ['title' => 'Changelog', 'icon' => 'editor.png'],
+		'comments' => ['title' => _COMMENTS, 'icon' => 'comments.png'],
+		'config' => ['title' => _PREFERENCES, 'icon' => 'preferences.png'],
+		'database' => ['title' => _DATABASE, 'icon' => 'database.png'],
+		'editor' => ['title' => _EDITOR_IN, 'icon' => 'editor.png'],
+		'favorites' => ['title' => _FAVORITES, 'icon' => 'favorites.png'],
+		'fields' => ['title' => _FIELDS, 'icon' => 'fields.png'],
+		'groups' => ['title' => _UGROUPS, 'icon' => 'groups.png'],
+		'lang' => ['title' => _LANG_EDIT, 'icon' => 'lang.png'],
+		'messages' => ['title' => _MESSAGES, 'icon' => 'messages.png'],
+		'modules' => ['title' => _MODULES, 'icon' => 'modules.png'],
+		'newsletter' => ['title' => _NEWSLETTER, 'icon' => 'newsletter.png'],
+		'privat' => ['title' => _PRIVAT, 'icon' => 'privat.png'],
+		'ratings' => ['title' => _RATINGS, 'icon' => 'ratings.png'],
+		'referers' => ['title' => _REFERERS, 'icon' => 'referers.png'],
+		'replace' => ['title' => _REPLACE, 'icon' => 'replace.png'],
 		'rss' => ['title' => _RSS, 'icon' => 'rss.png', 'op' => 'conf'],
-		'security' => ['title' => _SECURITY, 'icon' => 'security.png', 'op' => 'show'],
-		'sitemap' => ['title' => _SITEMAP, 'icon' => 'sitemap.png', 'op' => 'show'],
-		'stat' => ['title' => _STAT, 'icon' => 'stat.png', 'op' => 'show'],
-		'template' => ['title' => _THEME, 'icon' => 'template.png', 'op' => 'show'],
-		'uploads' => ['title' => _UPLOADSEDIT, 'icon' => 'uploads.png', 'op' => 'show'],
-		'users' => ['title' => _USERS, 'icon' => 'users.png', 'op' => 'show'],
+		'security' => ['title' => _SECURITY, 'icon' => 'security.png'],
+		'sitemap' => ['title' => _SITEMAP, 'icon' => 'sitemap.png'],
+		'stat' => ['title' => _STAT, 'icon' => 'stat.png'],
+		'template' => ['title' => _THEME, 'icon' => 'template.png'],
+		'uploads' => ['title' => _UPLOADSEDIT, 'icon' => 'uploads.png'],
+		'users' => ['title' => _USERS, 'icon' => 'users.png'],
 	];
 }
 
@@ -198,7 +198,7 @@ function panel() {
 	global $prefix, $db, $conf, $panel, $count, $admin_file, $locale, $class;
 	head();
 	if (file_exists('setup.php')) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _DELSETUP));
-	$minver = '8.5.0';
+	$minver = '8.1.0';
 	$info = sprintf(_PHPSETUP, $minver);
 	if (PHP_VERSION < $minver) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $info));
 	if ($conf['admininfo']) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => $conf['admininfo']));
@@ -220,9 +220,9 @@ function panel() {
 			$module_meta = getAdminModuleMeta();
 			ob_start();
 			foreach ($modules as $module) {
-				$meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png', 'op' => 'show'];
+				$meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png'];
 				adminmenu(
-					$admin_file.'.php?name='.$module.'&op='.$meta['op'],
+					$admin_file.'.php?name='.$module,
 					$meta['title'],
 					$meta['icon']
 				);
