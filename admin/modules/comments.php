@@ -8,19 +8,19 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function commNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     panel();
-    $ops = ['show', 'show&amp;status=1', 'conf', 'info'];
+    $ops = ['name=comments&amp;op=show', 'name=comments&amp;op=show&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'];
     $lang = [_HOME, _WAITINGCONT, _PREFERENCES, _INFO];
-    return getAdminTabs(_COMMENTS, 'comments.png', 'name=comments', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_COMMENTS, 'comments.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function commShow(): void {
+function comments(): void {
     head();
     $id = getVar('get', 'status', 'num') ? 1 : 0;
     echo commNavi(0, $id, 0, 0).ashowcom();
     foot();
 }
 
-function commEdit(): void {
+function edit(): void {
     global $db, $prefix, $admin_file;
     $id = getVar('get', 'id', 'num');
     head();
@@ -36,7 +36,7 @@ function commEdit(): void {
     foot();
 }
 
-function commEditSave(): void {
+function editsave(): void {
     global $prefix, $db, $admin_file;
     $id = getVar('post', 'id', 'num');
     $com_text = save_text($_POST['comment']);
@@ -44,7 +44,7 @@ function commEditSave(): void {
     header('Location: '.$admin_file.'.php?name=comments&op=show');
 }
 
-function commConf(): void {
+function conf(): void {
     global $admin_file, $confc;
     head();
     $cont = commNavi(0, 2, 0, 0);
@@ -99,7 +99,7 @@ function commConf(): void {
     foot();
 }
 
-function commSave(): void {
+function save(): void {
     global $admin_file;
     $cont = [
         'num' => getVar('post', 'num', 'num', 15),
@@ -122,24 +122,16 @@ function commSave(): void {
     header('Location: '.$admin_file.'.php?name=comments&op=conf');
 }
 
-function commInfo(): void {
+function info(): void {
     head();
     echo commNavi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'comments').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'show':
-    commShow();
-    break;
-
-    case 'edit':
-    commEdit();
-    break;
-
-    case 'editsave':
-    commEditSave();
-    break;
+    default: comments(); break;
+    case 'edit': edit(); break;
+    case 'editsave': editsave(); break;
 
     case 'comm_act':
     $get_id = getVar('get', 'id', 'num');
@@ -175,15 +167,7 @@ switch($op) {
     referer($admin_file.'.php?name=comments&op=show');
     break;
 
-    case 'conf':
-    commConf();
-    break;
-
-    case 'save':
-    commSave();
-    break;
-
-    case 'info':
-    commInfo();
-    break;
+    case 'conf': conf(); break;
+    case 'save': save(); break;
+    case 'info': info(); break;
 }

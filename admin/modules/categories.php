@@ -11,22 +11,22 @@ function catNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): 
     panel();
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
-    $ops = ['show'.$modlink, 'add'.$modlink, 'subadd'.$modlink, 'addedit'.$modlink, 'fix'.$modlink, 'info'.$modlink];
+    $ops = ['name=categories&amp;op=show'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink];
     $lang = [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO];
     $sops = ['', '', ''];
     $slang = [_CATEGORY, _ACESS, _ACESSF];
     $search = setTemplateBasic('searchbox', '<form method="post" action="'.$admin_file.'.php"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="show">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>');
-    return getAdminTabs(_CATEGORIES, 'categories.png', 'name=categories'.$search, $ops, $lang, $sops, $slang, $tab, $subtab);
+    return getAdminTabs(_CATEGORIES, 'categories.png', ''.$search, $ops, $lang, $sops, $slang, $tab, $subtab);
 }
 
-function catShow(): void {
+function categories(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
     head();
     echo catNavi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INFOCATDEL]).setTemplateBasic('open').'<div id="repajax_cat">'.ajax_cat($modul, 1).'</div>'.setTemplateBasic('close');
     foot();
 }
 
-function catFix(): void {
+function fix(): void {
     global $prefix, $db, $admin_file;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $result = $db->sql_query('SELECT id FROM '.$prefix.'_categories WHERE modul = :modul ORDER BY ordern ASC', ['modul' => $modul]);
@@ -38,7 +38,7 @@ function catFix(): void {
     header('Location: '.$admin_file.'.php?name=categories&op=show&modul='.$modul);
 }
 
-function catAdd(): void {
+function add(): void {
     global $prefix, $db, $conf, $admin_file;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
@@ -90,7 +90,7 @@ function catAdd(): void {
     foot();
 }
     
-function catSubAdd(): void {
+function subadd(): void {
     global $prefix, $db, $conf, $admin_file;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
@@ -148,7 +148,7 @@ function catSubAdd(): void {
     foot();
 }
 
-function catAddEdit(): void {
+function addedit(): void {
     global $prefix, $db, $admin_file;
     $modul = getVar('get', 'modul', 'var', 'forum');
     head();
@@ -166,7 +166,7 @@ function catAddEdit(): void {
     foot();
 }
 
-function catEdit(): void {
+function edit(): void {
     global $prefix, $db, $conf, $admin_file;
     $cid = getVar('req', 'cid', 'num');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
@@ -229,7 +229,7 @@ function catEdit(): void {
     foot();
 }
 
-function catInfo(): void {
+function info(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     head();
     echo catNavi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'categories').'</div>';
@@ -237,25 +237,11 @@ function catInfo(): void {
 }
 
 switch($op) {
-    case 'show':
-    catShow();
-    break;
-
-    case 'fix':
-    catFix();
-    break;
-
-    case 'add':
-    catAdd();
-    break;
-
-    case 'subadd':
-    catSubAdd();
-    break;
-
-    case 'addedit':
-    catAddEdit();
-    break;
+    default: categories(); break;
+    case 'fix': fix(); break;
+    case 'add': add(); break;
+    case 'subadd': subadd(); break;
+    case 'addedit': addedit(); break;
 
     case 'addsave':
     $modul = getVar('post', 'modul', 'var');
@@ -281,10 +267,8 @@ switch($op) {
     ]);
     header('Location: '.$admin_file.'.php?name=categories&op=show&modul='.$modul);
     break;
-    
-    case 'edit':
-    catEdit();
-    break;
+
+    case 'edit': edit(); break;
 
     case 'save':
     $id = getVar('post', 'id', 'num');
@@ -317,7 +301,5 @@ switch($op) {
     referer($admin_file.'.php?name=categories&op=show');
     break;
 
-    case 'info':
-    catInfo();
-    break;
+    case 'info': info(); break;
 }

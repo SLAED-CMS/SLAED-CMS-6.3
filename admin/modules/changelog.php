@@ -12,17 +12,17 @@ function changelogNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy 
     panel();
 
     if ($conflog['export_enabled'] ?? true) {
-        $ops = ['show', 'conf', 'exporttxt', 'exportmd', 'info'];
+        $ops = ['name=changelog&amp;op=show', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'];
         $lang = [_HOME, _PREFERENCES, 'Export TXT', 'Export Markdown', _INFO];
     } else {
-        $ops = ['show', 'conf', 'info'];
+        $ops = ['name=changelog&amp;op=show', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'];
         $lang = [_HOME, _PREFERENCES, _INFO];
     }
 
-    return getAdminTabs('Changelog', 'editor.png', 'name=changelog', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function changelogShow(): void {
+function changelog(): void {
     global $admin_file, $conflog;
     head();
     checkConfigFile('changelog.php');
@@ -39,7 +39,7 @@ function changelogShow(): void {
 
     // Export-Handling
     if ($export && $conflog['export_enabled']) {
-        changelogExport($export);
+        export($export);
         return;
     }
 
@@ -57,7 +57,7 @@ function changelogShow(): void {
     $cont .= '<td><input type="date" name="date_from" value="'.htmlspecialchars($date_from).'" placeholder="Von Datum" class="sl_conf" style="width: 150px;"></td>';
     $cont .= '<td><input type="date" name="date_to" value="'.htmlspecialchars($date_to).'" placeholder="Bis Datum" class="sl_conf" style="width: 150px;"></td>';
     $cont .= '<td><button type="submit" class="sl_but_blue">Filtern</button> ';
-    $cont .= '<a href="'.$admin_file.'.php?name=changelog&op=show" class="sl_but_gray">Zurücksetzen</a></td>';
+    $cont .= '<a href="'.$admin_file.'.php?name=changelog" class="sl_but_gray">Zurücksetzen</a></td>';
     $cont .= '</tr></table>';
     $cont .= '</div></form>';
 
@@ -174,7 +174,7 @@ function changelogShow(): void {
             'date_from' => $date_from,
             'date_to' => $date_to
         ]));
-        $url = $query ? $query.'&' : 'name=changelog&op=show&';
+        $url = $query ? $query.'&' : 'name=changelog&';
         $cont .= setPageNumbers(
             'pagenum',
             'changelog',
@@ -298,7 +298,7 @@ function renderCommit(array $commit, int $index, array $conflog): string {
     return $cont;
 }
 
-function changelogExport(string $format): void {
+function export(string $format): void {
     global $conflog;
 
     $gitlog = [];
@@ -370,7 +370,7 @@ function changelogExport(string $format): void {
     exit;
 }
 
-function changelogConf(): void {
+function conf(): void {
     global $admin_file, $conflog;
     head();
     checkConfigFile('changelog.php');
@@ -393,7 +393,7 @@ function changelogConf(): void {
     foot();
 }
 
-function changelogSaveConf(): void {
+function confsave(): void {
     global $admin_file;
 
     $cont = [
@@ -409,7 +409,7 @@ function changelogSaveConf(): void {
     header('Location: '.$admin_file.'.php?name=changelog&op=conf');
 }
 
-function changelogInfo(): void {
+function info(): void {
     head();
     $info = '<h3>Changelog Modul</h3>
     <p>Dieses Modul zeigt die Git-Historie des SLAED CMS an.</p>
@@ -427,27 +427,9 @@ function changelogInfo(): void {
 }
 
 switch($op) {
-    case 'show':
-    changelogShow();
-    break;
-
-    case 'conf':
-    changelogConf();
-    break;
-
-    case 'saveconf':
-    changelogSaveConf();
-    break;
-
-    case 'info':
-    changelogInfo();
-    break;
-
-    case 'exporttxt':
-    changelogExport('txt');
-    break;
-
-    case 'exportmd':
-    changelogExport('md');
-    break;
+    default: changelog(); break;
+    case 'conf': conf(); break;
+    case 'confsave': confsave(); break;
+    case 'info': info(); break;
+    case 'export': export(); break;
 }

@@ -9,7 +9,7 @@ require_once CONFIG_DIR.'/lang.php';
 
 function langNavi(int $tab = 0, int $subtab = 0): string {
     panel();
-    $ops = ['main', 'conf', 'info'];
+    $ops = ['name=lang&amp;op=main', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
     return getAdminTabs(_LANG_EDIT, 'lang.png', 'name=lang', $ops, $lang, [], [], $tab, $subtab);
 }
@@ -21,7 +21,7 @@ function getLangPath(string $mod = '', string $typ = ''): string {
     return $base.$module.$type.'/language';
 }
 
-function langMain(): void {
+function lang(): void {
     global $prefix, $db, $admin_file;
     $modbase = [];
     $who_view = [];
@@ -74,7 +74,7 @@ function langMain(): void {
     foot();
 }
 
-function langFile(): void {
+function file(): void {
     global $admin_file, $confla;
     head();
     $cont = langNavi(0, 0);
@@ -164,7 +164,7 @@ function langFile(): void {
     foot();
 }
 
-function langSave(): void {
+function save(): void {
     global $admin_file;
     $mod = getVar('post', 'mod', 'var', '');
     $typ = getVar('post', 'typ', 'var', '');
@@ -216,7 +216,7 @@ function langSave(): void {
     header('Location: '.$url);
 }
 
-function langConf(): void {
+function conf(): void {
     global $admin_file, $confla;
     head();
     checkConfigFile('lang.php');
@@ -233,7 +233,7 @@ function langConf(): void {
     foot();
 }
 
-function langConfSave(): void {
+function confsave(): void {
     global $admin_file, $confla;
     $cont = [
         'key' => getVar('post', 'key', 'text', ''),
@@ -245,17 +245,18 @@ function langConfSave(): void {
     header('Location: '.$admin_file.'.php?name=lang&op=conf');
 }
 
-function langInfo(): void {
+function info(): void {
     head();
     echo langNavi(2, 0).'<div id="repadm_info">'.adm_info(1, 0, 'lang').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'main': langMain(); break;
-    case 'file': langFile(); break;
-    case 'save': langSave(); break;
-    case 'conf': langConf(); break;
-    case 'confsave': langConfSave(); break;
-    case 'info': langInfo(); break;
+    default: lang(); break;
+    case 'main': lang(); break;
+    case 'file': file(); break;
+    case 'save': save(); break;
+    case 'conf': conf(); break;
+    case 'confsave': confsave(); break;
+    case 'info': info(); break;
 }

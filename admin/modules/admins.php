@@ -8,12 +8,12 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function adminsNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     panel();
-    $ops = ['show', 'add', 'info'];
+    $ops = ['name=admins&amp;op=show', 'name=admins&amp;op=add', 'name=admins&amp;op=info'];
     $lang = [_HOME, _ADD, _INFO];
-    return getAdminTabs(_EDITADMINS, 'admins.png', 'name=admins', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_EDITADMINS, 'admins.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function adminsShow(): void {
+function admins(): void {
     global $prefix, $db, $admin_file, $conf;
     head();
     $cont = adminsNavi(0, 0, 0, 0);
@@ -32,7 +32,7 @@ function adminsShow(): void {
     foot();
 }
 
-function adminsAdd(): void {
+function add(): void {
     global $prefix, $db, $admin_file, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
@@ -94,7 +94,7 @@ function adminsAdd(): void {
     foot();
 }
 
-function adminsSave(): void {
+function save(): void {
     global $prefix, $db, $admin_file, $conf, $stop;
     $aid = getVar('post', 'aid', 'num', 0);
     $name = getVar('post', 'name', 'name');
@@ -150,35 +150,25 @@ function adminsSave(): void {
         }
         header('Location: '.$admin_file.'.php?name=admins&op=show'.$send);
     } else {
-        adminsAdd();
+        add();
     }
 }
 
-function adminsInfo(): void {
+function info(): void {
     head();
     echo adminsNavi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'admins').'</div>';
     foot();
 }
 
 switch ($op) {
-    case 'show':
-    adminsShow();
-    break;
-
-    case 'add':
-    adminsAdd();
-    break;
-
-    case 'save':
-    adminsSave();
-    break;
+    default: admins(); break;
+    case 'add': add(); break;
+    case 'save': save(); break;
 
     case 'del':
     $db->sql_query('DELETE FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
     header('Location: '.$admin_file.'.php?name=admins&op=show');
     break;
 
-    case 'info':
-    adminsInfo();
-    break;
+    case 'info': info(); break;
 }

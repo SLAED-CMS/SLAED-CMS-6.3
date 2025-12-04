@@ -9,12 +9,12 @@ include('config/config_global.php');
 
 function configNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
 	panel();
-	$ops = ($opt == 1) ? ['show', 'show', 'show', 'show', 'show', 'show', 'show', 'show', 'info'] : ['', '', '', '', '', '', '', '', 'info'];
+	$ops = ($opt == 1) ? ['name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=info'] : ['', '', '', '', '', '', '', '', 'name=config&amp;op=info'];
 	$lang = [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _SEARCH, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO];
 	return getAdminTabs(_PREFERENCES, 'preferences.png', 'name=config', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);
 }
 
-function configShow() {
+function config() {
 	global $prefix, $db, $admin_file, $conf;
 	head();
 	$cont = configNavi(0, 0, 0, 0, 'configure');
@@ -315,7 +315,7 @@ function configShow() {
 	foot();
 }
 
-function configSave() {
+function save() {
 	global $admin_file, $conf;
 	$protect = array('\n' => '', '\t' => '', '\r' => '', ' ' => '');
 	$kprotect = array(', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ',');
@@ -548,14 +548,15 @@ function configSave() {
 	header("Location: ".$admin_file.".php?name=config&op=show");
 }
 
-function configInfo() {
+function info() {
 	head();
 	echo configNavi(1, 8, 0, 0, '').'<div id="repadm_info">'.adm_info(1, 0, 'configure').'</div>';
 	foot();
 }
 
 switch($op) {
-	case 'show': configShow(); break;
-	case 'save': configSave(); break;
-	case 'info': configInfo(); break;
+	default: config(); break;
+	case 'show': config(); break;
+	case 'save': save(); break;
+	case 'info': info(); break;
 }
