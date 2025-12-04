@@ -6,7 +6,7 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function blocksNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=blocks', 'name=blocks&amp;op=new', 'name=blocks&amp;op=file', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'];
     $lang = [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO];
     return getAdminTabs(_BLOCKS, 'blocks.png', '', $ops, $lang, [], [], $tab, $subtab);
@@ -14,14 +14,14 @@ function blocksNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0
 
 function blocks(): void {
     head();
-    echo blocksNavi(0, 0, 0, 0).setTemplateBasic('open').'<div id="repajax_block">'.ajax_block().'</div>'.setTemplateBasic('close');
+    echo navi(0, 0, 0, 0).setTemplateBasic('open').'<div id="repajax_block">'.ajax_block().'</div>'.setTemplateBasic('close');
     foot();
 }
 
 function add(): void {
     global $prefix, $db, $locale, $conf, $admin_file;
     head();
-    $cont = blocksNavi(0, 1, 0, 0);
+    $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post">'
     .'<table class="sl_table_form">'
@@ -88,7 +88,7 @@ function add(): void {
 function file(): void {
     global $admin_file;
     head();
-    $cont = blocksNavi(0, 2, 0, 0);
+    $cont = navi(0, 2, 0, 0);
     $permtest = end_chmod('blocks/', 777);
     if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
     $cont .= setTemplateBasic('open');
@@ -104,7 +104,7 @@ function file(): void {
 function fileedit(): void {
     global $prefix, $db, $admin_file;
     head();
-    $cont = blocksNavi(0, 3, 0, 0);
+    $cont = navi(0, 3, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><select name="bf" class="sl_form">';
@@ -168,7 +168,7 @@ function addsave(): void {
     }
     if (($content == '') && ($blockfile == '')) {
         head();
-        echo blocksNavi(0, 1, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _RSSFAIL]).setTemplateBasic('open').'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.setTemplateBasic('close');
+        echo navi(0, 1, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _RSSFAIL]).setTemplateBasic('open').'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.setTemplateBasic('close');
         foot();
     } else {
         if ($expire == '' || $expire == 0) {
@@ -211,7 +211,7 @@ function bfile(): void {
             }
         }
         head();
-        $cont = blocksNavi(0, 3, 0, 0);
+        $cont = navi(0, 3, 0, 0);
         $permtest = end_chmod('blocks/', 777);
         if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _BLOCK.': '.$bf]);
@@ -260,7 +260,7 @@ function bfilesave(): void {
 function edit(): void {
     global $prefix, $db, $admin_file, $conf;
     head();
-    $cont = blocksNavi(0, 1, 0, 0);
+    $cont = navi(0, 1, 0, 0);
     $bid = getVar('get', 'bid', 'num');
     list($bkey, $title, $content, $url, $bposition, $weight, $active, $refresh, $blanguage, $blockfile, $view, $expire, $action, $which) = $db->sql_fetchrow($db->sql_query('SELECT bkey, title, content, url, bposition, weight, active, refresh, blanguage, blockfile, view, expire, action, which FROM '.$prefix.'_blocks WHERE bid = :bid', ['bid' => $bid]));
     if ($url != '') {
@@ -525,7 +525,7 @@ function change(): void {
 
 function info(): void {
     head();
-    echo blocksNavi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'blocks').'</div>';
+    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'blocks').'</div>';
     foot();
 }
 
