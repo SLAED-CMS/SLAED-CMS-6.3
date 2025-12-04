@@ -85,7 +85,7 @@ function add(): void {
     foot();
 }
 
-function file(): void {
+function fileadd(): void {
     global $admin_file;
     head();
     $cont = navi(0, 2, 0, 0);
@@ -532,7 +532,7 @@ function info(): void {
 switch($op) {
     default: blocks(); break;
     case 'new': add(); break;
-    case 'file': file(); break;
+    case 'file': fileadd(); break;
     case 'fileedit': fileedit(); break;
     case 'fix': fix(); break;
     case 'add': addsave(); break;
