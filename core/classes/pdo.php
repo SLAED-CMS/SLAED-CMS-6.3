@@ -66,6 +66,11 @@ class sql_db {
         return '\''.str_replace('\'', '\'\'', (string)$value).'\'';
     }
 
+    # Public wrapper for safe SQL value quoting (used outside this class, e.g. backup)
+    public function sql_value(mixed $value): string {
+        return $this->sql_quote($value);
+    }
+
     # Closes the connection
     function sql_close(): bool {
         $this->sqlconnid = null;

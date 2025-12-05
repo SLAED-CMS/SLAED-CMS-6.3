@@ -6,27 +6,26 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function cat_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function catNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $admin_file;
-    panel();
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
-    $ops = ['cat_show'.$modlink, 'cat_add'.$modlink, 'cat_sub_add'.$modlink, 'cat_add_edit'.$modlink, 'cat_fix'.$modlink, 'cat_info'.$modlink];
+    $ops = ['name=categories&amp;op=show'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink];
     $lang = [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO];
     $sops = ['', '', ''];
     $slang = [_CATEGORY, _ACESS, _ACESSF];
-    $search = setTemplateBasic('searchbox', '<form method="post" action="'.$admin_file.'.php"><input type="hidden" name="op" value="cat_show">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>');
-    return getAdminTabs(_CATEGORIES, 'categories.png', $search, $ops, $lang, $sops, $slang, $tab, $subtab);
+    $search = setTemplateBasic('searchbox', '<form method="post" action="'.$admin_file.'.php"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="show">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>');
+    return getAdminTabs(_CATEGORIES, 'categories.png', ''.$search, $ops, $lang, $sops, $slang, $tab, $subtab);
 }
 
-function cat_show(): void {
+function categories(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
     head();
-    echo cat_navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INFOCATDEL]).setTemplateBasic('open').'<div id="repajax_cat">'.ajax_cat($modul, 1).'</div>'.setTemplateBasic('close');
+    echo catNavi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INFOCATDEL]).setTemplateBasic('open').'<div id="repajax_cat">'.ajax_cat($modul, 1).'</div>'.setTemplateBasic('close');
     foot();
 }
 
-function cat_fix(): void {
+function fix(): void {
     global $prefix, $db, $admin_file;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $result = $db->sql_query('SELECT id FROM '.$prefix.'_categories WHERE modul = :modul ORDER BY ordern ASC', ['modul' => $modul]);
@@ -35,15 +34,15 @@ function cat_fix(): void {
         $ordern++;
         $db->sql_query('UPDATE '.$prefix.'_categories SET ordern = :ordern WHERE id = :id', ['ordern' => $ordern, 'id' => $id]);
     }
-    header('Location: '.$admin_file.'.php?op=cat_show&modul='.$modul);
+    header('Location: '.$admin_file.'.php?name=categories&op=show&modul='.$modul);
 }
 
-function cat_add(): void {
+function add(): void {
     global $prefix, $db, $conf, $admin_file;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
-    $cont = cat_navi(0, 1, 1, 0);
+    $cont = catNavi(0, 1, 1, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$admin_file.'.php" method="post">'
@@ -79,24 +78,24 @@ function cat_add(): void {
     .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', '', 2).'</td></tr></table>'
     .'</div>'
     .'<script>
-        var countries=new ddtabcontent(\'cat_adds\')
+        var countries=new ddtabcontent(\'catAdds\')
         countries.setpersist(true)
         countries.setselectedClassTarget(\'link\')
         countries.init()
     </script>'
-    .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="op" value="cat_add_save"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
     
-function cat_sub_add(): void {
+function subadd(): void {
     global $prefix, $db, $conf, $admin_file;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $cont = cat_navi(0, 2, 1, 0);
+        $cont = catNavi(0, 2, 1, 0);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post2" action="'.$admin_file.'.php" method="post">'
@@ -133,31 +132,31 @@ function cat_sub_add(): void {
         .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', '', 2).'</td></tr></table>'
         .'</div>'
         .'<script>
-            var countries=new ddtabcontent(\'cat_sub_adds\')
+            var countries=new ddtabcontent(\'catSubAdds\')
             countries.setpersist(true)
             countries.setselectedClassTarget(\'link\')
             countries.init()
         </script>'
-        .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="op" value="cat_add_save"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>';
+        .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
     } else {
-        $cont = cat_navi(0, 2, 0, 0);
+        $cont = catNavi(0, 2, 0, 0);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, deflmconst($modul))]);
     }
     echo $cont;
     foot();
 }
 
-function cat_add_edit(): void {
+function addedit(): void {
     global $prefix, $db, $admin_file;
     $modul = getVar('get', 'modul', 'var', 'forum');
     head();
-    $cont = cat_navi(0, 3, 0, 0);
+    $cont = catNavi(0, 3, 0, 0);
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_form"><form action="'.$admin_file.'.php" method="post">'
         .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, '', 'cid', 'sl_form').'</td></tr>'
-        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="cat_edit"><input type="submit" value="'._EDIT.'" class="sl_but_blue"></td></tr></form></table>';
+        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="edit"><input type="submit" value="'._EDIT.'" class="sl_but_blue"></td></tr></form></table>';
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, deflmconst($modul))]);
@@ -166,14 +165,14 @@ function cat_add_edit(): void {
     foot();
 }
 
-function cat_edit(): void {
+function edit(): void {
     global $prefix, $db, $conf, $admin_file;
     $cid = getVar('req', 'cid', 'num');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     $result = $db->sql_query('SELECT modul, title, description, img, language, parentid, cstatus, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod FROM '.$prefix.'_categories WHERE id = :cid', ['cid' => $cid]);
     list($modul, $title, $description, $imgcat, $language, $parentid, $cstatus, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod) = $db->sql_fetchrow($result);
     head();
-    $cont = cat_navi(0, 3, 1, 0);
+    $cont = catNavi(0, 3, 1, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$admin_file.'.php" method="post">'
@@ -218,46 +217,32 @@ function cat_edit(): void {
     .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', $auth_mod, 2).'</td></tr></table>'
     .'</div>'
     .'<script>
-        var countries=new ddtabcontent(\'cat_edits\')
+        var countries=new ddtabcontent(\'catEdits\')
         countries.setpersist(true)
         countries.setselectedClassTarget(\'link\')
         countries.init()
     </script>'
-    .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="id" value="'.$cid.'"><input type="hidden" name="op" value="cat_save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="id" value="'.$cid.'"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function cat_info(): void {
+function info(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     head();
-    echo cat_navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'categories').'</div>';
+    echo catNavi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'categories').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'cat_show':
-    cat_show();
-    break;
+    default: categories(); break;
+    case 'fix': fix(); break;
+    case 'add': add(); break;
+    case 'subadd': subadd(); break;
+    case 'addedit': addedit(); break;
 
-    case 'cat_fix':
-    cat_fix();
-    break;
-
-    case 'cat_add':
-    cat_add();
-    break;
-
-    case 'cat_sub_add':
-    cat_sub_add();
-    break;
-
-    case 'cat_add_edit':
-    cat_add_edit();
-    break;
-
-    case 'cat_add_save':
+    case 'addsave':
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
     $description = getVar('post', 'description', 'text');
@@ -279,14 +264,12 @@ switch($op) {
     $db->sql_query('INSERT INTO '.$prefix.'_categories (id, modul, title, description, img, language, parentid, cstatus, ordern, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod) VALUES (NULL, :modul, :title, :description, :img, :language, :parentid, :cstatus, :ordern, :auth_view, :auth_read, :auth_post, :auth_reply, :auth_edit, :auth_delete, :auth_mod)', [
         'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $cid, 'cstatus' => $cstatus, 'ordern' => $ordern, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod
     ]);
-    header('Location: '.$admin_file.'.php?op=cat_show&modul='.$modul);
-    break;
-    
-    case 'cat_edit':
-    cat_edit();
+    header('Location: '.$admin_file.'.php?name=categories&op=show&modul='.$modul);
     break;
 
-    case 'cat_save':
+    case 'edit': edit(); break;
+
+    case 'save':
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
@@ -307,17 +290,15 @@ switch($op) {
     $db->sql_query('UPDATE '.$prefix.'_categories SET modul = :modul, title = :title, description = :description, img = :img, language = :language, parentid = :parentid, cstatus = :cstatus, auth_view = :auth_view, auth_read = :auth_read, auth_post = :auth_post, auth_reply = :auth_reply, auth_edit = :auth_edit, auth_delete = :auth_delete, auth_mod = :auth_mod WHERE id = :id', [
         'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $parentid, 'cstatus' => $cstatus, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod, 'id' => $id
     ]);
-    header('Location: '.$admin_file.'.php?op=cat_show&modul='.$modul);
+    header('Location: '.$admin_file.'.php?name=categories&op=show&modul='.$modul);
     break;
 
-    case 'cat_del':
+    case 'delete':
     $id = getVar('get', 'id', 'num');
     $db->sql_query('DELETE FROM '.$prefix.'_categories WHERE id = :id', ['id' => $id]);
     $db->sql_query('DELETE FROM '.$prefix.'_categories WHERE parentid = :id', ['id' => $id]);
-    referer($admin_file.'.php?op=cat_show');
+    referer($admin_file.'.php?name=categories&op=show');
     break;
 
-    case 'cat_info':
-    cat_info();
-    break;
+    case 'info': info(); break;
 }

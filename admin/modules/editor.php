@@ -6,17 +6,16 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function editor_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    panel();
-    $ops = ['editor_function', 'editor_header', 'editor_rewrite', 'editor_htaccess', 'editor_robots', 'editor_info'];
+function editorNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=editor&amp;op=function', 'name=editor&amp;op=header', 'name=editor&amp;op=rewrite', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
     $lang = [_EFUNCN, _EHEADN, _EREWN, _EHTN, _ERON, _INFO];
-    return getAdminTabs(_EDITOR_IN, 'editor.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_EDITOR_IN, 'editor.png', 'name=editor', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function editor_function(): void {
+function editor(): void {
     global $admin_file;
     head();
-    $cont = editor_navi(0, 0, 0, 0);
+    $cont = editorNavi(0, 0, 0, 0);
     $file = 'config/config_core.php';
     $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
     $permtest = end_chmod($file, 666);
@@ -25,16 +24,16 @@ function editor_function(): void {
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="op" value="editor_save"><input type="hidden" name="editor" value="editor_function"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="function"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function editor_header(): void {
+function header(): void {
     global $admin_file;
     head();
-    $cont = editor_navi(0, 1, 0, 0);
+    $cont = editorNavi(0, 1, 0, 0);
     $file = 'config/config_header.php';
     $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
     $permtest = end_chmod($file, 666);
@@ -43,16 +42,16 @@ function editor_header(): void {
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="op" value="editor_save"><input type="hidden" name="editor" value="editor_header"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="header"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function editor_rewrite(): void {
+function rewrite(): void {
     global $admin_file;
     head();
-    $cont = editor_navi(0, 2, 0, 0);
+    $cont = editorNavi(0, 2, 0, 0);
     $file = 'config/config_rewrite.php';
     $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
     $permtest = end_chmod($file, 666);
@@ -61,16 +60,16 @@ function editor_rewrite(): void {
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="op" value="editor_save"><input type="hidden" name="editor" value="editor_rewrite"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="rewrite"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function editor_htaccess(): void {
+function htaccess(): void {
     global $admin_file;
     head();
-    $cont = editor_navi(0, 3, 0, 0);
+    $cont = editorNavi(0, 3, 0, 0);
     $file = '.htaccess';
     $conts = file_get_contents($file);
     $permtest = end_chmod($file, 666);
@@ -78,16 +77,16 @@ function editor_htaccess(): void {
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EHT.': '.$file.' '._EINFO4]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="op" value="editor_save"><input type="hidden" name="editor" value="editor_htaccess"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="htaccess"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function editor_robots(): void {
+function robots(): void {
     global $admin_file;
     head();
-    $cont = editor_navi(0, 4, 0, 0);
+    $cont = editorNavi(0, 4, 0, 0);
     $file = 'robots.txt';
     $conts = file_get_contents($file);
     $permtest = end_chmod($file, 666);
@@ -95,40 +94,27 @@ function editor_robots(): void {
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EROB.': '.$file.' '._EINFO5]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/plain', $conts).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="op" value="editor_save"><input type="hidden" name="editor" value="editor_robots"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="robots"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function editor_info(): void {
+function info(): void {
     head();
-    echo editor_navi(1, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'editor').'</div>';
+    echo editorNavi(1, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'editor').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'editor_function':
-    editor_function();
-    break;
+    default: editor(); break;
+    case 'function': editor(); break;
+    case 'header': header(); break;
+    case 'rewrite': rewrite(); break;
+    case 'htaccess': htaccess(); break;
+    case 'robots': robots(); break;
 
-    case 'editor_header':
-    editor_header();
-    break;
-
-    case 'editor_rewrite':
-    editor_rewrite();
-    break;
-
-    case 'editor_htaccess':
-    editor_htaccess();
-    break;
-
-    case 'editor_robots':
-    editor_robots();
-    break;
-
-    case 'editor_save':
+    case 'save':
     $editor = getVar('post', 'editor', 'var');
     $file = getVar('post', 'file');
     $template = filter_input(INPUT_POST, 'template', FILTER_UNSAFE_RAW);
@@ -139,10 +125,8 @@ switch($op) {
         fwrite($handle, $template);
         fclose($handle);
     }
-    header('Location: '.$admin_file.'.php?op='.$editor);
+    header('Location: '.$admin_file.'.php?name=editor&op='.$editor);
     break;
 
-    case 'editor_info':
-    editor_info();
-    break;
+    case 'info': info(); break;
 }

@@ -8,7 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function template_navi() {
 	global $admin_file, $conf;
-	panel();
 	$templ = isset($_POST['templ']) ? analyze($_POST['templ']) : (isset($_GET['templ']) ? analyze($_GET['templ']) : $conf['theme']);
 	$narg = func_get_args();
 	$ops = array("template&amp;templ=".$templ, "template_style&amp;templ=".$templ, "template_info");

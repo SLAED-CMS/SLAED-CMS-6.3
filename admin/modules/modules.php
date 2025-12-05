@@ -6,18 +6,16 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_god()) die("Illegal file access");
 
-function module_navi() {
-	panel();
-	$narg = func_get_args();
-	$ops = array("module", "module_info");
-	$lang = array(_HOME, _INFO);
-	return navi_gen(_MODULES, "modules.png", "", $ops, $lang, "", "", $narg[0], $narg[1], $narg[2], $narg[3]);
+function moduleNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+	$ops = ['name=modules&amp;op=show', 'name=modules&amp;op=info'];
+	$lang = [_HOME, _INFO];
+	return getAdminTabs(_MODULES, 'modules.png', 'name=modules', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function module() {
+function modules() {
 	global $prefix, $db, $admin_file, $infos;
 	head();
-	$cont = module_navi(0, 0, 0, 0);
+	$cont = moduleNavi(0, 0, 0, 0);
 	if (isset($infos)) $cont .= tpl_warn("warn", $infos, "", "", "info");
 	$handle = opendir("modules");
 	$modlist = array();
@@ -73,19 +71,19 @@ function module() {
 				}
 			}
 			if ($install) {
-				$sqlimg = "||<a href=\"".$admin_file.".php?op=module_add&amp;mod=".$title."&amp;id=1\" OnClick=\"return DelCheck(this, '"._DB_DELETE." &quot;".$title."&quot;?');\" title=\""._DB_DELETE."\">"._DB_DELETE."</a>";
+				$sqlimg = "||<a href=\"".$admin_file.".php?name=modules&amp;op=add&amp;mod=".$title."&amp;id=1\" OnClick=\"return DelCheck(this, '"._DB_DELETE." &quot;".$title."&quot;?');\" title=\""._DB_DELETE."\">"._DB_DELETE."</a>";
 			} else {
-				$sqlimg = "||<a href=\"".$admin_file.".php?op=module_add&amp;mod=".$title."&amp;id=2\" OnClick=\"return DelCheck(this, '"._DB_INSTALL." &quot;".$title."&quot;?');\" title=\""._DB_INSTALL."\">"._DB_INSTALL."</a>";
+				$sqlimg = "||<a href=\"".$admin_file.".php?name=modules&amp;op=add&amp;mod=".$title."&amp;id=2\" OnClick=\"return DelCheck(this, '"._DB_INSTALL." &quot;".$title."&quot;?');\" title=\""._DB_INSTALL."\">"._DB_INSTALL."</a>";
 			}
 		} else {
 			$sqlimg = "";
 		}
 		if (file_exists("modules/".$title."/sql/update.sql")) {
-			$sqluimg = "||<a href=\"".$admin_file.".php?op=module_add&amp;mod=".$title."&amp;id=3\" OnClick=\"return DelCheck(this, '"._DB_UPDATE." &quot;".$title."&quot;?');\" title=\""._DB_UPDATE."\">"._DB_UPDATE."</a>";
+			$sqluimg = "||<a href=\"".$admin_file.".php?name=modules&amp;op=add&amp;mod=".$title."&amp;id=3\" OnClick=\"return DelCheck(this, '"._DB_UPDATE." &quot;".$title."&quot;?');\" title=\""._DB_UPDATE."\">"._DB_UPDATE."</a>";
 		} else {
 			$sqluimg = "";
 		}
-		$cont .= "<tr><td>".$a."</td><td>".$titlel."</td><td>".$title."</td><td>".$who_view."</td><td>".$mod_group."</td><td>".ad_status("", $active)."</td><td>".add_menu(ad_status($admin_file.".php?op=module_status&amp;id=".$mid."&amp;act=".$act, $active)."||<a href=\"".$admin_file.".php?op=module_edit&amp;mid=".$mid."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>".$sqlimg.$sqluimg)."</td></tr>";
+		$cont .= "<tr><td>".$a."</td><td>".$titlel."</td><td>".$title."</td><td>".$who_view."</td><td>".$mod_group."</td><td>".ad_status("", $active)."</td><td>".add_menu(ad_status($admin_file.".php?name=modules&amp;op=status&amp;id=".$mid."&amp;act=".$act, $active)."||<a href=\"".$admin_file.".php?name=modules&amp;op=edit&amp;mid=".$mid."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>".$sqlimg.$sqluimg)."</td></tr>";
 		$a++;
 	}
 	$cont .= "</tbody></table>";
@@ -94,12 +92,12 @@ function module() {
 	foot();
 }
 
-function module_edit() {
+function edit() {
 	global $prefix, $db, $admin_file;
 	$mid = intval($_GET['mid']);
 	list($title, $view, $inmenu, $mod_group, $blocks_m, $blocks_mc) = $db->sql_fetchrow($db->sql_query("SELECT title, view, inmenu, mod_group, blocks, blocks_c FROM ".$prefix."_modules WHERE mid = '".$mid."'"));
 	head();
-	$cont = module_navi(0, 0, 0, 0);
+	$cont = moduleNavi(0, 0, 0, 0);
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._VIEWPRIV."</td><td><select name=\"view\" class=\"sl_conf\">";
@@ -142,33 +140,37 @@ function module_edit() {
 	}
 	$cont .= "</select></td></tr>"
 	."<tr><td>"._SHOWINMENU."</td><td>".radio_form($inmenu, "inmenu")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"mid\" value=\"".$mid."\"><input type=\"hidden\" name=\"op\" value=\"module_edit_save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
+	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"mid\" value=\"".$mid."\"><input type=\"hidden\" name=\"name\" value=\"modules\"><input type=\"hidden\" name=\"op\" value=\"editsave\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
 	$cont .= tpl_eval("close", "");
 	echo $cont;
 	foot();
 }
 
-function module_info() {
+function info() {
 	head();
-	echo module_navi(0, 1, 0, 0)."<div id=\"repadm_info\">".adm_info(1, 0, "modules")."</div>";
+	echo moduleNavi(0, 1, 0, 0)."<div id=\"repadm_info\">".adm_info(1, 0, "modules")."</div>";
 	foot();
 }
 
 switch ($op) {
-	case "module":
-	module();
+	default:
+	modules();
 	break;
-	
-	case "module_status":
+
+	case "show":
+	modules();
+	break;
+
+	case "status":
 	$db->sql_query("UPDATE ".$prefix."_modules SET active = '".$act."' WHERE mid = '".$id."'");
-	header("Location: ".$admin_file.".php?op=module");
+	header("Location: ".$admin_file.".php?name=modules&op=show");
 	break;
-	
-	case "module_edit":
-	module_edit();
+
+	case "edit":
+	edit();
 	break;
-	
-	case "module_edit_save":
+
+	case "editsave":
 	$mid = intval($_POST['mid']);
 	$view = $_POST['view'];
 	$inmenu = $_POST['inmenu'];
@@ -176,10 +178,10 @@ switch ($op) {
 	$blocks_m = $_POST['blocks_m'];
 	$blocks_mc = $_POST['blocks_mc'];
 	$result = $db->sql_query("UPDATE ".$prefix."_modules SET view = '".$view."', inmenu = '".$inmenu."', mod_group = '".$mod_group."', blocks = '".$blocks_m."', blocks_c = '".$blocks_mc."' WHERE mid = '".$mid."'");
-	header("Location: ".$admin_file.".php?op=module");
+	header("Location: ".$admin_file.".php?name=modules&op=show");
 	break;
-	
-	case "module_add":
+
+	case "add":
 	$module = $_GET['mod'];
 	if ($module && $id) {
 		$filename = ($id == 3) ? file_get_contents("modules/".$module."/sql/update.sql") : file_get_contents("modules/".$module."/sql/table.sql");
@@ -202,11 +204,11 @@ switch ($op) {
 		}
 		$infos = $ttitle.": ".$module."<br><br>".$info;
 	}
-	module();
+	modules();
 	break;
-	
-	case "module_info":
-	module_info();
+
+	case "info":
+	info();
 	break;
 }
 ?>

@@ -7,7 +7,6 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function replace_navi() {
-	panel();
 	$narg = func_get_args();
 	$ops = ($narg[0] == 1) ? array("replace", "replace", "replace_info") : array("", "", "replace_info");
 	$lang = array(_CONTENT, _NEWS, _INFO);

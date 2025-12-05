@@ -8,7 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/sitemap.php';
 
 function sitemap_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-	panel();
 	$ops = ['sitemap', 'sitemap_xsl', 'sitemap_conf', 'sitemap_info'];
 	$lang = [_HOME, _TEMPLATE, _PREFERENCES, _INFO];
 	return getAdminTabs(_SITEMAP, 'sitemap.png', '', $ops, $lang, [], [], $tab, $subtab);

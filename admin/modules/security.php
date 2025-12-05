@@ -8,7 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 include('config/config_security.php');
 
 function security_navi() {
-    panel();
     $narg = func_get_args();
     $ops = array('security_show', 'security_block', 'security_pass', 'security_conf', 'security_info');
     $lang = array(_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO);

@@ -276,6 +276,7 @@ define("_KWORDSI","The number of displayed keywords of the site. This option is 
 define("_LADATE","Set the current date");
 define("_LANGCOUNT","The number of new fields of linguistic constants");
 define("_LANGKEY","API-Key");
+define("_LANGKEYI","Recommend to set their own, you can get the key for free at this site: https://translate.yandex.ru/developers/keys");
 define("_LANGTR","Language, which will be used translation");
 define("_LANG_EDIT","Language editor");
 define("_LEFT","Left");

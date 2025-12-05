@@ -7,7 +7,6 @@
 if (!defined("ADMIN_FILE") || !is_admin_god()) die("Illegal file access");
 
 function rss_navi() {
-	panel();
 	$narg = func_get_args();
 	$ops = ($narg[0] == 1) ? array("rss_conf", "rss_conf", "rss_info") : array("", "", "rss_info");
 	$lang = array(_RSS, _PREFERENCES, _INFO);
