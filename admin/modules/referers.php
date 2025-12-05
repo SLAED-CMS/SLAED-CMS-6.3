@@ -8,7 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function referers_navi() {
 	global $admin_file;
-	panel();
 	$narg = func_get_args();
 	$ops = array("referers", "referers_conf", "referers_del", "referers_info");
 	$lang = array(_HOME, _PREFERENCES, _DELETE, _INFO);

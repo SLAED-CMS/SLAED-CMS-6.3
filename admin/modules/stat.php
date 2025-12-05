@@ -8,7 +8,6 @@ if (!defined("ADMIN_FILE") || !is_admin_god()) die("Illegal file access");
 
 function stat_navi() {
 	global $admin_file;
-	panel();
 	$sfile = isset($_POST['file']) ? $_POST['file'] : 0;
 	$narg = func_get_args();
 	$ops = array("stat_show", "stat_conf", "stat_info");

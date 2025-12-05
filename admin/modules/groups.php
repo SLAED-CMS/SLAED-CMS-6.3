@@ -6,17 +6,16 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function groups_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    panel();
-    $ops = ['groups', 'groups_add', 'groups_points', 'groups_info'];
+function groupsNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['show', 'add', 'points', 'info'];
     $lang = [_HOME, _ADD, _POINTS, _INFO];
-    return getAdminTabs(_UGROUPS, 'groups.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs(_UGROUPS, 'groups.png', 'name=groups', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function groups(): void {
     global $prefix, $db, $admin_file, $conf;
     head();
-    $cont = groups_navi(0, 0, 0, 0);
+    $cont = groupsNavi(0, 0, 0, 0);
     $result = $db->sql_query('SELECT id, name, description, points, extra, rank, color FROM '.$prefix.'_groups ORDER BY points, extra');
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
@@ -38,7 +37,7 @@ function groups(): void {
             .'<td>'.$points.'</td>'
             .'<td>'.$users_num.'</td>'
             .'<td>'.$extra.'</td>'
-            .'<td>'.add_menu('<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$admin_file.'.php?op=groups_add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=groups_del&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu('<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$admin_file.'.php?name=groups&amp;op=add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?name=groups&amp;op=del&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setTemplateBasic('close');
@@ -49,7 +48,7 @@ function groups(): void {
     foot();
 }
 
-function groups_add(): void {
+function groupsAdd(): void {
     global $prefix, $db, $admin_file, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
@@ -69,7 +68,7 @@ function groups_add(): void {
     }
     $rank = empty($rank) ? 'rank_1.png' : $rank;
     head();
-    $cont = groups_navi(0, 1, 0, 0);
+    $cont = groupsNavi(0, 1, 0, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _GROUPSI]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= setTemplateBasic('open');
@@ -91,13 +90,13 @@ function groups_add(): void {
     .'<tr><td>'._COLOR.':</td><td><input type="color" name="color" value="'.$color.'" class="sl_form"></td></tr>'
     .'<tr><td>'._POINTSNEEDED.':</td><td><input type="number" name="points" value="'.$points.'" class="sl_form" placeholder="'._POINTSNEEDED.'"></td></tr>'
     .'<tr><td>'._SPEC_GROUP.':<div class="sl_small">'._GRSINFO.'</div></td><td><input type="checkbox" name="grextra" value="1"'.$check.'></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="gid" value="'.$gid.'"><input type="hidden" name="op" value="groups_save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="gid" value="'.$gid.'"><input type="hidden" name="name" value="groups"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function groups_save(): void {
+function groupsSave(): void {
     global $prefix, $db, $admin_file, $conf, $stop;
     $id = getVar('post', 'gid', 'num');
     $grname = getVar('post', 'grname', 'title');
@@ -116,16 +115,16 @@ function groups_save(): void {
         } else {
             $db->sql_query('INSERT INTO '.$prefix.'_groups (name, description, points, extra, rank, color) VALUES (:name, :description, :points, :extra, :rank, :color)', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
         }
-        header('Location: '.$admin_file.'.php?op=groups');
+        header('Location: '.$admin_file.'.php?name=groups&op=show');
     } else {
-        groups_add();
+        groupsAdd();
     }
 }
 
-function groups_points(): void {
+function groupsPoints(): void {
     global $prefix, $db, $admin_file, $confu;
     head();
-    $cont = groups_navi(0, 2, 0, 0);
+    $cont = groupsNavi(0, 2, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post">'
     .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._DESCRIPTION.'</th><th class="{sorter: false}">'._POINTS.'</th></tr></thead><tbody>';
@@ -137,13 +136,13 @@ function groups_points(): void {
         $a = $i + 1;
         $cont .= '<tr><td>'.$a.'</td><td>'.$p[$i].'</td><td>'.$d[$i].'</td><td><input type="number" value="'.$points[$i].'" name="spoints[]" class="sl_field" placeholder="'._POINTS.'" required></td></tr>';
     }
-    $cont .= '</tbody></table><table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="op" value="groups_points_save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= '</tbody></table><table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="groups"><input type="hidden" name="op" value="pointssave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function groups_points_save(): void {
+function groupsPointsSave(): void {
     global $admin_file, $confu;
     $spoints = getVar('post', 'spoints[]', 'num');
     if ($spoints) {
@@ -151,10 +150,10 @@ function groups_points_save(): void {
         $cont = ['points' => $npoints];
         setConfigFile('users.php', 'confu', $cont, $confu);
     }
-    header('Location: '.$admin_file.'.php?op=groups_points');
+    header('Location: '.$admin_file.'.php?name=groups&op=points');
 }
 
-function groups_del(): void {
+function groupsDel(): void {
     global $prefix, $db, $admin_file;
     $id = getVar('get', 'id', 'num');
     if ($id) {
@@ -164,38 +163,38 @@ function groups_del(): void {
     header('Location: '.$admin_file.'.php?op=groups');
 }
 
-function groups_info(): void {
+function groupsInfo(): void {
     head();
-    echo groups_navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'groups').'</div>';
+    echo groupsNavi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'groups').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'groups':
+    case 'show':
     groups();
     break;
 
-    case 'groups_add':
-    groups_add();
+    case 'add':
+    groupsAdd();
     break;
 
-    case 'groups_save':
-    groups_save();
+    case 'save':
+    groupsSave();
     break;
 
-    case 'groups_del':
-    groups_del();
+    case 'del':
+    groupsDel();
     break;
 
-    case 'groups_points':
-    groups_points();
+    case 'points':
+    groupsPoints();
     break;
 
-    case 'groups_points_save':
-    groups_points_save();
+    case 'pointssave':
+    groupsPointsSave();
     break;
 
-    case 'groups_info':
-    groups_info();
+    case 'info':
+    groupsInfo();
     break;
 }

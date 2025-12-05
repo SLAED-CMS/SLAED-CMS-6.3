@@ -10,7 +10,6 @@ include("config/config_uploads.php");
 
 function uploads_navi() {
 	global $admin_file, $confup;
-	panel();
 	$dir = isset($_POST['dir']) ? analyze($_POST['dir']) : (isset($_GET['dir']) ? analyze($_GET['dir']) : $confup['dir']);
 	$narg = func_get_args();
 	$ops = array("uploads", "templ_conf", "uploads_conf", "uploads_info");

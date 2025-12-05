@@ -6,17 +6,16 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function admins_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    panel();
-    $ops = ['admins_show', 'admins_add', 'admins_info'];
+function adminsNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'];
     $lang = [_HOME, _ADD, _INFO];
     return getAdminTabs(_EDITADMINS, 'admins.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function admins_show(): void {
-    global $prefix, $db, $admin_file, $conf;
+function admins(): void {
+    global $prefix, $db, $aroute, $conf;
     head();
-    $cont = admins_navi(0, 0, 0, 0);
+    $cont = adminsNavi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._URL.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE.'</th><th>'._IP.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -24,7 +23,7 @@ function admins_show(): void {
     while (list($id, $name, $title, $url, $email, $pwd, $super, $lang, $ip, $regdate, $lastvisit) = $db->sql_fetchrow($result)) {
         $lang = (!$lang) ? _ALL : $lang;
         $cont .= '<tr><td>'.title_tip(_REG.': '.format_time($regdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($lastvisit, _TIMESTRING)).$name.'</td><td>'.$title.'</td><td>'.domain($url).'</td><td>'.mailto($email).'</td><td>'.deflang($lang).'</td><td>'.user_geo_ip($ip, 4).'</td>'
-        .'<td>'.add_menu('<a href="'.$admin_file.'.php?op=admins_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=admins_del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+        .'<td>'.add_menu('<a href="'.$aroute.'.php?name=admins&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$aroute.'.php?name=admins&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
     }
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
@@ -32,15 +31,15 @@ function admins_show(): void {
     foot();
 }
 
-function admins_add(): void {
-    global $prefix, $db, $admin_file, $conf, $stop;
+function add(): void {
+    global $prefix, $db, $aroute, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->sql_query('SELECT id, name, title, url, email, pwd, super, editor, smail, modules, lang FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
         list($aid, $name, $title, $url, $email, $pwd, $super, $editor, $smail, $modules, $lang) = $db->sql_fetchrow($result);
     } else {
         $aid = getVar('post', 'aid', 'num', '');
-        $name = getVar('post', 'name', 'name', '');
+        $name = getVar('post', 'adminname', 'name', '');
         $title = getVar('post', 'title', 'title', '');
         $email = getVar('post', 'email', '', '');
         $url = getVar('post', 'url', 'url', 'https://');
@@ -52,13 +51,14 @@ function admins_add(): void {
         $lang = getVar('post', 'lang', '', $conf['language']);
     }
     head();
-    $cont = admins_navi(0, 1, 0, 0);
+    $cont = adminsNavi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $check = (empty($_COOKIE['sl_close_9'])) ? '' : ' checked';
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$admin_file.'.php" method="post">'
+    $cont .= '<form name="post" action="'.$aroute.'.php?name=admins" method="post">'
+    .'<input type="hidden" name="op" value="save">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('name', $name, '25', 'sl_form', '1').'</td></tr>'
+    .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('adminname', $name, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._URANK.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="50" class="sl_form" placeholder="'._URANK.'"></td></tr>'
     .'<tr><td>'._EMAIL.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required></td></tr>'
     .'<tr><td>'._URL.':</td><td><input type="url" name="url" value="'.$url.'" maxlength="255" class="sl_form" placeholder="'._URL.'"></td></tr>'
@@ -88,19 +88,19 @@ function admins_add(): void {
     }
     $sel1 = ($super == 1) ? ' checked' : '';
     $cont .= '<tr><td colspan="'.$a.'"><input type="checkbox" name="super" value="1"'.$sel1.'> <b>'._SUPERUSER.'</b></td></tr></table>'
-    .'</td></tr><tr><td colspan="2" class="sl_center"><input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="op" value="admins_save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    .'</td></tr><tr><td colspan="2" class="sl_center"><input type="hidden" name="aid" value="'.$aid.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function admins_save(): void {
-    global $prefix, $db, $admin_file, $conf, $stop;
+function save(): void {
+    global $prefix, $db, $aroute, $conf, $stop;
     $aid = getVar('post', 'aid', 'num', 0);
-    $name = getVar('post', 'name', 'name');
+    $name = getVar('post', 'adminname', 'name');
     $title = getVar('post', 'title', 'title');
     $url = getVar('post', 'url', 'url');
-    $email = getVar('post', 'email');
+    $email = getVar('post', 'email', 'email');
     $pwd = getVar('post', 'pwd', '', 0);
     $pwd2 = getVar('post', 'pwd2', '', 0);
     $lang = getVar('post', 'lang');
@@ -111,6 +111,7 @@ function admins_save(): void {
     $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
     $mail = getVar('post', 'mail');
     $stop = array();
+    $send = '';
     if (!$aid && !$pwd && !$pwd2) $stop[] = _NOPASS;
     if ($name) {
         list($adid, $adname) = $db->sql_fetchrow($db->sql_query('SELECT id, name FROM '.$prefix.'_admins WHERE name = :name', ['name' => $name]));
@@ -148,37 +149,29 @@ function admins_save(): void {
             mail_send($email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
-        header('Location: '.$admin_file.'.php?op=admins_show'.$send);
+        header('Location: '.$aroute.'.php?name=admins&op=show'.$send);
     } else {
-        admins_add();
+        add();
     }
 }
 
-function admins_info(): void {
+function del(): void {
+    global $prefix, $db, $aroute;
+    $id = getVar('get', 'id', 'num');
+    $db->sql_query('DELETE FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
+    header('Location: '.$aroute.'.php?name=admins&op=show');
+}
+
+function info(): void {
     head();
-    echo admins_navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'admins').'</div>';
+    echo adminsNavi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'admins').'</div>';
     foot();
 }
 
 switch ($op) {
-    case 'admins_show':
-    admins_show();
-    break;
-
-    case 'admins_add':
-    admins_add();
-    break;
-
-    case 'admins_save':
-    admins_save();
-    break;
-
-    case 'admins_del':
-    $db->sql_query('DELETE FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
-    header('Location: '.$admin_file.'.php?op=admins_show');
-    break;
-
-    case 'admins_info':
-    admins_info();
-    break;
+    default: admins(); break;
+    case 'add': add(); break;
+    case 'save': save(); break;
+    case 'del': del(); break;
+    case 'info': info(); break;
 }

@@ -276,6 +276,7 @@ define("_KWORDSI","Anzahl der ausgegebenen Keywords Website. Diese Option ist nu
 define("_LADATE","Installieren Sie das aktuelle Datum");
 define("_LANGCOUNT","Die Zahl der neuen Bereichen mit Sprachkonstanten");
 define("_LANGKEY","API-Schlüssel");
+define("_LANGKEYI","Wir empfehlen Ihren eigenes Schlüssel zu verwenden, Schlüssel können Sie kostenlos auf dieser Website erhalten:: https://translate.yandex.ru/developers/keys");
 define("_LANGTR","Sprache, von der die Übersetzung erfolgt");
 define("_LANG_EDIT","Sprach Editor");
 define("_LEFT","Links");

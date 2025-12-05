@@ -118,26 +118,42 @@ function adminmenu($url, $title, $image) {
 }
 
 function panelblock() {
-	global $prefix, $db, $conf, $panel, $admin_file, $content_am, $currentlang, $class;
+	global $prefix, $db, $conf, $panel, $admin_file, $content_am, $locale, $class;
 	if (!$panel) {
 		if (is_admin_god()) {
-			$dir = opendir('admin/links');
+			// Auto-discover admin modules
+			$modules = [];
+			$dir = opendir('admin/modules');
 			while (false !== ($file = readdir($dir))) {
-				if (substr($file, 0, 6) == 'links.') $files[] = $file;
+				if (preg_match('/^([a-z]+)\.php$/i', $file, $matches)) {
+					$modules[] = $matches[1];
+				}
 			}
 			closedir($dir);
-			sort($files);
-			foreach ($files as $entry) include('admin/links/'.$entry);
+			sort($modules);
+
+			// Generate menu entries for admin modules
+			$module_meta = getAdminModuleMeta();
+			foreach ($modules as $module) {
+				$meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png'];
+				adminmenu(
+					$admin_file.'.php?name='.$module,
+					$meta['title'],
+					$meta['icon']
+				);
+			}
 			$ablock = setTemplateBlock('block-left', array('{%title%}' => _ADMIN, '{%content%}' => $content_am, '{%id%}' => '1'));
 			$content_am = '';
 		}
+
+		// Custom modules
 		$result = $db->sql_query("SELECT title, active FROM ".$prefix."_modules ORDER BY title ASC");
 		while (list($title, $active) = $db->sql_fetchrow($result)) {
 			if (is_admin_god() || is_admin_modul($title)) {
 				if (file_exists('modules/'.$title.'/admin/index.php') && file_exists('modules/'.$title.'/admin/links.php')) {
 					$class = (!$active) ? ' sl_hidden' : '';
 					include('modules/'.$title.'/admin/links.php');
-					if (file_exists('modules/'.$title.'/admin/language/lang-'.$currentlang.'.php')) include('modules/'.$title.'/admin/language/lang-'.$currentlang.'.php');
+					if (file_exists('modules/'.$title.'/admin/language/lang-'.$locale.'.php')) include('modules/'.$title.'/admin/language/lang-'.$locale.'.php');
 				}
 			}
 		}
@@ -147,24 +163,70 @@ function panelblock() {
 	}
 }
 
+function getAdminModuleMeta(): array {
+	return [
+		'admins' => ['title' => _EDITADMINS, 'icon' => 'admins.png'],
+		'blocks' => ['title' => _BLOCKS, 'icon' => 'blocks.png'],
+		'categories' => ['title' => _CATEGORIES, 'icon' => 'categories.png'],
+		'changelog' => ['title' => 'Changelog', 'icon' => 'editor.png'],
+		'comments' => ['title' => _COMMENTS, 'icon' => 'comments.png'],
+		'config' => ['title' => _PREFERENCES, 'icon' => 'preferences.png'],
+		'database' => ['title' => _DATABASE, 'icon' => 'database.png'],
+		'editor' => ['title' => _EDITOR_IN, 'icon' => 'editor.png'],
+		'favorites' => ['title' => _FAVORITES, 'icon' => 'favorites.png'],
+		'fields' => ['title' => _FIELDS, 'icon' => 'fields.png'],
+		'groups' => ['title' => _UGROUPS, 'icon' => 'groups.png'],
+		'lang' => ['title' => _LANG_EDIT, 'icon' => 'lang.png'],
+		'messages' => ['title' => _MESSAGES, 'icon' => 'messages.png'],
+		'modules' => ['title' => _MODULES, 'icon' => 'modules.png'],
+		'newsletter' => ['title' => _NEWSLETTER, 'icon' => 'newsletter.png'],
+		'privat' => ['title' => _PRIVAT, 'icon' => 'privat.png'],
+		'ratings' => ['title' => _RATINGS, 'icon' => 'ratings.png'],
+		'referers' => ['title' => _REFERERS, 'icon' => 'referers.png'],
+		'replace' => ['title' => _REPLACE, 'icon' => 'replace.png'],
+		'rss' => ['title' => _RSS, 'icon' => 'rss.png', 'op' => 'conf'],
+		'security' => ['title' => _SECURITY, 'icon' => 'security.png'],
+		'sitemap' => ['title' => _SITEMAP, 'icon' => 'sitemap.png'],
+		'stat' => ['title' => _STAT, 'icon' => 'stat.png'],
+		'template' => ['title' => _THEME, 'icon' => 'template.png'],
+		'uploads' => ['title' => _UPLOADSEDIT, 'icon' => 'uploads.png'],
+		'users' => ['title' => _USERS, 'icon' => 'users.png'],
+	];
+}
+
 function panel() {
-	global $prefix, $db, $conf, $panel, $count, $admin_file, $currentlang, $class;
+	global $prefix, $db, $conf, $panel, $count, $admin_file, $locale, $class;
+	head();
 	if (file_exists('setup.php')) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _DELSETUP));
-	$minver = '5.6';
+	$minver = '8.1.0';
 	$info = sprintf(_PHPSETUP, $minver);
 	if (PHP_VERSION < $minver) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $info));
 	if ($conf['admininfo']) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => $conf['admininfo']));
 	if ($panel) {
 		$count = 1;
 		if (is_admin_god()) {
-			$dir = opendir("admin/links");
+			// Auto-discover admin modules
+			$modules = [];
+			$dir = opendir('admin/modules');
 			while (false !== ($file = readdir($dir))) {
-				if (substr($file, 0, 6) == "links.") $files[] = $file;
+				if (preg_match('/^([a-z]+)\.php$/i', $file, $matches)) {
+					$modules[] = $matches[1];
+				}
 			}
 			closedir($dir);
-			sort($files);
+			sort($modules);
+
+			// Generate menu entries
+			$module_meta = getAdminModuleMeta();
 			ob_start();
-			foreach ($files as $entry) include("admin/links/".$entry);
+			foreach ($modules as $module) {
+				$meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png'];
+				adminmenu(
+					$admin_file.'.php?name='.$module,
+					$meta['title'],
+					$meta['icon']
+				);
+			}
 			$cont = ob_get_clean();
 			echo tpl_eval("panel-admin", _ADMINMENU, $cont);
 		}
@@ -176,7 +238,7 @@ function panel() {
 				if (file_exists("modules/".$title."/admin/index.php") && file_exists("modules/".$title."/admin/links.php")) {
 					$class = (!$active) ? " sl_hidden" : "";
 					include("modules/".$title."/admin/links.php");
-					if (file_exists("modules/".$title."/admin/language/lang-".$currentlang.".php")) include("modules/".$title."/admin/language/lang-".$currentlang.".php");
+					if (file_exists("modules/".$title."/admin/language/lang-".$locale.".php")) include("modules/".$title."/admin/language/lang-".$locale.".php");
 				}
 			}
 		}
@@ -184,39 +246,47 @@ function panel() {
 		$cont = ob_get_clean();
 		echo tpl_eval("panel-modul", _MODULESADMIN, $cont);
 	}
+	foot();
 }
 
 if (is_admin()) {
-	$op = getVar('req', 'op', 'var');
-	$panel = (empty($op)) ? 1 : 0;
-	$op = (empty($op)) ? $conf['amod'] : $op;
+	$name = getVar('req', 'name', 'var');
+	$op = getVar('req', 'op', 'var', 'show');
+	$panel = (empty($name)) ? 1 : 0;
 	$id = getVar('req', 'id', 'num');
 	$act = getVar('req', 'act', 'num');
 	$pagetitle = $conf['defis'].' '._ADMINMENU;
-	switch($op) {
-		default:
-		if (is_admin_god()) {
-			$dir = opendir('admin/modules');
-			while (false !== ($file = readdir($dir))) {
-				if (preg_match('#(\.php)$#is', $file) && $file != '.' && $file != '..') include('admin/modules/'.$file);
-			}
-			closedir($dir);
-		}
-		$result = $db->sql_query('SELECT title FROM '.$prefix.'_modules ORDER BY title ASC');
-		while (list($mtitle) = $db->sql_fetchrow($result)) {
-			if (is_admin_god() || is_admin_modul($mtitle)) {
-				if (file_exists('modules/'.$mtitle.'/admin/index.php') && file_exists('modules/'.$mtitle.'/admin/links.php')) include('modules/'.$mtitle.'/admin/index.php');
-			}
-		}
-		break;
-		
-		case 'changeeditor':
+
+	// Special operations
+	if ($op == 'changeeditor') {
 		changeeditor();
-		break;
-		
-		case 'logout':
+	} elseif ($op == 'logout') {
 		logout();
-		break;
+	} elseif ($panel) {
+		// Show admin panel - no specific module requested
+		panel();
+	} else {
+		// Load specific admin module
+		if (is_admin_god()) {
+			$module_file = 'admin/modules/' . $name . '.php';
+			if (file_exists($module_file)) {
+				include($module_file);
+			}
+		}
+
+		// Load custom module admin if exists
+		$result = $db->sql_query('SELECT title FROM '.$prefix.'_modules WHERE title = :title', ['title' => $name]);
+		if ($db->sql_numrows($result) > 0) {
+			list($mtitle) = $db->sql_fetchrow($result);
+			if (is_admin_god() || is_admin_modul($mtitle)) {
+				if (file_exists('modules/'.$mtitle.'/admin/index.php')) {
+					if (file_exists('modules/'.$mtitle.'/admin/language/lang-'.$locale.'.php')) {
+						include('modules/'.$mtitle.'/admin/language/lang-'.$locale.'.php');
+					}
+					include('modules/'.$mtitle.'/admin/index.php');
+				}
+			}
+		}
 	}
 } else {
 	$home = 1;

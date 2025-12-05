@@ -7,18 +7,16 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 include('config/config_global.php');
 
-function configure_navi() {
-	panel();
-	$narg = func_get_args();
-	$ops = ($narg[0] == 1) ? array('configure', 'configure', 'configure', 'configure', 'configure', 'configure', 'configure', 'configure', 'configure_info') : array('', '', '', '', '', '', '', '', 'configure_info');
-	$lang = array(_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _SEARCH, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO);
-	return navi_gen(_PREFERENCES, 'preferences.png', '', $ops, $lang, '', '', $narg[0], $narg[1], $narg[2], $narg[3], $narg[4]);
+function configNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
+	$ops = ($opt == 1) ? ['name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=show', 'name=config&amp;op=info'] : ['', '', '', '', '', '', '', '', 'name=config&amp;op=info'];
+	$lang = [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _SEARCH, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO];
+	return getAdminTabs(_PREFERENCES, 'preferences.png', 'name=config', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);
 }
 
-function configure() {
+function config() {
 	global $prefix, $db, $admin_file, $conf;
 	head();
-	$cont = configure_navi(0, 0, 0, 0, 'configure');
+	$cont = configNavi(0, 0, 0, 0, 'configure');
 	$permtest = end_chmod('config/config_global.php', 666);
 	if ($permtest) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest));
 	$cont .= tpl_eval('open');
@@ -219,7 +217,7 @@ function configure() {
 	."<tr><td>"._SELLANGUAGE.":</td><td><select name=\"language\" class=\"sl_conf\">";
 	$dir = opendir("language");
 	while (false !== ($file = readdir($dir))) {
-		if (preg_match("/^lang\-(.+)\.php/", $file, $matches)) {
+		if (preg_match("/^(.+)\.php/", $file, $matches)) {
 			$langfound = $matches[1];
 			$selected = ($conf['language'] == $langfound) ? "selected" : "";
 			$cont .= "<option value=\"".$langfound."\" ".$selected.">".deflang($langfound)."</option>";
@@ -310,13 +308,13 @@ function configure() {
 		countries.setselectedClassTarget(\"link\")
 		countries.init()
 	</script>"
-	."<table class=\"sl_table_conf\"><tr><td class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"configure_save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
+	."<table class=\"sl_table_conf\"><tr><td class=\"sl_center\"><input type=\"hidden\" name=\"name\" value=\"config\"><input type=\"hidden\" name=\"op\" value=\"save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
 	$cont .= tpl_eval("close", "");
 	echo $cont;
 	foot();
 }
 
-function configure_save() {
+function save() {
 	global $admin_file, $conf;
 	$protect = array('\n' => '', '\t' => '', '\r' => '', ' ' => '');
 	$kprotect = array(', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ',');
@@ -546,17 +544,18 @@ function configure_save() {
 	#var_dump($cont);
 	#exit;
 	doConfig('config/config_global.php', 'conf', $cont, '', '');
-	header("Location: ".$admin_file.".php?op=configure");
+	header("Location: ".$admin_file.".php?name=config&op=show");
 }
 
-function configure_info() {
+function info() {
 	head();
-	echo configure_navi(1, 8, 0, 0, '').'<div id="repadm_info">'.adm_info(1, 0, 'configure').'</div>';
+	echo configNavi(1, 8, 0, 0, '').'<div id="repadm_info">'.adm_info(1, 0, 'configure').'</div>';
 	foot();
 }
 
 switch($op) {
-	case 'configure': configure(); break;
-	case 'configure_save': configure_save(); break;
-	case 'configure_info': configure_info(); break;
+	default: config(); break;
+	case 'show': config(); break;
+	case 'save': save(); break;
+	case 'info': info(); break;
 }

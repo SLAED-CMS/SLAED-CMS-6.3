@@ -276,6 +276,7 @@ define("_KWORDSI","Количество выводимых ключевых сл
 define("_LADATE","Установить текущую дату");
 define("_LANGCOUNT","Количество новых полей с языковыми константами");
 define("_LANGKEY","API-Ключ");
+define("_LANGKEYI","Рекомендуем установить свой, получить ключ бесплатно можно на данном сайте: https://translate.yandex.ru/developers/keys");
 define("_LANGTR","Язык, с которого будет производиться перевод");
 define("_LANG_EDIT","Редактор языков");
 define("_LEFT","Слева");

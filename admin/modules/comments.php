@@ -6,48 +6,47 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function comm_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    panel();
-    $ops = ['comm_show', 'comm_show&amp;status=1', 'comm_conf', 'comm_info'];
+function commNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=comments&amp;op=show', 'name=comments&amp;op=show&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'];
     $lang = [_HOME, _WAITINGCONT, _PREFERENCES, _INFO];
     return getAdminTabs(_COMMENTS, 'comments.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
-function comm_show(): void {
+function comments(): void {
     head();
     $id = getVar('get', 'status', 'num') ? 1 : 0;
-    echo comm_navi(0, $id, 0, 0).ashowcom();
+    echo commNavi(0, $id, 0, 0).ashowcom();
     foot();
 }
 
-function comm_edit(): void {
+function edit(): void {
     global $db, $prefix, $admin_file;
     $id = getVar('get', 'id', 'num');
     head();
-    $cont = comm_navi(0, 0, 0, 0);
+    $cont = commNavi(0, 0, 0, 0);
     $result = $db->sql_query('SELECT id, modul, comment FROM '.$prefix.'_comment WHERE id = :id', ['id' => $id]);
     list($id, $modul, $com_text) = $db->sql_fetchrow($result);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._COMMENT.':</td><td>'.textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="op" value="comm_edit_save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="editsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function comm_edit_save(): void {
+function editsave(): void {
     global $prefix, $db, $admin_file;
     $id = getVar('post', 'id', 'num');
     $com_text = save_text($_POST['comment']);
     $db->sql_query('UPDATE '.$prefix.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
-    header('Location: '.$admin_file.'.php?op=comm_show');
+    header('Location: '.$admin_file.'.php?name=comments&op=show');
 }
 
-function comm_conf(): void {
+function conf(): void {
     global $admin_file, $confc;
     head();
-    $cont = comm_navi(0, 2, 0, 0);
+    $cont = commNavi(0, 2, 0, 0);
     $cont .= checkConfigFile('comments.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
@@ -93,13 +92,13 @@ function comm_conf(): void {
     .'<tr><td>'._VPRIVAT.'</td><td>'.radio_form($confc['privat'], 'privat').'</td></tr>'
     .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($confc['profil'], 'profil').'</td></tr>'
     .'<tr><td>'._VWEB.'</td><td>'.radio_form($confc['web'], 'web').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="comm_save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function comm_save(): void {
+function save(): void {
     global $admin_file;
     $cont = [
         'num' => getVar('post', 'num', 'num', 15),
@@ -119,27 +118,19 @@ function comm_save(): void {
         'web' => getVar('post', 'web', 'num')
     ];
     setConfigFile('comments.php', 'confc', $cont);
-    header('Location: '.$admin_file.'.php?op=comm_conf');
+    header('Location: '.$admin_file.'.php?name=comments&op=conf');
 }
 
-function comm_info(): void {
+function info(): void {
     head();
-    echo comm_navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'comments').'</div>';
+    echo commNavi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'comments').'</div>';
     foot();
 }
 
 switch($op) {
-    case 'comm_show':
-    comm_show();
-    break;
-
-    case 'comm_edit':
-    comm_edit();
-    break;
-
-    case 'comm_edit_save':
-    comm_edit_save();
-    break;
+    default: comments(); break;
+    case 'edit': edit(); break;
+    case 'editsave': editsave(); break;
 
     case 'comm_act':
     $get_id = getVar('get', 'id', 'num');
@@ -155,7 +146,7 @@ switch($op) {
             }
         }
     }
-    referer($admin_file.'.php?op=comm_show');
+    referer($admin_file.'.php?name=comments&op=show');
     break;
 
     case 'comm_del':
@@ -172,18 +163,10 @@ switch($op) {
             }
         }
     }
-    referer($admin_file.'.php?op=comm_show');
+    referer($admin_file.'.php?name=comments&op=show');
     break;
 
-    case 'comm_conf':
-    comm_conf();
-    break;
-
-    case 'comm_save':
-    comm_save();
-    break;
-
-    case 'comm_info':
-    comm_info();
-    break;
+    case 'conf': conf(); break;
+    case 'save': save(); break;
+    case 'info': info(); break;
 }
