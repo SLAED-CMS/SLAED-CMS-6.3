@@ -6,7 +6,7 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function catNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $admin_file;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
@@ -21,7 +21,7 @@ function catNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): 
 function categories(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
     head();
-    echo catNavi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INFOCATDEL]).setTemplateBasic('open').'<div id="repajax_cat">'.ajax_cat($modul, 1).'</div>'.setTemplateBasic('close');
+    echo navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INFOCATDEL]).setTemplateBasic('open').'<div id="repajax_cat">'.ajax_cat($modul, 1).'</div>'.setTemplateBasic('close');
     foot();
 }
 
@@ -34,7 +34,8 @@ function fix(): void {
         $ordern++;
         $db->sql_query('UPDATE '.$prefix.'_categories SET ordern = :ordern WHERE id = :id', ['ordern' => $ordern, 'id' => $id]);
     }
-    header('Location: '.$admin_file.'.php?name=categories&op=show&modul='.$modul);
+    header('Location: '.$admin_file.'.php?name=categories&modul='.$modul);
+    exit;
 }
 
 function add(): void {
@@ -42,7 +43,7 @@ function add(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
-    $cont = catNavi(0, 1, 1, 0);
+    $cont = navi(0, 1, 1, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$admin_file.'.php" method="post">'
@@ -54,11 +55,11 @@ function add(): void {
     $cont .= '<tr><td>'._MODUL.':</td><td>'.cat_modul('modul', 'sl_form', $modul).'</td></tr>'
     .'<tr><td>'._IMG.':</td><td><select name="imgcat" id="img_replace" class="sl_form">'
     .'<option value="'.$path.'no.png">'._NO.'</option>';
-    $dir = opendir($path);
-    while (false !== ($entry = readdir($dir))) {
-        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != '.' && $entry != '..' && $entry != 'no.png') $conts[] = '<option value="'.$path.$entry.'">'.$entry.'</option>';
+    $files = scandir($path);
+    $conts = [];
+    foreach ($files as $entry) {
+        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != 'no.png') $conts[] = '<option value="'.$path.$entry.'">'.$entry.'</option>';
     }
-    closedir($dir);
     asort($conts);
     $cont .= implode('', $conts).'</select></td></tr>'
     .'<tr><td>'._PREVIEW.':</td><td><img src="'.$path.'no.png" id="picture" alt="'._IMG.'"></td></tr>'
@@ -95,7 +96,7 @@ function subadd(): void {
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $cont = catNavi(0, 2, 1, 0);
+        $cont = navi(0, 2, 1, 0);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post2" action="'.$admin_file.'.php" method="post">'
@@ -108,11 +109,11 @@ function subadd(): void {
         .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, '', 'cid', 'sl_form').'</td></tr>'
         .'<tr><td>'._IMG.':</td><td><select name="imgcat" id="img_replace" class="sl_form">'
         .'<option value="'.$path.'no.png">'._NO.'</option>';
-        $dir = opendir($path);
-        while (false !== ($entry = readdir($dir))) {
-            if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != '.' && $entry != '..' && $entry != 'no.png') $conts[] = '<option value="'.$path.$entry.'">'.$entry.'</option>';
+        $files = scandir($path);
+        $conts = [];
+        foreach ($files as $entry) {
+            if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != 'no.png') $conts[] = '<option value="'.$path.$entry.'">'.$entry.'</option>';
         }
-        closedir($dir);
         asort($conts);
         $cont .= implode('', $conts).'</select></td></tr>'
         .'<tr><td>'._PREVIEW.':</td><td><img src="'.$path.'no.png" id="picture" alt="'._IMG.'"></td></tr>'
@@ -140,7 +141,7 @@ function subadd(): void {
         .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
     } else {
-        $cont = catNavi(0, 2, 0, 0);
+        $cont = navi(0, 2, 0, 0);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, deflmconst($modul))]);
     }
     echo $cont;
@@ -151,7 +152,7 @@ function addedit(): void {
     global $prefix, $db, $admin_file;
     $modul = getVar('get', 'modul', 'var', 'forum');
     head();
-    $cont = catNavi(0, 3, 0, 0);
+    $cont = navi(0, 3, 0, 0);
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_form"><form action="'.$admin_file.'.php" method="post">'
@@ -172,7 +173,7 @@ function edit(): void {
     $result = $db->sql_query('SELECT modul, title, description, img, language, parentid, cstatus, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod FROM '.$prefix.'_categories WHERE id = :cid', ['cid' => $cid]);
     list($modul, $title, $description, $imgcat, $language, $parentid, $cstatus, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod) = $db->sql_fetchrow($result);
     head();
-    $cont = catNavi(0, 3, 1, 0);
+    $cont = navi(0, 3, 1, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$admin_file.'.php" method="post">'
@@ -189,14 +190,14 @@ function edit(): void {
     }
     $cont .= '<tr><td>'._IMG.':</td><td><select name="imgcat" id="img_replace" class="sl_form">'
     .'<option value="'.$path.'no.png">'._NO.'</option>';
-    $dir = opendir($path);
-    while (false !== ($entry = readdir($dir))) {
-        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != '.' && $entry != '..' && $entry != 'no.png') {
+    $files = scandir($path);
+    $conts = [];
+    foreach ($files as $entry) {
+        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != 'no.png') {
             $sel = ($imgcat == $entry) ? ' selected' : '';
             $conts[] = '<option value="'.$path.$entry.'"'.$sel.'>'.$entry.'</option>';
         }
     }
-    closedir($dir);
     $imgcat = (!$imgcat) ? 'no.png' : $imgcat;
     asort($conts);
     $cont .= implode('', $conts).'</select></td></tr>'
@@ -228,21 +229,8 @@ function edit(): void {
     foot();
 }
 
-function info(): void {
-    $modul = getVar('get', 'modul', 'var', 'forum');
-    head();
-    echo catNavi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'categories').'</div>';
-    foot();
-}
-
-switch($op) {
-    default: categories(); break;
-    case 'fix': fix(); break;
-    case 'add': add(); break;
-    case 'subadd': subadd(); break;
-    case 'addedit': addedit(); break;
-
-    case 'addsave':
+function addsave(): void {
+    global $prefix, $db, $conf, $admin_file;
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
     $description = getVar('post', 'description', 'text');
@@ -264,12 +252,12 @@ switch($op) {
     $db->sql_query('INSERT INTO '.$prefix.'_categories (id, modul, title, description, img, language, parentid, cstatus, ordern, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod) VALUES (NULL, :modul, :title, :description, :img, :language, :parentid, :cstatus, :ordern, :auth_view, :auth_read, :auth_post, :auth_reply, :auth_edit, :auth_delete, :auth_mod)', [
         'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $cid, 'cstatus' => $cstatus, 'ordern' => $ordern, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod
     ]);
-    header('Location: '.$admin_file.'.php?name=categories&op=show&modul='.$modul);
-    break;
+    header('Location: '.$admin_file.'.php?name=categories&modul='.$modul);
+    exit;
+}
 
-    case 'edit': edit(); break;
-
-    case 'save':
+function save(): void {
+    global $prefix, $db, $conf, $admin_file;
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
@@ -290,15 +278,33 @@ switch($op) {
     $db->sql_query('UPDATE '.$prefix.'_categories SET modul = :modul, title = :title, description = :description, img = :img, language = :language, parentid = :parentid, cstatus = :cstatus, auth_view = :auth_view, auth_read = :auth_read, auth_post = :auth_post, auth_reply = :auth_reply, auth_edit = :auth_edit, auth_delete = :auth_delete, auth_mod = :auth_mod WHERE id = :id', [
         'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $parentid, 'cstatus' => $cstatus, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod, 'id' => $id
     ]);
-    header('Location: '.$admin_file.'.php?name=categories&op=show&modul='.$modul);
-    break;
+    header('Location: '.$admin_file.'.php?name=categories&modul='.$modul);
+    exit;
+}
 
-    case 'delete':
+function del(): void {
+    global $prefix, $db, $admin_file;
     $id = getVar('get', 'id', 'num');
     $db->sql_query('DELETE FROM '.$prefix.'_categories WHERE id = :id', ['id' => $id]);
     $db->sql_query('DELETE FROM '.$prefix.'_categories WHERE parentid = :id', ['id' => $id]);
-    referer($admin_file.'.php?name=categories&op=show');
-    break;
+    referer($admin_file.'.php?name=categories');
+}
 
+function info(): void {
+    head();
+    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'categories').'</div>';
+    foot();
+}
+
+switch ($op) {
+    default: categories(); break;
+    case 'fix': fix(); break;
+    case 'add': add(); break;
+    case 'subadd': subadd(); break;
+    case 'addedit': addedit(); break;
+    case 'addsave': addsave(); break;
+    case 'edit': edit(); break;
+    case 'save': save(); break;
+    case 'delete': del(); break;
     case 'info': info(); break;
 }

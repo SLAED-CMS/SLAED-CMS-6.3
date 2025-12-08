@@ -7,9 +7,8 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/changelog.php';
 
-function changelogNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $conflog;
-
     if ($conflog['export_enabled'] ?? true) {
         $ops = ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'];
         $lang = [_HOME, _PREFERENCES, 'Export TXT', 'Export Markdown', _INFO];
@@ -17,7 +16,6 @@ function changelogNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy 
         $ops = ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'];
         $lang = [_HOME, _PREFERENCES, _INFO];
     }
-
     return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
@@ -25,7 +23,7 @@ function changelog(): void {
     global $admin_file, $conflog;
     head();
     checkConfigFile('changelog.php');
-    $cont = changelogNavi(0, 0, 0, 0);
+    $cont = navi(0, 0, 0, 0);
 
     //  Filter-Parameter
     $page = getVar('get', 'page', 'num', 1);
@@ -45,7 +43,6 @@ function changelog(): void {
     // Filter-Formular
     $cont .= '<form action="'.$admin_file.'.php" method="get" class="sl_filter_form">';
     $cont .= '<input type="hidden" name="name" value="changelog">';
-    $cont .= '<input type="hidden" name="op" value="show">';
     $cont .= '<div style="background: #f9f9f9; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">';
     $cont .= '<strong>Filter & Suche:</strong><br><br>';
     $cont .= '<table class="sl_table_conf"><tr>';
@@ -166,7 +163,6 @@ function changelog(): void {
         // Pagination via setPageNumbers()
         $query = http_build_query(array_filter([
             'name' => 'changelog',
-            'op' => 'show',
             'author' => $author,
             'file' => $file,
             'search' => $search,
@@ -373,8 +369,7 @@ function conf(): void {
     global $admin_file, $conflog;
     head();
     checkConfigFile('changelog.php');
-    $cont = changelogNavi(0, 1, 0, 0);
-
+    $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post">';
     $cont .= '<table class="sl_table_conf">';
@@ -387,14 +382,12 @@ function conf(): void {
     $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="changelog"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>';
     $cont .= '</table></form>';
     $cont .= setTemplateBasic('close');
-
     echo $cont;
     foot();
 }
 
 function confsave(): void {
     global $admin_file;
-
     $cont = [
         'limit' => getVar('post', 'limit', 'num', 50),
         'per_page' => getVar('post', 'per_page', 'num', 10),
@@ -403,12 +396,14 @@ function confsave(): void {
         'show_stats' => getVar('post', 'show_stats', 'num', 0),
         'export_enabled' => getVar('post', 'export_enabled', 'num', 0)
     ];
-
     setConfigFile('changelog.php', 'conflog', $cont);
     header('Location: '.$admin_file.'.php?name=changelog&op=conf');
+    exit;
 }
 
 function info(): void {
+    global $conflog;
+    $tab = ($conflog['export_enabled'] ?? true) ? 4 : 2;
     head();
     $info = '<h3>Changelog Modul</h3>
     <p>Dieses Modul zeigt die Git-Historie des SLAED CMS an.</p>
@@ -421,14 +416,17 @@ function info(): void {
     <li><strong>Konfigurierbar:</strong> Alle Einstellungen im Preferences-Tab anpassbar</li>
     <li><strong>Statistiken:</strong> Zeigt +/- Zeilen und geänderte Dateien</li>
     </ul>';
-    echo changelogNavi(0, 0, 2, 0).'<div id="repadm_info">'.$info.'</div>';
+    echo navi(0, $tab, 0, 0).'<div id="repadm_info">'.$info.'</div>';
     foot();
 }
 
-switch($op) {
+switch ($op) {
     default: changelog(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': confsave(); break;
     case 'info': info(); break;
-    case 'export': export(); break;
+    case 'export':
+        $format = getVar('get', 'id', 'var');
+        export($format);
+        break;
 }

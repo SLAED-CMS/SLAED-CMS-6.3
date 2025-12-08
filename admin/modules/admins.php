@@ -6,7 +6,7 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function adminsNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'];
     $lang = [_HOME, _ADD, _INFO];
     return getAdminTabs(_EDITADMINS, 'admins.png', '', $ops, $lang, [], [], $tab, $subtab);
@@ -15,7 +15,7 @@ function adminsNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0
 function admins(): void {
     global $prefix, $db, $aroute, $conf;
     head();
-    $cont = adminsNavi(0, 0, 0, 0);
+    $cont = navi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._URL.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE.'</th><th>'._IP.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -51,7 +51,7 @@ function add(): void {
         $lang = getVar('post', 'lang', '', $conf['language']);
     }
     head();
-    $cont = adminsNavi(0, 1, 0, 0);
+    $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $check = (empty($_COOKIE['sl_close_9'])) ? '' : ' checked';
     $cont .= setTemplateBasic('open');
@@ -149,7 +149,8 @@ function save(): void {
             mail_send($email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
-        header('Location: '.$aroute.'.php?name=admins&op=show'.$send);
+        header('Location: '.$aroute.'.php?name=admins'.$send);
+        exit;
     } else {
         add();
     }
@@ -159,12 +160,13 @@ function del(): void {
     global $prefix, $db, $aroute;
     $id = getVar('get', 'id', 'num');
     $db->sql_query('DELETE FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
-    header('Location: '.$aroute.'.php?name=admins&op=show');
+    header('Location: '.$aroute.'.php?name=admins');
+    exit;
 }
 
 function info(): void {
     head();
-    echo adminsNavi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'admins').'</div>';
+    echo navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'admins').'</div>';
     foot();
 }
 
