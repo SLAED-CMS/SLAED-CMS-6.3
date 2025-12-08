@@ -19,7 +19,7 @@ function blocks(): void {
 }
 
 function add(): void {
-    global $prefix, $db, $locale, $conf, $aroute;
+    global $prefix, $db, $conf, $aroute;
     head();
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');
@@ -37,13 +37,12 @@ function add(): void {
     .'<tr><td>'._FILENAME.':<div class="sl_small">'._FILENAMEIN.'</div></td><td>'
     .'<select name="blockfile" class="sl_form">'
     .'<option value="" selected>'._NONE.'</option>';
-    $handle = opendir('blocks');
-    while (false !== ($file = readdir($handle))) {
+    $files = scandir('blocks');
+    foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
             if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_blocks WHERE blockfile = :file', ['file' => $file])) == 0) $cont .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
         }
     }
-    closedir($handle);
     $cont .= '</select></td></tr>'
     .'<tr><td>'._CONTENT.':</td><td>'.textarea('1', 'content', '', 'all', '15', _CONTENT, '').'</td></tr>'
     .'<tr><td>'._POSITION.':</td><td><select name="bposition" class="sl_form">'
@@ -108,13 +107,12 @@ function fileedit(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><select name="bf" class="sl_form">';
-    $handle = opendir('blocks');
-    while (false !== ($file = readdir($handle))) {
+    $files = scandir('blocks');
+    foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
             if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_blocks WHERE blockfile = :file', ['file' => $file])) == 0) $cont .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
         }
     }
-    closedir($handle);
     $cont .= '</select></td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode"><input type="submit" value="'._EDITBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
@@ -126,16 +124,15 @@ function fix(): void {
     global $prefix, $db, $aroute;
     $pos = ['b', 'c', 'd', 'f', 'l', 'r'];
     foreach ($pos as $val) {
-        if ($val != '') {
-            $result = $db->sql_query('SELECT bid FROM '.$prefix.'_blocks WHERE bposition = :val ORDER BY weight ASC', ['val' => $val]);
-            $weight = 0;
-            while (list($bid) = $db->sql_fetchrow($result)) {
-                $weight++;
-                $db->sql_query('UPDATE '.$prefix.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $bid]);
-            }
+        $result = $db->sql_query('SELECT bid FROM '.$prefix.'_blocks WHERE bposition = :val ORDER BY weight ASC', ['val' => $val]);
+        $weight = 0;
+        while (list($bid) = $db->sql_fetchrow($result)) {
+            $weight++;
+            $db->sql_query('UPDATE '.$prefix.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $bid]);
         }
     }
-    header('Location: '.$aroute.'.php?name=blocks&op=show');
+    header('Location: '.$aroute.'.php?name=blocks');
+    exit;
 }
 
 function addsave(): void {
@@ -153,7 +150,7 @@ function addsave(): void {
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
     $url = ($headline) ? $headline : $url;
-    $blockwhere = getVar('post', 'blockwhere[]', 'num') ?: [];
+    $blockwhere = getVar('post', 'blockwhere[]', 'var') ?: [];
     list($weight) = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.$prefix.'_blocks WHERE bposition = :bposition ORDER BY weight DESC', ['bposition' => $bposition]));
     $weight++;
     $bkey = '';
@@ -185,7 +182,8 @@ function addsave(): void {
         $db->sql_query('INSERT INTO '.$prefix.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bposition, :weight, :active, :refresh, :btime, :blanguage, :blockfile, :view, :expire, :action, :which)', [
             'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
         ]);
-        header('Location: '.$aroute.'.php?name=blocks&op=show');
+        header('Location: '.$aroute.'.php?name=blocks');
+        exit;
     }
 }
 
@@ -234,6 +232,7 @@ function filecode(): void {
         foot();
     } else {
         header('Location: '.$aroute.'.php?name=blocks&op=file');
+        exit;
     }
 }
 
@@ -251,8 +250,9 @@ function filecodesave(): void {
                 $html_e = "\r\nBLOCKHTML;\r\n";
             }
             fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
-            header('Location: '.$aroute.'.php?name=blocks&op=show');
             fclose($handle);
+            header('Location: '.$aroute.'.php?name=blocks');
+            exit;
         }
     }
 }
@@ -276,14 +276,13 @@ function edit(): void {
     .'<tr><td>'._TITLE.':<div class="sl_small">'._ADDCONST.'</div></td><td><input type="text" name="title" maxlength="50" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>';
     if ($blockfile != '') {
         $cont .= '<tr><td>'._FILENAME.':</td><td><select name="blockfile" class="sl_form">';
-        $dir = opendir('blocks');
-        while (false !== ($file = readdir($dir))) {
+        $files = scandir('blocks');
+        foreach ($files as $file) {
             if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
                 $selected = ($blockfile == $file) ? ' selected' : '';
                 $cont .= '<option value="'.$file.'"'.$selected.'>'.$matches[0].'</option>';
             }
         }
-        closedir($dir);
         $cont .= '</select></td></tr>';
     } else {
         if ($url != '') {
@@ -336,21 +335,6 @@ function edit(): void {
         $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="blockwhere[]" value="'.$title.'"'.$mel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
         if ($i % $a == 0) $cont .= '</tr>';
         $i++;
-    }
-    $cel = '';
-    $hel = '';
-    if (in_array('infly', $where_mas)) {
-        switch ($where_mas[0]) {
-            case 'all':
-            $cel = ' checked';
-            break;
-            case 'home':
-            $hel = ' checked';
-            break;
-            case 'infly':
-            $fel = ' checked';
-            break;
-        }
     }
     $iel = (in_array('ihome', $where_mas)) ? ' checked' : '';
     $hel = (in_array('home', $where_mas)) ? ' checked' : '';
@@ -419,7 +403,7 @@ function editsave(): void {
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
-    $blockwhere = getVar('post', 'blockwhere[]', 'num') ?: [];
+    $blockwhere = getVar('post', 'blockwhere[]', 'var') ?: [];
     if (isset($blockwhere)) {
         $which = '';
         if (in_array('all', $blockwhere)) $which = 'all';
@@ -477,7 +461,8 @@ function editsave(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
             ]);
         }
-        header('Location: '.$aroute.'.php?name=blocks&op=show');
+        header('Location: '.$aroute.'.php?name=blocks');
+        exit;
     } else {
         if ($oldposition != $bposition) {
             $result = $db->sql_query('SELECT bid FROM '.$prefix.'_blocks WHERE weight >= :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
@@ -510,7 +495,8 @@ function editsave(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
             ]);
         }
-        header('Location: '.$aroute.'.php?name=blocks&op=show');
+        header('Location: '.$aroute.'.php?name=blocks');
+        exit;
     }
 }
 
@@ -520,7 +506,8 @@ function change(): void {
     $act = getVar('get', 'act', 'num', 0);
     $active = ($act) ? 0 : 1;
     $db->sql_query('UPDATE '.$prefix.'_blocks SET active = :active WHERE bid = :bid', ['active' => $active, 'bid' => $bid]);
-    header('Location: '.$aroute.'.php?name=blocks&op=show');
+    header('Location: '.$aroute.'.php?name=blocks');
+    exit;
 }
 
 function del(): void {
@@ -533,7 +520,8 @@ function del(): void {
         $weight++;
     }
     $db->sql_query('DELETE FROM '.$prefix.'_blocks WHERE bid = :id', ['id' => $id]);
-    header('Location: '.$aroute.'.php?name=blocks&op=show');
+    header('Location: '.$aroute.'.php?name=blocks');
+    exit;
 }
 
 function info(): void {
@@ -542,7 +530,7 @@ function info(): void {
     foot();
 }
 
-switch($op) {
+switch ($op) {
     default: blocks(); break;
     case 'add': add(); break;
     case 'addsave': addsave(); break;

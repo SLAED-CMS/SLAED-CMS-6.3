@@ -6,8 +6,8 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function commNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=comments&amp;op=show', 'name=comments&amp;op=show&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'];
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'];
     $lang = [_HOME, _WAITINGCONT, _PREFERENCES, _INFO];
     return getAdminTabs(_COMMENTS, 'comments.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
@@ -15,7 +15,7 @@ function commNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0):
 function comments(): void {
     head();
     $id = getVar('get', 'status', 'num') ? 1 : 0;
-    echo commNavi(0, $id, 0, 0).ashowcom();
+    echo navi(0, $id, 0, 0).ashowcom();
     foot();
 }
 
@@ -23,7 +23,7 @@ function edit(): void {
     global $db, $prefix, $admin_file;
     $id = getVar('get', 'id', 'num');
     head();
-    $cont = commNavi(0, 0, 0, 0);
+    $cont = navi(0, 0, 0, 0);
     $result = $db->sql_query('SELECT id, modul, comment FROM '.$prefix.'_comment WHERE id = :id', ['id' => $id]);
     list($id, $modul, $com_text) = $db->sql_fetchrow($result);
     $cont .= setTemplateBasic('open');
@@ -40,13 +40,14 @@ function editsave(): void {
     $id = getVar('post', 'id', 'num');
     $com_text = save_text($_POST['comment']);
     $db->sql_query('UPDATE '.$prefix.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
-    header('Location: '.$admin_file.'.php?name=comments&op=show');
+    header('Location: '.$admin_file.'.php?name=comments');
+    exit;
 }
 
 function conf(): void {
     global $admin_file, $confc;
     head();
-    $cont = commNavi(0, 2, 0, 0);
+    $cont = navi(0, 2, 0, 0);
     $cont .= checkConfigFile('comments.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
@@ -119,20 +120,11 @@ function save(): void {
     ];
     setConfigFile('comments.php', 'confc', $cont);
     header('Location: '.$admin_file.'.php?name=comments&op=conf');
+    exit;
 }
 
-function info(): void {
-    head();
-    echo commNavi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'comments').'</div>';
-    foot();
-}
-
-switch($op) {
-    default: comments(); break;
-    case 'edit': edit(); break;
-    case 'editsave': editsave(); break;
-
-    case 'comm_act':
+function act(): void {
+    global $db, $prefix, $admin_file;
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
     if (is_array($id)) {
@@ -146,10 +138,11 @@ switch($op) {
             }
         }
     }
-    referer($admin_file.'.php?name=comments&op=show');
-    break;
+    referer($admin_file.'.php?name=comments');
+}
 
-    case 'comm_del':
+function del(): void {
+    global $db, $prefix, $admin_file;
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
     if (is_array($id)) {
@@ -163,10 +156,22 @@ switch($op) {
             }
         }
     }
-    referer($admin_file.'.php?name=comments&op=show');
-    break;
+    referer($admin_file.'.php?name=comments');
+}
 
+function info(): void {
+    head();
+    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'comments').'</div>';
+    foot();
+}
+
+switch ($op) {
+    default: comments(); break;
+    case 'edit': edit(); break;
+    case 'editsave': editsave(); break;
     case 'conf': conf(); break;
     case 'save': save(); break;
+    case 'act': act(); break;
+    case 'del': del(); break;
     case 'info': info(); break;
 }
