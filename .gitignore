@@ -24,6 +24,9 @@
 /config/config_db.php
 /config/db.php
 
+# API tokens and secrets
+/config/changelog.php
+
 # Backups
 *.bak
 *.backup
