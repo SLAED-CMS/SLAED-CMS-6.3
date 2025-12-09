@@ -85,7 +85,7 @@ function commits(string $owner, string $repo, int $limit = 50, string $token = '
 }
 
 function changelog(): void {
-    global $admin_file, $conflog;
+    global $aroute, $conflog;
     head();
     checkConfigFile('changelog.php');
     $cont = navi(0, 0, 0, 0);
@@ -106,7 +106,7 @@ function changelog(): void {
     }
 
     // Filter-Formular
-    $cont .= '<form action="'.$admin_file.'.php" method="get" class="sl_filter_form">';
+    $cont .= '<form action="'.$aroute.'.php" method="get" class="sl_filter_form">';
     $cont .= '<input type="hidden" name="name" value="changelog">';
     $cont .= '<div style="background: #f9f9f9; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">';
     $cont .= '<strong>Filter & Suche:</strong><br><br>';
@@ -118,7 +118,7 @@ function changelog(): void {
     $cont .= '<td><input type="date" name="date_from" value="'.htmlspecialchars($date_from).'" placeholder="Von Datum" class="sl_conf" style="width: 150px;"></td>';
     $cont .= '<td><input type="date" name="date_to" value="'.htmlspecialchars($date_to).'" placeholder="Bis Datum" class="sl_conf" style="width: 150px;"></td>';
     $cont .= '<td><button type="submit" class="sl_but_blue">Filtern</button> ';
-    $cont .= '<a href="'.$admin_file.'.php?name=changelog" class="sl_but_gray">Zurücksetzen</a></td>';
+    $cont .= '<a href="'.$aroute.'.php?name=changelog" class="sl_but_gray">Zurücksetzen</a></td>';
     $cont .= '</tr></table>';
     $cont .= '</div></form>';
 
@@ -479,12 +479,12 @@ function export(): void {
 }
 
 function conf(): void {
-    global $admin_file, $conflog;
+    global $aroute, $conflog;
     head();
     checkConfigFile('changelog.php');
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$admin_file.'.php" method="post">';
+    $cont .= '<form action="'.$aroute.'.php" method="post">';
     $cont .= '<table class="sl_table_conf">';
 
     // Quelle
@@ -525,13 +525,12 @@ function conf(): void {
 }
 
 function confsave(): void {
-    global $admin_file;
-    
+    global $aroute;
     $cont = [
         'source' => getVar('post', 'source', 'var', 'local'),
-        'github_owner' => getVar('post', 'github_owner', 'word', ''),
-        'github_repo' => getVar('post', 'github_repo', 'word', ''),
-        'github_token' => getVar('post', 'github_token', 'word', ''),
+        'github_owner' => getVar('post', 'github_owner', 'text', ''),
+        'github_repo' => getVar('post', 'github_repo', 'text', ''),
+        'github_token' => getVar('post', 'github_token', 'text', ''),
         'limit' => getVar('post', 'limit', 'num', 50),
         'per_page' => getVar('post', 'per_page', 'num', 10),
         'group_by_date' => getVar('post', 'group_by_date', 'num', 0),
@@ -540,7 +539,7 @@ function confsave(): void {
         'export_enabled' => getVar('post', 'export_enabled', 'num', 0)
     ];
     setConfigFile('changelog.php', 'conflog', $cont);
-    header('Location: '.$admin_file.'.php?name=changelog&op=conf');
+    header('Location: '.$aroute.'.php?name=changelog&op=conf');
     exit;
 }
 
