@@ -33,7 +33,7 @@ function commits(string $owner, string $repo, int $limit = 50, string $token = '
         'Accept: application/vnd.github.v3+json'
     ];
 
-    if ($token) $headers[] = 'Authorization: Bearer '.$token;
+    if ($token) $headers[] = 'Authorization: token '.$token;
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
