@@ -32,8 +32,6 @@
 
 ### Coding Standards
 
-See `.claudecode/rules.md` for complete coding guidelines.
-
 **Key principles:**
 - **schnell** (fast) - optimized queries, caching
 - **stabil** (stable) - error prevention, consistent API
@@ -63,12 +61,6 @@ See `.claudecode/rules.md` for complete coding guidelines.
 ├── storage/           # Cache, logs, backups
 └── uploads/           # User uploads
 ```
-
-### Documentation
-
-- **Architecture:** `.claudecode/architecture.md`
-- **Coding Rules:** `.claudecode/rules.md`
-- **VSCode Extensions:** `.claudecode/vscode-extensions.md`
 
 ## License
 
