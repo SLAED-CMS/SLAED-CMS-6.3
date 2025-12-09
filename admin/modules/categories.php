@@ -7,14 +7,14 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $admin_file;
+    global $aroute;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
-    $ops = ['name=categories&amp;op=show'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink];
+    $ops = ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink];
     $lang = [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO];
     $sops = ['', '', ''];
     $slang = [_CATEGORY, _ACESS, _ACESSF];
-    $search = setTemplateBasic('searchbox', '<form method="post" action="'.$admin_file.'.php"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="show">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>');
+    $search = setTemplateBasic('searchbox', '<form method="post" action="'.$aroute.'.php"><input type="hidden" name="name" value="categories">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>');
     return getAdminTabs(_CATEGORIES, 'categories.png', ''.$search, $ops, $lang, $sops, $slang, $tab, $subtab);
 }
 
@@ -26,7 +26,7 @@ function categories(): void {
 }
 
 function fix(): void {
-    global $prefix, $db, $admin_file;
+    global $prefix, $db, $aroute;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $result = $db->sql_query('SELECT id FROM '.$prefix.'_categories WHERE modul = :modul ORDER BY ordern ASC', ['modul' => $modul]);
     $ordern = 0;
@@ -34,19 +34,19 @@ function fix(): void {
         $ordern++;
         $db->sql_query('UPDATE '.$prefix.'_categories SET ordern = :ordern WHERE id = :id', ['ordern' => $ordern, 'id' => $id]);
     }
-    header('Location: '.$admin_file.'.php?name=categories&modul='.$modul);
+    header('Location: '.$aroute.'.php?name=categories&modul='.$modul);
     exit;
 }
 
 function add(): void {
-    global $prefix, $db, $conf, $admin_file;
+    global $prefix, $db, $conf, $aroute;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
     $cont = navi(0, 1, 1, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$admin_file.'.php" method="post">'
+    $cont .= '<form name="post" action="'.$aroute.'.php" method="post">'
     .'<div id="tabcs0" class="tabcont">'
     .'<table class="sl_table_form">'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
@@ -91,7 +91,7 @@ function add(): void {
 }
     
 function subadd(): void {
-    global $prefix, $db, $conf, $admin_file;
+    global $prefix, $db, $conf, $aroute;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
@@ -99,7 +99,7 @@ function subadd(): void {
         $cont = navi(0, 2, 1, 0);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
         $cont .= setTemplateBasic('open');
-        $cont .= '<form name="post2" action="'.$admin_file.'.php" method="post">'
+        $cont .= '<form name="post2" action="'.$aroute.'.php" method="post">'
         .'<div id="tabcs0" class="tabcont">'
         .'<table class="sl_table_form">'
         .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
@@ -149,13 +149,13 @@ function subadd(): void {
 }
 
 function addedit(): void {
-    global $prefix, $db, $admin_file;
+    global $prefix, $db, $aroute;
     $modul = getVar('get', 'modul', 'var', 'forum');
     head();
     $cont = navi(0, 3, 0, 0);
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont .= setTemplateBasic('open');
-        $cont .= '<table class="sl_table_form"><form action="'.$admin_file.'.php" method="post">'
+        $cont .= '<table class="sl_table_form"><form action="'.$aroute.'.php" method="post">'
         .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, '', 'cid', 'sl_form').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="edit"><input type="submit" value="'._EDIT.'" class="sl_but_blue"></td></tr></form></table>';
         $cont .= setTemplateBasic('close');
@@ -167,7 +167,7 @@ function addedit(): void {
 }
 
 function edit(): void {
-    global $prefix, $db, $conf, $admin_file;
+    global $prefix, $db, $conf, $aroute;
     $cid = getVar('req', 'cid', 'num');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     $result = $db->sql_query('SELECT modul, title, description, img, language, parentid, cstatus, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod FROM '.$prefix.'_categories WHERE id = :cid', ['cid' => $cid]);
@@ -176,7 +176,7 @@ function edit(): void {
     $cont = navi(0, 3, 1, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$admin_file.'.php" method="post">'
+    $cont .= '<form name="post" action="'.$aroute.'.php" method="post">'
     .'<div id="tabcs0" class="tabcont">'
     .'<table class="sl_table_form">'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
@@ -230,7 +230,7 @@ function edit(): void {
 }
 
 function addsave(): void {
-    global $prefix, $db, $conf, $admin_file;
+    global $prefix, $db, $conf, $aroute;
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
     $description = getVar('post', 'description', 'text');
@@ -252,12 +252,12 @@ function addsave(): void {
     $db->sql_query('INSERT INTO '.$prefix.'_categories (id, modul, title, description, img, language, parentid, cstatus, ordern, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod) VALUES (NULL, :modul, :title, :description, :img, :language, :parentid, :cstatus, :ordern, :auth_view, :auth_read, :auth_post, :auth_reply, :auth_edit, :auth_delete, :auth_mod)', [
         'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $cid, 'cstatus' => $cstatus, 'ordern' => $ordern, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod
     ]);
-    header('Location: '.$admin_file.'.php?name=categories&modul='.$modul);
+    header('Location: '.$aroute.'.php?name=categories&modul='.$modul);
     exit;
 }
 
 function save(): void {
-    global $prefix, $db, $conf, $admin_file;
+    global $prefix, $db, $conf, $aroute;
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
@@ -278,16 +278,16 @@ function save(): void {
     $db->sql_query('UPDATE '.$prefix.'_categories SET modul = :modul, title = :title, description = :description, img = :img, language = :language, parentid = :parentid, cstatus = :cstatus, auth_view = :auth_view, auth_read = :auth_read, auth_post = :auth_post, auth_reply = :auth_reply, auth_edit = :auth_edit, auth_delete = :auth_delete, auth_mod = :auth_mod WHERE id = :id', [
         'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $parentid, 'cstatus' => $cstatus, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod, 'id' => $id
     ]);
-    header('Location: '.$admin_file.'.php?name=categories&modul='.$modul);
+    header('Location: '.$aroute.'.php?name=categories&modul='.$modul);
     exit;
 }
 
 function del(): void {
-    global $prefix, $db, $admin_file;
+    global $prefix, $db, $aroute;
     $id = getVar('get', 'id', 'num');
     $db->sql_query('DELETE FROM '.$prefix.'_categories WHERE id = :id', ['id' => $id]);
     $db->sql_query('DELETE FROM '.$prefix.'_categories WHERE parentid = :id', ['id' => $id]);
-    referer($admin_file.'.php?name=categories');
+    referer($aroute.'.php?name=categories');
 }
 
 function info(): void {
@@ -305,6 +305,6 @@ switch ($op) {
     case 'addsave': addsave(); break;
     case 'edit': edit(); break;
     case 'save': save(); break;
-    case 'delete': del(); break;
+    case 'del': del(); break;
     case 'info': info(); break;
 }

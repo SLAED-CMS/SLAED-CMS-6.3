@@ -13,7 +13,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function admins(): void {
-    global $prefix, $db, $aroute, $conf;
+    global $prefix, $db, $aroute;
     head();
     $cont = navi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);

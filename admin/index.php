@@ -179,6 +179,7 @@ function getAdminModuleMeta(): array {
 		'lang' => ['title' => _LANG_EDIT, 'icon' => 'lang.png'],
 		'messages' => ['title' => _MESSAGES, 'icon' => 'messages.png'],
 		'modules' => ['title' => _MODULES, 'icon' => 'modules.png'],
+		'monitor' => ['title' => 'Monitor', 'icon' => 'stat.png'],
 		'newsletter' => ['title' => _NEWSLETTER, 'icon' => 'newsletter.png'],
 		'privat' => ['title' => _PRIVAT, 'icon' => 'privat.png'],
 		'ratings' => ['title' => _RATINGS, 'icon' => 'ratings.png'],
