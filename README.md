@@ -6,13 +6,13 @@
 
 - **PHP:** 8.4+
 - **Database:** MySQL 8.0+ or MariaDB 10+
-- **Web Server:** Apache with mod_rewrite
+- **Web Server:** Apache, Ngnix, IIS
 - **Encoding:** UTF-8
 
 ## Tech Stack
 
 - PHP 8.4 with strict types
-- MySQLi/PDO with prepared statements
+- PDO with prepared statements
 - jQuery + jQuery UI
 - CKEditor, TinyMCE, CodeMirror
 - Multi-language support (6 languages)
@@ -33,11 +33,11 @@
 ### Coding Standards
 
 **Key principles:**
-- **schnell** (fast) - optimized queries, caching
-- **stabil** (stable) - error prevention, consistent API
-- **effektiv** (effective) - reusable code, no redundancy
-- **produktiv** (productive) - easy extensibility
-- **sicher** (secure) - XSS, CSRF, SQL injection protection
+- **Fast** - optimized queries, caching
+- **Stable** - error prevention, consistent API
+- **Effective** - reusable code, no redundancy
+- **Productive** - easy extensibility
+- **Secure** - XSS, CSRF, SQL injection protection
 
 **Naming conventions:**
 - Functions: `verbNoun()` - camelCase
