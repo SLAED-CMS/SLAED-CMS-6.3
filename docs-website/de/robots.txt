@@ -1,4 +1,0 @@
-User-agent: *
-Sitemap: https://slaed.de/sitemap.xml
-Crawl-delay: 10
-Host: https://slaed.de
