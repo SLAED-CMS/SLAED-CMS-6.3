@@ -147,7 +147,7 @@ function changelog(): void {
 
             if (empty($commits)) {
                 global $github_error;
-                $error_msg = $github_error ?: 'Keine Commits von GitHub geladen. Prüfen Sie Owner/Repo oder API-Zugriff.';
+                $error_msg = $github_error ?: 'No commits loaded from GitHub. Check Owner/Repo or API access.';
                 $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $error_msg]);
             }
         }

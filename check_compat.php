@@ -57,7 +57,7 @@ function scanAllDirsIncludePublic($dir, $patterns, &$checkedFiles, &$folderCount
 
         $filePath = str_replace('\\','/',$filePath);
 
-        // Nur PHP-Dateien prüfen, außer check_compat.php
+        // Only check PHP files, except check_compat.php
         if (substr(strtolower($filePath), -4) !== '.php') continue;
         if (basename($filePath) === 'check_compat.php') continue;
 
