@@ -23,7 +23,7 @@ function commits(string $owner, string $repo, int $limit = 50, string $token = '
     global $github_error;
     $url = "https://api.github.com/repos/$owner/$repo/commits?per_page=$limit";
 
-    // Filter hinzufügen
+    // Add filter
     if (!empty($filters['author'])) $url .= '&author='.urlencode($filters['author']);
     if (!empty($filters['since'])) $url .= '&since='.urlencode($filters['since'].'T00:00:00Z');
     if (!empty($filters['until'])) $url .= '&until='.urlencode($filters['until'].'T23:59:59Z');

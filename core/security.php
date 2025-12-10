@@ -817,7 +817,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         }
     }
 
-    // Filter-Definitionen (einmalig für Einzelwerte und Arrays)
+    // Filter definitions (once for single values and arrays)
     $filters = [
         'num'   => fn($v) => num_filter($v),
         'let'   => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
@@ -884,7 +884,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         }
     }
 
-    // Quelle auswählen: POST / GET / REQ
+    // Select source: POST / GET / REQ
     $value = match(strtolower($var)) {
         'post' => $p,
         'get'  => $g,
@@ -900,7 +900,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
     if ($type && isset($filters[$type])) {
         $value = $filters[$type]($value);
     } else {
-        // Wenn kein Typ, trim für Strings
+        // If no type, trim for strings
         if (is_string($value)) $value = trim($value);
     }
 
