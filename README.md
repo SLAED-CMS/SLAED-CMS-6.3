@@ -349,4 +349,4 @@ See [LICENSE](LICENSE) for more details.
 
 **SLAED CMS** - Powerful, Secure, Flexible Content Management for Your Projects
 
-*Last updated: January 2025*
+*Last updated: December 2025*
