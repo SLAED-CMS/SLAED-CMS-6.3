@@ -58,10 +58,12 @@ http://localhost/slaed-cms/
 4. **Configure** database connection in `config/config_db.php`
 5. **Import** database schema from `database/schema.sql`
 6. **Set permissions** on writable directories:
-   ```bash
-   chmod -R 755 config/ storage/ uploads/
-   chmod 666 config/*.php storage/logs/*.txt
-   ```
+
+```bash
+chmod -R 755 config/ storage/ uploads/
+chmod 666 config/*.php storage/logs/*.txt
+```
+
 7. **Run setup** by accessing `http://yoursite.com/setup.php`
 8. **Delete** setup.php after installation
 
@@ -127,8 +129,8 @@ slaed-cms/
 │   └── language/         # Admin translations
 ├── blocks/               # Reusable UI components
 ├── config/               # Configuration files
-│   ├── config_db.php    # Database configuration
-│   ├── config_global.php # Global settings (187+ parameters)
+│   ├── db.php    # Database configuration
+│   ├── global.php # Global settings (187+ parameters)
 │   └── *.php            # Module-specific configs
 ├── core/                 # System core
 │   ├── core.php         # Main core file (271 KB)
@@ -136,8 +138,8 @@ slaed-cms/
 │   ├── user.php         # User management
 │   └── classes/         # Database drivers (MySQLi, PDO)
 ├── language/             # Multi-language files
-│   ├── lang-english.php
-│   ├── lang-german.php
+│   ├── lang-en.php
+│   ├── lang-de.php
 │   └── ...
 ├── modules/              # Frontend modules (27+)
 │   ├── news/            # News module
