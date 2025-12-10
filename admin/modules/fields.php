@@ -24,42 +24,40 @@ function fields(): void
     $content = '';
     $k = 0;
     foreach ($mods as $val) {
-        if ($val != '') {
-            $fieldc = explode('||', $conffi[$val]);
-            $content .= '<div id="tabc' . $k . '" class="tabcont">';
-            for ($c = 0; $c < 10; $c++) {
-                preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
-                $field = '<select name="field3' . $k . '[]" class="sl_conf">';
-                $fieldname = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
-                foreach ($fieldname as $key => $val2) {
-                    $i = $key + 1;
-                    $sel = ($out[3] == $i) ? ' selected' : '';
-                    $field .= '<option value="' . $i . '"' . $sel . '>' . $val2 . '</option>';
-                }
-                $field .= '</select>';
-                $field2 = '<select name="field4' . $k . '[]" class="sl_conf">';
-                $fieldname2 = [_FIELDIN, _FIELDOUT];
-                foreach ($fieldname2 as $key => $val3) {
-                    $a = $key + 1;
-                    $sel2 = ($out[4] == $a) ? ' selected' : '';
-                    $field2 .= '<option value="' . $a . '"' . $sel2 . '>' . $val3 . '</option>';
-                }
-                $field2 .= '</select>';
-                $b = $c + 1;
-                $display = (empty($out[1]) && empty($out[1][$c]) != '0' && $c != '0') ? ' class="sl_none"' : '';
-                $hr = ($c == '0') ? '' : '<hr>';
-                $content .= '<div id="fi' . $k . $c . '"' . $display . '>' . $hr
-                    . '<table class="sl_table_conf">'
-                    . '<tr><td><a OnClick="HideShow(\'fi' . $k . $b . '\', \'slide\', \'up\', 500);" title="' . _ADD . '" class="sl_plus">' . _FIELD . ': ' . $b . '</a></td><td>'
-                    . '<table><tr><td>' . _NAME . ':</td><td><input type="text" name="field1' . $k . '[]" value="' . $out[1] . '" class="sl_conf" placeholder="' . _NAME . '" required></td></tr>'
-                    . '<tr><td>' . _CONTENT . ':</td><td><input type="text" name="field2' . $k . '[]" value="' . $out[2] . '" class="sl_conf" placeholder="' . _CONTENT . '" required></td></tr>'
-                    . '<tr><td>' . _TYPE . ':</td><td>' . $field . '</td></tr>'
-                    . '<tr><td>' . _USES . ':</td><td>' . $field2 . '</td></tr></table>'
-                    . '</td></tr></table></div>';
+        $fieldc = explode('||', $conffi[$val]);
+        $content .= '<div id="tabc' . $k . '" class="tabcont">';
+        for ($c = 0; $c < 10; $c++) {
+            preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
+            $field = '<select name="field3' . $k . '[]" class="sl_conf">';
+            $fieldname = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
+            foreach ($fieldname as $key => $val2) {
+                $i = $key + 1;
+                $sel = ($out[3] == $i) ? ' selected' : '';
+                $field .= '<option value="' . $i . '"' . $sel . '>' . $val2 . '</option>';
             }
-            $content .= '</div>';
-            $k++;
+            $field .= '</select>';
+            $field2 = '<select name="field4' . $k . '[]" class="sl_conf">';
+            $fieldname2 = [_FIELDIN, _FIELDOUT];
+            foreach ($fieldname2 as $key => $val3) {
+                $a = $key + 1;
+                $sel2 = ($out[4] == $a) ? ' selected' : '';
+                $field2 .= '<option value="' . $a . '"' . $sel2 . '>' . $val3 . '</option>';
+            }
+            $field2 .= '</select>';
+            $b = $c + 1;
+            $display = (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '';
+            $hr = ($c == '0') ? '' : '<hr>';
+            $content .= '<div id="fi' . $k . $c . '"' . $display . '>' . $hr
+                . '<table class="sl_table_conf">'
+                . '<tr><td><a OnClick="HideShow(\'fi' . $k . $b . '\', \'slide\', \'up\', 500);" title="' . _ADD . '" class="sl_plus">' . _FIELD . ': ' . $b . '</a></td><td>'
+                . '<table><tr><td>' . _NAME . ':</td><td><input type="text" name="field1' . $k . '[]" value="' . $out[1] . '" class="sl_conf" placeholder="' . _NAME . '" required></td></tr>'
+                . '<tr><td>' . _CONTENT . ':</td><td><input type="text" name="field2' . $k . '[]" value="' . $out[2] . '" class="sl_conf" placeholder="' . _CONTENT . '" required></td></tr>'
+                . '<tr><td>' . _TYPE . ':</td><td>' . $field . '</td></tr>'
+                . '<tr><td>' . _USES . ':</td><td>' . $field2 . '</td></tr></table>'
+                . '</td></tr></table></div>';
         }
+        $content .= '</div>';
+        $k++;
     }
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _FIELDINFO]);
     $cont .= setTemplateBasic('open');
@@ -82,23 +80,17 @@ function save(): void
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
     $a = 0;
     foreach ($mods as $val) {
-        if ($val != '') {
-            $fields = '';
-            for ($i = 0; $i < 10; $i++) {
-                $ident = ($i == 0) ? '' : '||';
-                $field1 = getVar('post', 'field1' . $a . '[' . $i . ']', 'title', '0');
-                $field2 = getVar('post', 'field2' . $a . '[' . $i . ']', 'title', '0');
-                $field3 = getVar('post', 'field3' . $a . '[' . $i . ']', 'title', '0');
-                $field4 = getVar('post', 'field4' . $a . '[' . $i . ']', 'title', '0');
-                $field1 = ($field1 != '') ? $field1 : 0;
-                $field2 = ($field2 != '') ? $field2 : 0;
-                $field3 = ($field3 != '') ? $field3 : 0;
-                $field4 = ($field4 != '') ? $field4 : 0;
-                $fields .= $ident . $field1 . '|' . $field2 . '|' . $field3 . '|' . $field4;
-            }
-            $a++;
-            $cont[$val] = $fields;
+        $fields = '';
+        for ($i = 0; $i < 10; $i++) {
+            $ident = ($i == 0) ? '' : '||';
+            $field1 = getVar('post', 'field1' . $a . '[' . $i . ']', 'var', '0') ?: 0;
+            $field2 = getVar('post', 'field2' . $a . '[' . $i . ']', 'var', '0') ?: 0;
+            $field3 = getVar('post', 'field3' . $a . '[' . $i . ']', 'var', '0') ?: 0;
+            $field4 = getVar('post', 'field4' . $a . '[' . $i . ']', 'var', '0') ?: 0;
+            $fields .= $ident . $field1 . '|' . $field2 . '|' . $field3 . '|' . $field4;
         }
+        $a++;
+        $cont[$val] = $fields;
     }
     setConfigFile('fields.php', 'conffi', $cont);
     header('Location: ' . $aroute . '.php?name=fields');
