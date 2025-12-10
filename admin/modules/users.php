@@ -83,10 +83,10 @@ function users_show(): void {
 
     $offset = ($num - 1) * $confu['anum'];
 
-    // Params für COUNT (ohne Limit/Offset)
+    // Params for COUNT (without limit/offset)
     $cnt_params = $params;
 
-    // Params für SELECT (mit Limit/Offset)
+    // Params for SELECT (with limit/offset)
     $params['offset'] = (int)$offset;
     $params['limit'] = (int)$confu['anum'];
 

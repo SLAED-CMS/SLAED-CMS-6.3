@@ -21,7 +21,6 @@
 !/uploads/index.html
 
 # Database configs (contains passwords)
-/config/config_db.php
 /config/db.php
 
 # API tokens and secrets
@@ -63,6 +62,3 @@ composer.lock
 .DS_Store
 desktop.ini
 nul
-
-# Claude Code temp files (keep rules and docs)
-.claudecode/*.tmp

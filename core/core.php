@@ -1300,10 +1300,10 @@ function getImgText($text, $type='') {
 # Format SEO url
 $confse = [
     'rewrite' => false,   // true = SEO-Link, false = klassischer Link
-    'sep'     => '/',    // Separator für Basis-Segmente (name, op, id)
-    'title'   => true,   // title einfügen oder nicht
-    'ctitle'  => true,   // ctitle einfügen oder nicht
-    'tsep'    => '',    // Separator nur für Title / CTitle
+    'sep'     => '/',    // Separator for base segments (name, op, id)
+    'title'   => true,   // insert title or not
+    'ctitle'  => true,   // insert ctitle or not
+    'tsep'    => '',    // Separator only for Title / CTitle
 ];
 
 function getSeoUrl(array $params): string {
@@ -1311,7 +1311,7 @@ function getSeoUrl(array $params): string {
     $sep  = $confse['sep'] ?? '-';
     $tsep = $confse['tsep'] ?? '-';
 
-    // Basis-Segmente: name, op, id
+    // base segments: name, op, id
     $segments = [
         $params['name'] ?? 'home',
         $params['op'] ?? 'view',
@@ -1325,7 +1325,7 @@ function getSeoUrl(array $params): string {
         }
     }
 
-    // Rückgabe: SEO-Link oder klassischer Link
+    // Return: SEO-Link or classic link
     return ($confse['rewrite'] ?? false)
         ? implode($sep, $segments)
         : 'index.php?name=' . $segments[0] . '&op=' . $segments[1] . '&id=' . $segments[2];
@@ -3072,7 +3072,7 @@ function addBackupDb(): bool {
         return false;
     }
 
-    // Logging-Start für Performance-Analyse
+    // Logging start for performance analysis
     $backup_start = microtime(true);
 
     $sess_f = COUNTER_DIR.'/backup.log';
@@ -3080,7 +3080,7 @@ function addBackupDb(): bool {
     $past = time() - intval($confs['sess_b']);
 
     if ($sess_b >= $past) {
-        return false; // Noch nicht Zeit für Backup
+        return false; // Not yet time for Backup
     }
 
     // Timestamp-Datei aktualisieren
@@ -3185,7 +3185,7 @@ function addBackupDb(): bool {
 
             // FIX: Korrekte Include/Exclude Logik
             if ($btables_exclude) {
-                // Exclude-Modus: Nimm alles außer status == -1
+                // Exclude mode: Take everything except status == -1
                 if ($status != -1) {
                     $tables[] = $row[0];
                 }
@@ -3230,7 +3230,7 @@ function addBackupDb(): bool {
         }
     }
 
-    // FIX: Path Traversal Sicherheitslücke
+    // FIX: Path Traversal security vulnerability
     $safe_dbname = preg_replace('/[^a-zA-Z0-9_-]/', '_', $confdb['name']);
     $name = $safe_dbname."_".date("Y-m-d_H-i-s");
 
@@ -3245,7 +3245,7 @@ function addBackupDb(): bool {
 
     $filepath = $backup_dir.$name.'.sql';
 
-    // FIX: Error-Handling für fopen
+    // FIX: Error handling for fopen
     $fp = @fopen($filepath, "wb");
     if (!$fp) {
         error_log("Backup failed: Cannot create file " . $filepath);

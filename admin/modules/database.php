@@ -60,7 +60,7 @@ function database(): void {
         }
         $total_rows += $rows;
 
-        // --- Tabellen- und Freispeichergröße ---
+        // --- Table  und free space size ---
         $tabsize   = (int) $info['Data_length'] + (int) $info['Index_length'];
         $tabsizefr = (int) ($info['Data_free'] ?: 0);
 
@@ -76,7 +76,7 @@ function database(): void {
                 : '<div class="sl_green">'.files_size($tabsizefr).'</div>';
         }
 
-        // --- Status / Aktionen abhängig vom Modus ---
+        // --- Status / Actions depending on mode ---
         if ($type === 'optimize') {
             $db->sql_query('ANALYZE TABLE `'.$confdb['name'].'`.`'.$name.'`');
             $oresult = $db->sql_query('OPTIMIZE TABLE `'.$confdb['name'].'`.`'.$name.'`');
@@ -144,7 +144,7 @@ function database(): void {
 
     $content .= '</tbody></table>';
 
-    // Nach OPTIMIZE: Totals für Info-Box neu berechnen
+    // After OPTIMIZE: Totals to recalculate info box
     if ($type === 'optimize') {
         $result    = $db->sql_query('SHOW TABLE STATUS FROM `'.$confdb['name'].'`');
         $total     = 0;

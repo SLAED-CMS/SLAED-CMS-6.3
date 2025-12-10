@@ -74,7 +74,7 @@ private function sql_quote($value) {
     if (empty($params)) return $query;
 
     foreach ($params as $key => $value) {
-        // Prüfe, ob es ein named placeholder ist (:name)
+        // Check, ob es ein named placeholder ist (:name)
         $placeholder = (strpos($key, ':') === 0) ? $key : ':' . $key;
 
         if (is_string($value)) {
