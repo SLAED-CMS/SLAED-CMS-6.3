@@ -9,9 +9,6 @@ if (!defined('MODULE_FILE') && !defined('ADMIN_FILE')) die('Illegal file access'
 define('BLOCK_FILE', true);
 define('FUNC_FILE', true);
 
-# Base directory of the project
-define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__)));
-
 # Configuration directory
 define('CONFIG_DIR', BASE_DIR.'/config');
 
@@ -151,7 +148,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
             addErrorFile(_ERR_ZOPEN.': '.$file);
             return false;
         }
-        
+
         // Handle directory
         if (is_dir($src)) {
             $rit = new RecursiveIteratorIterator(
@@ -159,11 +156,11 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 RecursiveIteratorIterator::LEAVES_ONLY
             );
             $base = strlen(rtrim($src, DIRECTORY_SEPARATOR)) + 1;
-            
+
             foreach ($rit as $info) {
                 $path = $info->getRealPath();
                 $local = substr($path, $base);
-                
+
                 if (!$zip->addFile($path, $local)) {
                     $zip->close();
                     addErrorFile(_ERR_ZADD.': '.$path);
@@ -187,21 +184,21 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 addErrorFile(_ERR_TYPE.': '.gettype($src));
                 return false;
             }
-            
+
             $tmp = tempnam(sys_get_temp_dir(), 'zip_');
             if ($tmp === false) {
                 $zip->close();
                 addErrorFile(_ERR_WRITE.': Temp file creation failed');
                 return false;
             }
-            
+
             if (file_put_contents($tmp, $src) === false) {
                 $zip->close();
                 if (file_exists($tmp)) unlink($tmp);
                 addErrorFile(_ERR_WRITE.': '.$tmp);
                 return false;
             }
-            
+
             // Use logical internal name
             $iname = $nbase.'.txt';
             if (!$zip->addFile($tmp, $iname)) {
@@ -210,12 +207,12 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 addErrorFile(_ERR_ZADD.': '.$tmp);
                 return false;
             }
-            
+
             unlink($tmp);
         }
-        
+
         $zip->close();
-        
+
         // Delete source if requested
         if ($del) {
             if (is_file($src)) {
@@ -227,26 +224,26 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 }
             }
         }
-        
+
         return true;
     }
-    
+
     // ========================================
     // GZIP / BZIP2 COMPRESSION
     // ========================================
-    
+
     // GZ and BZ2 only support single files
     if (!is_file($src)) {
         addErrorFile(_ERR_FILE.': '.$src);
         return false;
     }
-    
+
     $srcf = fopen($src, 'rb');
     if (!$srcf) {
         addErrorFile(_ERR_OPEN.': '.$src);
         return false;
     }
-    
+
     if ($algo === 'gz') {
         $zipf = gzopen($file, 'wb');
         if (!$zipf) {
@@ -254,7 +251,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
             addErrorFile(_ERR_GZIP.': '.$file);
             return false;
         }
-        
+
         while (!feof($srcf)) {
             $chunk = fread($srcf, 65536);
             if ($chunk === false) {
@@ -270,10 +267,10 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 return false;
             }
         }
-        
+
         gzclose($zipf);
         fclose($srcf);
-    } 
+    }
     elseif ($algo === 'bz2') {
         $zipf = bzopen($file, 'wb');
         if (!$zipf) {
@@ -281,7 +278,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
             addErrorFile(_ERR_BZIP.': '.$file);
             return false;
         }
-        
+
         while (!feof($srcf)) {
             $chunk = fread($srcf, 65536);
             if ($chunk === false) {
@@ -297,21 +294,21 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
                 return false;
             }
         }
-        
+
         bzclose($zipf);
         fclose($srcf);
-    } 
+    }
     else {
         fclose($srcf);
         addErrorFile(_ERR_TYPE.': '.$algo);
         return false;
     }
-    
+
     // Delete source if requested
     if ($del) {
         unlink($src);
     }
-    
+
     return true;
 }
 
@@ -1178,16 +1175,16 @@ function getCpuLoad($tcache = 2) {
             $tmp = explode(' ', file_get_contents('/proc/loadavg'));
             if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
         }
-		$nproc = 0;
-		if (file_exists('/proc/cpuinfo')) {
-			$info = file_get_contents('/proc/cpuinfo');
-			if ($info !== false) {
-				preg_match_all('/^processor\s*:/m', $info, $matches);
-				if (!empty($matches[0])) $nproc = count($matches[0]);
-			}
-		}
-		if ($nproc <= 0) $nproc = 1;
-		if (isset($raw) && is_numeric($raw)) $percent = ($raw / $nproc) * 10.0;
+        $nproc = 0;
+        if (file_exists('/proc/cpuinfo')) {
+            $info = file_get_contents('/proc/cpuinfo');
+            if ($info !== false) {
+                preg_match_all('/^processor\s*:/m', $info, $matches);
+                if (!empty($matches[0])) $nproc = count($matches[0]);
+            }
+        }
+        if ($nproc <= 0) $nproc = 1;
+        if (isset($raw) && is_numeric($raw)) $percent = ($raw / $nproc) * 10.0;
     }
     if (is_numeric($percent)) {
         $cpu = round((float)$percent, 2);
@@ -1241,7 +1238,7 @@ function getPass($m) {
     return $pass;
 }
 
-# Defining the server connection protocol 
+# Defining the server connection protocol
 function getProtocol() {
     if ($_SERVER['SERVER_PORT'] == 443) {
         $proto = 'https';
@@ -1361,7 +1358,7 @@ function slugify(string $text, string $sep = '-'): string {
 
 function getHref($meta) {
     global $prefix, $db, $conf, $confse;
-    
+
     if (is_array($meta)) {
         $href = $meta['0'];
         if ($conf['rewrite']) {
@@ -1408,28 +1405,28 @@ function getHref($meta) {
         $ctitle = empty($meta['5']) ? '' : $meta['5'];
         $cdesc = empty($meta['6']) ? '' : $meta['6'];
         $cimg = empty($meta['7']) ? '' : $meta['7'];
-        
+
         ###
         $url = urlencode($url);
         $href = urlencode($href);
         #list($durl, $dmtime) = $db->sql_fetchrow($db->sql_query("SELECT sl_url, sl_mtime FROM ".$prefix."_seo WHERE sl_url = '".$url."'"));
         #$result = $db->sql_query("SELECT url FROM ".$prefix."_seo WHERE url = '".urlencode($url)."'");
 
-        if ($url == $durl) {
-            if ($mtime > $dmtime) {
+        #if ($url == $durl) {
+            #if ($mtime > $dmtime) {
                 # echo "UPDATE";
                 #$db->sql_query("UPDATE ".$prefix."_seo SET sl_url = '".$url."', sl_link = '".$href."', sl_time = '".$time."', sl_mtime = '".$mtime."', sl_title = '".$title."', sl_desc = '".$desc."', sl_keys = '".$keys."', sl_img = '".$img."', sl_ctitle = '".$ctitle."', sl_cdesc = '".$cdesc."', sl_cimg = '".$cimg."' WHERE sl_url = '".$url."'");
-            }
+            #}
             #$result = $db->sql_query("SELECT mtime FROM ".$prefix."_seo WHERE mtime < '".$mtime."'");
             #if ($db->sql_numrows($result) > 0) {
                 #$db->sql_query("UPDATE ".$prefix."_seo SET uname = '".$uname."', time = '".$ctime."', host_addr = '".$ip."', guest = '".$guest."', module = '".$name."', url = '".$url."' WHERE uname = '".$uname."'");
             #}
-        } else {
+        #} else {
             #$db->sql_query("INSERT INTO ".$prefix."_seo (url, link, time, mtime, title, desc, keys, img, ctitle, cdesc, cimg) VALUES ('".str_replace('&', '&amp;', $url)."', '".str_replace('&', '&amp;', $href)."', NOW(), '".$mtime."', '".$title."', '".$desc."', '".$keys."', '".$img."', '".$ctitle."', '".$cdesc."', '".$cimg."')");
             #$db->sql_query("INSERT INTO ".$prefix."_seo VALUES (NULL, '".$url."', '".$href."', '".$time."', '".$mtime."', '".$title."', '".$desc."', '".$keys."', '".$img."', '".$ctitle."', '".$cdesc."', '".$cimg."')");
-        }
+        #}
         ###
-        
+
         /*
         $marray = $href.'||'.$time.'||'.$mtime.'||'.$title.'||'.$desc.'||'.$keys.'||'.$img.'||'.$ctitle.'||'.$cdesc.'||'.$cimg;
         $array = array($url => $marray);
@@ -2008,7 +2005,7 @@ function stream($url, $name) {
     header("Content-Length: ".filesize($url));
     header("Content-Disposition: attachment; filename=".$name);
     readfile($url);
-    
+
     /* https://secure.php.net/manual/ru/function.readfile.php
     if (file_exists($file)) {
         header('Content-Description: File Transfer');
@@ -2343,7 +2340,7 @@ function from_bot() {
 # Check referer from Search Engines
 function engines_word($refer) {
     $engines = array("images.google." => array("q", "prev"), "bing.com" => "q", ".alot." => "q", "a993.com" => "q1", "abcsok." => "q", "alltheweb." => "q", "altavista." => "q", "aol." => array("q", "query", "encquery"), "aolsvc." => "query", "avantfind.com" => "keywords", "bonvote.com" => "search", "bonweb.com" => "search", "comcast.net" => "q", "conduit." => "q", "eniro.se" => "search_word", "excite." => "search", "google." => array("q", "as_q"), "gogo.ru" => "q", "yandex." => array("text", "query"), "ya.ru" => "text", "hotbot." => "query", "icerocket.com" => "q", "icq.com" => "q", "isheyka.com" => "q", "midco.net" => "q", "live.com" => "q", "msn." => "q", "yahoo." => array("p", "k"), "search." => "q", "kvasir.no" => "q", "myway.com" => "searchfor", "netscape." => array("q", "query"), "oceanfree.net" => "as_q", "qip.ru" => "query", "sweetim.com" => "q", "tut.by" => "query", "ukr.net" => "search_query", "search.oboz.ua" => "k", "search.www.infoseek.co.jp" => "qt", ".setooz.com" => "query", "toile.com" => "q", "vinden.nl" => "q", ".i.ua" => "q", ".mail.ru" => array("q", "tag"), ".onru.ru" => "q", "aport.ru" => "r", "find.ru" => "text", "gde.ru" => array("keywords", "query", "t", "search_query", "id"), "go.km.ru" => "sq", "meta.ua" => "q", "metabot.ru" => "st", "nerus.ru" => "query", "nigma.ru" => array("s", "pq"), "nova.rambler.ru" => "query", "poisk.ru" => "text", "protonet.ru" => "q", "rambler.ru" => "query", "tyndex.ru" => "pnam", "webalta.ru" => "q", "exactseek.com" => array("q", "query"), "lycos." => "query", "ask." => "q", "cnn." => "query", "looksmart." => "qt", "about." => "terms", "mamma." => "query", "gigablast." => "q", "voila." => "rdata", "virgilio." => "qs", "baidu." => "wd", "alice." => "qs", "najdi." => "q", "club-internet." => "q", "mama." => "query", "seznam." => "q", "netsprint." => "q", "szukacz." => "q", "yam." => "k", "pchome." => "q");
-    
+
     $refer= str_replace(array("&#038;", "&amp;"), "&", $refer);
     $tmp = parse_url(urldecode(trim($refer)));
     $site = $tmp['host'];
@@ -3019,7 +3016,7 @@ function filereport() {
             $fp = fopen($sess_f, "wb");
             fwrite($fp, time());
             fclose($fp);
-            
+
             $safe = ini_get("safe_mode") == "1" ? 1 : 0;
             if (!$safe && function_exists("set_time_limit")) set_time_limit(600);
 
@@ -3069,276 +3066,276 @@ function login_report($id, $typ, $login, $pass) {
 
 # Backup DB for MySQL 8.0+ & MariaDB 10+
 function addBackupDb(): bool {
-	global $confs, $confdb, $db;
-	
-	if (!$confs['log_b']) {
-		return false;
-	}
-	
-	// Logging-Start für Performance-Analyse
-	$backup_start = microtime(true);
-	
-	$sess_f = COUNTER_DIR.'/backup.log';
-	$sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
-	$past = time() - intval($confs['sess_b']);
-	
-	if ($sess_b >= $past) {
-		return false; // Noch nicht Zeit für Backup
-	}
-	
-	// Timestamp-Datei aktualisieren
-	if (file_exists($sess_f)) @unlink($sess_f);
-	$fp_time = @fopen($sess_f, "wb");
-	if ($fp_time) {
-		fwrite($fp_time, time());
-		fclose($fp_time);
-	}
-	
-	// FIX: Memory-Management
-	@ini_set('memory_limit', '512M');
-	
-	// safe_mode ist entfernt; defensiv behandeln
-	$safe = 0;
-	if (function_exists('ini_get')) {
-		$sm = @ini_get('safe_mode');
-		$safe = ($sm && $sm != '0') ? 1 : 0;
-	}
-	if (!$safe && function_exists("set_time_limit")) @set_time_limit(600);
-	
-	# Кодировка соединения с MySQL
-	# auto - автоматический выбор (устанавливается кодировка таблицы), latin1, cp1251, utf8 и т.п.
-	$ccharset = "auto";
+    global $confs, $confdb, $db;
 
-	# Типы таблиц у которых сохраняется только структура, разделенные запятой
-	$conlycreate = "MRG_MyISAM,MERGE,HEAP,MEMORY";
+    if (!$confs['log_b']) {
+        return false;
+    }
 
-	# В фильтре таблиц указываются специальные шаблоны по которым отбираются таблицы. В шаблонах можно использовать следующие специальные символы:
-	# символ * — означает любое количество символов;
-	# символ ? — означает один любой символ;
-	# символ ^ — означает исключение из списка таблицы или таблиц.
+    // Logging-Start für Performance-Analyse
+    $backup_start = microtime(true);
 
-	# Примеры:
-	# slaed_* все таблицы начинающиеся с "slaed_" (все таблицы форума invision board)
-	# slaed_*, ^slaed_session все таблицы начинающиеся с "slaed_", кроме "slaed_session"
-	# slaed_s*s, ^slaed_session все таблицы начинающиеся с "slaed_s" и заканчивающиеся буквой "s", кроме "slaed_session"
-	# ^*s все таблицы, кроме таблиц заканчивающихся буквой "s"
-	# ^slaed_???? все таблицы, кроме таблиц, которые начинаются с "slaed_" und содержат 4 символа после знака подчеркивания
-	$ctables = "^ipb_*";
+    $sess_f = COUNTER_DIR.'/backup.log';
+    $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
+    $past = time() - intval($confs['sess_b']);
 
-	$bsize = 0;
-	
-	// Server-Version via PDO
-	try {
-		$vres = $db->sql_query("SELECT VERSION() AS v");
-		$vrow = $vres ? $vres->fetch(PDO::FETCH_ASSOC) : null;
-		$ver = $vrow && isset($vrow['v']) ? $vrow['v'] : '0.0.0';
-		preg_match("#^(\d+)\.(\d+)\.(\d+)#", $ver, $m);
-		$bmysql_ver = isset($m[1]) ? sprintf("%d%02d%02d", $m[1], $m[2], $m[3]) : 0;
-	} catch (Exception $e) {
-		error_log("Backup failed: Cannot get MySQL version - " . $e->getMessage());
-		return false;
-	}
-	
-	$bonly_create = explode(",", $conlycreate);
+    if ($sess_b >= $past) {
+        return false; // Noch nicht Zeit für Backup
+    }
 
-	$btables_exclude = !empty($ctables) && $ctables[0] == '^' ? 1 : 0;
-	$btables = (!empty($ctables)) ? $ctables : "";
-	$btables = explode(",", $btables);
-	$tbls = array();
-	
-	if (!empty($ctables)) {
-		foreach($btables as $table) {
-			$table = preg_replace("/[^\w*?^]/", "", $table);
-			$pattern = array("/\?/", "/\*/");
-			$replace = array(".", ".*?");
-			$tbls[] = preg_replace($pattern, $replace, $table);
-		}
-	}
+    // Timestamp-Datei aktualisieren
+    if (file_exists($sess_f)) @unlink($sess_f);
+    $fp_time = @fopen($sess_f, "wb");
+    if ($fp_time) {
+        fwrite($fp_time, time());
+        fclose($fp_time);
+    }
 
-	// Zeichenkodierung setzen, wenn nicht auto
-	if ($bmysql_ver > 40101 && $ccharset != 'auto') {
-		$db->sql_query("SET NAMES '".$ccharset."'");
-		$last_charset = $ccharset;
-	} else {
-		$last_charset = "";
-	}
+    // FIX: Memory-Management
+    @ini_set('memory_limit', '512M');
 
-	// FIX: Korrigierte Filter-Logik
-	$tables = array();
-	$res = $db->sql_query("SHOW TABLES");
-	
-	while ($row = $res->fetch(PDO::FETCH_NUM)) {
-		$status = 0;
-		
-		if (!empty($tbls)) {
-			foreach ($tbls as $table) {
-				$exclude = preg_match("#^\^#", $table) ? true : false;
-				
-				if (!$exclude) {
-					if (preg_match("#^{$table}$#i", $row[0])) {
-						$status = 1; // Include
-					}
-				}
-				
-				if ($exclude && preg_match("#{$table}$#i", $row[0])) {
-					$status = -1; // Exclude
-					break; // Sofort abbrechen wenn excluded
-				}
-			}
-			
-			// FIX: Korrekte Include/Exclude Logik
-			if ($btables_exclude) {
-				// Exclude-Modus: Nimm alles außer status == -1
-				if ($status != -1) {
-					$tables[] = $row[0];
-				}
-			} else {
-				// Include-Modus: Nimm nur status == 1
-				if ($status == 1) {
-					$tables[] = $row[0];
-				}
-			}
-		} else {
-			// Keine Filter = alle Tabellen
-			$tables[] = $row[0];
-		}
-	}
+    // safe_mode ist entfernt; defensiv behandeln
+    $safe = 0;
+    if (function_exists('ini_get')) {
+        $sm = @ini_get('safe_mode');
+        $safe = ($sm && $sm != '0') ? 1 : 0;
+    }
+    if (!$safe && function_exists("set_time_limit")) @set_time_limit(600);
 
-	if (empty($tables)) {
-		error_log("Backup failed: No tables found to backup");
-		return false;
-	}
+    # Кодировка соединения с MySQL
+    # auto - автоматический выбор (устанавливается кодировка таблицы), latin1, cp1251, utf8 и т.п.
+    $ccharset = "auto";
 
-	$tabs = count($tables);
-	$res = $db->sql_query("SHOW TABLE STATUS");
-	$tabinfo = array();
-	$tab_charset = array();
-	$tab_type = array();
-	$tabsize = array();
-	$tabinfo[0] = 0;
-	
-	while ($item = $res->fetch(PDO::FETCH_ASSOC)) {
-		if (in_array($item['Name'], $tables)) {
-			$item['Rows'] = empty($item['Rows']) ? 0 : $item['Rows'];
-			$tabinfo[0] += $item['Rows'];
-			$tabinfo[$item['Name']] = $item['Rows'];
-			$bsize += $item['Data_length'];
-			$tabsize[$item['Name']] = 1 + round(1048576 / ($item['Avg_row_length'] + 1));
-			
-			if (!empty($item['Collation']) && preg_match("#^([a-z0-9]+)_#i", $item['Collation'], $m)) {
-				$tab_charset[$item['Name']] = $m[1];
-			}
-			
-			$tab_type[$item['Name']] = isset($item['Engine']) ? $item['Engine'] : $item['Type'];
-		}
-	}
+    # Типы таблиц у которых сохраняется только структура, разделенные запятой
+    $conlycreate = "MRG_MyISAM,MERGE,HEAP,MEMORY";
 
-	// FIX: Path Traversal Sicherheitslücke
-	$safe_dbname = preg_replace('/[^a-zA-Z0-9_-]/', '_', $confdb['name']);
-	$name = $safe_dbname."_".date("Y-m-d_H-i-s");
-	
-	// FIX: Verzeichnis-Check
-	$backup_dir = BACKUP_DIR.'/';
-	if (!is_dir($backup_dir)) {
-		if (!@mkdir($backup_dir, 0750, true)) {
-			error_log("Backup failed: Cannot create backup directory");
-			return false;
-		}
-	}
-	
-	$filepath = $backup_dir.$name.'.sql';
-	
-	// FIX: Error-Handling für fopen
-	$fp = @fopen($filepath, "wb");
-	if (!$fp) {
-		error_log("Backup failed: Cannot create file " . $filepath);
-		return false;
-	}
-	
-	// Header schreiben
-	fwrite($fp, "# DB: ".$confdb['name']."\n");
-	fwrite($fp, "# Tables: ".$tabs."\n");
-	fwrite($fp, "# Size: ".round($bsize / 1048576, 2)." MB\n");
-	fwrite($fp, "# Lines: ".number_format($tabinfo[0], 0, ",", " ")."\n");
-	fwrite($fp, "# Date: ".date("Y.m.d H:i:s")."\n\n");
+    # В фильтре таблиц указываются специальные шаблоны по которым отбираются таблицы. В шаблонах можно использовать следующие специальные символы:
+    # символ * — означает любое количество символов;
+    # символ ? — означает один любой символ;
+    # символ ^ — означает исключение из списка таблицы или таблиц.
 
-	$db->sql_query("SET SQL_QUOTE_SHOW_CREATE = 1");
+    # Примеры:
+    # slaed_* все таблицы начинающиеся с "slaed_" (все таблицы форума invision board)
+    # slaed_*, ^slaed_session все таблицы начинающиеся с "slaed_", кроме "slaed_session"
+    # slaed_s*s, ^slaed_session все таблицы начинающиеся с "slaed_s" и заканчивающиеся буквой "s", кроме "slaed_session"
+    # ^*s все таблицы, кроме таблиц заканчивающихся буквой "s"
+    # ^slaed_???? все таблицы, кроме таблиц, которые начинаются с "slaed_" und содержат 4 символа после знака подчеркивания
+    $ctables = "^ipb_*";
 
-	foreach ($tables as $table) {
-		// FIX: Charset isset() Check
-		if ($bmysql_ver > 40101 && isset($tab_charset[$table]) && $tab_charset[$table] != $last_charset) {
-			if ($ccharset == "auto" && !empty($tab_charset[$table])) {
-				$db->sql_query("SET NAMES '".$tab_charset[$table]."'");
-				$last_charset = $tab_charset[$table];
-			}
-		}
+    $bsize = 0;
 
-		$res = $db->sql_query("SHOW CREATE TABLE `{$table}`");
-		$tab = $res->fetch(PDO::FETCH_NUM);
-		
-		// Для MariaDB 10+ НЕ используем условные комментарии
-		if (isset($tab[1])) {
-			fwrite($fp, "DROP TABLE IF EXISTS `{$table}`;\n{$tab[1]};\n\n");
-		}
+    // Server-Version via PDO
+    try {
+        $vres = $db->sql_query("SELECT VERSION() AS v");
+        $vrow = $vres ? $vres->fetch(PDO::FETCH_ASSOC) : null;
+        $ver = $vrow && isset($vrow['v']) ? $vrow['v'] : '0.0.0';
+        preg_match("#^(\d+)\.(\d+)\.(\d+)#", $ver, $m);
+        $bmysql_ver = isset($m[1]) ? sprintf("%d%02d%02d", $m[1], $m[2], $m[3]) : 0;
+    } catch (Exception $e) {
+        error_log("Backup failed: Cannot get MySQL version - " . $e->getMessage());
+        return false;
+    }
 
-		if (in_array($tab_type[$table], $bonly_create)) continue;
+    $bonly_create = explode(",", $conlycreate);
 
-		$NumericColumn = array();
-		$res = $db->sql_query("SHOW COLUMNS FROM `{$table}`");
-		$field = 0;
-		while ($col = $res->fetch(PDO::FETCH_NUM)) {
-			$NumericColumn[$field++] = preg_match("#^(\w*int|year)#", $col[1]) ? 1 : 0;
-		}
-		$fields = $field;
+    $btables_exclude = !empty($ctables) && $ctables[0] == '^' ? 1 : 0;
+    $btables = (!empty($ctables)) ? $ctables : "";
+    $btables = explode(",", $btables);
+    $tbls = array();
 
-		$from = 0;
-		$limit = $tabsize[$table];
-		
-		if ($tabinfo[$table] > 0) {
-			$i = 0;
-			fwrite($fp, "INSERT INTO `{$table}` VALUES");
-			
-			while ($res = $db->sql_query("SELECT * FROM `{$table}` LIMIT {$from}, {$limit}")) {
-				$countThisBatch = 0;
-				
-				while ($row = $res->fetch(PDO::FETCH_NUM)) {
-					$countThisBatch++;
-					$i++;
-					
-					// ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем разделение ПЕРЕД записью строки
-					if ($i > 1 && ($i - 1) % 10000 == 0) {
-						// Закрываем предыдущий INSERT и начинаем новый
-						fwrite($fp, ";\n\nINSERT INTO `{$table}` VALUES");
-					}
-					
-					for ($k = 0; $k < $fields; $k++) {
-						if ($NumericColumn[$k]) {
-							$row[$k] = isset($row[$k]) ? $row[$k] : "NULL";
-						} else {
-							$row[$k] = isset($row[$k]) ? $db->sqlconnid->quote($row[$k]) : "NULL";
-						}
-					}
-					
-					// Добавляем запятую ПЕРЕД строкой (кроме первой и после разделения)
-					$is_first_in_block = ($i == 1) || (($i - 1) % 10000 == 0);
-					fwrite($fp, ($is_first_in_block ? "\n" : ",\n")."(".implode(",", $row).")");
-				}
-				
-				if ($countThisBatch < $limit) break;
-				$from += $limit;
-			}
-			
-			fwrite($fp, ";\n\n");
-		}
-	}
+    if (!empty($ctables)) {
+        foreach($btables as $table) {
+            $table = preg_replace("/[^\w*?^]/", "", $table);
+            $pattern = array("/\?/", "/\*/");
+            $replace = array(".", ".*?");
+            $tbls[] = preg_replace($pattern, $replace, $table);
+        }
+    }
 
-	fclose($fp);
-	addCompress($backup_dir, $filepath, $name, 'auto', true);
-	
-	// Performance-Logging
-	$duration = round(microtime(true) - $backup_start, 2);
-	error_log("Backup completed: {$tabs} tables, ".round($bsize/1048576, 2)."MB in {$duration}s");
-	return true;
+    // Zeichenkodierung setzen, wenn nicht auto
+    if ($bmysql_ver > 40101 && $ccharset != 'auto') {
+        $db->sql_query("SET NAMES '".$ccharset."'");
+        $last_charset = $ccharset;
+    } else {
+        $last_charset = "";
+    }
+
+    // FIX: Korrigierte Filter-Logik
+    $tables = array();
+    $res = $db->sql_query("SHOW TABLES");
+
+    while ($row = $res->fetch(PDO::FETCH_NUM)) {
+        $status = 0;
+
+        if (!empty($tbls)) {
+            foreach ($tbls as $table) {
+                $exclude = preg_match("#^\^#", $table) ? true : false;
+
+                if (!$exclude) {
+                    if (preg_match("#^{$table}$#i", $row[0])) {
+                        $status = 1; // Include
+                    }
+                }
+
+                if ($exclude && preg_match("#{$table}$#i", $row[0])) {
+                    $status = -1; // Exclude
+                    break; // Sofort abbrechen wenn excluded
+                }
+            }
+
+            // FIX: Korrekte Include/Exclude Logik
+            if ($btables_exclude) {
+                // Exclude-Modus: Nimm alles außer status == -1
+                if ($status != -1) {
+                    $tables[] = $row[0];
+                }
+            } else {
+                // Include-Modus: Nimm nur status == 1
+                if ($status == 1) {
+                    $tables[] = $row[0];
+                }
+            }
+        } else {
+            // Keine Filter = alle Tabellen
+            $tables[] = $row[0];
+        }
+    }
+
+    if (empty($tables)) {
+        error_log("Backup failed: No tables found to backup");
+        return false;
+    }
+
+    $tabs = count($tables);
+    $res = $db->sql_query("SHOW TABLE STATUS");
+    $tabinfo = array();
+    $tab_charset = array();
+    $tab_type = array();
+    $tabsize = array();
+    $tabinfo[0] = 0;
+
+    while ($item = $res->fetch(PDO::FETCH_ASSOC)) {
+        if (in_array($item['Name'], $tables)) {
+            $item['Rows'] = empty($item['Rows']) ? 0 : $item['Rows'];
+            $tabinfo[0] += $item['Rows'];
+            $tabinfo[$item['Name']] = $item['Rows'];
+            $bsize += $item['Data_length'];
+            $tabsize[$item['Name']] = 1 + round(1048576 / ($item['Avg_row_length'] + 1));
+
+            if (!empty($item['Collation']) && preg_match("#^([a-z0-9]+)_#i", $item['Collation'], $m)) {
+                $tab_charset[$item['Name']] = $m[1];
+            }
+
+            $tab_type[$item['Name']] = isset($item['Engine']) ? $item['Engine'] : $item['Type'];
+        }
+    }
+
+    // FIX: Path Traversal Sicherheitslücke
+    $safe_dbname = preg_replace('/[^a-zA-Z0-9_-]/', '_', $confdb['name']);
+    $name = $safe_dbname."_".date("Y-m-d_H-i-s");
+
+    // FIX: Verzeichnis-Check
+    $backup_dir = BACKUP_DIR.'/';
+    if (!is_dir($backup_dir)) {
+        if (!@mkdir($backup_dir, 0750, true)) {
+            error_log("Backup failed: Cannot create backup directory");
+            return false;
+        }
+    }
+
+    $filepath = $backup_dir.$name.'.sql';
+
+    // FIX: Error-Handling für fopen
+    $fp = @fopen($filepath, "wb");
+    if (!$fp) {
+        error_log("Backup failed: Cannot create file " . $filepath);
+        return false;
+    }
+
+    // Header schreiben
+    fwrite($fp, "# DB: ".$confdb['name']."\n");
+    fwrite($fp, "# Tables: ".$tabs."\n");
+    fwrite($fp, "# Size: ".round($bsize / 1048576, 2)." MB\n");
+    fwrite($fp, "# Lines: ".number_format($tabinfo[0], 0, ",", " ")."\n");
+    fwrite($fp, "# Date: ".date("Y.m.d H:i:s")."\n\n");
+
+    $db->sql_query("SET SQL_QUOTE_SHOW_CREATE = 1");
+
+    foreach ($tables as $table) {
+        // FIX: Charset isset() Check
+        if ($bmysql_ver > 40101 && isset($tab_charset[$table]) && $tab_charset[$table] != $last_charset) {
+            if ($ccharset == "auto" && !empty($tab_charset[$table])) {
+                $db->sql_query("SET NAMES '".$tab_charset[$table]."'");
+                $last_charset = $tab_charset[$table];
+            }
+        }
+
+        $res = $db->sql_query("SHOW CREATE TABLE `{$table}`");
+        $tab = $res->fetch(PDO::FETCH_NUM);
+
+        // Для MariaDB 10+ НЕ используем условные комментарии
+        if (isset($tab[1])) {
+            fwrite($fp, "DROP TABLE IF EXISTS `{$table}`;\n{$tab[1]};\n\n");
+        }
+
+        if (in_array($tab_type[$table], $bonly_create)) continue;
+
+        $NumericColumn = array();
+        $res = $db->sql_query("SHOW COLUMNS FROM `{$table}`");
+        $field = 0;
+        while ($col = $res->fetch(PDO::FETCH_NUM)) {
+            $NumericColumn[$field++] = preg_match("#^(\w*int|year)#", $col[1]) ? 1 : 0;
+        }
+        $fields = $field;
+
+        $from = 0;
+        $limit = $tabsize[$table];
+
+        if ($tabinfo[$table] > 0) {
+            $i = 0;
+            fwrite($fp, "INSERT INTO `{$table}` VALUES");
+
+            while ($res = $db->sql_query("SELECT * FROM `{$table}` LIMIT {$from}, {$limit}")) {
+                $countThisBatch = 0;
+
+                while ($row = $res->fetch(PDO::FETCH_NUM)) {
+                    $countThisBatch++;
+                    $i++;
+
+                    // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем разделение ПЕРЕД записью строки
+                    if ($i > 1 && ($i - 1) % 10000 == 0) {
+                        // Закрываем предыдущий INSERT и начинаем новый
+                        fwrite($fp, ";\n\nINSERT INTO `{$table}` VALUES");
+                    }
+
+                    for ($k = 0; $k < $fields; $k++) {
+                        if ($NumericColumn[$k]) {
+                            $row[$k] = isset($row[$k]) ? $row[$k] : "NULL";
+                        } else {
+                            $row[$k] = isset($row[$k]) ? $db->sql_value($row[$k]) : "NULL";
+                        }
+                    }
+
+                    // Добавляем запятую ПЕРЕД строкой (кроме первой и после разделения)
+                    $is_first_in_block = ($i == 1) || (($i - 1) % 10000 == 0);
+                    fwrite($fp, ($is_first_in_block ? "\n" : ",\n")."(".implode(",", $row).")");
+                }
+
+                if ($countThisBatch < $limit) break;
+                $from += $limit;
+            }
+
+            fwrite($fp, ";\n\n");
+        }
+    }
+
+    fclose($fp);
+    addCompress($backup_dir, $filepath, $name, 'auto', true);
+
+    // Performance-Logging
+    $duration = round(microtime(true) - $backup_start, 2);
+    error_log("Backup completed: {$tabs} tables, ".round($bsize/1048576, 2)."MB in {$duration}s");
+    return true;
 }
 
 # Check user acess
@@ -3559,7 +3556,7 @@ function bb_decode($sourse, $mod, $id="") {
 
     $sourse = str_replace(array("&#034;", "&#039;"), array("\"", "'"), preg_replace($bb, $html, $sourse));
     # $sourse = preg_replace($bb, $html, $sourse);
-    
+
     while (preg_match("#\[quote\](.*?)\[/quote\]#si", $sourse)) $sourse = preg_replace_callback("#\[quote\](.*?)\[/quote\]#si", "encode_quote", $sourse);
     while (preg_match("#\[hide\](.*?)\[/hide\]#si", $sourse)) $sourse = preg_replace_callback("#\[hide\](.*?)\[/hide\]#si", "encode_hide", $sourse);
     if (empty($id)) {
@@ -3571,7 +3568,7 @@ function bb_decode($sourse, $mod, $id="") {
     while (preg_match("#\[usephp\](.*?)\[/usephp\]#si", $sourse)) $sourse = preg_replace_callback("#\[usephp\](.*?)\[/usephp\]#si", "use_php", $sourse);
     while (preg_match("#\[tabs=(.*?)\](.*?)\[/tabs\]#si", $sourse)) $sourse = preg_replace_callback("#\[tabs=(.*?)\](.*?)\[/tabs\]#si", "encode_tabs", $sourse);
     if (stripos($sourse, "[attach=") !== false) $sourse = encode_attach($sourse, $mod);
-    
+
     $sourse = search_replace($sourse, $mod);
     return $sourse;
 }
@@ -3609,20 +3606,20 @@ function encode_code($text) {
 function encode_php($text) {
     global $conf;
     static $sname;
-    
+
     $replace = isset($text[2]) ? trim($text[2]) : trim($text[1]);
     $cname = isset($text[2]) ? analyze($text[1]) : 'php';
-    
+
     $from = array('bash', 'cpp', 'csharp', 'css', 'delphi', 'diff', 'groovy', 'java', 'jscript', 'php', 'plain', 'python', 'ruby', 'scala', 'sql', 'vb', 'xml');
     $to = array('Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml');
     $cname = str_ireplace($from, $to, $cname);
     $ucname = strtolower($cname);
-    
+
     $in = array('&#034;', '&quot;', '&#036;', '&dollar;', '&#038;', '&amp;', '&#039;', '&apos;', '&#060;', '&lt;', '&#062;', '&gt;', '&#092;', '&bsol;');
     $out = array("\"", "\"", "$", "$", "&", "&", "'", "'", "<", "<", ">", ">", "\\", "\\");
     $replace = ($conf['syntax'] <= 1) ? str_replace($in, $out, $replace) : $replace;
     $replace = preg_replace('#<br.*>#i', '', $replace);
-    
+
     if (!$conf['syntax']) {
         if (preg_match("#<\?(php)?[^[:graph:]]#", $replace)) {
             $replace = highlight_string($replace, true);
@@ -4264,19 +4261,19 @@ function textarea() {
         $fonts = "<option value=\"\">"._FONT."</option>";
         $font = array("Arial", "Courier", "Mistral", "Impact", "Sans Serif", "Tahoma", "Helvetica", "Verdana");
         foreach ($font as $val) if ($val != "") $fonts .= "<option style=\"font-family: ".$val.";\" value=\"".$val."\">".$val."</option>";
-        
+
         $colors = "<option value=\"\">"._ECOLOR."</option>";
         $color = array("black", "gray", "silver", "white", "maroon", "red", "orangered", "orange", "yellow", "purple", "fuchsia", "violet", "darkgreen", "green", "lime", "navy", "blue", "teal", "aqua");
         foreach ($color as $val) if ($val != "") $colors .= "<option style=\"background: ".$val.";\" value=\"".$val."\">".$val."</option>";
-        
+
         $fsizes = "<option value=\"\">"._ESIZE."</option>";
         $fsize = array("8", "10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30", "32");
         foreach ($fsize as $val) if ($val != "") $fsizes .= "<option value=\"".$val."\">".$val."</option>";
-        
+
         $fcodes = "<option value=\"\">"._CODE."</option>";
         $fcode = array("Bash", "Cpp", "CSharp", "Css", "Delphi", "Diff", "Groovy", "Java", "JScript", "Php", "Plain", "Python", "Ruby", "Scala", "Sql", "Vb", "Xml");
         foreach ($fcode as $val) if ($val != "") $fcodes .= "<option value=\"".strtolower($val)."\">".$val."</option>";
-        
+
         $code .= "<div class=\"sl_drop\">
             <span OnClick=\"HideShow('t-form-".$id."', 'blind', 'up', 500);\" class=\"sl_bb_text\" title=\""._TEXT."\"></span>
             <div id=\"t-form-".$id."\" class=\"sl_drop-form\">
@@ -4439,11 +4436,11 @@ function textarea() {
         if (!isset($jscript)) {
             $code = '<script src="plugins/codemirror/lib/codemirror.js"></script>
             <script src="plugins/codemirror/addon/edit/matchbrackets.js"></script>
-            
+
             <script src="plugins/codemirror/addon/hint/show-hint.js"></script>
             <script src="plugins/codemirror/addon/hint/xml-hint.js"></script>
             <script src="plugins/codemirror/addon/hint/html-hint.js"></script>
-            
+
             <script src="plugins/codemirror/mode/htmlmixed/htmlmixed.js"></script>
             <script src="plugins/codemirror/mode/xml/xml.js"></script>
             <script src="plugins/codemirror/mode/javascript/javascript.js"></script>
@@ -4489,13 +4486,13 @@ function textarea_code($id, $name, $style, $mode, $text) {
     if (!isset($jscript)) {
         $code = '<script src="plugins/codemirror/lib/codemirror.js"></script>
         <script src="plugins/codemirror/addon/edit/matchbrackets.js"></script>
-        
+
         <script src="plugins/codemirror/addon/hint/show-hint.js"></script>
         <script src="plugins/codemirror/addon/hint/xml-hint.js"></script>
         <script src="plugins/codemirror/addon/hint/html-hint.js"></script>
         <script src="plugins/codemirror/addon/hint/css-hint.js"></script>
         <script src="plugins/codemirror/addon/hint/sql-hint.js"></script>
-        
+
         <script src="plugins/codemirror/mode/htmlmixed/htmlmixed.js"></script>
         <script src="plugins/codemirror/mode/xml/xml.js"></script>
         <script src="plugins/codemirror/mode/javascript/javascript.js"></script>
@@ -4706,12 +4703,12 @@ function upload($typ, $directory, $typefile, $maxsize, $namefile, $width, $heigh
             return 0;
         }
     } elseif ($typ == 4 && $url) {
-        $ch = curl_init(); 
+        $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_NOBODY, 1);
         curl_setopt($ch, CURLOPT_FAILONERROR, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HEADER, 1); 
+        curl_setopt($ch, CURLOPT_HEADER, 1);
         $result = curl_exec($ch);
         curl_close($ch);
         if (!$result) return 0;
@@ -4914,13 +4911,13 @@ function ashowcom() {
             $privat = ($confc['privat'] && $confpr['act'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=privat&amp;uname=".urlencode($user_name)."\" title=\""._SENDMES."\" class=\"sl_but_green\">"._MESSAGE."</a>" : "";
             $profil = ($confc['profil'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
             $web = ($confc['web'] && !empty($user_website)) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
-            
+
             # Будущие функции
             #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
             #$thank = "<a href=\"javascript: scroll(0, 0);\" title=\""._THANK."\">"._THANK."</a>";
             $warn = "";
             $thank = "";
-            
+
             if (is_moder($com_modul)) {
                 if (defined("ADMIN_FILE")) {
                     $edit = add_menu("<a href=\"index.php?name=".$com_modul."&amp;op=view&amp;id=".$com_cid."#".$com_id."\" title=\""._MVIEW."\">"._MVIEW."</a>||<a href=\"".$admin_file.".php?op=comm_edit&amp;id=".$com_id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=comm_act&amp;id=".$com_id."&amp;refer=1\" title=\""._ACTIVATE."\">"._ACTIVATE."</a>||<a href=\"".$admin_file.".php?op=comm_del&amp;id=".$com_id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".cutstr(text_filter(bb_decode($com_text, $com_modul)), 10)."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>");
@@ -5135,10 +5132,10 @@ function create_stat() {
     $mday = ($arg[1]) ? intval($arg[1]) : ((isset($_GET['day'])) ? intval($_GET['day']) : "15");
     $file = ($arg[2]) ? text_filter($arg[2]) : ((isset($_GET['file'])) ? text_filter($_GET['file']) : "");
     $off = 1;
-    
+
     if (!$report) header("Content-type: image/png");
     $image = imagecreate(800, 340);
-    
+
     $white = imagecolorallocate($image, 255, 255, 255);
     $red = imagecolorallocate($image, 255, 0, 0);
     $green = imagecolorallocate($image, 0, 128, 0);
@@ -5202,36 +5199,36 @@ function create_stat() {
             $w = round((230 / $max1) * $day[1]);
             if ($w < 5) $w = 1;
             $off = 120;
-            
+
             imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi']+3, 249, $wblue);
             imagerectangle($image, $off+$confst['bet']*$i,250-$w, $off+$confst['bet']*$i+$confst['shi']+3, 249, $black);
             imagerectangle($image, $off+$confst['bet']*$i+$confst['shi']+4, 250-$w+4, $off+$confst['bet']*$i+$confst['shi']+5, 249, $black);
             $zzz = $day[1] - ($day[4] + $day[5]);
             $w = round((230 / $max1) * $zzz);
             if ($w < 4) $w = $w + 31;
-        
+
             imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi']+3, 249, $wgreen);
             imagerectangle($image, $off+$confst['bet']*$i, 250-$w, $off+$confst['bet']*$i+$confst['shi']+3, 249, $black);
             imagestring($image, 1, $off+$confst['bet']*$i+2, 250-$w+1-10, $day[1], $white);
-            
+
             $d = explode(".", $day[0]);
             $d = $d[0].".".$d[1];
-            
+
             imagestring($image, 1, $off+$confst['bet']*$i+1, 255, $d, $wblue);
             imagestring($image, 1, $off+$confst['bet']*$i+1, 265, $day[1], $red);
             imagestring($image, 1, $off+$confst['bet']*$i+1, 275, $day[2], $green);
             imagestring($image, 1, $off+$confst['bet']*$i+1, 285, $day[6], $purple);
-            
+
             imagestring($image, 1, $off+$confst['bet']*$i+1, 300, $day[5], $wblue);
             imagestring($image, 1, $off+$confst['bet']*$i+1, 310, $day[4], $red);
             imagestring($image, 1, $off+$confst['bet']*$i+1, 320, $zzz, $green);
             imagestring($image, 1, $off+$confst['bet']*$i+1, 330, rtrim($day[7]), $purple);
-            
+
             imagestring($image, 1, 3, 255, "DATE:", $wblue);
             imagestring($image, 1, 3, 265, "UNIQUE VISITORS:", $red);
             imagestring($image, 1, 3, 275, "SITE HITS:", $green);
             imagestring($image, 1, 3, 285, "HOMEPAGE HITS:", $purple);
-            
+
             imagestring($image, 1, 3, 300, "OTHER SITES:", $wblue);
             imagestring($image, 1, 3, 310, "SEARCH ENGINES:", $red);
             imagestring($image, 1, 3, 320, "AUDIENCE:", $green);
@@ -5243,25 +5240,25 @@ function create_stat() {
     imagefilledrectangle($image, 5, 170, 20, 180, $wblue);
     imagerectangle($image, 5, 170, 20, 180, $black);
     imagestring($image, 1, 25, 171, "UNIQUE VISITORS", $black);
-    
+
     imagefilledrectangle($image, 5, 185, 20, 195, $wgreen);
     imagerectangle($image, 5, 185, 20, 195, $black);
     imagestring($image, 1, 25, 186, "SITE AUDIENCE", $black);
-    
+
     imagefilledrectangle($image, 5, 200, 20, 210, $yellow);
     imagerectangle($image, 5, 200, 20, 210, $black);
     imagestring($image, 1, 25, 202, "SITE HITS", $black);
-    
+
     imagerectangle($image, 0, 296, 799, 339, $gray);
     imagerectangle($image, 0, 252, 800, 252, $gray);
     imagerectangle($image, 0, 0, 799, 339, $gray);
-    
+
     imagestring($image, 1, 5, 5, "VISITS BY DAYS FOR ".strtoupper($conf['homeurl'])." BY SLAED CMS ".$conf['version']." - ".date(_TIMESTRING), $wblue);
-    
+
     imagestring($image, 1, 5, 30, "UNIQUES TOTAL: ".$unique, $red);
     imagestring($image, 1, 5, 40, "HITS TOTAL: ".$today, $green);
     imagestring($image, 1, 5, 50, "HOMEPAGE HITS: ".$homepage, $purple);
-    
+
     imagestring($image, 1, 5, 70, "OTHER SITES: ".$sites, $wblue);
     imagestring($image, 1, 5, 80, "SEARCH ENGINES: ".$engines, $red);
     imagestring($image, 1, 5, 90, "AUDIENCE: ".$auditory, $green);
@@ -5269,7 +5266,7 @@ function create_stat() {
 
     imagestring($image, 1, 5, 120, "PAGES PER VIS.: ".round($today/$unique, 2), $wblue);
     imagestring($image, 1, 5, 130, "AVR. AUDIENCE: ".round($auditory/$i), $wblue);
-    
+
     if ($report) {
         imagepng($image, "config/counter/stat/".date("m-Y").".png");
     } else {
@@ -5326,12 +5323,12 @@ function create_img_gd($imgfile, $imgthumb, $newwidth) {
             $destWidth = $newwidth;
             $destHeight = $srcHeight / $ratioWidth;
             $destImage = imagecreatetruecolor($destWidth, $destHeight);
-            
+
             imagesavealpha($destImage, true);
             $iccalpha = imagecolorallocatealpha($destImage, 255, 255, 255, 127);
             imagefill($destImage, 0, 0, $iccalpha);
             imagecopyresampled($destImage, $srcImage, 0, 0, 0, 0, $destWidth, $destHeight, $srcWidth, $srcHeight);
-            
+
             switch($type) {
                 case IMG_GIF:
                 imagegif($destImage, $imgthumb);

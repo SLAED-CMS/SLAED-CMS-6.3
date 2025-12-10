@@ -35,6 +35,9 @@ $prefix = $confdb['prefix'];
 
 # Security config file include
 require_once CONFIG_DIR.'/config_security.php';
+$aroute = $confs['afile'];
+
+# OLD DELETE
 $admin_file = $confs['afile'];
 
 # Report PHP errors

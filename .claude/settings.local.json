@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(export FILTER_BRANCH_SQUELCH_WARNING=1)",
+      "Bash(cat:*)",
+      "Bash(git for-each-ref:*)",
+      "Bash(xargs -r git update-ref:*)",
+      "Bash(git reflog:*)",
+      "Bash(git gc:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
