@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/lang.php';
 
-function langNavi(int $tab = 0, int $subtab = 0): string {
+function navi(int $tab = 0, int $subtab = 0): string {
     $ops = ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
     return getAdminTabs(_LANG_EDIT, 'lang.png', '', $ops, $lang, [], [], $tab, $subtab);
@@ -21,7 +21,7 @@ function getLangPath(string $mod = '', string $typ = ''): string {
 }
 
 function lang(): void {
-    global $prefix, $db, $admin_file;
+    global $prefix, $db, $aroute;
     $modbase = [];
     $who_view = [];
     $result = $db->sql_query('SELECT title, active, view FROM '.$prefix.'_modules ORDER BY title ASC');
@@ -37,12 +37,12 @@ function lang(): void {
     }
 
     head();
-    $cont = langNavi(0, 0);
+    $cont = navi(0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
 
-    $sys_admin = '<a href="'.$admin_file.'.php?name=lang&amp;op=file&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
-    $sys_modul = '<a href="'.$admin_file.'.php?name=lang&amp;op=file" title="'._FULLEDIT.'">'._MODUL.'</a>';
+    $sys_admin = '<a href="'.$aroute.'.php?name=lang&amp;op=editfile&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
+    $sys_modul = '<a href="'.$aroute.'.php?name=lang&amp;op=editfile" title="'._FULLEDIT.'">'._MODUL.'</a>';
     $cont .= '<tr><td>1</td><td>'._SYSTEM.'</td><td>'._ALL.'</td><td>'._MVALL.'</td><td>'.ad_status('', 1).'</td><td>'.add_menu($sys_admin.'||'.$sys_modul).'</td></tr>';
 
     $mod = [];
@@ -60,10 +60,10 @@ function lang(): void {
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $eadmin = '';
         $emodul = '';
-        if (is_dir($mod_path.'/admin/language')) $eadmin = '<a href="'.$admin_file.'.php?name=lang&amp;op=file&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
+        if (is_dir($mod_path.'/admin/language')) $eadmin = '<a href="'.$aroute.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
         if (is_dir($mod_path.'/language')) {
             $sep = $eadmin ? '||' : '';
-            $emodul = $sep.'<a href="'.$admin_file.'.php?name=lang&amp;op=file&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
+            $emodul = $sep.'<a href="'.$aroute.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
         }
         $cont .= '<td>'.add_menu($eadmin.$emodul).'</td></tr>';
     }
@@ -73,10 +73,10 @@ function lang(): void {
     foot();
 }
 
-function edit(): void {
-    global $admin_file, $confla;
+function editfile(): void {
+    global $aroute, $confla;
     head();
-    $cont = langNavi(0, 0);
+    $cont = navi(0, 0);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
@@ -84,9 +84,9 @@ function edit(): void {
     $lng_cn = [];
     $cnst_arr = [];
     $lang_path = getLangPath($mod, $typ);
-    $dir = opendir($lang_path);
-    while (($file = readdir($dir)) !== false) if (preg_match('#^(.+)\.php#', $file, $matches)) $lng_cn[] = $matches[1];
-    closedir($dir);
+    foreach (scandir($lang_path) as $file) {
+        if (preg_match('#^(.+)\.php#', $file, $matches)) $lng_cn[] = $matches[1];
+    }
     $gl_tmp = $cnst_arr;
     $cnst_arr = [];
     $cj = count($lng_cn);
@@ -120,7 +120,7 @@ function edit(): void {
     $offset = ($page - 1) * $per_page;
 
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_form">';
+    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_form">';
     $ci = min($per_page, $total - $offset);
     for ($i = 0; $i < $ci; $i++) {
         $idx = $offset + $i;
@@ -155,7 +155,7 @@ function edit(): void {
     $cont .= '<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
 
     // Pagination via setPageNumbers()
-    $url = 'name=lang&op=file&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
+    $url = 'name=lang&op=editfile&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
     $cont .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');
 
     $cont .= setTemplateBasic('close');
@@ -164,7 +164,7 @@ function edit(): void {
 }
 
 function save(): void {
-    global $admin_file;
+    global $aroute;
     $mod = getVar('post', 'mod', 'var', '');
     $typ = getVar('post', 'typ', 'var', '');
     $lng_cn = getVar('post', 'lcn[]', 'var') ?: [];
@@ -211,17 +211,18 @@ function save(): void {
         fwrite($handle, $lng_str);
         fclose($handle);
     }
-    $url = $admin_file.'.php?name=lang&op=file&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
+    $url = $aroute.'.php?name=lang&op=editfile&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
     header('Location: '.$url);
+    exit;
 }
 
 function conf(): void {
-    global $admin_file, $confla;
+    global $aroute, $confla;
     head();
     checkConfigFile('lang.php');
-    $cont = langNavi(1, 0);
+    $cont = navi(1, 0);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._LANGKEY.':</td><td><input type="text" name="key" value="'.$confla['key'].'" class="sl_conf" placeholder="'._LANGKEY.'" required></td></tr>'
     .'<tr><td>'._LANGTR.':</td><td><select name="lang" class="sl_conf">'.language($confla['lang'], 1).'</select></td></tr>'
     .'<tr><td>'._LANGCOUNT.':</td><td><input type="number" name="count" value="'.$confla['count'].'" class="sl_conf" placeholder="'._LANGCOUNT.'" required></td></tr>'
@@ -233,7 +234,7 @@ function conf(): void {
 }
 
 function confsave(): void {
-    global $admin_file, $confla;
+    global $aroute, $confla;
     $cont = [
         'key' => getVar('post', 'key', 'text', ''),
         'lang' => getVar('post', 'lang', 'var', 'russian'),
@@ -241,19 +242,19 @@ function confsave(): void {
         'per_page' => getVar('post', 'per_page', 'num', 100)
     ];
     setConfigFile('lang.php', 'confla', $cont, $confla);
-    header('Location: '.$admin_file.'.php?name=lang&op=conf');
+    header('Location: '.$aroute.'.php?name=lang&op=conf');
+    exit;
 }
 
 function info(): void {
     head();
-    echo langNavi(2, 0).'<div id="repadm_info">'.adm_info(1, 0, 'lang').'</div>';
+    echo navi(2, 0).'<div id="repadm_info">'.adm_info(1, 0, 'lang').'</div>';
     foot();
 }
 
-switch($op) {
+switch ($op) {
     default: lang(); break;
-    case 'main': lang(); break;
-    case 'file': edit(); break;
+    case 'editfile': editfile(); break;
     case 'save': save(); break;
     case 'conf': conf(); break;
     case 'confsave': confsave(); break;

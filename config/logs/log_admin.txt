@@ -347,3 +347,74 @@ IP Адрес: 127.0.0.1
 Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
 Дата: 27.11.2025 09:53:59
 ---
+Вход: Да
+IP Адрес: 127.0.0.1
+Ник: SLAED CMS
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 28.11.2025 07:24:58
+---
+Вход: Да
+IP Адрес: 127.0.0.1
+Ник: SLAED CMS
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 28.11.2025 11:21:35
+---
+Eingang: Nein
+IP Adresse: 127.0.0.1
+Nickname: slaed
+Passwort: slaed
+Link: /admin.php
+Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Datum: 01.12.2025 10:12:13
+---
+Eingang: Ja
+IP Adresse: 127.0.0.1
+Nickname: SLAED CMS
+Link: /admin.php
+Browser: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Datum: 01.12.2025 10:12:16
+---
+Вход: Да
+IP Адрес: 127.0.0.1
+Ник: SLAED CMS
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 02.12.2025 08:49:17
+---
+Вход: Да
+IP Адрес: 127.0.0.1
+Ник: SLAED CMS
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 03.12.2025 09:02:46
+---
+Вход: Да
+IP Адрес: 127.0.0.1
+Ник: SLAED CMS
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 04.12.2025 08:38:52
+---
+Вход: Да
+IP Адрес: 127.0.0.1
+Ник: SLAED CMS
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 08.12.2025 13:06:01
+---
+Вход: Да
+IP Адрес: 127.0.0.1
+Ник: SLAED CMS
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 09.12.2025 07:20:42
+---
+Вход: Да
+IP Адрес: 127.0.0.1
+Ник: SLAED CMS
+Ссылка: /admin.php
+Браузер: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:145.0) Gecko/20100101 Firefox/145.0
+Дата: 10.12.2025 07:48:58
+---

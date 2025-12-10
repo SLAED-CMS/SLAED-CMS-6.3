@@ -6924,3 +6924,832 @@ Datum: 11.11.2025 11:02:57
 Удалён файл: ./config/config_sitemap.php
 Дата: 27.11.2025 09:42:49
 ---
+Добавлен новый файл: ./.git/FETCH_HEAD
+Добавлен новый файл: ./.git/ORIG_HEAD
+Добавлен новый файл: ./.git/logs/refs/remotes/offline/HEAD
+Добавлен новый файл: ./.git/logs/refs/remotes/offline/master
+Добавлен новый файл: ./.git/objects/00/5ec77a88ef2a3704873b1744281728083d0479
+Добавлен новый файл: ./.git/objects/01/a65c557046e2e0aaa88308a43e113163282277
+Добавлен новый файл: ./.git/objects/02/0713d123c4eb26e2daac87f8e5fadc8040c6e6
+Добавлен новый файл: ./.git/objects/02/6201da21a86c306847373d8c0c01afeb8edf64
+Добавлен новый файл: ./.git/objects/06/c3b4a3fd4129732292419d2e5efaea23248ce4
+Добавлен новый файл: ./.git/objects/07/607c9f65681b14ca97505cbf1ddb330a81071b
+Добавлен новый файл: ./.git/objects/0a/71cb35f133848df05e5b3563f64596a9054b5d
+Добавлен новый файл: ./.git/objects/0c/a90805626ae3f54aacef55b03aa82910fc4616
+Добавлен новый файл: ./.git/objects/0e/1e17781d09a7e708f6775252897348e122157e
+Добавлен новый файл: ./.git/objects/0e/214730e2afea82ad6325c9e86104c257ae7024
+Добавлен новый файл: ./.git/objects/0f/3001831b755726075cb4056cc95d39eb8c2172
+Добавлен новый файл: ./.git/objects/11/4299cb1e9864ce79397eb2c983b6a260288866
+Добавлен новый файл: ./.git/objects/13/f9de68c577bd3d14dbae4933c9946004ea5b40
+Добавлен новый файл: ./.git/objects/18/7c053cf4c8c29e30cd3abcea29acbeca2ebfc0
+Добавлен новый файл: ./.git/objects/19/57ee4fd94a43ec5097f61e4fc1e2340d7fc232
+Добавлен новый файл: ./.git/objects/1a/97db4ebfe39b2c3a201b295a03dcd88d710b0b
+Добавлен новый файл: ./.git/objects/20/d1470eaae0f3acc3f9d4e0c785ae0e5a510e5c
+Добавлен новый файл: ./.git/objects/21/e0a5ffc43c21f19dd5539d3a30103c19c82247
+Добавлен новый файл: ./.git/objects/24/83e152d2cad2d614a83d1706a09c8f6dfe75b2
+Добавлен новый файл: ./.git/objects/24/f82ae1025a732bb5808cfa090027d357e4651d
+Добавлен новый файл: ./.git/objects/25/c2add5b614c5c271ae205c29bf9c3e9a3dbf0a
+Добавлен новый файл: ./.git/objects/25/db4654ef577cc9f6632add0d93f13ef730556c
+Добавлен новый файл: ./.git/objects/28/710982674b44fb8cbfce28eb4e0428d5e9fd3d
+Добавлен новый файл: ./.git/objects/2d/342105a28e775c99d4d59208ae51a97190519c
+Добавлен новый файл: ./.git/objects/2d/97d594188bd87976d5efee8520c6fd5e67c36b
+Добавлен новый файл: ./.git/objects/30/40442288806240c0ae4bc8c8da987ae5db6eb1
+Добавлен новый файл: ./.git/objects/30/b43d0649e7750603d6711576f875cb5fb33494
+Добавлен новый файл: ./.git/objects/31/1ccb8792fb2ee639318d7bfbccac37d34dc598
+Добавлен новый файл: ./.git/objects/34/aa06dbd8fb5d5ff7a89206f28ed3681a677cf5
+Добавлен новый файл: ./.git/objects/35/193396de40cc936f54cf448ceeb4d297fe28f1
+Добавлен новый файл: ./.git/objects/35/735acc5dc6f7865ec75eeb16dc7c946603672e
+Добавлен новый файл: ./.git/objects/36/8d8161e76b277fc81747b57171328e93b7200a
+Добавлен новый файл: ./.git/objects/37/af83f72b38f0e4a92b0a77bbc16741d034f45f
+Добавлен новый файл: ./.git/objects/38/38f3aa810a7322bc7e0ca2986fa61da777402d
+Добавлен новый файл: ./.git/objects/38/5156d941d30ff172d4215f1069ea3e0789cfe4
+Добавлен новый файл: ./.git/objects/39/187ceb0cab678449eb498b5379374f10a5b424
+Добавлен новый файл: ./.git/objects/39/a5a0b310a6947061c53baae188251689c6694a
+Добавлен новый файл: ./.git/objects/3d/87d5c788e7d63230fd9112523f92a9582e063f
+Добавлен новый файл: ./.git/objects/41/dc289b54e3ef5157e6ecc00afadb7911140c75
+Добавлен новый файл: ./.git/objects/43/e733ead64e58ea1dbed02d441d02b1e1fd43bf
+Добавлен новый файл: ./.git/objects/44/ec6e863c7138c97d0a972b20ab576aa6e6d2f5
+Добавлен новый файл: ./.git/objects/45/47e7a578f895f74e6f3899bca78a0b25d1cf95
+Добавлен новый файл: ./.git/objects/45/df59da085ac7d9fd1e40db0694144105ab03c7
+Добавлен новый файл: ./.git/objects/47/406fdcb532fb000a03015e20bd68c317de1ee8
+Добавлен новый файл: ./.git/objects/48/dad56577075a6d233e2e6add2348c5c517cfab
+Добавлен новый файл: ./.git/objects/4b/78200f12313c4c0c7f36eb0a6614ae13e18bc4
+Добавлен новый файл: ./.git/objects/4c/d0642d60b0e5c6e7951d15c7118fe2c144713e
+Добавлен новый файл: ./.git/objects/4d/959bdb7731c7fc0477a32db8e5154fa6dc14e7
+Добавлен новый файл: ./.git/objects/4f/20cee610b1838ad6d3dfc33f6fdff3a737e755
+Добавлен новый файл: ./.git/objects/50/46d56dbe8582707bbfa3fb4b60d15c35b9410f
+Добавлен новый файл: ./.git/objects/51/a6e5c6e7eb36b32e20cb0ca41b67c391d2ee0e
+Добавлен новый файл: ./.git/objects/54/d8942169d21827f48113ffda9ab698e64cb1a6
+Добавлен новый файл: ./.git/objects/55/2a3fa25af0f0b9247f3b016548ec3267f2a565
+Добавлен новый файл: ./.git/objects/55/9d60eee8af2f1b3d7b431465ff28340edb7601
+Добавлен новый файл: ./.git/objects/58/3012f7f83df1a03b30205e60273ad96310f3b8
+Добавлен новый файл: ./.git/objects/5a/818a63b17865ef920db8207a8493d5d6b2c508
+Добавлен новый файл: ./.git/objects/5b/d9f74365271668dff6f6968e0fbb909683941b
+Добавлен новый файл: ./.git/objects/5c/4c673e435472c62eaf2b76ac86bb0a1c61c412
+Добавлен новый файл: ./.git/objects/5d/6375c0fa3e6550fb183f9d22651492a019ab3d
+Добавлен новый файл: ./.git/objects/5d/994170007b26c272b013bacd5ee190ebf3619f
+Добавлен новый файл: ./.git/objects/5f/09235095d2a060dd5a2b586b24f2c88e3652c8
+Добавлен новый файл: ./.git/objects/60/78c115b42befe37c6289310f817846bb392a5f
+Добавлен новый файл: ./.git/objects/61/bbf66c047fe808a81edd3195f60f2f1b3ca63f
+Добавлен новый файл: ./.git/objects/72/dd889a3ca07ae36ec565afdf5f8e6cbe4d2618
+Добавлен новый файл: ./.git/objects/77/da127e1f3643d115805e4dedca781fb97398c3
+Добавлен новый файл: ./.git/objects/78/5929eef5376083d26f7a8cce6cfb5775962925
+Добавлен новый файл: ./.git/objects/79/1154403b129c022285fb59d2a32716bf9ddc9f
+Добавлен новый файл: ./.git/objects/7b/82c3f6ef250745d47b45eb6ec8fd5924a65573
+Добавлен новый файл: ./.git/objects/7d/880a2f013ea1baa6d3ef4b334bd3b15a37026f
+Добавлен новый файл: ./.git/objects/7d/9344fed2463f30c2c906a180e9adc2a514b430
+Добавлен новый файл: ./.git/objects/7f/3b8a3358d02bee73ee83fdad034acdb15ddc0f
+Добавлен новый файл: ./.git/objects/80/28b91afd55cb659b019b728a6ca1b9b37a8bb8
+Добавлен новый файл: ./.git/objects/80/c4816d443862a3042cc4adf17b5ccdaf932b87
+Добавлен новый файл: ./.git/objects/81/269b69b2a48e964814e20f703b4e9344dff1de
+Добавлен новый файл: ./.git/objects/81/b6f15de4fbdbea7d03051ce11d28b903d231d0
+Добавлен новый файл: ./.git/objects/82/c6f3c7871b7f83c3e0a125fd3a4dfd43b0aa3d
+Добавлен новый файл: ./.git/objects/83/56b8b19b6fc29d608c45bb5a2722f5bdc7d807
+Добавлен новый файл: ./.git/objects/86/52d81baaa0318af1c5a3b5d283985cecdb777d
+Добавлен новый файл: ./.git/objects/86/8a143a656f84b05c68e6089ffacc534aa9371b
+Добавлен новый файл: ./.git/objects/86/e686e335582854889c032bdf9a6e1eda5e7d0b
+Добавлен новый файл: ./.git/objects/87/7d5e79af751f37ccef229a89a6787da6709552
+Добавлен новый файл: ./.git/objects/89/cdc7dd703506569a3c13a37a66b30ef77fcc70
+Добавлен новый файл: ./.git/objects/8a/09e679602435d2459e425b2408d0bf80d16b43
+Добавлен новый файл: ./.git/objects/8a/6061d8919448ba32c0e487c59ba8ce606d6a6f
+Добавлен новый файл: ./.git/objects/8a/67498803268df8fecd4faafb33cba961a0c496
+Добавлен новый файл: ./.git/objects/8a/784fd70b253237585a7b699de7a438454daaa3
+Добавлен новый файл: ./.git/objects/8b/aa710162970befd8df3a9bdfdeda4c6907c4da
+Добавлен новый файл: ./.git/objects/92/25165672aa03e20a53707c4a38254f3a01378f
+Добавлен новый файл: ./.git/objects/94/60c9ef202e22d2750a71cabfcd2ec056520462
+Добавлен новый файл: ./.git/objects/94/992de6e22023134e4510113c8fd7cf53d26374
+Добавлен новый файл: ./.git/objects/95/59a41ad89f9b4f37de142bac3bcbd32e7bba9a
+Добавлен новый файл: ./.git/objects/96/75ddab5c3c3fcaf1605dffe99d04c80d4abe2f
+Добавлен новый файл: ./.git/objects/96/f4adfea66af8a800c9921ef7f87806490e1450
+Добавлен новый файл: ./.git/objects/98/5f3fc57ef5ca659dedf71353f4f237c7968138
+Добавлен новый файл: ./.git/objects/9a/4fa4292e0cf3bd35f7928e68cbb307ffdc1be1
+Добавлен новый файл: ./.git/objects/9b/3fa839d38dab9f9aaf8636bba774a6e987bdff
+Добавлен новый файл: ./.git/objects/9b/8ffd6ca0ac5b1a0c4e5978c6f88d1bdf6a89d2
+Добавлен новый файл: ./.git/objects/9b/a0b2f2e2605e9656380e9d6a5ab3370c85b17c
+Добавлен новый файл: ./.git/objects/a1/842fa32cf10fc8caac2988ca84e4b59951f26f
+Добавлен новый файл: ./.git/objects/a2/4d1a8220d48ee10528cf521e3f42d286b72875
+Добавлен новый файл: ./.git/objects/a3/a123da15f104e750458211546b33b6bc4e9c0e
+Добавлен новый файл: ./.git/objects/a4/f691c00de37689f40c5bc6c0c5bb72c135c795
+Добавлен новый файл: ./.git/objects/ab/179406cea10d67560354a9186df3106b7cc8ef
+Добавлен новый файл: ./.git/objects/ab/ef31d1e3522518035260589851156527a0bac0
+Добавлен новый файл: ./.git/objects/ae/fe5b8c2dfe4007c76d9a7b0a5f7c3951c2ec2c
+Добавлен новый файл: ./.git/objects/b2/5875398f5a3bde6dbaa2856bc74dd6017b84d4
+Добавлен новый файл: ./.git/objects/b2/a0ce0bc531944c1f2edaf3bdb9904bcb5288c3
+Добавлен новый файл: ./.git/objects/b2/fa0642c10f40ffe5097201ff21d712ab0543ca
+Добавлен новый файл: ./.git/objects/b3/0523755ed120fe022cf234b0f0cf87f96d4c85
+Добавлен новый файл: ./.git/objects/b4/7187cb30645901339fe6c02171ce9d30fce9bb
+Добавлен новый файл: ./.git/objects/b5/42ee88224f061c31e56bfc7babd8fe7b6f9246
+Добавлен новый файл: ./.git/objects/b7/bc4377a755f3fae90aa298fc1cb091a89f8894
+Добавлен новый файл: ./.git/objects/b9/00fe8e2730471950fa057f0e418624a65bfc22
+Добавлен новый файл: ./.git/objects/ba/f142fd36c190c8d890590ff6938c0ec9738e12
+Добавлен новый файл: ./.git/objects/bc/2dab4f8a1602bfc2c492a123b4d72e5be0b30d
+Добавлен новый файл: ./.git/objects/bc/770d1325b82f35a0344499a6e63dd2a27f2836
+Добавлен новый файл: ./.git/objects/bd/76686d8a1b1e0e9b3da45d6be8ec7506e6e715
+Добавлен новый файл: ./.git/objects/be/c2de54831de0a20e9a6879fb3f37de99dce80d
+Добавлен новый файл: ./.git/objects/bf/cf9546add677a5fb13ec7f1bfb7754ecee8b99
+Добавлен новый файл: ./.git/objects/c1/9ad2e7b9ed9f78fde0e9fa91f306b7f7409e85
+Добавлен новый файл: ./.git/objects/cb/6bc42873d8579d18adee50978bec0094d2face
+Добавлен новый файл: ./.git/objects/cc/bb1fb43c0ddedb339d4c05d57b9322fd5560f0
+Добавлен новый файл: ./.git/objects/cd/dc4d6c89218b2a5eaadce942d3866c38b2c77a
+Добавлен новый файл: ./.git/objects/d0/9ce395d4f330c1b150e12aca633556de302bb3
+Добавлен новый файл: ./.git/objects/d2/1999fb9ddcf281096e8ea1f1832b1a63dea81b
+Добавлен новый файл: ./.git/objects/d3/58ecc0e10a7696f402222b09962979e2af9c08
+Добавлен новый файл: ./.git/objects/d3/5f6190a74ea96ece871cb6e87893dd88e83811
+Добавлен новый файл: ./.git/objects/d4/2d7ded15c9b0e24fb79799d08bfc2032be1a50
+Добавлен новый файл: ./.git/objects/d4/7ab9ea569a94cce0ed0a75f518f102985d47b5
+Добавлен новый файл: ./.git/objects/d5/bc56abb80de6e5f0a617fbb4d94dc1c8e6e6fc
+Добавлен новый файл: ./.git/objects/d5/e1ea90f6ef315beade922351fa4d740b1f5a7e
+Добавлен новый файл: ./.git/objects/d6/9ab05e61526abcb30d690b37f6dda7bececd6b
+Добавлен новый файл: ./.git/objects/da/184c7bcf4c4356a46e40c5cc4293327b764ff7
+Добавлен новый файл: ./.git/objects/da/c217996cb76892a0011bee6b79a8831cbec8f2
+Добавлен новый файл: ./.git/objects/e1/e32baad9f44d0fb9e87fef996ed40d6350eb9b
+Добавлен новый файл: ./.git/objects/e4/8a802009fbb988ed82759ce02ee502bb6e161b
+Добавлен новый файл: ./.git/objects/e5/c8315baf3dbcac7a623ae631657efed4649221
+Добавлен новый файл: ./.git/objects/e5/f34b325f30a443f95e4c2f73379fecc34ac4a5
+Добавлен новый файл: ./.git/objects/e9/cd2ddef181f0311a333916daad9a274e42bd3e
+Добавлен новый файл: ./.git/objects/ec/93ce3652c12602963bab6b9d698940b512a1af
+Добавлен новый файл: ./.git/objects/f2/11fa5d6022cbe2f71e4cc803844097bb1deb82
+Добавлен новый файл: ./.git/objects/f3/6e3f131f90bb26ec64b0d8d0fba65403bc1f8d
+Добавлен новый файл: ./.git/objects/f4/3fcb16d58ce3b9e3aa50bfc8dddaef4d3cb210
+Добавлен новый файл: ./.git/objects/f5/cdbf80a14d9a8a84ad54f0e0c9920efe8c2ff2
+Добавлен новый файл: ./.git/objects/f7/7edabccaab5cedbce2473c8a54bcee4c8c4a10
+Добавлен новый файл: ./.git/objects/f8/e386529a42aa84ded893f2d3dd72e3373077a3
+Добавлен новый файл: ./.git/objects/f9/c2925b8770dbdfa8501dbc3c19629dae335969
+Добавлен новый файл: ./.git/objects/f9/d383cd29971e715318f57a5e5d4e92ea34c66b
+Добавлен новый файл: ./.git/objects/fb/a984b6040ec9d16ca187280eb560c3630f5500
+Добавлен новый файл: ./.git/objects/fb/f928ace6097fd10759d554940e2e4ba344d6c6
+Добавлен новый файл: ./.git/objects/fc/290e1e2561fcd39c74808969fd5b235c74b274
+Добавлен новый файл: ./.git/objects/ff/09363642c40f4a713ab626243800f9fd93c439
+Добавлен новый файл: ./.git/objects/ff/7dd5204a2d5c978819f77f808e5ef066a412cb
+Добавлен новый файл: ./.git/refs/remotes/offline/HEAD
+Добавлен новый файл: ./.git/refs/remotes/offline/master
+Добавлен новый файл: ./config/changelog.php
+Добавлен новый файл: ./config/fields.php
+Добавлен новый файл: ./config/logs/error_2025-11-27_11-00.txt.gz
+Добавлен новый файл: ./config/logs/error_2025-11-27_11-10.txt.gz
+Добавлен новый файл: ./config/logs/error_2025-11-27_14-10.txt.gz
+Добавлен новый файл: ./config/users.php
+Добавлен новый файл: ./git/MODERNISIERUNG_RULES.md
+Добавлен новый файл: ./storage/backup/.htaccess
+Добавлен новый файл: ./storage/backup/index.html
+Добавлен новый файл: ./storage/backup/sql_slaed_net_2025-11-26_20-00-07.zip
+Добавлен новый файл: ./storage/counter/ips.log
+Изменён файл: ./.git/COMMIT_EDITMSG
+Изменён файл: ./.git/config
+Изменён файл: ./.git/index
+Изменён файл: ./.git/logs/HEAD
+Изменён файл: ./.git/logs/refs/heads/master
+Изменён файл: ./.git/refs/heads/master
+Изменён файл: ./admin/links/links.admin.php
+Изменён файл: ./admin/modules/admins.php
+Изменён файл: ./admin/modules/blocks.php
+Изменён файл: ./admin/modules/changelog.php
+Изменён файл: ./admin/modules/comments.php
+Изменён файл: ./admin/modules/database.php
+Изменён файл: ./admin/modules/fields.php
+Изменён файл: ./admin/modules/groups.php
+Изменён файл: ./admin/modules/lang.php
+Изменён файл: ./admin/modules/sitemap.php
+Изменён файл: ./admin/modules/users.php
+Изменён файл: ./config/config_global.php
+Изменён файл: ./config/counter/days.txt
+Изменён файл: ./config/counter/dump.txt
+Изменён файл: ./config/counter/sess.txt
+Изменён файл: ./config/counter/stat.txt
+Изменён файл: ./config/db.php
+Изменён файл: ./config/logs/error.txt
+Изменён файл: ./config/logs/error_sql.txt
+Изменён файл: ./config/logs/log_admin.txt
+Изменён файл: ./core/core.php
+Изменён файл: ./core/security.php
+Удалён файл: ./config/config_fields.php
+Удалён файл: ./storage/backup/slaed_new_2025-11-11_11-07.sql
+Удалён файл: ./storage/backup/slaed_new_2025-11-11_11-07.zip
+Дата: 28.11.2025 09:42:42
+---
+Gelцschte Datei: ./config/counter/days.txt
+Gelцschte Datei: ./storage/counter/ips.log
+Geänderte Datei: ./.git/COMMIT_EDITMSG
+Geänderte Datei: ./.git/FETCH_HEAD
+Geänderte Datei: ./.git/ORIG_HEAD
+Geänderte Datei: ./.git/index
+Geänderte Datei: ./.git/logs/HEAD
+Geänderte Datei: ./.git/logs/refs/heads/master
+Geänderte Datei: ./.git/logs/refs/remotes/offline/master
+Geänderte Datei: ./.git/refs/heads/master
+Geänderte Datei: ./.git/refs/remotes/offline/master
+Geänderte Datei: ./admin/modules/lang.php
+Geänderte Datei: ./config/counter/dump.txt
+Geänderte Datei: ./config/counter/sess.txt
+Geänderte Datei: ./config/counter/stat.txt
+Geänderte Datei: ./config/logs/error.txt
+Geänderte Datei: ./config/logs/log_admin.txt
+Geänderte Datei: ./plugins/jquery/jquery.slaed.js
+Neue Datei: ./.git/objects/18/e3ac487b06b078b68933ccef7d8c76d49cd24a
+Neue Datei: ./.git/objects/df/3b8c05bc7b40e259f9167d06a944198427b8e2
+Neue Datei: ./.git/objects/e6/4dc170087845a026e39a2d922d9e000a419db0
+Neue Datei: ./.git/objects/f4/ef7298c151e93a9f777cc6055a80e81e33e1b5
+Neue Datei: ./.git/objects/fd/566a6e9e5f9e30085f86d42b03a583fa18e2d0
+Neue Datei: ./config/counter/stat/stat_2025-11.txt
+Datum: 01.12.2025 10:12:03
+---
+Добавлен новый файл: ./admin/language/de.php
+Добавлен новый файл: ./admin/language/en.php
+Добавлен новый файл: ./admin/language/fr.php
+Добавлен новый файл: ./admin/language/pl.php
+Добавлен новый файл: ./admin/language/ru.php
+Добавлен новый файл: ./admin/language/uk.php
+Добавлен новый файл: ./config/counter/days.txt
+Добавлен новый файл: ./config/lang.php
+Добавлен новый файл: ./language/de.php
+Добавлен новый файл: ./language/en.php
+Добавлен новый файл: ./language/fr.php
+Добавлен новый файл: ./language/pl.php
+Добавлен новый файл: ./language/ru.php
+Добавлен новый файл: ./language/uk.php
+Добавлен новый файл: ./storage/counter/ips.log
+Изменён файл: ./.git/index
+Изменён файл: ./admin/modules/admins.php
+Изменён файл: ./admin/modules/blocks.php
+Изменён файл: ./admin/modules/categories.php
+Изменён файл: ./admin/modules/changelog.php
+Изменён файл: ./admin/modules/comments.php
+Изменён файл: ./admin/modules/configure.php
+Изменён файл: ./admin/modules/editor.php
+Изменён файл: ./admin/modules/favorites.php
+Изменён файл: ./admin/modules/fields.php
+Изменён файл: ./admin/modules/groups.php
+Изменён файл: ./admin/modules/lang.php
+Изменён файл: ./admin/modules/messages.php
+Изменён файл: ./config/config_global.php
+Изменён файл: ./config/counter/dump.txt
+Изменён файл: ./config/counter/sess.txt
+Изменён файл: ./config/counter/stat.txt
+Изменён файл: ./config/logs/error.txt
+Изменён файл: ./config/logs/log_admin.txt
+Изменён файл: ./core/admin.php
+Изменён файл: ./core/core.php
+Изменён файл: ./core/security.php
+Изменён файл: ./index.php
+Изменён файл: ./plugins/jquery/jquery.slaed.js
+Удалён файл: ./admin/language/lang-english.php
+Удалён файл: ./admin/language/lang-french.php
+Удалён файл: ./admin/language/lang-german.php
+Удалён файл: ./admin/language/lang-polish.php
+Удалён файл: ./admin/language/lang-russian.php
+Удалён файл: ./admin/language/lang-ukrainian.php
+Удалён файл: ./config/config_lang.php
+Удалён файл: ./language/lang-english.php
+Удалён файл: ./language/lang-french.php
+Удалён файл: ./language/lang-german.php
+Удалён файл: ./language/lang-polish.php
+Удалён файл: ./language/lang-russian.php
+Удалён файл: ./language/lang-ukrainian.php
+Дата: 02.12.2025 11:00:53
+---
+Ajout d'un nouveau fichier: ./lang-english.php
+Ajout d'un nouveau fichier: ./setup/language/de.php
+Ajout d'un nouveau fichier: ./setup/language/en.php
+Ajout d'un nouveau fichier: ./setup/language/fr.php
+Ajout d'un nouveau fichier: ./setup/language/pl.php
+Ajout d'un nouveau fichier: ./setup/language/ru.php
+Ajout d'un nouveau fichier: ./setup/language/uk.php
+Ajout d'un nouveau fichier: ./setup/templates/images/de.png
+Ajout d'un nouveau fichier: ./setup/templates/images/en.png
+Ajout d'un nouveau fichier: ./setup/templates/images/fr.png
+Ajout d'un nouveau fichier: ./setup/templates/images/pl.png
+Ajout d'un nouveau fichier: ./setup/templates/images/ru.png
+Ajout d'un nouveau fichier: ./setup/templates/images/uk.png
+Modifier un fichier: ./.git/index
+Modifier un fichier: ./admin/admin.php
+Modifier un fichier: ./admin/modules/blocks.php
+Modifier un fichier: ./admin/modules/changelog.php
+Modifier un fichier: ./admin/modules/configure.php
+Modifier un fichier: ./admin/modules/lang.php
+Modifier un fichier: ./blocks/block-languages.php
+Modifier un fichier: ./blocks/block-user_info.php
+Modifier un fichier: ./blocks/block-voting.php
+Modifier un fichier: ./config/config_global.php
+Modifier un fichier: ./config/counter/days.txt
+Modifier un fichier: ./config/counter/dump.txt
+Modifier un fichier: ./config/counter/sess.txt
+Modifier un fichier: ./config/counter/stat.txt
+Modifier un fichier: ./config/lang.php
+Modifier un fichier: ./config/logs/error.txt
+Modifier un fichier: ./config/logs/log_admin.txt
+Modifier un fichier: ./core/core.php
+Modifier un fichier: ./core/user.php
+Modifier un fichier: ./language/fr.php
+Modifier un fichier: ./modules/account/index.php
+Modifier un fichier: ./modules/contact/index.php
+Modifier un fichier: ./modules/forum/index.php
+Modifier un fichier: ./modules/voting/index.php
+Modifier un fichier: ./modules/whois/index.php
+Modifier un fichier: ./setup/setup.php
+Modifier un fichier: ./templates/admin/index.php
+Supprimé le fichier: ./setup/language/lang-english.php
+Supprimé le fichier: ./setup/language/lang-french.php
+Supprimé le fichier: ./setup/language/lang-german.php
+Supprimé le fichier: ./setup/language/lang-polish.php
+Supprimé le fichier: ./setup/language/lang-russian.php
+Supprimé le fichier: ./setup/language/lang-ukrainian.php
+Supprimé le fichier: ./setup/templates/images/english.png
+Supprimé le fichier: ./setup/templates/images/french.png
+Supprimé le fichier: ./setup/templates/images/german.png
+Supprimé le fichier: ./setup/templates/images/polish.png
+Supprimé le fichier: ./setup/templates/images/russian.png
+Supprimé le fichier: ./setup/templates/images/ukrainian.png
+Date: 03.12.2025 13:04:31
+---
+Добавлен новый файл: ./.claude/settings.local.json
+Добавлен новый файл: ./.git/objects/01/108d09c6d2f908296d73b8f756a7489e63406e
+Добавлен новый файл: ./.git/objects/01/3d5b4e875ab66da0d16914ecfab5d4e69c30d0
+Добавлен новый файл: ./.git/objects/01/55f1fa50e15fc8cb836843760e53153bf832e2
+Добавлен новый файл: ./.git/objects/05/45c9602d85645d0645f7c156f35ca2e2e48f62
+Добавлен новый файл: ./.git/objects/08/b3f32506b4a3f75bc78cefdf2f4c6ef30f129d
+Добавлен новый файл: ./.git/objects/08/fe5827cc5033084a34701ac70f8433120d3126
+Добавлен новый файл: ./.git/objects/0a/009b417f679ff77f526654e9fc0506bfbbf87f
+Добавлен новый файл: ./.git/objects/12/198227418bcded76800db8521af38a9cd2f685
+Добавлен новый файл: ./.git/objects/12/4cd5c8e028e8ed32792d72e16f79ef7ee7d827
+Добавлен новый файл: ./.git/objects/14/612128c4743ee2c9795c813fbed141d26794d4
+Добавлен новый файл: ./.git/objects/17/17cc306337a99ac942560db78fe59e80c3d478
+Добавлен новый файл: ./.git/objects/17/6802e83d91a443ec47e16b961c3ffa952649ce
+Добавлен новый файл: ./.git/objects/18/9bf46d582b86b56b516acd65a45be10166f1d9
+Добавлен новый файл: ./.git/objects/19/dd9910b4487edae80421b624521a4771b4a0fa
+Добавлен новый файл: ./.git/objects/1e/d6b9900e5cb4e572a0bad2edab49d54e345177
+Добавлен новый файл: ./.git/objects/1f/1abab639afb4c5fdfcd3a92d44f5a3d4f804ba
+Добавлен новый файл: ./.git/objects/20/4c436bd5268e4cca9b21b033e76963bf0942df
+Добавлен новый файл: ./.git/objects/21/9f9644f39a8e5e75a3b656ecb225b21c785caa
+Добавлен новый файл: ./.git/objects/22/62acf3c45d97430a5df1a4df289e2a1e4aa0f7
+Добавлен новый файл: ./.git/objects/22/dafc5d1657d74c7a87e56f36494ac6c3b33850
+Добавлен новый файл: ./.git/objects/29/cf59a0400582952b6a8379ffaf29cf39624c49
+Добавлен новый файл: ./.git/objects/2c/02ad595991adbf414ccde5c6758b0f4bee9ea4
+Добавлен новый файл: ./.git/objects/2c/9bdd4704011a7b972762a99cafad090857ee00
+Добавлен новый файл: ./.git/objects/2c/d6a9a2dd6c074585bd04ea30b258f5d5f3b7ad
+Добавлен новый файл: ./.git/objects/30/b7c4fec720966eed9069e9af445f4aaa8f7257
+Добавлен новый файл: ./.git/objects/31/92d773593b4f4783d88fdb456571a74d6ce24e
+Добавлен новый файл: ./.git/objects/31/c79f4885f11aae0e9caa97dab68388993ca078
+Добавлен новый файл: ./.git/objects/3a/c4c781874a96e0f833986ce3574d4d6b485843
+Добавлен новый файл: ./.git/objects/3b/a7a18322a193f8557b4822969ab46a7cf4aa74
+Добавлен новый файл: ./.git/objects/3f/facff1e0ca3e73fff01dc1eedb5e1e556d12a4
+Добавлен новый файл: ./.git/objects/40/0a2a2d64cc4d74711c81f74fa108d7fdc8b454
+Добавлен новый файл: ./.git/objects/41/10255cf413ab86bd0a350dcddef17de3c68991
+Добавлен новый файл: ./.git/objects/41/fe5c3599504d9c6a90d0833449c63213d6dd38
+Добавлен новый файл: ./.git/objects/48/0acd254f3d9e4c2ddcdb143d310a0b7a273571
+Добавлен новый файл: ./.git/objects/4f/5964fa8cd2238a1130ef5b9269910ae3b69a03
+Добавлен новый файл: ./.git/objects/53/3ceacf955472a29dfc5d8bc6befe4c431e006a
+Добавлен новый файл: ./.git/objects/53/b3eb74c6d85945e120418ac75b07008ceb1f48
+Добавлен новый файл: ./.git/objects/54/e26b8ec855feaa434f337a23218e5d2fd224d6
+Добавлен новый файл: ./.git/objects/58/8a648168312374a17a1bcc6b94dbb79186f32b
+Добавлен новый файл: ./.git/objects/59/a678e89440f7d0148494fd18b6d000da5f8844
+Добавлен новый файл: ./.git/objects/5b/919c050ef1f1e029cceb2e13a594c223cd2dad
+Добавлен новый файл: ./.git/objects/5c/a5a9bf5bde8e844718a51811a3472f8f300d6b
+Добавлен новый файл: ./.git/objects/68/2f6aac97d62c92dd937791ef214e73a15ace8e
+Добавлен новый файл: ./.git/objects/6a/e7041f8976974b478a156154e1349beb8bf4ca
+Добавлен новый файл: ./.git/objects/6c/71766fd8c78788abb5bb3f9f474ce9d7270ebf
+Добавлен новый файл: ./.git/objects/70/6f4ce8700167339f147a241d6f7a4f38bb84dd
+Добавлен новый файл: ./.git/objects/72/e648745c179cef10cc5b0857c1c9da204b32d2
+Добавлен новый файл: ./.git/objects/73/33b7f21e5d81f90196c259fb73cbb2881dc790
+Добавлен новый файл: ./.git/objects/75/6771f110acdd9413f8107dd41df47608759af4
+Добавлен новый файл: ./.git/objects/76/bebbc28e39ec0090b41c3012df8cf498f532fd
+Добавлен новый файл: ./.git/objects/78/891915e599840ba5ea2d075a10308bef855b68
+Добавлен новый файл: ./.git/objects/79/583c23b6bde8b04893963f4aa8e1162eddfc3e
+Добавлен новый файл: ./.git/objects/7a/228ca74146f5bec988a737ddd3d7f15acafb62
+Добавлен новый файл: ./.git/objects/7a/c45a5aa994ccc3c8f9c242de000f132b3540f5
+Добавлен новый файл: ./.git/objects/7b/740ed19fcb53c17732a9daa0c5c1eae74c452b
+Добавлен новый файл: ./.git/objects/7d/8bcb18b90f643b644c3f62a62a367e7d9e0f51
+Добавлен новый файл: ./.git/objects/82/05d6f490b3ecadcb79c9334281ed97564ba21e
+Добавлен новый файл: ./.git/objects/82/77a82a93bc9101ae6afeb23d613655835254cd
+Добавлен новый файл: ./.git/objects/83/1b7bcb97397e3ef968fd3ce7360444dcdde829
+Добавлен новый файл: ./.git/objects/83/30f5a2de0dcc634c30160e0d698fd5da8a3c5a
+Добавлен новый файл: ./.git/objects/84/30d3ee6ecd232549a40e22873bc50d8f5b64ea
+Добавлен новый файл: ./.git/objects/86/052f3cbcc5d2187137a9c15278b89bcd86160c
+Добавлен новый файл: ./.git/objects/88/c5e680f6bfb8b355ae4c390303b116754ace8d
+Добавлен новый файл: ./.git/objects/88/dc8ad6e83a31c26cf85cd222206d4d47f73d3f
+Добавлен новый файл: ./.git/objects/89/b131e82bda62e983aa0a8750c2e3c7ecefbce3
+Добавлен новый файл: ./.git/objects/8c/0ff98441a3d7b502d457a50837d68fea319ca5
+Добавлен новый файл: ./.git/objects/8f/ed6d56996495ad208a584712b2978cb90126af
+Добавлен новый файл: ./.git/objects/90/fcf5b0a6142f5542379982d425cc3dbb1652c0
+Добавлен новый файл: ./.git/objects/91/783d2dc69de4c7c3e7c7df4b251470cc9e50e0
+Добавлен новый файл: ./.git/objects/92/a6365146ac2a75a4bb0a2a365a4f3f0362b0ce
+Добавлен новый файл: ./.git/objects/95/f56017a0563ea2bd47e78e432522e05378b8c4
+Добавлен новый файл: ./.git/objects/95/f5999937313907c11c923ca46d94db6f603284
+Добавлен новый файл: ./.git/objects/9f/0adc720c003481099a570f9997dc175c94c630
+Добавлен новый файл: ./.git/objects/a1/3a81027d2db71d59265dab848c8ad98df1bb40
+Добавлен новый файл: ./.git/objects/a1/e716b084b5edcfb24e455921ab50c9585ee55c
+Добавлен новый файл: ./.git/objects/a4/80e60d59fe7c8fd0056dd04c20ae9a246516db
+Добавлен новый файл: ./.git/objects/a7/ca666b3f9483f46d35ed759ba672597ebe4606
+Добавлен новый файл: ./.git/objects/ab/76de6b49f52b824d814bf2f755385b76e16f87
+Добавлен новый файл: ./.git/objects/ab/ddab08018d815b72591fa8fb96ca2deac46a88
+Добавлен новый файл: ./.git/objects/ac/267d3c57faceb22dbce86052085d0e4b3b472a
+Добавлен новый файл: ./.git/objects/b1/eb84b4f66ae3cb94ddd2b42c920ffcc535a9a6
+Добавлен новый файл: ./.git/objects/b3/1b312ccd0ab86dbe8574136f7c0c7526019df6
+Добавлен новый файл: ./.git/objects/b3/5472b0d77485d09482c2dd4ba8f86b1cde4423
+Добавлен новый файл: ./.git/objects/b3/96e9d7ca30690faf4f196fb86fb6058aaac307
+Добавлен новый файл: ./.git/objects/b4/a066584ec0b7c6e90c26c4190973dffbbe90ca
+Добавлен новый файл: ./.git/objects/bc/03a60ddafa7c2a4e493c0f210b75e46c9d234f
+Добавлен новый файл: ./.git/objects/bc/79b7907b1a978b574dc9297f60ac002737b8a5
+Добавлен новый файл: ./.git/objects/bc/af688af3ac4fd7fd866093ac774d11ee79e9ee
+Добавлен новый файл: ./.git/objects/bf/e91ce9aa150e9dca3f302a0b1d853f023f6518
+Добавлен новый файл: ./.git/objects/c3/69deba4137ed931d835c5374f55172cea16eaa
+Добавлен новый файл: ./.git/objects/c5/5ab210d93fc51d2905003b59d8832c39514d47
+Добавлен новый файл: ./.git/objects/cb/10b9696ba2604c845cd5d4e68e4baf14e1a8e5
+Добавлен новый файл: ./.git/objects/cb/920fa38ff9aaf14bb9cb094c89544ed8227429
+Добавлен новый файл: ./.git/objects/cd/41176aa8f740640f7639e70778383c17336c4a
+Добавлен новый файл: ./.git/objects/cd/68d1ff897c95e58753f0ecad08eaec5e6b1351
+Добавлен новый файл: ./.git/objects/d4/5bd5e0393a776126049a37586861bf6dc2eb2d
+Добавлен новый файл: ./.git/objects/da/87e8d99bb22fe55909b558f16035efd8f50e96
+Добавлен новый файл: ./.git/objects/db/f8e1c3f2887d780f6f079f6a1860f35964fdce
+Добавлен новый файл: ./.git/objects/dc/8690585ac9c69f4f7dfab6b36df58cb05ce6ad
+Добавлен новый файл: ./.git/objects/de/4744032d5f5f449048b5a46201759b29384c04
+Добавлен новый файл: ./.git/objects/e2/0a8bc9c967c5fb7f57a9a94c4fd2d44a542952
+Добавлен новый файл: ./.git/objects/e2/6707eebb8b95d83479807d25d25643fb45abbd
+Добавлен новый файл: ./.git/objects/e2/9c66120a834c901c6312591363277f2bf6b70d
+Добавлен новый файл: ./.git/objects/e2/9d9679d94a7056060915da4be5c08df541b916
+Добавлен новый файл: ./.git/objects/e4/3647c3666b36723f8b928811b4c9d511961fb1
+Добавлен новый файл: ./.git/objects/e7/854d9e8d49441752adc916b15c880e2fa152bc
+Добавлен новый файл: ./.git/objects/ed/5c7a9080fa1e1a5c0775341992fcc9941fb854
+Добавлен новый файл: ./.git/objects/ed/cdc2a9c90a05b9ee29876783f4dc1a6b754de4
+Добавлен новый файл: ./.git/objects/f1/9391ecf019f78b6b1b5191ce9eed9dbed56d6e
+Добавлен новый файл: ./.git/objects/f2/6b81c237c036feb779ac4bab284ee548768484
+Добавлен новый файл: ./.git/objects/f3/4a57f94e6d6101a3599e091bef3c46d4bb6641
+Добавлен новый файл: ./.git/objects/f5/a7f8526e89ea4766a6ba3f46056dfe8fe3030b
+Добавлен новый файл: ./.git/objects/f8/8988c6883fc602ec4bbb16325bc73e384eff92
+Добавлен новый файл: ./.git/objects/f8/8b3d64cf85ab352e31d444eef7ebac151747d0
+Добавлен новый файл: ./.git/objects/fb/f0498ee0cb962cf67b86ceeef926bd78246fa1
+Добавлен новый файл: ./.git/objects/fc/9aebf17f73fa9b0e6ebc648f821d77405e3594
+Добавлен новый файл: ./.git/objects/fe/b6858c30e0728118f892a3b5901bd59d450fbe
+Добавлен новый файл: ./admin/modules/config.php
+Изменён файл: ./.git/COMMIT_EDITMSG
+Изменён файл: ./.git/index
+Изменён файл: ./.git/logs/HEAD
+Изменён файл: ./.git/logs/refs/heads/master
+Изменён файл: ./.git/refs/heads/master
+Изменён файл: ./admin/admin.php
+Изменён файл: ./admin/modules/admins.php
+Изменён файл: ./admin/modules/blocks.php
+Изменён файл: ./admin/modules/categories.php
+Изменён файл: ./admin/modules/changelog.php
+Изменён файл: ./admin/modules/comments.php
+Изменён файл: ./admin/modules/database.php
+Изменён файл: ./admin/modules/editor.php
+Изменён файл: ./admin/modules/favorites.php
+Изменён файл: ./admin/modules/fields.php
+Изменён файл: ./admin/modules/groups.php
+Изменён файл: ./admin/modules/lang.php
+Изменён файл: ./admin/modules/messages.php
+Изменён файл: ./admin/modules/modules.php
+Изменён файл: ./admin/modules/newsletter.php
+Изменён файл: ./admin/modules/privat.php
+Изменён файл: ./config/config_global.php
+Изменён файл: ./config/config_security.php
+Изменён файл: ./config/counter/days.txt
+Изменён файл: ./config/counter/dump.txt
+Изменён файл: ./config/counter/sess.txt
+Изменён файл: ./config/counter/stat.txt
+Изменён файл: ./config/db.php
+Изменён файл: ./config/logs/error.txt
+Изменён файл: ./config/logs/log_admin.txt
+Изменён файл: ./core/admin.php
+Изменён файл: ./core/security.php
+Изменён файл: ./setup/language/de.php
+Изменён файл: ./setup/language/en.php
+Изменён файл: ./setup/language/fr.php
+Изменён файл: ./setup/language/pl.php
+Изменён файл: ./setup/language/ru.php
+Изменён файл: ./setup/language/uk.php
+Изменён файл: ./setup/setup.php
+Удалён файл: ./admin/links/.htaccess
+Удалён файл: ./admin/links/index.html
+Удалён файл: ./admin/links/links.admin.php
+Удалён файл: ./admin/modules/configure.php
+Удалён файл: ./lang-english.php
+Дата: 04.12.2025 13:14:26
+---
+Добавлен новый файл: ./.git/objects/00/255a32ccbaf49a9cafac761df2281ed63dda17
+Добавлен новый файл: ./.git/objects/02/3ffaf5ab789fefe16bdf84e434a2ad84240e82
+Добавлен новый файл: ./.git/objects/0a/9ba1c62758c0441bf410fab1a9ef1dd5c48760
+Добавлен новый файл: ./.git/objects/0c/f456187c587f869a5a091aace90a1873c1f6cd
+Добавлен новый файл: ./.git/objects/0d/73527f1296dedacb168afd0672678f0a6fe95e
+Добавлен новый файл: ./.git/objects/0d/eb70d3c05d72eaaec96ad3d6e69ae7c5a4d5df
+Добавлен новый файл: ./.git/objects/12/0114bb53458c951914631f92f0be58c3becc17
+Добавлен новый файл: ./.git/objects/12/05c178ac1f96159318e5b9e4d31382dd593d70
+Добавлен новый файл: ./.git/objects/17/c96dc2871536e9b7d52cdc767f8d116802230c
+Добавлен новый файл: ./.git/objects/1b/377f6cd46e2f3bf7624952a2dc939bf9226fa7
+Добавлен новый файл: ./.git/objects/23/5fc4c22714686a6acb68cc48bc5b14c6bf964d
+Добавлен новый файл: ./.git/objects/27/2c369775214485dd560752a99aede882b4fc23
+Добавлен новый файл: ./.git/objects/29/ee10be2d2a8e97e681ca349215dc1e5a31fb50
+Добавлен новый файл: ./.git/objects/2c/32570856886c4911bb142b46ebe3297cfa3e64
+Добавлен новый файл: ./.git/objects/30/6252ff260833880c4dbc3bc09539c7ff4143ac
+Добавлен новый файл: ./.git/objects/34/45b6e3c31e6abe3f58b01cd1c5e0c94547407c
+Добавлен новый файл: ./.git/objects/37/382d50cee952288074b66bfd9684f780ff3fcf
+Добавлен новый файл: ./.git/objects/39/7529742c9b6ca0d3bba2edc63a691ad4947793
+Добавлен новый файл: ./.git/objects/39/f43ac004d43e72883fad42436a42b0eb794457
+Добавлен новый файл: ./.git/objects/3a/96235bfaa0f0f30daa4b2e0591fa3bd2afe4f8
+Добавлен новый файл: ./.git/objects/40/c28f223a29f98247394e37e52305458579c1bf
+Добавлен новый файл: ./.git/objects/41/f23c5631e8d53097ca795840f711501daac0e5
+Добавлен новый файл: ./.git/objects/44/2e85067859f24f7b4ff7c52b5cf6cd64b03a25
+Добавлен новый файл: ./.git/objects/45/26a1f1036b8b5f98d20ea3605c110f2a9f3e4b
+Добавлен новый файл: ./.git/objects/47/c380b881bd44110d805e1d90120bc3b57f948e
+Добавлен новый файл: ./.git/objects/4e/deab218bbd5cc188646ee024c537a2f7dae019
+Добавлен новый файл: ./.git/objects/52/220d02bb4fbde6fd06d162014abe1f024b7bad
+Добавлен новый файл: ./.git/objects/52/d81c18a8870bce6427df1a60f4d9ecc23827fc
+Добавлен новый файл: ./.git/objects/53/5cab3855f4ee9371cdd9fec17cb03a9dd8634f
+Добавлен новый файл: ./.git/objects/54/00b795027928c92be517cc07f7959402a19f0c
+Добавлен новый файл: ./.git/objects/54/4229574cb282557e1b3d25410ef5f826cc4678
+Добавлен новый файл: ./.git/objects/54/f7781c0ddd88dd91c8508e01c08e3f4d68544d
+Добавлен новый файл: ./.git/objects/59/8b6944f850e4b868a4339cc816beb5092cb2fd
+Добавлен новый файл: ./.git/objects/5a/955923b8e245976e1538d88b6f9584a9130773
+Добавлен новый файл: ./.git/objects/5c/52c51c292f1b111a003ffa72a82d8d4d000964
+Добавлен новый файл: ./.git/objects/5d/43f7df971dca46aace18ae1e5caf5fe3c1e3a2
+Добавлен новый файл: ./.git/objects/5e/476bf8f4c05705e71f2d217657abecda76ba93
+Добавлен новый файл: ./.git/objects/5f/040e8120a401042b1a8dd71e9672e0749df12c
+Добавлен новый файл: ./.git/objects/5f/0c9f26e2e9102e3a9604883822ec00c4661502
+Добавлен новый файл: ./.git/objects/62/680533d5eda3aa435d36d9797f3bd849bd381c
+Добавлен новый файл: ./.git/objects/66/4035505ce30a2e7f16debcd65df8bd74397c81
+Добавлен новый файл: ./.git/objects/66/529f489f23093cdd36869a940b68748115a4d9
+Добавлен новый файл: ./.git/objects/66/bc1d63580d4a67176145157fa54a3d8fa8e650
+Добавлен новый файл: ./.git/objects/69/765148bdec7f1b28e52c2e3a692e705f765206
+Добавлен новый файл: ./.git/objects/6a/732e62323f6ca23ec7060eaa96f8217a8783ea
+Добавлен новый файл: ./.git/objects/6c/8934e93716a1c755e05fe543910b2af1401d46
+Добавлен новый файл: ./.git/objects/71/3f5449ae91ee336a23c4876a438f794328529c
+Добавлен новый файл: ./.git/objects/73/50edce7d6409d000a472f50a718562f77b5603
+Добавлен новый файл: ./.git/objects/74/5c06facc26bd334e11310c85ebf118f6b8ad4e
+Добавлен новый файл: ./.git/objects/77/72f0426dfdc18271ede338cedb35a880269d0c
+Добавлен новый файл: ./.git/objects/80/7638a551acc9ea5a76c5c0d01d466edb718593
+Добавлен новый файл: ./.git/objects/86/e670a180ff212523ee71ff81f8592b7b99254e
+Добавлен новый файл: ./.git/objects/89/dd551d1ea59249c64edd684b349b6aa557b16a
+Добавлен новый файл: ./.git/objects/8b/118775dcc2609797244b03b2fd99ee0460b5dd
+Добавлен новый файл: ./.git/objects/8b/4db2dd8b1f1ba252c30e63eaf4549e10502d7e
+Добавлен новый файл: ./.git/objects/8c/a2cb5e189f0b3faac6ca77f087e71fb83ca803
+Добавлен новый файл: ./.git/objects/90/2ce33e53aa1e67d7d9cea3b0a4e832227c6c6c
+Добавлен новый файл: ./.git/objects/95/2f45653bc27720184eeff61585312b7f23e977
+Добавлен новый файл: ./.git/objects/96/872e758851b4b2da2cb9fe3a5144c64137af07
+Добавлен новый файл: ./.git/objects/98/0d2957da384f1a37c65f78e2bb1013216c0c28
+Добавлен новый файл: ./.git/objects/99/b3c57cc984cb97c8d9300d1204a8fd4b23beaa
+Добавлен новый файл: ./.git/objects/9b/aa4eac4e0c53eea96c646d6c21224e7f20f01c
+Добавлен новый файл: ./.git/objects/9e/b87c44aad7dcef9373428f16326ee31febc0a7
+Добавлен новый файл: ./.git/objects/a6/9efdb07cda0103781f36639ca247c100957a93
+Добавлен новый файл: ./.git/objects/a7/5e90c858743195bda95731a73e0ddcd74d60d3
+Добавлен новый файл: ./.git/objects/a8/2d7aad47473eca1693e4c7348d6d9f19fa134d
+Добавлен новый файл: ./.git/objects/a9/8f973f99c125db16b265d596b612537c15ab4d
+Добавлен новый файл: ./.git/objects/b0/221a6df722b4520e746a0dca71b76dd7dca8df
+Добавлен новый файл: ./.git/objects/b1/f6c967223f90625f12fb24d0b745a1def7dc8c
+Добавлен новый файл: ./.git/objects/b4/47c491a1e27c475a00c09bef971d64bc5a8edb
+Добавлен новый файл: ./.git/objects/b9/da10d3118973f40d49e2ea74e375504084d1ef
+Добавлен новый файл: ./.git/objects/bd/93234b056fa2838a4fdcca5664dd6479aed6f1
+Добавлен новый файл: ./.git/objects/be/ef3e6fd096bcbfe9d5858e95f373fdd9c65a98
+Добавлен новый файл: ./.git/objects/c7/fe605909c3b450af72b00cfb7dd0e7359e41b2
+Добавлен новый файл: ./.git/objects/c9/1b36d9fc661e81d3457310d7dcf60c235b563e
+Добавлен новый файл: ./.git/objects/ca/e3fddd13e7dbf92ef5dee9a813f51cb3c7698a
+Добавлен новый файл: ./.git/objects/cb/2dec7cbdb1a6bf4f787e961eb1dcd046fd3f6e
+Добавлен новый файл: ./.git/objects/ce/549f9814430ba840dd8535ea6a84dffca7b970
+Добавлен новый файл: ./.git/objects/d2/1ba9c4dfe262531438d5a2ca057b0afdc2e7ec
+Добавлен новый файл: ./.git/objects/d3/538a4224733a74db43bec0e02c5a7aa6ec8d7f
+Добавлен новый файл: ./.git/objects/d6/38f8b27edde02438fa914410e25184a8ac6799
+Добавлен новый файл: ./.git/objects/d9/eadc51f6a2888d413b3388c32a2ee972115c4a
+Добавлен новый файл: ./.git/objects/db/25362393c1bf0b38611a57044bfb8cdb1f33d7
+Добавлен новый файл: ./.git/objects/dc/f854a9d142d99d5b81ded31eba754b0e23210d
+Добавлен новый файл: ./.git/objects/de/e40ccc0a3bf66c372ea05ba7857c73af955a1f
+Добавлен новый файл: ./.git/objects/e0/481932565c89527d818aeb3055fb7e03e6849c
+Добавлен новый файл: ./.git/objects/e2/2346be459413068c1012809704350217627915
+Добавлен новый файл: ./.git/objects/e5/c1d15be70d84e642aa14ad4a9c8da8508fa6c4
+Добавлен новый файл: ./.git/objects/eb/93badbca233409416366f16f47a0c6182125e1
+Добавлен новый файл: ./.git/objects/ec/c36a78f07884870b71021a8ec98f947f45771d
+Добавлен новый файл: ./.git/objects/ed/446f8003143e722600e0e99a65aab163aa6c66
+Добавлен новый файл: ./.git/objects/f2/d7f305a4d9b2df8c91dd5415a577f00a3b2682
+Добавлен новый файл: ./.git/objects/f9/46e50bce51c8b399fe1ca2af1375bb46dd6548
+Добавлен новый файл: ./.git/objects/fd/1f4cfc83cf37b606d977c345d4b15d36e1cdfd
+Добавлен новый файл: ./.git/objects/ff/c63a9e094cceb3763643703e6fc9a20571afc5
+Добавлен новый файл: ./.git/objects/ff/f5ee8ef0cd6bd0d2f6f00709803b27df28b7ed
+Добавлен новый файл: ./admin/index.php
+Добавлен новый файл: ./admin/info/admins-de.html
+Добавлен новый файл: ./admin/info/admins-en.html
+Добавлен новый файл: ./admin/info/admins-fr.html
+Добавлен новый файл: ./admin/info/admins-pl.html
+Добавлен новый файл: ./admin/info/admins-ru.html
+Добавлен новый файл: ./admin/info/admins-uk.html
+Изменён файл: ./.claude/settings.local.json
+Изменён файл: ./.git/COMMIT_EDITMSG
+Изменён файл: ./.git/index
+Изменён файл: ./.git/logs/HEAD
+Изменён файл: ./.git/logs/refs/heads/master
+Изменён файл: ./.git/refs/heads/master
+Изменён файл: ./admin.php
+Изменён файл: ./admin/modules/admins.php
+Изменён файл: ./admin/modules/blocks.php
+Изменён файл: ./admin/modules/categories.php
+Изменён файл: ./admin/modules/changelog.php
+Изменён файл: ./admin/modules/comments.php
+Изменён файл: ./admin/modules/config.php
+Изменён файл: ./admin/modules/database.php
+Изменён файл: ./admin/modules/editor.php
+Изменён файл: ./admin/modules/favorites.php
+Изменён файл: ./admin/modules/fields.php
+Изменён файл: ./admin/modules/groups.php
+Изменён файл: ./admin/modules/lang.php
+Изменён файл: ./admin/modules/messages.php
+Изменён файл: ./admin/modules/modules.php
+Изменён файл: ./admin/modules/newsletter.php
+Изменён файл: ./admin/modules/privat.php
+Изменён файл: ./admin/modules/ratings.php
+Изменён файл: ./admin/modules/referers.php
+Изменён файл: ./admin/modules/replace.php
+Изменён файл: ./admin/modules/rss.php
+Изменён файл: ./admin/modules/security.php
+Изменён файл: ./admin/modules/sitemap.php
+Изменён файл: ./admin/modules/stat.php
+Изменён файл: ./admin/modules/template.php
+Изменён файл: ./admin/modules/uploads.php
+Изменён файл: ./admin/modules/users.php
+Изменён файл: ./config/counter/days.txt
+Изменён файл: ./config/counter/dump.txt
+Изменён файл: ./config/counter/sess.txt
+Изменён файл: ./config/counter/stat.txt
+Изменён файл: ./config/logs/error.txt
+Изменён файл: ./core/admin.php
+Изменён файл: ./core/core.php
+Изменён файл: ./core/security.php
+Изменён файл: ./core/user.php
+Изменён файл: ./index.php
+Удалён файл: ./admin/admin.php
+Удалён файл: ./admin/info/admins-english.html
+Удалён файл: ./admin/info/admins-french.html
+Удалён файл: ./admin/info/admins-german.html
+Удалён файл: ./admin/info/admins-polish.html
+Удалён файл: ./admin/info/admins-russian.html
+Удалён файл: ./admin/info/admins-ukrainian.html
+Удалён файл: ./storage/counter/ips.log
+Дата: 08.12.2025 13:05:53
+---
+Добавлен новый файл: ./.claude/modernization-rules.md
+Добавлен новый файл: ./admin/info/blocks-de.html
+Добавлен новый файл: ./admin/info/blocks-en.html
+Добавлен новый файл: ./admin/info/blocks-fr.html
+Добавлен новый файл: ./admin/info/blocks-pl.html
+Добавлен новый файл: ./admin/info/blocks-ru.html
+Добавлен новый файл: ./admin/info/blocks-uk.html
+Добавлен новый файл: ./admin/info/categories-de.html
+Добавлен новый файл: ./admin/info/categories-en.html
+Добавлен новый файл: ./admin/info/categories-fr.html
+Добавлен новый файл: ./admin/info/categories-pl.html
+Добавлен новый файл: ./admin/info/categories-ru.html
+Добавлен новый файл: ./admin/info/categories-uk.html
+Добавлен новый файл: ./admin/info/comments-de.html
+Добавлен новый файл: ./admin/info/comments-en.html
+Добавлен новый файл: ./admin/info/comments-fr.html
+Добавлен новый файл: ./admin/info/comments-pl.html
+Добавлен новый файл: ./admin/info/comments-ru.html
+Добавлен новый файл: ./admin/info/comments-uk.html
+Добавлен новый файл: ./admin/info/configure-de.html
+Добавлен новый файл: ./admin/info/configure-en.html
+Добавлен новый файл: ./admin/info/configure-fr.html
+Добавлен новый файл: ./admin/info/configure-pl.html
+Добавлен новый файл: ./admin/info/configure-ru.html
+Добавлен новый файл: ./admin/info/configure-uk.html
+Добавлен новый файл: ./admin/info/database-de.html
+Добавлен новый файл: ./admin/info/database-en.html
+Добавлен новый файл: ./admin/info/database-fr.html
+Добавлен новый файл: ./admin/info/database-pl.html
+Добавлен новый файл: ./admin/info/database-ru.html
+Добавлен новый файл: ./admin/info/database-uk.html
+Добавлен новый файл: ./admin/info/editor-de.html
+Добавлен новый файл: ./admin/info/editor-en.html
+Добавлен новый файл: ./admin/info/editor-fr.html
+Добавлен новый файл: ./admin/info/editor-pl.html
+Добавлен новый файл: ./admin/info/editor-ru.html
+Добавлен новый файл: ./admin/info/editor-uk.html
+Добавлен новый файл: ./admin/info/favorites-de.html
+Добавлен новый файл: ./admin/info/favorites-en.html
+Добавлен новый файл: ./admin/info/favorites-fr.html
+Добавлен новый файл: ./admin/info/favorites-pl.html
+Добавлен новый файл: ./admin/info/favorites-ru.html
+Добавлен новый файл: ./admin/info/favorites-uk.html
+Добавлен новый файл: ./admin/info/fields-de.html
+Добавлен новый файл: ./admin/info/fields-en.html
+Добавлен новый файл: ./admin/info/fields-fr.html
+Добавлен новый файл: ./admin/info/fields-pl.html
+Добавлен новый файл: ./admin/info/fields-ru.html
+Добавлен новый файл: ./admin/info/fields-uk.html
+Добавлен новый файл: ./admin/info/groups-de.html
+Добавлен новый файл: ./admin/info/groups-en.html
+Добавлен новый файл: ./admin/info/groups-fr.html
+Добавлен новый файл: ./admin/info/groups-po.html
+Добавлен новый файл: ./admin/info/groups-ru.html
+Добавлен новый файл: ./admin/info/groups-uk.html
+Добавлен новый файл: ./admin/info/lang-de.html
+Добавлен новый файл: ./admin/info/lang-en.html
+Добавлен новый файл: ./admin/info/lang-fr.html
+Добавлен новый файл: ./admin/info/lang-pl.html
+Добавлен новый файл: ./admin/info/lang-ru.html
+Добавлен новый файл: ./admin/info/lang-uk.html
+Добавлен новый файл: ./admin/info/messages-de.html
+Добавлен новый файл: ./admin/info/messages-en.html
+Добавлен новый файл: ./admin/info/messages-fr.html
+Добавлен новый файл: ./admin/info/messages-pl.html
+Добавлен новый файл: ./admin/info/messages-ru.html
+Добавлен новый файл: ./admin/info/messages-uk.html
+Добавлен новый файл: ./admin/info/modules-de.html
+Добавлен новый файл: ./admin/info/modules-en.html
+Добавлен новый файл: ./admin/info/modules-fr.html
+Добавлен новый файл: ./admin/info/modules-pl.html
+Добавлен новый файл: ./admin/info/modules-ru.html
+Добавлен новый файл: ./admin/info/modules-uk.html
+Добавлен новый файл: ./admin/modules/monitor.php
+Добавлен новый файл: ./storage/counter/ips.log
+Изменён файл: ./.git/index
+Изменён файл: ./admin/index.php
+Изменён файл: ./admin/modules/admins.php
+Изменён файл: ./admin/modules/blocks.php
+Изменён файл: ./admin/modules/categories.php
+Изменён файл: ./admin/modules/changelog.php
+Изменён файл: ./admin/modules/comments.php
+Изменён файл: ./admin/modules/database.php
+Изменён файл: ./admin/modules/editor.php
+Изменён файл: ./admin/modules/favorites.php
+Изменён файл: ./admin/modules/fields.php
+Изменён файл: ./admin/modules/groups.php
+Изменён файл: ./admin/modules/messages.php
+Изменён файл: ./admin/modules/privat.php
+Изменён файл: ./config/changelog.php
+Изменён файл: ./config/counter/days.txt
+Изменён файл: ./config/counter/dump.txt
+Изменён файл: ./config/counter/sess.txt
+Изменён файл: ./config/counter/stat.txt
+Изменён файл: ./config/logs/error.txt
+Изменён файл: ./config/logs/log_admin.txt
+Изменён файл: ./core/classes/pdo.php
+Удалён файл: ./admin/info/blocks-english.html
+Удалён файл: ./admin/info/blocks-french.html
+Удалён файл: ./admin/info/blocks-german.html
+Удалён файл: ./admin/info/blocks-polish.html
+Удалён файл: ./admin/info/blocks-russian.html
+Удалён файл: ./admin/info/blocks-ukrainian.html
+Удалён файл: ./admin/info/categories-english.html
+Удалён файл: ./admin/info/categories-french.html
+Удалён файл: ./admin/info/categories-german.html
+Удалён файл: ./admin/info/categories-polish.html
+Удалён файл: ./admin/info/categories-russian.html
+Удалён файл: ./admin/info/categories-ukrainian.html
+Удалён файл: ./admin/info/comments-english.html
+Удалён файл: ./admin/info/comments-french.html
+Удалён файл: ./admin/info/comments-german.html
+Удалён файл: ./admin/info/comments-polish.html
+Удалён файл: ./admin/info/comments-russian.html
+Удалён файл: ./admin/info/comments-ukrainian.html
+Удалён файл: ./admin/info/configure-english.html
+Удалён файл: ./admin/info/configure-french.html
+Удалён файл: ./admin/info/configure-german.html
+Удалён файл: ./admin/info/configure-polish.html
+Удалён файл: ./admin/info/configure-russian.html
+Удалён файл: ./admin/info/configure-ukrainian.html
+Удалён файл: ./admin/info/database-english.html
+Удалён файл: ./admin/info/database-french.html
+Удалён файл: ./admin/info/database-german.html
+Удалён файл: ./admin/info/database-polish.html
+Удалён файл: ./admin/info/database-russian.html
+Удалён файл: ./admin/info/database-ukrainian.html
+Удалён файл: ./admin/info/editor-english.html
+Удалён файл: ./admin/info/editor-french.html
+Удалён файл: ./admin/info/editor-german.html
+Удалён файл: ./admin/info/editor-polish.html
+Удалён файл: ./admin/info/editor-russian.html
+Удалён файл: ./admin/info/editor-ukrainian.html
+Удалён файл: ./admin/info/favorites-english.html
+Удалён файл: ./admin/info/favorites-french.html
+Удалён файл: ./admin/info/favorites-german.html
+Удалён файл: ./admin/info/favorites-polish.html
+Удалён файл: ./admin/info/favorites-russian.html
+Удалён файл: ./admin/info/favorites-ukrainian.html
+Удалён файл: ./admin/info/fields-english.html
+Удалён файл: ./admin/info/fields-french.html
+Удалён файл: ./admin/info/fields-german.html
+Удалён файл: ./admin/info/fields-polish.html
+Удалён файл: ./admin/info/fields-russian.html
+Удалён файл: ./admin/info/fields-ukrainian.html
+Удалён файл: ./admin/info/groups-english.html
+Удалён файл: ./admin/info/groups-french.html
+Удалён файл: ./admin/info/groups-german.html
+Удалён файл: ./admin/info/groups-polish.html
+Удалён файл: ./admin/info/groups-russian.html
+Удалён файл: ./admin/info/groups-ukrainian.html
+Удалён файл: ./admin/info/lang-english.html
+Удалён файл: ./admin/info/lang-french.html
+Удалён файл: ./admin/info/lang-german.html
+Удалён файл: ./admin/info/lang-polish.html
+Удалён файл: ./admin/info/lang-russian.html
+Удалён файл: ./admin/info/lang-ukrainian.html
+Удалён файл: ./admin/info/modules-english.html
+Удалён файл: ./admin/info/modules-french.html
+Удалён файл: ./admin/info/modules-german.html
+Удалён файл: ./admin/info/modules-polish.html
+Удалён файл: ./admin/info/modules-russian.html
+Удалён файл: ./admin/info/modules-ukrainian.html
+Удалён файл: ./admin/info/msg-english.html
+Удалён файл: ./admin/info/msg-french.html
+Удалён файл: ./admin/info/msg-german.html
+Удалён файл: ./admin/info/msg-polish.html
+Удалён файл: ./admin/info/msg-russian.html
+Удалён файл: ./admin/info/msg-ukrainian.html
+Дата: 09.12.2025 14:05:53
+---
