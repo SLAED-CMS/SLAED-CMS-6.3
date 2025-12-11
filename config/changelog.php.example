@@ -7,14 +7,14 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 $conflog = array (
-  'export_enabled' => '1',
+  'export_enabled' => '0',
   'github_owner' => 'SLAED-CMS',
   'github_repo' => 'SLAED-CMS-6.3-Pro',
-  'github_token' => '', // Add your GitHub Personal Access Token here
+  'github_token' => getenv('GITHUB_TOKEN') ?: '',
   'group_by_date' => '1',
-  'limit' => '50',
-  'per_page' => '10',
+  'limit' => '500',
+  'per_page' => '50',
   'show_files' => '1',
   'show_stats' => '1',
-  'source' => 'github',
+  'source' => 'local',
 );
