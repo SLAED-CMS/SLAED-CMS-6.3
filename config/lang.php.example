@@ -1,0 +1,14 @@
+<?php
+# Author: Eduard Laas
+# Copyright © 2005 - 2025 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
+
+if (!defined('FUNC_FILE')) die('Illegal file access');
+
+$confla = array (
+  'count' => '5',
+  'key' => getenv('YANDEX_TRANSLATE_KEY') ?: '',
+  'lang' => 'ru',
+  'per_page' => '100',
+);
