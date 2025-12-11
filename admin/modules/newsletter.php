@@ -6,21 +6,21 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function newsletterNavi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['show', 'add', 'info'];
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=info'];
     $lang = [_HOME, _ADD, _INFO];
-    return getAdminTabs(_NEWSLETTER, 'newsletter.png', 'name=newsletter', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_NEWSLETTER, 'newsletter.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
 function newsletter(): void {
-    global $prefix, $db, $admin_file, $conf;
+    global $prefix, $db, $aroute, $conf;
     head();
-    $cont = newsletterNavi(0, 0, 0, 0);
-    $result = $db->sql_query('SELECT id, title, content, mails, send, time, endtime FROM '.$prefix.'_newsletter ORDER BY id');
+    $cont = navi(0, 0, 0, 0);
+    $result = $db->sql_query('SELECT id, title, mails, send, time, endtime FROM '.$prefix.'_newsletter ORDER BY id');
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._NLEND.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while (list($id, $title, $content, $mails, $sended, $time, $endtime) = $db->sql_fetchrow($result)) {
+        while (list($id, $title, $mails, $sended, $time, $endtime) = $db->sql_fetchrow($result)) {
             $sendtime = ($endtime > $time) ? strtotime($endtime) - strtotime($time) : 0;
             $active = ($mails && $sended && $conf['newsletter']) ? 1 : 0;
             $cont .= '<tr>'
@@ -28,7 +28,7 @@ function newsletter(): void {
             .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.display_time($sendtime)).$title.'</td>'
             .'<td>'.$sended.' '._NLUSER.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu('<a href="'.$admin_file.'.php?name=newsletter&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?name=newsletter&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu('<a href="'.$aroute.'.php?name=newsletter&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$aroute.'.php?name=newsletter&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setTemplateBasic('close');
@@ -39,8 +39,8 @@ function newsletter(): void {
     foot();
 }
 
-function newsletterAdd(): void {
-    global $prefix, $db, $admin_file, $conf, $stop;
+function add(): void {
+    global $prefix, $db, $aroute, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->sql_query('SELECT title, content, mails FROM '.$prefix.'_newsletter WHERE id = :id', ['id' => $id]);
@@ -54,16 +54,16 @@ function newsletterAdd(): void {
     $count = getVar('post', 'count', 'num', '');
     $send = getVar('post', 'send', '', '');
     head();
-    $cont = newsletterNavi(0, 1, 0, 0);
+    $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($content) $cont .= preview($title, $content, '', '', 'all');
     list($num) = $db->sql_fetchrow($db->sql_query('SELECT Count(user_id) FROM '.$prefix.'_users'));
     $sel = ($mails == 1) ? ' selected' : '';
     $option = '<option value="1"'.$sel.'>'._MASSMAIL.' - '.$num.'</option>';
-    list($num2) = $db->sql_fetchrow($db->sql_query('SELECT Count(user_id) FROM '.$prefix.'_users WHERE user_newsletter = \'1\''));
+    list($num2) = $db->sql_fetchrow($db->sql_query('SELECT Count(user_id) FROM '.$prefix.'_users WHERE user_newsletter = 1'));
     $sel = ($mails == 2) ? ' selected' : '';
     $option .= '<option value="2"'.$sel.'>'._ANEWSLETTER.' - '.$num2.'</option>';
-    $result3 = $db->sql_query('SELECT id, name, points FROM '.$prefix.'_groups WHERE extra = \'1\' ORDER BY id');
+    $result3 = $db->sql_query('SELECT id, name, points FROM '.$prefix.'_groups WHERE extra = 1 ORDER BY id');
     if ($db->sql_numrows($result3) > 0) {
         while (list($grid, $grname, $points) = $db->sql_fetchrow($result3)) {
             $result4 = $db->sql_query('SELECT user_email FROM '.$prefix.'_users WHERE user_group = :grid', ['grid' => $grid]);
@@ -77,7 +77,7 @@ function newsletterAdd(): void {
             $option .= '<option value="'.$email3.'"'.$sel.'>'._SPEC_GROUP.' "'.$grname.'" - '.$num3.'</option>';
         }
     }
-    $result5 = $db->sql_query('SELECT id, name, points FROM '.$prefix.'_groups WHERE extra != \'1\' ORDER BY id');
+    $result5 = $db->sql_query('SELECT id, name, points FROM '.$prefix.'_groups WHERE extra != 1 ORDER BY id');
     if ($db->sql_numrows($result5) > 0) {
         while (list($grid, $grname, $points) = $db->sql_fetchrow($result5)) {
             $result6 = $db->sql_query('SELECT user_email FROM '.$prefix.'_users WHERE user_points >= :points', ['points' => $points]);
@@ -92,7 +92,7 @@ function newsletterAdd(): void {
         }
     }
     if (is_active('money')) {
-        $result7 = $db->sql_query('SELECT mail FROM '.$prefix.'_money WHERE status = \'1\'');
+        $result7 = $db->sql_query('SELECT mail FROM '.$prefix.'_money WHERE status = 1');
         if ($db->sql_numrows($result7) > 0) {
             $aemail = [];
             while (list($user_email) = $db->sql_fetchrow($result7)) $aemail[] = $user_email;
@@ -110,7 +110,7 @@ function newsletterAdd(): void {
         }
     }
     if (is_active('order')) {
-        $result8 = $db->sql_query('SELECT mail FROM '.$prefix.'_order WHERE status = \'1\'');
+        $result8 = $db->sql_query('SELECT mail FROM '.$prefix.'_order WHERE status = 1');
         if ($db->sql_numrows($result8) > 0) {
             $aemail = [];
             while (list($user_email) = $db->sql_fetchrow($result8)) $aemail[] = $user_email;
@@ -144,7 +144,7 @@ function newsletterAdd(): void {
             $sel = ($email7 == $mails) ? ' selected' : '';
             $option .= '<option value="'.$email7.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7.'</option>';
         }
-        $result10 = $db->sql_query('SELECT email FROM '.$prefix.'_clients WHERE active = \'1\'');
+        $result10 = $db->sql_query('SELECT email FROM '.$prefix.'_clients WHERE active = 1');
         if ($db->sql_numrows($result10) > 0) {
             $aemail = [];
             while (list($user_email) = $db->sql_fetchrow($result10)) $aemail[] = $user_email;
@@ -160,7 +160,7 @@ function newsletterAdd(): void {
             $sel = ($email8 == $mails) ? ' selected' : '';
             $option .= '<option value="'.$email8.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8.'</option>';
         }
-        $result11 = $db->sql_query('SELECT email FROM '.$prefix.'_clients WHERE active = \'0\'');
+        $result11 = $db->sql_query('SELECT email FROM '.$prefix.'_clients WHERE active = 0');
         if ($db->sql_numrows($result11) > 0) {
             $aemail = [];
             while (list($user_email) = $db->sql_fetchrow($result11)) $aemail[] = $user_email;
@@ -178,7 +178,7 @@ function newsletterAdd(): void {
         }
     }
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" method="post" action="'.$admin_file.'.php"><table class="sl_table_form">'
+    $cont .= '<form name="post" method="post" action="'.$aroute.'.php"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="50" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'content', $content, 'all', '10', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._NLWHERE.':</td><td><select name="mails" class="sl_form">'.$option.'</select></td></tr>'
@@ -197,8 +197,8 @@ function newsletterAdd(): void {
     foot();
 }
 
-function newsletterSave(): void {
-    global $prefix, $db, $admin_file, $conf, $stop;
+function save(): void {
+    global $prefix, $db, $aroute, $conf, $stop;
     $id = getVar('post', 'nid', 'num', 0);
     $title = getVar('post', 'title', 'title');
     $content = getVar('post', 'content', 'text');
@@ -214,7 +214,7 @@ function newsletterSave(): void {
             while (list($user_email) = $db->sql_fetchrow($result)) $emails[] = $user_email;
             $emails = implode(',', array_unique($emails));
         } elseif ($mails == 2) {
-            $result = $db->sql_query('SELECT user_email FROM '.$prefix.'_users WHERE user_newsletter = \'1\'');
+            $result = $db->sql_query('SELECT user_email FROM '.$prefix.'_users WHERE user_newsletter = 1');
             $emails = [];
             while (list($user_email) = $db->sql_fetchrow($result)) $emails[] = $user_email;
             $emails = implode(',', array_unique($emails));
@@ -223,47 +223,40 @@ function newsletterSave(): void {
         }
         $emails = ($send) ? $emails : '';
         if ($id) {
-            $db->sql_query('UPDATE '.$prefix.'_newsletter SET title = :title, content = :content, mails = :mails, send = \'0\', time = now(), endtime = \'0\' WHERE id = :id', [
+            $db->sql_query('UPDATE '.$prefix.'_newsletter SET title = :title, content = :content, mails = :mails, send = 0, time = now(), endtime = 0 WHERE id = :id', [
                 'title' => $title, 'content' => $content, 'mails' => $emails, 'id' => $id
             ]);
         } else {
-            $db->sql_query('INSERT INTO '.$prefix.'_newsletter (title, content, mails, send, time, endtime) VALUES (:title, :content, :mails, \'\', now(), \'\')', [
+            $db->sql_query('INSERT INTO '.$prefix.'_newsletter (title, content, mails, send, time, endtime) VALUES (:title, :content, :mails, 0, now(), 0)', [
                 'title' => $title, 'content' => $content, 'mails' => $emails
             ]);
         }
         $cont = ['newsletter' => $send, 'newslettercount' => $count];
         doConfig('config/config_global.php', 'conf', $cont, $conf, '');
-        header('Location: '.$admin_file.'.php?name=newsletter&op=show');
+        header('Location: '.$aroute.'.php?name=newsletter');
+        exit;
     } else {
-        newsletterAdd();
+        add();
     }
 }
 
-function newsletterInfo(): void {
+function del(): void {
+    global $prefix, $db, $aroute, $id;
+    $db->sql_query('DELETE FROM '.$prefix.'_newsletter WHERE id = :id', ['id' => $id]);
+    header('Location: '.$aroute.'.php?name=newsletter');
+    exit;
+}
+
+function info(): void {
     head();
-    echo newsletterNavi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'newsletter').'</div>';
+    echo navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'newsletter').'</div>';
     foot();
 }
 
 switch ($op) {
-    case 'show':
-    newsletter();
-    break;
-
-    case 'add':
-    newsletterAdd();
-    break;
-
-    case 'save':
-    newsletterSave();
-    break;
-
-    case 'delete':
-    $db->sql_query('DELETE FROM '.$prefix.'_newsletter WHERE id = :id', ['id' => $id]);
-    header('Location: '.$admin_file.'.php?name=newsletter&op=show');
-    break;
-
-    case 'info':
-    newsletterInfo();
-    break;
+    default: newsletter(); break;
+    case 'add': add(); break;
+    case 'save': save(); break;
+    case 'delete': del(); break;
+    case 'info': info(); break;
 }

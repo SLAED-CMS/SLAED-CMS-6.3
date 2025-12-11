@@ -6,15 +6,13 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string
-{
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=monitor', 'name=monitor&op=info'];
     $lang = [_HOME, _INFO];
-    return getAdminTabs('System Monitor', 'stat.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('System Monitor', 'stat.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
-function get_server_load_data()
-{
+function get_server_load_data() {
     $load = [0, 0, 0];
     if (function_exists('sys_getloadavg')) {
         $load = sys_getloadavg();
@@ -22,8 +20,7 @@ function get_server_load_data()
     return $load;
 }
 
-function get_memory_info()
-{
+function get_memory_info() {
     $free = 0;
     $total = 0;
 
@@ -48,12 +45,12 @@ function get_memory_info()
             }
         }
     } else {
-        $data = @file_get_contents("/proc/meminfo");
+        $data = @file_get_contents('/proc/meminfo');
         if ($data) {
             $data = explode("\n", $data);
             $meminfo = [];
             foreach ($data as $line) {
-                list($key, $val) = explode(":", $line);
+                list($key, $val) = explode(':', $line);
                 $meminfo[trim($key)] = trim($val);
             }
             $total = intval($meminfo['MemTotal'] ?? 0) * 1024;
@@ -75,8 +72,7 @@ function get_memory_info()
     ];
 }
 
-function memory_get_safe_limit()
-{
+function memory_get_safe_limit() {
     $memory_limit = ini_get('memory_limit');
     if (preg_match('/^(\d+)(.)$/', $memory_limit, $matches)) {
         if ($matches[2] == 'M') {
@@ -90,18 +86,16 @@ function memory_get_safe_limit()
     return $memory_limit;
 }
 
-function format_bytes($bytes, $precision = 2)
-{
+function format_bytes($bytes, $precision = 2) {
     $units = ['B', 'KB', 'MB', 'GB', 'TB'];
     $bytes = max($bytes, 0);
     $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
     $pow = min($pow, count($units) - 1);
     $bytes /= pow(1024, $pow);
-    return round($bytes, $precision) . ' ' . $units[$pow];
+    return round($bytes, $precision).' '.$units[$pow];
 }
 
-function get_network_stats()
-{
+function get_network_stats() {
     $rx = 0;
     $tx = 0;
     if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -116,7 +110,7 @@ function get_network_stats()
             }
         }
     } else {
-        $data = @file_get_contents("/proc/net/dev");
+        $data = @file_get_contents('/proc/net/dev');
         if ($data) {
             $lines = explode("\n", $data);
             foreach ($lines as $line) {
@@ -131,30 +125,30 @@ function get_network_stats()
     return ['rx' => $rx, 'tx' => $tx];
 }
 
-function is_mod_active($mod)
-{
+function is_mod_active($mod) {
     global $prefix, $db;
     if (function_exists('is_active')) return is_active($mod);
-    $row = $db->sql_fetchrow($db->sql_query("SELECT active FROM " . $prefix . "_modules WHERE title='$mod'"));
+    $row = $db->sql_fetchrow($db->sql_query('SELECT active FROM '.$prefix.'_modules WHERE title = :title', ['title' => $mod]));
     return ($row && $row[0] == 1);
 }
 
-function monitor(): void
-{
+function monitor(): void {
     global $prefix, $db, $conf, $confdb;
     head();
-    echo navi(0, 0);
+    $cont = navi(0, 0, 0, 0);
+    $cont .= setTemplateBasic('open');
+    
 
     // Stats Gathering
     $load = get_server_load_data();
     $mem = get_memory_info();
-    $disk_total = disk_total_space(".");
-    $disk_free = disk_free_space(".");
+    $disk_total = disk_total_space('.');
+    $disk_free = disk_free_space('.');
     $disk_used = $disk_total - $disk_free;
     $disk_percent = ($disk_total > 0) ? round(($disk_used / $disk_total) * 100, 1) : 0;
     $net = get_network_stats();
 
-    $uptime_str = "N/A";
+    $uptime_str = 'N/A';
     if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
         $uptime = @file_get_contents('/proc/uptime');
         if ($uptime) {
@@ -165,32 +159,32 @@ function monitor(): void
             $uptime_str = "$days d, $hours:$mins";
         }
     } else {
-        $uptime_str = "Windows";
+        $uptime_str = 'Windows';
     }
 
-    $users_online = $db->sql_numrows($db->sql_query("SELECT ip FROM " . $prefix . "_session"));
+    $users_online = $db->sql_numrows($db->sql_query('SELECT ip FROM '.$prefix.'_session'));
 
     // DB Stats
     $dbtotal_size = 0;
     $db_tables = 0;
-    $dbresult = $db->sql_query("SHOW TABLE STATUS FROM " . $confdb['name']);
+    $dbresult = $db->sql_query('SHOW TABLE STATUS FROM '.$confdb['name']);
     while ($row = $db->sql_fetchrow($dbresult)) {
         $dbtotal_size += $row['Data_length'] + $row['Index_length'];
         $db_tables++;
     }
 
     $server_soft = $_SERVER['SERVER_SOFTWARE'];
-    $server_name = "Web Server";
-    if (stripos($server_soft, 'apache') !== false) $server_name = "Apache";
-    elseif (stripos($server_soft, 'nginx') !== false) $server_name = "Nginx";
-    elseif (stripos($server_soft, 'litespeed') !== false) $server_name = "LiteSpeed";
+    $server_name = 'Web Server';
+    if (stripos($server_soft, 'apache') !== false) $server_name = 'Apache';
+    elseif (stripos($server_soft, 'nginx') !== false) $server_name = 'Nginx';
+    elseif (stripos($server_soft, 'litespeed') !== false) $server_name = 'LiteSpeed';
 
     $extensions = get_loaded_extensions();
     $ext_count = count($extensions);
 
     // Detailed Info Logic
     $gd = gd_info();
-    $ver_query = $db->sql_query("SELECT VERSION()");
+    $ver_query = $db->sql_query('SELECT VERSION()');
     $ver_row = $db->sql_fetchrow($ver_query);
     $mysql_ver = $ver_row[0];
 
@@ -198,10 +192,70 @@ function monitor(): void
     $off = '<span style="color:#ef4444">Off</span>';
 
     // Counts for Overview Strip
-    $cnt_files = $db->sql_numrows($db->sql_query("SELECT lid FROM " . $prefix . "_files WHERE status!='0'"));
-    $cnt_news = $db->sql_numrows($db->sql_query("SELECT sid FROM " . $prefix . "_news WHERE status!='0'"));
+    $cnt_files = $db->sql_numrows($db->sql_query('SELECT lid FROM '.$prefix.'_files WHERE status != \'0\''));
+    $cnt_news = $db->sql_numrows($db->sql_query('SELECT sid FROM '.$prefix.'_news WHERE status != \'0\''));
 
-?>
+    // Calculate dashboard metrics
+    $loadP = min($load[0] * 10, 100);
+    $dash = 2 * pi() * 45;
+    $off = $dash - ($dash * $loadP / 100);
+    $ramP = $mem['percent'];
+    $offR = $dash - ($dash * $ramP / 100);
+    $ram_used_mb = round($mem['used'] / 1024 / 1024);
+    $ram_total_mb = round($mem['total'] / 1024 / 1024);
+    $diskP = $disk_percent;
+    $dashD = 2 * pi() * 45;
+    $offD = $dashD - ($dashD * $diskP / 100);
+    $disk_used_fmt = format_bytes($disk_used);
+    $disk_total_fmt = format_bytes($disk_total);
+    $disk_free_fmt = format_bytes($disk_free);
+    $net_tx_fmt = format_bytes($net['tx']);
+    $net_rx_fmt = format_bytes($net['rx']);
+    $db_size_fmt = format_bytes($dbtotal_size);
+
+    // Additional variables for dashboard
+    $load_str = implode(' / ', $load);
+    $php_version = PHP_VERSION;
+    $php_sapi = php_sapi_name();
+    $os_name = php_uname('s');
+    $server_soft_full = $_SERVER['SERVER_SOFTWARE'];
+    $gd_version = $gd['GD Version'];
+    $post_max = ini_get('post_max_size');
+    $file_uploads = ini_get('file_uploads') ? $on : $off;
+    $upload_max = ini_get('upload_max_filesize');
+    $memory_limit = ini_get('memory_limit');
+    $max_input_vars = ini_get('max_input_vars');
+    $max_execution_time = ini_get('max_execution_time');
+    $gzip_loaded = (extension_loaded('zlib')) ? $on : $off;
+    $zip_loaded = (extension_loaded('zip')) ? $on : $off;
+    $php_time = date('H:i:s');
+    $operation_mode = (!$conf['close']) ? $on : $off;
+    $stat_active = (is_mod_active('stat')) ? $on : $off;
+    $referers_active = (is_mod_active('referers')) ? $on : $off;
+    $newsletter = ($conf['newsletter']) ? $on : $off;
+    $cache = ($conf['cache']) ? $on : $off;
+    $rewrite = ($conf['rewrite']) ? $on : $off;
+    $cms_version = $conf['version'];
+
+    // SVG paths for traffic chart
+    $pathUp = 'M0,220 ';
+    $pathDown = 'M0,220 ';
+    for ($i = 0; $i <= 20; $i++) {
+        $x = $i * (100 / 20).'%';
+        $yU = 220 - rand(10, 80);
+        $yD = 220 - rand(10, 80);
+        if ($i == 20) {
+            $yU = 220;
+            $yD = 220;
+        }
+        $pathUp .= 'L'.$x.','.$yU.' ';
+        $pathDown .= 'L'.$x.','.$yD.' ';
+    }
+    $pathUp .= 'Z';
+    $pathDown .= 'Z';
+
+    $cont .= <<<HTML
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
         :root {
@@ -218,8 +272,6 @@ function monitor(): void
 
         .mon-wrapper {
             font-family: 'Inter', system-ui, sans-serif;
-            background: var(--bg-body);
-            padding: 20px;
             color: var(--text-main);
         }
 
@@ -520,22 +572,19 @@ function monitor(): void
                         <div class="knob-wrapper">
                             <svg class="knob-svg" viewBox="0 0 100 100">
                                 <circle class="knob-bg" cx="50" cy="50" r="45"></circle>
-                                <?php $loadP = min($load[0] * 10, 100);
-                                $dash = 2 * pi() * 45;
-                                $off = $dash - ($dash * $loadP / 100); ?>
-                                <circle class="knob-val" cx="50" cy="50" r="45" stroke="#22c55e" stroke-dasharray="<?php echo $dash; ?>" stroke-dashoffset="<?php echo $off; ?>"></circle>
+                                <circle class="knob-val" cx="50" cy="50" r="45" stroke="#22c55e" stroke-dasharray="{$dash}" stroke-dashoffset="{$off}"></circle>
                             </svg>
-                            <div class="knob-text"><?php echo $load[0]; ?>%</div>
+                            <div class="knob-text">{$load[0]}%</div>
                         </div>
                         <div class="sys-label">Operations</div>
-                        <div class="sys-sub"><?php echo implode(' / ', $load); ?></div>
+                        <div class="sys-sub">{$load_str}</div>
                     </div>
                     <!-- CPU Real -->
                     <div class="mon-sys-item">
                         <div class="knob-wrapper">
                             <svg class="knob-svg" viewBox="0 0 100 100">
                                 <circle class="knob-bg" cx="50" cy="50" r="45"></circle>
-                                <circle class="knob-val" cx="50" cy="50" r="45" stroke="#22c55e" stroke-dasharray="<?php echo $dash; ?>" stroke-dashoffset="<?php echo $dash; /* Mock 0 near real */ ?>"></circle>
+                                <circle class="knob-val" cx="50" cy="50" r="45" stroke="#22c55e" stroke-dasharray="{$dash}" stroke-dashoffset="{$dash}"></circle>
                             </svg>
                             <div class="knob-text">0.2%</div>
                         </div>
@@ -547,14 +596,12 @@ function monitor(): void
                         <div class="knob-wrapper">
                             <svg class="knob-svg" viewBox="0 0 100 100">
                                 <circle class="knob-bg" cx="50" cy="50" r="45"></circle>
-                                <?php $ramP = $mem['percent'];
-                                $offR = $dash - ($dash * $ramP / 100); ?>
-                                <circle class="knob-val" cx="50" cy="50" r="45" stroke="#22c55e" stroke-dasharray="<?php echo $dash; ?>" stroke-dashoffset="<?php echo $offR; ?>"></circle>
+                                <circle class="knob-val" cx="50" cy="50" r="45" stroke="#22c55e" stroke-dasharray="{$dash}" stroke-dashoffset="{$offR}"></circle>
                             </svg>
-                            <div class="knob-text"><?php echo round($ramP, 1); ?>%</div>
+                            <div class="knob-text">{$ramP}%</div>
                         </div>
                         <div class="sys-label">RAM Usage</div>
-                        <div class="sys-sub"><?php echo round($mem['used'] / 1024 / 1024); ?> / <?php echo round($mem['total'] / 1024 / 1024); ?> (MB)</div>
+                        <div class="sys-sub">{$ram_used_mb} / {$ram_total_mb} (MB)</div>
                     </div>
                 </div>
             </div>
@@ -570,16 +617,13 @@ function monitor(): void
                         <circle cx="50" cy="50" r="25" fill="none" stroke="#f3f4f6" stroke-width="6"></circle>
 
                         <!-- Value Arc -->
-                        <?php $diskP = $disk_percent;
-                        $dashD = 2 * pi() * 45;
-                        $offD = $dashD - ($dashD * $diskP / 100); ?>
-                        <circle cx="50" cy="50" r="45" fill="none" stroke="#22c55e" stroke-width="6" stroke-linecap="round" stroke-dasharray="<?php echo $dashD; ?>" stroke-dashoffset="<?php echo $offD; ?>"></circle>
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="#22c55e" stroke-width="6" stroke-linecap="round" stroke-dasharray="{$dashD}" stroke-dashoffset="{$offD}"></circle>
                     </svg>
-                    <div class="knob-text" style="font-size:24px; color:#22c55e;"><?php echo round($diskP); ?>%</div>
+                    <div class="knob-text" style="font-size:24px; color:#22c55e;">{$diskP}%</div>
                 </div>
                 <div class="disk-text">
                     <div class="sys-label">Root /</div>
-                    <div class="sys-sub"><?php echo format_bytes($disk_used); ?> / <?php echo format_bytes($disk_total); ?></div>
+                    <div class="sys-sub">{$disk_used_fmt} / {$disk_total_fmt}</div>
                 </div>
             </div>
         </div>
@@ -588,22 +632,22 @@ function monitor(): void
         <div class="mon-overview-strip">
             <div class="ov-item">
                 <div class="ov-label">Website</div>
-                <div class="ov-val"><?php echo $cnt_news; ?> <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
+                <div class="ov-val">{$cnt_news} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
                 </div>
             </div>
             <div class="ov-item">
                 <div class="ov-label">Files</div>
-                <div class="ov-val"><?php echo $cnt_files; ?> <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
+                <div class="ov-val">{$cnt_files} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
                 </div>
             </div>
             <div class="ov-item">
                 <div class="ov-label">Database</div>
-                <div class="ov-val"><?php echo $db_tables; ?> <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
+                <div class="ov-val">{$db_tables} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
                 </div>
             </div>
             <div class="ov-item">
                 <div class="ov-label">Users</div>
-                <div class="ov-val"><?php echo $users_online; ?> <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
+                <div class="ov-val">{$users_online} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
                 </div>
             </div>
         </div>
@@ -616,18 +660,18 @@ function monitor(): void
                 <div class="sw-grid">
                     <div class="sw-card">
                         <i class="sw-icon fa fa-server"></i>
-                        <div class="sw-name"><?php echo $server_name; ?></div>
+                        <div class="sw-name">{$server_name}</div>
                         <div class="sw-stat-row"><span>Ver</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
                     </div>
                     <div class="sw-card">
                         <i class="sw-icon fa fa-database"></i>
                         <div class="sw-name">MySQL</div>
-                        <div class="sw-stat-row"><span><?php echo $mysql_ver; ?></span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                        <div class="sw-stat-row"><span>{$mysql_ver}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
                     </div>
                     <div class="sw-card">
                         <i class="sw-icon fa fa-code"></i>
                         <div class="sw-name">PHP</div>
-                        <div class="sw-stat-row"><span><?php echo PHP_VERSION; ?></span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                        <div class="sw-stat-row"><span>{$php_version}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
                     </div>
                     <div class="sw-card">
                         <i class="sw-icon fa fa-shield"></i>
@@ -643,31 +687,14 @@ function monitor(): void
                 <div class="traffic-stats-row">
                     <div class="t-item">
                         <div class="t-label t-label-up"><span></span> Upstream</div>
-                        <div class="t-val"><?php echo format_bytes($net['tx']); ?></div>
+                        <div class="t-val">{$net_tx_fmt}</div>
                     </div>
                     <div class="t-item">
                         <div class="t-label t-label-down"><span></span> Downstream</div>
-                        <div class="t-val"><?php echo format_bytes($net['rx']); ?></div>
+                        <div class="t-val">{$net_rx_fmt}</div>
                     </div>
                 </div>
                 <!-- Chart -->
-                <?php
-                $pathUp = "M0,220 ";
-                $pathDown = "M0,220 ";
-                for ($i = 0; $i <= 20; $i++) {
-                    $x = $i * (100 / 20) . "%";
-                    $yU = 220 - rand(10, 80);
-                    $yD = 220 - rand(10, 80);
-                    if ($i == 20) {
-                        $yU = 220;
-                        $yD = 220;
-                    }
-                    $pathUp .= "L$x,$yU ";
-                    $pathDown .= "L$x,$yD ";
-                }
-                $pathUp .= "Z";
-                $pathDown .= "Z";
-                ?>
                 <svg class="chart-svg" preserveAspectRatio="none">
                     <defs>
                         <linearGradient id="gUp" x1="0" x2="0" y1="0" y2="1">
@@ -679,8 +706,8 @@ function monitor(): void
                             <stop offset="1" stop-color="#fff" stop-opacity="0" />
                         </linearGradient>
                     </defs>
-                    <path d="<?php echo $pathUp; ?>" fill="url(#gUp)" stroke="#f97316" stroke-width="2" />
-                    <path d="<?php echo $pathDown; ?>" fill="url(#gDown)" stroke="#22c55e" stroke-width="2" />
+                    <path d="{$pathUp}" fill="url(#gUp)" stroke="#f97316" stroke-width="2" />
+                    <path d="{$pathDown}" fill="url(#gDown)" stroke="#22c55e" stroke-width="2" />
                 </svg>
             </div>
         </div>
@@ -693,55 +720,55 @@ function monitor(): void
                     <table class="mon-clean-table">
                         <tr>
                             <td>Operation Mode</td>
-                            <td><?php echo (!$conf['close']) ? $on : $off; ?></td>
+                            <td>{$operation_mode}</td>
                         </tr>
                         <tr>
                             <td>Statistics</td>
-                            <td><?php echo (is_mod_active('stat')) ? $on : $off; ?></td>
+                            <td>{$stat_active}</td>
                         </tr>
                         <tr>
                             <td>Transitions</td>
-                            <td><?php echo (is_mod_active('referers')) ? $on : $off; ?></td>
+                            <td>{$referers_active}</td>
                         </tr>
                         <tr>
                             <td>Newsletter</td>
-                            <td><?php echo ($conf['newsletter']) ? $on : $off; ?></td>
+                            <td>{$newsletter}</td>
                         </tr>
                         <tr>
                             <td>Caching</td>
-                            <td><?php echo ($conf['cache']) ? $on : $off; ?></td>
+                            <td>{$cache}</td>
                         </tr>
                         <tr>
                             <td>SEF Rewrite</td>
-                            <td><?php echo ($conf['rewrite']) ? $on : $off; ?></td>
+                            <td>{$rewrite}</td>
                         </tr>
                         <tr>
                             <td>SLAED CMS</td>
-                            <td><?php echo $conf['version']; ?></td>
+                            <td>{$cms_version}</td>
                         </tr>
                         <tr>
                             <td>OS</td>
-                            <td><?php echo php_uname('s'); ?></td>
+                            <td>{$os_name}</td>
                         </tr>
                         <tr>
                             <td>Server</td>
-                            <td><?php echo $_SERVER['SERVER_SOFTWARE']; ?></td>
+                            <td>{$server_soft_full}</td>
                         </tr>
                         <tr>
                             <td>PHP Version</td>
-                            <td><?php echo PHP_VERSION; ?></td>
+                            <td>{$php_version}</td>
                         </tr>
                         <tr>
                             <td>PHP SAPI</td>
-                            <td><?php echo php_sapi_name(); ?></td>
+                            <td>{$php_sapi}</td>
                         </tr>
                         <tr>
                             <td>PHP GD</td>
-                            <td><?php echo $gd['GD Version']; ?></td>
+                            <td>{$gd_version}</td>
                         </tr>
                         <tr>
                             <td>MySQL</td>
-                            <td><?php echo $mysql_ver; ?></td>
+                            <td>{$mysql_ver}</td>
                         </tr>
                     </table>
                 </div>
@@ -749,77 +776,74 @@ function monitor(): void
                     <table class="mon-clean-table">
                         <tr>
                             <td>DB Size</td>
-                            <td><?php echo format_bytes($dbtotal_size); ?></td>
+                            <td>{$db_size_fmt}</td>
                         </tr>
                         <tr>
                             <td>Post Max Size</td>
-                            <td><?php echo ini_get('post_max_size'); ?></td>
+                            <td>{$post_max}</td>
                         </tr>
                         <tr>
                             <td>File Uploads</td>
-                            <td><?php echo ini_get('file_uploads') ? $on : $off; ?></td>
+                            <td>{$file_uploads}</td>
                         </tr>
                         <tr>
                             <td>Upload Max</td>
-                            <td><?php echo ini_get('upload_max_filesize'); ?></td>
+                            <td>{$upload_max}</td>
                         </tr>
                         <tr>
                             <td>Memory Limit</td>
-                            <td><?php echo ini_get('memory_limit'); ?></td>
+                            <td>{$memory_limit}</td>
                         </tr>
                         <tr>
                             <td>Max Input Vars</td>
-                            <td><?php echo ini_get('max_input_vars'); ?></td>
+                            <td>{$max_input_vars}</td>
                         </tr>
                         <tr>
                             <td>Execution Time</td>
-                            <td><?php echo ini_get('max_execution_time'); ?> s</td>
+                            <td>{$max_execution_time} s</td>
                         </tr>
                         <tr>
                             <td>GZip</td>
-                            <td><?php echo (extension_loaded('zlib')) ? $on : $off; ?></td>
+                            <td>{$gzip_loaded}</td>
                         </tr>
                         <tr>
                             <td>Zip Archive</td>
-                            <td><?php echo (extension_loaded('zip')) ? $on : $off; ?></td>
+                            <td>{$zip_loaded}</td>
                         </tr>
                         <tr>
                             <td>PHP Timezone</td>
-                            <td><?php echo date('H:i:s'); ?></td>
+                            <td>{$php_time}</td>
                         </tr>
                         <tr>
                             <td>Disk Total</td>
-                            <td><?php echo format_bytes($disk_total); ?></td>
+                            <td>{$disk_total_fmt}</td>
                         </tr>
                         <tr>
                             <td>Disk Free</td>
-                            <td><?php echo format_bytes($disk_free); ?></td>
+                            <td>{$disk_free_fmt}</td>
                         </tr>
                         <tr>
                             <td>Disk Used</td>
-                            <td><?php echo format_bytes($disk_used); ?></td>
+                            <td>{$disk_used_fmt}</td>
                         </tr>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-<?php
+HTML;
+    $cont .= setTemplateBasic('close');
+    echo $cont;
     foot();
 }
 
-function info(): void
-{
+function info(): void {
     head();
-    echo navi(0, 1, 0, 0) . '<div id="repadm_info">' . adm_info(1, 0, 'monitor') . '</div>';
+    echo navi(0, 1, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'monitor').'</div>';
     foot();
 }
 
 switch ($op) {
-    default:
-        monitor();
-        break;
-    case 'info':
-        info();
-        break;
+    default: monitor(); break;
+    case 'info': info(); break;
 }
