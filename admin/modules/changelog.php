@@ -324,7 +324,7 @@ function render(array $commit, int $index, array $conflog): string {
 
     // Header
     $cont .= '<div style="border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-bottom: 10px;">';
-    $cont .= '<span style="font-weight: bold; font-size: 16px;">'.htmlspecialchars($commit['subject']).'</span>';
+    $cont .= '<span style="font-size: 16px;">'.htmlspecialchars($commit['subject']).'</span>';
     $cont .= ' <code style="background: #f0f0f0; padding: 2px 6px; margin-left: 10px;">'.$commit['hash'].'</code>';
     $cont .= '</div>';
 
@@ -336,9 +336,20 @@ function render(array $commit, int $index, array $conflog): string {
 
     // Body
     if (!empty($commit['body']) && $commit['body'] !== 'COMMIT_END') {
-        $body = htmlspecialchars($commit['body']);
-        $body = str_replace("\n", '<br>', $body);
-        $cont .= '<div style="background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 3px solid #2196F3;">';
+        $body = $commit['body'];
+
+        // Escape nur gefährliche HTML-Zeichen
+        $body = htmlspecialchars($body, ENT_NOQUOTES);
+
+        // Basic Markdown formatting
+        $body = preg_replace('/\*\*([^\*]+)\*\*/', '<strong>$1</strong>', $body);
+        $body = preg_replace('/^[\-\*] (.+)$/m', '&bull; $1', $body);
+        $body = preg_replace('/`([^`]+)`/', '<code style="background:#e8e8e8;padding:2px 4px;border-radius:3px;">$1</code>', $body);
+
+        // Zeilenumbrüche
+        $body = nl2br($body);
+
+        $cont .= '<div style="background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 3px solid #2196F3; line-height: 1.6;">';
         $cont .= $body;
         $cont .= '</div>';
     }
