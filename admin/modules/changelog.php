@@ -324,8 +324,8 @@ function render(array $commit, int $index, array $conflog): string {
 
     // Header
     $cont .= '<div style="border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-bottom: 10px;">';
-    $cont .= '<span style="font-size: 16px;">'.htmlspecialchars($commit['subject']).'</span>';
-    $cont .= ' <code style="background: #f0f0f0; padding: 2px 6px; margin-left: 10px;">'.$commit['hash'].'</code>';
+    $cont .= '<span style="font-size: 14px;"><strong>'.htmlspecialchars($commit['subject']).'</strong></span>';
+    $cont .= ' <code style="border-radius: 4px; background: #f0f0f0; padding: 2px 6px; margin-left: 10px;">'.$commit['hash'].'</code>';
     $cont .= '</div>';
 
     // Meta-Info

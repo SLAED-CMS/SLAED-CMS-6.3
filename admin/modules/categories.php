@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     $lang = [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO];
     $sops = ['', '', ''];
     $slang = [_CATEGORY, _ACESS, _ACESSF];
-    $search = setTemplateBasic('searchbox', '<form method="post" action="'.$aroute.'.php"><input type="hidden" name="name" value="categories">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>');
+    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$aroute.'.php"><input type="hidden" name="name" value="categories">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>']);
     return getAdminTabs(_CATEGORIES, 'categories.png', ''.$search, $ops, $lang, $sops, $slang, $tab, $subtab);
 }
 
