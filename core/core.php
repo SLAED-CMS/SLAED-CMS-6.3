@@ -44,9 +44,9 @@ if (defined('MODULE_FILE')) {
     require_once BASE_DIR.'/core/admin.php';
 }
 
-require_once CONFIG_DIR.'/config_ratings.php';
-require_once CONFIG_DIR.'/config_replace.php';
-require_once CONFIG_DIR.'/config_referers.php';
+require_once CONFIG_DIR.'/ratings.php';
+require_once CONFIG_DIR.'/replace.php';
+require_once CONFIG_DIR.'/referers.php';
 
 ### The beginning of new functions
 
