@@ -1,6 +1,7 @@
 # SLAED CMS 6.3
 
 ![PHP Version](https://img.shields.io/badge/PHP-8.4+-blue.svg)
+![MySQL / MariaDB](https://img.shields.io/badge/MySQL_8.0+_or_MariaDB_10+-red.svg)
 ![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 ![Migration](https://img.shields.io/badge/Migration-50%25%20Complete-yellow.svg)
