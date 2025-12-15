@@ -425,7 +425,7 @@ define("_SEARCHNUM","Quantity of results of search on page");
 define("_SEC_ADMIN_IP","Admissible IP Addresses of manager");
 define("_SEC_ADMIN_MASK","Mask of a network for an input in the panel of manager");
 define("_SEC_AUTH_INFO","Installation of an additional password and login significantly increases the level of security of the system and virtually eliminates unauthorized access to the control panel. Please note, «HTTP-authentication» is only possible when running PHP as an Apache-module or FastCGI mode with integrated Mod Rewrite. Note that this function does not work on Microsoft IIS-server with CGI-version of PHP. To avoid problems with access, it is recommended to consult with your hosting provider.");
-define("_SEC_AUTH_OK","Additional password and login successfully installed. To disable or change the password and login open the file: config/config_security.php and change the value to: 'login' => '' and 'password' => ''");
+define("_SEC_AUTH_OK","Additional password and login successfully installed. To disable or change the password and login open the file: config/security.php and change the value to: 'login' => '' and 'password' => ''");
 define("_SEC_COOKIE","Cookies for the blocked visitors");
 define("_SEC_DB","To activate automatic copying a database?");
 define("_SEC_HACK_STAT","To conduct statistics of attacks?");

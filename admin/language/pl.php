@@ -425,7 +425,7 @@ define("_SEARCHNUM","Liczba wyników wyszukiwania na stronę");
 define("_SEC_ADMIN_IP","Dopuszczalne Adresy IP admina");
 define("_SEC_ADMIN_MASK","Maska sieci, aby wejść w panel admina");
 define("_SEC_AUTH_INFO","Instalacja dodatkowego hasła i loginu znacznie zwiększa poziom bezpieczeństwa systemu i eliminuje nieautoryzowanego dostępu do panelu sterowania. Należy pamiętać, «Uwierzytelnianie HTTP» jest możliwe tylko wtedy, gdy PHP działa jako moduł Apache-trybach FastCGI z wbudowanym Mod Rewrite. Należy pamiętać, że funkcja ta nie działa na serwerze Microsoft IIS-CGI-z wersji PHP. Aby uniknąć problemów z dostępem, zaleca się, aby skontaktować się z dostawcą usług hostingowych.");
-define("_SEC_AUTH_OK","Dodatkowe hasło i login są bezpiecznie zamontowane. Aby wyłączyć lub zmienić hasło, login i otwórz plik: config/config_security.php i zmień wartości zmiennych: 'login' => '' i 'password' => ''");
+define("_SEC_AUTH_OK","Dodatkowe hasło i login są bezpiecznie zamontowane. Aby wyłączyć lub zmienić hasło, login i otwórz plik: config/security.php i zmień wartości zmiennych: 'login' => '' i 'password' => ''");
 define("_SEC_COOKIE","Nazwa Cookies do zablokowanych użytkowników");
 define("_SEC_DB","Automatyczne kopiowanie bazy danych?");
 define("_SEC_HACK_STAT","Prowadzenie statystyk ataków?");

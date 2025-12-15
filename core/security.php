@@ -9,13 +9,13 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 #define('BASE_DIR', dirname(__DIR__));
 
 # Global config file include
-require_once BASE_DIR.'/config/config_global.php';
+require_once CONFIG_DIR.'/config_global.php';
 
 # Users config file include
-require_once BASE_DIR.'/config/users.php';
+require_once CONFIG_DIR.'/users.php';
 
 # SEO config file include
-require_once BASE_DIR.'/config/config_seo.php';
+require_once CONFIG_DIR.'/config_seo.php';
 
 # Murder variables
 unset($name, $file, $admin, $user, $admintrue, $godtrue, $usertrue, $aid, $uname, $guest, $userinfo, $stop);
@@ -34,7 +34,7 @@ if ($confdb['sync']) $db->sql_query("SET LOCAL time_zone = '".date('P')."'");
 $prefix = $confdb['prefix'];
 
 # Security config file include
-require_once CONFIG_DIR.'/config_security.php';
+require_once CONFIG_DIR.'/security.php';
 $aroute = $confs['afile'];
 
 # OLD DELETE
@@ -1175,7 +1175,7 @@ function doHackReport($msg) {
     if ($confs['block']) {
         $btime = time() + 86400;
         $cont = array('blocker_ip' => $confs['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||');
-        doConfig('config/config_security.php', 'confs', $cont, $confs, '');
+        doConfig('config/security.php', 'confs', $cont, $confs, '');
         setCookies($confs['blocker_cookie'], $btime, 'block');
     }
     if ($confs['mail']) {

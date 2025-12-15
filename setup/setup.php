@@ -9,7 +9,7 @@ define('FUNC_FILE', true);
 define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__)));
 
 require_once BASE_DIR.'/config/config_global.php';
-require_once BASE_DIR.'/config/config_security.php';
+require_once BASE_DIR.'/config/security.php';
 
 if ($confs['error'] == 2) {
     ini_set('display_errors', 1);
@@ -319,8 +319,8 @@ function save(): void {
         $xafile = file_exists($xafile.'.php') ? $xafile : $tafile;
     }
     $cont = array('afile' => $xafile);
-    doConfig('config/config_security.php', 'confs', $cont, $confs, '');
-    require_once BASE_DIR.'/config/config_security.php';
+    doConfig('config/security.php', 'confs', $cont, $confs, '');
+    require_once BASE_DIR.'/config/security.php';
     
     require_once BASE_DIR.'/config/db.php';
     $cont = array('host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync);

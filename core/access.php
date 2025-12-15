@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE')) die('Illegal file access');
 global $path;
 
 include($path.'config/config_global.php');
-include($path.'config/config_security.php');
+include($path.'config/security.php');
 include($path.'language/lang-'.$conf['language'].'.php');
 
 # Denial of Authenticate

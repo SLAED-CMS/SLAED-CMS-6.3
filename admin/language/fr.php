@@ -425,7 +425,7 @@ define("_SEARCHNUM","Nombre de résultats de recherche sur la page");
 define("_SEC_ADMIN_IP","Valide l'Adresse IP de l'administrateur");
 define("_SEC_ADMIN_MASK","Masque de réseau pour entrer dans le panneau de l'administrateur");
 define("_SEC_AUTH_INFO","Installation d'un mot de passe et login supplémentaire augmente considérablement le niveau de sécurité du système et élimine pratiquement tout accès non autorisé au panneau de commande. Se il vous plaît noter, «HTTP-authentification» ne est possible que lors de l'exécution PHP comme Apache-module ou en mode FastCGI avec Mod Rewrite intégrée. Notez que cette fonction ne fonctionne pas sur Microsoft IIS-serveur avec CGI-version de PHP. Pour éviter les problèmes d'accès, il est recommandé de consulter votre fournisseur d'hébergement.");
-define("_SEC_AUTH_OK","Notes de mot de passe et de connexion en toute tranquillité installés. Pour le désactiver ou le changement de mot de passe et le nom ouvrez le fichier: config/config_security.php et modifiez les valeurs des variables: 'login' => '' et 'password' => ''");
+define("_SEC_AUTH_OK","Notes de mot de passe et de connexion en toute tranquillité installés. Pour le désactiver ou le changement de mot de passe et le nom ouvrez le fichier: config/security.php et modifiez les valeurs des variables: 'login' => '' et 'password' => ''");
 define("_SEC_COOKIE","Nom de Cookies bloqués visiteurs");
 define("_SEC_DB","Automatique de sauvegarde de base de données?");
 define("_SEC_HACK_STAT","Gérer les statistiques des attaques?");

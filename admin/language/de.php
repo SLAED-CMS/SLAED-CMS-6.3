@@ -425,7 +425,7 @@ define("_SEARCHNUM","Menge der Ergebnisse der Suche auf die Seite");
 define("_SEC_ADMIN_IP","Zulässige IP Adresse von dem Verwalter");
 define("_SEC_ADMIN_MASK","Maske des Netzes für den Eingang in das Panel des Verwalters");
 define("_SEC_AUTH_INFO","Installation eines zusätzlichen Passwort und Login signifikant erhöht die Sicherheit des Systems und verhindert praktisch jede unberechtigten Zugriff auf das Control Panel. Bitte beachten Sie, «HTTP-Authentifizierung» ist nur möglich, wenn PHP als Apache-Modul oder FastCGI-Modus mit integrierten Mod Rewrite. Beachten Sie, dass diese Funktion nicht auf Microsoft IIS-Server mit CGI-Version von PHP arbeiten. Um Probleme mit dem Zugang zu vermeiden, empfiehlt es sich, mit dem Hosting-Anbieter wenden.");
-define("_SEC_AUTH_OK","Weitere Login und Passwort sind sicher installiert. Zu deaktivieren oder das Kennwort zu ändern und Login öffnen Sie die Datei: config/config_security.php und ändern Sie den Wert der Variablen: 'login' => '' und 'password' => ''");
+define("_SEC_AUTH_OK","Weitere Login und Passwort sind sicher installiert. Zu deaktivieren oder das Kennwort zu ändern und Login öffnen Sie die Datei: config/security.php und ändern Sie den Wert der Variablen: 'login' => '' und 'password' => ''");
 define("_SEC_COOKIE","Cookies für die blockierten Besucher");
 define("_SEC_DB","Das automatische Kopieren der Datenbank zu aktivieren?");
 define("_SEC_HACK_STAT","Statistik der Angriffe führen?");
