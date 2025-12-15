@@ -37,7 +37,7 @@ if (empty($go)) {
         }
     }
     $file = (getVar('req', 'file', 'var')) ? $file : 'index';
-    $theme = get_theme();
+    $theme = getTheme();
     if ($name) {
         $conf['name'] = $name;
         $conf['style'] = 'sl_mod_'.strtolower($name);

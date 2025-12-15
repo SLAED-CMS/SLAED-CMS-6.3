@@ -562,26 +562,18 @@ function setCache($id=''): void {
 # Set cached script file
 function setScript() {
     header('Content-type: text/javascript');
-    readfile('config/cache/'.md5(get_theme().'script').'.txt');
+    readfile('config/cache/'.md5(getTheme().'script').'.txt');
 }
 
 # Set cached CSS file
 function setCss() {
     header('Content-type: text/css');
-    readfile('config/cache/'.md5(get_theme().'style').'.txt');
+    readfile('config/cache/'.md5(getTheme().'style').'.txt');
 }
 
 # Set bottom navigation
 function setNaviLower($mod) {
     return setTemplateBasic('open').'<span class="sl_pos_center"><a href="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_foot">'._BACK.'</a><a href="index.php?name='.$mod.'" title="'._PAGEHOME.'" class="sl_but_foot">'._PAGEHOME.'</a><a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="sl_but_foot">'._PAGETOP.'</a></span>'.setTemplateBasic('close');
-}
-
-# Theme include
-function setThemeInclude() {
-    global $theme;
-    $theme = ($theme) ? $theme : get_theme();
-    if (file_exists('templates/'.$theme.'/index.php')) include_once('templates/'.$theme.'/index.php');
-    include_once('core/template.php');
 }
 
 # Load configuration file and return chmod warning if needed
@@ -1452,11 +1444,81 @@ function getHref($meta) {
     return $url;
 }
 
+# Theme include
+function setThemeInclude(): void {
+    global $theme;
+    $theme = $theme ?: getTheme();
+    $idx = BASE_DIR.'/templates/'.$theme.'/index.php';
+    if (is_file($idx)) require_once $idx;
+    require_once BASE_DIR.'/core/template.php';
+}
+
+# Format theme
+function getTheme(): string {
+    static $cached = null;
+    if ($cached !== null) return $cached;
+    global $user, $conf;
+    if (defined('ADMIN_FILE')) return $cached = 'admin';
+    $default = $conf['theme'] ?? 'default';
+    if (!is_user()) return $cached = $default;
+    $utheme = $user[5] ?? '';
+    if ($utheme !== '' && is_dir(BASE_DIR.'/templates/'.$utheme)) return $cached = $utheme;
+    return $cached = $default;
+}
+
 # Format theme file
-function getThemeFile($name) {
+function getThemeFile(string $name): string|false {
+    global $home, $conf, $op;
+    static $cache = [];
+    $theme = getTheme();
+    $cat = isset($_GET['cat']) ? (int)$_GET['cat'] : 0;
+    $tpl = $conf['template'] ?? '';
+    $mod = $conf['name'] ?? '';
+    $opv = $op ?? '';
+    $key = $theme.'|'.$name.'|'.(int)$home.'|'.$tpl.'|'.$mod.'|'.$opv.'|'.$cat;
+    if (array_key_exists($key, $cache)) return $cache[$key];
+    $dir = BASE_DIR.'/templates/'.$theme.'/';
+    $candidates = [];
+    if ($home) {
+        $candidates[] = $name.'-home';
+    } elseif ($tpl !== '') {
+        $candidates[] = $name.'-'.$tpl;
+    } elseif ($mod !== '' && $opv !== '') {
+        $candidates[] = $name.'-'.$mod.'-'.$opv;
+        $candidates[] = $name.'-'.$mod;
+    } elseif ($mod !== '' && $cat > 0) {
+        $candidates[] = $name.'-'.$mod.'-cat-'.$cat;
+        $candidates[] = $name.'-'.$mod;
+    } elseif ($mod !== '') {
+        $candidates[] = $name.'-'.$mod;
+    }
+    $candidates[] = $name;
+    foreach ($candidates as $fname) {
+        $path = $dir.$fname.'.html';
+        if (is_file($path)) return $cache[$key] = $path;
+    }
+    return $cache[$key] = false;
+}
+
+# Get theme load
+function getThemeLoad(string $tpl): ?string {
+    $path = getThemeFile($tpl);
+    if (!$path) return null;
+    static $cache = [];
+    $mtime = filemtime($path) ?: 0;
+    if (!isset($cache[$path]) || $cache[$path]['mtime'] !== $mtime) {
+        $raw = file_get_contents($path);
+        if ($raw === false) return $cache[$path] = null;
+        $cache[$path] = ['mtime' => $mtime, 'raw' => $raw];
+    }
+    return $cache[$path]['raw'] ?? null;
+}
+
+# OLD DELETE
+/* function getThemeFile($name) {
     global $home, $conf, $op;
     static $theme;
-    $theme = (!isset($theme)) ? get_theme() : $theme;
+    $theme = (!isset($theme)) ? getTheme() : $theme;
     $cat = (isset($_GET['cat'])) ? intval($_GET['cat']) : '';
     if ($home) {
         $fname = (file_exists('templates/'.$theme.'/'.$name.'-home.html')) ? $name.'-home' : $name;
@@ -1485,7 +1547,7 @@ function getThemeFile($name) {
     }
     $index = (file_exists('templates/'.$theme.'/'.$fname.'.html')) ? 'templates/'.$theme.'/'.$fname.'.html' : 0;
     return $index;
-}
+} */
 
 # Determining the load time
 function getTimeLoads() {
@@ -1498,20 +1560,6 @@ function getTimeLoads() {
 }
 
 ### End of new features
-
-# Format theme
-function get_theme() {
-    global $user, $conf;
-    if (!defined('ADMIN_FILE') && is_user()) {
-        $utheme = $user[5];
-        $theme = ($utheme != '' && is_dir('templates/'.$utheme)) ? $utheme : $conf['theme'];
-    } elseif (!defined('ADMIN_FILE')) {
-        $theme = $conf['theme'];
-    } elseif (defined('ADMIN_FILE')) {
-        $theme = 'admin';
-    }
-    return $theme;
-}
 
 # Format Time
 function datetime($id, $name, $time, $max, $class) {
@@ -2122,7 +2170,7 @@ function ad_save() {
 # Find img
 function img_find($img) {
     global $conf, $theme;
-    $theme = (!isset($theme)) ? get_theme() : $theme;
+    $theme = (!isset($theme)) ? getTheme() : $theme;
     return 'templates/'.$theme.'/images/'.$img;
 }
 
