@@ -2177,7 +2177,7 @@ function img_find($img) {
 # Format select RSS
 function rss_select() {
     global $conf;
-    include("config/config_rss.php");
+    require_once CONFIG_DIR.'/rss.php';
     $fieldc = explode("||", $confrs['rss']);
     $url = (isset($_POST['url'])) ? url_filter($_POST['url']) : "";
     $cont = "";
@@ -2197,7 +2197,7 @@ function rss_select() {
 # Read RSS
 function rss_read($url, $id) {
     if ($url) {
-        include("config/config_rss.php");
+        require_once CONFIG_DIR.'/rss.php';
         $url = str_replace(array("&#038;", "&amp;"), "&", $url);
         $url = (!preg_match("#http\:\/\/#i", $url)) ? "http://".$url : $url;
         $content = file_get_contents($url);
@@ -2868,7 +2868,7 @@ function head() {
         if (strpos($conf['homeurl'], get_host()) !== false) {
             $strlink .= '<link rel="canonical" href="'.$purl.'">'."\n";
         }
-        include('config/config_rss.php');
+        require_once CONFIG_DIR.'/rss.php';
         if ($confrs['act']) {
             $fieldc = explode('||', $confrs['rss']);
             foreach ($fieldc as $val) {

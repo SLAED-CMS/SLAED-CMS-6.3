@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 include('config/config_news.php');
-include('config/config_rss.php');
+require_once CONFIG_DIR.'/rss.php';
 if ($conf['forum']) include('core/forum.php');
 
 function account() {

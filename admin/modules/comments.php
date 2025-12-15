@@ -116,7 +116,7 @@ function save(): void {
         'addmail' => getVar('post', 'addmail', 'num'),
         'privat' => getVar('post', 'privat', 'num'),
         'profil' => getVar('post', 'profil', 'num'),
-        'web' => getVar('post', 'web', 'num')
+        'web' => getVar('post', 'web', 'num'),
     ];
     setConfigFile('comments.php', 'confc', $cont);
     header('Location: '.$admin_file.'.php?name=comments&op=conf');

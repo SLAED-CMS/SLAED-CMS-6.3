@@ -34,9 +34,9 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function referers(): void {
     global $prefix, $db, $confr;
-    $sort = getVar('req', 'sort', 'num') ?: 10;
-    $order = getVar('req', 'order', 'num') ?: 2;
-    $num = getVar('get', 'num', 'num') ?: 1;
+    $sort = getVar('req', 'sort', 'num', 10);
+    $order = getVar('req', 'order', 'num', 2);
+    $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $confr['anum'];
     $tnum = ($offset) ? $confr['anum'] + $offset : $confr['anum'];
     $sortmap = [
@@ -105,11 +105,11 @@ function conf(): void {
 function save(): void {
     global $aroute;
     $content = [
-        'anum' => getVar('post', 'anum', 'num') ?: 50,
-        'anump' => getVar('post', 'anump', 'num') ?: 10,
-        'refer_t' => (getVar('post', 'refer_t', 'num') ?: 0) * 86400 ?: 2592000,
-        'refer' => getVar('post', 'refer', 'num') ?: 0,
-        'referb' => getVar('post', 'referb', 'num') ?: 0
+        'anum' => getVar('post', 'anum', 'num', 50),
+        'anump' => getVar('post', 'anump', 'num', 10),
+        'refer_t' => getVar('post', 'refer_t', 'num', 30) * 86400,
+        'refer' => getVar('post', 'refer', 'num', 0),
+        'referb' => getVar('post', 'referb', 'num', 0),
     ];
     setConfigFile('referers.php', 'confr', $content);
     header('Location: '.$aroute.'.php?name=referers&op=conf');

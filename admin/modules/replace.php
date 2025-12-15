@@ -64,8 +64,8 @@ function save(): void {
         $fields = '';
         for ($i = 0; $i < 50; $i++) {
             $ident = ($i == 0) ? '' : '||';
-            $field1 = getVar('post', 'field1'.$a.'['.$i.']', 'word', '0') ?: 0;
-            $field2 = getVar('post', 'field2'.$a.'['.$i.']', '', '0') ?: 0;
+            $field1 = getVar('post', 'field1'.$a.'['.$i.']', 'word', '0');
+            $field2 = getVar('post', 'field2'.$a.'['.$i.']', '', '0');
             $fields .= $ident.$field1.'|'.$field2;
         }
         $a++;

@@ -700,7 +700,7 @@ function favordel() {
 # RSS Channel
 function rss_channel() {
 	global $prefix, $db, $conf;
-	include("config/config_rss.php");
+	require_once CONFIG_DIR.'/rss.php';
 	get_lang();
 	header_remove("X-Content-Type-Options");
 	header("Content-Type: application/rss+xml; charset="._CHARSET);
