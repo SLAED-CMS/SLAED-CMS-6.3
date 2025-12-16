@@ -13,7 +13,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function database(): void {
-    global $db, $confdb, $admin_file;
+    global $db, $confdb, $aroute;
 
     $type     = getVar('get', 'type', 'var'); // '', 'optimize', 'repair'
     $ftitleth = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
@@ -104,11 +104,11 @@ function database(): void {
         } else {
             // Standardansicht mit Aktionen
             $ftitletd = add_menu(
-                '<a href="'.$admin_file.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=1" '
+                '<a href="'.$aroute.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=1" '
                 .'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._CLEAN.'">'._CLEAN.'</a>'
                 .'||'
-                .'<a href="'.$admin_file.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=2" '
+                .'<a href="'.$aroute.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=2" '
                 .'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._ONDELETE.'">'._ONDELETE.'</a>'
             );
