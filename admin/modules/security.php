@@ -8,17 +8,18 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/security.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
-    $ops = ['security', 'block', 'pass', 'conf', 'info'];
+    $ops = ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'];
     $lang = [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO];
+    $sops = ['', ''];
     $slang = [_BANNED_IP, _BANNED_USERS];
-    return getAdminTabs(_SECURITY, 'security.png', '', $ops, $lang, ['', ''], $slang, $tab, $subtab, $legacy, $extra);
+    return getAdminTabs(_SECURITY, 'security.png', '', $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $extra);
 }
 
 function security(): void {
-    global $confs, $aroute;
+    global $aroute;
     head();
     $cont = navi(0, 0, 0, 0, 'security');
-    $cont .= checkConfigFile('logs');
+    $cont .= checkConfigFile('security.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SIZE.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     
@@ -146,7 +147,7 @@ function block_save(): void {
     $id = getVar('req', 'id', 'num');
     $ip = getVar('req', 'ip', 'text');
     $name = getVar('req', 'name', 'name');
-    $mail = getVar('post', 'mail', 'text');
+    $mail = getVar('post', 'mail', 'bool');
     $info = trim(getVar('post', 'info', 'text'));
     $info = ($info) ? $info : _BANN_INFO;
     $mailtext = trim(getVar('post', 'mailtext', 'text'));
@@ -169,7 +170,7 @@ function block_save(): void {
         $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
         $cont['blocker_user'] = $confs['blocker_user'].$name.'|'.$time.'|'.$info.'||';
         if ($mail) {
-            list($mail_addr) = $db->sql_fetchrow($db->sql_query("SELECT user_email FROM ".$prefix."_users WHERE user_name='".$name."'"));
+            list($mail_addr) = $db->sql_fetchrow($db->sql_query('SELECT user_email FROM '.$prefix.'_users WHERE user_name = :name', ['name' => $name]));
             $subject = $conf['sitename'].' - '._SECURITY;
             $msg = nl2br(bb_decode(str_replace('[time]', rest_time($time), str_replace('[info]', $info, $mailtext)), 'all'), false);
             mail_send($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);
@@ -331,7 +332,7 @@ function conf_save(): void {
     $cont['password'] = $confs['password'];
     
     setConfigFile('security.php', 'confs', $cont);
-    header('Location: '.$afile.'.php?name=security&op=conf');
+    header('Location: '.$aroute.'.php?name=security&op=conf');
     exit;
 }
 
@@ -360,7 +361,7 @@ function del(): void {
     exit;
 }
 
-switch($op) {
+switch ($op) {
     default: security(); break;
     case 'file': file_view(); break;
     case 'down': down(); break;
