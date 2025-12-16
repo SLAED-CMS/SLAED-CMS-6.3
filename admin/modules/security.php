@@ -42,7 +42,7 @@ function security(): void {
     foot();
 }
 
-function file_view(): void {
+function fileview(): void {
     global $aroute;
     head();
     $cont = navi(0, 0, 0, 0, 'security');
@@ -85,7 +85,7 @@ function block(): void {
                 .'<td>'.$mask.'</td>'
                 .'<td>'.$binfo[2].'</td>'
                 .'<td>'.rest_time($binfo[3]).'</td>'
-                .'<td>'.add_menu('<a href="'.$aroute.'.php?name=security&amp;op=block_save&amp;ip='.$binfo[0].'&amp;ip_mask='.$binfo[1].'&amp;hash='.$binfo[2].'&amp;time='.$binfo[3].'&amp;id=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+                .'<td>'.add_menu('<a href="'.$aroute.'.php?name=security&amp;op=blocksave&amp;ip='.$binfo[0].'&amp;ip_mask='.$binfo[1].'&amp;hash='.$binfo[2].'&amp;time='.$binfo[3].'&amp;id=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             }
         }
         $cont .= '</tbody></table><hr>';
@@ -102,7 +102,7 @@ function block(): void {
     .'<tr><td>'._HASH.':</td><td><input type="text" name="hash" value="'.$hash.'" maxlength="255" class="sl_form" placeholder="'._HASH.'"></td></tr>'
     .'<tr><td>'._TIME.':</td><td><input type="number" name="time" value="'.$time.'" class="sl_form" placeholder="'._TIME.'" required></td></tr>'
     .'<tr><td>'._BANN_REAS.':</td><td><textarea name="info" cols="65" rows="5" class="sl_form" placeholder="'._BANN_REAS.'" required>'.$info.'</textarea></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="block_save"><input type="hidden" name="id" value="2"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="blocksave"><input type="hidden" name="id" value="2"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
     .'</div>';
     $cont .= '<div id="tabcs1" class="tabcont">';
     $bip = explode('||', $confs['blocker_user']);
@@ -114,7 +114,7 @@ function block(): void {
                 $cont .= '<tr><td>'.user_info($binfo[0]).'</td>'
                 .'<td>'.$binfo[2].'</td>'
                 .'<td>'.rest_time($binfo[1]).'</td>'
-                .'<td>'.add_menu('<a href="'.$aroute.'.php?name=security&amp;op=block_save&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+                .'<td>'.add_menu('<a href="'.$aroute.'.php?name=security&amp;op=blocksave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             }
         }
         $cont .= '</tbody></table><hr>';
@@ -128,7 +128,7 @@ function block(): void {
     .'<tr><td>'._BANN_REAS.':</td><td><textarea name="info" cols="65" rows="5" class="sl_form" placeholder="'._BANN_REAS.'" required>'.$info.'</textarea></td></tr>'
     .'<tr><td>'._MAIL_SENDE.'</td><td><input type="checkbox" name="mail" value="1" OnClick="CloseOpen(\''.$cookie.'\', 0);"'.$check.'></td></tr>'
     .'<tr><td colspan="2"><div id="'.$cookie.'" class="data" data-all=\'{"id": "'.$cookie.'"}\'><table class="sl_table_form"><tr><td>'._MAIL_TEXT.':<div class="sl_small">'._MAIL_INFO.'</div></td><td>'.textarea('1', 'mailtext', replace_break(str_replace('[text]', _BANN_INFO.PHP_EOL.PHP_EOL._BANN_TERM.': [time]'.PHP_EOL._BANN_REAS.': [info]', $conf['mtemp'])), 'all', '10').'</td></tr></table></div></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="block_save"><input type="hidden" name="id" value="4"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="blocksave"><input type="hidden" name="id" value="4"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
     .'</div>'
     .'<script>
         var countries=new ddtabcontent("securitys")
@@ -141,7 +141,7 @@ function block(): void {
     foot();
 }
 
-function block_save(): void {
+function blocksave(): void {
     global $prefix, $db, $conf, $confs, $aroute;
     $send = '';
     $id = getVar('req', 'id', 'num');
@@ -202,13 +202,13 @@ function pass(): void {
     } else {
         $cont .= '<input type="hidden" name="login" value=""><input type="hidden" name="password" value="">';
     }
-    $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="pass_save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="passsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function pass_save(): void {
+function passsave(): void {
     global $confs, $aroute;
     $protect = [PHP_EOL => '', ' ' => ''];
     $admin_ip = getVar('post', 'admin_ip', 'text');
@@ -272,13 +272,13 @@ function conf(): void {
     .'<tr><td>'._SEC_LOG_A.'</td><td>'.radio_form($confs['log_a'], 'log_a').'</td></tr>'
     .'<tr><td>'._SEC_LOG_U.'</td><td>'.radio_form($confs['log_u'], 'log_u').'</td></tr>'
     .'<tr><td>'._SEC_WARN_BLOCK.'</td><td>'.radio_form($confs['block'], 'block').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="conf_save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function conf_save(): void {
+function confsave(): void {
     global $confs, $aroute;
     
     $flood_t = getVar('post', 'flood_t', 'num', '1');
@@ -291,10 +291,8 @@ function conf_save(): void {
     $afile = (file_exists($afile.'.php')) ? $afile : $tafile;
     
     $log_size = getVar('post', 'log_size', 'num', '1048576');
-    $sess_d = getVar('post', 'sess_d', 'num');
-    $sess_d = ($sess_d) ? $sess_d * 60 : 86400;
-    $sess_b = getVar('post', 'sess_b', 'num');
-    $sess_b = ($sess_b) ? $sess_b * 60 : 86400;
+    $sess_d = getVar('post', 'sess_d', 'num', 1440) * 60;
+    $sess_b = getVar('post', 'sess_b', 'num', 1440) * 60;
     
     $cont = [
         'flood' => getVar('post', 'flood', 'num'),
@@ -363,14 +361,14 @@ function del(): void {
 
 switch ($op) {
     default: security(); break;
-    case 'file': file_view(); break;
+    case 'file': fileview(); break;
     case 'down': down(); break;
     case 'del': del(); break;
     case 'block': block(); break;
-    case 'block_save': block_save(); break;
+    case 'blocksave': blocksave(); break;
     case 'pass': pass(); break;
-    case 'pass_save': pass_save(); break;
+    case 'passsave': passsave(); break;
     case 'conf': conf(); break;
-    case 'conf_save': conf_save(); break;
+    case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
