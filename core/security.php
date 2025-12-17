@@ -797,7 +797,7 @@ function getUrlMeta() {
  *
  * @param string $var     'post', 'get' oder 'req'
  * @param string $key     Name des Parameters (Bracket-Notation: field[0], field[])
- * @param string $type    Typ für Filterung: num, let, word, name, title, text, field, url, var, bool
+ * @param string $type    Typ für Filterung: num, let, word, name, title, text, field, url, var, bool, raw
  * @param mixed  $default Standardwert, falls Parameter fehlt
  * @return mixed Gefilterter Wert oder Default / false
  */
@@ -829,6 +829,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'url'   => fn($v) => is_string($v) ? url_filter(trim($v)) : $v,
         'var'   => fn($v) => is_string($v) ? isVar($v) : $v,
         'bool'  => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),
+        'raw'   => fn($v) => $v,
     ];
 
     // Ganzes Array mit Element-Filterung: field[] + type
