@@ -87,7 +87,7 @@ function commits(string $owner, string $repo, int $limit = 50, string $token = '
 function changelog(): void {
     global $aroute, $conflog;
     head();
-    checkConfigFile('changelog.php');
+    checkPerms('changelog.php');
     $cont = navi(0, 0, 0, 0);
 
     //  Filter-Parameter
@@ -492,7 +492,7 @@ function export(): void {
 function conf(): void {
     global $aroute, $conflog;
     head();
-    checkConfigFile('changelog.php');
+    checkPerms('changelog.php');
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$aroute.'.php" method="post">';

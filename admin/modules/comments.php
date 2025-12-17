@@ -48,7 +48,7 @@ function conf(): void {
     global $admin_file, $confc;
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkConfigFile('comments.php');
+    $cont .= checkPerms('comments.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$confc['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'

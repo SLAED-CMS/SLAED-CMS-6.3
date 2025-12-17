@@ -17,7 +17,7 @@ function ratings(): void {
     global $aroute, $confra;
     head();
     $cont = navi(0, 0, 0, 0);
-    $cont .= checkConfigFile('ratings.php');
+    $cont .= checkPerms('ratings.php');
     $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     $i = 0;
     $content = '';

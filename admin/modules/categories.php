@@ -6,7 +6,7 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
     global $aroute;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
@@ -15,7 +15,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     $sops = ['', '', ''];
     $slang = [_CATEGORY, _ACESS, _ACESSF];
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$aroute.'.php"><input type="hidden" name="name" value="categories">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>']);
-    return getAdminTabs(_CATEGORIES, 'categories.png', ''.$search, $ops, $lang, $sops, $slang, $tab, $subtab);
+    return getAdminTabs(_CATEGORIES, 'categories.png', $search, $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $extra);
 }
 
 function categories(): void {
@@ -43,7 +43,7 @@ function add(): void {
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
-    $cont = navi(0, 1, 1, 0);
+    $cont = navi(0, 1, 1, 0, 'add');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$aroute.'.php" method="post">'
@@ -70,8 +70,8 @@ function add(): void {
     .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', '', '').'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', '', '').'</td></tr></table>'
     .'</div>'
-    .'<div id="tabcs2" class="tabcont">
-    <table class="sl_table_form">'
+    .'<div id="tabcs2" class="tabcont">'
+    .'<table class="sl_table_form">'
     .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', '', '').'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', '', '').'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_edit', 'sl_form', '', 1).'</td></tr>'
@@ -79,9 +79,9 @@ function add(): void {
     .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', '', 2).'</td></tr></table>'
     .'</div>'
     .'<script>
-        var countries=new ddtabcontent(\'catAdds\')
+        var countries=new ddtabcontent("adds")
         countries.setpersist(true)
-        countries.setselectedClassTarget(\'link\')
+        countries.setselectedClassTarget("link")
         countries.init()
     </script>'
     .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>';
@@ -96,7 +96,7 @@ function subadd(): void {
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $cont = navi(0, 2, 1, 0);
+        $cont = navi(0, 2, 1, 0, 'subadd');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post2" action="'.$aroute.'.php" method="post">'
@@ -133,9 +133,9 @@ function subadd(): void {
         .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', '', 2).'</td></tr></table>'
         .'</div>'
         .'<script>
-            var countries=new ddtabcontent(\'catSubAdds\')
+            var countries=new ddtabcontent("subadds")
             countries.setpersist(true)
-            countries.setselectedClassTarget(\'link\')
+            countries.setselectedClassTarget("link")
             countries.init()
         </script>'
         .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>';
@@ -173,7 +173,7 @@ function edit(): void {
     $result = $db->sql_query('SELECT modul, title, description, img, language, parentid, cstatus, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod FROM '.$prefix.'_categories WHERE id = :cid', ['cid' => $cid]);
     list($modul, $title, $description, $imgcat, $language, $parentid, $cstatus, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod) = $db->sql_fetchrow($result);
     head();
-    $cont = navi(0, 3, 1, 0);
+    $cont = navi(0, 3, 1, 0, 'edit');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$aroute.'.php" method="post">'
@@ -218,9 +218,9 @@ function edit(): void {
     .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', $auth_mod, 2).'</td></tr></table>'
     .'</div>'
     .'<script>
-        var countries=new ddtabcontent(\'catEdits\')
+        var countries=new ddtabcontent("edits")
         countries.setpersist(true)
-        countries.setselectedClassTarget(\'link\')
+        countries.setselectedClassTarget("link")
         countries.init()
     </script>'
     .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="id" value="'.$cid.'"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';

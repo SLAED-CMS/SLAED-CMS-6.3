@@ -88,7 +88,7 @@ function conf(): void {
     global $aroute, $confr;
     head();
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkConfigFile('referers.php');
+    $cont .= checkPerms('referers.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
        .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confr['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'

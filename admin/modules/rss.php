@@ -17,7 +17,7 @@ function rss(): void {
     global $aroute, $confrs;
     head();
     $cont = navi(0, 0, 0, 0, 'rss');
-    $cont .= checkConfigFile('rss.php');
+    $cont .= checkPerms('rss.php');
     $content = '';
     $fieldc = explode('||', $confrs['rss']);
     for ($c = 0; $c < 50; $c++) {

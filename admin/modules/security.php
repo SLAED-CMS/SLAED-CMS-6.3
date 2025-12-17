@@ -19,7 +19,7 @@ function security(): void {
     global $aroute;
     head();
     $cont = navi(0, 0, 0, 0, 'security');
-    $cont .= checkConfigFile('security.php');
+    $cont .= checkPerms('security.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SIZE.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     
@@ -52,7 +52,7 @@ function fileview(): void {
         $title = strtr($fname, $langs);
         $file = 'config/logs/'.$fname.'.txt';
         $content = file_get_contents($file);
-        $cont .= checkConfigFile('config/logs/'.$fname.'.txt');
+        $cont .= checkPerms('config/logs/'.$fname.'.txt');
         $cont .= setTemplateBasic('open').'<table class="sl_table_edit"><tr><td><h5>'.$title.'</h5></td></tr><tr><td>'.textarea_code('code', '', 'sl_form', 'message/http', $content).'</td></tr></table>'.setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -70,7 +70,7 @@ function block(): void {
     
     head();
     $cont = navi(0, 1, 1, 0, 'security');
-    $cont .= checkConfigFile('security.php');
+    $cont .= checkPerms('security.php');
     if (getVar('get', 'send', 'var')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<div id="tabcs0" class="tabcont">';
@@ -186,7 +186,7 @@ function pass(): void {
     global $confs, $aroute;
     head();
     $cont = navi(0, 2, 0, 0, 'security');
-    $cont .= checkConfigFile('security.php');
+    $cont .= checkPerms('security.php');
     $cont .= (!$confs['login'] || !$confs['password']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEC_AUTH_INFO]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEC_AUTH_OK]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$aroute.'.php?name=security" method="post"><table class="sl_table_conf">'
@@ -235,7 +235,7 @@ function conf(): void {
     global $confs, $aroute;
     head();
     $cont = navi(0, 3, 0, 0, 'security');
-    $cont .= checkConfigFile('security.php');
+    $cont .= checkPerms('security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$aroute.'.php?name=security" method="post"><table class="sl_table_conf">'

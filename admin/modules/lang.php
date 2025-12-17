@@ -92,7 +92,7 @@ function editfile(): void {
     $cj = count($lng_cn);
     for ($j = 0; $j < $cj; $j++) {
         $lng_src = $lang_path.'/'.$lng_cn[$j].'.php';
-        checkConfigFile($lng_src);
+        checkPerms($lng_src);
         $lng = file_get_contents($lng_src);
         preg_match_all('#define\(["\']([^"\']+)["\']\s*,\s*["\'](.*)["\']\);#sU', $lng, $out);
         unset($out[0]);
@@ -219,7 +219,7 @@ function save(): void {
 function conf(): void {
     global $aroute, $confla;
     head();
-    checkConfigFile('lang.php');
+    checkPerms('lang.php');
     $cont = navi(1, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'

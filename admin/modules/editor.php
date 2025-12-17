@@ -18,7 +18,7 @@ function editor(): void {
     $cont = navi(0, 0, 0, 0);
     $file = 'config/config_core.php';
     $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
-    $cont .= checkConfigFile($file);
+    $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EFUNC.': '.$file.' '._EINFO]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
     $cont .= setTemplateBasic('open');
@@ -35,7 +35,7 @@ function editheader(): void {
     $cont = navi(0, 1, 0, 0);
     $file = 'config/config_header.php';
     $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
-    $cont .= checkConfigFile($file);
+    $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EHEAD.': '.$file.' '._EINFO2]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
     $cont .= setTemplateBasic('open');
@@ -52,7 +52,7 @@ function editrewrite(): void {
     $cont = navi(0, 2, 0, 0);
     $file = 'config/config_rewrite.php';
     $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
-    $cont .= checkConfigFile($file);
+    $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EREW.': '.$file.' '._EINFO3]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
     $cont .= setTemplateBasic('open');
@@ -69,7 +69,7 @@ function htaccess(): void {
     $cont = navi(0, 3, 0, 0);
     $file = '.htaccess';
     $conts = file_get_contents($file);
-    $cont .= checkConfigFile($file);
+    $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EHT.': '.$file.' '._EINFO4]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
@@ -85,7 +85,7 @@ function robots(): void {
     $cont = navi(0, 4, 0, 0);
     $file = 'robots.txt';
     $conts = file_get_contents($file);
-    $cont .= checkConfigFile($file);
+    $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EROB.': '.$file.' '._EINFO5]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/plain', $conts).'</td></tr>'

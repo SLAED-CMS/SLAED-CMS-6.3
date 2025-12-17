@@ -20,7 +20,7 @@ function users_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0
         $search .= '<option value="'.$sort.'"'.$sel.'>'.$value.'</option>';
     }
     $search .= '</select> '.get_user_search('chng_user', $chng_user, '30').' <input type="hidden" name="op" value="users_show"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $search = setTemplateBasic('searchbox', $search);
+    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
     return getAdminTabs(_USERS, 'users.png', $search, $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
@@ -504,7 +504,7 @@ function users_conf(): void {
     global $admin_file, $confu;
     head();
     $cont = users_navi(0, 4, 0, 0);
-    checkConfigFile('users.php');
+    checkPerms('users.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._ANONYMOUSNAME.':</td><td><input type="text" name="anonym" value="'.$confu['anonym'].'" class="sl_conf" placeholder="'._ANONYMOUSNAME.'" required></td></tr>'

@@ -18,7 +18,7 @@ function replace(): void {
     head();
     $cont = navi(0, 0, 0, 0, 'replace');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _REPLACEINFO]);
-    $cont .= checkConfigFile('replace.php');
+    $cont .= checkPerms('replace.php');
     $mods = ['content', 'news'];
     $content = '';
     $k = 0;

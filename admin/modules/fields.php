@@ -17,7 +17,7 @@ function fields(): void {
     global $aroute, $conffi;
     head();
     $cont = navi(0, 0, 0, 0, 'fields');
-    $cont .= checkConfigFile('fields.php');
+    $cont .= checkPerms('fields.php');
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
     $content = '';
     $k = 0;

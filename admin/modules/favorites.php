@@ -22,7 +22,7 @@ function conf(): void {
     global $aroute, $conffav;
     head();
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkConfigFile('favorites.php');
+    $cont .= checkPerms('favorites.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conffav['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'

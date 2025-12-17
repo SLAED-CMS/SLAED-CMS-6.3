@@ -18,12 +18,12 @@ function sitemap(): void {
     head();
     $file = 'sitemap.xml';
     $cont = navi(0, 0, 0, 0);
-    $cont .= checkConfigFile($file, 1);
+    $cont .= checkPerms($file, 1);
     $conts = file_get_contents($file);
     $f = $asize = 0;
     $acont = '';
     foreach (glob('sitemap*.xml*') as $file) {
-        $cont .= checkConfigFile($file, 1);
+        $cont .= checkPerms($file, 1);
         $handle = fopen($file, 'rb');
         $n = 0;
         while (!feof($handle)) {
@@ -57,7 +57,7 @@ function xsl(): void {
     head();
     $file = CONFIG_DIR.'/sitemap/sitemap.xsl';
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkConfigFile('sitemap/sitemap.xsl');
+    $cont .= checkPerms('sitemap/sitemap.xsl');
     $conts = file_get_contents($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_XSL_INFO, $file)]);
     $cont .= setTemplateBasic('open');
@@ -81,7 +81,7 @@ function conf(): void {
     global $aroute, $confma;
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkConfigFile('sitemap.php');
+    $cont .= checkPerms('sitemap.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._MODULES.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.modul('mod', 'sl_conf', $confma['mod'], 1).'</td></tr>';
