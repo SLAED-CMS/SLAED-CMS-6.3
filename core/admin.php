@@ -6,6 +6,159 @@
 
 if (!defined('ADMIN_FILE')) die('Illegal file access');
 
+# Format statistic image
+function getStatistic() {
+    global $conf, $confst;
+    require_once CONFIG_DIR.'/statistic.php';
+    $arg = func_get_args();
+    $report = ($arg[0]) ? intval($arg[0]) : ((isset($_GET['report'])) ? intval($_GET['report']) : 0);
+    $mday = ($arg[1]) ? intval($arg[1]) : ((isset($_GET['day'])) ? intval($_GET['day']) : '15');
+    $file = ($arg[2]) ? text_filter($arg[2]) : ((isset($_GET['file'])) ? text_filter($_GET['file']) : '');
+    $off = 1;
+
+    if (!$report) header('Content-type: image/png');
+    $image = imagecreate(800, 340);
+
+    $white = imagecolorallocate($image, 255, 255, 255);
+    $red = imagecolorallocate($image, 255, 0, 0);
+    $green = imagecolorallocate($image, 0, 128, 0);
+    $purple = imagecolorallocate($image, 200, 0, 200);
+    $black = imagecolorallocate($image, 0, 0, 0);
+    $wblue = imagecolorallocate($image, 34, 122, 199);
+    $wgreen = imagecolorallocate($image, 44, 135, 16);
+    $gray = imagecolorallocate($image, 203, 218, 226);
+    $yellow = imagecolorallocate($image, 207, 179, 31);
+    $llgray = imagecolorallocate($image, 250, 250, 250);
+
+    imagefilledrectangle($image, 0, 252, 800, 340, $llgray);
+
+    if ($report) {
+        $f = (file_exists(COUNTER_DIR.'/days.log')) ? file(COUNTER_DIR.'/days.log') : file(COUNTER_DIR.'/statistic.log');
+    } else {
+        if ($file) {
+            $f = file(COUNTER_DIR.'/statistic/'.$file);
+        } else {
+            if (file_exists(COUNTER_DIR.'/days.log')) {
+                $f = file(COUNTER_DIR.'/days.log');
+                $stat = file(COUNTER_DIR.'/statistic.log');
+                if ($stat !== false) $f = array_merge($f, $stat);
+            } else {
+                $f = file(COUNTER_DIR.'/statistic.log');
+            }
+        }
+    }
+    $f = ($f !== false) ? $f : [];
+    $to = count($f);
+    if ($mday > 15) {
+        $from = 0;
+        $to = 15;
+    } else {
+        $from = (!$file && date('d') <= 15) ? 0 : 15;
+        if ($from < 0) $from = 0;
+    }
+    $unique = $today = $engines = $sites = $homepage = $auditory = $max1 = $max2 = 0;
+    for($i = $from; $i < $to; $i++) {
+        $day = explode('|', $f[$i]);
+        if ($day[1] > $max1) $max1 = $day[1];
+        if ($day[2] > $max2) $max2 = $day[2];
+        $unique = $unique + $day[1];
+        $today = $today + $day[2];
+        $engines = $engines + $day[4];
+        $sites = $sites + $day[5];
+        $homepage = $homepage + $day[6];
+        $auditory = $auditory + $day[1] - ($day[4] + $day[5]);
+        if ($auditory < 0) $auditory = 0;
+        $regusers = $regusers + $day[7];
+    }
+    $i = 0;
+    for($z = $from; $z < $to; $z++) {
+        $day = explode('|', $f[$z]);
+        if ($day[2] != '') {
+            $w = round((230 / $max2) * $day[2]);
+            if ($w < 4) $w = 4;
+            $off = 134;
+            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi'], 249, $yellow);
+            imagerectangle($image, $off+$confst['bet']*$i, 250-$w, $off+$confst['bet']*$i+$confst['shi'], 249, $black);
+            imagerectangle($image, $off+$confst['bet']*$i+$confst['shi']+1, 250-$w+3, $off+$confst['bet']*$i+$confst['shi']+2, 249, $gray);
+            $w = round((230 / $max1) * $day[1]);
+            if ($w < 5) $w = 1;
+            $off = 120;
+
+            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi']+3, 249, $wblue);
+            imagerectangle($image, $off+$confst['bet']*$i,250-$w, $off+$confst['bet']*$i+$confst['shi']+3, 249, $black);
+            imagerectangle($image, $off+$confst['bet']*$i+$confst['shi']+4, 250-$w+4, $off+$confst['bet']*$i+$confst['shi']+5, 249, $black);
+            $zzz = $day[1] - ($day[4] + $day[5]);
+            $w = round((230 / $max1) * $zzz);
+            if ($w < 4) $w = $w + 31;
+
+            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi']+3, 249, $wgreen);
+            imagerectangle($image, $off+$confst['bet']*$i, 250-$w, $off+$confst['bet']*$i+$confst['shi']+3, 249, $black);
+            imagestring($image, 1, $off+$confst['bet']*$i+2, 250-$w+1-10, $day[1], $white);
+
+            $d = explode('.', $day[0]);
+            $d = $d[0].'.'.$d[1];
+
+            imagestring($image, 1, $off+$confst['bet']*$i+1, 255, $d, $wblue);
+            imagestring($image, 1, $off+$confst['bet']*$i+1, 265, $day[1], $red);
+            imagestring($image, 1, $off+$confst['bet']*$i+1, 275, $day[2], $green);
+            imagestring($image, 1, $off+$confst['bet']*$i+1, 285, $day[6], $purple);
+
+            imagestring($image, 1, $off+$confst['bet']*$i+1, 300, $day[5], $wblue);
+            imagestring($image, 1, $off+$confst['bet']*$i+1, 310, $day[4], $red);
+            imagestring($image, 1, $off+$confst['bet']*$i+1, 320, $zzz, $green);
+            imagestring($image, 1, $off+$confst['bet']*$i+1, 330, rtrim($day[7]), $purple);
+
+            imagestring($image, 1, 3, 255, 'DATE:', $wblue);
+            imagestring($image, 1, 3, 265, 'UNIQUE VISITORS:', $red);
+            imagestring($image, 1, 3, 275, 'SITE HITS:', $green);
+            imagestring($image, 1, 3, 285, 'HOMEPAGE HITS:', $purple);
+
+            imagestring($image, 1, 3, 300, 'OTHER SITES:', $wblue);
+            imagestring($image, 1, 3, 310, 'SEARCH ENGINES:', $red);
+            imagestring($image, 1, 3, 320, 'AUDIENCE:', $green);
+            imagestring($image, 1, 3, 330, 'REGISTERED USERS:', $purple);
+        }
+        $i++;
+    }
+
+    imagefilledrectangle($image, 5, 170, 20, 180, $wblue);
+    imagerectangle($image, 5, 170, 20, 180, $black);
+    imagestring($image, 1, 25, 171, 'UNIQUE VISITORS', $black);
+
+    imagefilledrectangle($image, 5, 185, 20, 195, $wgreen);
+    imagerectangle($image, 5, 185, 20, 195, $black);
+    imagestring($image, 1, 25, 186, 'SITE AUDIENCE', $black);
+
+    imagefilledrectangle($image, 5, 200, 20, 210, $yellow);
+    imagerectangle($image, 5, 200, 20, 210, $black);
+    imagestring($image, 1, 25, 202, 'SITE HITS', $black);
+
+    imagerectangle($image, 0, 296, 799, 339, $gray);
+    imagerectangle($image, 0, 252, 800, 252, $gray);
+    imagerectangle($image, 0, 0, 799, 339, $gray);
+
+    imagestring($image, 1, 5, 5, 'VISITS BY DAYS FOR '.strtoupper($conf['homeurl']).' BY SLAED CMS '.$conf['version'].' - '.date(_TIMESTRING), $wblue);
+
+    imagestring($image, 1, 5, 30, 'UNIQUES TOTAL: '.$unique, $red);
+    imagestring($image, 1, 5, 40, 'HITS TOTAL: '.$today, $green);
+    imagestring($image, 1, 5, 50, 'HOMEPAGE HITS: '.$homepage, $purple);
+
+    imagestring($image, 1, 5, 70, 'OTHER SITES: '.$sites, $wblue);
+    imagestring($image, 1, 5, 80, 'SEARCH ENGINES: '.$engines, $red);
+    imagestring($image, 1, 5, 90, 'AUDIENCE: '.$auditory, $green);
+    imagestring($image, 1, 5, 100, 'REG. USERS: '.$regusers, $purple);
+
+    imagestring($image, 1, 5, 120, 'PAGES PER VIS.: '.round($today/$unique, 2), $wblue);
+    imagestring($image, 1, 5, 130, 'AVR. AUDIENCE: '.round($auditory/$i), $wblue);
+
+    if ($report) {
+        imagepng($image, COUNTER_DIR.'/statistic/'.date('m-Y').'.png');
+    } else {
+        imagepng($image);
+    }
+    exit;
+}
+
 # Authenticate and IP address check
 function checkAccess() {
     global $confs;
@@ -43,7 +196,7 @@ function checkAccess() {
 
 # Denial of Authenticate
 function setUnauthorized() {
-    header('WWW-Authenticate: Basic realm="SLAED"');
+    header('WWW-Authenticate: Basic realm="SLAED CMS"');
     header('HTTP/1.0 401 Unauthorized');
     setExit(_LOGININCOR);
 }
@@ -138,7 +291,7 @@ function getAdminInfo(int $obj = 0, string $mod = '', string $file = ''): string
         $name = $fpre.$locale;
         $path = $mpp.'admin/info/'.$name.'.html';
         $tfile = is_file($path) ? file_get_contents($path) : _NO_INFO;
-        if ($ainfo) $cont .= checkConfigFile($path);
+        if ($ainfo) $cont .= checkPerms($path);
         $mod = $mpp;
     }
     $cont .= setTemplateBasic('open');
@@ -275,7 +428,7 @@ function admininfo() {
             $ablocks .= setTemplateBlock('block-left', array('{%title%}' => _WAITINGCONT, '{%content%}' => $w_cont, '{%id%}' => '4'));
             
             if ($conf['sblock'] && is_admin_god()) {
-                include("config/config_stat.php");
+                include("config/statistic.php");
                 
                 $phpsapi = ucfirst(php_sapi_name());
                 $osver = php_uname("s");

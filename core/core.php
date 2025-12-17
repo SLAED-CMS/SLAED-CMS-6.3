@@ -576,15 +576,17 @@ function setNaviLower($mod) {
     return setTemplateBasic('open').'<span class="sl_pos_center"><a href="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_foot">'._BACK.'</a><a href="index.php?name='.$mod.'" title="'._PAGEHOME.'" class="sl_but_foot">'._PAGEHOME.'</a><a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="sl_but_foot">'._PAGETOP.'</a></span>'.setTemplateBasic('close');
 }
 
-# Load configuration file and return chmod warning if needed
-function checkConfigFile(string $fp): string {
-    $path = CONFIG_DIR.'/'.$fp;
-    $perm = checkFileChmod($path, 666);
-    return ($perm !== '') ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $perm]) : '';
+# Load configuration file or directory and return chmod warning if needed
+function checkPerms(string $fp, int $id = 0): string {
+    $base = ($id === 0) ? CONFIG_DIR : BASE_DIR;
+    $path = $base.'/'.ltrim($fp, '/');
+    $perm = is_dir($path) ? 777 : 666;
+    $info = checkFileChmod($path, $perm);
+    return ($info !== '') ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $info]) : '';
 }
 
 # Check file chmod permission and try to fix it (Linux only)
-function checkFileChmod(string $dir,int $chm): string {
+function checkFileChmod(string $dir, int $chm): string {
     $out = '';
     if (file_exists($dir) && $chm > 0) {
         $per=substr(decoct(fileperms($dir)), -3);
@@ -2591,7 +2593,7 @@ function url_types() {
 function check_user() {
     global $user;
     if (is_user()) {
-        $f = "config/counter/user.txt";
+        $f = COUNTER_DIR.'/user.log';
         $un = text_filter(substr($user[1], 0, 25), 1);
         if (file_exists($f)) {
             $fun = file_get_contents($f);
@@ -2707,27 +2709,27 @@ function head() {
             }
         }
     }
-    include('config/config_stat.php');
+    require_once CONFIG_DIR.'/statistic.php';
     if ($confst['stat']) {
         $sreferer = get_referer();
         $sreqhom = text_filter($request);
-        $spath = 'config/counter/';
-        $sdate = file($spath.'stat.txt');
+        $spath = COUNTER_DIR.'/';
+        $sdate = file($spath.'statistic.log');
         if ($sdate) {
             $con = explode('|', trim($sdate[0]));
             if (date('d.m.Y') != $con[0]) {
-                $fpd = fopen($spath.'days.txt', 'ab');
+                $fpd = fopen($spath.'days.log', 'ab');
                 flock($fpd, 2);
                 fwrite($fpd, $sdate[0]."\r\n");
                 flock($fpd, 3);
                 fclose($fpd);
-                if (file_exists($spath.'stat.txt')) unlink($spath.'stat.txt');
-                if (file_exists(COUNTER_DIR.'/ips.log')) unlink(COUNTER_DIR.'/ips.log');
-                if (file_exists($spath.'user.txt')) unlink($spath.'user.txt');
+                if (file_exists($spath.'statistic.log')) unlink($spath.'statistic.log');
+                if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
+                if (file_exists($spath.'user.log')) unlink($spath.'user.log');
                 if (substr($con[0], 3) != date('m.Y')) {
                     $month = date('Y-m', strtotime('-1 month'));
-                    rename($spath.'days.txt', $spath.'stat/stat_'.$month.'.txt');
-                    if (file_exists($spath.'days.txt')) unlink($spath.'days.txt');
+                    rename($spath.'days.log', $spath.'stat/stat_'.$month.'.log');
+                    if (file_exists($spath.'days.log')) unlink($spath.'days.log');
                 }
                 $ahits = ($con[3]) ? ($con[3]+1) : '1';
                 $sengine = ($conf['session'] && !empty($guest) == 1) ? '1' : '0';
@@ -2744,7 +2746,7 @@ function head() {
                 $suser = ($checku && $conf['session'] && $guest == 2) ? intval($con[7]+1) : $con[7];
                 $wc = $con[0].'|'.$shost.'|'.intval($con[2]+1).'|'.intval($con[3]+1).'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
             }
-            $fps = fopen($spath.'stat.txt', 'wb');
+            $fps = fopen($spath.'statistic.log', 'wb');
             if (flock($fps, LOCK_EX)) {
                 ftruncate($fps, 0);
                 fwrite($fps, $wc);
@@ -2752,14 +2754,14 @@ function head() {
                 flock($fps, LOCK_UN);
             }
             fclose($fps);
-        } elseif (!file_exists($spath.'stat.txt') || (date('d.m.Y', filemtime($spath.'stat.txt')) < date('d.m.Y', time()))) {
-            unlink(COUNTER_DIR.'/ips.log');
-            unlink($spath.'user.txt');
+        } elseif (!file_exists($spath.'statistic.log') || (date('d.m.Y', filemtime($spath.'statistic.log')) < date('d.m.Y', time()))) {
+            unlink($spath.'ips.log');
+            unlink($spath.'user.log');
             $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
             $srefer = ($sreferer) ? '1' : '0';
             $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
             $wc = date('d.m.Y').'|0|1|1|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
-            $fps = fopen($spath.'stat.txt', 'wb');
+            $fps = fopen($spath.'statistic.log', 'wb');
             flock($fps, 2);
             fwrite($fps, $wc);
             flock($fps, 3);
@@ -5169,158 +5171,6 @@ function update_points() {
         $rpoints = (!empty($arg[2])) ? "-".$upoints[$a] : "+".$upoints[$a];
         $db->sql_query("UPDATE ".$prefix."_users SET user_points = user_points".$rpoints." WHERE user_id = '".$uid."'");
     }
-}
-
-# Format statistic image
-function create_stat() {
-    global $conf;
-    include("config/config_stat.php");
-    $arg = func_get_args();
-    $report = ($arg[0]) ? intval($arg[0]) : ((isset($_GET['report'])) ? intval($_GET['report']) : 0);
-    $mday = ($arg[1]) ? intval($arg[1]) : ((isset($_GET['day'])) ? intval($_GET['day']) : "15");
-    $file = ($arg[2]) ? text_filter($arg[2]) : ((isset($_GET['file'])) ? text_filter($_GET['file']) : "");
-    $off = 1;
-
-    if (!$report) header("Content-type: image/png");
-    $image = imagecreate(800, 340);
-
-    $white = imagecolorallocate($image, 255, 255, 255);
-    $red = imagecolorallocate($image, 255, 0, 0);
-    $green = imagecolorallocate($image, 0, 128, 0);
-    $purple = imagecolorallocate($image, 200, 0, 200);
-    $black = imagecolorallocate($image, 0, 0, 0);
-    $wblue = imagecolorallocate($image, 34, 122, 199);
-    $wgreen = imagecolorallocate($image, 44, 135, 16);
-    $gray = imagecolorallocate($image, 203, 218, 226);
-    $yellow = imagecolorallocate($image, 207, 179, 31);
-    $llgray = imagecolorallocate($image, 250, 250, 250);
-
-    imagefilledrectangle($image, 0, 252, 800, 340, $llgray);
-
-    $f = array();
-    if ($report) {
-        $f = (file_exists("config/counter/days.txt")) ? file("config/counter/days.txt") : file("config/counter/stat.txt");
-    } else {
-        if ($file) {
-            $f = file("config/counter/stat/".$file);
-        } else {
-            if (file_exists("config/counter/days.txt")) {
-                $f = file("config/counter/days.txt");
-                $f = array_merge($f, file("config/counter/stat.txt"));
-            } else {
-                $f = file("config/counter/stat.txt");
-            }
-        }
-    }
-    $to = count($f);
-    if ($mday > 15) {
-        $from = 0;
-        $to = 15;
-    } else {
-        $from = (!$file && date("d") <= 15) ? 0 : 15;
-        if ($from < 0) $from = 0;
-    }
-    $unique = $today = $engines = $sites = $homepage = $auditory = $max1 = $max2 = 0;
-    for($i = $from; $i < $to; $i++) {
-        $day = explode("|", $f[$i]);
-        if ($day[1] > $max1) $max1 = $day[1];
-        if ($day[2] > $max2) $max2 = $day[2];
-        $unique = $unique + $day[1];
-        $today = $today + $day[2];
-        $engines = $engines + $day[4];
-        $sites = $sites + $day[5];
-        $homepage = $homepage + $day[6];
-        $auditory = $auditory + $day[1] - ($day[4] + $day[5]);
-        if ($auditory < 0) $auditory = 0;
-        $regusers = $regusers + $day[7];
-    }
-    $i = 0;
-    for($z = $from; $z < $to; $z++) {
-        $day = explode("|", $f[$z]);
-        if ($day[2] != "") {
-            $w = round((230 / $max2) * $day[2]);
-            if ($w < 4) $w = 4;
-            $off = 134;
-            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi'], 249, $yellow);
-            imagerectangle($image, $off+$confst['bet']*$i, 250-$w, $off+$confst['bet']*$i+$confst['shi'], 249, $black);
-            imagerectangle($image, $off+$confst['bet']*$i+$confst['shi']+1, 250-$w+3, $off+$confst['bet']*$i+$confst['shi']+2, 249, $gray);
-            $w = round((230 / $max1) * $day[1]);
-            if ($w < 5) $w = 1;
-            $off = 120;
-
-            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi']+3, 249, $wblue);
-            imagerectangle($image, $off+$confst['bet']*$i,250-$w, $off+$confst['bet']*$i+$confst['shi']+3, 249, $black);
-            imagerectangle($image, $off+$confst['bet']*$i+$confst['shi']+4, 250-$w+4, $off+$confst['bet']*$i+$confst['shi']+5, 249, $black);
-            $zzz = $day[1] - ($day[4] + $day[5]);
-            $w = round((230 / $max1) * $zzz);
-            if ($w < 4) $w = $w + 31;
-
-            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi']+3, 249, $wgreen);
-            imagerectangle($image, $off+$confst['bet']*$i, 250-$w, $off+$confst['bet']*$i+$confst['shi']+3, 249, $black);
-            imagestring($image, 1, $off+$confst['bet']*$i+2, 250-$w+1-10, $day[1], $white);
-
-            $d = explode(".", $day[0]);
-            $d = $d[0].".".$d[1];
-
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 255, $d, $wblue);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 265, $day[1], $red);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 275, $day[2], $green);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 285, $day[6], $purple);
-
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 300, $day[5], $wblue);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 310, $day[4], $red);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 320, $zzz, $green);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 330, rtrim($day[7]), $purple);
-
-            imagestring($image, 1, 3, 255, "DATE:", $wblue);
-            imagestring($image, 1, 3, 265, "UNIQUE VISITORS:", $red);
-            imagestring($image, 1, 3, 275, "SITE HITS:", $green);
-            imagestring($image, 1, 3, 285, "HOMEPAGE HITS:", $purple);
-
-            imagestring($image, 1, 3, 300, "OTHER SITES:", $wblue);
-            imagestring($image, 1, 3, 310, "SEARCH ENGINES:", $red);
-            imagestring($image, 1, 3, 320, "AUDIENCE:", $green);
-            imagestring($image, 1, 3, 330, "REGISTERED USERS:", $purple);
-        }
-        $i++;
-    }
-
-    imagefilledrectangle($image, 5, 170, 20, 180, $wblue);
-    imagerectangle($image, 5, 170, 20, 180, $black);
-    imagestring($image, 1, 25, 171, "UNIQUE VISITORS", $black);
-
-    imagefilledrectangle($image, 5, 185, 20, 195, $wgreen);
-    imagerectangle($image, 5, 185, 20, 195, $black);
-    imagestring($image, 1, 25, 186, "SITE AUDIENCE", $black);
-
-    imagefilledrectangle($image, 5, 200, 20, 210, $yellow);
-    imagerectangle($image, 5, 200, 20, 210, $black);
-    imagestring($image, 1, 25, 202, "SITE HITS", $black);
-
-    imagerectangle($image, 0, 296, 799, 339, $gray);
-    imagerectangle($image, 0, 252, 800, 252, $gray);
-    imagerectangle($image, 0, 0, 799, 339, $gray);
-
-    imagestring($image, 1, 5, 5, "VISITS BY DAYS FOR ".strtoupper($conf['homeurl'])." BY SLAED CMS ".$conf['version']." - ".date(_TIMESTRING), $wblue);
-
-    imagestring($image, 1, 5, 30, "UNIQUES TOTAL: ".$unique, $red);
-    imagestring($image, 1, 5, 40, "HITS TOTAL: ".$today, $green);
-    imagestring($image, 1, 5, 50, "HOMEPAGE HITS: ".$homepage, $purple);
-
-    imagestring($image, 1, 5, 70, "OTHER SITES: ".$sites, $wblue);
-    imagestring($image, 1, 5, 80, "SEARCH ENGINES: ".$engines, $red);
-    imagestring($image, 1, 5, 90, "AUDIENCE: ".$auditory, $green);
-    imagestring($image, 1, 5, 100, "REG. USERS: ".$regusers, $purple);
-
-    imagestring($image, 1, 5, 120, "PAGES PER VIS.: ".round($today/$unique, 2), $wblue);
-    imagestring($image, 1, 5, 130, "AVR. AUDIENCE: ".round($auditory/$i), $wblue);
-
-    if ($report) {
-        imagepng($image, "config/counter/stat/".date("m-Y").".png");
-    } else {
-        imagepng($image);
-    }
-    imagedestroy($image);
 }
 
 # Format image preview PHP GD
