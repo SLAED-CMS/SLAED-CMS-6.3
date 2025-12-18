@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -251,19 +251,19 @@ function ghpage(string $owner, string $repo, array $filters, int $perpage, int $
     if ($httpcode !== 200) {
         $errdata = json_decode($body, true);
         $gherror = '<strong>GitHub API Fehler:</strong><br>';
-        $gherror .= '• HTTP Status: '.$httpcode.'<br>';
+        $gherror .= 'â€¢ HTTP Status: '.$httpcode.'<br>';
 
         if ($httpcode === 403) {
             if (preg_match('/X-RateLimit-Remaining: (\d+)/i', $header, $m)) {
-                $gherror .= '• Rate Limit verbleibend: '.$m[1].'<br>';
+                $gherror .= 'â€¢ Rate Limit verbleibend: '.$m[1].'<br>';
             }
             if (preg_match('/X-RateLimit-Reset: (\d+)/i', $header, $m)) {
-                $gherror .= '• Reset um: '.date('H:i:s', intval($m[1])).'<br>';
+                $gherror .= 'â€¢ Reset um: '.date('H:i:s', intval($m[1])).'<br>';
             }
         }
 
         if (isset($errdata['message'])) {
-            $gherror .= '• Nachricht: '.esc($errdata['message']);
+            $gherror .= 'â€¢ Nachricht: '.esc($errdata['message']);
         }
 
         return [];
@@ -360,15 +360,9 @@ function gitfetch(string $gitdir, array $filters, int $limit): array {
     $format .= '%ad'.GIT_LOG_DELIM.'%an'.GIT_LOG_DELIM.'%ae'.GIT_LOG_DELIM;
     $format .= '%s'.GIT_LOG_DELIM.'%b'.GIT_LOG_DELIM.COMMIT_END;
 
-    if (PHP_OS_FAMILY === 'Windows') {
-        $format = str_replace('%', '%%', $format);
-        $dateformat = '%%Y-%%m-%%d %%H:%%M';
-    } else {
-        $dateformat = '%Y-%m-%d %H:%M';
-    }
+    $dateformat = '%Y-%m-%d %H:%M';
 
-    $cmd = escapeshellarg($gitexe).' log --pretty="format:'.$format.'"';
-    $cmd .= ' --date="format:'.$dateformat.'" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
+    $cmd = escapeshellarg($gitexe).' log --pretty="format:'.$format.'" --date="format:'.$dateformat.'" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
 
     $gitlog = [];
     exec($cmd, $gitlog, $retcode);
@@ -761,63 +755,58 @@ function rencom(array $commits, array $conf): string {
             continue;
         }
 
-        $bg = $i % 2 ? '#f9f9f9' : '#fff';
-        $html .= '<div class="commit" style="background: '.$bg.'">';
-        $html .= '<div class="commit-header">';
-        $html .= '<strong>'.esc($commit['subject']).'</strong>';
-        $html .= ' <code>'.esc($commit['hash']).'</code>';
-        $html .= '</div>';
-
-        $html .= '<div class="commit-meta">';
-        $html .= '<strong>Autor:</strong> '.esc($commit['author']).' &lt;'.esc($commit['email']).'&gt; ';
-        $html .= '| <strong>Datum:</strong> '.esc($commit['date']);
-        $html .= '</div>';
-
+        $bodyHtml = '';
         if (!empty($commit['body']) && $commit['body'] !== COMMIT_END) {
             $body = esc($commit['body']);
             $body = preg_replace('/\*\*([^\*]+)\*\*/', '<strong>$1</strong>', $body);
             $body = preg_replace('/^[\-\*] (.+)$/m', '&bull; $1', $body);
             $body = preg_replace('/`([^`]+)`/', '<code>$1</code>', $body);
-            $body = nl2br($body);
-
-            $html .= '<div class="commit-body">'.$body.'</div>';
+            $bodyHtml = '<div class="commit-body">'.nl2br($body).'</div>';
         }
 
-        if ($conf['showstat'] && !empty($commit['files'])) {
+        $statsHtml = '';
+        if (!empty($conf['showstat']) && !empty($commit['files'])) {
             $totadd = $totdel = 0;
             foreach ($commit['files'] as $f) {
                 $totadd += $f['added'];
                 $totdel += $f['deleted'];
             }
 
-            $html .= '<div class="commit-stats">';
-            $html .= '<strong>Änderungen:</strong> ';
-            $html .= '<span class="add">+'.$totadd.'</span> / ';
-            $html .= '<span class="del">-'.$totdel.'</span> | ';
-            $html .= '<strong>'.count($commit['files']).' Datei(en)</strong>';
-            $html .= '</div>';
-
-            if ($conf['showfile']) {
-                $html .= '<div class="commit-files">';
+            $filesHtml = '';
+            if (!empty($conf['showfile'])) {
+                $rows = [];
                 foreach ($commit['files'] as $f) {
-                    $html .= '<div>';
-                    $html .= '<span class="add">+'.str_pad($f['added'], 3, ' ', STR_PAD_LEFT).'</span> ';
-                    $html .= '<span class="del">-'.str_pad($f['deleted'], 3, ' ', STR_PAD_LEFT).'</span> ';
-                    $html .= esc($f['file']);
-                    $html .= '</div>';
+                    $rows[] = '<div><span class="add">+'.str_pad($f['added'], 3, ' ', STR_PAD_LEFT).'</span> '
+                        .'<span class="del">-'.str_pad($f['deleted'], 3, ' ', STR_PAD_LEFT).'</span> '
+                        .esc($f['file']).'</div>';
                 }
-                $html .= '</div>';
+                $filesHtml = '<div class="commit-files">'.implode('', $rows).'</div>';
             }
+
+            $statsHtml = '<div class="commit-stats">';
+            $statsHtml .= '<strong>Änderungen:</strong> ';
+            $statsHtml .= '<span class="add">+'.$totadd.'</span> / ';
+            $statsHtml .= '<span class="del">-'.$totdel.'</span> | ';
+            $statsHtml .= '<strong>'.count($commit['files']).' Datei(en)</strong>';
+            $statsHtml .= '</div>';
+            $statsHtml .= $filesHtml;
         }
 
-        $html .= '</div>';
+        $html .= setTemplateBasic('basic-changelog-commit', [
+            '{%background%}' => $i % 2 ? '#f9f9f9' : '#fff',
+            '{%subject%}' => esc($commit['subject']),
+            '{%hash%}' => esc($commit['hash']),
+            '{%author%}' => esc($commit['author']),
+            '{%email%}' => esc($commit['email']),
+            '{%date%}' => esc($commit['date']),
+            '{%body%}' => $bodyHtml,
+            '{%stats%}' => $statsHtml
+        ]);
         $i++;
     }
 
     return $html;
-}
-
-function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
+}function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
     $query = http_build_query(array_filter([
         'name' => 'changelog',
         'author' => $filters['author'],
@@ -845,3 +834,5 @@ switch ($op) {
     case 'export': export(); break;
     case 'info': info(); break;
 }
+
+
