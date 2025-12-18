@@ -320,7 +320,7 @@
                         <div class="knob-text">{%load_0%}%</div>
                     </div>
                     <div class="sys-label">Operations</div>
-                    <div class="sys-sub">{%load_str%}</div>
+                    <div class="sys-sub">{%loadstr%}</div>
                 </div>
                 <!-- CPU Real -->
                 <div class="mon-sys-item">
@@ -366,7 +366,7 @@
             </div>
             <div class="disk-text">
                 <div class="sys-label">Root /</div>
-                <div class="sys-sub">{%disk_used_fmt%} / {%disk_total_fmt%}</div>
+                <div class="sys-sub">{%diskused%} / {%disktot%}</div>
             </div>
         </div>
     </div>
@@ -375,22 +375,22 @@
     <div class="mon-overview-strip">
         <div class="ov-item">
             <div class="ov-label">Website</div>
-            <div class="ov-val">{%cnt_news%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
+            <div class="ov-val">{%cntnews%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
             </div>
         </div>
         <div class="ov-item">
             <div class="ov-label">Files</div>
-            <div class="ov-val">{%cnt_files%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
+            <div class="ov-val">{%cntfile%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
             </div>
         </div>
         <div class="ov-item">
             <div class="ov-label">Database</div>
-            <div class="ov-val">{%db_tables%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
+            <div class="ov-val">{%dbtabs%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
             </div>
         </div>
         <div class="ov-item">
             <div class="ov-label">Users</div>
-            <div class="ov-val">{%users_online%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
+            <div class="ov-val">{%userson%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
             </div>
         </div>
     </div>
@@ -403,18 +403,18 @@
             <div class="sw-grid">
                 <div class="sw-card">
                     <i class="sw-icon fa fa-server"></i>
-                    <div class="sw-name">{%server_name%}</div>
+                    <div class="sw-name">{%servname%}</div>
                     <div class="sw-stat-row"><span>Ver</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
                 </div>
                 <div class="sw-card">
                     <i class="sw-icon fa fa-database"></i>
                     <div class="sw-name">MySQL</div>
-                    <div class="sw-stat-row"><span>{%mysql_ver%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-stat-row"><span>{%mysql%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
                 </div>
                 <div class="sw-card">
                     <i class="sw-icon fa fa-code"></i>
                     <div class="sw-name">PHP</div>
-                    <div class="sw-stat-row"><span>{%php_version%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-stat-row"><span>{%phpver%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
                 </div>
                 <div class="sw-card">
                     <i class="sw-icon fa fa-shield"></i>
@@ -430,11 +430,11 @@
             <div class="traffic-stats-row">
                 <div class="t-item">
                     <div class="t-label t-label-up"><span></span> Upstream</div>
-                    <div class="t-val">{%net_tx_fmt%}</div>
+                    <div class="t-val">{%nettx%}</div>
                 </div>
                 <div class="t-item">
                     <div class="t-label t-label-down"><span></span> Downstream</div>
-                    <div class="t-val">{%net_rx_fmt%}</div>
+                    <div class="t-val">{%netrx%}</div>
                 </div>
             </div>
             <!-- Chart -->
@@ -463,19 +463,19 @@
                 <table class="mon-clean-table">
                     <tr>
                         <td>Operation Mode</td>
-                        <td>{%operation_mode%}</td>
+                        <td>{%opmode%}</td>
                     </tr>
                     <tr>
                         <td>Statistics</td>
-                        <td>{%stat_active%}</td>
+                        <td>{%statact%}</td>
                     </tr>
                     <tr>
                         <td>Transitions</td>
-                        <td>{%referers_active%}</td>
+                        <td>{%referact%}</td>
                     </tr>
                     <tr>
                         <td>Newsletter</td>
-                        <td>{%newsletter%}</td>
+                        <td>{%newslet%}</td>
                     </tr>
                     <tr>
                         <td>Caching</td>
@@ -487,31 +487,31 @@
                     </tr>
                     <tr>
                         <td>SLAED CMS</td>
-                        <td>{%cms_version%}</td>
+                        <td>{%cmsver%}</td>
                     </tr>
                     <tr>
                         <td>OS</td>
-                        <td>{%os_name%}</td>
+                        <td>{%osname%}</td>
                     </tr>
                     <tr>
                         <td>Server</td>
-                        <td>{%server_soft_full%}</td>
+                        <td>{%servfull%}</td>
                     </tr>
                     <tr>
                         <td>PHP Version</td>
-                        <td>{%php_version%}</td>
+                        <td>{%phpver%}</td>
                     </tr>
                     <tr>
                         <td>PHP SAPI</td>
-                        <td>{%php_sapi%}</td>
+                        <td>{%phpsapi%}</td>
                     </tr>
                     <tr>
                         <td>PHP GD</td>
-                        <td>{%gd_version%}</td>
+                        <td>{%gdver%}</td>
                     </tr>
                     <tr>
                         <td>MySQL</td>
-                        <td>{%mysql_ver%}</td>
+                        <td>{%mysql%}</td>
                     </tr>
                 </table>
             </div>
@@ -519,55 +519,55 @@
                 <table class="mon-clean-table">
                     <tr>
                         <td>DB Size</td>
-                        <td>{%db_size_fmt%}</td>
+                        <td>{%dbszfmt%}</td>
                     </tr>
                     <tr>
                         <td>Post Max Size</td>
-                        <td>{%post_max%}</td>
+                        <td>{%postmax%}</td>
                     </tr>
                     <tr>
                         <td>File Uploads</td>
-                        <td>{%file_uploads%}</td>
+                        <td>{%fileup%}</td>
                     </tr>
                     <tr>
                         <td>Upload Max</td>
-                        <td>{%upload_max%}</td>
+                        <td>{%upmax%}</td>
                     </tr>
                     <tr>
                         <td>Memory Limit</td>
-                        <td>{%memory_limit%}</td>
+                        <td>{%memlim%}</td>
                     </tr>
                     <tr>
                         <td>Max Input Vars</td>
-                        <td>{%max_input_vars%}</td>
+                        <td>{%maxvars%}</td>
                     </tr>
                     <tr>
                         <td>Execution Time</td>
-                        <td>{%max_execution_time%} s</td>
+                        <td>{%maxtime%} s</td>
                     </tr>
                     <tr>
                         <td>GZip</td>
-                        <td>{%gzip_loaded%}</td>
+                        <td>{%gzipld%}</td>
                     </tr>
                     <tr>
                         <td>Zip Archive</td>
-                        <td>{%zip_loaded%}</td>
+                        <td>{%zipld%}</td>
                     </tr>
                     <tr>
                         <td>PHP Timezone</td>
-                        <td>{%php_time%}</td>
+                        <td>{%phptime%}</td>
                     </tr>
                     <tr>
                         <td>Disk Total</td>
-                        <td>{%disk_total_fmt%}</td>
+                        <td>{%disktot%}</td>
                     </tr>
                     <tr>
                         <td>Disk Free</td>
-                        <td>{%disk_free_fmt%}</td>
+                        <td>{%diskfree%}</td>
                     </tr>
                     <tr>
                         <td>Disk Used</td>
-                        <td>{%disk_used_fmt%}</td>
+                        <td>{%diskused%}</td>
                     </tr>
                 </table>
             </div>
