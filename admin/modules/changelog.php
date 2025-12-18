@@ -360,8 +360,15 @@ function gitfetch(string $gitdir, array $filters, int $limit): array {
     $format .= '%ad'.GIT_LOG_DELIM.'%an'.GIT_LOG_DELIM.'%ae'.GIT_LOG_DELIM;
     $format .= '%s'.GIT_LOG_DELIM.'%b'.GIT_LOG_DELIM.COMMIT_END;
 
-    $cmd = escapeshellarg($gitexe).' log --pretty=format:'.escapeshellarg($format);
-    $cmd .= ' --date=format:"%Y-%m-%d %H:%M" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
+    if (PHP_OS_FAMILY === 'Windows') {
+        $format = str_replace('%', '%%', $format);
+        $dateformat = '%%Y-%%m-%%d %%H:%%M';
+    } else {
+        $dateformat = '%Y-%m-%d %H:%M';
+    }
+
+    $cmd = escapeshellarg($gitexe).' log --pretty="format:'.$format.'"';
+    $cmd .= ' --date="format:'.$dateformat.'" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
 
     $gitlog = [];
     exec($cmd, $gitlog, $retcode);
@@ -391,8 +398,10 @@ function gitparse(array $lines): array {
                 $commits[] = $curcom;
             }
 
-            $parts = explode($delim, $line);
+            $parts = explode($delim, $line, 9);
             if (count($parts) >= 8) {
+                $body = trim($parts[7] ?? '');
+                $body = str_replace(COMMIT_END, '', $body);
                 $curcom = [
                     'fullhash' => $parts[1] ?? '',
                     'hash' => $parts[2] ?? '',
@@ -400,7 +409,7 @@ function gitparse(array $lines): array {
                     'author' => $parts[4] ?? '',
                     'email' => $parts[5] ?? '',
                     'subject' => $parts[6] ?? '',
-                    'body' => trim($parts[7] ?? '')
+                    'body' => $body
                 ];
                 $files = [];
             }
