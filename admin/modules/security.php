@@ -7,12 +7,12 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/security.php';
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'];
     $lang = [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO];
     $sops = ['', ''];
     $slang = [_BANNED_IP, _BANNED_USERS];
-    return getAdminTabs(_SECURITY, 'security.png', '', $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $extra);
+    return getAdminTabs(_SECURITY, 'security.png', '', $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
 }
 
 function security(): void {

@@ -7,76 +7,302 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/changelog.php';
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $conflog;
-    if ($conflog['export_enabled'] ?? true) {
-        $ops = ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'];
-        $lang = [_HOME, _PREFERENCES, 'Export TXT', 'Export Markdown', _INFO];
-    } else {
-        $ops = ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'];
-        $lang = [_HOME, _PREFERENCES, _INFO];
-    }
-    return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, $subtab);
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+const GH_API_TIMEOUT = 10;
+const GH_API_CONNECT_TIMEOUT = 5;
+const GIT_LOG_DELIM = '||';
+const COMMIT_START = 'COMMIT_START';
+const COMMIT_END = 'COMMIT_END';
+const DEFAULT_CACHE_TTL = 900; // 15 minutes
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+function esc(string $str): string {
+    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 }
 
-function commits(string $owner, string $repo, int $limit = 50, string $token = '', array $filters = []): array {
-    global $github_error;
-    $url = "https://api.github.com/repos/$owner/$repo/commits?per_page=$limit";
+function clamp(int $value, int $min, int $max): int {
+    return max($min, min($value, $max));
+}
 
-    // Add filter
-    if (!empty($filters['author'])) $url .= '&author='.urlencode($filters['author']);
-    if (!empty($filters['since'])) $url .= '&since='.urlencode($filters['since'].'T00:00:00Z');
-    if (!empty($filters['until'])) $url .= '&until='.urlencode($filters['until'].'T23:59:59Z');
+function valdate(string $date): bool {
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) return false;
+    $dt = DateTime::createFromFormat('Y-m-d', $date);
+    return $dt && $dt->format('Y-m-d') === $date;
+}
+
+// ============================================================================
+// CACHE FUNCTIONS
+// ============================================================================
+
+/**
+ * Get cache data with metadata
+ * @return array|null ['data' => mixed, 'etag' => string, 'lastmod' => string] or null
+ */
+function chgetcache(string $key): ?array {
+    $file = CACHE_DIR.'/'.sha1($key).'.json';
+    if (!file_exists($file)) return null;
+
+    $json = @file_get_contents($file);
+    if (!$json) return null;
+
+    $cache = json_decode($json, true);
+    if (!$cache || !isset($cache['meta'], $cache['data'])) {
+        @unlink($file);
+        return null;
+    }
+
+    // Check expiration
+    $now = time();
+    if ($now > $cache['meta']['expires_at']) {
+        @unlink($file);
+        return null;
+    }
+
+    return [
+        'data' => $cache['data'],
+        'etag' => $cache['meta']['etag'] ?? '',
+        'lastmod' => $cache['meta']['last_modified'] ?? ''
+    ];
+}
+
+/**
+ * Set cache with metadata (atomic write)
+ * @param string $key Cache key
+ * @param mixed $data Data to cache
+ * @param string $url Original URL (for debugging)
+ * @param string $etag ETag from response
+ * @param string $lastmod Last-Modified from response
+ */
+function chsetcache(string $key, $data, string $url = '', string $etag = '', string $lastmod = ''): void {
+    if (!is_dir(CACHE_DIR)) @mkdir(CACHE_DIR, 0755, true);
+
+    $file = CACHE_DIR.'/'.sha1($key).'.json';
+    $tmpfile = $file.'.tmp';
+
+    $ttl = DEFAULT_CACHE_TTL;
+    global $conflog;
+    if (isset($conflog['cachettl'])) {
+        $ttl = (int)$conflog['cachettl'];
+    }
+
+    $cache = [
+        'meta' => [
+            'created_at' => time(),
+            'expires_at' => time() + $ttl,
+            'etag' => $etag,
+            'last_modified' => $lastmod,
+            'url' => $url
+        ],
+        'data' => $data
+    ];
+
+    // Atomic write
+    $json = json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (file_put_contents($tmpfile, $json, LOCK_EX) !== false) {
+        @rename($tmpfile, $file);
+    }
+}
+
+// ============================================================================
+// GITHUB API FUNCTIONS
+// ============================================================================
+
+function ghtotal(string $owner, string $repo, string $token = ''): int {
+    global $gherror;
+
+    $cachekey = "ghtotal_$owner/$repo";
+    $cached = chgetcache($cachekey);
+    if ($cached !== null) return $cached['data'];
+
+    $query = <<<GQL
+query {
+  repository(owner: "$owner", name: "$repo") {
+    defaultBranchRef {
+      target {
+        ... on Commit {
+          history {
+            totalCount
+          }
+        }
+      }
+    }
+  }
+}
+GQL;
+
+    $payload = json_encode(['query' => $query]);
+    $headers = [
+        'User-Agent: SLAED-CMS-Changelog',
+        'Content-Type: application/json',
+    ];
+
+    if ($token) {
+        $headers[] = 'Authorization: Bearer '.$token;
+    }
+
+    $ch = curl_init('https://api.github.com/graphql');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, GH_API_TIMEOUT);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, GH_API_CONNECT_TIMEOUT);
+
+    $response = curl_exec($ch);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($response === false || $httpcode !== 200) {
+        $gherror = 'GraphQL API Fehler: HTTP '.$httpcode;
+        return 0;
+    }
+
+    $data = json_decode($response, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        $gherror = 'JSON Decode Fehler';
+        return 0;
+    }
+
+    $count = $data['data']['repository']['defaultBranchRef']['target']['history']['totalCount'] ?? 0;
+    chsetcache($cachekey, $count, 'https://api.github.com/graphql');
+
+    return $count;
+}
+
+function ghfetch(string $owner, string $repo, array $filters, int $limit, string $token = ''): array {
+    global $gherror;
+
+    $cachekey = "ghfetch_$owner/$repo/$limit/".md5(json_encode($filters));
+
+    $cached = chgetcache($cachekey);
+    if ($cached !== null) return $cached['data'];
+
+    $allcom = [];
+    $wanted = clamp($limit, 1, 500);
+    $page = 1;
+
+    while (count($allcom) < $wanted && $page <= 10) {
+        $perpage = min(100, $wanted - count($allcom));
+        $commits = ghpage($owner, $repo, $filters, $perpage, $page, $token);
+
+        if (empty($commits)) break;
+
+        $allcom = array_merge($allcom, $commits);
+        $page++;
+    }
+
+    $url = "https://api.github.com/repos/$owner/$repo/commits";
+    chsetcache($cachekey, $allcom, $url);
+    return $allcom;
+}
+
+function ghpage(string $owner, string $repo, array $filters, int $perpage, int $page, string $token): array {
+    global $gherror;
+
+    $url = "https://api.github.com/repos/$owner/$repo/commits?per_page=$perpage&page=$page";
+
+    if (!empty($filters['author'])) {
+        $url .= '&author='.urlencode($filters['author']);
+    }
+    if (!empty($filters['since']) && valdate($filters['since'])) {
+        $url .= '&since='.urlencode($filters['since'].'T00:00:00Z');
+    }
+    if (!empty($filters['until']) && valdate($filters['until'])) {
+        $url .= '&until='.urlencode($filters['until'].'T23:59:59Z');
+    }
 
     $headers = [
         'User-Agent: SLAED-CMS-Changelog',
         'Accept: application/vnd.github.v3+json'
     ];
 
-    if ($token) $headers[] = 'Authorization: token '.$token;
+    if ($token) {
+        $headers[] = 'Authorization: token '.$token;
+    }
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, GH_API_TIMEOUT);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, GH_API_CONNECT_TIMEOUT);
+    curl_setopt($ch, CURLOPT_HEADER, true);
 
     $response = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $headerz = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
     curl_close($ch);
 
-    if ($http_code !== 200) {
-        $error_data = json_decode($response, true);
-        $github_error = '<strong>GitHub API Fehler:</strong><br>';
-        $github_error .= '• <strong>HTTP Status:</strong> '.$http_code.'<br>';
-        $github_error .= '• <strong>URL:</strong> '.$url.'<br>';
-        if (isset($error_data['message'])) {
-            $github_error .= '• <strong>Nachricht:</strong> '.htmlspecialchars($error_data['message']).'<br>';
-        }
-        if (isset($error_data['documentation_url'])) {
-            $github_error .= '• <strong>Doku:</strong> <a href="'.$error_data['documentation_url'].'" target="_blank">'.$error_data['documentation_url'].'</a><br>';
-        }
-        $github_error .= '• <strong>Token verwendet:</strong> '.($token ? 'Ja' : 'Nein');
+    if ($response === false) {
+        $gherror = 'CURL Fehler: Verbindung fehlgeschlagen';
         return [];
     }
 
-    $commits_data = json_decode($response, true);
-    if (!is_array($commits_data)) return [];
+    $header = substr($response, 0, $headerz);
+    $body = substr($response, $headerz);
 
+    if ($httpcode !== 200) {
+        $errdata = json_decode($body, true);
+        $gherror = '<strong>GitHub API Fehler:</strong><br>';
+        $gherror .= '• HTTP Status: '.$httpcode.'<br>';
+
+        if ($httpcode === 403) {
+            if (preg_match('/X-RateLimit-Remaining: (\d+)/i', $header, $m)) {
+                $gherror .= '• Rate Limit verbleibend: '.$m[1].'<br>';
+            }
+            if (preg_match('/X-RateLimit-Reset: (\d+)/i', $header, $m)) {
+                $gherror .= '• Reset um: '.date('H:i:s', intval($m[1])).'<br>';
+            }
+        }
+
+        if (isset($errdata['message'])) {
+            $gherror .= '• Nachricht: '.esc($errdata['message']);
+        }
+
+        return [];
+    }
+
+    $comdata = json_decode($body, true);
+    if (json_last_error() !== JSON_ERROR_NONE || !is_array($comdata)) {
+        $gherror = 'JSON Decode Fehler: '.json_last_error_msg();
+        return [];
+    }
+
+    return ghparse($comdata, $filters);
+}
+
+function ghparse(array $data, array $filters): array {
     $commits = [];
-    foreach ($commits_data as $c) {
-        // Filter nach Suchbegriff (in Commit-Message)
-        if (!empty($filters['search']) && stripos($c['commit']['message'], $filters['search']) === false) {
+    $search = $filters['search'] ?? '';
+
+    foreach ($data as $c) {
+        if (!isset($c['commit']['message'])) continue;
+
+        $msg = $c['commit']['message'];
+
+        if ($search && stripos($msg, $search) === false) {
             continue;
         }
 
+        $parts = explode("\n", $msg, 2);
+        $subject = $parts[0];
+        $body = isset($parts[1]) ? trim($parts[1]) : '';
+
         $commits[] = [
-            'full_hash' => $c['sha'],
-            'hash' => substr($c['sha'], 0, 7),
-            'date' => date('Y-m-d H:i', strtotime($c['commit']['author']['date'])),
-            'author' => $c['commit']['author']['name'],
-            'email' => $c['commit']['author']['email'],
-            'subject' => explode("\n", $c['commit']['message'])[0],
-            'body' => implode("\n", array_slice(explode("\n", $c['commit']['message']), 1)),
+            'fullhash' => $c['sha'] ?? '',
+            'hash' => substr($c['sha'] ?? '', 0, 7),
+            'date' => date('Y-m-d H:i', strtotime($c['commit']['author']['date'] ?? 'now')),
+            'author' => $c['commit']['author']['name'] ?? 'Unknown',
+            'email' => $c['commit']['author']['email'] ?? '',
+            'subject' => $subject,
+            'body' => $body,
             'files' => []
         ];
     }
@@ -84,403 +310,368 @@ function commits(string $owner, string $repo, int $limit = 50, string $token = '
     return $commits;
 }
 
+// ============================================================================
+// LOCAL GIT FUNCTIONS
+// ============================================================================
+
+function gitfetch(string $gitdir, array $filters, int $limit): array {
+    global $giterror;
+
+    $cachekey = "gitfetch_$gitdir/$limit/".md5(json_encode($filters));
+
+    $cached = chgetcache($cachekey);
+    if ($cached !== null) return $cached['data'];
+
+    $gitexe = 'git';
+    if (file_exists('C:\\Program Files\\Git\\cmd\\git.exe')) {
+        $gitexe = 'C:\\Program Files\\Git\\cmd\\git.exe';
+    }
+
+    if (!is_dir($gitdir.'/.git')) {
+        $giterror = 'Git-Repository nicht gefunden: '.$gitdir;
+        return [];
+    }
+
+    $olddir = getcwd();
+    if (!chdir($gitdir)) {
+        $giterror = 'Konnte nicht in Verzeichnis wechseln: '.$gitdir;
+        return [];
+    }
+
+    $gitfilt = '';
+    if (!empty($filters['author'])) {
+        $gitfilt .= ' --author='.escapeshellarg($filters['author']);
+    }
+    if (!empty($filters['search'])) {
+        $gitfilt .= ' --grep='.escapeshellarg($filters['search']);
+    }
+    if (!empty($filters['since']) && valdate($filters['since'])) {
+        $gitfilt .= ' --since='.escapeshellarg($filters['since']);
+    }
+    if (!empty($filters['until']) && valdate($filters['until'])) {
+        $gitfilt .= ' --until='.escapeshellarg($filters['until']);
+    }
+    if (!empty($filters['file'])) {
+        $gitfilt .= ' -- '.escapeshellarg($filters['file']);
+    }
+
+    $limit = clamp($limit, 1, 500);
+    $format = COMMIT_START.GIT_LOG_DELIM.'%H'.GIT_LOG_DELIM.'%h'.GIT_LOG_DELIM;
+    $format .= '%ad'.GIT_LOG_DELIM.'%an'.GIT_LOG_DELIM.'%ae'.GIT_LOG_DELIM;
+    $format .= '%s'.GIT_LOG_DELIM.'%b'.GIT_LOG_DELIM.COMMIT_END;
+
+    $cmd = escapeshellarg($gitexe).' log --pretty=format:'.escapeshellarg($format);
+    $cmd .= ' --date=format:"%Y-%m-%d %H:%M" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
+
+    $gitlog = [];
+    exec($cmd, $gitlog, $retcode);
+    chdir($olddir);
+
+    if ($retcode !== 0) {
+        $giterror = 'Git-Befehl fehlgeschlagen (Code: '.$retcode.')';
+        return [];
+    }
+
+    $commits = gitparse($gitlog);
+    chsetcache($cachekey, $commits, "git:$gitdir");
+
+    return $commits;
+}
+
+function gitparse(array $lines): array {
+    $commits = [];
+    $curcom = null;
+    $files = [];
+    $delim = GIT_LOG_DELIM;
+
+    foreach ($lines as $line) {
+        if (strpos($line, COMMIT_START.$delim) === 0) {
+            if ($curcom) {
+                $curcom['files'] = $files;
+                $commits[] = $curcom;
+            }
+
+            $parts = explode($delim, $line);
+            if (count($parts) >= 8) {
+                $curcom = [
+                    'fullhash' => $parts[1] ?? '',
+                    'hash' => $parts[2] ?? '',
+                    'date' => $parts[3] ?? '',
+                    'author' => $parts[4] ?? '',
+                    'email' => $parts[5] ?? '',
+                    'subject' => $parts[6] ?? '',
+                    'body' => trim($parts[7] ?? '')
+                ];
+                $files = [];
+            }
+        } elseif (strpos($line, COMMIT_END) === 0) {
+            continue;
+        } elseif ($curcom && preg_match('/^(\d+|-)\s+(\d+|-)\s+(.+)$/', $line, $m)) {
+            if (count($m) >= 4) {
+                $files[] = [
+                    'added' => $m[1] === '-' ? 0 : intval($m[1]),
+                    'deleted' => $m[2] === '-' ? 0 : intval($m[2]),
+                    'file' => $m[3]
+                ];
+            }
+        }
+    }
+
+    if ($curcom) {
+        $curcom['files'] = $files;
+        $commits[] = $curcom;
+    }
+
+    return $commits;
+}
+
+// ============================================================================
+// MAIN FUNCTIONS
+// ============================================================================
+
 function changelog(): void {
-    global $aroute, $conflog;
+    global $aroute, $conflog, $gherror, $giterror;
+
     head();
     checkPerms('changelog.php');
-    $cont = navi(0, 0, 0, 0);
 
-    //  Filter-Parameter
-    $page = getVar('get', 'page', 'num', 1);
-    $author = getVar('get', 'author', 'var', '');
-    $file = getVar('get', 'file', 'var', '');
-    $search = getVar('get', 'search', 'var', '');
-    $date_from = getVar('get', 'date_from', 'var', '');
-    $date_to = getVar('get', 'date_to', 'var', '');
-    $export = getVar('get', 'export', 'var', '');
+    $cont = navi(0, 0);
 
-    // Export-Handling
-    if ($export && $conflog['export_enabled']) {
-        export($export);
+    // Get filters
+    $page = max(1, getVar('get', 'page', 'num', 1));
+    $author = trim(strip_tags(getVar('get', 'author', 'var', '')));
+    $file = trim(strip_tags(getVar('get', 'file', 'var', '')));
+    $search = trim(strip_tags(getVar('get', 'search', 'var', '')));
+    $datefrom = getVar('get', 'datefrom', 'var', '');
+    $dateto = getVar('get', 'dateto', 'var', '');
+
+    if ($datefrom && !valdate($datefrom)) $datefrom = '';
+    if ($dateto && !valdate($dateto)) $dateto = '';
+
+    $filters = [
+        'author' => $author,
+        'file' => $file,
+        'search' => $search,
+        'since' => $datefrom,
+        'until' => $dateto
+    ];
+
+    // Get commits
+    $source = $conflog['source'] ?? 'local';
+    $limit = clamp($conflog['limit'] ?? 50, 10, 500);
+    $commits = [];
+    $totcount = 0;
+
+    if ($source === 'github') {
+        $ghowner = trim($conflog['ghowner'] ?? '');
+        $ghrepo = trim($conflog['ghrepo'] ?? '');
+        $ghtoken = trim($conflog['ghtoken'] ?? '');
+
+        if (empty($ghowner) || empty($ghrepo)) {
+            $cont .= setTemplateWarning('warn', [
+                'time' => '', 'url' => '', 'id' => 'warn',
+                'text' => 'GitHub Owner/Repo nicht konfiguriert.'
+            ]);
+            echo $cont;
+            foot();
+            return;
+        }
+
+        $totcount = ghtotal($ghowner, $ghrepo, $ghtoken);
+        $commits = ghfetch($ghowner, $ghrepo, $filters, $limit, $ghtoken);
+
+        if (empty($commits) && $gherror) {
+            $cont .= setTemplateWarning('warn', [
+                'time' => '', 'url' => '', 'id' => 'warn',
+                'text' => $gherror
+            ]);
+        }
+    } else {
+        $gitdir = realpath(__DIR__.'/../../');
+        $commits = gitfetch($gitdir, $filters, $limit);
+        $totcount = count($commits);
+
+        if (empty($commits) && $giterror) {
+            $cont .= setTemplateWarning('warn', [
+                'time' => '', 'url' => '', 'id' => 'warn',
+                'text' => $giterror
+            ]);
+        }
+    }
+
+    if (empty($commits)) {
+        if (!$gherror && !$giterror) {
+            $cont .= setTemplateWarning('info', [
+                'time' => '', 'url' => '', 'id' => 'info',
+                'text' => 'Keine Commits gefunden.'
+            ]);
+        }
+        echo $cont;
+        foot();
         return;
     }
 
-    // Filter-Formular
-    $cont .= '<form action="'.$aroute.'.php" method="get" class="sl_filter_form">';
-    $cont .= '<input type="hidden" name="name" value="changelog">';
-    $cont .= '<div style="background: #f9f9f9; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px;">';
-    $cont .= '<strong>Filter & Suche:</strong><br><br>';
-    $cont .= '<table class="sl_table_conf"><tr>';
-    $cont .= '<td><input type="text" name="search" value="'.htmlspecialchars($search).'" placeholder="Suche in Commits..." class="sl_conf" style="width: 200px;"></td>';
-    $cont .= '<td><input type="text" name="author" value="'.htmlspecialchars($author).'" placeholder="Autor..." class="sl_conf" style="width: 180px;"></td>';
-    $cont .= '<td><input type="text" name="file" value="'.htmlspecialchars($file).'" placeholder="Datei..." class="sl_conf" style="width: 180px;"></td>';
-    $cont .= '</tr><tr>';
-    $cont .= '<td><input type="date" name="date_from" value="'.htmlspecialchars($date_from).'" placeholder="Von Datum" class="sl_conf" style="width: 150px;"></td>';
-    $cont .= '<td><input type="date" name="date_to" value="'.htmlspecialchars($date_to).'" placeholder="Bis Datum" class="sl_conf" style="width: 150px;"></td>';
-    $cont .= '<td><button type="submit" class="sl_but_blue">Filtern</button> ';
-    $cont .= '<a href="'.$aroute.'.php?name=changelog" class="sl_but_gray">Zurücksetzen</a></td>';
-    $cont .= '</tr></table>';
-    $cont .= '</div></form>';
+    // Pagination
+    $perpage = clamp($conflog['perpage'] ?? 10, 1, 50);
+    $totcom = count($commits);
+    $totpage = max(1, ceil($totcom / $perpage));
+    $page = clamp($page, 1, $totpage);
+    $offset = ($page - 1) * $perpage;
+    $compg = array_slice($commits, $offset, $perpage);
 
-    // Commits abrufen (GitHub oder Lokal)
-    $source = $conflog['source'] ?? 'local';
-    $commits = [];
-
-    if ($source === 'github') {
-        // GitHub API
-        $github_owner = $conflog['github_owner'] ?? '';
-        $github_repo = $conflog['github_repo'] ?? '';
-        $github_token = $conflog['github_token'] ?? '';
-
-        if (empty($github_owner) || empty($github_repo)) {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'GitHub Owner/Repo nicht konfiguriert. Bitte in den Einstellungen angeben.']);
-        } else {
-            $filters = [
-                'author' => $author,
-                'search' => $search,
-                'since' => $date_from,
-                'until' => $date_to
-            ];
-
-            $limit = $conflog['limit'] ?? 50;
-            $commits = commits($github_owner, $github_repo, $limit, $github_token, $filters);
-
-            if (empty($commits)) {
-                global $github_error;
-                $error_msg = $github_error ?: 'No commits loaded from GitHub. Check Owner/Repo or API access.';
-                $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $error_msg]);
-            }
-        }
-    } else {
-        // Lokales Git
-        $gitlog = [];
-        $git_dir = realpath(__DIR__.'/../../');
-        $git_exe = 'C:\\Program Files\\Git\\cmd\\git.exe';
-
-        if (!file_exists($git_exe)) $git_exe = 'git';
-
-        $old_dir = getcwd();
-        chdir($git_dir);
-
-        // Filter-Command bauen
-        $git_filters = '';
-        if ($author) $git_filters .= ' --author="'.escapeshellarg($author).'"';
-        if ($search) $git_filters .= ' --grep="'.escapeshellarg($search).'"';
-        if ($date_from) $git_filters .= ' --since="'.escapeshellarg($date_from).'"';
-        if ($date_to) $git_filters .= ' --until="'.escapeshellarg($date_to).'"';
-        if ($file) $git_filters .= ' -- '.escapeshellarg($file);
-
-        $limit = $conflog['limit'] ?? 50;
-        $cmd = '"'.$git_exe.'" log --pretty=format:"COMMIT_START||%H||%h||%ad||%an||%ae||%s||%b||COMMIT_END" --date=format:"%Y-%m-%d %H:%M" --numstat '.$git_filters.' -'.$limit.' 2>&1';
-        exec($cmd, $gitlog, $return_code);
-        chdir($old_dir);
-
-        if ($return_code !== 0 || empty($gitlog)) {
-            $error_msg = 'Git-Historie konnte nicht geladen werden.<br>';
-            $error_msg .= 'Git-Verzeichnis: '.$git_dir.'<br>';
-            $error_msg .= 'Git-Executable: '.$git_exe.'<br>';
-            $error_msg .= 'Return Code: '.$return_code;
-            if (!empty($gitlog)) $error_msg .= '<br>Output: '.implode('<br>', $gitlog);
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $error_msg]);
-        } else {
-            // Commits parsen
-            $current_commit = null;
-            $files = [];
-
-            foreach ($gitlog as $line) {
-                if (strpos($line, 'COMMIT_START||') === 0) {
-                    if ($current_commit) {
-                        $current_commit['files'] = $files;
-                        $commits[] = $current_commit;
-                    }
-                    $parts = explode('||', $line);
-                    if (count($parts) >= 8) {
-                        $current_commit = [
-                            'full_hash' => $parts[1],
-                            'hash' => $parts[2],
-                            'date' => $parts[3],
-                            'author' => $parts[4],
-                            'email' => $parts[5],
-                            'subject' => $parts[6],
-                            'body' => trim($parts[7])
-                        ];
-                        $files = [];
-                    }
-                } elseif (strpos($line, 'COMMIT_END') === 0) {
-                    continue;
-                } elseif ($current_commit && preg_match('/^(\d+|-)\s+(\d+|-)\s+(.+)$/', $line, $matches)) {
-                    $files[] = [
-                        'added' => $matches[1] === '-' ? 0 : intval($matches[1]),
-                        'deleted' => $matches[2] === '-' ? 0 : intval($matches[2]),
-                        'file' => $matches[3]
-                    ];
-                }
-            }
-
-            if ($current_commit) {
-                $current_commit['files'] = $files;
-                $commits[] = $current_commit;
-            }
-        }
+    // Group by date
+    if ($conflog['grpdate'] ?? false) {
+        $compg = grpdate($compg);
     }
 
-    // Nur fortfahren wenn Commits vorhanden
-    if (!empty($commits)) {
-
-        // Pagination
-        $per_page = $conflog['per_page'] ?? 10;
-        $total_commits = count($commits);
-        $total_pages = ceil($total_commits / $per_page);
-        $page = max(1, min($page, $total_pages));
-        $offset = ($page - 1) * $per_page;
-        $commits_page = array_slice($commits, $offset, $per_page);
-
-        // Anzeige
-        $cont .= setTemplateBasic('open');
-        $cont .= '<div class="sl_changelog">';
-        $cont .= '<div style="margin-bottom: 15px;"><strong>Gesamt: '.$total_commits.' Commits | Seite '.$page.' von '.$total_pages.'</strong></div>';
-
-        // Datum-Gruppierung
-        if ($conflog['group_by_date']) {
-            $commits_page = groupbydate($commits_page);
-        }
-
-        $i = 0;
-        foreach ($commits_page as $commit) {
-            if (isset($commit['date_header'])) {
-                $cont .= '<div style="background: #4CAF50; color: white; padding: 8px; margin: 20px 0 10px 0; font-weight: bold; border-radius: 4px;">';
-                $cont .= $commit['date_header'];
-                $cont .= '</div>';
-                continue;
-            }
-            $cont .= render($commit, $i, $conflog);
-            $i++;
-        }
-
-        $cont .= '</div>';
-
-        // Pagination via setPageNumbers()
-        $query = http_build_query(array_filter([
-            'name' => 'changelog',
-            'author' => $author,
-            'file' => $file,
-            'search' => $search,
-            'date_from' => $date_from,
-            'date_to' => $date_to
-        ]));
-        $url = $query ? $query.'&' : 'name=changelog&';
-        $cont .= setPageNumbers(
-            'pagenum',
-            'changelog',
-            $total_commits,
-            $total_pages,
-            $per_page,
-            $url,
-            10,
-            $page,
-            '',
-            'page'
-        );
-
-        $cont .= setTemplateBasic('close');
-    }
+    // Render template
+    $cont .= setTemplateBasic('basic-changelog', [
+        '{%aroute%}' => $aroute,
+        '{%search%}' => esc($search),
+        '{%author%}' => esc($author),
+        '{%file%}' => esc($file),
+        '{%datefrom%}' => esc($datefrom),
+        '{%dateto%}' => esc($dateto),
+        '{%totcount%}' => $totcount,
+        '{%totcom%}' => $totcom,
+        '{%page%}' => $page,
+        '{%totpage%}' => $totpage,
+        '{%commits%}' => rencom($compg, $conflog),
+        '{%paging%}' => rendpage($totcom, $totpage, $perpage, $page, $filters)
+    ]);
 
     echo $cont;
     foot();
 }
 
-function groupbydate(array $commits): array {
-    $grouped = [];
-    $last_date = '';
-    $today = date('Y-m-d');
-    $yesterday = date('Y-m-d', strtotime('-1 day'));
+function conf(): void {
+    global $aroute, $conflog;
 
-    foreach ($commits as $commit) {
-        $commit_date = substr($commit['date'], 0, 10);
+    head();
+    checkPerms('changelog.php');
 
-        if ($commit_date !== $last_date) {
-            $last_date = $commit_date;
-            $date_label = $commit_date;
+    $cont = navi(0, 1);
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form action="'.esc($aroute).'.php" method="post">';
+    $cont .= '<table class="sl_table_conf">';
 
-            if ($commit_date === $today) {
-                $date_label = 'Heute ('.$commit_date.')';
-            } elseif ($commit_date === $yesterday) {
-                $date_label = 'Gestern ('.$commit_date.')';
-            } elseif (strtotime($commit_date) > strtotime('-7 days')) {
-                $date_label = 'Diese Woche ('.$commit_date.')';
-            }
+    $source = $conflog['source'] ?? 'local';
 
-            $grouped[] = ['date_header' => $date_label];
-        }
+    $cont .= '<tr><td colspan="2" style="background: #4CAF50; color: white; padding: 8px; font-weight: bold;">Changelog-Quelle</td></tr>';
+    $cont .= '<tr><td><strong>Quelle:</strong></td><td>';
+    $cont .= '<select name="source" class="sl_conf" onchange="toggleGithubFields(this.value)">';
+    $cont .= '<option value="local"'.($source === 'local' ? ' selected' : '').'>Lokales Git</option>';
+    $cont .= '<option value="github"'.($source === 'github' ? ' selected' : '').'>GitHub API</option>';
+    $cont .= '</select></td></tr>';
 
-        $grouped[] = $commit;
+    $display = $source === 'github' ? 'table-row-group' : 'none';
+    $cont .= '<tbody id="github_fields" style="display: '.$display.'">';
+    $cont .= '<tr><td><strong>GitHub Owner:</strong></td><td>';
+    $cont .= '<input type="text" name="ghowner" value="'.esc($conflog['ghowner'] ?? '').'" class="sl_conf"></td></tr>';
+    $cont .= '<tr><td><strong>GitHub Repository:</strong></td><td>';
+    $cont .= '<input type="text" name="ghrepo" value="'.esc($conflog['ghrepo'] ?? '').'" class="sl_conf"></td></tr>';
+    $cont .= '<tr><td><strong>GitHub Token:</strong></td><td>';
+    $cont .= '<input type="text" name="ghtoken" value="'.esc($conflog['ghtoken'] ?? '').'" class="sl_conf"></td></tr>';
+    $cont .= '</tbody>';
+
+    $cont .= '<tr><td colspan="2" style="background: #2196F3; color: white; padding: 8px; font-weight: bold;">Anzeige-Optionen</td></tr>';
+    $cont .= '<tr><td><strong>Anzahl Commits:</strong></td><td>';
+    $cont .= '<input type="number" name="limit" value="'.($conflog['limit'] ?? 50).'" class="sl_conf" min="10" max="500"></td></tr>';
+    $cont .= '<tr><td><strong>Pro Seite:</strong></td><td>';
+    $cont .= '<input type="number" name="perpage" value="'.($conflog['perpage'] ?? 10).'" class="sl_conf" min="5" max="50"></td></tr>';
+    $cont .= '<tr><td><strong>Cache TTL (Sekunden):</strong></td><td>';
+    $cont .= '<input type="number" name="cachettl" value="'.($conflog['cachettl'] ?? 900).'" class="sl_conf" min="0" max="3600"></td></tr>';
+    $cont .= '<tr><td><strong>Datum gruppieren:</strong></td><td>';
+    $cont .= '<input type="checkbox" name="grpdate" value="1" '.($conflog['grpdate'] ?? false ? 'checked' : '').'></td></tr>';
+    $cont .= '<tr><td><strong>Dateien anzeigen:</strong></td><td>';
+    $cont .= '<input type="checkbox" name="showfile" value="1" '.($conflog['showfile'] ?? false ? 'checked' : '').'></td></tr>';
+    $cont .= '<tr><td><strong>Statistiken:</strong></td><td>';
+    $cont .= '<input type="checkbox" name="showstat" value="1" '.($conflog['showstat'] ?? false ? 'checked' : '').'></td></tr>';
+    $cont .= '<tr><td><strong>Export:</strong></td><td>';
+    $cont .= '<input type="checkbox" name="exporten" value="1" '.($conflog['exporten'] ?? false ? 'checked' : '').'></td></tr>';
+
+    $cont .= '<tr><td colspan="2" class="sl_center">';
+    $cont .= '<input type="hidden" name="name" value="changelog">';
+    $cont .= '<input type="hidden" name="op" value="save">';
+    $cont .= '<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>';
+    $cont .= '</table>';
+
+    $cont .= '<script>
+    function toggleGithubFields(source) {
+        document.getElementById("github_fields").style.display = (source === "github") ? "table-row-group" : "none";
     }
+    </script>';
 
-    return $grouped;
+    $cont .= '</form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-function render(array $commit, int $index, array $conflog): string {
-    $cont = '<div class="sl_commit" style="border: 1px solid #ddd; margin: 10px 0; padding: 15px; background: '.($index % 2 ? '#f9f9f9' : '#fff').'">';
+function save(): void {
+    global $aroute;
 
-    // Header
-    $cont .= '<div style="border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-bottom: 10px;">';
-    $cont .= '<span style="font-size: 14px;"><strong>'.htmlspecialchars($commit['subject']).'</strong></span>';
-    $cont .= ' <code style="border-radius: 4px; background: #f0f0f0; padding: 2px 6px; margin-left: 10px;">'.$commit['hash'].'</code>';
-    $cont .= '</div>';
+    $confdata = [
+        'source' => getVar('post', 'source', 'var', 'local'),
+        'ghowner' => getVar('post', 'ghowner', 'text', ''),
+        'ghrepo' => getVar('post', 'ghrepo', 'text', ''),
+        'ghtoken' => getVar('post', 'ghtoken', 'text', ''),
+        'limit' => clamp(getVar('post', 'limit', 'num', 50), 10, 500),
+        'perpage' => clamp(getVar('post', 'perpage', 'num', 10), 5, 50),
+        'cachettl' => clamp(getVar('post', 'cachettl', 'num', 900), 0, 3600),
+        'grpdate' => getVar('post', 'grpdate', 'num', 0),
+        'showfile' => getVar('post', 'showfile', 'num', 0),
+        'showstat' => getVar('post', 'showstat', 'num', 0),
+        'exporten' => getVar('post', 'exporten', 'num', 0)
+    ];
 
-    // Meta-Info
-    $cont .= '<div style="color: #666; font-size: 13px; margin-bottom: 10px;">';
-    $cont .= '<strong>Autor:</strong> '.htmlspecialchars($commit['author']).' &lt;'.htmlspecialchars($commit['email']).'&gt; ';
-    $cont .= '| <strong>Datum:</strong> '.$commit['date'];
-    $cont .= '</div>';
-
-    // Body
-    if (!empty($commit['body']) && $commit['body'] !== 'COMMIT_END') {
-        $body = $commit['body'];
-
-        // Escape nur gefährliche HTML-Zeichen
-        $body = htmlspecialchars($body, ENT_NOQUOTES);
-
-        // Basic Markdown formatting
-        $body = preg_replace('/\*\*([^\*]+)\*\*/', '<strong>$1</strong>', $body);
-        $body = preg_replace('/^[\-\*] (.+)$/m', '&bull; $1', $body);
-        $body = preg_replace('/`([^`]+)`/', '<code style="background:#e8e8e8;padding:2px 4px;border-radius:3px;">$1</code>', $body);
-
-        // Zeilenumbrüche
-        $body = nl2br($body);
-
-        $cont .= '<div style="background: #f5f5f5; padding: 10px; margin: 10px 0; border-left: 3px solid #2196F3; line-height: 1.6;">';
-        $cont .= $body;
-        $cont .= '</div>';
-    }
-
-    // Datei-Statistiken
-    if ($conflog['show_stats'] && !empty($commit['files'])) {
-        $total_add = $total_del = $file_count = 0;
-        foreach ($commit['files'] as $f) {
-            $total_add += $f['added'];
-            $total_del += $f['deleted'];
-            $file_count++;
-        }
-
-        $cont .= '<div style="margin: 10px 0;">';
-        $cont .= '<strong>Änderungen:</strong> ';
-        $cont .= '<span style="color: green;">+'.$total_add.'</span> / ';
-        $cont .= '<span style="color: red;">-'.$total_del.'</span> | ';
-        $cont .= '<strong>'.$file_count.' '.($file_count === 1 ? 'Datei' : 'Dateien').'</strong>';
-        $cont .= '</div>';
-
-        // Dateiliste
-        if ($conflog['show_files']) {
-            if ($file_count <= 5) {
-                $cont .= '<div style="font-size: 12px; color: #555;">';
-                foreach ($commit['files'] as $f) {
-                    $cont .= '<div style="padding: 2px 0;">';
-                    $cont .= '<span style="color: green;">+'.str_pad($f['added'], 3, ' ', STR_PAD_LEFT).'</span> ';
-                    $cont .= '<span style="color: red;">-'.str_pad($f['deleted'], 3, ' ', STR_PAD_LEFT).'</span> ';
-                    $cont .= htmlspecialchars($f['file']);
-                    $cont .= '</div>';
-                }
-                $cont .= '</div>';
-            } else {
-                $cont .= '<details style="font-size: 12px; color: #555; margin-top: 5px;">';
-                $cont .= '<summary style="cursor: pointer;">Zeige alle '.$file_count.' Dateien</summary>';
-                $cont .= '<div style="margin-top: 5px;">';
-                foreach ($commit['files'] as $f) {
-                    $cont .= '<div style="padding: 2px 0;">';
-                    $cont .= '<span style="color: green;">+'.str_pad($f['added'], 3, ' ', STR_PAD_LEFT).'</span> ';
-                    $cont .= '<span style="color: red;">-'.str_pad($f['deleted'], 3, ' ', STR_PAD_LEFT).'</span> ';
-                    $cont .= htmlspecialchars($f['file']);
-                    $cont .= '</div>';
-                }
-                $cont .= '</div>';
-                $cont .= '</details>';
-            }
-        }
-    }
-
-    $cont .= '</div>';
-    return $cont;
+    setConfigFile('changelog.php', 'conflog', $confdata);
+    header('Location: '.$aroute.'.php?name=changelog&op=conf');
+    exit;
 }
 
 function export(): void {
     global $conflog;
+
     $format = getVar('get', 'id', 'var');
     $source = $conflog['source'] ?? 'local';
-    $limit = $conflog['limit'] ?? 50;
-    $commits = [];
+    $limit = clamp($conflog['limit'] ?? 50, 10, 500);
 
     if ($source === 'github') {
-        // GitHub API Export
-        $github_owner = $conflog['github_owner'] ?? '';
-        $github_repo = $conflog['github_repo'] ?? '';
-        $github_token = $conflog['github_token'] ?? '';
-
-        if ($github_owner && $github_repo) {
-            $commits = commits($github_owner, $github_repo, $limit, $github_token);
-        }
+        $ghowner = trim($conflog['ghowner'] ?? '');
+        $ghrepo = trim($conflog['ghrepo'] ?? '');
+        $ghtoken = trim($conflog['ghtoken'] ?? '');
+        $commits = ghfetch($ghowner, $ghrepo, [], $limit, $ghtoken);
     } else {
-        // Lokales Git Export
-        $gitlog = [];
-        $git_dir = realpath(__DIR__.'/../../');
-        $git_exe = 'C:\\Program Files\\Git\\cmd\\git.exe';
-        if (!file_exists($git_exe)) $git_exe = 'git';
-
-        $old_dir = getcwd();
-        chdir($git_dir);
-        $cmd = '"'.$git_exe.'" log --pretty=format:"COMMIT_START||%H||%h||%ad||%an||%ae||%s||%b||COMMIT_END" --date=format:"%Y-%m-%d %H:%M" -'.$limit.' 2>&1';
-        exec($cmd, $gitlog, $return_code);
-        chdir($old_dir);
-
-        $current_commit = null;
-
-        foreach ($gitlog as $line) {
-            if (strpos($line, 'COMMIT_START||') === 0) {
-                if ($current_commit) $commits[] = $current_commit;
-                $parts = explode('||', $line);
-                if (count($parts) >= 8) {
-                    $current_commit = [
-                        'hash' => $parts[2],
-                        'date' => $parts[3],
-                        'author' => $parts[4],
-                        'subject' => $parts[6],
-                        'body' => trim($parts[7])
-                    ];
-                }
-            } elseif (strpos($line, 'COMMIT_END') === 0) {
-                continue;
-            }
-        }
-        if ($current_commit) $commits[] = $current_commit;
+        $gitdir = realpath(__DIR__.'/../../');
+        $commits = gitfetch($gitdir, [], $limit);
     }
 
-    $filename = 'changelog_'.date('Y-m-d').'.'.$format;
+    $filename = 'changelog_'.date('Y-m-d').'.'.($format === 'md' ? 'md' : 'txt');
 
     header('Content-Type: text/plain; charset=utf-8');
     header('Content-Disposition: attachment; filename="'.$filename.'"');
 
     if ($format === 'md') {
         echo "# SLAED CMS Changelog\n\n";
-        echo "Generiert am: ".date('Y-m-d H:i:s')."\n\n";
-        echo "---\n\n";
+        echo "Generiert am: ".date('Y-m-d H:i:s')."\n\n---\n\n";
         foreach ($commits as $c) {
             echo "## ".$c['subject']."\n\n";
             echo "**Commit:** `".$c['hash']."`  \n";
             echo "**Autor:** ".$c['author']."  \n";
             echo "**Datum:** ".$c['date']."  \n\n";
-            if ($c['body'] && $c['body'] !== 'COMMIT_END') {
+            if (!empty($c['body']) && $c['body'] !== COMMIT_END) {
                 echo $c['body']."\n\n";
             }
             echo "---\n\n";
         }
     } else {
-        echo "SLAED CMS Changelog\n";
-        echo "===================\n\n";
+        echo "SLAED CMS Changelog\n===================\n\n";
         echo "Generiert am: ".date('Y-m-d H:i:s')."\n\n";
         foreach ($commits as $c) {
             echo $c['subject']."\n";
             echo "Commit: ".$c['hash']." | Autor: ".$c['author']." | Datum: ".$c['date']."\n";
-            if ($c['body'] && $c['body'] !== 'COMMIT_END') {
+            if (!empty($c['body']) && $c['body'] !== COMMIT_END) {
                 echo $c['body']."\n";
             }
             echo "\n".str_repeat('-', 80)."\n\n";
@@ -489,106 +680,159 @@ function export(): void {
     exit;
 }
 
-function conf(): void {
-    global $aroute, $conflog;
-    head();
-    checkPerms('changelog.php');
-    $cont = navi(0, 1, 0, 0);
-    $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post">';
-    $cont .= '<table class="sl_table_conf">';
-
-    // Quelle
-    $source = $conflog['source'] ?? 'local';
-    $cont .= '<tr><td colspan="2" style="background: #4CAF50; color: white; padding: 8px; font-weight: bold;">Changelog-Quelle</td></tr>';
-    $cont .= '<tr><td><strong>Quelle:</strong></td><td>';
-    $cont .= '<select name="source" class="sl_conf" onchange="toggleGithubFields(this.value)">';
-    $cont .= '<option value="local"'.($source === 'local' ? ' selected' : '').'>Lokales Git</option>';
-    $cont .= '<option value="github"'.($source === 'github' ? ' selected' : '').'>GitHub API</option>';
-    $cont .= '</select></td></tr>';
-
-    // GitHub-Optionen
-    $cont .= '<tbody id="github_fields" style="display: '.($source === 'github' ? 'table-row-group' : 'none').'">';
-    $cont .= '<tr><td><strong>GitHub Owner:</strong><br><small>z.B. "anthropics"</small></td><td><input type="text" name="github_owner" value="'.htmlspecialchars($conflog['github_owner'] ?? '').'" class="sl_conf" placeholder="owner"></td></tr>';
-    $cont .= '<tr><td><strong>GitHub Repository:</strong><br><small>z.B. "claude-code"</small></td><td><input type="text" name="github_repo" value="'.htmlspecialchars($conflog['github_repo'] ?? '').'" class="sl_conf" placeholder="repo"></td></tr>';
-    $cont .= '<tr><td><strong>GitHub Token (optional):</strong><br><small>Für höhere Rate Limits</small></td><td><input type="text" name="github_token" value="'.htmlspecialchars($conflog['github_token'] ?? '').'" class="sl_conf" placeholder="ghp_..."></td></tr>';
-    $cont .= '</tbody>';
-
-    // Allgemeine Optionen
-    $cont .= '<tr><td colspan="2" style="background: #2196F3; color: white; padding: 8px; font-weight: bold; margin-top: 10px;">Anzeige-Optionen</td></tr>';
-    $cont .= '<tr><td><strong>Anzahl Commits (gesamt):</strong></td><td><input type="number" name="limit" value="'.($conflog['limit'] ?? 50).'" class="sl_conf" min="10" max="500"></td></tr>';
-    $cont .= '<tr><td><strong>Commits pro Seite:</strong></td><td><input type="number" name="per_page" value="'.($conflog['per_page'] ?? 10).'" class="sl_conf" min="5" max="50"></td></tr>';
-    $cont .= '<tr><td><strong>Nach Datum gruppieren:</strong></td><td><input type="checkbox" name="group_by_date" value="1" '.($conflog['group_by_date'] ? 'checked' : '').'></td></tr>';
-    $cont .= '<tr><td><strong>Dateien anzeigen:</strong></td><td><input type="checkbox" name="show_files" value="1" '.($conflog['show_files'] ? 'checked' : '').'></td></tr>';
-    $cont .= '<tr><td><strong>Statistiken anzeigen:</strong></td><td><input type="checkbox" name="show_stats" value="1" '.($conflog['show_stats'] ? 'checked' : '').'></td></tr>';
-    $cont .= '<tr><td><strong>Export aktivieren:</strong></td><td><input type="checkbox" name="export_enabled" value="1" '.($conflog['export_enabled'] ? 'checked' : '').'></td></tr>';
-    $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="changelog"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>';
-    $cont .= '</table>';
-    $cont .= '<script>
-    function toggleGithubFields(source) {
-        document.getElementById("github_fields").style.display = (source === "github") ? "table-row-group" : "none";
-    }
-    </script>';
-    $cont .= '</form>';
-    $cont .= setTemplateBasic('close');
-    echo $cont;
-    foot();
-}
-
-function confsave(): void {
-    global $aroute;
-    $cont = [
-        'source' => getVar('post', 'source', 'var', 'local'),
-        'github_owner' => getVar('post', 'github_owner', 'text', ''),
-        'github_repo' => getVar('post', 'github_repo', 'text', ''),
-        'github_token' => getVar('post', 'github_token', 'text', ''),
-        'limit' => getVar('post', 'limit', 'num', 50),
-        'per_page' => getVar('post', 'per_page', 'num', 10),
-        'group_by_date' => getVar('post', 'group_by_date', 'num', 0),
-        'show_files' => getVar('post', 'show_files', 'num', 0),
-        'show_stats' => getVar('post', 'show_stats', 'num', 0),
-        'export_enabled' => getVar('post', 'export_enabled', 'num', 0)
-    ];
-    setConfigFile('changelog.php', 'conflog', $cont);
-    header('Location: '.$aroute.'.php?name=changelog&op=conf');
-    exit;
-}
-
 function info(): void {
-    global $conflog;
-    $tab = ($conflog['export_enabled'] ?? true) ? 4 : 2;
     head();
-    $source = $conflog['source'] ?? 'local';
-    $source_label = $source === 'github' ? 'GitHub API' : 'Lokales Git';
-
-    $info = '<h3>Changelog Modul</h3>
-    <p>Dieses Modul zeigt die Git-Historie des SLAED CMS an.</p>
-    <p><strong>Aktuelle Quelle:</strong> '.$source_label.'</p>
-    <h4>Features:</h4>
-    <ul>
-    <li><strong>Flexible Quellen:</strong> Lokales Git-Repository ODER GitHub API (konfigurierbar)</li>
-    <li><strong>Filter:</strong> Nach Autor, Datei, Datum und Suchbegriff filtern</li>
-    <li><strong>Pagination:</strong> Blättern durch alle Commits</li>
-    <li><strong>Export:</strong> Als TXT oder Markdown exportieren</li>
-    <li><strong>Datum-Gruppierung:</strong> Commits nach Datum gruppieren (Heute, Gestern, etc.)</li>
-    <li><strong>Konfigurierbar:</strong> Alle Einstellungen im Preferences-Tab anpassbar</li>
-    <li><strong>Statistiken:</strong> Zeigt +/- Zeilen und geänderte Dateien (nur bei lokalem Git)</li>
-    </ul>
-    <h4>GitHub API:</h4>
-    <ul>
-    <li>Funktioniert ohne lokales Git-Repository</li>
-    <li>Kann Remote-Repositories abfragen (z.B. anthropics/claude-code)</li>
-    <li>Optional: GitHub Token für höhere Rate Limits (60 → 5000 Requests/Stunde)</li>
-    <li>Filter: Autor, Datum, Suchbegriff werden unterstützt</li>
-    </ul>';
-    echo navi(0, $tab, 0, 0).'<div id="repadm_info">'.$info.'</div>';
+    echo navi(0, 4, 0, 0, 'changelog').'<div id="repadm_info">'.adm_info(1, 0, 'changelog').'</div>';
     foot();
 }
+
+function navi(int $opt, int $tab): string {
+    global $conflog;
+
+    $exporten = $conflog['exporten'] ?? true;
+
+    if ($exporten) {
+        $ops = [
+            'name=changelog',
+            'name=changelog&amp;op=conf',
+            'name=changelog&amp;op=export&amp;id=txt',
+            'name=changelog&amp;op=export&amp;id=md',
+            'name=changelog&amp;op=info'
+        ];
+        $lang = [_HOME, _PREFERENCES, 'Export TXT', 'Export Markdown', _INFO];
+    } else {
+        $ops = ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'];
+        $lang = [_HOME, _PREFERENCES, _INFO];
+    }
+
+    return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, 0);
+}
+
+// ============================================================================
+// RENDER FUNCTIONS
+// ============================================================================
+
+function grpdate(array $commits): array {
+    $grouped = [];
+    $lastdate = '';
+    $today = date('Y-m-d');
+    $yester = date('Y-m-d', strtotime('-1 day'));
+
+    foreach ($commits as $commit) {
+        $comdate = substr($commit['date'], 0, 10);
+
+        if ($comdate !== $lastdate) {
+            $lastdate = $comdate;
+            $label = $comdate;
+
+            if ($comdate === $today) {
+                $label = 'Heute ('.$comdate.')';
+            } elseif ($comdate === $yester) {
+                $label = 'Gestern ('.$comdate.')';
+            } elseif (strtotime($comdate) > strtotime('-7 days')) {
+                $label = 'Diese Woche ('.$comdate.')';
+            }
+
+            $grouped[] = ['datehdr' => $label];
+        }
+
+        $grouped[] = $commit;
+    }
+
+    return $grouped;
+}
+
+function rencom(array $commits, array $conf): string {
+    $html = '';
+    $i = 0;
+
+    foreach ($commits as $commit) {
+        if (isset($commit['datehdr'])) {
+            $html .= '<div class="date-header">'.esc($commit['datehdr']).'</div>';
+            continue;
+        }
+
+        $bg = $i % 2 ? '#f9f9f9' : '#fff';
+        $html .= '<div class="commit" style="background: '.$bg.'">';
+        $html .= '<div class="commit-header">';
+        $html .= '<strong>'.esc($commit['subject']).'</strong>';
+        $html .= ' <code>'.esc($commit['hash']).'</code>';
+        $html .= '</div>';
+
+        $html .= '<div class="commit-meta">';
+        $html .= '<strong>Autor:</strong> '.esc($commit['author']).' &lt;'.esc($commit['email']).'&gt; ';
+        $html .= '| <strong>Datum:</strong> '.esc($commit['date']);
+        $html .= '</div>';
+
+        if (!empty($commit['body']) && $commit['body'] !== COMMIT_END) {
+            $body = esc($commit['body']);
+            $body = preg_replace('/\*\*([^\*]+)\*\*/', '<strong>$1</strong>', $body);
+            $body = preg_replace('/^[\-\*] (.+)$/m', '&bull; $1', $body);
+            $body = preg_replace('/`([^`]+)`/', '<code>$1</code>', $body);
+            $body = nl2br($body);
+
+            $html .= '<div class="commit-body">'.$body.'</div>';
+        }
+
+        if ($conf['showstat'] && !empty($commit['files'])) {
+            $totadd = $totdel = 0;
+            foreach ($commit['files'] as $f) {
+                $totadd += $f['added'];
+                $totdel += $f['deleted'];
+            }
+
+            $html .= '<div class="commit-stats">';
+            $html .= '<strong>Änderungen:</strong> ';
+            $html .= '<span class="add">+'.$totadd.'</span> / ';
+            $html .= '<span class="del">-'.$totdel.'</span> | ';
+            $html .= '<strong>'.count($commit['files']).' Datei(en)</strong>';
+            $html .= '</div>';
+
+            if ($conf['showfile']) {
+                $html .= '<div class="commit-files">';
+                foreach ($commit['files'] as $f) {
+                    $html .= '<div>';
+                    $html .= '<span class="add">+'.str_pad($f['added'], 3, ' ', STR_PAD_LEFT).'</span> ';
+                    $html .= '<span class="del">-'.str_pad($f['deleted'], 3, ' ', STR_PAD_LEFT).'</span> ';
+                    $html .= esc($f['file']);
+                    $html .= '</div>';
+                }
+                $html .= '</div>';
+            }
+        }
+
+        $html .= '</div>';
+        $i++;
+    }
+
+    return $html;
+}
+
+function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
+    $query = http_build_query(array_filter([
+        'name' => 'changelog',
+        'author' => $filters['author'],
+        'file' => $filters['file'],
+        'search' => $filters['search'],
+        'datefrom' => $filters['since'],
+        'dateto' => $filters['until']
+    ]));
+    $url = $query ? $query.'&' : 'name=changelog&';
+
+    return setPageNumbers(
+        'pagenum', 'changelog', $totcom, $totpage, $perpage,
+        $url, 10, $page, '', 'page'
+    );
+}
+
+// ============================================================================
+// ROUTING
+// ============================================================================
 
 switch ($op) {
     default: changelog(); break;
     case 'conf': conf(); break;
-    case 'saveconf': confsave(); break;
+    case 'save': save(); break;
     case 'export': export(); break;
     case 'info': info(); break;
 }

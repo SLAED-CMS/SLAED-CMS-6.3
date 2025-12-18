@@ -6,10 +6,10 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ['name=monitor', 'name=monitor&op=info'];
     $lang = [_HOME, _INFO];
-    return getAdminTabs('System Monitor', 'stat.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);
+    return getAdminTabs('System Monitor', 'statistic.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
 function get_server_load_data() {

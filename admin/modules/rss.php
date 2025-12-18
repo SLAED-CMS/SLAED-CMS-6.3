@@ -7,10 +7,10 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/rss.php';
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ($opt == 1) ? ['name=rss', 'name=rss', 'name=rss&amp;op=info'] : ['', '', 'name=rss&amp;op=info'];
     $lang = [_RSS, _PREFERENCES, _INFO];
-    return getAdminTabs(_RSS, 'rss.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $extra);
+    return getAdminTabs(_RSS, 'rss.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
 function rss(): void {

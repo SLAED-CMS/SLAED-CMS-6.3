@@ -6,7 +6,7 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     global $aroute;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
@@ -15,7 +15,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
     $sops = ['', '', ''];
     $slang = [_CATEGORY, _ACESS, _ACESSF];
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$aroute.'.php"><input type="hidden" name="name" value="categories">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>']);
-    return getAdminTabs(_CATEGORIES, 'categories.png', $search, $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $extra);
+    return getAdminTabs(_CATEGORIES, 'categories.png', $search, $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
 }
 
 function categories(): void {
