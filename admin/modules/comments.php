@@ -20,14 +20,14 @@ function comments(): void {
 }
 
 function edit(): void {
-    global $db, $prefix, $admin_file;
+    global $db, $prefix, $aroute;
     $id = getVar('get', 'id', 'num');
     head();
     $cont = navi(0, 0, 0, 0);
     $result = $db->sql_query('SELECT id, modul, comment FROM '.$prefix.'_comment WHERE id = :id', ['id' => $id]);
     list($id, $modul, $com_text) = $db->sql_fetchrow($result);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._COMMENT.':</td><td>'.textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="editsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
@@ -36,21 +36,21 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $prefix, $db, $admin_file;
+    global $prefix, $db, $aroute;
     $id = getVar('post', 'id', 'num');
     $com_text = save_text($_POST['comment']);
     $db->sql_query('UPDATE '.$prefix.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
-    header('Location: '.$admin_file.'.php?name=comments');
+    header('Location: '.$aroute.'.php?name=comments');
     exit;
 }
 
 function conf(): void {
-    global $admin_file, $confc;
+    global $aroute, $confc;
     head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms('comments.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$confc['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
     .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confc['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
     .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$confc['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
@@ -100,7 +100,7 @@ function conf(): void {
 }
 
 function save(): void {
-    global $admin_file;
+    global $aroute;
     $cont = [
         'num' => getVar('post', 'num', 'num', 15),
         'anum' => getVar('post', 'anum', 'num', 15),
@@ -119,12 +119,12 @@ function save(): void {
         'web' => getVar('post', 'web', 'num'),
     ];
     setConfigFile('comments.php', 'confc', $cont);
-    header('Location: '.$admin_file.'.php?name=comments&op=conf');
+    header('Location: '.$aroute.'.php?name=comments&op=conf');
     exit;
 }
 
 function act(): void {
-    global $db, $prefix, $admin_file;
+    global $db, $prefix, $aroute;
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
     if (is_array($id)) {
@@ -138,11 +138,11 @@ function act(): void {
             }
         }
     }
-    referer($admin_file.'.php?name=comments');
+    referer($aroute.'.php?name=comments');
 }
 
 function del(): void {
-    global $db, $prefix, $admin_file;
+    global $db, $prefix, $aroute;
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
     if (is_array($id)) {
@@ -156,7 +156,7 @@ function del(): void {
             }
         }
     }
-    referer($admin_file.'.php?name=comments');
+    referer($aroute.'.php?name=comments');
 }
 
 function info(): void {
