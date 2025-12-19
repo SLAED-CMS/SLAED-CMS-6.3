@@ -50,6 +50,30 @@ require_once CONFIG_DIR.'/referers.php';
 
 ### The beginning of new functions
 
+# Highlights text terms inside HTML content
+function filterTextHighlight(string $sourse, string $word): string {
+    $word = var_filter(urldecode($word));
+    if (!$word) return $sourse;
+    $word = preg_replace('/\s+/', ' ', trim($word));
+    $warray = strpos($word, ' ') !== false ? explode(' ', $word) : [$word];
+    preg_match_all('#<[^>]*>#', $sourse, $tags);
+    $taglist = [];
+    $k = 0;
+    foreach ($tags[0] as $tag) {
+        $k++;
+        $taglist[$k] = $tag;
+        $sourse = str_replace($tag, '<'.$k.'>', $sourse);
+    }
+    foreach ($warray as $i) {
+        $i = trim($i);
+        if ($i === '') continue;
+        $pattern = '/'.preg_quote($i, '/').'/iu';
+        $sourse = preg_replace($pattern, '<span class="sl_word">$0</span>', $sourse);
+    }
+    foreach ($taglist as $k => $tag) $sourse = str_replace('<'.$k.'>', $tag, $sourse);
+    return $sourse;
+}
+
 # Write, append, or compress file
 function addFile(string $file, string $src, string $comp = 'none', bool $del = false, string $mode = 'w', int $max = 10485760): int {
     if (is_file($src)) {
@@ -536,6 +560,7 @@ function setPageNumbers() {
         }
         return tpl_eval($arg[0], _OVERALL, $arg[2], _BY, $arg[3], _PAGE_S, $arg[4], _PERPAGE, $cont, $cprev, $cnext);
     }
+    return '';
 }
 
 # Browser caching
@@ -1664,6 +1689,7 @@ function gender($gender) {
     return $gen;
 }
 
+# OLD DELETE
 # Format search highlight
 function search_color($sourse, $word) {
     global $conf;

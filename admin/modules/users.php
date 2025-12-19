@@ -6,253 +6,94 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
-function users_navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $admin_file;
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
+    global $aroute;
     $psearch = getVar('post', 'search');
-    $chng_user = getVar('post', 'chng_user');
-    $ops = ['users_show', 'users_add', 'users_new', 'users_null', 'users_conf', 'users_info'];
+    $chng = getVar('post', 'chng');
+    $ops = ['name=users', 'name=users&amp;op=add', 'name=users&amp;op=newuser', 'name=users&amp;op=null', 'name=users&amp;op=conf', 'name=users&amp;op=info'];
     $lang = [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO];
-    $search = '<form method="post" action="'.$admin_file.'.php">'._SEARCH.': <select name="search">';
+    $search = '<form method="post" action="'.$aroute.'.php">'._SEARCH.': <select name="search">';
     $priv = [_ID, _NICKNAME, _EMAIL, _IP, _URL];
     foreach ($priv as $key => $value) {
         $sort = $key + 1;
         $sel = ($psearch == $sort || (!$psearch && $sort == 2)) ? ' selected' : '';
         $search .= '<option value="'.$sort.'"'.$sel.'>'.$value.'</option>';
     }
-    $search .= '</select> '.get_user_search('chng_user', $chng_user, '30').' <input type="hidden" name="op" value="users_show"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $search .= '</select> '.get_user_search('chng', $chng, '30').' <input type="hidden" name="name" value="users"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs(_USERS, 'users.png', $search, $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs(_USERS, 'users.png', $search, $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
-function users_show(): void {
-    global $prefix, $db, $admin_file, $conf, $confu;
-
-    $search = getVar('req','search','num');
-    $ch_user = getVar('req','chng_user');
-
+function users(): void {
+    global $prefix, $db, $aroute, $confu;
+    $search = getVar('req', 'search', 'num');
+    $chng = getVar('req', 'chng');
     head();
-    $cont = users_navi(0,0,0,0);
-
-    if (getVar('get','send','num')) {
-        $cont .= setTemplateWarning('warn', [
-            'time' => '',
-            'url'  => '',
-            'id'   => 'info',
-            'text' => _MAIL_SEND
-        ]);
-    }
-
-    // Basis-Filter & Sortierung
-    $where = '1=1';
+    $cont = navi(0,0,0,0);
+    if (getVar('get','send','num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
+    $where = '1 = 1';
     $order = 'ORDER BY u.user_id DESC';
     $params = [];
-
-    if ($search == 1 && $ch_user) {
+    if ($search == 1 && $chng) {
         $where = 'user_id LIKE :search';
         $order = 'ORDER BY u.user_id ASC';
-        $params['search'] = '%'.$ch_user.'%';
-    } elseif ($search == 2 && $ch_user) {
+        $params['search'] = '%'.$chng.'%';
+    } elseif ($search == 2 && $chng) {
         $where = 'user_name LIKE :search';
         $order = 'ORDER BY u.user_name ASC';
-        $params['search'] = '%'.$ch_user.'%';
-    } elseif ($search == 3 && $ch_user) {
+        $params['search'] = '%'.$chng.'%';
+    } elseif ($search == 3 && $chng) {
         $where = 'user_email LIKE :search';
         $order = 'ORDER BY u.user_email ASC';
-        $params['search'] = '%'.$ch_user.'%';
-    } elseif ($search == 4 && $ch_user) {
+        $params['search'] = '%'.$chng.'%';
+    } elseif ($search == 4 && $chng) {
         $where = 'user_last_ip LIKE :search';
         $order = 'ORDER BY u.user_last_ip ASC';
-        $params['search'] = '%'.$ch_user.'%';
-    } elseif ($search == 5 && $ch_user) {
+        $params['search'] = '%'.$chng.'%';
+    } elseif ($search == 5 && $chng) {
         $where = 'user_website LIKE :search';
         $order = 'ORDER BY u.user_website ASC';
-        $params['search'] = '%'.$ch_user.'%';
-    } elseif ($search == 6 && $ch_user) {
+        $params['search'] = '%'.$chng.'%';
+    } elseif ($search == 6 && $chng) {
         $where = 'user_group = :grp';
         $order = 'ORDER BY u.user_id ASC';
-        $params['grp'] = (int)$ch_user;
-    } elseif ($search == 7 && $ch_user) {
+        $params['grp'] = $chng;
+    } elseif ($search == 7 && $chng) {
         $where = 'user_points >= :pts';
         $order = 'ORDER BY u.user_id ASC';
-        $params['pts'] = (int)$ch_user;
+        $params['pts'] = $chng;
     }
-
-    // Paging
-    $num = getVar('get','num','num','1');
-    $num = $num > 0 ? (int)$num : 1;
-
+    $num = getVar('get', 'num', 'num', '1');
+    $num = $num > 0 ? $num : 1;
     $offset = ($num - 1) * $confu['anum'];
-
-    // Params for COUNT (without limit/offset)
     $cnt_params = $params;
-
-    // Params for SELECT (with limit/offset)
-    $params['offset'] = (int)$offset;
-    $params['limit'] = (int)$confu['anum'];
-
-    $sql = 'SELECT u.user_id, u.user_name, u.user_email, u.user_website, u.user_regdate, '
-        .'u.user_lastvisit, u.user_points, u.user_last_ip, u.user_gender, u.user_agent, '
-        .'g.name, g.color '
-        .'FROM '.$prefix.'_users AS u '
-        .'LEFT JOIN '.$prefix.'_groups AS g ON (g.id=u.user_group) '
-        .'WHERE '.$where.' '
-        .$order.' '
-        .'LIMIT :offset, :limit';
-
+    $params['offset'] = $offset;
+    $params['limit'] = $confu['anum'];
+    $sql = 'SELECT u.user_id, u.user_name, u.user_email, u.user_website, u.user_regdate, u.user_lastvisit, u.user_points, u.user_last_ip, u.user_gender, u.user_agent, g.name, g.color FROM '.$prefix.'_users AS u LEFT JOIN '.$prefix.'_groups AS g ON (g.id = u.user_group) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
     $res = $db->sql_query($sql,$params);
-
     if ($db->sql_numrows($res) > 0) {
         $cont .= setTemplateBasic('open');
-        $cont .= '<table class="sl_table_list_sort"><thead><tr>'
-            .'<th>'._ID.'</th>'
-            .'<th>'._NICKNAME.'</th>'
-            .'<th>'._IP.'</th>'
-            .'<th>'._EMAIL.'</th>'
-            .'<th>'._REG.'</th>'
-            .'<th class="{sorter: false}">'._FUNCTIONS.'</th>'
-            .'</tr></thead><tbody>';
-
-        while (list(
-            $user_id,
-            $user_name,
-            $user_email,
-            $user_website,
-            $user_regdate,
-            $user_lastvisit,
-            $user_points,
-            $user_last_ip,
-            $user_gender,
-            $user_agent,
-            $gname,
-            $gcolor
-        ) = $db->sql_fetchrow($res)) {
-
-            $sgroup = $gname
-                ? '<span style="color: '.$gcolor.'">'.$gname.'</span>'
-                : _NO;
-
-            $web = $user_website ? domain($user_website,40) : _NO;
-
-            $cont .= '<tr><td>'.$user_id.'</td>'
-                .'<td>'.title_tip(
-                    _HASH.': '.md5($user_agent).'<br>'
-                    ._LAST_VISIT.': '.format_time($user_lastvisit,_TIMESTRING).'<br>'
-                    ._SPEC_GROUP.': '.$sgroup.'<br>'
-                    ._SITE.': '.$web.'<br>'
-                    ._GENDER.': '.gender($user_gender).'<br>'
-                    ._POINTS.': '.$user_points
-                ).search_color(user_info($user_name),$ch_user).'</td>'
-                .'<td>'.user_geo_ip($user_last_ip,4).'</td>'
-                .'<td>'.search_color($user_email,$ch_user).'</td>'
-                .'<td>'.format_time($user_regdate,_TIMESTRING).'</td>'
-                .'<td>'.add_menu(
-                    '<a href="'.$admin_file.'.php?op=users_add&amp;id='.$user_id
-                        .'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'
-                    .'||<a href="'.$admin_file.'.php?op=security_block&amp;new_ip='.$user_last_ip
-                        .'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'
-                        .$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>'
-                    .'||<a href="'.$admin_file.'.php?op=users_del&amp;id='.$user_id.'&amp;refer=1'
-                        .'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'
-                        .$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>'
-                ).'</td></tr>';
+        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._EMAIL.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        while (list($user_id, $user_name, $user_email, $user_website, $user_regdate, $user_lastvisit, $user_points, $user_last_ip, $user_gender, $user_agent, $gname, $gcolor) = $db->sql_fetchrow($res)) {
+            $sgroup = $gname ? '<span style="color: '.$gcolor.'">'.$gname.'</span>' : _NO;
+            $web = $user_website ? domain($user_website, 40) : _NO;
+            $cont .= '<tr><td>'.filterTextHighlight($user_id, $chng).'</td>'
+                .'<td>'.title_tip(_HASH.': '.md5($user_agent).'<br>'._LAST_VISIT.': '.format_time($user_lastvisit, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.filterTextHighlight($web,$chng).'<br>'._GENDER.': '.gender($user_gender).'<br>'._POINTS.': '.$user_points).filterTextHighlight(user_info($user_name), $chng).'</td><td>'.filterTextHighlight(user_geo_ip($user_last_ip, 4), $chng).'</td><td>'.filterTextHighlight($user_email, $chng).'</td><td>'.format_time($user_regdate, _TIMESTRING).'</td><td>'.add_menu('<a href="'.$aroute.'.php?name=users&amp;op=add&amp;id='.$user_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$aroute.'.php?name=security&amp;op=block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$aroute.'.php?name=users&amp;op=del&amp;id='.$user_id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
-
         $cont .= '</tbody></table>';
-
         $lsear = $search ? '&amp;search='.$search : '';
-        $lchg = $ch_user ? '&amp;chng_user='.$ch_user : '';
-
-        $cont .= setArticleNumbers(
-            'pagenum',
-            '',
-            (int)$confu['anum'],
-            'op=users_show'.$lsear.$lchg.'&amp;',
-            'user_id',
-            '_users',
-            '',
-            $where,
-            (int)$confu['anump'],
-            $cnt_params
-        );
-
+        $lchg = $chng ? '&amp;chng='.$chng : '';
+        $cont .= setArticleNumbers('pagenum', '', $confu['anum'], 'name=users'.$lsear.$lchg.'&amp;', 'user_id', '_users', '', $where, $confu['anump'], $cnt_params);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', [
-            'time' => '',
-            'url'  => '',
-            'id'   => 'info',
-            'text' => _USERNOEXIST
-        ]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url'  => '', 'id'   => 'info', 'text' => _USERNOEXIST]);
     }
-
     echo $cont;
     foot();
 }
 
-/*function users_show(): void {
-    global $prefix, $db, $admin_file, $conf, $confu;
-    $search = getVar('req', 'search', 'num');
-    $chng_user = getVar('req', 'chng_user');
-    head();
-    $cont = users_navi(0, 0, 0, 0);
-    if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
-    $params = [];
-    if ($search == 1 && $chng_user) {
-        $sqlstring = "user_id LIKE :search ORDER BY user_id ASC";
-        $params['search'] = '%'.$chng_user.'%';
-    } elseif ($search == 2 && $chng_user) {
-        $sqlstring = "user_name LIKE :search ORDER BY user_name ASC";
-        $params['search'] = '%'.$chng_user.'%';
-    } elseif ($search == 3 && $chng_user) {
-        $sqlstring = "user_email LIKE :search ORDER BY user_email ASC";
-        $params['search'] = '%'.$chng_user.'%';
-    } elseif ($search == 4 && $chng_user) {
-        $sqlstring = "user_last_ip LIKE :search ORDER BY user_last_ip ASC";
-        $params['search'] = '%'.$chng_user.'%';
-    } elseif ($search == 5 && $chng_user) {
-        $sqlstring = "user_website LIKE :search ORDER BY user_website ASC";
-        $params['search'] = '%'.$chng_user.'%';
-    } elseif ($search == 6 && $chng_user) {
-        $sqlstring = "user_group = :group ORDER BY user_id ASC";
-        $params['group'] = $chng_user;
-    } elseif ($search == 7 && $chng_user) {
-        $sqlstring = "user_points >= :points ORDER BY user_id ASC";
-        $params['points'] = $chng_user;
-    } else {
-        $sqlstring = "user_id ORDER BY user_id DESC";
-    }
-    $num = getVar('get', 'num', 'num', '1');
-    $offset = ($num-1) * $confu['anum'];
-    $params['offset'] = $offset;
-    $params['limit'] = $confu['anum'];
-    $result = $db->sql_query("SELECT u.user_id, u.user_name, u.user_email, u.user_website, u.user_regdate, u.user_lastvisit, u.user_points, u.user_last_ip, u.user_gender, u.user_agent, g.name, g.color FROM ".$prefix."_users AS u LEFT JOIN ".$prefix."_groups AS g ON (g.id = u.user_group) WHERE ".$sqlstring." LIMIT :offset, :limit", $params);
-    if ($db->sql_numrows($result) > 0) {
-        $cont .= setTemplateBasic('open');
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._EMAIL.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while (list($user_id, $user_name, $user_email, $user_website, $user_regdate, $user_lastvisit, $user_points, $user_last_ip, $user_gender, $user_agent, $gname, $gcolor) = $db->sql_fetchrow($result)) {
-            $sgroup = ($gname) ? '<span style="color: '.$gcolor.'">'.$gname.'</span>' : _NO;
-            $website = ($user_website) ? domain($user_website, 40) : _NO;
-            $cont .= '<tr><td>'.$user_id.'</td>'
-            .'<td>'.title_tip(_HASH.': '.md5($user_agent).'<br>'._LAST_VISIT.': '.format_time($user_lastvisit, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.$website.'<br>'._GENDER.': '.gender($user_gender).'<br>'._POINTS.': '.$user_points).search_color(user_info($user_name), $chng_user).'</td>'
-            .'<td>'.user_geo_ip($user_last_ip, 4).'</td>'
-            .'<td>'.search_color($user_email, $chng_user).'</td>'
-            .'<td>'.format_time($user_regdate, _TIMESTRING).'</td>'
-            .'<td>'.add_menu('<a href="'.$admin_file.'.php?op=users_add&amp;id='.$user_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$admin_file.'.php?op=users_del&amp;id='.$user_id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
-        }
-        $cont .= '</tbody></table>';
-        $lsear = ($search) ? '&amp;search='.$search : '';
-        $lchng = ($chng_user) ? '&amp;chng_user='.$chng_user : '';
-        $cont .= setArticleNumbers('pagenum', '', $confu['anum'], 'op=users_show'.$lsear.$lchng.'&amp;', 'user_id', '_users', '', $sqlstring, $confu['anump']);
-        $cont .= setTemplateBasic('close');
-    } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _USERNOEXIST]);
-    }
-    echo $cont;
-    foot();
-}*/
-
-function users_add(): void {
-    global $prefix, $db, $admin_file, $conf, $confu, $stop;
+function add(): void {
+    global $prefix, $db, $aroute, $conf, $confu, $stop;
     require_once CONFIG_DIR.'/config_news.php';
     $id = getVar('req', 'id', 'num');
     if (is_numeric($id)) {
@@ -288,10 +129,10 @@ function users_add(): void {
         $user_field = getVar('post', 'user_field', 'field');
     }
     head();
-    $cont = users_navi(0, 1, 0, 0);
+    $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._NICKNAME.':</td><td><input type="text" name="user_name" value="'.$user_name.'" maxlength="25" class="sl_form" placeholder="'._NICKNAME.'" required></td></tr>'
     .'<tr><td>'._URANK.':</td><td><input type="text" name="user_rank" value="'.$user_rank.'" maxlength="25" class="sl_form" placeholder="'._URANK.'"></td></tr>'
     .'<tr><td>'._EMAIL.':</td><td><input type="email" name="user_email" value="'.$user_email.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required></td></tr>'
@@ -320,15 +161,13 @@ function users_add(): void {
     if ($confu['theme']) {
         $tcategory = '';
         $tcount = 0;
-        $dh = opendir('templates');
-        while (($file = readdir($dh)) !== false) {
+        foreach (scandir('templates') as $file) {
             if (!preg_match('/\./', $file) && $file != 'admin') {
                 $sel = ($file == $user_theme) ? ' selected' : '';
                 $tcategory .= '<option value="'.$file.'"'.$sel.'>'.$file.'</option>';
                 $tcount++;
             }
         }
-        closedir($dh);
         if ($tcount > 1) $cont .= '<tr><td>'._THEME.':</td><td><select name="user_theme" class="sl_form">'.$tcategory.'</select></td></tr>';
     }
     $cont .= '<tr><td>'._RNEWSLETTER.':</td><td>'.radio_form($user_newsletter, 'user_newsletter').'</td></tr>';
@@ -361,14 +200,14 @@ function users_add(): void {
     .'<tr><td>'._RETYPEPASSWORD.':</td><td><input type="password" name="user_password2" value="" maxlength="25" class="sl_form" placeholder="'._RETYPEPASSWORD.'"></td></tr>'
     .'<tr><td>'._MAIL_SENDE.'</td><td><input type="checkbox" name="mail" value="1" OnClick="CloseOpen(\'sl_close_9\', 0);"'.$check.'></td></tr>'
     .'<tr><td colspan="2"><div id="sl_close_9"><table class="sl_table_form"><tr><td>'._MAIL_TEXT.':<div class="sl_small">'._MAIL_PASS_INFO.'</div></td><td class="sl_form">'.textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, '').'</td></tr></table></div></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="user_id" value="'.$user_id.'"><input type="hidden" name="op" value="users_add_save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="user_id" value="'.$user_id.'"><input type="hidden" name="name" value="users"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function users_add_save(): void {
-    global $prefix, $db, $admin_file, $conf, $stop;
+function addsave(): void {
+    global $prefix, $db, $aroute, $conf, $stop;
     $user_id = getVar('post', 'user_id', 'num');
     $user_name = getVar('post', 'user_name', 'name');
     $user_rank = getVar('post', 'user_rank');
@@ -437,19 +276,20 @@ function users_add_save(): void {
             mail_send($user_email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
-        header('Location: '.$admin_file.'.php?op=users_show'.$send);
+        header('Location: '.$aroute.'.php?name=users'.$send);
+        exit;
     } else {
-        users_add();
+        add();
     }
 }
 
-function users_new(): void {
-    global $prefix, $db, $admin_file, $conf, $confu;
+function newuser(): void {
+    global $prefix, $db, $aroute, $conf, $confu;
     head();
-    $cont = users_navi(0, 2, 0, 0);
+    $cont = navi(0, 2, 0, 0);
     $num = getVar('get', 'num', 'num', '1');
-    $offset = ($num-1) * $confu['anum'];
-    $result = $db->sql_query('SELECT user_id, user_name, user_email, user_password, user_regdate, check_num FROM '.$prefix.'_users_temp WHERE user_id LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $confu['anum']]);
+    $offset = ($num - 1) * $confu['anum'];
+    $result = $db->sql_query('SELECT user_id, user_name, user_email, user_password, user_regdate, check_num FROM '.$prefix.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $confu['anum']]);
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._EMAIL.'</th><th>'._PASSWORD.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -459,10 +299,10 @@ function users_new(): void {
             .'<td>'.$user_email.'</td>'
             .'<td>'.$user_password.'</td>'
             .'<td>'.$user_regdate.'</td>'
-            .'<td>'.add_menu(ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($user_name).'&amp;num='.$check_num, 0).'||<a href="'.$admin_file.'.php?op=users_new_del&amp;id='.$user_id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu(ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($user_name).'&amp;num='.$check_num, 0).'||<a href="'.$aroute.'.php?name=users&amp;op=newdel&amp;id='.$user_id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
-        $cont .= setArticleNumbers('pagenum', '', $confu['anum'], 'op=users_new&amp;', 'user_id', '_users_temp', '', '', $confu['anump']);
+        $cont .= setArticleNumbers('pagenum', '', (int)$confu['anum'], 'name=users&amp;op=newuser&amp;', 'user_id', '_users_temp', '', '', (int)$confu['anump'], []);
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -471,24 +311,24 @@ function users_new(): void {
     foot();
 }
 
-function users_null(): void {
-    global $prefix, $db, $admin_file, $conf, $confu;
+function nullpoints(): void {
+    global $aroute;
     head();
-    $cont = users_navi(0, 3, 0, 0);
+    $cont = navi(0, 3, 0, 0);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._POINTS.':</td><td>'.radio_form(0, 'points').'</td></tr>'
     .'<tr><td>'._RATINGS.':</td><td>'.radio_form(0, 'votes').'</td></tr>'
     .'<tr><td>'._UWARNS.':</td><td>'.radio_form(0, 'warnings').'</td></tr>'
     .'<tr><td>'._SIGNATURE.':</td><td>'.radio_form(0, 'sig').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="users_null_save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="users"><input type="hidden" name="op" value="nullsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function users_null_save(): void {
-    global $prefix, $db, $admin_file;
+function nullsave(): void {
+    global $prefix, $db, $aroute;
     $points = getVar('post', 'points', 'num');
     $votes = getVar('post', 'votes', 'num');
     $warnings = getVar('post', 'warnings', 'num');
@@ -497,16 +337,17 @@ function users_null_save(): void {
     if ($votes == 1) $db->sql_query('UPDATE '.$prefix.'_users SET user_votes = :zero, user_totalvotes = :zero', ['zero' => '0']);
     if ($warnings == 1) $db->sql_query('UPDATE '.$prefix.'_users SET user_warnings = :zero', ['zero' => '0']);
     if ($sig == 1) $db->sql_query('UPDATE '.$prefix.'_users SET user_sig = :empty', ['empty' => '']);
-    header('Location: '.$admin_file.'.php?op=users_show');
+    header('Location: '.$aroute.'.php?name=users');
+    exit;
 }
 
-function users_conf(): void {
-    global $admin_file, $confu;
+function conf(): void {
+    global $aroute, $confu;
     head();
-    $cont = users_navi(0, 4, 0, 0);
+    $cont = navi(0, 4, 0, 0);
     checkPerms('users.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._ANONYMOUSNAME.':</td><td><input type="text" name="anonym" value="'.$confu['anonym'].'" class="sl_conf" placeholder="'._ANONYMOUSNAME.'" required></td></tr>'
     .'<tr><td>'._ADIR.':</td><td><input type="text" name="adirectory" value="'.$confu['adirectory'].'" class="sl_conf" placeholder="'._ADIR.'" required></td></tr>'
     .'<tr><td>'._ATYPE.':</td><td><input type="text" name="atypefile" value="'.$confu['atypefile'].'" class="sl_conf" placeholder="'._ATYPE.'" required></td></tr>'
@@ -547,15 +388,15 @@ function users_conf(): void {
     .'<tr><td>'._NETWORKCODE.':</td><td>'.textarea_code('code', 'network_c', 'sl_conf', 'text/html', $confu['network_c']).'</td></tr>'
     .'<tr><td>'._NAME_BLOCK.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="name_b" cols="65" rows="5" class="sl_conf" placeholder="'._NAME_BLOCK.'">'.$confu['name_b'].'</textarea></td></tr>'
     .'<tr><td>'._MAIL_BLOCK.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="mail_b" cols="65" rows="5" class="sl_conf" placeholder="'._MAIL_BLOCK.'">'.$confu['mail_b'].'</textarea></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="users_save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="users"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function users_save(): void {
-    global $admin_file, $confu;
-    $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
+function save(): void {
+    global $aroute, $confu;
+    $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
     $cont = [
         'anonym' => getVar('post', 'anonym', 'title'),
         'adirectory' => getVar('post', 'adirectory', 'title'),
@@ -585,75 +426,44 @@ function users_save(): void {
         'points' => $confu['points']
     ];
     setConfigFile('users.php', 'confu', $cont);
-    header('Location: '.$admin_file.'.php?op=users_conf');
+    header('Location: '.$aroute.'.php?name=users&op=conf');
+    exit;
 }
 
-function users_new_del(): void {
-    global $prefix, $db, $admin_file;
+function newdel(): void {
+    global $prefix, $db, $aroute;
     $id = getVar('get', 'id', 'num');
     if ($id) $db->sql_query('DELETE FROM '.$prefix.'_users_temp WHERE user_id = :id', ['id' => $id]);
-    referer($admin_file.'.php?op=users_show');
+    referer($aroute.'.php?name=users');
 }
 
-function users_del(): void {
-    global $prefix, $db, $admin_file;
+function del(): void {
+    global $prefix, $db, $aroute;
     $id = getVar('get', 'id', 'num');
     if ($id) {
         $db->sql_query('DELETE FROM '.$prefix.'_users WHERE user_id = :id', ['id' => $id]);
         $db->sql_query('DELETE FROM '.$prefix.'_favorites WHERE uid = :id', ['id' => $id]);
         # $db->sql_query('DELETE FROM '.$prefix.'_comment WHERE uid = :id', ['id' => $id]);
     }
-    referer($admin_file.'.php?op=users_show');
+    referer($aroute.'.php?name=users');
 }
 
-function users_info(): void {
+function info(): void {
     head();
-    echo users_navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'users').'</div>';
+    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'users').'</div>';
     foot();
 }
 
-switch($op) {
-    case 'users_show':
-    users_show();
-    break;
-
-    case 'users_add':
-    users_add();
-    break;
-
-    case 'users_add_save':
-    users_add_save();
-    break;
-
-    case 'users_new':
-    users_new();
-    break;
-
-    case 'users_new_del':
-    users_new_del();
-    break;
-
-    case 'users_del':
-    users_del();
-    break;
-
-    case 'users_null':
-    users_null();
-    break;
-
-    case 'users_null_save':
-    users_null_save();
-    break;
-
-    case 'users_conf':
-    users_conf();
-    break;
-
-    case 'users_save':
-    users_save();
-    break;
-
-    case 'users_info':
-    users_info();
-    break;
+switch ($op) {
+    default: users(); break;
+    case 'add': add(); break;
+    case 'addsave': addsave(); break;
+    case 'newuser': newuser(); break;
+    case 'newdel': newdel(); break;
+    case 'del': del(); break;
+    case 'null': nullpoints(); break;
+    case 'nullsave': nullsave(); break;
+    case 'conf': conf(); break;
+    case 'save': save(); break;
+    case 'info': info(); break;
 }

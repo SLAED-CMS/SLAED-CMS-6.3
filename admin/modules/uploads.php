@@ -103,6 +103,18 @@ function uploads(): void {
     foot();
 }
 
+function uploadsave(): void {
+    global $aroute, $stop;
+    $sdir = getVar('post', 'dir', 'var');
+    upload(3, 'uploads/'.$sdir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $sdir, '1600', '1600', '1');
+    if ($stop) {
+        uploads();
+    } else {
+        header('Location: '.$aroute.'.php?name=uploads&dir='.$sdir);
+        exit;
+    }
+}
+
 function templconf(): void {
     global $aroute, $confup;
     require_once CONFIG_DIR.'/filetype.php';
@@ -135,7 +147,7 @@ function templsave(): void {
 function conf(): void {
     global $aroute, $confup;
     head();
-    $cont = navi(1, 2, 1, 0, 'uploads_conf');
+    $cont = navi(1, 2, 1, 0, 'conf');
     $cont .= checkPerms('uploads.php');
     $handle = opendir('uploads');
     $directory = '';
@@ -184,7 +196,7 @@ function conf(): void {
     $cont .= setTemplateBasic('open');
     $cont .= $conts
     .'<script>
-        var countries=new ddtabcontent("uploads_confs")
+        var countries=new ddtabcontent("confs")
         countries.setpersist(true)
         countries.setselectedClassTarget("link")
         countries.init()
@@ -205,11 +217,11 @@ function confsave(): void {
     $theight = getVar('post', 'theight', 'num', 500);
     $xtheight = (!$theight) ? 500 : $theight;
     $dir = getVar('post', 'dir', 'var');
-    $content = "\$confup = [];\n"
-    ."\$confup['dir'] = \"".$dir."\";\n"
-    ."\$confup['typ'] = \"".$xttyp."\";\n"
-    ."\$confup['width'] = \"".$xtwidth."\";\n"
-    ."\$confup['height'] = \"".$xtheight."\";\n";
+    $confup = [];
+    $confup['dir'] = $dir;
+    $confup['typ'] = $xttyp;
+    $confup['width'] = $xtwidth;
+    $confup['height'] = $xtheight;
     $mods = ['all', 'account', 'album', 'auto_links', 'content', 'faq', 'files', 'forum', 'help', 'info', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
     $type = getVar('post', 'type', 'raw');
     $allsize = getVar('post', 'allsize', 'raw');
@@ -236,11 +248,11 @@ function confsave(): void {
             $xusum = (!intval($usum[$i])) ? 100 : $usum[$i];
             $upload = getVar('post', $i.'upload', 'num');
             $upguest = getVar('post', $i.'upguest', 'num');
-            $content .= "\$confup['".$val."'] = \"".$xtype.'|'.$xallsize.'|'.$xsize.'|'.$xwidth.'|'.$xheight.'|'.$xup.'|'.$xgdwidth.'|'.$xnum.'|'.$xasum.'|'.$xusum.'|'.$upload.'|'.$upguest."\";\n";
+            $confup[$val] = $xtype.'|'.$xallsize.'|'.$xsize.'|'.$xwidth.'|'.$xheight.'|'.$xup.'|'.$xgdwidth.'|'.$xnum.'|'.$xasum.'|'.$xusum.'|'.$upload.'|'.$upguest;
             $i++;
         }
     }
-    save_conf(CONFIG_DIR.'/uploads.php', $content);
+    setConfigFile('uploads.php', 'confup', $confup);
     header('Location: '.$aroute.'.php?name=uploads&op=conf');
     exit;
 }
@@ -253,16 +265,7 @@ function info(): void {
 
 switch ($op) {
     default: uploads(); break;
-    case 'uploadsave':
-        $sdir = getVar('post', 'dir', 'var');
-        upload(3, 'uploads/'.$sdir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $sdir, '1600', '1600', '1');
-        if ($stop) {
-            uploads();
-        } else {
-            header('Location: '.$aroute.'.php?name=uploads&dir='.$sdir);
-            exit;
-        }
-        break;
+    case 'uploadsave': uploadsave(); break;
     case 'templconf': templconf(); break;
     case 'templsave': templsave(); break;
     case 'conf': conf(); break;
