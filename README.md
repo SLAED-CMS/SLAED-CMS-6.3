@@ -20,7 +20,7 @@ SLAED CMS is a powerful, modular content management system built with modern PHP
 git clone https://github.com/yourusername/slaed-cms.git
 
 # 2. Configure database
-cp config/config_db.php.example config/config_db.php
+cp config/db.php.example config/db.php
 # Edit config/config_db.php with your database credentials
 
 # 3. Import database schema
@@ -57,8 +57,8 @@ http://localhost/slaed-cms/
 1. **Download** the latest release or clone the repository
 2. **Extract** files to your web server directory
 3. **Create** a MySQL/MariaDB database
-4. **Configure** database connection in `config/config_db.php`
-5. **Import** database schema from `database/schema.sql`
+4. **Configure** database connection in `config/db.php`
+5. **Import** database schema from `setup/sql/table.sql`
 6. **Set permissions** on writable directories:
 
 ```bash
@@ -140,8 +140,8 @@ slaed-cms/
 │   ├── user.php         # User management
 │   └── classes/         # Database drivers (MySQLi, PDO)
 ├── language/             # Multi-language files
-│   ├── lang-en.php
-│   ├── lang-de.php
+│   ├── en.php
+│   ├── de.php
 │   └── ...
 ├── modules/              # Frontend modules (27+)
 │   ├── news/            # News module
@@ -343,9 +343,9 @@ See [LICENSE](LICENSE) for more details.
 
 ## 📮 Support
 
-- **Documentation:** See project wiki (coming soon)
+- **Documentation:** See project wiki
 - **Issues:** Report bugs via GitHub Issues
-- **Forum:** Community support forum (coming soon)
+- **Forum:** Community support forum
 
 ---
 
