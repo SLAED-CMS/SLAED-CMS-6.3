@@ -293,7 +293,7 @@ function save(): void {
         $xadmin_c = 'admin-'.$xadmin_c;
     }
 
-    $xmodule = getVar('post', 'module', 'var');
+    $xmodule = getVar('post', 'module[]', 'var');
     $xmodule = $xmodule ? implode(',', $xmodule) : '0';
 
     $xvar = getVar('post', 'variables[]', 'var');
