@@ -16,7 +16,7 @@ function editor(): void {
     global $aroute;
     head();
     $cont = navi(0, 0, 0, 0);
-    $file = 'config/config_core.php';
+    $file = CONFIG_DIR.'/system.php';
     $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EFUNC.': '.$file.' '._EINFO]);

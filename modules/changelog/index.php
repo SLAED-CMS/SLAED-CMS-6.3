@@ -447,14 +447,13 @@ function chlogFormatDay(string $date): string {
 
 function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
     $query = http_build_query(array_filter([
-        'name' => $modname,
         'author' => $filters['author'] ?? '',
         'file' => $filters['file'] ?? '',
         'search' => $filters['search'] ?? '',
         'datefrom' => $filters['since'] ?? '',
         'dateto' => $filters['until'] ?? ''
     ]));
-    $url = $query ? $query.'&' : 'name='.$modname.'&';
+    $url = $query ? $query.'&' : '';
 
     $out = setPageNumbers('pagenum', $modname, $totcom, $totpage, $perpage, $url, 10, $page, '', 'page');
     return $out ?? '';

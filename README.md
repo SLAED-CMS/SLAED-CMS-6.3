@@ -135,7 +135,7 @@ slaed-cms/
 │   ├── global.php # Global settings (187+ parameters)
 │   └── *.php            # Module-specific configs
 ├── core/                 # System core
-│   ├── core.php         # Main core file (271 KB)
+│   ├── system.php         # Main core file (271 KB)
 │   ├── security.php     # Security functions
 │   ├── user.php         # User management
 │   └── classes/         # Database drivers (MySQLi, PDO)

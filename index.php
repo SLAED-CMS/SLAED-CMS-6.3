@@ -7,7 +7,7 @@
 define('MODULE_FILE', true);
 $sgtime = microtime(true);
 define('BASE_DIR', str_replace('\\', '/', __DIR__));
-require_once BASE_DIR.'/core/core.php';
+require_once BASE_DIR.'/core/system.php';
 
 if (!defined('ADMIN_FILE') && $conf['close'] && !is_admin()) setExit(_CLOSE_TEXT);
 if (isset($_GET['error'])) setExit(sprintf(_ERROR404, $_GET['error'], $conf['homeurl']), 1);
