@@ -9,7 +9,6 @@ if (!defined("BLOCK_FILE")) {
 
 global $prefix, $db, $conf;
 $mods_1 = "<tr><td><a href=\"index.php\" title=\""._HOME."\" class=\"sl_modul\">"._HOME."</a></td></tr>";
-$mods_1 .= ($conf['forum']) ? "<tr><td><a href=\"forum/index.php\" title=\""._FORUM."\" class=\"sl_modul\">"._FORUM."</a></td></tr>" : "";
 $mods_2 = ""; $mods_3 = ""; $mods_4 = "";
 $result = $db->sql_query("SELECT title, view, active, inmenu FROM ".$prefix."_modules ORDER BY title ASC");
 while (list($m_title, $view, $active, $inmenu) = $db->sql_fetchrow($result)) {

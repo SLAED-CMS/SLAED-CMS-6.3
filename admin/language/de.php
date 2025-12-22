@@ -235,8 +235,6 @@ define("_FILE_S","Allgemeine Größe der Dateien");
 define("_FIX","Sortierung");
 define("_FIXED","Fixieren");
 define("_FLY_FIX","Freier festgelegter Block");
-define("_FORUM_LINK","Link auf das Profil des Forums");
-define("_FORUM_MESS","Link auf die persönlichen Mitteilungen des Forums");
 define("_F_5","Menge der Dateien auf die Seite");
 define("_F_8","Erlauben, die Dateien zu ergдnzen?");
 define("_F_9","Gдsten erlauben, die Dateien zu ergänzen?");
@@ -258,7 +256,6 @@ define("_INFO_NO","Zum deaktivieren des Attributs müssen Sie die Einstellung «
 define("_INFO_NULL","Zum deaktivieren des Attributs müssen Sie die Einstellung «0» wählen.");
 define("_INHOME","Nur auf der Hauptseite");
 define("_INQUIRY","Datenbank Anfrage");
-define("_INT_FORUM","Die gemeine Registrierung der Benutzer mit");
 define("_IN_ID","Die identischen Eingänge");
 define("_IN_URL","Die Eingangadressen");
 define("_IP_ID","Identische IP Adressen");

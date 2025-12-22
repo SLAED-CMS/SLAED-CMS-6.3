@@ -75,24 +75,6 @@ function navi() {
     $link[] = 'index.php?name=account';
     $img[] = 'account/home.png';
     
-    if ($conf['forum_link']) {
-        $title[] = _ACCOUNT;
-        $ititle[] = _ACCOUNT;
-        $link[] = 'forum/'.$conf['forum_link'];
-        $img[] = 'account/account.png';
-    }
-    if ($conf['forum_mess']) {
-        $title[] = _MESSAGES;
-        $ititle[] = _PRIVAT;
-        $link[] = 'forum/'.$conf['forum_mess'];
-        $img[] = 'account/messages.png';
-    }
-    if ($conf['forum']) {
-        $title[] = _FORUM;
-        $ititle[] = _FORUM;
-        $link[] = 'forum/index.php';
-        $img[] = 'account/forum.png';
-    }
     if ($confpr['act']) {
         $title[] = _MESSAGES;
         $ititle[] = _PRIVAT;

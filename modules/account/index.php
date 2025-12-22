@@ -11,7 +11,6 @@ if (!defined('MODULE_FILE')) {
 get_lang($conf['name']);
 include('config/config_news.php');
 require_once CONFIG_DIR.'/rss.php';
-if ($conf['forum']) include('core/forum.php');
 
 function account() {
     global $conf, $confu, $stop;
@@ -240,7 +239,6 @@ function activate(): void {
             $db->sql_query('INSERT INTO '.$prefix.'_users (user_id, user_name, user_rank, user_email, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_agent) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent)', array('uname'  => $user_name, 'rank'   => $rank, 'email'  => $user_email, 'avatar' => 'default/00.gif', 'regdate' => $user_regdate, 'pwd'    => md5_salt($user_password), 'lang'   => $locale, 'ip'     => $uip, 'agent'  => $uagent));
             $db->sql_query('DELETE FROM '.$prefix.'_users_temp WHERE user_name = :uname AND check_num = :cnum', array('uname' => $user_name, 'cnum' => $check_num));
             $db->sql_query('DELETE FROM '.$prefix.'_session WHERE uname = :uname AND guest = 0', array('uname' => $uip));
-            if ($conf['forum']) new_user($user_name, $user_password, $user_email);
             echo setTemplateBasic('title', array('{%title%}' => _ACTIVATIONYES)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ACTMSG));
         } else {
             echo setTemplateBasic('title', array('{%title%}' => _ACTIVATIONERROR)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ACTERROR1));
@@ -594,7 +592,6 @@ function passmail() {
             $newpass = getPass($confu['minpass']);
             $cryptpass = md5_salt($newpass);
             $db->sql_query("UPDATE ".$prefix."_users SET user_password = '".$cryptpass."' WHERE user_email = '".$email."'");
-            if ($conf['forum']) new_pass($user_name, $newpass, $user_email);
             $link = "<a href=\"".$conf['homeurl']."/index.php?name=".$conf['name']."\">".$conf['homeurl']."/index.php?name=".$conf['name']."</a>";
             $subject = $conf['sitename']." - "._USERPASSWORD." ".$user_name;
             $message = str_replace("[text]", sprintf(_PASSSEND, $user_name, $conf['sitename'], $user_name, $newpass, $link), $conf['mtemp']);
@@ -631,14 +628,9 @@ function login() {
         $db->sql_query("DELETE FROM ".$prefix."_session WHERE uname = '".$uip."' AND guest = '0'");
         $db->sql_query("UPDATE ".$prefix."_users SET user_last_ip = '".$uip."', user_lastvisit = NOW(), user_agent = '".$uagent."' WHERE user_id = '".$user_id."'");
         login_report(0, 1, $uname, "");
-        if ($conf['forum']) {
-            new_user($user_name, $upass, $user_email);
-            log_in($uname, $upass);
-        }
         referer("index.php?name=".$conf['name']."&op=profil");
     } else {
         login_report(0, 0, $uname, $upass);
-        if ($conf['forum']) check_user($uname, $upass);
         account();
     }
 }
@@ -648,7 +640,6 @@ function logout() {
     $user_name = htmlspecialchars(substr($user[1], 0, 25));
     setCookiesDelete('account');
     $db->sql_query("DELETE FROM ".$prefix."_session WHERE uname = '".$user_name."' AND guest = '2'");
-    if ($conf['forum']) log_out();
     unset($user);
     referer("index.php");
 }
@@ -835,7 +826,6 @@ function savepass() {
                     mail_send($user_email, $conf['adminmail'], $subject, $message, 0, 3);
                     $newpass = md5_salt($newpass);
                     $db->sql_query("UPDATE ".$prefix."_users SET user_password = '".$newpass."' WHERE user_id = '".$user_id."'");
-                    if ($conf['forum']) new_pass($user_name, $newpass2, $user_email);
                     header('Location: index.php?name='.$conf['name']);
                 } else {
                     $stop[] = _ERROR_PASS;

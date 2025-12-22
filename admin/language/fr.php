@@ -235,8 +235,6 @@ define("_FILE_S","La taille totale des fichiers");
 define("_FIX","Tri");
 define("_FIXED","Fixer");
 define("_FLY_FIX","Libre un bloc fixe");
-define("_FORUM_LINK","Profil lien sur le forum");
-define("_FORUM_MESS","Lien vers personnelles messages du forum");
 define("_F_5","Le nombre de fichiers par page");
 define("_F_8","Autoriser l'ajout de fichiers?");
 define("_F_9","Autoriser les clients d'ajouter des fichiers?");
@@ -258,7 +256,6 @@ define("_INFO_NO","Pour désactiver l'attribut, vous devez sélectionner la vale
 define("_INFO_NULL","Pour désactiver l'attribut, vous devez sélectionner la valeur «0».");
 define("_INHOME","Seulement sur la");
 define("_INQUIRY","Requête à la base de données");
-define("_INT_FORUM","Total de l'enregistrement des utilisateurs");
 define("_IN_ID","Identique entrées");
 define("_IN_URL","Adresse entrées");
 define("_IP_ID","Identique IP promus");
