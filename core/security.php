@@ -6,16 +6,9 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-#define('BASE_DIR', dirname(__DIR__));
-
-# Global config file include
-require_once CONFIG_DIR.'/config_global.php';
-
-# Users config file include
+# Config file include
+require_once CONFIG_DIR.'/global.php';
 require_once CONFIG_DIR.'/users.php';
-
-# SEO config file include
-require_once CONFIG_DIR.'/config_seo.php';
 
 # Murder variables
 unset($name, $file, $admin, $user, $admintrue, $godtrue, $usertrue, $aid, $uname, $guest, $userinfo, $stop);

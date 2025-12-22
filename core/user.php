@@ -782,7 +782,7 @@ function rss_channel() {
 
 # Open search
 function open_search() {
-    global $conf, $confse;
+    global $conf;
     get_lang();
     header("Content-Type: application/opensearchdescription+xml");
     header("Content-Encoding: none");

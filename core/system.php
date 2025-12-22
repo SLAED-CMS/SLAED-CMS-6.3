@@ -637,7 +637,7 @@ function setConfigFile(string $fp, string $name, array $arr, array $act = [], st
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
     .'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL
-    .'$'.$name.' = '.var_export($arr, true).';';
+    .'$'.$name.' = '.var_export($arr, true).';'.PHP_EOL;
     file_put_contents($fp, $cnt, LOCK_EX);
 }
 
@@ -1311,6 +1311,9 @@ function getImgText($text, $type='') {
     return $img;
 }
 
+# OLD DELETE
+require_once CONFIG_DIR.'/config_seo.php';
+
 # Format SEO url
 $confse = [
     'rewrite' => false,   // true = SEO-Link, false = klassischer Link
@@ -1853,7 +1856,7 @@ function updateNewsletter(): void {
             foreach ($outmail as $val) if ($val != "") mail_send($val, $conf['adminmail'], $title, bb_decode($content, "all"), 0, 3);
             if (!$inmail) {
                 $cont = array('newsletter' => '0');
-                doConfig('config/config_global.php', 'conf', $cont, $conf, '');
+                setConfigFile('global.php', 'conf', $cont, $conf, '');
             }
         }
     }
@@ -3466,7 +3469,7 @@ function getcat() {
 
 # Format categories links
 function catlink() {
-    global $prefix, $db, $conf, $confse;
+    global $prefix, $db, $conf;
     $arg = func_get_args();
     $mod = analyze($arg[0]);
     $id = intval($arg[1]);

@@ -8,9 +8,9 @@ if (!defined('ADMIN_FILE')) die('Illegal file access');
 
 global $path;
 
-include($path.'config/config_global.php');
-include($path.'config/security.php');
-include($path.'language/lang-'.$conf['language'].'.php');
+require_once $path.'config/global.php';
+require_once $path.'config/security.php';
+require_once $path.'language/'.$conf['language'].'.php';
 
 # Denial of Authenticate
 function setUnauthorized() {

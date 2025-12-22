@@ -6,9 +6,8 @@
 
 if (!defined('SETUP_FILE')) die('Illegal File Access');
 define('FUNC_FILE', true);
-define('BASE_DIR', str_replace('\\', '/', dirname(__DIR__)));
 
-require_once BASE_DIR.'/config/config_global.php';
+require_once BASE_DIR.'/config/global.php';
 require_once BASE_DIR.'/config/security.php';
 
 if ($confs['error'] == 2) {
@@ -35,15 +34,20 @@ if (version_compare(PHP_VERSION, '8.1.0', '<')) setExit(_PHPSETUP);
 if ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==') setExit(_NO_LICENSE);
 $copyright = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
 
-function doConfig(string $fp, string $name, array $array, array|string $actual = '', string $type = ''): void {
-    if (is_array($array) && $name) {
-        if (is_array($actual)) $array += $actual;
-        ksort($array);
-        array_walk($array, function (&$v) { $v = is_bool($v) ? strval(intval($v)) : strval($v); });
-        $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
-        $cont = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL.'$'.$name.' = '.var_export($array, true).';';
-        file_put_contents($fp, $cont, LOCK_EX);
-    }
+function setConfigFile(string $fp, string $name, array $arr, array|string $act = [], string $type = ''): void {
+    $fp = BASE_DIR.'/config/'.$fp;
+    if (!empty($act)) $arr += $act;
+    ksort($arr);
+    array_walk($arr, function (&$v): void { $v = is_bool($v) ? (string)(int)$v : (string)$v; });
+    $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
+    $cnt = '<?php'.PHP_EOL
+    .'# Author: Eduard Laas'.PHP_EOL
+    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# License: GNU GPL 3'.PHP_EOL
+    .'# Website: slaed.net'.PHP_EOL.PHP_EOL
+    .'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL
+    .'$'.$name.' = '.var_export($arr, true).';'.PHP_EOL;
+    file_put_contents($fp, $cnt, LOCK_EX);
 }
 
 function getProtocol(): string {
@@ -257,8 +261,8 @@ function lang(): void {
 function config(): void {
     global $title, $conf, $confs;
     $title = _CONFIG;
-    checkWritableConfig('config/db.php');
-    checkWritableConfig('config/config_global.php');
+    checkWritableConfig(BASE_DIR.'/config/db.php');
+    checkWritableConfig(BASE_DIR.'/config/global.php');
     require_once BASE_DIR.'/config/db.php';
     $xhost = ($confdb['host']) ? $confdb['host'] : 'localhost';
     $xuname = ($confdb['uname']) ? $confdb['uname'] : '';
@@ -307,8 +311,8 @@ function save(): void {
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
 
     $cont = array('language' => $clang, 'homeurl' => $url);
-    doConfig('config/config_global.php', 'conf', $cont, $conf, '');
-    require_once BASE_DIR.'/config/config_global.php';
+    setConfigFile('global.php', 'conf', $cont, $conf, '');
+    require_once BASE_DIR.'/config/global.php';
 
     $tafile = ($confs['afile']) ? $confs['afile'] : 'admin';
     if (file_exists($tafile.'.php') && !file_exists($xafile.'.php')) {
@@ -319,12 +323,12 @@ function save(): void {
         $xafile = file_exists($xafile.'.php') ? $xafile : $tafile;
     }
     $cont = array('afile' => $xafile);
-    doConfig('config/security.php', 'confs', $cont, $confs, '');
+    setConfigFile('security.php', 'confs', $cont, $confs, '');
     require_once BASE_DIR.'/config/security.php';
     
     require_once BASE_DIR.'/config/db.php';
     $cont = array('host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync);
-    doConfig('config/db.php', 'confdb', $cont, $confdb, '');
+    setConfigFile('db.php', 'confdb', $cont, $confdb, '');
 
     require_once 'core/classes/pdo.php';
     $db = new sql_db($xhost, $xuname, $xpass, $xname, $xcharset);

@@ -232,7 +232,7 @@ function save(): void {
             ]);
         }
         $cont = ['newsletter' => $send, 'newslettercount' => $count];
-        doConfig('config/config_global.php', 'conf', $cont, $conf, '');
+        setConfigFile('global.php', 'conf', $cont, $conf, '');
         header('Location: '.$aroute.'.php?name=newsletter');
         exit;
     } else {
