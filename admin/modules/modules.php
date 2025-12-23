@@ -6,9 +6,30 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
+####
+function migrateModulesDbToConfig(): void {
+    global $db, $prefix;
+    $result = $db->sql_query('SELECT title, active, view, inmenu, mod_group, blocks, blocks_c FROM '.$prefix.'_modules');
+    $cont = [];
+    while ($row = $db->sql_fetchrow($result)) {
+        $title = $row['title'];
+        $cont[$title] = [
+            'active' => $row['active'],
+            'view' => $row['view'],
+            'inmenu' => $row['inmenu'],
+            'group' => $row['mod_group'],
+            'side' => $row['blocks'],
+            'top' => $row['blocks_c'],
+        ];
+    }
+    setConfigFile('modules.php', 'confmd', $cont);
+}
+####
+
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=modules', 'name=modules&amp;op=info'];
     $lang = [_HOME, _INFO];
+    echo migrateModulesDbToConfig();
     return getAdminTabs(_MODULES, 'modules.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 

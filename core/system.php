@@ -629,6 +629,34 @@ function setConfigFile(string $fp, string $name, array $arr, array $act = [], st
     $fp = CONFIG_DIR.'/'.$fp;
     if (!empty($act)) $arr += $act;
     ksort($arr);
+    $normalize = function ($v) use (&$normalize) {
+        if (is_array($v)) {
+            foreach ($v as $k => $vv) $v[$k] = $normalize($vv);
+            return $v;
+        }
+        if (is_bool($v)) return (string)(int)$v;
+        if (is_int($v)) return (string)$v;
+        if (is_float($v)) return (string)$v;
+        if (is_null($v)) return '';
+        return (string)$v;
+    };
+    foreach ($arr as $k => $v) $arr[$k] = $normalize($v);
+    $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
+    $cnt = '<?php'.PHP_EOL
+    .'# Author: Eduard Laas'.PHP_EOL
+    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# License: GNU GPL 3'.PHP_EOL
+    .'# Website: slaed.net'.PHP_EOL.PHP_EOL
+    .'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL
+    .'$'.$name.' = '.var_export($arr, true).';'.PHP_EOL;
+    file_put_contents($fp, $cnt, LOCK_EX);
+}
+
+/*
+function setConfigFile(string $fp, string $name, array $arr, array $act = [], string $type = ''): void {
+    $fp = CONFIG_DIR.'/'.$fp;
+    if (!empty($act)) $arr += $act;
+    ksort($arr);
     array_walk($arr, function (&$v): void { $v = is_bool($v) ? (string)(int)$v : (string)$v; });
     $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
     $cnt = '<?php'.PHP_EOL
@@ -640,6 +668,7 @@ function setConfigFile(string $fp, string $name, array $arr, array $act = [], st
     .'$'.$name.' = '.var_export($arr, true).';'.PHP_EOL;
     file_put_contents($fp, $cnt, LOCK_EX);
 }
+    */
 
 # DELETE OLD
 function doConfig($fp, $name, $array, $actual='', $type='') {
@@ -1311,8 +1340,78 @@ function getImgText($text, $type='') {
     return $img;
 }
 
-# OLD DELETE
-require_once CONFIG_DIR.'/config_seo.php';
+# BEARBEITUNG SEO
+# Количество знаков в описании
+$confse['dletter'] = "160";
+
+# Активировать Open Graph
+$confse['agraph'] = "1";
+
+# Open Graph
+$confse['graph'] = <<<HTML
+<meta property="og:site_name" content="[site]">
+<meta property="og:locale" content="[loc]">
+<meta property="og:title" content="[title]">
+<meta property="og:description" content="[desc]">
+<meta property="og:image" content="[img]">
+<meta property="og:type" content="[type]">
+<meta property="og:url" content="[url]">
+HTML;
+
+# Активировать Schema
+$confse['aschema'] = "1";
+
+# Schema
+$confse['schema'] = <<<HTML
+<script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Organization",
+    "name": "[site]",
+    "url": "[homeurl]",
+    "image": "[logo]",
+    "sameAs": [
+        "https://vk.com/slaed_cms",
+        "https://www.facebook.com/slaedsystem",
+        "https://twitter.com/slaed_cms",
+        "https://plus.google.com/112343714768886483056"
+    ]
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "name": "[title]",
+    "description": "[desc]",
+    "articleSection": "[ctitle]",
+    "datePublished": "[time]",
+    "dateModified": "[mtime]",
+    "image": "[img]",
+    "url": "[url]",
+    "headline": "0",
+    "author": {
+        "@type": "Person",
+        "name": "[site]"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "[site]",
+        "url": "[homeurl]",
+        "logo": {
+            "@type": "ImageObject",
+            "name": "[site]",
+            "url": "[logo]"
+        }
+    },
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "name": "[site]",
+        "url": "[homeurl]"
+    }
+}
+</script>
+HTML;
 
 # Format SEO url
 $confse = [

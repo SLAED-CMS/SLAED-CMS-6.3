@@ -780,7 +780,7 @@ function getUrlMeta() {
     $url = urlencode(str_replace('index.php?', '', substr(getenv('REQUEST_URI'), 1)));
     #list($link, $time, $mtime, $title, $desc, $keys, $img, $ctitle, $cdesc, $cimg) = $db->sql_fetchrow($db->sql_query("SELECT sl_link, sl_time, sl_mtime, sl_title, sl_desc, sl_keys, sl_img, sl_ctitle, sl_cdesc, sl_cimg FROM ".$prefix."_seo WHERE sl_url = '".$url."'"));
     #$a = array($link, $time, $mtime, $title, $desc, $keys, $img, $ctitle, $cdesc, $cimg);
-	$a = 0;
+    $a = 0;
     return is_array($a) ? $a : false;
 }
 
