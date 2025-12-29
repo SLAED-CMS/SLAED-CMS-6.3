@@ -29,6 +29,7 @@ require_once BASE_DIR.'/core/legacy.php';
 # Config file include
 require_once CONFIG_DIR.'/comments.php';
 require_once CONFIG_DIR.'/favorites.php';
+require_once CONFIG_DIR.'/modules.php';
 require_once CONFIG_DIR.'/config_privat.php';
 require_once CONFIG_DIR.'/config_voting.php';
 
@@ -44,6 +45,24 @@ require_once CONFIG_DIR.'/replace.php';
 require_once CONFIG_DIR.'/referers.php';
 
 ### The beginning of new functions
+
+# Reads module configuration row-by-row
+function getModules(?string $title = null): array|false {
+    global $confmd;
+    static $keys;
+    $fields = ['active', 'view', 'menu', 'group', 'side', 'top'];
+    if ($title !== null) {
+        $title = basename($title);
+        if (!isset($confmd[$title])) return false;
+        $row = $confmd[$title];
+    } else {
+        $keys ??= array_keys($confmd);
+        if (!$keys) return false;
+        $title = array_shift($keys);
+        $row = $confmd[$title];
+    }
+    return array_merge([$title], array_map(fn($f) => $row[$f] ?? '0', $fields));
+}
 
 # Highlights text terms inside HTML content
 function filterTextHighlight(string $sourse, string $word): string {
@@ -627,7 +646,7 @@ function checkFileChmod(string $dir, int $chm): string {
 # Saving configurations to a file
 function setConfigFile(string $fp, string $name, array $arr, array $act = [], string $type = ''): void {
     $fp = CONFIG_DIR.'/'.$fp;
-    if (!empty($act)) $arr += $act;
+    if (!empty($act)) $arr = array_replace_recursive($arr, $act);
     ksort($arr);
     $normalize = function ($v) use (&$normalize) {
         if (is_array($v)) {

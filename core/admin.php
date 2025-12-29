@@ -307,6 +307,32 @@ function getAdminInfo(int $obj = 0, string $mod = '', string $file = ''): string
     return $cont;
 }
 
+# Synchronize modules configuration with actual modules
+function updateModulesConfig(): void {
+    global $confmd;
+    $moddir = 'modules';
+    $defaults = [
+        'active' => '0',
+        'view' => '0',
+        'menu' => '1',
+        'group' => '0',
+        'side' => '0',
+        'top' => '0',
+    ];
+    $found = [];
+    $h = opendir($moddir);
+    while (false !== ($folder = readdir($h))) {
+        if ($folder === '.' || $folder === '..' || str_contains($folder, '.')) continue;
+        $path = $moddir.'/'.$folder;
+        if (!is_dir($path)) continue;
+        if (!is_file($path.'/index.php') && !is_file($path.'/admin/index.php')) continue;
+        $found[$folder] = $confmd[$folder] ?? $defaults;
+    }
+    closedir($h);
+    ksort($found, SORT_NATURAL | SORT_FLAG_CASE);
+    setConfigFile('modules.php', 'confmd', $found);
+}
+
 # Legacy compatibility wrapper – will be removed later
 function navi_gen(...$arg): string
 {

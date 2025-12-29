@@ -11,7 +11,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '2',
     'top' => '0',
@@ -20,7 +20,7 @@ $confmd = array (
   array (
     'active' => '0',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -29,7 +29,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -38,7 +38,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '1',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '6',
     'side' => '0',
     'top' => '0',
@@ -47,7 +47,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -56,7 +56,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '0',
+    'menu' => '0',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -65,7 +65,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -74,7 +74,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -83,7 +83,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '2',
     'top' => '0',
@@ -92,7 +92,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '1',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -101,7 +101,7 @@ $confmd = array (
   array (
     'active' => '0',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -110,7 +110,7 @@ $confmd = array (
   array (
     'active' => '0',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -119,7 +119,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -128,7 +128,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '3',
     'top' => '3',
@@ -137,7 +137,7 @@ $confmd = array (
   array (
     'active' => '0',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -146,7 +146,7 @@ $confmd = array (
   array (
     'active' => '0',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -155,7 +155,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -164,7 +164,7 @@ $confmd = array (
   array (
     'active' => '0',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -173,7 +173,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -182,7 +182,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '1',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -191,7 +191,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '1',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -200,7 +200,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -209,7 +209,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -218,7 +218,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '2',
     'top' => '0',
@@ -227,7 +227,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -236,7 +236,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '0',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
@@ -245,7 +245,7 @@ $confmd = array (
   array (
     'active' => '1',
     'view' => '1',
-    'inmenu' => '1',
+    'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',

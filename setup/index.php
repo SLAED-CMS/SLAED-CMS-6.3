@@ -34,11 +34,23 @@ if (version_compare(PHP_VERSION, '8.1.0', '<')) setExit(_PHPSETUP);
 if ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==') setExit(_NO_LICENSE);
 $copyright = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
 
-function setConfigFile(string $fp, string $name, array $arr, array|string $act = [], string $type = ''): void {
+# Saving configurations to a file
+function setConfigFile(string $fp, string $name, array $arr, array $act = [], string $type = ''): void {
     $fp = BASE_DIR.'/config/'.$fp;
-    if (!empty($act)) $arr += $act;
+    if (!empty($act)) $arr = array_replace_recursive($arr, $act);
     ksort($arr);
-    array_walk($arr, function (&$v): void { $v = is_bool($v) ? (string)(int)$v : (string)$v; });
+    $normalize = function ($v) use (&$normalize) {
+        if (is_array($v)) {
+            foreach ($v as $k => $vv) $v[$k] = $normalize($vv);
+            return $v;
+        }
+        if (is_bool($v)) return (string)(int)$v;
+        if (is_int($v)) return (string)$v;
+        if (is_float($v)) return (string)$v;
+        if (is_null($v)) return '';
+        return (string)$v;
+    };
+    foreach ($arr as $k => $v) $arr[$k] = $normalize($v);
     $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
@@ -311,7 +323,7 @@ function save(): void {
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
 
     $cont = array('language' => $clang, 'homeurl' => $url);
-    setConfigFile('global.php', 'conf', $cont, $conf, '');
+    setConfigFile('global.php', 'conf', $conf, $cont);
     require_once BASE_DIR.'/config/global.php';
 
     $tafile = ($confs['afile']) ? $confs['afile'] : 'admin';
@@ -323,12 +335,12 @@ function save(): void {
         $xafile = file_exists($xafile.'.php') ? $xafile : $tafile;
     }
     $cont = array('afile' => $xafile);
-    setConfigFile('security.php', 'confs', $cont, $confs, '');
+    setConfigFile('security.php', 'confs', $confs, $cont);
     require_once BASE_DIR.'/config/security.php';
     
     require_once BASE_DIR.'/config/db.php';
     $cont = array('host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync);
-    setConfigFile('db.php', 'confdb', $cont, $confdb, '');
+    setConfigFile('db.php', 'confdb', $confdb, $cont);
 
     require_once 'core/classes/pdo.php';
     $db = new sql_db($xhost, $xuname, $xpass, $xname, $xcharset);
@@ -426,6 +438,20 @@ function save(): void {
         $title = _SAVE_UPDATE;
         $bodytext .= executeSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
+        $result = $db->sql_query('SELECT title, active, view, inmenu, mod_group, blocks, blocks_c FROM '.$xprefix.'_modules');
+        $cont = [];
+        while ($row = $db->sql_fetchrow($result)) {
+            $title = $row['title'];
+            $cont[$title] = [
+                'active' => $row['active'],
+                'view' => $row['view'],
+                'menu' => $row['inmenu'],
+                'group' => $row['mod_group'],
+                'side' => $row['blocks'],
+                'top' => $row['blocks_c'],
+            ];
+        }
+        setConfigFile('modules.php', 'confmd', $cont);
         $title = _SAVE_UPDATE;
         $bodytext .= executeSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     }
