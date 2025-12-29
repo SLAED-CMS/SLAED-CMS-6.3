@@ -9,7 +9,6 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=modules', 'name=modules&amp;op=info'];
     $lang = [_HOME, _INFO];
-    # echo migrateModulesConfig();
     return getAdminTabs(_MODULES, 'modules.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
@@ -20,34 +19,6 @@ function modules(): void {
     $cont = navi(0, 0, 0, 0);
     if (isset($infos)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $infos]);
     $a = 1;
-
-
-    /*
-    $handle = opendir('modules');
-    $modlist = array();
-    while (false !== ($file = readdir($handle))) {
-        if (!preg_match("/\./", $file) && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) $modlist[] = $file;
-    }
-    closedir($handle);
-    sort($modlist);
-    for ($i = 0; $i < count($modlist); $i++) {
-        if ($modlist[$i] != '') {
-            list($mid) = $db->sql_fetchrow($db->sql_query('SELECT mid FROM '.$prefix.'_modules WHERE title = :title', ['title' => $modlist[$i]]));
-            if (!$mid) $db->sql_query('INSERT INTO '.$prefix.'_modules VALUES (NULL, :title, \'0\', \'0\', \'1\', \'0\', \'0\', \'0\')', ['title' => $modlist[$i]]);
-        }
-    }
-    $result = $db->sql_query('SELECT title FROM '.$prefix.'_modules');
-    while (list($title) = $db->sql_fetchrow($result)) {
-        $a = 0;
-        $handle = opendir('modules');
-        while (false !== ($file = readdir($handle))) {
-            if ($file == $title && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) $a = 1;
-        }
-        closedir($handle);
-        if ($a == 0) $db->sql_query('DELETE FROM '.$prefix.'_modules WHERE title = :title', ['title' => $title]);
-    }
-        */
-
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     while (list($title, $active, $view, $menu, $group) = getModules()) {
