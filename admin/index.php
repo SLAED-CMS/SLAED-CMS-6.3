@@ -147,8 +147,7 @@ function panelblock() {
         }
 
         // Custom modules
-        $result = $db->sql_query("SELECT title, active FROM ".$prefix."_modules ORDER BY title ASC");
-        while (list($title, $active) = $db->sql_fetchrow($result)) {
+        while (list($title, $active) = getModules()) {
             if (is_admin_god() || is_admin_modul($title)) {
                 if (file_exists('modules/'.$title.'/admin/index.php') && file_exists('modules/'.$title.'/admin/links.php')) {
                     $class = (!$active) ? ' sl_hidden' : '';
@@ -232,9 +231,8 @@ function panel() {
             echo tpl_eval("panel-admin", _ADMINMENU, $cont);
         }
         $count = 1;
-        $result = $db->sql_query("SELECT title, active FROM ".$prefix."_modules ORDER BY title ASC");
         ob_start();
-        while (list($title, $active) = $db->sql_fetchrow($result)) {
+        while (list($title, $active) = getModules()) {
             if (is_admin_god() || is_admin_modul($title)) {
                 if (file_exists("modules/".$title."/admin/index.php") && file_exists("modules/".$title."/admin/links.php")) {
                     $class = (!$active) ? " sl_hidden" : "";
@@ -269,23 +267,17 @@ if (is_admin()) {
     } else {
         // Load specific admin module
         if (is_admin_god()) {
-            $module_file = 'admin/modules/' . $name . '.php';
-            if (file_exists($module_file)) {
-                include($module_file);
-            }
+            $file = BASE_DIR.'/admin/modules/'.$name.'.php';
+            if (file_exists($file)) require_once $file;
         }
 
         // Load custom module admin if exists
-        $result = $db->sql_query('SELECT title FROM '.$prefix.'_modules WHERE title = :title', ['title' => $name]);
-        if ($db->sql_numrows($result) > 0) {
-            list($mtitle) = $db->sql_fetchrow($result);
-            if (is_admin_god() || is_admin_modul($mtitle)) {
-                if (file_exists('modules/'.$mtitle.'/admin/index.php')) {
-                    if (file_exists('modules/'.$mtitle.'/admin/language/lang-'.$locale.'.php')) {
-                        include('modules/'.$mtitle.'/admin/language/lang-'.$locale.'.php');
-                    }
-                    include('modules/'.$mtitle.'/admin/index.php');
+        if (is_admin_god() || is_admin_modul($name)) {
+            if (file_exists(BASE_DIR.'/modules/'.$name.'/admin/index.php')) {
+                if (file_exists(BASE_DIR.'/modules/'.$name.'/admin/language/lang-'.$locale.'.php')) {
+                    require_once BASE_DIR.'/modules/'.$name.'/admin/language/lang-'.$locale.'.php';
                 }
+                require_once BASE_DIR.'/modules/'.$name.'/admin/index.php';
             }
         }
     }

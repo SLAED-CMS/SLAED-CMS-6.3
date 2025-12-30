@@ -73,15 +73,14 @@ function add(): void {
     .'<table>';
     $a = 3;
     $i = 1;
-    $result = $db->sql_query('SELECT mid, title FROM '.$prefix.'_modules');
-    while (list($mid, $title) = $db->sql_fetchrow($result)) {
+    while (list($title) = getModules()) {
         if (file_exists('modules/'.$title.'/admin/index.php') && file_exists('modules/'.$title.'/admin/links.php')) {
             $amodules = explode(',', $modules);
             $sel = '';
-            foreach ($amodules as $val) if ($mid == $val) $sel = ' checked';
+            foreach ($amodules as $val) if ($title == $val) $sel = ' checked';
             $tdwidth = intval(100/$a);
             if (($i - 1) % $a == 0) $cont .= '<tr>';
-            $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="amodules[]" value="'.$mid.'"'.$sel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
+            $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="amodules[]" value="'.$title.'"'.$sel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
             if ($i % $a == 0) $cont .= '</tr>';
             $i++;
         }
@@ -104,7 +103,7 @@ function save(): void {
     $pwd = getVar('post', 'pwd', '', 0);
     $pwd2 = getVar('post', 'pwd2', '', 0);
     $lang = getVar('post', 'lang');
-    $amodules = getVar('post', 'amodules[]', 'num') ?: [];
+    $amodules = getVar('post', 'amodules[]', 'var') ?: [];
     $modules = $amodules ? implode(',', $amodules) : '';
     $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
     $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
