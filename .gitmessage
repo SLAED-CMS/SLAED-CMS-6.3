@@ -1,0 +1,40 @@
+<brief summary of changes>
+
+**Focus:** <stability / security / ops / UX>
+
+## Summary
+<1–2 sentences describing what this release is and why it matters.>
+
+## Changes
+### What
+- <What was added or improved (aggregated, user-facing)>
+- <No low-level implementation details>
+
+### Why
+- <Why this change was needed>
+- <What problem it solves in production>
+
+### Test
+- <How this release was verified>
+- <CI, phpunit, smoke tests, manual checks if applicable>
+
+## Impact
+### For Admins / DevOps
+- <Operational changes>
+- <New or changed commands / endpoints>
+- <Production or maintenance behavior>
+
+### For Developers
+- <API or contract changes>
+- <New tools or guarantees>
+- <Backward-compatibility notes>
+
+## Breaking Changes
+- None  
+  *(or list explicitly if present)*
+
+## Upgrade
+- See `UPGRADING.md`
+- Recommended steps:
+  - `backup:create`
+  - `release:check` (if available)
