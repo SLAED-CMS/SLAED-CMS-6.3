@@ -41,6 +41,7 @@
 .rules/
 .vscode/
 .idea/
+plans/
 *.sublime-*
 .DS_Store
 Thumbs.db
@@ -57,9 +58,13 @@ Thumbs.db
 node_modules/
 package-lock.json
 
-# Composer (if added later)
+# Composer
 vendor/
 composer.lock
+
+# PHPUnit
+.phpunit.cache/
+tests/coverage/
 
 # OS files
 .editorconfig

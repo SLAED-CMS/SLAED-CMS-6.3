@@ -1,0 +1,37 @@
+{
+    "name": "slaed/cms",
+    "description": "SLAED CMS - Modern, Secure, High-Performance Content Management System",
+    "type": "project",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Eduard Laas",
+            "email": "info@slaed.net",
+            "homepage": "https://slaed.net"
+        }
+    ],
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^12.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse",
+        "quality": [
+            "@analyse",
+            "@test"
+        ]
+    }
+}

@@ -1,0 +1,17 @@
+parameters:
+    level: 0
+    paths:
+        - core
+        - modules
+    excludePaths:
+        - modules/*/admin/info/*
+        - plugins/*
+        - vendor/*
+    ignoreErrors:
+        - '#Variable \$db might not be defined#'
+        - '#Variable \$conf might not be defined#'
+        - '#Variable \$confn might not be defined#'
+        - '#Variable \$user might not be defined#'
+        - '#Variable \$module_name might not be defined#'
+    reportUnmatchedIgnoredErrors: false
+    treatPhpDocTypesAsCertain: false
