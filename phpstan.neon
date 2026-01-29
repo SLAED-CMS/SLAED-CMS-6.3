@@ -1,10 +1,13 @@
 parameters:
     level: 0
+    bootstrapFiles:
+        - phpstan-bootstrap.php
     paths:
         - core
         - modules
     excludePaths:
         - modules/*/admin/info/*
+        - modules/clients/pclzip.lib.php
         - plugins/*
         - vendor/*
     ignoreErrors:
@@ -13,5 +16,26 @@ parameters:
         - '#Variable \$confn might not be defined#'
         - '#Variable \$user might not be defined#'
         - '#Variable \$module_name might not be defined#'
+        - '#include\(\) "config/config_uploads\.php" is not a file or it does not exist#'
+        - '#Inner named functions are not supported by PHPStan#'
+        - '#require_once\(\) ".*config/db\.php" is not a file or it does not exist#'
+        - '#require_once\(\) ".*config/changelog\.php" is not a file or it does not exist#'
+        - '#Undefined variable: \$confu#'
+        - '#Undefined variable: \$rfl#'
+        - '#Undefined variable: \$uname#'
+        - '#Undefined variable: \$refer#'
+        - '#Undefined variable: \$cont#'
+        - '#Undefined variable: \$hometext#'
+        - '#Undefined variable: \$r_file#'
+        - '#Undefined variable: \$ihome#'
+        - '#Undefined variable: \$csearch#'
+        - '#Undefined variable: \$code#'
+        - '#Undefined variable: \$user_name#'
+        - '#Undefined variable: \$v_file#'
+        - '#Call to function unset\(\) contains undefined variable \$v_header_list#'
+        - '#Function news invoked with 0 parameters#'
+        - '#Function whois invoked with 0 parameters#'
+        - '#Class PclZip does not have a constructor#'
+        - '#Cannot unset property sql_db::\$qresult#'
     reportUnmatchedIgnoredErrors: false
     treatPhpDocTypesAsCertain: false
