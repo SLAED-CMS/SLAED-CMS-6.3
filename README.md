@@ -310,13 +310,15 @@ function processData(int $id, string $name = ''): array {
 
 ## 🤝 Contributing
 
-We welcome contributions! Please follow these guidelines:
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+**Quick Start:**
 
 1. **Fork** the repository
 2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
 3. **Follow** SLAED coding standards
 4. **Test** your changes thoroughly
-5. **Commit** with clear messages
+5. **Commit** with clear messages (see [.gitmessage](.gitmessage))
 6. **Push** to your branch
 7. **Open** a Pull Request
 
@@ -329,6 +331,8 @@ We welcome contributions! Please follow these guidelines:
 > - Write comments in English
 > - Test on PHP 8.4+
 
+See also: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | [SECURITY.md](SECURITY.md)
+
 ---
 
 ## 📝 License
@@ -338,6 +342,12 @@ GNU General Public License v3.0
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 See [LICENSE](LICENSE) for more details.
+
+---
+
+## 🔄 Upgrading
+
+Upgrading from a previous version? See [UPGRADING.md](UPGRADING.md) for migration instructions.
 
 ---
 
@@ -354,7 +364,7 @@ See [LICENSE](LICENSE) for more details.
 ## 📮 Support
 
 - **Documentation EN:** [slaed.info](https://slaed.info)
-- **Documentation DE:** [slaed.info](https://slaed.de)
+- **Documentation DE:** [slaed.de](https://slaed.de)
 - **Forum:** [slaed.net/forum](https://slaed.net/index.php?name=forum)
 
 ---
