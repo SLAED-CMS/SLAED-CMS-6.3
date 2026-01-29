@@ -15,7 +15,7 @@ $module = new ModuleBase($db, $prefix, $conf, $confn);
 
 
 
-function news() {
+function news($module) {
     global $prefix, $db, $admin_file, $conf, $confu, $confn, $home, $op;
     $cwhere = catmids($conf['name'], 's.catid');
     $unum = getUserNews($confn['num']);
@@ -118,22 +118,19 @@ function news() {
     foot();
 }
 
-function liste() {
+function liste($module) {
     global $prefix, $db, $conf, $confu, $confn;
     $cwhere = catmids($conf['name'], 's.catid');
     $listnum = intval($confn['listnum']);
-    $let = getVar('get', 'let', 'let');
-    if ($let) {
-        $field = 'op=liste&let='.urlencode($let).'&';
-        $order = "WHERE UCASE(s.title) LIKE BINARY '".$let."%' AND s.time <= NOW() AND s.status != '0'";
-    } else {
-        $field = 'op=liste&';
-        $order = "WHERE s.time <= NOW() AND s.status != '0'";
-    }
-    $num = getVar('get', 'num', 'num', '1');
-    $offset = ($num - 1) * $listnum;
-    $offset = intval($offset);
-    $result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) ".$order." ".$cwhere." ORDER BY s.fix DESC, s.time DESC LIMIT ".$offset.", ".$listnum);
+    $flt = $module->getLetterFilter('s.title');
+    $let = $flt['let'];
+    $field = $flt['url'];
+    $order = 'WHERE '.$flt['sql'].' AND s.time <= NOW() AND s.status != \'0\'';
+    $pg = $module->getOffset($listnum);
+    $num = $pg['num'];
+    $offset = $pg['ofs'];
+    $sql = 'SELECT s.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name FROM '.$prefix.'_news AS s LEFT JOIN '.$prefix.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.$prefix.'_users AS u ON (s.uid = u.user_id) '.$order.' '.$cwhere.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$listnum;
+    $result = ($flt['params']) ? $db->sql_query($sql, $flt['params']) : $db->sql_query($sql);
     head();
     $cont = $module->getNavigation(_LIST);
     if ($db->sql_numrows($result) > 0) {
@@ -158,7 +155,7 @@ function liste() {
     foot();
 }
 
-function view() {
+function view($module) {
     global $prefix, $db, $admin_file, $conf, $confu, $confn;
     $id = getVar('get', 'id', 'num');
     $pag = getVar('get', 'num', 'num', '1');
@@ -221,7 +218,7 @@ function view() {
     }
 }
 
-function add() {
+function add($module) {
     global $prefix, $db, $user, $conf, $confu, $confn, $stop;
     if ((is_user() && $confn['add'] == 1) || (!is_user() && $confn['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
@@ -257,7 +254,7 @@ function add() {
     }
 }
 
-function send() {
+function send($module) {
     global $prefix, $db, $user, $conf, $confn, $stop;
     if ((is_user() && $confn['add'] == 1) || (!is_user() && $confn['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
@@ -282,7 +279,7 @@ function send() {
             echo $module->getNavigation(_ADD).setTemplateWarning('warn', array('time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT));
             foot();
         } else {
-            add();
+            add($module);
         }
     } else {
         header('Location: index.php?name='.$conf['name']);
@@ -290,9 +287,9 @@ function send() {
 }
 
 switch($op) {
-    default: news(); break;
-    case 'liste': liste(); break;
-    case 'view': view(); break;
-    case 'add': add(); break;
-    case 'send': send(); break;
+    default: news($module); break;
+    case 'liste': liste($module); break;
+    case 'view': view($module); break;
+    case 'add': add($module); break;
+    case 'send': send($module); break;
 }
