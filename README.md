@@ -3,10 +3,9 @@
 [![PHP Version](https://img.shields.io/badge/PHP-8.4+-slateblue.svg)](https://www.php.net/)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
-[![License](https://img.shields.io/badge/License-GPL--3.0-yellow.svg)](LICENSE)
-[![GitHub Issues](https://img.shields.io/github/issues/SLAED-CMS/SLAED-CMS-6.3.svg)](https://github.com/SLAED-CMS/SLAED-CMS-6.3/issues)
+[![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
-![Migration](https://img.shields.io/badge/Migration-50%25%20Complete-yellow.svg)
+![Migration](https://img.shields.io/badge/Migration-50%25%20Complete-purple.svg)
 
 **Modern, Secure, High-Performance Content Management System**
 
@@ -347,16 +346,16 @@ See [LICENSE](LICENSE) for more details.
 **Eduard Laas**
 
 - Website: [slaed.net](https://slaed.net)
-- Email: info@slaed.net
+- E-Mail: info@slaed.net
 - Copyright © 2005 - 2026 SLAED
 
 ---
 
 ## 📮 Support
 
-- **Documentation:** [slaed.info](https://slaed.info/)
+- **Documentation EN:** [slaed.info](https://slaed.info)
+- **Documentation DE:** [slaed.info](https://slaed.de)
 - **Forum:** [slaed.net/forum](https://slaed.net/index.php?name=forum)
-- **Issues:** [GitHub Issues](https://github.com/SLAED-CMS/SLAED-CMS-6.3/issues)
 
 ---
 
