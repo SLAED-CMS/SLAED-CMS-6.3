@@ -244,8 +244,8 @@ We follow responsible disclosure practices:
 
 ## Contact
 
-**Project Lead:** Eduard Laas
-**Email:** info@slaed.net
-**Website:** [slaed.net](https://slaed.net)
+- **Project Lead:** Eduard Laas
+- **Email:** info@slaed.net
+- **Website:** [slaed.net](https://slaed.net)
 
 ---

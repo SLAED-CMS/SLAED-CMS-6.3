@@ -98,8 +98,8 @@ Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcem
 
 ## Contact
 
-**Project Lead:** Eduard Laas
-**Email:** info@slaed.net
-**Website:** [slaed.net](https://slaed.net)
+- **Project Lead:** Eduard Laas
+- **Email:** info@slaed.net
+- **Website:** [slaed.net](https://slaed.net)
 
 ---
