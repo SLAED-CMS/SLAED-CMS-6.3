@@ -203,6 +203,65 @@ class ModuleBase
         return $spec['countWhereNoLet'];
     }
 
+    /**
+     * Generic view page runner for legacy modules.
+     *
+     * Spec keys:
+     * - module (string) e.g. $conf['name']
+     * - alias (string) e.g. 's'
+     * - table (string) e.g. '_news'
+     * - pk (string) e.g. 'sid'
+     * - catField (string) e.g. 'catid'
+     * - select (string) SELECT fields (must include what renderer needs)
+     * - joins (string) optional JOIN clauses
+     * - where (string) base WHERE without pk filter (without 'WHERE')
+     * - render (callable) function(int $id, array $row, ModuleBase $module): void
+     * - incCounter (bool) optional, default true
+     */
+    public function getViewPage(array $spec): void
+    {
+        if (!array_key_exists('joins', $spec)) $spec['joins'] = '';
+
+        $need = array('module','alias','table','pk','catField','select','where','render');
+        foreach ($need as $key) {
+            if (!array_key_exists($key, $spec)) {
+                throw new Exception('Missing view spec key: '.$key);
+            }
+        }
+
+        $id = getVar('get', 'id', 'num');
+        if (!$id) {
+            header('Location: index.php?name='.$spec['module']);
+            exit;
+        }
+
+        $cwhere = catmids($spec['module'], $spec['alias'].'.'.$spec['catField']);
+
+        $sql = 'SELECT '.$spec['select']
+            .' FROM '.$this->prefix.$spec['table'].' AS '.$spec['alias'].' '
+            .$spec['joins']
+            .' WHERE '.$spec['alias'].'.'.$spec['pk'].' = :id AND '.$spec['where'].' '.$cwhere
+            .' LIMIT 1';
+
+        $res = $this->db->sql_query($sql, array('id' => $id));
+        $row = $this->db->sql_fetchrow($res);
+
+        if (!$row) {
+            header('Location: index.php?name='.$spec['module']);
+            exit;
+        }
+
+        $inc = array_key_exists('incCounter', $spec) ? (bool)$spec['incCounter'] : true;
+        if ($inc) {
+            $this->db->sql_query(
+                'UPDATE '.$this->prefix.$spec['table'].' SET counter = counter+1 WHERE '.$spec['pk'].' = :id',
+                array('id' => $id)
+            );
+        }
+
+        call_user_func($spec['render'], (int)$id, $row, $this);
+    }
+
     public function getHomeTitle(): string
     {
         $name = (string)($this->conf['name'] ?? '');

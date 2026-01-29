@@ -190,67 +190,78 @@ function liste($module) {
     foot();
 }
 
-function view($module) {
+function getNewsViewPage(int $id, array $row, ModuleBase $module): void {
     global $prefix, $db, $admin_file, $conf, $confu, $confn;
-    $id = getVar('get', 'id', 'num');
+
     $pag = getVar('get', 'num', 'num', '1');
     $word = getVar('get', 'word', 'word');
-    $cwhere = catmids($conf['name'], 's.catid');
-    $result = $db->sql_query("SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.counter, s.acomm, s.score, s.ratings, s.associated, c.title, c.description, c.img, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) WHERE s.sid = '".$id."' AND s.time <= NOW() AND s.status != '0' ".$cwhere);
-    if ($db->sql_numrows($result) == 1) {
-        $db->sql_query("UPDATE ".$prefix."_news SET counter = counter+1 WHERE sid = '".$id."'");
-        list($cid, $uname, $title, $time, $hometext, $bodytext, $field, $vote, $counter, $acomm, $score, $ratings, $associated, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
-        $chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
-        head();
-        $cont = $module->getNavigation(_NEWS, $confn['viewcat']);
-        if ($cid) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $cid, $confn['defis'], _NEWS)));
-        if ($confn['viewcat']) $cont .= setCategories($conf['name'], $confn['subcat'], $confn['catdesc'], 0);
-        $fields = fields_out($field, $conf['name']);
-        $fields = ($fields) ? '<br><br>'.$fields : '';
-        $text = (!$bodytext) ? $hometext.$fields : $hometext.'<br><br>'.$bodytext.$fields;
-        $conpag = explode('[pagebreak]', $text);
-        $pageno = count($conpag);
-        if ($pag > $pageno) $pag = $pageno;
-        $arrayelement = (int)$pag;
-        $arrayelement--;
-        $cdesc = ($cdesc) ? $cdesc : $ctitle;
-        $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
-        $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
-        $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-        $post = ($confn['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym'])) : '';
-        $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-        $date = ($confn['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</span>' : '';
-        $reads = ($confn['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
-        $rating = ajax_rating(1, $id, $conf['name'], $ratings, $score, '');
-        $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?op=news_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-        $favorites = favorview($id, $conf['name']);
-        $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
-        $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVoting($vote, $conf['name']).'</div><hr>' : '';
-        $cont .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($conpag[$arrayelement], $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting));
-        $cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $confn['nump'], '', '#'.$id, '');
-        if ($confn['assoc']) {
-            $limit = intval($confn['asocnum']);
-            list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".$prefix."_news WHERE catid IN (".$associated.") AND sid != '".$id."' AND time <= NOW() AND status != '0'"));
-            if ($count >= $limit) {
-                $random = mt_rand(0, $count - $limit);
-                $result = $db->sql_query("SELECT sid, title, time, hometext, bodytext FROM ".$prefix."_news WHERE catid IN (".$associated.") AND sid != '".$id."' AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.", ".$limit);
-                $cont .= setTemplateBasic('assoc-open', array('{%title%}' => _ASSTORY));
-                while (list($aid, $title, $time, $hometext, $bodytext) = $db->sql_fetchrow($result)) {
-                    $date = ($confn['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</span>' : '';
-                    $text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
-                    $img = getImgText($hometext);
-                    $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-                    $cont .= setTemplateBasic('assoc-basic', array('{%href%}' => getHref(array('name='.$conf['name'].'&op=view&id='.$aid, $time, '', $title, $hometext.$bodytext, '', '', '')), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img));
-                }
-                $cont .= setTemplateBasic('assoc-close');
+
+    list($cid, $uname, $title, $time, $hometext, $bodytext, $field, $vote, $counter, $acomm, $score, $ratings, $associated, $ctitle, $cdesc, $cimg, $user_name) = $row;
+    $chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
+    head();
+    $cont = $module->getNavigation(_NEWS, $confn['viewcat']);
+    if ($cid) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $cid, $confn['defis'], _NEWS)));
+    if ($confn['viewcat']) $cont .= setCategories($conf['name'], $confn['subcat'], $confn['catdesc'], 0);
+    $fields = fields_out($field, $conf['name']);
+    $fields = ($fields) ? '<br><br>'.$fields : '';
+    $text = (!$bodytext) ? $hometext.$fields : $hometext.'<br><br>'.$bodytext.$fields;
+    $conpag = explode('[pagebreak]', $text);
+    $pageno = count($conpag);
+    if ($pag > $pageno) $pag = $pageno;
+    $arrayelement = (int)$pag;
+    $arrayelement--;
+    $cdesc = ($cdesc) ? $cdesc : $ctitle;
+    $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
+    $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
+    $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
+    $post = ($confn['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym'])) : '';
+    $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
+    $date = ($confn['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</span>' : '';
+    $reads = ($confn['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
+    $rating = ajax_rating(1, $id, $conf['name'], $ratings, $score, '');
+    $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?op=news_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+    $favorites = favorview($id, $conf['name']);
+    $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
+    $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVoting($vote, $conf['name']).'</div><hr>' : '';
+    $cont .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($conpag[$arrayelement], $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting));
+    $cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $confn['nump'], '', '#'.$id, '');
+    if ($confn['assoc']) {
+        $limit = intval($confn['asocnum']);
+        list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".$prefix."_news WHERE catid IN (".$associated.") AND sid != '".$id."' AND time <= NOW() AND status != '0'"));
+        if ($count >= $limit) {
+            $random = mt_rand(0, $count - $limit);
+            $result = $db->sql_query("SELECT sid, title, time, hometext, bodytext FROM ".$prefix."_news WHERE catid IN (".$associated.") AND sid != '".$id."' AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.", ".$limit);
+            $cont .= setTemplateBasic('assoc-open', array('{%title%}' => _ASSTORY));
+            while (list($aid, $title, $time, $hometext, $bodytext) = $db->sql_fetchrow($result)) {
+                $date = ($confn['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</span>' : '';
+                $text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
+                $img = getImgText($hometext);
+                $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
+                $cont .= setTemplateBasic('assoc-basic', array('{%href%}' => getHref(array('name='.$conf['name'].'&op=view&id='.$aid, $time, '', $title, $hometext.$bodytext, '', '', '')), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img));
             }
+            $cont .= setTemplateBasic('assoc-close');
         }
-        if ($acomm) $cont .= setComShow($id, $acomm);
-        echo $cont;
-        foot();
-    } else {
-        header('Location: index.php?name='.$conf['name']);
     }
+    if ($acomm) $cont .= setComShow($id, $acomm);
+    echo $cont;
+    foot();
+}
+
+function view($module) {
+    global $prefix, $conf;
+
+    $module->getViewPage(array(
+        'module' => $conf['name'],
+        'alias' => 's',
+        'table' => '_news',
+        'pk' => 'sid',
+        'catField' => 'catid',
+        'select' => 's.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.counter, s.acomm, s.score, s.ratings, s.associated, c.title, c.description, c.img, u.user_name',
+        'joins' => 'LEFT JOIN '.$prefix.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.$prefix.'_users AS u ON (s.uid = u.user_id)',
+        'where' => 's.time <= NOW() AND s.status != \'0\'',
+        'render' => 'getNewsViewPage',
+        'incCounter' => true
+    ));
 }
 
 function add($module) {
