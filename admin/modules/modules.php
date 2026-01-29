@@ -14,14 +14,36 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function modules(): void {
     global $prefix, $db, $aroute, $infos;
-    updateModulesConfig();
     head();
     $cont = navi(0, 0, 0, 0);
     if (isset($infos)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $infos]);
-    $a = 1;
+    $handle = opendir('modules');
+    $modlist = array();
+    while (false !== ($file = readdir($handle))) {
+        if (!preg_match("/\./", $file) && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) $modlist[] = $file;
+    }
+    closedir($handle);
+    sort($modlist);
+    for ($i = 0; $i < count($modlist); $i++) {
+        if ($modlist[$i] != '') {
+            list($mid) = $db->sql_fetchrow($db->sql_query('SELECT mid FROM '.$prefix.'_modules WHERE title = :title', ['title' => $modlist[$i]]));
+            if (!$mid) $db->sql_query('INSERT INTO '.$prefix.'_modules VALUES (NULL, :title, \'0\', \'0\', \'1\', \'0\', \'0\', \'0\')', ['title' => $modlist[$i]]);
+        }
+    }
+    $result = $db->sql_query('SELECT title FROM '.$prefix.'_modules');
+    while (list($title) = $db->sql_fetchrow($result)) {
+        $a = 0;
+        $handle = opendir('modules');
+        while (false !== ($file = readdir($handle))) {
+            if ($file == $title && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) $a = 1;
+        }
+        closedir($handle);
+        if ($a == 0) $db->sql_query('DELETE FROM '.$prefix.'_modules WHERE title = :title', ['title' => $title]);
+    }
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-    while (list($title, $active, $view, $menu, $group) = getModules()) {
+    $result = $db->sql_query('SELECT mid, title, active, view, inmenu, mod_group FROM '.$prefix.'_modules ORDER BY title ASC');
+    while (list($mid, $title, $active, $view, $inmenu, $mod_group) = $db->sql_fetchrow($result)) {
         $act = ($active) ? '0' : '1';
         if ($view == 0) {
             $who_view = _MVALL;
@@ -30,12 +52,12 @@ function modules(): void {
         } elseif ($view == 2) {
             $who_view = _MVADMIN;
         }
-        $titlel = ($menu == 0) ? title_tip(_NO_SICHT).deflmconst($title) : deflmconst($title);
-        if ($group != 0) {
-            $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.$prefix.'_groups WHERE id = :id', ['id' => $group]));
-            $group = $grp['name'];
+        $titlel = ($inmenu == 0) ? title_tip(_NO_SICHT).deflmconst($title) : deflmconst($title);
+        if ($mod_group != 0) {
+            $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.$prefix.'_groups WHERE id = :id', ['id' => $mod_group]));
+            $mod_group = $grp['name'];
         } else {
-            $group = _NONE;
+            $mod_group = _NONE;
         }
         if (file_exists('modules/'.$title.'/sql/table.sql')) {
             $filename = file_get_contents('modules/'.$title.'/sql/table.sql');
@@ -61,7 +83,7 @@ function modules(): void {
         } else {
             $sqluimg = '';
         }
-        $cont .= '<tr><td>'.$a.'</td><td>'.$titlel.'</td><td>'.$title.'</td><td>'.$who_view.'</td><td>'.$group.'</td><td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($aroute.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active).'||<a href="'.$aroute.'.php?name=modules&amp;op=edit&amp;mod='.$title.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$sqlimg.$sqluimg).'</td></tr>';
+        $cont .= '<tr><td>'.$a.'</td><td>'.$titlel.'</td><td>'.$title.'</td><td>'.$who_view.'</td><td>'.$mod_group.'</td><td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($aroute.'.php?name=modules&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active).'||<a href="'.$aroute.'.php?name=modules&amp;op=edit&amp;mid='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$sqlimg.$sqluimg).'</td></tr>';
         $a++;
     }
     $cont .= '</tbody></table>';
@@ -72,16 +94,12 @@ function modules(): void {
 
 function edit(): void {
     global $prefix, $db, $aroute;
-    $title = getVar('get', 'mod', 'var');
-    list($title, $active, $view, $menu, $group, $side, $top) = getModules($title);
-    $titlen = ($menu == 0) ? title_tip(_NO_SICHT).deflmconst($title) : deflmconst($title);
+    $mid = getVar('get', 'mid', 'num');
+    list($view, $inmenu, $mod_group, $blocks_m, $blocks_mc) = $db->sql_fetchrow($db->sql_query('SELECT view, inmenu, mod_group, blocks, blocks_c FROM '.$prefix.'_modules WHERE mid = :mid', ['mid' => $mid]));
     head();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._NAME.':</td><td>'.$titlen.'</td></tr>'
-    .'<tr><td>'._MODUL.':</td><td>'.$title.'</td></tr>'
-    .'<tr><td>'._STATUS.':</td><td>'.ad_status('', $active).'</td></tr>'
     .'<tr><td>'._VIEWPRIV.'</td><td><select name="view" class="sl_conf">';
     $privs = array(_MVALL, _MVUSERS, _MVADMIN);
     foreach ($privs as $key => $value) {
@@ -91,12 +109,12 @@ function edit(): void {
     $cont .= '</select></td></tr>';
     $numrow = $db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_groups'));
     if ($numrow > 0) {
-        $cont .= '<tr><td>'._UGROUP.':</td><td><select name="group" class="sl_conf">';
+        $cont .= '<tr><td>'._UGROUP.':</td><td><select name="mod_group" class="sl_conf">';
         $result2 = $db->sql_query('SELECT id, name FROM '.$prefix.'_groups');
         while (list($gid, $gname) = $db->sql_fetchrow($result2)) {
-            $gsel = ($gid == $group) ? ' selected' : '';
+            $gsel = ($gid == $mod_group) ? ' selected' : '';
             if (empty($none)) {
-                $ggsel = ($group == 0) ? ' selected' : '';
+                $ggsel = ($mod_group == 0) ? ' selected' : '';
                 $cont .= '<option value="0"'.$ggsel.'>'._NONE.'</option>';
                 $none = 1;
             }
@@ -105,56 +123,47 @@ function edit(): void {
         }
         $cont .= '</select></td></tr>';
     } else {
-        $cont .= '<input type="hidden" name="group" value="0">';
+        $cont .= '<input type="hidden" name="mod_group" value="0">';
     }
-    $cont .= '<tr><td>'._BLOCKS_MOD.':</td><td><select name="side" class="sl_conf">';
+    $cont .= '<tr><td>'._BLOCKS_MOD.':</td><td><select name="blocks_m" class="sl_conf">';
     $bmods = array(_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3);
     foreach ($bmods as $key => $value) {
-        $sel = ($side == $key ) ? 'selected' : '';
+        $sel = ($blocks_m == $key ) ? 'selected' : '';
         $cont .= '<option value="'.$key.'" '.$sel.'>'.$value.'</option>';
     }
     $cont .= '</select></td></tr>'
-    .'<tr><td>'._BLOCKS_MOD.':</td><td><select name="top" class="sl_conf">';
+    .'<tr><td>'._BLOCKS_MOD.':</td><td><select name="blocks_mc" class="sl_conf">';
     $bmodcs = array(_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3);
     foreach ($bmodcs as $key => $value) {
-        $sel = ($top == $key ) ? ' selected' : '';
+        $sel = ($blocks_mc == $key ) ? ' selected' : '';
         $cont .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
     }
     $cont .= '</select></td></tr>'
-    .'<tr><td>'._SHOWINMENU.'</td><td>'.radio_form($menu, 'menu').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="mod" value="'.$title.'"><input type="hidden" name="name" value="modules"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td>'._SHOWINMENU.'</td><td>'.radio_form($inmenu, 'inmenu').'</td></tr>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="mid" value="'.$mid.'"><input type="hidden" name="name" value="modules"><input type="hidden" name="op" value="editsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
 function status(): void {
-    global $aroute, $confmd;
-    $mod = getVar('get', 'mod', 'var');
-    $cont = [
-        $mod => [
-            'active'  => getVar('get', 'act', 'num'),
-        ]
-    ];
-    setConfigFile('modules.php', 'confmd', $confmd, $cont);
+    global $prefix, $db, $aroute, $act, $id;
+    $db->sql_query('UPDATE '.$prefix.'_modules SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
     header('Location: '.$aroute.'.php?name=modules');
     exit;
 }
 
 function save(): void {
-    global $aroute, $confmd;
-    $mod = getVar('post', 'mod', 'var');
-    $view = getVar('post', 'view', 'num', 0);
-    $cont = [
-        $mod => [
-            'view'  => $view,
-            'menu'  => getVar('post', 'menu', 'num', 1),
-            'group' => $view != 1 ? 0 : getVar('post', 'group', 'num', 0),
-            'side'  => getVar('post', 'side', 'num', 0),
-            'top'   => getVar('post', 'top', 'num', 0),
-        ]
-    ];
-    setConfigFile('modules.php', 'confmd', $confmd, $cont);
+    global $prefix, $db, $aroute;
+    $mid = getVar('post', 'mid', 'num');
+    $view = getVar('post', 'view', 'num');
+    $inmenu = getVar('post', 'inmenu', 'num');
+    $mod_group = ($view != 1) ? 0 : getVar('post', 'mod_group', 'num');
+    $blocks_m = getVar('post', 'blocks_m', 'num');
+    $blocks_mc = getVar('post', 'blocks_mc', 'num');
+    $db->sql_query('UPDATE '.$prefix.'_modules SET view = :view, inmenu = :inmenu, mod_group = :mod_group, blocks = :blocks_m, blocks_c = :blocks_mc WHERE mid = :mid', [
+        'view' => $view, 'inmenu' => $inmenu, 'mod_group' => $mod_group, 'blocks_m' => $blocks_m, 'blocks_mc' => $blocks_mc, 'mid' => $mid
+    ]);
     header('Location: '.$aroute.'.php?name=modules');
     exit;
 }
