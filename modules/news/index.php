@@ -1,4 +1,5 @@
 <?php
+require_once 'core/classes/module.php';
 # Author: Eduard Laas
 # Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
@@ -10,19 +11,9 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 include('config/config_news.php');
+$module = new ModuleBase($db, $prefix, $conf, $confn);
 
-function navigate($title, $cat='') {
-    global $conf, $confn;
-    $ncat = getVar('get', 'cat', 'num');
-    $ncat = ($ncat) ? '&cat='.$ncat : '';
-    $home = '<a href="'.getHref(array('name='.$conf['name'], '', '', '', '', '', '', '')).'" title="'._NEWS.'" class="sl_but_navi">'._HOME.'</a>';
-    $best = ($confn['rate']) ? '<a href="'.getHref(array('name='.$conf['name'].$ncat.'&op=best', '', '', '', '', '', '', '')).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-    $pop = ($confn['rate']) ? '<a href="'.getHref(array('name='.$conf['name'].$ncat.'&op=pop', '', '', '', '', '', '', '')).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-    $liste = '<a href="'.getHref(array('name='.$conf['name'].'&op=liste', '', '', '', '', '', '', '')).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-    $add = ((is_user() && $confn['add'] == 1) || (!is_user() && $confn['addquest'] == 1)) ? '<a href="'.getHref(array('name='.$conf['name'].'&op=add', '', '', '', '', '', '', '')).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
-    $catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-    return setTemplateBasic('navi', array('{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow));
-}
+
 
 function news() {
     global $prefix, $db, $admin_file, $conf, $confu, $confn, $home, $op;
@@ -72,7 +63,7 @@ function news() {
     head();
     $cont = '';
     if (!$home || ($home && $confn['homcat'])) {
-        $cont .= navigate($ntitle, $caton);
+        $cont .= $module->getNavigation($ntitle, $caton);
         if ($ncat) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $ncat, $confn['defis'], _NEWS)));
         if ($caton == 1) $cont .= setCategories($conf['name'], $confn['subcat'], $confn['catdesc'], $ncat);
     }
@@ -144,7 +135,7 @@ function liste() {
     $offset = intval($offset);
     $result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) ".$order." ".$cwhere." ORDER BY s.fix DESC, s.time DESC LIMIT ".$offset.", ".$listnum);
     head();
-    $cont = navigate(_LIST);
+    $cont = $module->getNavigation(_LIST);
     if ($db->sql_numrows($result) > 0) {
         $letter = ($confn['letter']) ? letter($conf['name']) : '';
         $cont .= setTemplateBasic('liste-open', array('{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE));
@@ -179,7 +170,7 @@ function view() {
         list($cid, $uname, $title, $time, $hometext, $bodytext, $field, $vote, $counter, $acomm, $score, $ratings, $associated, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
         $chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
         head();
-        $cont = navigate(_NEWS, $confn['viewcat']);
+        $cont = $module->getNavigation(_NEWS, $confn['viewcat']);
         if ($cid) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $cid, $confn['defis'], _NEWS)));
         if ($confn['viewcat']) $cont .= setCategories($conf['name'], $confn['subcat'], $confn['catdesc'], 0);
         $fields = fields_out($field, $conf['name']);
@@ -240,7 +231,7 @@ function add() {
         $field = getVar('post', 'field', 'field');
         $postname = getVar('post', 'postname', 'name');
         head();
-        $cont = navigate(_ADD);
+        $cont = $module->getNavigation(_ADD);
         if ($stop) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop));
         if ($hometext) $cont .= preview($title, $hometext, $bodytext, $field, $conf['name']);
         $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _SUBMIT.' '._PAGENOTE));
@@ -288,7 +279,7 @@ function send() {
             $puname = (is_user()) ? $user[1] : $postname;
             addmail($confn['addmail'], $conf['name'], $puname, _NEWS);
             head();
-            echo navigate(_ADD).setTemplateWarning('warn', array('time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT));
+            echo $module->getNavigation(_ADD).setTemplateWarning('warn', array('time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT));
             foot();
         } else {
             add();
