@@ -1,9 +1,10 @@
 # SLAED CMS 6.3
 
-![PHP Version](https://img.shields.io/badge/PHP-8.4+-blue.svg)
-![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-red.svg)
-![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-8A2BE2.svg)
-![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)
+[![PHP Version](https://img.shields.io/badge/PHP-8.4+-slateblue.svg)](https://www.php.net/)
+[![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
+[![License](https://img.shields.io/badge/License-GPL--3.0-yellow.svg)](LICENSE)
+[![GitHub Issues](https://img.shields.io/github/issues/SLAED-CMS/SLAED-CMS-6.3.svg)](https://github.com/SLAED-CMS/SLAED-CMS-6.3/issues)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 ![Migration](https://img.shields.io/badge/Migration-50%25%20Complete-yellow.svg)
 
@@ -17,14 +18,14 @@ SLAED CMS is a powerful, modular content management system built with modern PHP
 
 ```bash
 # 1. Clone or download the repository
-git clone https://github.com/yourusername/slaed-cms.git
+git clone https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
 
 # 2. Configure database
 cp config/db.php.example config/db.php
-# Edit config/config_db.php with your database credentials
+# Edit config/db.php with your database credentials
 
 # 3. Import database schema
-mysql -u root -p your_database < database/schema.sql
+mysql -u root -p your_database < setup/sql/table.sql
 
 # 4. Set permissions
 chmod -R 755 config/ storage/ uploads/
@@ -34,9 +35,9 @@ chmod 666 config/*.php
 http://localhost/slaed-cms/
 ```
 
-**Default admin credentials:**
-- Username: `admin`
-- Password: `admin` (change immediately!)
+> [!WARNING]
+> **Default admin credentials:** `admin` / `admin`
+> Change the password immediately after first login!
 
 ---
 
@@ -67,7 +68,10 @@ chmod 666 config/*.php storage/logs/*.txt
 ```
 
 7. **Run setup** by accessing `http://yoursite.com/setup.php`
-8. **Delete** setup.php after installation
+8. **Delete** `setup.php` after installation
+
+> [!CAUTION]
+> Always delete `setup.php` after installation to prevent unauthorized access.
 
 ### Method 2: Using setup.php
 
@@ -131,11 +135,11 @@ slaed-cms/
 │   └── language/         # Admin translations
 ├── blocks/               # Reusable UI components
 ├── config/               # Configuration files
-│   ├── db.php    # Database configuration
-│   ├── global.php # Global settings (187+ parameters)
+│   ├── db.php           # Database configuration
+│   ├── global.php       # Global settings (187+ parameters)
 │   └── *.php            # Module-specific configs
 ├── core/                 # System core
-│   ├── system.php         # Main core file (271 KB)
+│   ├── system.php       # Main core file
 │   ├── security.php     # Security functions
 │   ├── user.php         # User management
 │   └── classes/         # Database drivers (MySQLi, PDO)
@@ -170,9 +174,9 @@ slaed-cms/
 
 ## 🔄 Modernization Status (v6.3)
 
-SLAED CMS 6.3 is undergoing a major modernization to PHP 8.4 standards:
-
-**Progress: 50% Complete**
+> [!NOTE]
+> SLAED CMS 6.3 is undergoing a major modernization to PHP 8.4 standards.
+> **Progress: 50% Complete**
 
 ### ✅ Completed
 - 2106+ SQL queries converted to prepared statements
@@ -252,7 +256,9 @@ define('_USR_ACTIVE', 'User is active');
 // EN, FR, DE, PL, RU, UA
 ```
 
-**Security Best Practices:**
+> [!IMPORTANT]
+> **Security Best Practices**
+
 ```php
 // ✅ Input validation
 $id = getVar('post', 'id', 'num');
@@ -264,10 +270,14 @@ $db->sql_query('SELECT * FROM '.$prefix.'_users WHERE id = :id', ['id' => $id]);
 
 // ✅ Output escaping
 echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');
-
-// ❌ NEVER do this
-$db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
 ```
+
+> [!CAUTION]
+> **Never concatenate user input directly into SQL queries!**
+> ```php
+> // ❌ NEVER do this - SQL injection vulnerability
+> $db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
+> ```
 
 **Code Style:**
 ```php
@@ -311,13 +321,14 @@ We welcome contributions! Please follow these guidelines:
 6. **Push** to your branch
 7. **Open** a Pull Request
 
-**Code Requirements:**
-- Follow SLAED naming conventions
-- Add type hints to all functions
-- Use prepared statements for SQL
-- Validate all user input with `getVar()`
-- Write comments in English
-- Test on PHP 8.4+
+> [!TIP]
+> **Code Requirements:**
+> - Follow SLAED naming conventions
+> - Add type hints to all functions
+> - Use prepared statements for SQL
+> - Validate all user input with `getVar()`
+> - Write comments in English
+> - Test on PHP 8.4+
 
 ---
 
@@ -335,7 +346,7 @@ See [LICENSE](LICENSE) for more details.
 
 **Eduard Laas**
 
-- Website: [https://slaed.net](https://slaed.net)
+- Website: [slaed.net](https://slaed.net)
 - Email: info@slaed.net
 - Copyright © 2005 - 2026 SLAED
 
@@ -343,12 +354,10 @@ See [LICENSE](LICENSE) for more details.
 
 ## 📮 Support
 
-- **Documentation:** See project wiki
-- **Issues:** Report bugs via GitHub Issues
-- **Forum:** Community support forum
+- **Documentation:** [slaed.info](https://slaed.info/)
+- **Forum:** [slaed.net/forum](https://slaed.net/index.php?name=forum)
+- **Issues:** [GitHub Issues](https://github.com/SLAED-CMS/SLAED-CMS-6.3/issues)
 
 ---
 
 **SLAED CMS** - Powerful, Secure, Flexible Content Management for Your Projects
-
-*Last updated: December 2025*
