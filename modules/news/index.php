@@ -14,6 +14,62 @@ include('config/config_news.php');
 $module = new ModuleBase($db, $prefix, $conf, $confn);
 
 
+function getNewsIndexRow(array $row): string {
+    global $conf, $confu, $confn, $admin_file;
+
+    $id = $row[0];
+    $cid = $row[1];
+    $uname = $row[2];
+    $stitle = $row[3];
+    $time = $row[4];
+    $hometext = $row[5];
+    $bodytext = $row[6];
+    $comm = $row[7];
+    $counter = $row[8];
+    $acomm = $row[9];
+    $score = $row[10];
+    $ratings = $row[11];
+    $ctitle = $row[12];
+    $cdesc = $row[13];
+    $cimg = $row[14];
+    $user_name = $row[15];
+
+    $width_tab = (float)($GLOBALS['news_width_tab'] ?? 100);
+    $i = (int)($GLOBALS['news_row_i'] ?? 1);
+
+    $thref = getSeoUrl(array(
+        'name' => $conf['name'],
+        'op' => 'view',
+        'id' => $id,
+        'title' => $stitle,
+        'ctitle' => $ctitle
+    ));
+
+    $chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
+    $cdesc = ($cdesc) ? $cdesc : $ctitle;
+    $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
+    $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
+    $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
+    $title = '<a href="'.$thref.'" title="'.$stitle.'">'.$stitle.'</a> '.new_graphic($time);
+    $read = '<a href="'.$thref.'" title="'.$stitle.'" class="sl_but_read">'._READMORE.'</a>';
+    $post = ($confn['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym'])) : '';
+    $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
+    $date = ($confn['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</span>' : '';
+    $reads = ($confn['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
+    $comm = ($acomm) ? '<a href="'.$thref.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
+    $rating = ajax_rating(0, $id, $conf['name'], $ratings, $score, '');
+    $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?op=news_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+
+    if (($i - 1) % $confn['bascol'] == 0) $out = '<tr>'; else $out = '';
+    $out .= '<td style="width: '.$width_tab.'%;">';
+    $out .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($hometext, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => ''));
+    $out .= '</td>';
+    if ($i % $confn['bascol'] == 0) $out .= '</tr>';
+
+    $GLOBALS['news_row_i'] = $i + 1;
+    return $out;
+}
+
 
 function news($module) {
     global $prefix, $db, $admin_file, $conf, $confu, $confn, $home, $op;
@@ -67,53 +123,32 @@ function news($module) {
         if ($ncat) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $ncat, $confn['defis'], _NEWS)));
         if ($caton == 1) $cont .= setCategories($conf['name'], $confn['subcat'], $confn['catdesc'], $ncat);
     }
-    $num = getVar('get', 'num', 'num', '1');
-    $offset = ($num - 1) * $unum;
-    $offset = intval($offset);
-    $result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) ".$order." LIMIT ".$offset.", ".$unum);
-    if ($db->sql_numrows($result) > 0) {
-        $width_tab = 100 / $confn['bascol'];
-        $i = 1;
-        $cont .= '<table>';
-        while(list($id, $cid, $uname, $stitle, $time, $hometext, $bodytext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
-            
-            $thref = getSeoUrl([
-    'name'   => $conf['name'],
-    'op'     => 'view',
-    'id'     => $id,
-    'title'  => $stitle,
-    'ctitle' => $ctitle
-]);
+    $GLOBALS['news_width_tab'] = 100 / $confn['bascol'];
+    $GLOBALS['news_row_i'] = 1;
 
-            #$thref = getSeoUrl('name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle);
-            #$chref = getSeoUrl('name='.$conf['name'].'&cat='.$cid, '', $ctitle);
-            #$thref = getHref(array('name='.$conf['name'].'&op=view&id='.$id, $time, '', $stitle, $hometext.$bodytext, $ctitle, $cdesc, $cimg));
-            $chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
-            $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
-            $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
-            $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-            $title = '<a href="'.$thref.'" title="'.$stitle.'">'.$stitle.'</a> '.new_graphic($time);
-            $read = '<a href="'.$thref.'" title="'.$stitle.'" class="sl_but_read">'._READMORE.'</a>';
-            $post = ($confn['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym'])) : '';
-            $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-            $date = ($confn['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</span>' : '';
-            $reads = ($confn['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
-            $comm = ($acomm) ? '<a href="'.$thref.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
-            $rating = ajax_rating(0, $id, $conf['name'], $ratings, $score, '');
-            $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?op=news_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            if (($i - 1) % $confn['bascol'] == 0) $cont .= '<tr>';
-            $cont .= '<td style="width: '.$width_tab.'%;">';
-            $cont .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($hometext, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => ''));
-            $cont .= '</td>';
-            if ($i % $confn['bascol'] == 0) $cont .= '</tr>';
-            $i++;
-        }
-        $cont .= '</table>';
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'sid', '_news', 'catid', $onum, $confn['nump']);
-    } else {
-        $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
-    }
+    $sql = 'SELECT s.sid, s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name'
+    .' FROM '.$prefix.'_news AS s'
+    .' LEFT JOIN '.$prefix.'_categories AS c ON (s.catid = c.id)'
+    .' LEFT JOIN '.$prefix.'_users AS u ON (s.uid = u.user_id)'
+    .' '.$order.' LIMIT {ofs}, {limit}';
+
+    $cont .= $module->getIndexPage(array(
+        'sql' => $sql,
+        'limit' => $unum,
+        'renderRow' => 'getNewsIndexRow',
+        'before' => '<table>',
+        'after' => '</table>',
+        'pager' => array(
+            'module' => $conf['name'],
+            'limit' => $unum,
+            'field' => $field,
+            'pk' => 'sid',
+            'table' => '_news',
+            'catField' => 'catid',
+            'onum' => $onum,
+            'nump' => $confn['nump']
+        )
+    ));
     echo $cont;
     foot();
 }

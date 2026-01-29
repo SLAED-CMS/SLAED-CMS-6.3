@@ -204,6 +204,81 @@ class ModuleBase
     }
 
     /**
+     * Wrapper for legacy pagination helper.
+     */
+    public function getPageNumbers(array $spec): string
+    {
+        $need = array('module','limit','field','pk','table','catField','onum','nump');
+        foreach ($need as $key) {
+            if (!array_key_exists($key, $spec)) {
+                throw new Exception('Missing page spec key: '.$key);
+            }
+        }
+
+        return setArticleNumbers(
+            'pagenum',
+            $spec['module'],
+            (int)$spec['limit'],
+            (string)$spec['field'],
+            (string)$spec['pk'],
+            (string)$spec['table'],
+            (string)$spec['catField'],
+            (string)$spec['onum'],
+            (int)$spec['nump']
+        );
+    }
+
+    /**
+     * Generic index page runner (loop + offset + optional pager).
+     *
+     * Spec keys:
+     * - sql (string) must contain LIMIT {ofs}, {limit}
+     * - limit (int)
+     * - renderRow (callable) function(array $row): string
+     * - before (string) optional
+     * - after (string) optional
+     * - empty (string) optional
+     * - params (array) optional
+     * - pager (array) optional (for getPageNumbers)
+     */
+    public function getIndexPage(array $spec): string
+    {
+        $need = array('sql','limit','renderRow');
+        foreach ($need as $key) {
+            if (!array_key_exists($key, $spec)) {
+                throw new Exception('Missing index spec key: '.$key);
+            }
+        }
+
+        $pg = $this->getOffset((int)$spec['limit'], 'num');
+        $sql = str_replace(
+            array('{ofs}', '{limit}'),
+            array((string)$pg['ofs'], (string)((int)$spec['limit'])),
+            (string)$spec['sql']
+        );
+
+        $params = array_key_exists('params', $spec) ? (array)$spec['params'] : array();
+        $res = $this->db->sql_query($sql, $params);
+
+        if ($this->db->sql_numrows($res) <= 0) {
+            return array_key_exists('empty', $spec) ? (string)$spec['empty']
+                : setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+        }
+
+        $out = array_key_exists('before', $spec) ? (string)$spec['before'] : '';
+        while ($row = $this->db->sql_fetchrow($res)) {
+            $out .= call_user_func($spec['renderRow'], $row);
+        }
+        $out .= array_key_exists('after', $spec) ? (string)$spec['after'] : '';
+
+        if (array_key_exists('pager', $spec) && is_array($spec['pager'])) {
+            $out .= $this->getPageNumbers($spec['pager']);
+        }
+
+        return $out;
+    }
+
+    /**
      * Generic view page runner for legacy modules.
      *
      * Spec keys:
