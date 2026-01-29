@@ -118,39 +118,74 @@ function news($module) {
     foot();
 }
 
+function getNewsListeRow(array $row): string {
+    global $conf, $confu;
+
+    $id = $row[0];
+    $cid = $row[1];
+    $uname = $row[2];
+    $title = $row[3];
+    $time = $row[4];
+    $ctitle = $row[5];
+    $cdesc = $row[6];
+    $user_name = $row[7];
+
+    $thref = getHref(array('name='.$conf['name'].'&op=view&id='.$id, $time, '', $title, '', $ctitle, $cdesc, ''));
+    $chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, ''));
+
+    $title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
+    $cdesc = ($cdesc) ? $cdesc : $ctitle;
+    $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
+    $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
+
+    return setTemplateBasic('liste-basic', array(
+        '{%id%}' => $id,
+        '{%title%}' => $title,
+        '{%ctitle%}' => $ctitle,
+        '{%post%}' => $post,
+        '{%time%}' => format_time($time)
+    ));
+}
+
 function liste($module) {
-    global $prefix, $db, $conf, $confu, $confn;
-    $cwhere = catmids($conf['name'], 's.catid');
-    $listnum = intval($confn['listnum']);
-    $flt = $module->getLetterFilter('s.title');
-    $let = $flt['let'];
-    $field = $flt['url'];
-    $order = 'WHERE '.$flt['sql'].' AND s.time <= NOW() AND s.status != \'0\'';
-    $pg = $module->getOffset($listnum);
-    $num = $pg['num'];
-    $offset = $pg['ofs'];
-    $sql = 'SELECT s.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name FROM '.$prefix.'_news AS s LEFT JOIN '.$prefix.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.$prefix.'_users AS u ON (s.uid = u.user_id) '.$order.' '.$cwhere.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$listnum;
-    $result = ($flt['params']) ? $db->sql_query($sql, $flt['params']) : $db->sql_query($sql);
+    global $prefix, $conf, $confn;
+
     head();
     $cont = $module->getNavigation(_LIST);
-    if ($db->sql_numrows($result) > 0) {
-        $letter = ($confn['letter']) ? letter($conf['name']) : '';
-        $cont .= setTemplateBasic('liste-open', array('{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE));
-        while (list($id, $cid, $uname, $title, $time, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
-            $thref = getHref(array('name='.$conf['name'].'&op=view&id='.$id, $time, '', $title, '', $ctitle, $cdesc, ''));
-            $chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, ''));
-            $title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
-            $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
-            $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
-            $cont .= setTemplateBasic('liste-basic', array('{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $post, '{%time%}' => format_time($time)));
-        }
-        $cont .= setTemplateBasic('liste-close');
-        $onum = ($let) ? "title LIKE BINARY '".$let."%' AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'sid', '_news', 'catid', $onum, $confn['nump']);
-    } else {
-        $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
-    }
+
+    $limit = (int)$confn['listnum'];
+
+    $cont .= $module->getListePage(array(
+        'title' => _LIST,
+        'module' => $conf['name'],
+        'alias' => 's',
+        'table' => '_news',
+        'pk' => 'sid',
+        'catField' => 'catid',
+        'select' => 's.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name',
+        'joins' => 'LEFT JOIN '.$prefix.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.$prefix.'_users AS u ON (s.uid = u.user_id)',
+        'where' => 's.time <= NOW() AND s.status != \'0\'',
+        'order' => 's.fix DESC, s.time DESC',
+        'limit' => $limit,
+        'nump' => (int)$confn['nump'],
+        'letterField' => 's.title',
+        'openTpl' => 'liste-open',
+        'rowTpl' => 'liste-basic',
+        'closeTpl' => 'liste-close',
+        'headerMap' => array(
+            '{%letter%}' => ($confn['letter']) ? letter($conf['name']) : '',
+            '{%id%}' => _ID,
+            '{%title%}' => _TITLE,
+            '{%category%}' => _CATEGORY,
+            '{%poster%}' => _POSTER,
+            '{%date%}' => _DATE
+        ),
+        'renderRow' => 'getNewsListeRow',
+        'countWhereLetPrefix' => 'title LIKE BINARY ',
+        'countWhereSuffix' => 'AND time <= NOW() AND status != \'0\'',
+        'countWhereNoLet' => 'time <= NOW() AND status != \'0\''
+    ));
+
     echo $cont;
     foot();
 }

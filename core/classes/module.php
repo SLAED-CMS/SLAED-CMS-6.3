@@ -84,6 +84,125 @@ class ModuleBase
         ));
     }
 
+    /**
+     * Generic A-Z list page scaffold for legacy modules.
+     *
+     * Spec keys (all required unless noted):
+     * - title (string)
+     * - module (string) e.g. $this->conf['name']
+     * - alias (string) e.g. 's'
+     * - table (string) e.g. '_news'
+     * - pk (string) e.g. 'sid'
+     * - catField (string) e.g. 'catid'
+     * - select (string) SELECT fields (must include pk/title/time/cat fields used by renderer)
+     * - joins (string) optional JOIN clauses
+     * - where (string) base WHERE (without 'WHERE')
+     * - order (string) ORDER BY (without 'ORDER BY')
+     * - limit (int)
+     * - nump (int)
+     * - letterField (string) e.g. 's.title'
+     * - rowTpl (string) e.g. 'liste-basic'
+     * - openTpl (string) e.g. 'liste-open'
+     * - closeTpl (string) e.g. 'liste-close'
+     * - headerMap (array) placeholders for openTpl
+     * - renderRow (callable) function(array $row): string
+     * - countWhereLetPrefix (string) e.g. 'title LIKE BINARY '
+     * - countWhereSuffix (string) e.g. "AND time <= NOW() AND status != '0'"
+     * - countWhereNoLet (string)
+     */
+    public function getListePage(array $spec): string
+    {
+        $this->checkListeSpec($spec);
+
+        $flt = $this->getLetterFilter($spec['letterField']);
+        $pg = $this->getOffset((int)$spec['limit'], 'num');
+        $ofs = $pg['ofs'];
+
+        $cwhere = catmids($spec['module'], $spec['alias'].'.'.$spec['catField']);
+
+        $sql = 'SELECT '.$spec['select']
+            .' FROM '.$this->prefix.$spec['table'].' AS '.$spec['alias'].' '
+            .$spec['joins']
+            .' WHERE '.$flt['sql'].' AND '.$spec['where'].' '.$cwhere
+            .' ORDER BY '.$spec['order']
+            .' LIMIT '.$ofs.', '.(int)$spec['limit'];
+
+        $res = $this->db->sql_query($sql, $flt['params']);
+
+        if ($this->db->sql_numrows($res) <= 0) {
+            return setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+        }
+
+        $out = setTemplateBasic($spec['openTpl'], $spec['headerMap']);
+
+        while ($row = $this->db->sql_fetchrow($res)) {
+            $out .= call_user_func($spec['renderRow'], $row);
+        }
+
+        $out .= setTemplateBasic($spec['closeTpl']);
+
+        $let = $flt['let'];
+        $onum = ($let !== '') ? $this->getListeCountWhere($spec, $let) : $this->getListeCountWhere($spec, '');
+
+        $out .= setArticleNumbers(
+            'pagenum',
+            $spec['module'],
+            (int)$spec['limit'],
+            $flt['url'],
+            $spec['pk'],
+            $spec['table'],
+            $spec['catField'],
+            $onum,
+            (int)$spec['nump']
+        );
+
+        return $out;
+    }
+
+    public function checkListeSpec(array &$spec): void
+    {
+        if (!array_key_exists('joins', $spec)) $spec['joins'] = '';
+
+        $need = array(
+            'title',
+            'module',
+            'alias',
+            'table',
+            'pk',
+            'catField',
+            'select',
+            'where',
+            'order',
+            'limit',
+            'nump',
+            'letterField',
+            'openTpl',
+            'rowTpl',
+            'closeTpl',
+            'headerMap',
+            'renderRow',
+            'countWhereLetPrefix',
+            'countWhereSuffix',
+            'countWhereNoLet'
+        );
+
+        foreach ($need as $key) {
+            if (!array_key_exists($key, $spec)) {
+                throw new Exception('Missing liste spec key: '.$key);
+            }
+        }
+    }
+
+    public function getListeCountWhere(array $spec, string $let): string
+    {
+        # Preserve legacy LIKE BINARY behavior for count condition
+        if ($let !== '') {
+            $let = addslashes($let);
+            return $spec['countWhereLetPrefix'].'\''.$let.'%\' '.$spec['countWhereSuffix'];
+        }
+        return $spec['countWhereNoLet'];
+    }
+
     public function getHomeTitle(): string
     {
         $name = (string)($this->conf['name'] ?? '');
