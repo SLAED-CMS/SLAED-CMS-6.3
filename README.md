@@ -380,6 +380,18 @@ Upgrading from a previous version? See [UPGRADING.md](UPGRADING.md) for migratio
 
 ---
 
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [TEMPLATES.md](docs/TEMPLATES.md) | Template system guide (variables, conditionals, examples) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Coding standards and contribution guidelines |
+| [UPGRADING.md](UPGRADING.md) | Migration guide from previous versions |
+| [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards |
+
+---
+
 ## 📮 Support
 
 - **Documentation EN:** [slaed.info](https://slaed.info)
