@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Set пlobal еemplate мars
+# Set global template vars
 if (!function_exists('getTemplateVars')) {
     function getTemplateVars(): array {
         static $cache = [];
@@ -47,6 +47,52 @@ if (!function_exists('getTemplateVars')) {
             '{%favorites%}' => _S_FAVORITEN,
             '{%homepage%}' => _S_STARTSEITE,
         ];
+    }
+}
+
+# Apply minimal {% if FLAG %} ... {% else %} ... {% endif %} (no elseif)
+if (!function_exists('setTemplateIf')) {
+    function setTemplateIf(string $html, array $flags): string {
+        if ($html === '' || !str_contains($html, '{%')) return $html;
+        foreach ($flags as $k => $v) {
+            if ($v === 'true') $flags[$k] = true;
+            if ($v === 'false') $flags[$k] = false;
+        }
+        $re = '/(\{\%\s*(?:if\s+[a-zA-Z0-9_]+|else|endif)\s*\%\})/';
+        $parts = preg_split($re, $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (!is_array($parts) || count($parts) < 2) return $html;
+        $out = '';
+        $stack = [];
+        $emit = true;
+        foreach ($parts as $p) {
+            if (preg_match('/^\{\%\s*if\s+([a-zA-Z0-9_]+)\s*\%\}$/', $p, $m)) {
+                $name = $m[1];
+                $cond = !empty($flags[$name]);
+                $parent = $emit;
+                $stack[] = ['active' => $cond, 'seen' => false, 'parent' => $parent];
+                $emit = $parent && $cond;
+                continue;
+            }
+            if (preg_match('/^\{\%\s*else\s*\%\}$/', $p)) {
+                if ($stack === []) continue;
+                $i = count($stack) - 1;
+                if ($stack[$i]['seen']) continue;
+                $stack[$i]['seen'] = true;
+                $emit = $stack[$i]['parent'] && !$stack[$i]['active'];
+                continue;
+            }
+            if (preg_match('/^\{\%\s*endif\s*\%\}$/', $p)) {
+                if ($stack === []) continue;
+                array_pop($stack);
+                $emit = true;
+                foreach ($stack as $fr) {
+                    $emit = $emit && $fr['parent'] && ($fr['seen'] ? !$fr['active'] : $fr['active']);
+                }
+                continue;
+            }
+            if ($emit) $out .= $p;
+        }
+        return $out;
     }
 }
 
@@ -93,6 +139,12 @@ if (!function_exists('setTemplateBasic')) {
         $vars = getTemplateVars();
         $raw = getThemeLoad($tpl);
         if ($raw === null) return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => sprintf(_ERRORTPL, $tpl)]);
+        $flags = [];
+        if (isset($val['if_flag']) && is_array($val['if_flag'])) {
+            $flags = $val['if_flag'];
+            unset($val['if_flag']);
+        }
+        $raw = setTemplateIf($raw, $flags);
         return strtr($raw, $val + $vars);
     }
 }
@@ -101,6 +153,11 @@ if (!function_exists('setTemplateBasic')) {
 if (!function_exists('setTemplateBlock')) {
     function setTemplateBlock(string $tpl, array $val = []): string {
         global $pos, $blockfile, $b_id;
+        $flags = [];
+        if (isset($val['if_flag']) && is_array($val['if_flag'])) {
+            $flags = $val['if_flag'];
+            unset($val['if_flag']);
+        }
         $theme = getTheme();
         if ($pos === 's' || $pos === 'o') {
             $bname = empty($blockfile) ? 'fly-block-'.$b_id : 'fly-'.str_replace('.php', '', $blockfile);
@@ -111,15 +168,20 @@ if (!function_exists('setTemplateBlock')) {
         if (is_file($direct)) {
             static $dircache = [];
             $mtime = filemtime($direct) ?: 0;
-            if (!isset($dircache[$direct]) || $dircache[$direct]['mtime'] !== $mtime) {
-                $raw = file_get_contents($direct);
-                if ($raw === false) {
-                    $raw = null;
-                } else {
-                    $dircache[$direct] = ['mtime' => $mtime, 'raw' => $raw];
+            $rawtpl = null;
+            if (isset($dircache[$direct]) && $dircache[$direct]['mtime'] === $mtime) {
+                $rawtpl = $dircache[$direct]['raw'];
+            } else {
+                $rawread = file_get_contents($direct);
+                if ($rawread !== false) {
+                    $dircache[$direct] = ['mtime' => $mtime, 'raw' => $rawread];
+                    $rawtpl = $rawread;
                 }
             }
-            if (isset($dircache[$direct])) return strtr($dircache[$direct]['raw'], $val + ['{%theme%}' => $theme]);
+            if ($rawtpl !== null) {
+                $rawtpl = setTemplateIf($rawtpl, $flags);
+                return strtr($rawtpl, $val + ['{%theme%}' => $theme]);
+            }
         }
         $fallback = match ($pos) {
             'l' => 'block-left',
@@ -129,6 +191,7 @@ if (!function_exists('setTemplateBlock')) {
             's', 'o' => 'block-fly',
             default => 'block-all',
         };
+        if ($flags !== []) $val['if_flag'] = $flags;
         $out = setTemplateBasic($fallback, $val);
         if (!$out) $out = setTemplateBasic('block-all', $val);
         return $out ?: strtr('<fieldset><legend>{%title%}</legend>{%content%}</fieldset>', $val);
