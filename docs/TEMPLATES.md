@@ -261,22 +261,22 @@ SLAED CMS supports minimal and safe conditional rendering based on boolean flags
 ### Syntax
 
 ```html
-{% if FLAG %}
+{%if FLAG%}
   Content shown when FLAG is true
-{% else %}
+{%else%}
   Content shown when FLAG is false
-{% endif %}
+{%endif%}
 ```
 
 ### Rules
 
 | Feature | Supported |
 |---------|-----------|
-| `{% if FLAG %}` | Yes |
-| `{% else %}` | Yes |
-| `{% endif %}` | Yes |
+| `{%if FLAG%}` | Yes |
+| `{%else%}` | Yes |
+| `{%endif%}` | Yes |
 | Nested IF blocks | Yes |
-| `{% elseif %}` | No |
+| `{%elseif%}` | No |
 | Logical operators (`&&`, `\|\|`, `!`) | No |
 | Comparisons (`==`, `>`, `<`) | No |
 | Function calls | No |
@@ -387,12 +387,12 @@ $html = setTemplateWarning('warn', [
 
 ```html
 <nav>
-  {% if logged_in %}
+  {%if logged_in%}
     <a href="index.php?name=account">{%account%}</a>
     <a href="index.php?op=logout">{%logout_text%}</a>
-  {% else %}
+  {%else%}
     <a href="index.php?name=users&op=login">{%login_text%}</a>
-  {% endif %}
+  {%endif%}
 </nav>
 ```
 
@@ -418,9 +418,9 @@ echo setTemplateBasic('header', [
 <ul class="nav">
   <li><a href="index.php">{%home%}</a></li>
 
-  {% if is_admin %}
+  {%if is_admin%}
     <li><a href="admin.php">{%admin_text%}</a></li>
-  {% endif %}
+  {%endif%}
 </ul>
 ```
 
@@ -443,17 +443,17 @@ echo setTemplateBasic('nav', [
 
 ```html
 <section>
-  {% if logged_in %}
+  {%if logged_in%}
     <div>Hello, {%user_name%}</div>
 
-    {% if is_admin %}
+    {%if is_admin%}
       <div class="badge">Admin</div>
       <a href="admin.php">Admin Panel</a>
-    {% endif %}
+    {%endif%}
 
-  {% else %}
+  {%else%}
     <a href="index.php?name=users&op=login">Login</a>
-  {% endif %}
+  {%endif%}
 </section>
 ```
 
@@ -476,9 +476,9 @@ echo setTemplateBasic('profilebox', [
 **Template:** `templates/<theme>/home.html`
 
 ```html
-{% if show_banner %}
+{%if show_banner%}
   <div class="alert alert-info">{%banner_text%}</div>
-{% endif %}
+{%endif%}
 ```
 
 **PHP:**
@@ -502,11 +502,11 @@ echo setTemplateBasic('home', [
 <div class="block">
   <h3>{%title%}</h3>
 
-  {% if has_content %}
+  {%if has_content%}
     <div class="body">{%content%}</div>
-  {% else %}
+  {%else%}
     <div class="body empty">No content available</div>
-  {% endif %}
+  {%endif%}
 </div>
 ```
 
@@ -534,11 +534,11 @@ When a flag is not defined, it defaults to `false`.
 **Template:**
 
 ```html
-{% if something %}
+{%if something%}
   YES
-{% else %}
+{%else%}
   NO
-{% endif %}
+{%endif%}
 ```
 
 **PHP:**
