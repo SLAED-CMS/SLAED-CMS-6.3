@@ -1,5 +1,8 @@
 # Upgrading SLAED CMS
 
+> **Migration Guide for SLAED CMS**
+> *Last updated: January 2026*
+
 This document provides instructions for upgrading SLAED CMS between versions.
 
 ## Table of Contents
@@ -8,7 +11,9 @@ This document provides instructions for upgrading SLAED CMS between versions.
 - [Before You Upgrade](#before-you-upgrade)
 - [Upgrading to 6.3](#upgrading-to-63)
 - [Breaking Changes](#breaking-changes)
+- [Migration Checklist](#migration-checklist)
 - [Troubleshooting](#troubleshooting)
+- [Version History](#version-history)
 
 ---
 
@@ -242,6 +247,56 @@ $id = getVar('post', 'id', 'num');
 
 ---
 
+## Migration Checklist
+
+Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
+
+### Code Style
+
+- [ ] Update copyright year: `© 2005 - 2026 SLAED`
+- [ ] Change all `"..."` to `'...'` (single quotes)
+- [ ] Change all `array(...)` to `[...]`
+- [ ] Check indentation: 4 spaces (no tabs)
+- [ ] Check line length: max 120 characters
+- [ ] Remove closing PHP tag `?>`
+- [ ] Remove error suppression operators `@`
+
+### Functions
+
+- [ ] Add type hints to all function parameters
+- [ ] Add return types to all functions (`: void`, `: string`, etc.)
+- [ ] Remove all `func_get_args()` usage
+- [ ] Rename functions to verb+noun pattern if needed
+
+### Security
+
+- [ ] Replace all `isset($_GET/$_POST)` with `getVar()`
+- [ ] Convert all SQL queries to prepared statements
+- [ ] Test for SQL injection vulnerabilities
+- [ ] Validate all user inputs
+
+### Modernization
+
+- [ ] Rename template functions: `tpl_eval()` → `setTemplateBasic()`
+- [ ] Rename template functions: `tpl_warn()` → `setTemplateWarning()`
+- [ ] Change `http://` defaults to `https://`
+- [ ] Update config includes: `include('config/config_X.php')` → `require_once CONFIG_DIR.'/X.php'`
+- [ ] Use `checkPerms()` instead of `end_chmod()` for config permissions
+- [ ] Rename config files: remove `config_` prefix where applicable
+
+### Admin Modules
+
+- [ ] Rename navigation function to `navi()`
+- [ ] Replace `$admin_file` with `$aroute`
+- [ ] Add `exit;` after all `header()` redirects
+- [ ] Remove `&op=show` from navigation URLs
+- [ ] Extract inline switch-cases into separate functions
+
+> [!TIP]
+> Refer to `.rules/refactoring-rules.md` for detailed migration patterns and examples.
+
+---
+
 ## Troubleshooting
 
 ### Common Issues
@@ -337,26 +392,64 @@ rm -rf storage/cache/*
 
 ## Version History
 
-### 6.3.0 (In Development)
+### 6.3.0 (In Development - 2025/2026)
+
+**Status:** Active Development (50% Complete as of January 2026)
 
 **Major Changes:**
-- PHP 8.4 compatibility
+- PHP 8.4 compatibility (8.1+ minimum)
 - All SQL queries converted to prepared statements
 - Input validation with `getVar()`
 - Type declarations for all functions
 - Module configuration moved to `config/modules.php`
-- Template functions modernized
+- Template functions modernized (`setTemplateBasic()`, `setTemplateWarning()`)
+- Removed `core/classes/module.php` (centralized in core)
+- Config file naming: removed `config_` prefix
 
-**Security:**
+**Security Improvements:**
 - 2106+ SQL injection vulnerabilities fixed
 - 269+ input validation points added
-- Deprecated insecure functions removed
+- 99 deprecated insecure functions removed
+- 1282 legacy code constructs updated
+
+**Modernized Admin Modules:**
+- `admins.php`, `blocks.php`, `categories.php`, `changelog.php`
+- `comments.php`, `database.php`, `editor.php`, `fields.php`
+- `groups.php`, `lang.php`, `sitemap.php`, `users.php`
+
+**Removed Files:**
+- `config/config_db.php` → use `config/db.php`
+- `config/counter/dump.txt`, `config/counter/sess.txt`
+- `core/classes/module.php`
+
+**Renamed Files:**
+- `modules/news/admin/info/en.html` → `english.html`
+- `modules/news/admin/info/de.html` → `german.html`
+- `modules/news/admin/info/fr.html` → `french.html`
+- `modules/news/admin/info/pl.html` → `polish.html`
+- `modules/news/admin/info/ru.html` → `russian.html`
+- `modules/news/admin/info/uk.html` → `ukrainian.html`
 
 ### 6.2.0 (2017)
 
+**Status:** End of Life - No security updates
+
 - Last stable release with PHP 7.x support
-- Legacy SQL queries
-- End of Life: No security updates
+- Legacy SQL queries (string concatenation)
+- Direct `$_GET`/`$_POST` access
+- `eval()` in template system
+
+> [!WARNING]
+> Version 6.2.x contains known security vulnerabilities that will not be patched.
+> Upgrade to 6.3.x is strongly recommended.
+
+### 6.1.0 and Earlier
+
+**Status:** Not Supported
+
+- PHP 5.x/7.0 only
+- Fresh installation of 6.3.x recommended
+- No upgrade path available
 
 ---
 
@@ -368,3 +461,5 @@ rm -rf storage/cache/*
 - **Email:** info@slaed.net
 
 ---
+
+*SLAED CMS © 2005 - 2026 Eduard Laas. Licensed under GNU GPL 3.*

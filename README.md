@@ -175,16 +175,35 @@ slaed-cms/
 
 > [!NOTE]
 > SLAED CMS 6.3 is undergoing a major modernization to PHP 8.4 standards.
-> **Progress: 50% Complete**
+> **Progress: 50% Complete** (as of January 2026)
 
 ### ✅ Completed
+
+**Security Improvements:**
 - 2106+ SQL queries converted to prepared statements
-- 269 user input points secured with validation
-- 12 admin modules fully modernized
+- 269+ user input points secured with validation
+- 99 deprecated functions replaced
+
+**Code Modernization:**
 - Type declarations added (parameters & return types)
 - Modern array syntax (`[]` instead of `array()`)
 - Input validation with `getVar()` helper
 - Quote consistency (single quotes throughout)
+- Template functions modernized (`setTemplateBasic()`, `setTemplateWarning()`)
+
+**Modernized Admin Modules (12):**
+- `admins.php` - Administrator management
+- `blocks.php` - Block management
+- `categories.php` - Category management
+- `changelog.php` - Changelog viewer
+- `comments.php` - Comment management
+- `database.php` - Database operations (+186% refactored)
+- `editor.php` - Editor settings
+- `fields.php` - Custom fields
+- `groups.php` - User groups
+- `lang.php` - Language settings
+- `sitemap.php` - Sitemap generation
+- `users.php` - User management (+220 lines improved)
 
 ### 🚧 In Progress
 - Remaining admin modules (15 modules)
@@ -196,7 +215,7 @@ slaed-cms/
 - ✅ Full PHP 8.4 compatibility
 - ✅ Enhanced security (SQL injection prevention)
 - ✅ Better performance (2-3x faster with PHP 8.4)
-- ✅ Type safety (strict types, type hints)
+- ✅ Type safety (type hints, return types)
 - ✅ Modern coding standards (PSR-12 compatible)
 
 ---
@@ -369,4 +388,20 @@ Upgrading from a previous version? See [UPGRADING.md](UPGRADING.md) for migratio
 
 ---
 
+## 📜 Version History
+
+| Version | Release | PHP | Status |
+|---------|---------|-----|--------|
+| 6.3.x | 2025-2026 | 8.1 - 8.4 | Active Development |
+| 6.2.x | 2017 | 7.4 - 8.0 | End of Life |
+| 6.1.x | 2015 | 7.0 - 7.4 | Not Supported |
+| < 6.0 | 2005-2014 | 5.x | Not Supported |
+
+> [!WARNING]
+> **Version 6.2.x and earlier are no longer supported.** Security vulnerabilities will not be patched. Please upgrade to 6.3.x.
+
+---
+
 **SLAED CMS** - Powerful, Secure, Flexible Content Management for Your Projects
+
+*© 2005 - 2026 SLAED. Licensed under GNU GPL 3.*

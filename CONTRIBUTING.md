@@ -1,5 +1,8 @@
 # Contributing to SLAED CMS
 
+> **Contribution Guidelines for SLAED CMS 6.3**
+> *Last updated: January 2026*
+
 Thank you for your interest in contributing to SLAED CMS! This document provides guidelines and standards for contributing to the project.
 
 ## Table of Contents
@@ -227,6 +230,83 @@ define('_USR_ACTIVE', 'User is active');
 > [!IMPORTANT]
 > Every constant **must** be defined in all 6 languages: EN, FR, DE, PL, RU, UA
 
+### Admin Module Conventions
+
+When working on admin modules, follow these specific conventions:
+
+#### Navigation Function
+
+```php
+// Always use navi() - not moduleNavi() or similar
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
+    $ops = ['name=modules', 'name=modules&amp;op=info'];
+    $lang = [_HOME, _INFO];
+    return getAdminTabs(_MODULES, 'modules.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
+}
+```
+
+#### Global Variables
+
+```php
+// ✅ Correct - use $aroute
+global $aroute;
+header('Location: '.$aroute.'.php?name=modules');
+exit;
+
+// ❌ Wrong - deprecated
+global $admin_file;
+header('Location: '.$admin_file.'.php?name=modules');
+```
+
+#### Header Redirects
+
+Always add `exit;` after header redirects and use simplified URLs:
+
+```php
+// ✅ Correct
+header('Location: '.$aroute.'.php?name=modules');
+exit;
+
+// ❌ Wrong - unnecessary &op=show
+header('Location: '.$aroute.'.php?name=modules&op=show');
+```
+
+#### Switch-Case Structure
+
+Extract inline code into separate functions:
+
+```php
+// ✅ Correct
+function status(): void {
+    global $prefix, $db, $aroute, $act, $id;
+    $db->sql_query('UPDATE '.$prefix.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
+    header('Location: '.$aroute.'.php?name=categories');
+    exit;
+}
+
+switch ($op) {
+    default: modules(); break;
+    case 'status': status(); break;
+    case 'edit': edit(); break;
+}
+```
+
+### Template Functions
+
+Use the modernized template functions:
+
+```php
+// ✅ New (6.3.x)
+$cont .= setTemplateBasic('open');
+$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $text]);
+$cont .= setTemplateBasic('close');
+
+// ❌ Old (deprecated)
+$cont .= tpl_eval('open');
+$cont .= tpl_warn('warn', $text, '', '', 'info');
+$cont .= tpl_eval('close');
+```
+
 ### File Structure
 
 - **Files:** `snake_case.php`
@@ -413,3 +493,7 @@ When adding new text:
 ---
 
 **Thank you for contributing to SLAED CMS!**
+
+---
+
+*SLAED CMS © 2005 - 2026 Eduard Laas. Licensed under GNU GPL 3.*
