@@ -146,13 +146,22 @@ function money_delete() {
 
 function billing($title, $autor, $infos, $num, $date, $menge, $kurs, $sum) {
 	global $theme, $conf;
-	$sitename = $conf['sitename'];
-	$homeurl = $conf['homeurl'];
-	$site_logo = $conf['site_logo'];
-	$charset = _CHARSET;
-	$thefile = "\$r_file=\"".addslashes(file_get_contents("modules/money/templates/billing.html"))."\";";
-	eval($thefile);
-	echo stripslashes($r_file);
+	$template = file_get_contents("modules/money/templates/billing.html");
+	$replacements = [
+		'$charset' => _CHARSET,
+		'$theme' => $theme,
+		'$title' => $title,
+		'$site_logo' => $conf['site_logo'],
+		'$sitename' => $conf['sitename'],
+		'$autor' => $autor,
+		'$infos' => $infos,
+		'$num' => $num,
+		'$date' => $date,
+		'$menge' => $menge,
+		'$kurs' => $kurs,
+		'$sum' => $sum,
+	];
+	echo str_replace(array_keys($replacements), array_values($replacements), $template);
 }
 
 function money_rechn() {
