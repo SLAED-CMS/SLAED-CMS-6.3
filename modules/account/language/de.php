@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2017 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -61,4 +61,3 @@ define("_UPASSWORD","Passwort");
 define("_USERLOGIN","Login in der Systemsteuerung");
 define("_USERREGLOGIN","Zugang in der Systemsteuerung");
 define("_YOUAREREGISTERED","Sie sind jetzt angemeldet. Das Passwort wird an die angegebene eMail-Adresse gesandt.");
-?>

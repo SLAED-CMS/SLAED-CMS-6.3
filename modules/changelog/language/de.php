@@ -1,6 +1,8 @@
 <?php
-# Copyright 2005 - 2026 SLAED
-# Website: https://www.slaed.net
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
 define('_CHLOG_FILTER', 'Filter & Suche');
 define('_CHLOG_SEARCH', 'Suchbegriff:');

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2017 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -61,4 +61,3 @@ define("_UPASSWORD","Password");
 define("_USERLOGIN","Go to control panel");
 define("_USERREGLOGIN","The entrance to the control panel");
 define("_YOUAREREGISTERED","Welcome! You are now registered as a member.");
-?>
