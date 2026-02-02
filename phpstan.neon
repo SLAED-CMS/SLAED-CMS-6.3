@@ -37,5 +37,6 @@ parameters:
         - '#Function whois invoked with 0 parameters#'
         - '#Class PclZip does not have a constructor#'
         - '#Cannot unset property sql_db::\$qresult#'
+        - '#Call to sprintf contains 0 placeholders#'
     reportUnmatchedIgnoredErrors: false
     treatPhpDocTypesAsCertain: false

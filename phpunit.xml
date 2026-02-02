@@ -9,6 +9,11 @@
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
         </testsuite>
+        <testsuite name="Validation">
+            <directory>tests</directory>
+            <exclude>tests/Unit</exclude>
+            <exclude>tests/bootstrap.php</exclude>
+        </testsuite>
     </testsuites>
 
 </phpunit>
