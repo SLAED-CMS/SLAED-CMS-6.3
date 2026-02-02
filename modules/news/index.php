@@ -283,7 +283,7 @@ function send() {
 		if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->sql_query("INSERT INTO ".$prefix."_news (sid, catid, uid, name, title, time, hometext, bodytext, field, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', NOW(), '".$hometext."', '".$bodytext."', '".$field."', '".getIp()."', '0')");
+			$db->sql_query("INSERT INTO ".$prefix."_news (sid, catid, uid, name, title, time, hometext, bodytext, field, associated, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', NOW(), '".$hometext."', '".$bodytext."', '".$field."', '', '".getIp()."', '0')");
 			update_points(31);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confn['addmail'], $conf['name'], $puname, _NEWS);

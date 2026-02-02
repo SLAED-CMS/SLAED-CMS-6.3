@@ -193,7 +193,7 @@ function network() {
             } else {
                 $uemail = isset($ulog['email']) ? mb_strtolower($ulog['email']) : '';
                 $network = isset($ulog['profile']) ? $ulog['profile'] : $ulog['network'];
-                $db->sql_query("INSERT INTO ".$prefix."_users (user_id, user_name, user_email, user_avatar, user_regdate, user_password, user_last_ip, user_agent, user_network) VALUES (NULL, '".$uname."', '".$uemail."', 'default/00.gif', NOW(), '".$upass."', '".$uip."', '".$uagent."', '".$network."')");
+                $db->sql_query("INSERT INTO ".$prefix."_users (user_id, user_name, user_email, user_avatar, user_regdate, user_password, user_last_ip, user_agent, user_network, user_block, user_warnings, user_field) VALUES (NULL, '".$uname."', '".$uemail."', 'default/00.gif', NOW(), '".$upass."', '".$uip."', '".$uagent."', '".$network."', '', '', '')");
                 list($user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme) = $db->sql_fetchrow($db->sql_query("SELECT user_id, user_name, user_password, user_storynum, user_blockon, user_theme FROM ".$prefix."_users WHERE user_password = '".$upass."'"));
                 setCookies('account', time() + intval($conf['user_c_t']), array($user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme));
                 $db->sql_query("DELETE FROM ".$prefix."_session WHERE uname = '".$uip."' AND guest = '0'");
@@ -236,7 +236,7 @@ function activate(): void {
             $uip = getIp();
             $uagent = getAgent();
             $rank = '';
-            $db->sql_query('INSERT INTO '.$prefix.'_users (user_id, user_name, user_rank, user_email, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_agent) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent)', array('uname'  => $user_name, 'rank'   => $rank, 'email'  => $user_email, 'avatar' => 'default/00.gif', 'regdate' => $user_regdate, 'pwd'    => md5_salt($user_password), 'lang'   => $locale, 'ip'     => $uip, 'agent'  => $uagent));
+            $db->sql_query('INSERT INTO '.$prefix.'_users (user_id, user_name, user_rank, user_email, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_agent, user_network, user_block, user_warnings, user_field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', array('uname'  => $user_name, 'rank'   => $rank, 'email'  => $user_email, 'avatar' => 'default/00.gif', 'regdate' => $user_regdate, 'pwd'    => md5_salt($user_password), 'lang'   => $locale, 'ip'     => $uip, 'agent'  => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => ''));
             $db->sql_query('DELETE FROM '.$prefix.'_users_temp WHERE user_name = :uname AND check_num = :cnum', array('uname' => $user_name, 'cnum' => $check_num));
             $db->sql_query('DELETE FROM '.$prefix.'_session WHERE uname = :uname AND guest = 0', array('uname' => $uip));
             echo setTemplateBasic('title', array('{%title%}' => _ACTIVATIONYES)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ACTMSG));

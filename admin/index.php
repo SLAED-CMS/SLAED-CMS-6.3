@@ -32,7 +32,7 @@ function add_admin() {
                 $auser_avatar = "default/00.gif";
                 $user_exist = $db->sql_numrows($db->sql_query("SELECT * FROM ".$prefix."_users WHERE user_name = '".$aname."'"));
                 if ($user_exist) $db->sql_query("DELETE FROM ".$prefix."_users WHERE user_name='".$aname."'");
-                $db->sql_query("INSERT INTO ".$prefix."_users (user_id, user_name, user_email, user_website, user_avatar, user_regdate, user_password, user_lang, user_last_ip) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."')");
+                $db->sql_query("INSERT INTO ".$prefix."_users (user_id, user_name, user_email, user_website, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_block, user_warnings, user_field) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."', '', '', '')");
             }
             header("Location: ".$admin_file.".php");
         } else {

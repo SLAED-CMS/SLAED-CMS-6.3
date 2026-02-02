@@ -171,7 +171,7 @@ function help_save() {
 			header("Location: ".$admin_file.".php?op=help_view&id=".$hid);
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_help (sid, pid, catid, uid, aid, title, time, hometext, ip_sender, status) VALUES (NULL, '".$pid."', '".$cat."', '".$uid."', '".$postid."', '".$subject."', now(), '".$hometext."', '".$ip."', '0')");
+			$db->sql_query("INSERT INTO ".$prefix."_help (sid, pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (NULL, '".$pid."', '".$cat."', '".$uid."', '".$postid."', '".$subject."', now(), '".$hometext."', '', '".$ip."', '0')");
 			$db->sql_query("UPDATE ".$prefix."_help SET comments = comments+1, status = '".$status."'WHERE sid = '".$pid."'");
 			
 			if ($umail) {

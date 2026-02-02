@@ -559,16 +559,16 @@ CREATE TABLE `{prefix}_referer` (
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_search` (
-  `sl_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `sl_word` VARCHAR(255) NOT NULL,
-  `sl_modul` VARCHAR(50) NOT NULL,
-  `sl_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `sl_score` INT UNSIGNED NOT NULL DEFAULT 0,
-  PRIMARY KEY (`sl_id`),
-  KEY `sl_word` (`sl_word`(191)),
-  KEY `sl_modul` (`sl_modul`),
-  KEY `sl_time` (`sl_time`),
-  KEY `sl_word_modul` (`sl_word`(191), `sl_modul`)
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `word` VARCHAR(255) NOT NULL,
+  `modul` VARCHAR(50) NOT NULL,
+  `time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `score` INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `word` (`word`(191)),
+  KEY `modul` (`modul`),
+  KEY `time` (`time`),
+  KEY `word_modul` (`word`(191), `modul`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_session` (
