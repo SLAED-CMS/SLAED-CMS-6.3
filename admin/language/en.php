@@ -558,3 +558,8 @@ define("_ADMIN_FILE_INFO","With a view of safety change the standard name at a f
 define("_SMODULE","Use search in modules");
 define("_ASEARCH","Activate the search engine analyser?");
 define("_SKDWORDS","Exclude the following words from the site's keywords");
+define("_KEY_SEP","Separate keywords with commas?");
+define("_LTITLE","Use long titles?");
+define("_ADESC","Automatic description generation?");
+define("_DLETTER","Maximum number of characters in description");
+define("_RSEP","URL separator");

@@ -558,3 +558,8 @@ define("_ADMIN_FILE_INFO","Pour des raisons de sécurité, modifiez le nom par d
 define("_SMODULE","Utiliser la recherche dans les modules");
 define("_ASEARCH","Activer l'analyseur de moteur de recherche?");
 define("_SKDWORDS","Excluez les mots suivants des mots-clés du site");
+define("_KEY_SEP","Séparer les mots-clés par des virgules?");
+define("_LTITLE","Utiliser des titres longs?");
+define("_ADESC","Génération automatique de la description?");
+define("_DLETTER","Nombre maximal de caractères dans la description");
+define("_RSEP","Séparateur d'URL");

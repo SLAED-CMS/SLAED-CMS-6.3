@@ -558,3 +558,8 @@ define("_ADMIN_FILE_INFO","Ze względów bezpieczeństwa zmień domyślną nazw�
 define("_SMODULE","Użyj wyszukiwania w modułach");
 define("_ASEARCH","Aktywować analizator wyszukiwarek?");
 define("_SKDWORDS","Wykluczyć następujące słowa ze słów kluczowych witryny");
+define("_KEY_SEP","Rozdzielać słowa kluczowe przecinkami?");
+define("_LTITLE","Używać długich tytułów?");
+define("_ADESC","Automatyczne generowanie opisu?");
+define("_DLETTER","Maksymalna liczba znaków w opisie");
+define("_RSEP","Separator URL");

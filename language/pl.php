@@ -12,7 +12,7 @@ define("_ACTIVATEPERSONAL","Aktywacja własne menu?");
 define("_ACTIVEBUTNOTSEE","Aktywne ale niewiem");
 define("_ADD","Dodaj");
 define("_ADDITIONALYGRP","Moduł ten jest dostępny tylko dla grupy użytkowników");
-define("_ADDMAIL","Prosimy pamiętać o tym, że użytkownik %1\$s wyprodukował publikację nowego materiału w module«% 2\$s».<br>, Aby wyświetlić przydał, zaloguj się do panelu administratora systemu.");
+define("_ADDMAIL","Prosimy pamiętać o tym, że użytkownik %1\$s wyprodukował publikację nowego materiału w module«%2\$s».<br>, Aby wyświetlić przydał, zaloguj się do panelu administratora systemu.");
 define("_ADDMAILC","Prosimy pamiętać o tym, że użytkownik %1\$s wyprodukował publikację nowego komentarza w module«%2\$s».<br><br>Dla przeczytaniu wiadomości, przejdź do adresu: %3\$s");
 define("_ADMIN","Administrator");
 define("_ADMINMENU","Panel administratora");

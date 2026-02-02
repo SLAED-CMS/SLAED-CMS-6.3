@@ -558,3 +558,8 @@ define("_ADMIN_FILE_INFO","Ändern Sie aus Sicherheitsgründen den Standardnamen
 define("_SMODULE","Suche in Modulen verwenden");
 define("_ASEARCH","Suchalysator aktivieren?");
 define("_SKDWORDS","Die folgenden Wörter aus den Schlüsselwörtern der Website ausschließen");
+define("_KEY_SEP","Schlüsselwörter durch Kommas trennen?");
+define("_LTITLE","Lange Titel verwenden?");
+define("_ADESC","Automatische Beschreibungsgenerierung?");
+define("_DLETTER","Maximale Anzahl der Zeichen in der Beschreibung");
+define("_RSEP","URL-Trennzeichen");
