@@ -287,12 +287,12 @@ SLAED CMS supports minimal and safe conditional rendering based on boolean flags
 
 ### Passing Flags from PHP
 
-Flags are passed via the `flag` key (array):
+Flags are passed via the `if_flag` key (array):
 
 ```php
 echo setTemplateBasic('template-name', [
     '{%variable%}' => $value,
-    'flag' => [
+    'if_flag' => [
         'logged_in' => is_user(),
         'is_admin'  => is_admin(),
     ],
@@ -329,7 +329,7 @@ setTemplateBasic(string $tpl, array $val = []): string
 ```php
 $html = setTemplateBasic('header', [
     '{%title%}' => 'Welcome',
-    'flag' => [
+    'if_flag' => [
         'logged_in' => is_user(),
     ],
 ]);
@@ -402,7 +402,7 @@ $html = setTemplateWarning('warn', [
 echo setTemplateBasic('header', [
     '{%login_text%}'  => _LOGIN,
     '{%logout_text%}' => _LOGOUT,
-    'flag' => [
+    'if_flag' => [
         'logged_in' => is_user(),
     ],
 ]);
@@ -429,7 +429,7 @@ echo setTemplateBasic('header', [
 ```php
 echo setTemplateBasic('nav', [
     '{%admin_text%}' => _ADMIN,
-    'flag' => [
+    'if_flag' => [
         'is_admin' => is_admin(),
     ],
 ]);
@@ -462,7 +462,7 @@ echo setTemplateBasic('nav', [
 ```php
 echo setTemplateBasic('profilebox', [
     '{%user_name%}' => $uname ?? '',
-    'flag' => [
+    'if_flag' => [
         'logged_in' => is_user(),
         'is_admin'  => is_admin(),
     ],
@@ -486,7 +486,7 @@ echo setTemplateBasic('profilebox', [
 ```php
 echo setTemplateBasic('home', [
     '{%banner_text%}' => 'Welcome!',
-    'flag' => [
+    'if_flag' => [
         'show_banner' => (bool)($conf['show_banner'] ?? false),
     ],
 ]);
@@ -516,7 +516,7 @@ echo setTemplateBasic('home', [
 echo setTemplateBlock('ignored', [
     '{%title%}'   => $title,
     '{%content%}' => $content,
-    'flag' => [
+    'if_flag' => [
         'has_content' => trim((string)$content) !== '',
     ],
 ]);
@@ -579,7 +579,7 @@ echo setTemplateBasic('test', []);
 ### Best Practices
 
 1. **Keep logic in PHP** - Templates should only handle presentation
-2. **Use meaningful flag names** - `logged_in` instead of `flag1`
+2. **Use meaningful flag names** - `logged_in` instead of `flag`
 3. **Escape user data** - Always use `htmlspecialchars()` for untrusted input
 4. **Avoid deep nesting** - Maximum 2-3 levels of nested conditions
 5. **Use global variables** - Leverage `getTemplateVars()` for common values
