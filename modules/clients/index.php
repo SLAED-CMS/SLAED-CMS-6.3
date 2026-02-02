@@ -1,5 +1,5 @@
 <?php
-# Copyright © 2005 - 2015 SLAED
+# Copyright Â© 2005 - 2015 SLAED
 # Website: http://www.slaed.net
 
 if (!defined("MODULE_FILE")) {
@@ -61,14 +61,14 @@ function download() {
 			$path = "uploads/clients/".$url;
 			$code = base64_encode($user_id."-".getip()."-".getagent());
 		
-			# Øèôðóåì ôàéëû
+			# Ð¨Ð¸Ñ„Ñ€ÑƒÐµÐ¼ Ñ„Ð°Ð¹Ð»Ñ‹
 			$input = array('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S' ,'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '=');
-			$output = array('{', '©', '"', '§', '$', 'Ö', '&', '/', '(', '', '¹', '¡', '<', '%', '‹', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'å', 'B', 'ø', 'D', 'E', 'ÿ', 'G', 'ä', 'I', 'J', 'K', 'L', '‡', 'Ø', 'O', 'Æ', 'Q', '·', 'Â' ,'!', 'U', '†', '¶', 'X', 'Y', 'Z', '¿');
+			$output = array('{', 'Â©', '"', 'Â§', '$', 'Ð¦', '&', '/', '(', '', 'â„–', 'ÐŽ', '<', '%', 'â€¹', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'Ðµ', 'B', 'Ñˆ', 'D', 'E', 'Ñ', 'G', 'Ð´', 'I', 'J', 'K', 'L', 'â€¡', 'Ð¨', 'O', 'Ð–', 'Q', 'Â·', 'Ð’' ,'!', 'U', 'â€ ', 'Â¶', 'X', 'Y', 'Z', 'Ñ—');
 			$sourse = str_replace($input, $output, $code);
-			if (file_exists($path."/html/templates/admin/images/admin/admins.png")) save_hidden($path."/html/templates/admin/images/admin/admins.png", $ipath."/admins.png", $sourse."IEND®B`‚");
+			if (file_exists($path."/html/templates/admin/images/admin/admins.png")) save_hidden($path."/html/templates/admin/images/admin/admins.png", $ipath."/admins.png", $sourse."IENDÂ®B`â€š");
 			if (file_exists($path."/html/templates/admin/images/admin/forum.png")) save_hidden($path."/html/templates/admin/images/admin/forum.png", $ipath."/forum.png", $code);
 			if (file_exists($path."/html/templates/admin/images/language/german.png")) save_hidden($path."/html/templates/admin/images/language/german.png", $ipath."/german.png", $code);
-			if (file_exists($path."/html/templates/admin/images/admin/menu.png")) save_hidden($path."/html/templates/admin/images/admin/menu.png", $ipath."/menu.png", $sourse."IEND®B`‚".$code);
+			if (file_exists($path."/html/templates/admin/images/admin/menu.png")) save_hidden($path."/html/templates/admin/images/admin/menu.png", $ipath."/menu.png", $sourse."IENDÂ®B`â€š".$code);
 			
 			if (file_exists($path."/html/config/license.txt")) generator($path."/html/config");
 			if (file_exists($path."/setup/config/license.txt")) generator($path."/setup/config");
@@ -94,13 +94,13 @@ function download() {
 }
 
 function save_hidden($path, $ipath, $code) {
-	# ×èòàåì è ïåðåçàïèñûâàåì ôàéë
+	# Ð§Ð¸Ñ‚Ð°ÐµÐ¼ Ð¸ Ð¿ÐµÑ€ÐµÐ·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ Ñ„Ð°Ð¹Ð»
 	$content = file_get_contents($ipath);
 	$code = $content.$code;
 	$fp = fopen($path, "wb");
 	fwrite($fp, $code);
 	fclose($fp);
-	# Ìåíÿåì âðåìÿ ôàéëà
+	# ÐœÐµÐ½ÑÐµÐ¼ Ð²Ñ€ÐµÐ¼Ñ Ñ„Ð°Ð¹Ð»Ð°
 	$atime = filemtime($ipath);
 	touch($path, $atime, $atime);
 }
