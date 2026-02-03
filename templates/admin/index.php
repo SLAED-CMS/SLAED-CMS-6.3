@@ -37,7 +37,7 @@ function setTemplateHead($sub, $val = '') {
 			.'<li><a href="index.php?name=account" target="_blank" title="'._ACCOUNT.'"><b>'._ACCOUNT.'</b></a></li>'
 			.'<li><a href="'.$admin_file.'.php?op=logout" title="'._LOGOUT.'"><b>'._LOGOUT.'</b></a></li>';
 		}
-		$blocks = panelblock().admininfo().adminblock();
+		$blocks = getAdminPanelBlocks().admininfo().adminblock();
 	} else {
 		$login = ($db->sql_numrows($db->sql_query("SELECT * FROM ".$prefix."_admins")) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
 	}

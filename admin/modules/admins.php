@@ -75,7 +75,7 @@ function add(): void {
     $i = 1;
     $result = $db->sql_query('SELECT mid, title FROM '.$prefix.'_modules');
     while (list($mid, $title) = $db->sql_fetchrow($result)) {
-        if (file_exists('modules/'.$title.'/admin/index.php') && file_exists('modules/'.$title.'/admin/links.php')) {
+        if (file_exists('modules/'.$title.'/admin/index.php')) {
             $amodules = explode(',', $modules);
             $sel = '';
             foreach ($amodules as $val) if ($mid == $val) $sel = ' checked';

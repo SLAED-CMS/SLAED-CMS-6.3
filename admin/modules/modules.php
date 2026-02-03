@@ -89,10 +89,11 @@ function modules(): void {
 
     $a = 1;
     foreach ($confmd as $title => $mod) {
+        $lang = (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']);
         $active = $mod['active'];
         $view = $mod['view'];
         $menu = $mod['menu'];
-        $group_id = $mod['group'];
+        $group = $mod['group'];
 
         $act = $active ? 0 : 1;
 
@@ -104,10 +105,11 @@ function modules(): void {
             $who_view = _MVADMIN;
         }
 
-        $titlel = ($menu == 0) ? title_tip(_NO_SICHT).deflmconst($title) : deflmconst($title);
+        $titlel = ($menu == 0) ? title_tip(_NO_SICHT).$lang : $lang;
+        
 
-        if ($group_id != 0) {
-            $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.$prefix.'_groups WHERE id = :id', ['id' => $group_id]));
+        if ($group != 0) {
+            $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.$prefix.'_groups WHERE id = :id', ['id' => $group]));
             $group_name = $grp['name'];
         } else {
             $group_name = _NONE;
