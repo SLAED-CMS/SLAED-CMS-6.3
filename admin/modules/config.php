@@ -30,7 +30,7 @@ function config(): void {
     $entries = is_dir($path) ? scandir($path) : [];
     if (is_array($entries)) {
         foreach ($entries as $entry) {
-            if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
+            if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
                 $sel = ($conf['site_logo'] == $entry) ? ' selected' : '';
                 $cont .= '<option value="'.$path.$entry.'"'.$sel.'>'.$entry.'</option>';
             }

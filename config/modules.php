@@ -9,24 +9,66 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 $confmd = array (
   'account' => 
   array (
+    'lang' => '_ACCOUNT',
+    'img' => 'account.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
     'group' => '0',
-    'side' => '2',
+    'side' => '1',
     'top' => '0',
+  ),
+  'admins' => 
+  array (
+    'lang' => '_EDITADMINS',
+    'img' => 'admins.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
   ),
   'auto_links' => 
   array (
-    'active' => '0',
+    'lang' => '_LINKS',
+    'img' => 'auto_links.png',
+    'active' => '1',
     'view' => '0',
     'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
   ),
+  'blocks' => 
+  array (
+    'lang' => '_BLOCKS',
+    'img' => 'blocks.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'categories' => 
+  array (
+    'lang' => '_CATEGORIES',
+    'img' => 'categories.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'changelog' => 
   array (
+    'lang' => '_CHANGELOG',
+    'img' => 'editor.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -36,6 +78,8 @@ $confmd = array (
   ),
   'clients' => 
   array (
+    'lang' => '_CLIENTS',
+    'img' => 'clients.png',
     'active' => '1',
     'view' => '1',
     'menu' => '1',
@@ -43,8 +87,34 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
+  'comments' => 
+  array (
+    'lang' => '_COMMENTS',
+    'img' => 'comments.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'config' => 
+  array (
+    'lang' => '_PREFERENCES',
+    'img' => 'config.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'contact' => 
   array (
+    'lang' => '_CONTACT',
+    'img' => 'contact.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -54,6 +124,8 @@ $confmd = array (
   ),
   'content' => 
   array (
+    'lang' => '_CONTENT',
+    'img' => 'content.png',
     'active' => '1',
     'view' => '0',
     'menu' => '0',
@@ -61,8 +133,34 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
+  'database' => 
+  array (
+    'lang' => '_DATABASE',
+    'img' => 'database.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'editor' => 
+  array (
+    'lang' => '_EDITOR_IN',
+    'img' => 'editor.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'faq' => 
   array (
+    'lang' => '_FAQ',
+    'img' => 'faq.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -70,8 +168,34 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
+  'favorites' => 
+  array (
+    'lang' => '_FAVORITES',
+    'img' => 'favorites.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'fields' => 
+  array (
+    'lang' => '_FIELDS',
+    'img' => 'fields.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'files' => 
   array (
+    'lang' => '_FILES',
+    'img' => 'files.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -81,6 +205,8 @@ $confmd = array (
   ),
   'forum' => 
   array (
+    'lang' => '_FORUM',
+    'img' => 'forum.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -88,8 +214,22 @@ $confmd = array (
     'side' => '2',
     'top' => '0',
   ),
+  'groups' => 
+  array (
+    'lang' => '_UGROUPS',
+    'img' => 'groups.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'help' => 
   array (
+    'lang' => '_HELP',
+    'img' => 'help.png',
     'active' => '1',
     'view' => '1',
     'menu' => '1',
@@ -97,8 +237,10 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
-  'image' => 
+  'jokes' => 
   array (
+    'lang' => '_JOKES',
+    'img' => 'jokes.png',
     'active' => '0',
     'view' => '0',
     'menu' => '1',
@@ -106,17 +248,22 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
-  'jokes' => 
+  'lang' => 
   array (
-    'active' => '0',
+    'lang' => '_LANG',
+    'img' => 'lang.png',
+    'active' => '1',
     'view' => '0',
     'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
+    'type' => '0',
   ),
   'links' => 
   array (
+    'lang' => '_LINKS',
+    'img' => 'links.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -126,6 +273,8 @@ $confmd = array (
   ),
   'main' => 
   array (
+    'lang' => '_MAIN',
+    'img' => 'main.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -135,15 +284,43 @@ $confmd = array (
   ),
   'media' => 
   array (
+    'lang' => '_MEDIA',
+    'img' => 'media.png',
     'active' => '0',
     'view' => '0',
     'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
+  ),
+  'messages' => 
+  array (
+    'lang' => '_MESSAGES',
+    'img' => 'messages.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'modules' => 
+  array (
+    'lang' => '_MODULES',
+    'img' => 'modules.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
   ),
   'money' => 
   array (
+    'lang' => '_MONEY',
+    'img' => 'money.png',
     'active' => '0',
     'view' => '0',
     'menu' => '1',
@@ -151,8 +328,22 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
+  'monitor' => 
+  array (
+    'lang' => '_MONITOR',
+    'img' => 'monitor.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'news' => 
   array (
+    'lang' => '_NEWS',
+    'img' => 'news.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -160,8 +351,22 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
+  'newsletter' => 
+  array (
+    'lang' => '_NEWSLETTER',
+    'img' => 'newsletter.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'order' => 
   array (
+    'lang' => '_ORDER',
+    'img' => 'order.png',
     'active' => '0',
     'view' => '0',
     'menu' => '1',
@@ -171,6 +376,8 @@ $confmd = array (
   ),
   'pages' => 
   array (
+    'lang' => '_PAGES',
+    'img' => 'pages.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -178,8 +385,34 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
+  'privat' => 
+  array (
+    'lang' => '_PRIVAT',
+    'img' => 'privat.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'ratings' => 
+  array (
+    'lang' => '_RATINGS',
+    'img' => 'ratings.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'recommend' => 
   array (
+    'lang' => '_RECOMMEND',
+    'img' => 'recommend.png',
     'active' => '1',
     'view' => '1',
     'menu' => '1',
@@ -187,8 +420,46 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
+  'referers' => 
+  array (
+    'lang' => '_REFERERS',
+    'img' => 'referers.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'replace' => 
+  array (
+    'lang' => '_REPLACE',
+    'img' => 'replace.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'rss' => 
+  array (
+    'lang' => '_RSS',
+    'img' => 'rss.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'rss_info' => 
   array (
+    'lang' => '_RSS_INFO',
+    'img' => 'rss_info.png',
     'active' => '1',
     'view' => '1',
     'menu' => '1',
@@ -198,6 +469,8 @@ $confmd = array (
   ),
   'search' => 
   array (
+    'lang' => '_SEARCH',
+    'img' => 'search.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -205,8 +478,22 @@ $confmd = array (
     'side' => '0',
     'top' => '0',
   ),
+  'security' => 
+  array (
+    'lang' => '_SECURITY',
+    'img' => 'security.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'shop' => 
   array (
+    'lang' => '_SHOP',
+    'img' => 'shop.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -216,6 +503,8 @@ $confmd = array (
   ),
   'sitemap' => 
   array (
+    'lang' => '_SITEMAP',
+    'img' => 'sitemap.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -223,8 +512,46 @@ $confmd = array (
     'side' => '2',
     'top' => '0',
   ),
+  'statistic' => 
+  array (
+    'lang' => '_STATISTIC',
+    'img' => 'statistic.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'template' => 
+  array (
+    'lang' => '_TEMPLATE',
+    'img' => 'template.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
+  'uploads' => 
+  array (
+    'lang' => '_UPLOADS',
+    'img' => 'uploads.png',
+    'active' => '1',
+    'view' => '0',
+    'menu' => '1',
+    'group' => '0',
+    'side' => '0',
+    'top' => '0',
+    'type' => '0',
+  ),
   'users' => 
   array (
+    'lang' => '_USERS',
+    'img' => 'users.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -234,6 +561,8 @@ $confmd = array (
   ),
   'voting' => 
   array (
+    'lang' => '_VOTING',
+    'img' => 'voting.png',
     'active' => '1',
     'view' => '0',
     'menu' => '1',
@@ -243,6 +572,8 @@ $confmd = array (
   ),
   'whois' => 
   array (
+    'lang' => '_WHOIS',
+    'img' => 'whois.png',
     'active' => '1',
     'view' => '1',
     'menu' => '1',

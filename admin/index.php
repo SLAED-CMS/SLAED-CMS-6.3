@@ -118,42 +118,33 @@ function adminmenu($url, $title, $image) {
 }
 
 function panelblock() {
-    global $prefix, $db, $conf, $panel, $admin_file, $content_am, $locale, $class;
+    global $confmd, $conf, $panel, $admin_file, $content_am, $locale, $class;
     if (!$panel) {
         if (is_admin_god()) {
-            // Auto-discover admin modules
-            $modules = [];
-            $dir = opendir('admin/modules');
-            while (false !== ($file = readdir($dir))) {
-                if (preg_match('/^([a-z]+)\.php$/i', $file, $matches)) {
-                    $modules[] = $matches[1];
+            // Admin modules (type=0)
+            foreach ($confmd as $title => $mod) {
+                if (($mod['type'] ?? 1) == 0) {
+                    $class = (!$mod['active']) ? ' sl_hidden' : '';
+                    adminmenu(
+                        $admin_file.'.php?name='.$title,
+                        deflmconst($mod['lang']),
+                        $mod['img']
+                    );
                 }
-            }
-            closedir($dir);
-            sort($modules);
-
-            // Generate menu entries for admin modules
-            $module_meta = getAdminModuleMeta();
-            foreach ($modules as $module) {
-                $meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png'];
-                adminmenu(
-                    $admin_file.'.php?name='.$module,
-                    $meta['title'],
-                    $meta['icon']
-                );
             }
             $ablock = setTemplateBlock('block-left', array('{%title%}' => _ADMIN, '{%content%}' => $content_am, '{%id%}' => '1'));
             $content_am = '';
         }
 
-        // Custom modules
-        $result = $db->sql_query("SELECT title, active FROM ".$prefix."_modules ORDER BY title ASC");
-        while (list($title, $active) = $db->sql_fetchrow($result)) {
-            if (is_admin_god() || is_admin_modul($title)) {
-                if (file_exists('modules/'.$title.'/admin/index.php') && file_exists('modules/'.$title.'/admin/links.php')) {
-                    $class = (!$active) ? ' sl_hidden' : '';
-                    include('modules/'.$title.'/admin/links.php');
-                    if (file_exists('modules/'.$title.'/admin/language/lang-'.$locale.'.php')) include('modules/'.$title.'/admin/language/lang-'.$locale.'.php');
+        // Custom modules (type=1)
+        foreach ($confmd as $title => $mod) {
+            if (($mod['type'] ?? 1) == 1) {
+                if (is_admin_god() || is_admin_modul($title)) {
+                    if (file_exists('modules/'.$title.'/admin/index.php') && file_exists('modules/'.$title.'/admin/links.php')) {
+                        $class = (!$mod['active']) ? ' sl_hidden' : '';
+                        include('modules/'.$title.'/admin/links.php');
+                        if (file_exists('modules/'.$title.'/admin/language/'.$locale.'.php')) include('modules/'.$title.'/admin/language/'.$locale.'.php');
+                    }
                 }
             }
         }
@@ -163,40 +154,8 @@ function panelblock() {
     }
 }
 
-function getAdminModuleMeta(): array {
-    return [
-        'admins' => ['title' => _EDITADMINS, 'icon' => 'admins.png'],
-        'blocks' => ['title' => _BLOCKS, 'icon' => 'blocks.png'],
-        'categories' => ['title' => _CATEGORIES, 'icon' => 'categories.png'],
-        'changelog' => ['title' => 'Changelog', 'icon' => 'editor.png'],
-        'comments' => ['title' => _COMMENTS, 'icon' => 'comments.png'],
-        'config' => ['title' => _PREFERENCES, 'icon' => 'config.png'],
-        'database' => ['title' => _DATABASE, 'icon' => 'database.png'],
-        'editor' => ['title' => _EDITOR_IN, 'icon' => 'editor.png'],
-        'favorites' => ['title' => _FAVORITES, 'icon' => 'favorites.png'],
-        'fields' => ['title' => _FIELDS, 'icon' => 'fields.png'],
-        'groups' => ['title' => _UGROUPS, 'icon' => 'groups.png'],
-        'lang' => ['title' => _LANG_EDIT, 'icon' => 'lang.png'],
-        'messages' => ['title' => _MESSAGES, 'icon' => 'messages.png'],
-        'modules' => ['title' => _MODULES, 'icon' => 'modules.png'],
-        'monitor' => ['title' => 'Monitor', 'icon' => 'monitor.png'],
-        'newsletter' => ['title' => _NEWSLETTER, 'icon' => 'newsletter.png'],
-        'privat' => ['title' => _PRIVAT, 'icon' => 'privat.png'],
-        'ratings' => ['title' => _RATINGS, 'icon' => 'ratings.png'],
-        'referers' => ['title' => _REFERERS, 'icon' => 'referers.png'],
-        'replace' => ['title' => _REPLACE, 'icon' => 'replace.png'],
-        'rss' => ['title' => _RSS, 'icon' => 'rss.png', 'op' => 'conf'],
-        'security' => ['title' => _SECURITY, 'icon' => 'security.png'],
-        'sitemap' => ['title' => _SITEMAP, 'icon' => 'sitemap.png'],
-        'statistic' => ['title' => _STAT, 'icon' => 'statistic.png'],
-        'template' => ['title' => _THEME, 'icon' => 'template.png'],
-        'uploads' => ['title' => _UPLOADSEDIT, 'icon' => 'uploads.png'],
-        'users' => ['title' => _USERS, 'icon' => 'users.png'],
-    ];
-}
-
 function panel() {
-    global $prefix, $db, $conf, $panel, $count, $admin_file, $locale, $class;
+    global $confmd, $conf, $panel, $count, $admin_file, $locale, $class;
     head();
     if (file_exists('setup.php')) echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _DELSETUP));
     $minver = '8.1.0';
@@ -206,40 +165,32 @@ function panel() {
     if ($panel) {
         $count = 1;
         if (is_admin_god()) {
-            // Auto-discover admin modules
-            $modules = [];
-            $dir = opendir('admin/modules');
-            while (false !== ($file = readdir($dir))) {
-                if (preg_match('/^([a-z]+)\.php$/i', $file, $matches)) {
-                    $modules[] = $matches[1];
-                }
-            }
-            closedir($dir);
-            sort($modules);
-
-            // Generate menu entries
-            $module_meta = getAdminModuleMeta();
+            // Admin modules (type=0)
             ob_start();
-            foreach ($modules as $module) {
-                $meta = $module_meta[$module] ?? ['title' => ucfirst($module), 'icon' => 'components.png'];
-                adminmenu(
-                    $admin_file.'.php?name='.$module,
-                    $meta['title'],
-                    $meta['icon']
-                );
+            foreach ($confmd as $title => $mod) {
+                if (($mod['type'] ?? 1) == 0) {
+                    $class = (!$mod['active']) ? ' sl_hidden' : '';
+                    adminmenu(
+                        $admin_file.'.php?name='.$title,
+                        deflmconst($mod['lang']),
+                        $mod['img']
+                    );
+                }
             }
             $cont = ob_get_clean();
             echo tpl_eval("panel-admin", _ADMINMENU, $cont);
         }
         $count = 1;
-        $result = $db->sql_query("SELECT title, active FROM ".$prefix."_modules ORDER BY title ASC");
         ob_start();
-        while (list($title, $active) = $db->sql_fetchrow($result)) {
-            if (is_admin_god() || is_admin_modul($title)) {
-                if (file_exists("modules/".$title."/admin/index.php") && file_exists("modules/".$title."/admin/links.php")) {
-                    $class = (!$active) ? " sl_hidden" : "";
-                    include("modules/".$title."/admin/links.php");
-                    if (file_exists("modules/".$title."/admin/language/lang-".$locale.".php")) include("modules/".$title."/admin/language/lang-".$locale.".php");
+        // Custom modules (type=1)
+        foreach ($confmd as $title => $mod) {
+            if (($mod['type'] ?? 1) == 1) {
+                if (is_admin_god() || is_admin_modul($title)) {
+                    if (file_exists('modules/'.$title.'/admin/index.php') && file_exists('modules/'.$title.'/admin/links.php')) {
+                        $class = (!$mod['active']) ? ' sl_hidden' : '';
+                        include('modules/'.$title.'/admin/links.php');
+                        if (file_exists('modules/'.$title.'/admin/language/'.$locale.'.php')) include('modules/'.$title.'/admin/language/'.$locale.'.php');
+                    }
                 }
             }
         }
@@ -269,22 +220,17 @@ if (is_admin()) {
     } else {
         // Load specific admin module
         if (is_admin_god()) {
-            $module_file = 'admin/modules/' . $name . '.php';
-            if (file_exists($module_file)) {
-                include($module_file);
-            }
+            $module_file = BASE_DIR.'/admin/modules/'.$name.'.php';
+            if (file_exists($module_file)) require_once $module_file;
         }
 
         // Load custom module admin if exists
-        $result = $db->sql_query('SELECT title FROM '.$prefix.'_modules WHERE title = :title', ['title' => $name]);
-        if ($db->sql_numrows($result) > 0) {
-            list($mtitle) = $db->sql_fetchrow($result);
-            if (is_admin_god() || is_admin_modul($mtitle)) {
-                if (file_exists('modules/'.$mtitle.'/admin/index.php')) {
-                    if (file_exists('modules/'.$mtitle.'/admin/language/lang-'.$locale.'.php')) {
-                        include('modules/'.$mtitle.'/admin/language/lang-'.$locale.'.php');
-                    }
-                    include('modules/'.$mtitle.'/admin/index.php');
+        if (isset($confmd[$name])) {
+            if (is_admin_god() || is_admin_modul($name)) {
+                $path = BASE_DIR.'/modules/'.$name.'/admin';
+                if (file_exists($path.'/index.php')) {
+                    if (file_exists($path.'/language/'.$locale.'.php')) require_once $path.'/language/'.$locale.'.php';
+                    require_once $path.'/index.php';
                 }
             }
         }

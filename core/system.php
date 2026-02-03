@@ -27,6 +27,7 @@ require_once BASE_DIR.'/core/security.php';
 require_once BASE_DIR.'/core/legacy.php';
 
 # Config file include
+require_once CONFIG_DIR.'/modules.php';
 require_once CONFIG_DIR.'/comments.php';
 require_once CONFIG_DIR.'/favorites.php';
 require_once CONFIG_DIR.'/config_privat.php';
@@ -627,9 +628,16 @@ function checkFileChmod(string $dir, int $chm): string {
 # Saving configurations to a file
 function setConfigFile(string $fp, string $name, array $arr, array $act = [], string $type = ''): void {
     $fp = CONFIG_DIR.'/'.$fp;
-    if (!empty($act)) $arr += $act;
+    if (!empty($act)) $arr = array_replace_recursive($act, $arr);
     ksort($arr);
-    array_walk($arr, function (&$v): void { $v = is_bool($v) ? (string)(int)$v : (string)$v; });
+    $normalize = function ($v) use (&$normalize) {
+        if (is_array($v)) {
+            foreach ($v as $k => $vv) $v[$k] = $normalize($vv);
+            return $v;
+        }
+        return is_bool($v) ? (string)(int)$v : (string)$v;
+    };
+    foreach ($arr as $k => $v) $arr[$k] = $normalize($v);
     $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
@@ -2750,7 +2758,7 @@ function head() {
                 if (file_exists($spath.'user.log')) unlink($spath.'user.log');
                 if (substr($con[0], 3) != date('m.Y')) {
                     $month = date('Y-m', strtotime('-1 month'));
-                    rename($spath.'days.log', $spath.'stat/stat_'.$month.'.log');
+                    rename($spath.'days.log', $spath.'statistic/statistic_'.$month.'.log');
                     if (file_exists($spath.'days.log')) unlink($spath.'days.log');
                 }
                 $ahits = ($con[3]) ? ($con[3]+1) : '1';
