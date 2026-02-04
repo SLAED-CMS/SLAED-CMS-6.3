@@ -154,11 +154,18 @@ function pointssave(): void {
 }
 
 function del(): void {
-    global $prefix, $db, $aroute;
+    global $prefix, $db, $aroute, $confmd;
     $id = getVar('get', 'id', 'num');
     if ($id) {
         $db->sql_query('DELETE FROM '.$prefix.'_groups WHERE id = :id', ['id' => $id]);
-        $db->sql_query('UPDATE '.$prefix.'_modules SET mod_group = :zero WHERE mod_group = :id', ['zero' => 0, 'id' => $id]);
+        $changed = false;
+        foreach ($confmd as $name => $info) {
+            if ((int)($info['group'] ?? 0) === $id) {
+                $confmd[$name]['group'] = 0;
+                $changed = true;
+            }
+        }
+        if ($changed) setConfigFile('modules.php', 'confmd', $confmd);
     }
     header('Location: '.$aroute.'.php?name=groups');
     exit;

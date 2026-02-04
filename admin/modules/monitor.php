@@ -126,10 +126,10 @@ function get_network_stats() {
 }
 
 function is_mod_active($mod) {
-    global $prefix, $db;
+    global $confmd;
     if (function_exists('is_active')) return is_active($mod);
-    $row = $db->sql_fetchrow($db->sql_query('SELECT active FROM '.$prefix.'_modules WHERE title = :title', ['title' => $mod]));
-    return ($row && $row[0] == 1);
+    $info = $confmd[$mod] ?? [];
+    return !empty($info['active']);
 }
 
 function monitor(): void {

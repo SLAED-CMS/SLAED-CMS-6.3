@@ -1,1 +1,58 @@
-Opis moduіu w jкzyku polskim.
+[justify]Moduł «Dziennik zmian» (Changelog) służy do wyświetlania historii commitów (zmian) w systemie kontroli wersji Git. Jest to przydatne narzędzie dla programistów i administratorów, pozwalające śledzić wszystkie zmiany wprowadzone w kodzie projektu.<br>
+<br>
+Moduł obsługuje dwa źródła danych:<br>
+<br>
+[li] [b]Lokalny Git[/b] – odczyt commitów bezpośrednio z lokalnego repozytorium Git na serwerze.<br>
+[li] [b]GitHub API[/b] – pobieranie commitów przez API GitHub dla zdalnych repozytoriów.<br>
+<br>
+[color=green][b]Zakładka «Strona główna»[/b][/color]<br>
+Na stronie głównej wyświetlana jest lista commitów z możliwością filtrowania i wyszukiwania. Dostępne filtry:<br>
+<br>
+[li] [b][i]Wyszukiwanie[/i][/b] – wyszukiwanie w tekście wiadomości commita.<br>
+[li] [b][i]Autor[/i][/b] – filtrowanie według nazwy autora commita.<br>
+[li] [b][i]Plik[/i][/b] – filtrowanie według nazwy zmienionego pliku (tylko dla lokalnego Git).<br>
+[li] [b][i]Data od/do[/i][/b] – filtrowanie commitów według zakresu dat.<br>
+<br>
+Dla każdego commita wyświetlane są:<br>
+[li] Temat (subject) commita<br>
+[li] Hash commita (skrócony)<br>
+[li] Imię autora i email<br>
+[li] Data i czas commita<br>
+[li] Treść wiadomości (jeśli dostępna)<br>
+[li] Statystyki zmian – liczba dodanych i usuniętych linii (opcjonalnie)<br>
+[li] Lista zmienionych plików (opcjonalnie)<br>
+<br>
+[color=green][b]Zakładka «Ustawienia»[/b][/color]<br>
+W tej zakładce konfigurowane są parametry modułu:<br>
+<br>
+[u]Źródło danych[/u]<br>
+[li] [b][i]Źródło[/i][/b] – wybór źródła commitów: «Lokalny Git» lub «GitHub API».<br>
+<br>
+[u]Ustawienia GitHub (przy wyborze GitHub API)[/u]<br>
+[li] [b][i]GitHub Owner[/i][/b] – nazwa właściciela repozytorium (użytkownik lub organizacja).<br>
+[li] [b][i]GitHub Repository[/i][/b] – nazwa repozytorium.<br>
+[li] [b][i]GitHub Token[/i][/b] – osobisty token dostępu do uwierzytelniania. Zalecany do zwiększenia limitu żądań API.<br>
+<br>
+[u]Parametry wyświetlania[/u]<br>
+[li] [b][i]Liczba commitów[/i][/b] – maksymalna liczba commitów do załadowania (od 10 do 500).<br>
+[li] [b][i]Na stronie[/i][/b] – liczba commitów wyświetlanych na jednej stronie (od 5 do 50).<br>
+[li] [b][i]Cache TTL[/i][/b] – czas życia pamięci podręcznej w sekundach. Domyślnie 900 sekund (15 minut). Ustaw 0, aby wyłączyć buforowanie.<br>
+[li] [b][i]Grupuj według daty[/i][/b] – grupowanie commitów według dni z nagłówkami «Dzisiaj», «Wczoraj», «W tym tygodniu».<br>
+[li] [b][i]Pokaż pliki[/i][/b] – wyświetlanie listy zmienionych plików dla każdego commita.<br>
+[li] [b][i]Pokaż statystyki[/i][/b] – wyświetlanie liczby dodanych/usuniętych linii.<br>
+[li] [b][i]Eksport[/i][/b] – włącz możliwość eksportu historii zmian.<br>
+<br>
+[color=green][b]Eksport[/b][/color]<br>
+Po włączeniu opcji eksportu na pasku nawigacyjnym pojawiają się dodatkowe zakładki:<br>
+[li] [b]Export TXT[/b] – eksport do formatu tekstowego.<br>
+[li] [b]Export Markdown[/b] – eksport do formatu Markdown do wykorzystania w dokumentacji.<br>
+<br>
+[hr][color=blue][b]Uwaga![/b][/color]<br>
+<br>
+[li] Aby pracować z lokalnym Git, na serwerze musi być zainstalowany Git, a projekt musi znajdować się w repozytorium Git.<br>
+[li] Podczas korzystania z GitHub API bez tokena obowiązuje limit 60 żądań na godzinę. Z tokenem – 5000 żądań na godzinę.<br>
+[li] Buforowanie pomaga zmniejszyć obciążenie serwera i GitHub API. Przy częstych zmianach zmniejsz TTL pamięci podręcznej.<br>
+[li] Statystyki plików (dodane/usunięte linie) są dostępne tylko przy użyciu lokalnego Git.[hr]<br>
+<br>
+[color=green][b]Użycie na stronie[/b][/color]<br>
+Moduł może być również wyświetlany w publicznej części witryny, umożliwiając odwiedzającym przeglądanie historii zmian projektu. Aby aktywować dostęp publiczny, włącz moduł w panelu administratora w sekcji «Moduły» i ustaw odpowiednie prawa dostępu.[/justify]

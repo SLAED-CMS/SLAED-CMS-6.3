@@ -72,6 +72,7 @@ define("_CERROR8","Запрещена отправка сообщений сам
 define("_CERROR9","Размещение ссылок в комментариях запрещено!");
 define("_CHANGE","Настройки");
 define("_CHANGEFREQ","Частота обновления");
+define("_CHANGELOG","История изменений");
 define("_CHARSET","utf-8");
 define("_CHECKALL","Отметить все");
 define("_CHECKOP","Действие с отмеченными");

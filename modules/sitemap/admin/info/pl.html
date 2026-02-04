@@ -1,0 +1,49 @@
+[justify]Sekcja «Mapa witryny» pozwala zarządzać ustawieniami generowania pliku sitemap.xml. Ten plik informuje wyszukiwarki o tym, jak zorganizowana jest zawartość Twojej witryny. Roboty wyszukiwarek przeglądają ten plik, aby dokładniej indeksować sekcje i strony.<br>
+<br>
+Pliki Sitemap mogą być również używane do dostarczania wyszukiwarkom metadanych o Twoich stronach. Obejmuje to informacje takie jak data ostatniej modyfikacji, częstotliwość aktualizacji treści i priorytet strony w porównaniu z innymi na witrynie.<br>
+<br>
+Aby roboty wyszukiwarek jak najszybciej dowiedziały się o nowym pliku Sitemap, webmaster musi zmodyfikować plik robots.txt, dodając specjalną dyrektywę wskazującą dokładną ścieżkę do mapy witryny:<br>
+<br>
+Przykład dla protokołu HTTP<br>
+<br>
+[i]Sitemap: http://www.twoja_strona/sitemap.xml[/i]<br>
+<br>
+Przykład dla bezpiecznego protokołu HTTPS<br>
+<br>
+[i]Sitemap: https://www.twoja_strona/sitemap.xml[/i]<br>
+<br>
+Te zmiany można wprowadzić bezpośrednio z panelu administracyjnego w sekcji «Edytor osadzania», zakładka «Reguły dla robotów».<br>
+<br>
+Dla szybszego indeksowania zaleca się sprawdzenie utworzonego pliku mapy witryny pod kątem błędów i dodanie go do wyszukiwarek Yandex, Google, Bing za pomocą «Yandex Webmaster», «Google Search Console», «Bing Webmaster».<br>
+<br>
+[color=green][b]Zakładka «Strona główna»[/b][/color]<br>
+Ta sekcja wyświetla informacje o utworzonym pliku mapy witryny: jego rozmiar, datę utworzenia, liczbę linii i kod głównego pliku sitemap.xml. Kliknięcie przycisku «Odśwież» wygeneruje nową mapę i zaktualizuje istniejącą lub utworzy nowy plik, jeśli nie istnieje.<br>
+<br>
+[color=green][b]Zakładka «Szablon»[/b][/color]<br>
+Szablon jest przeznaczony do formatowania mapy witryny, czyniąc ją bardziej zrozumiałą i przyjemną do wizualnego przeglądania przez zwykłych odwiedzających. Nie jest to obowiązkowy atrybut dla wyszukiwarek i dlatego może być modyfikowany lub całkowicie wyłączony.<br>
+<br>
+Za pomocą mechanizmów stylów innych typów można utworzyć wiele arkuszy stylów dla jednego dokumentu XML, zapewniając różne scenariusze wyświetlania, jak w naszym przypadku dla prostego pliku mapy witryny i pliku indeksu mapy witryny.<br>
+<br>
+[u]Zmienne szablonu[/u]<br>
+Szablon używa jednego typu zmiennych: &#036;lan[1], &#036;lan[2] itd.<br>
+Odpowiadają one za wyświetlanie nagłówków, stałych (słów w zależności od języka wybranego przez odwiedzającego, jeśli ta opcja jest włączona, w przeciwnym razie w języku domyślnym) i innych komponentów.<br>
+<br>
+[color=green][b]Zakładka «Konfiguracja»[/b][/color]<br>
+Ta zakładka zawiera główne ustawienia generowania. Wyjaśnienia niektórych ustawień:<br>
+<br>
+[li] [b][i]Moduły[/i][/b] – moduły systemowe, dla których będzie generowana mapa witryny. Aby wybrać dwie lub więcej opcji, przytrzymaj klawisz «Ctrl». Aby wyłączyć, wybierz «Nie».<br>
+[li] [b][i]Częstotliwość aktualizacji[/i][/b] – parametr wskazujący częstotliwość aktualizacji strony. Nie jest obowiązkowym atrybutem, można wyłączyć wybierając «Nie».<br>
+[li] [b][i]Priorytet[/i][/b] – wskazuje ważność strony w porównaniu z innymi. Priorytet można ustawić od 0.1 (niski) do 1.0 (wysoki). Zalecane: maksymalny 1.0 dla strony głównej, wysoki 0.9 dla modułów, średni 0.8 dla kategorii, niższy 0.7 dla publikacji. Nie jest obowiązkowym atrybutem, można wyłączyć wybierając «0».<br>
+[li] [b][i]Przedział czasowy między aktualizacjami pliku mapy w godzinach[/i][/b] – system może automatycznie tworzyć mapy witryny. Przedział między tworzeniem plików jest określony w godzinach.<br>
+[li] [b][i]Automatyczne generowanie i aktualizacja pliku mapy?[/i][/b] – czy generować plik mapy witryny czy nie.<br>
+[li] [b][i]Wskazywać datę ostatniej modyfikacji[/i][/b] – dodawać parametr daty dla linków odpowiednich sekcji witryny czy nie. Nie jest obowiązkowym atrybutem, można pominąć.<br>
+[li] [b][i]Generuj linki[/i][/b] – wybierz sekcje, dla których będą generowane linki w pliku mapy.<br>
+[li] [b][i]Używać szablonu projektu XSL dla pliku mapy?[/i][/b] – czy używać szablonu projektu mapy witryny, jeśli istnieje.<br>
+[li] [b][i]Tworzyć zwykłą strukturę mapy do przeglądania na stronie?[/i][/b] – jeśli ta opcja jest ustawiona, oprócz standardowej wersji mapy witryny system utworzy plik w formacie HTML do publikacji i zwykłego przeglądania jako standardowy moduł systemowy. Jeśli planujesz go używać, aktywuj moduł «sitemap» w panelu administratora, sekcja «Moduły».<br>
+<br>
+[hr][color=blue][b]Uwaga![/b][/color]<br>
+Generowanie linków jest wykonywane tylko dla modułów aktywowanych do przeglądania na stronie przez «wszystkich odwiedzających». Zmiana ustawień działania i widoczności modułów jest dostępna z głównego panelu administratora w sekcji «Moduły».[hr]<br>
+Do tworzenia mapy witryny mają zastosowanie pewne wymagania, o których webmaster powinien wiedzieć.<br>
+<br>
+[li] Liczba linków w pliku Sitemap nie powinna przekraczać 50 000 jednostek. Jeśli jest ich więcej, system utworzy kilka oddzielnych map witryny, które zostaną wymienione w pliku indeksu Sitemap.<br>
+[li] Maksymalny rozmiar jednego pliku mapy nie powinien przekraczać 10 MB. Jeśli tak się stanie, system automatycznie skompresuje go za pomocą gzip.[/justify]

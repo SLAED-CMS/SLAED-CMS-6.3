@@ -1,1 +1,18 @@
-Opis moduіu w jкzyku polskim.
+[justify]Sekcja jest przeznaczona do wykonywania podstawowych operacji administrowania bazą danych witryny.<br>
+W tej sekcji można wykonać następujące działania:<br>
+[li] [b][i]Optymalizacja bazy danych[/i][/b] – działanie jest wykonywane natychmiast po przejściu do zakładki o tej samej nazwie. Regularnie optymalizując bazę danych, zmniejsza się jej rozmiar i odpowiednio przyspiesza się praca pobierania informacji z bazy danych.<br>
+Zaleca się używanie tej funkcji co najmniej raz w tygodniu.<br>
+[li] [b][i]Naprawa bazy danych[/i][/b] – działanie jest wykonywane natychmiast po przejściu do zakładki o tej samej nazwie. W przypadku nieoczekiwanego zatrzymania serwera MySQL podczas wykonywania jakichkolwiek działań może dojść do uszkodzenia struktury tabel bazy danych. Użycie tej funkcji naprawi uszkodzone tabele.[hr][color=blue][b]Uwaga![/color][/b]<br>
+W zakładkach «Optymalizacja bazy danych» i «Naprawa bazy danych» wyświetlana jest kolumna «Overhead», która pokazuje informacje o wolnej przestrzeni zwolnionej po optymalizacji lub naprawie bazy danych.[hr][li] [b][i]Zapytanie do bazy danych[/i][/b] – pozwala wykonać dowolne zapytanie w bazie danych. Za pomocą formularza wyświetlanego w zakładce można wykonywać praktycznie wszystkie zapytania z wyjątkiem zapytań selekcji danych (SELECT).<br>
+<br>
+[b][i][color=orangered]Przykłady zapytań do bazy danych[/color][/i][/b]<br>
+[li] Zapytanie, które usunie wszystkich zarejestrowanych użytkowników, którzy nie odwiedzali projektu od: 2010-02-29 18:15:00.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_lastvisit &lt; &quot;2010-02-29 18:15:00&quot;;[/code]<br>
+[justify][li] Zapytanie, które usunie wszystkich zarejestrowanych użytkowników, którzy nigdy nie odwiedzali projektu.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_lastvisit = &quot;0000-00-00 00:00:00&quot;;[/code]<br>
+[justify][li] Zapytanie, które usunie wszystkich zarejestrowanych użytkowników używających adresu IP: 193.201.225.104. Ta możliwość jest przydatna do masowego usuwania botów spamowych w przypadku ich rejestracji.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_last_ip = &quot;193.201.225.104&quot;;[/code]<br>
+[justify][li] W niektórych przypadkach, przy publikacji dużych tekstów z treścią przekraczającą 65535 znaków, istnieje potrzeba zwiększenia rozmiaru przechowywanych informacji do maksimum. Wykonaj następujący pakiet zapytań:[/justify]<br>
+[code]ALTER TABLE `{prefix}_stories` CHANGE `hometext` `hometext` MEDIUMTEXT NULL DEFAULT NULL;<br>
+ALTER TABLE `{prefix}_stories` CHANGE `bodytext` `bodytext` LONGTEXT NOT NULL;[/code][justify][hr][color=red][b][i]Uwaga![/b]<br>
+Po zapytaniu system dostarczy raport o wynikach wykonania zapytań w poszczególnych tabelach: Ok (jeśli wszystko przebiegło poprawnie), Błąd (jeśli wystąpił błąd).[/i][/color][/justify]

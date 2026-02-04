@@ -1,1 +1,18 @@
-Module Description English.
+[justify]This section is designed for performing basic operations for administering the website database.<br>
+In this section, you can perform the following actions:<br>
+[li] [b][i]Database Optimization[/i][/b] – the action is performed immediately after navigating to the tab of the same name. By regularly optimizing the database, its size is reduced and accordingly the work of retrieving information from the database is accelerated.<br>
+It is recommended to use this function at least once a week.<br>
+[li] [b][i]Database Repair[/i][/b] – the action is performed immediately after navigating to the tab of the same name. In case of an unexpected MySQL server stop while performing any actions, the structure of database tables may be damaged. Using this function will repair damaged tables.[hr][color=blue][b]Please Note![/color][/b]<br>
+In the «Database Optimization» and «Database Repair» tabs, the «Overhead» column is displayed, which shows information about the free space released after database optimization or repair.[hr][li] [b][i]Database Query[/i][/b] – allows you to execute an arbitrary query in the database. Through the form displayed in the tab, you can execute almost any queries except data selection queries (SELECT).<br>
+<br>
+[b][i][color=orangered]Examples of Database Queries[/color][/i][/b]<br>
+[li] Query that will delete all registered users who have not visited the project since: 2010-02-29 18:15:00.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_lastvisit &lt; &quot;2010-02-29 18:15:00&quot;;[/code]<br>
+[justify][li] Query that will delete all registered users who have never visited the project.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_lastvisit = &quot;0000-00-00 00:00:00&quot;;[/code]<br>
+[justify][li] Query that will delete all registered users using IP address: 193.201.225.104. This feature is useful for mass deletion of spam bots in case of their registration.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_last_ip = &quot;193.201.225.104&quot;;[/code]<br>
+[justify][li] In some cases, when publishing large texts with content exceeding 65535 characters, there is a need to increase the size of stored information to the maximum. Execute the following query package:[/justify]<br>
+[code]ALTER TABLE `{prefix}_stories` CHANGE `hometext` `hometext` MEDIUMTEXT NULL DEFAULT NULL;<br>
+ALTER TABLE `{prefix}_stories` CHANGE `bodytext` `bodytext` LONGTEXT NOT NULL;[/code][justify][hr][color=red][b][i]Attention![/b]<br>
+After the query, the system will provide a report on the results of query execution in individual tables: Ok (if everything went correctly), Error (if an error occurred).[/i][/color][/justify]

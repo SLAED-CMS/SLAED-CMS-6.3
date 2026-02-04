@@ -139,12 +139,22 @@ function navi() {
 
 # Check group
 function is_mod_group($name) {
-    global $prefix, $db, $user;
+    global $confmd, $prefix, $db, $user;
     if (is_user()) {
         $uid = intval($user[0]);
-        list($points, $group) = $db->sql_fetchrow($db->sql_query("SELECT user_points, user_group FROM ".$prefix."_users WHERE user_id = '".$uid."'"));
-        list($mgroup, $grpoints, $grextra) = $db->sql_fetchrow($db->sql_query("SELECT m.mod_group, g.points, g.extra FROM ".$prefix."_modules AS m LEFT JOIN ".$prefix."_groups AS g ON (m.mod_group = g.id) WHERE m.title = '".$name."'"));
-        if (intval($group) && $group != "" && $group == $mgroup && $grextra == '1') {
+        $row = $db->sql_fetchrow($db->sql_query('SELECT user_points, user_group FROM '.$prefix.'_users WHERE user_id = :id', ['id' => $uid]));
+        $points = $row['user_points'] ?? 0;
+        $group = $row['user_group'] ?? 0;
+        $mod_conf = $confmd[$name] ?? [];
+        $mgroup = intval($mod_conf['group'] ?? 0);
+        $grpoints = 0;
+        $grextra = 0;
+        if ($mgroup) {
+            $ginfo = $db->sql_fetchrow($db->sql_query('SELECT points, extra FROM '.$prefix.'_groups WHERE id = :id', ['id' => $mgroup]));
+            $grpoints = intval($ginfo['points'] ?? 0);
+            $grextra = $ginfo['extra'] ?? 0;
+        }
+        if (intval($group) && $group != '' && $group == $mgroup && $grextra == '1') {
             return 1;
         } elseif ((intval($points) && $points >= $grpoints && $grextra != '1') || $mgroup == 0) {
             return 1;

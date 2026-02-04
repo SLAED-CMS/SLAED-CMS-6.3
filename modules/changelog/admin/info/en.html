@@ -1,1 +1,58 @@
-Module Description English.
+[justify]The «Changelog» module is designed to display the commit history (changes) in the Git version control system. It is a useful tool for developers and administrators to track all changes made to the project code.<br>
+<br>
+The module supports two data sources:<br>
+<br>
+[li] [b]Local Git[/b] – reading commits directly from the local Git repository on the server.<br>
+[li] [b]GitHub API[/b] – fetching commits via the GitHub API for remote repositories.<br>
+<br>
+[color=green][b]«Home» Tab[/b][/color]<br>
+The main page displays a list of commits with filtering and search capabilities. Available filters:<br>
+<br>
+[li] [b][i]Search[/i][/b] – search in commit message text.<br>
+[li] [b][i]Author[/i][/b] – filter by commit author name.<br>
+[li] [b][i]File[/i][/b] – filter by changed file name (local Git only).<br>
+[li] [b][i]Date from/to[/i][/b] – filter commits by date range.<br>
+<br>
+For each commit, the following is displayed:<br>
+[li] Commit subject<br>
+[li] Commit hash (shortened)<br>
+[li] Author name and email<br>
+[li] Commit date and time<br>
+[li] Message body (if available)<br>
+[li] Change statistics – number of added and deleted lines (optional)<br>
+[li] List of changed files (optional)<br>
+<br>
+[color=green][b]«Settings» Tab[/b][/color]<br>
+This tab configures the module parameters:<br>
+<br>
+[u]Data Source[/u]<br>
+[li] [b][i]Source[/i][/b] – select commit source: «Local Git» or «GitHub API».<br>
+<br>
+[u]GitHub Settings (when GitHub API is selected)[/u]<br>
+[li] [b][i]GitHub Owner[/i][/b] – repository owner name (user or organization).<br>
+[li] [b][i]GitHub Repository[/i][/b] – repository name.<br>
+[li] [b][i]GitHub Token[/i][/b] – personal access token for authentication. Recommended to increase API request limit.<br>
+<br>
+[u]Display Parameters[/u]<br>
+[li] [b][i]Number of commits[/i][/b] – maximum number of commits to load (10 to 500).<br>
+[li] [b][i]Per page[/i][/b] – number of commits displayed per page (5 to 50).<br>
+[li] [b][i]Cache TTL[/i][/b] – cache lifetime in seconds. Default is 900 seconds (15 minutes). Set to 0 to disable caching.<br>
+[li] [b][i]Group by date[/i][/b] – group commits by day with headers «Today», «Yesterday», «This Week».<br>
+[li] [b][i]Show files[/i][/b] – display list of changed files for each commit.<br>
+[li] [b][i]Show statistics[/i][/b] – display number of added/deleted lines.<br>
+[li] [b][i]Export[/i][/b] – enable changelog export functionality.<br>
+<br>
+[color=green][b]Export[/b][/color]<br>
+When the export option is enabled, additional tabs appear in the navigation bar:<br>
+[li] [b]Export TXT[/b] – export in text format.<br>
+[li] [b]Export Markdown[/b] – export in Markdown format for use in documentation.<br>
+<br>
+[hr][color=blue][b]Please Note![/b][/color]<br>
+<br>
+[li] To work with local Git, Git must be installed on the server and the project must be in a Git repository.<br>
+[li] When using the GitHub API without a token, there is a limit of 60 requests per hour. With a token – 5000 requests per hour.<br>
+[li] Caching helps reduce server load and GitHub API usage. For frequent changes, reduce the cache TTL.<br>
+[li] File statistics (added/deleted lines) are only available when using local Git.[hr]<br>
+<br>
+[color=green][b]Website Usage[/b][/color]<br>
+The module can also be displayed on the public part of the website, allowing visitors to view the project's change history. To activate public access, enable the module in the administrator panel under «Modules» and set the appropriate access rights.[/justify]

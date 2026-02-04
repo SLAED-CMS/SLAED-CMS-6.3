@@ -1,1 +1,173 @@
-Description du module en français.
+[hr][color=red][b][i]Attention ![/b]<br>
+Cette section est destinée uniquement aux administrateurs qui maîtrisent bien les logiciels serveur et le langage de programmation PHP.[/i][/color][hr]<br>
+[justify]La section « Éditeur » permet de gérer directement les fichiers système principaux via le panneau d'administration. La gestion des fichiers s'effectue dans les onglets suivants :<br>
+[li] [b][i]Noyau du système[/i][/b] – fichier d'injection dans le noyau du système : config/system.php. Dans cet onglet, vous pouvez ajouter du code qui sera placé dans le noyau du système.<br>
+[li] [b][i]En-tête du système[/i][/b] – fichier d'injection dans l'en-tête du système : config/header.php. Dans cet onglet, vous pouvez insérer du code qui sera injecté dans le head du système. En règle générale, ce fichier est utilisé pour l'injection de scripts Java et de balises meta.<br>
+[li] [b][i]SEF système[/i][/b] – fichier de configuration des règles de transformation SEF au niveau système : config/rewrite.php. Dans cet onglet, vous pouvez modifier ou compléter les règles standard de transformation des barres d'adresse du navigateur. Cette fonctionnalité n'est disponible que si Mod Rewrite est installé sur le serveur.<br>
+[li] [b][i]SEF serveur[/i][/b] – fichier de configuration des règles de transformation SEF au niveau serveur : .htaccess. Dans cet onglet, vous pouvez modifier ou compléter les règles standard de transformation des barres d'adresse du navigateur au niveau serveur. Cette fonctionnalité n'est disponible que si Mod Rewrite est installé sur le serveur.<br>
+[li] [b][i]Règles pour les robots[/i][/b] – fichier de configuration des instructions et paramètres d'indexation pour les robots de recherche : robots.txt. Dans cet onglet, vous pouvez modifier ou compléter le fichier texte situé dans le répertoire racine du site, qui contient des instructions spéciales pour les robots de recherche. Ces instructions peuvent interdire l'indexation de certaines sections ou pages du site, indiquer le « miroir » correct du domaine, recommander au robot de recherche de respecter un certain intervalle de temps entre les téléchargements de documents depuis le serveur, etc. Dans ce fichier, vous pouvez spécifier les paramètres d'indexation du site aussi bien pour tous les robots à la fois que pour chaque moteur de recherche séparément.<br>
+<br>
+Pour apporter des modifications à un fichier, accédez à l'onglet correspondant et effectuez les modifications dans l'éditeur de contenu du fichier qui s'ouvre, cliquez sur « Enregistrer » pour sauvegarder.[/justify]<br>
+<br>
+[hr][color=red][b][i]Attention ![/b]<br>
+Si les fichiers de configuration n'ont pas les droits d'accès appropriés définis (CHMOD - 666), le système affichera un avertissement correspondant.[/i][/color][hr]<br>
+[b][color=green]Exemples d'utilisation de l'éditeur d'injection dans la section « En-tête du système »[/color][/b]<br>
+<br>
+[color=orangered][b][i]Redirection d'un visiteur provenant d'un site spécifique[/i][/b][/color]<br>
+Accédez à l'onglet « En-tête du système » et ajoutez l'entrée suivante :<br>
+[php]&#036;reflink = &quot;#slaed.net#i&quot;;<br>
+&#036;metlink = &quot;news.html&quot;;<br>
+&#036;referer = text_filter(getenv(&quot;HTTP_REFERER&quot;));<br>
+if (preg_match(&#036;reflink, &#036;referer)) { <br>
+echo &#039;&lt;meta http-equiv=&quot;refresh&quot; content=&quot;0; url=&#039;.&#036;metlink.&#039;&quot;&gt;&#039;; <br>
+}[/php]<br>
+[justify]&#036;reflink – responsable de l'adresse du site d'où vient le visiteur.<br>
+Au lieu de : slaed.net indiquez votre domaine.<br>
+&#036;metlink – responsable de la page vers laquelle le visiteur sera redirigé.<br>
+Au lieu de : news.html indiquez la page ou le site requis.<br>
+<br>
+[color=orangered][b][i]Interdire la copie d'informations du site[/i][/b][/color]<br>
+Tout ce qui peut être lu et vu peut également être copié. Il n'existe pas de protection efficace contre la copie. Mais cela ne signifie pas qu'on ne peut pas l'entraver ; vous pouvez désactiver l'utilisation des boutons droit ou autres de la souris utilisés pour copier. Ce sera un obstacle insignifiant mais tout de même un obstacle à la copie pour les utilisateurs débutants.<br>
+Accédez à l'onglet « En-tête du système » et ajoutez l'entrée suivante :[/justify]<br>
+[php]echo &#039;&lt;script&gt;<br>
+&lt;!--//<br>
+function click() {<br>
+// Pour désactiver le bouton gauche, mettez le chiffre 1 <br>
+// Pour désactiver le troisième bouton, mettez le chiffre 3 <br>
+if (event.button == 2) { <br>
+// Entrez ici votre message qui apparaîtra dans la fenêtre d'avertissement <br>
+alert(&quot;Copyright Scriptic!&quot;); <br>
+}<br>
+}<br>
+document.onmousedown=click;<br>
+//--&gt;<br>
+&lt;/script&gt;&#039;;[/php]<br>
+[justify]Notez que ce code ne fonctionne que sur les navigateurs Internet Explorer. Il est possible que quelque chose de similaire existe pour d'autres navigateurs. Si vous souhaitez utiliser un autre code, remplacez simplement celui-ci par votre code en l'insérant entre echo &#039; et &#039;;[/justify]<br>
+<br>
+[color=orangered][b][i]Redirection d'un visiteur d'un pays spécifique[/i][/b][/color]<br>
+Accédez à l'onglet « En-tête du système » et ajoutez l'entrée suivante :<br>
+[php]&#036;userlang = &quot;Russia&quot;; <br>
+&#036;metlink = &quot;news.html&quot;; <br>
+&#036;userip = user_geo_ip(getip(), 2); <br>
+if (&#036;userip == &#036;userlang) { <br>
+echo &#039;&lt;meta http-equiv=&quot;refresh&quot; content=&quot;0; url=&#039;.&#036;metlink.&#039;&quot;&gt;&#039;; <br>
+}[/php]<br>
+[justify]&#036;userlang – responsable du nom du pays d'où vient le visiteur.<br>
+Le nom du pays ne doit pas être arbitraire et doit correspondre aux normes d'utilisation de la classe. L'orthographe correcte d'un pays peut être vérifiée dans la variable &#036;COUNTRY_NAMES du fichier : core/geo_ip.php<br>
+&#036;metlink – responsable de la page vers laquelle le visiteur sera redirigé.<br>
+Au lieu de : news.html indiquez la page ou le site requis.<br>
+<br>
+[b][color=green]Exemples d'utilisation de l'éditeur d'injection dans la section « SEF serveur »[/color][/b]<br>
+<br>
+[color=orangered][b][i]Interdire à d'autres sites d'utiliser les images du site[/i][/b][/color]<br>
+Ce n'est un secret pour personne que certains sites, pour économiser leur trafic et l'espace utilisé sur le serveur, utilisent des images distantes d'autres sites, consommant ainsi le trafic d'autrui et augmentant la charge du serveur. Pour empêcher cela, nous proposons les méthodes suivantes.<br>
+Accédez à l'onglet « SEF serveur » et ajoutez après :[/justify]<br>
+[php]# Mod rewrite on<br>
+RewriteEngine On<br>
+RewriteBase /[/php]<br>
+l'entrée suivante :<br>
+[php]RewriteOptions MaxRedirects=100<br>
+RewriteCond %{HTTP_REFERER} !^http://(www&#092;.)?slaed&#092;.net/ [NC]<br>
+RewriteRule &#092;.(jpe?g|gif|bmp|png)&#036; http://www.slaed.net/templates/default/images/logos/slaed_logo_60x60.png [L][/php]<br>
+[justify]Au lieu de : slaed indiquez le nom de domaine de votre site.<br>
+Au lieu de : net indiquez la zone de domaine de votre site.<br>
+Au lieu de : http://www.slaed.net/templates/default/images/logos/slaed_logo_60x60.png indiquez un lien vers le logo ou l'image qui sera affiché sur le site qui utilise des images de votre site.<br>
+<br>
+[color=orangered][b][i]Fusion du domaine avec www et sans[/i][/b][/color]<br>
+À première vue, un domaine avec le préfixe www et sans semble être le même, mais ce n'est pas le cas. Le serveur les reconnaît comme deux domaines différents et, en règle générale, deux sites complètement différents peuvent y être installés. Certains hébergeurs ont la fusion de deux domaines prévue initialement et effectuée automatiquement, certains ont ce paramètre dans le panneau de contrôle de l'hébergement. Pour les hébergements où la fusion n'est pas prévue, vous pouvez utiliser la méthode suivante.<br>
+Accédez à l'onglet « SEF serveur » et ajoutez après :[/justify]<br>
+[php]# Mod rewrite on<br>
+RewriteEngine On<br>
+RewriteBase /[/php]<br>
+l'entrée suivante :<br>
+[php]# Redirect<br>
+RewriteCond %{HTTP_HOST} !^www&#092;.slaed&#092;.net [NC]<br>
+RewriteRule ^(.*)&#036; http://www.slaed.net/&#036;1 [R=301,L][/php]<br>
+[justify]Au lieu de : slaed indiquez le nom de domaine de votre site.<br>
+Au lieu de : net indiquez la zone de domaine de votre site.<br>
+Pour que cette méthode fonctionne, le serveur de l'hébergeur doit prendre en charge le travail avec .htaccess, Mod Rewrite doit être installé et activé.[/justify]<br>
+<br>
+[color=orangered][b][i]Règles et paramètres possibles[/i][/b][/color]<br>
+[justify]Dans la description ci-dessous, nous vous présentons les règles possibles avec descriptions qui sont acceptables pour une utilisation dans notre cas sur « SEF serveur », notamment dans le fichier principal .htaccess, qui se trouve dans le répertoire principal du système.[/justify]<br>
+<br>
+[php]# Interdiction du listing et de la visualisation des répertoires<br>
+Options All -ExecCGI -Indexes -Includes +FollowSymLinks[/php]<br>
+<br>
+[php]# Page d'index du site<br>
+DirectoryIndex index.php[/php]<br>
+<br>
+[php]# Encodage par défaut du site<br>
+AddDefaultCharset utf-8[/php]<br>
+<br>
+[php]# Redirection en cas d'erreur serveur correspondante<br>
+ErrorDocument 400    /index.php?error=400<br>
+ErrorDocument 401    /index.php?error=401<br>
+ErrorDocument 403    /index.php?error=403<br>
+ErrorDocument 404    /index.php?error=404<br>
+ErrorDocument 500    /index.php?error=500<br>
+ErrorDocument 503    /index.php?error=503[/php]<br>
+<br>
+[php]# Paramètres de sécurité, pertinents pour les versions inférieures à PHP 5.3.0, non pertinents pour PHP 5.4.0 et supérieur<br>
+php_flag register_globals off<br>
+php_flag safe_mode on<br>
+php_flag magic_quotes_gpc on[/php]<br>
+<br>
+[php]# Interdiction de l'affichage des versions des logiciels serveur<br>
+ServerSignature Off[/php]<br>
+<br>
+La règle ci-dessus n'est malheureusement pas prise en charge par tous les hébergeurs. Les paramètres décrits ci-dessous ne sont disponibles que si mod_rewrite est installé sur le serveur.<br>
+<br>
+[php]# Activation de mod_rewrite<br>
+RewriteEngine On[/php]<br>
+<br>
+[justify]Le module mod_rewrite est un module logiciel du serveur web Apache (notez qu'il ne fonctionnera pas sous d'autres serveurs web !). Sa fonction principale est la manipulation d'actions avec URL. Le module est très universel et polyvalent ; quelques exemples pratiques sont présentés ici.[/justify]<br>
+<br>
+[php]# Répertoire racine<br>
+RewriteBase /[/php]<br>
+<br>
+[php]# Redirection de www vers sans www<br>
+RewriteCond %{HTTP_HOST}    ^www&#092;.(.*) [NC]<br>
+RewriteRule ^(.*)&#036;    http://%1/&#036;1 [R=301,L][/php]<br>
+<br>
+[php]# Redirection de sans www vers www<br>
+RewriteCond %{HTTP_HOST}    ^[^.]+&#092;.[^.]+&#036;<br>
+RewriteCond %{HTTPS}s    ^on(s)|<br>
+RewriteRule ^    http%1://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L][/php]<br>
+<br>
+[php]# Redirection du protocole http vers https<br>
+RewriteCond %{HTTPS} off<br>
+RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L][/php]<br>
+<br>
+[php]# Redirection des adresses avec index.php vers sans index.php<br>
+RewriteCond %{THE_REQUEST}    ^GET.*index&#092;.php [NC]<br>
+RewriteRule (.*?)index&#092;.php/*(.*)    /&#036;1&#036;2 [R=301,L][/php]<br>
+<br>
+[php]# Redirection vers une nouvelle catégorie<br>
+RewriteRule ^ancienne/(.*)&#036;    /nouvelle/&#036;1 [R=301,L][/php]<br>
+<br>
+[php]# Règles de traitement des requêtes pour bloquer les exploits courants<br>
+RewriteCond %{QUERY_STRING}    proc/self/environ [OR]<br>
+RewriteCond %{QUERY_STRING}    mosConfig_[a-zA-Z_]{1,21}(=|&#092;%3D) [OR]<br>
+RewriteCond %{QUERY_STRING}    base64_(en|de)code&#092;(.*&#092;) [OR]<br>
+RewriteCond %{QUERY_STRING}    base64_encode[^(]*&#092;([^)]*&#092;) [OR]<br>
+RewriteCond %{QUERY_STRING}    (&lt;|%3C)([^s]*s)+cript.*(&gt;|%3E) [NC,OR]<br>
+RewriteCond %{QUERY_STRING}    GLOBALS(=|&#092;[|&#092;%[0-9A-Z]{0,2}) [OR]<br>
+RewriteCond %{QUERY_STRING}    _REQUEST(=|&#092;[|&#092;%[0-9A-Z]{0,2})<br>
+RewriteRule .*    index.php [F][/php]<br>
+<br>
+[php]# Blocage des injections MySQL<br>
+RewriteCond %{QUERY_STRING}    CONCAT.*&#092;( [NC,OR]<br>
+RewriteCond %{QUERY_STRING}    UNION.*SELECT.*&#092;( [NC,OR]<br>
+RewriteCond %{QUERY_STRING}    UNION.*ALL.*SELECT [NC]<br>
+RewriteRule ^(.*)&#036;    index.php [F,L][/php]<br>
+<br>
+[php]# Blocage des injections de fichiers<br>
+RewriteCond %{REQUEST_METHOD}    GET<br>
+RewriteCond %{QUERY_STRING}    [a-zA-Z0-9_]=http:// [OR]<br>
+RewriteCond %{QUERY_STRING}    [a-zA-Z0-9_]=(&#092;.&#092;.//?)+ [OR]<br>
+RewriteCond %{QUERY_STRING}    [a-zA-Z0-9_]=/([a-z0-9_.]//?)+ [NC]<br>
+RewriteRule .*    - [F][/php]<br>
+<br>
+[php]# Redirection pour les domaines étrangers<br>
+RewriteCond %{HTTP_HOST}    !^slaed&#092;.net&#036;<br>
+RewriteRule ^(.*)&#036;    http://slaed.net/&#036;1 [R=301,L][/php]

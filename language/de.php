@@ -72,6 +72,7 @@ define("_CERROR8","Verboten senden von Nachrichten an sich selbst!");
 define("_CERROR9","Platzierung von Links in den Kommentaren Bereiche sind Nichtraucherzonen)!");
 define("_CHANGE","Einstellungen");
 define("_CHANGEFREQ","Aktualisierungsrate");
+define("_CHANGELOG","Änderungsprotokoll");
 define("_CHARSET","utf-8");
 define("_CHECKALL","Alle Markieren");
 define("_CHECKOP","Aktion mit markierten");

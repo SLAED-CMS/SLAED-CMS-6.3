@@ -72,6 +72,7 @@ define("_CERROR8","Allow sending messages to yourself!");
 define("_CERROR9","Placement of the links in the comments is prohibited!");
 define("_CHANGE","Attitudes");
 define("_CHANGEFREQ","Change frequency");
+define("_CHANGELOG","Changelog");
 define("_CHARSET","utf-8");
 define("_CHECKALL","Mark all");
 define("_CHECKOP","The action marked with");

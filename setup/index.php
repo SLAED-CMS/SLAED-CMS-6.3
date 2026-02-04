@@ -438,24 +438,104 @@ function save(): void {
         $title = _SAVE_UPDATE;
         $bodytext .= executeSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
-        $result = $db->sql_query('SELECT title, active, view, inmenu, mod_group, blocks, blocks_c FROM '.$xprefix.'_modules');
         $cont = [];
-        while ($row = $db->sql_fetchrow($result)) {
-            $title = $row['title'];
-            $cont[$title] = [
-                'active' => $row['active'],
-                'view' => $row['view'],
-                'menu' => $row['inmenu'],
-                'group' => $row['mod_group'],
-                'side' => $row['blocks'],
-                'top' => $row['blocks_c'],
-            ];
+        $admin_path = BASE_DIR.'/admin/modules';
+        if (is_dir($admin_path) && ($handle = opendir($admin_path))) {
+            while (false !== ($file = readdir($handle))) {
+                if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) {
+                    $module = $matches[1];
+                    $cont[$module] = [
+                        'lang'   => '_'.strtoupper($module),
+                        'img'    => strtolower($module).'.png',
+                        'active' => 1,
+                        'view'   => 0,
+                        'menu'   => 1,
+                        'group'  => 0,
+                        'side'   => 0,
+                        'top'    => 0,
+                        'type'   => 0,
+                    ];
+                }
+            }
+            closedir($handle);
+        }
+        $modules_path = BASE_DIR.'/modules';
+        if (is_dir($modules_path) && ($handle = opendir($modules_path))) {
+            while (false !== ($file = readdir($handle))) {
+                if (!preg_match('/\./', $file) && (file_exists($modules_path.'/'.$file.'/index.php') || file_exists($modules_path.'/'.$file.'/admin/index.php'))) {
+                    $cont[$file] = [
+                        'lang'   => '_'.strtoupper($file),
+                        'img'    => strtolower($file).'.png',
+                        'active' => 0,
+                        'view'   => 0,
+                        'menu'   => 1,
+                        'group'  => 0,
+                        'side'   => 0,
+                        'top'    => 0,
+                        'type'   => 1,
+                    ];
+                }
+            }
+            closedir($handle);
+        }
+        $has_modules = false;
+        $tbl = $xprefix.'_modules';
+        $tbl_res = $db->sql_query('SHOW TABLES LIKE :tbl', ['tbl' => $tbl]);
+        if ($tbl_res && $db->sql_numrows($tbl_res) > 0) $has_modules = true;
+        if ($has_modules) {
+            $map = [];
+            $result = $db->sql_query('SELECT mid, title, active, view, inmenu, mod_group, blocks, blocks_c FROM '.$tbl);
+            while ($row = $db->sql_fetchrow($result)) {
+                $title = $row['title'];
+                $map[(string)$row['mid']] = $title;
+                if (!isset($cont[$title])) {
+                    $cont[$title] = [
+                        'lang'   => '_'.strtoupper($title),
+                        'img'    => strtolower($title).'.png',
+                        'active' => 0,
+                        'view'   => 0,
+                        'menu'   => 1,
+                        'group'  => 0,
+                        'side'   => 0,
+                        'top'    => 0,
+                        'type'   => 1,
+                    ];
+                }
+                $cont[$title]['active'] = $row['active'];
+                $cont[$title]['view'] = $row['view'];
+                $cont[$title]['menu'] = $row['inmenu'];
+                $cont[$title]['group'] = $row['mod_group'];
+                $cont[$title]['side'] = $row['blocks'];
+                $cont[$title]['top'] = $row['blocks_c'];
+            }
+            if (!empty($map)) {
+                $result = $db->sql_query('SELECT id, modules FROM '.$xprefix.'_admins');
+                while ($row = $db->sql_fetchrow($result)) {
+                    $modules = $row['modules'] ?? '';
+                    $list = array_filter(array_map('trim', explode(',', $modules)), 'strlen');
+                    $names = [];
+                    foreach ($list as $val) {
+                        if (ctype_digit($val) && isset($map[$val])) {
+                            $names[] = $map[$val];
+                        } elseif (!ctype_digit($val)) {
+                            $names[] = $val;
+                        }
+                    }
+                    $names = array_values(array_unique($names));
+                    $new_modules = implode(',', $names);
+                    if ($new_modules !== $modules) {
+                        $db->sql_query('UPDATE '.$xprefix.'_admins SET modules = :modules WHERE id = :id', [
+                            'modules' => $new_modules,
+                            'id' => $row['id'],
+                        ]);
+                    }
+                }
+            }
         }
         setConfigFile('modules.php', 'confmd', $cont);
         $title = _SAVE_UPDATE;
         $bodytext .= executeSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     }
-    
     setHead();
     echo '<table class="sl_table">'.$bodytext.'</table>'
     .'<div class="sl_center"><form action="'.$confs['afile'].'.php" method="post">'._GOBACK.' <input type="submit" value="'._ADMIN_SE.'" class="sl_but_blue"></form></div>';

@@ -22,17 +22,17 @@ if (empty($go)) {
         $userip = user_geo_ip(getip(), 2);
         if ($userip != '?' && !is_bot() && empty(getCookies('language'))) {
             if ($userip == 'United Kingdom' || $userip == 'United States of America' || $userip == 'Canada' || $userip == 'Australia') {
-                header('Location: index.php?newlang=english');
+                header('Location: index.php?newlang=en');
             } elseif ($userip == 'France') {
-                header('Location: index.php?newlang=french');
+                header('Location: index.php?newlang=fr');
             } elseif ($userip == 'Germany') {
-                header('Location: index.php?newlang=german');
+                header('Location: index.php?newlang=de');
             } elseif ($userip == 'Poland') {
-                header('Location: index.php?newlang=polish');
+                header('Location: index.php?newlang=pl');
             } elseif ($userip == 'Russian Federation') {
-                header('Location: index.php?newlang=russian');
+                header('Location: index.php?newlang=ru');
             } elseif ($userip == 'Ukraine') {
-                header('Location: index.php?newlang=ukrainian');
+                header('Location: index.php?newlang=uk');
             }
         }
     }
@@ -42,22 +42,30 @@ if (empty($go)) {
         $conf['name'] = $name;
         $conf['style'] = 'sl_mod_'.strtolower($name);
         $module = 1;
-        list($mod_active, $view, $blocks, $blocks_c) = $db->sql_fetchrow($db->sql_query("SELECT active, view, blocks, blocks_c FROM ".$prefix."_modules WHERE title='".$name."'"));
-        if (intval($mod_active) || is_moder($name)) {
-            if ($view == 0 && file_exists('modules/'.$name.'/'.$file.'.php')) {
-                include('modules/'.$name.'/'.$file.'.php');
-            } elseif (($view == 1 && (is_user() && is_mod_group($name)) || is_moder($name)) && file_exists('modules/'.$name.'/'.$file.'.php')) {
-                include('modules/'.$name.'/'.$file.'.php');
+        $mconf = $confmd[$name] ?? [];
+        $active = $mconf['active'] ?? 0;
+        $view = $mconf['view'] ?? 0;
+        $path = BASE_DIR.'/modules/'.$name.'/'.$file.'.php';
+        if (intval($active) || is_moder($name)) {
+            if ($view == 0 && file_exists($path)) {
+                require_once $path;
+            } elseif (($view == 1 && (is_user() && is_mod_group($name)) || is_moder($name)) && file_exists($path)) {
+                require_once $path;
             } elseif ($view == 1 && !is_moder($name)) {
                 if (!is_user()) $info = _MODULEUSERS.' ';
-                list($gname) = $db->sql_fetchrow($db->sql_query("SELECT name FROM ".$prefix."_modules LEFT JOIN ".$prefix."_groups ON (mod_group=id) WHERE title='".$name."'"));
+                $group = $mconf['group'] ?? 0;
+                $gname = '';
+                if ($group) {
+                    $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.$prefix.'_groups WHERE id = :id', ['id' => $group]));
+                    $gname = $grp['name'] ?? '';
+                }
                 if ($gname) $info .= _ADDITIONALYGRP.': '.$gname;
                 head();
                 echo setTemplateBasic('title', array('{%title%}' => _ACCESSDENIED)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name=account&op=newuser', 'id' => 'info', 'text' => $info));
                 foot();
                 exit;
-            } elseif ($view == 2 && is_moder($name) && file_exists('modules/'.$name.'/'.$file.'.php')) {
-                include('modules/'.$name.'/'.$file.'.php');
+            } elseif ($view == 2 && is_moder($name) && file_exists($path)) {
+                require_once $path;
             } elseif ($view == 2 && !is_moder($name)) {
                 head();
                 echo setTemplateBasic('title', array('{%title%}' => _ACCESSDENIED)).setTemplateWarning('warn', array('time' => '5', 'url' => '', 'id' => 'info', 'text' => _MODULESADMINS));
@@ -83,8 +91,9 @@ if (empty($go)) {
             $hi = mt_rand(0, count($hmodul) - 1);
             $name = $hmodul[$hi];
             $conf['name'] = $name;
-            if (file_exists('modules/'.$name.'/'.$file.'.php')) {
-                include('modules/'.$name.'/'.$file.'.php');
+            $path = BASE_DIR.'/modules/'.$name.'/'.$file.'.php';
+            if (file_exists($path)) {
+                require_once $path;
                 exit;
             } else {
                 head();
@@ -124,7 +133,7 @@ if (empty($go)) {
         get_lang('shop');
         setThemeInclude();
         setCache('0');
-        include('config/config_shop.php');
+        require_once CONFIG_DIR.'/config_shop.php';
         switch($op) {
             default: show_kasse(); break;
             case 'add_kasse': add_kasse(); break;
@@ -140,7 +149,7 @@ if (empty($go)) {
         }
     } elseif ($go == 4) {
         setCache('0');
-        include('config/config_uploads.php');
+        require_once CONFIG_DIR.'/config_uploads.php';
         $mod = (getVar('get', 'mod', 'var')) ? strtolower(getVar('get', 'mod', 'var')) : '';
         if ($mod) {
             $userid = (getVar('get', 'userid', 'num')) ? getVar('get', 'userid', 'num') : '0';
@@ -159,7 +168,7 @@ if (empty($go)) {
             get_lang('admin');
             setThemeInclude();
             setCache('0');
-            include('core/admin.php');
+            require_once BASE_DIR.'/core/admin.php';
             switch($op) {
                 case 'ajax_cat': ajax_cat(); break;
                 case 'cat_order': cat_order(); break;

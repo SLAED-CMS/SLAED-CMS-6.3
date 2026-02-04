@@ -1,1 +1,194 @@
-Modulbeschreibung auf Deutsch.
+[justify]Der Bereich «Blöcke und Banner» bietet die Möglichkeit, die Website aus «Bausteinen» aufzubauen, die «Blöcke» genannt werden.<br>
+Es gibt folgende Arten von Blöcken:<br>
+[li] [b][i]Standard[/i][/b] – werden an bestimmten Stellen der Website platziert;<br>
+[li] [b][i]Frei (fly)[/i][/b] – diese Blöcke können an beliebigen Stellen, in Vorlagen oder Modulen des Systems verwendet werden.<br>
+Die meisten Funktionalitätsanforderungen der Website werden durch Standardblöcke abgedeckt, aber in einigen Fällen können freie Blöcke verwendet werden.<br>
+<br>
+[color=green][b]Standardblöcke[/b][/color]<br>
+Standardblöcke können nach folgenden Eigenschaften unterteilt werden:<br>
+[li] [b][i]Nach Typ[/i][/b]:<br>
+* Dateibasiert – Blöcke, deren Informationen durch HTML- und PHP-Funktionen ausgegeben werden, die in der entsprechenden Datei definiert sind.<br>
+* HTML – Blöcke, deren Informationen durch HTML-Funktionen ausgegeben werden, die im Blockinhalt definiert sind.<br>
+* RSS – Blöcke, die Informationen aus einem RSS-Link anzeigen.<br>
+* System – zu Systemblöcken gehören: Admin, UserBox.<br>
+[li] [b][i]Nach Zugänglichkeit (wer sieht)[/i][/b]: alle Benutzer, nur Benutzer, nur Administratoren, nur Anonyme.<br>
+[li] [b][i]Nach Position[/i][/b]: links, mittig unten, mittig oben, rechts, oberes Banner, unteres Banner.<br>
+<br>
+[color=orangered][b][i]Gestaltung von Standardblöcken[/i][/b][/color]<br>
+Für die Gestaltung von Standardblöcken sind die Theme-Vorlagen verantwortlich: block-center.html, block-all.html, block-right.html und andere Vorlagen mit dem Präfix block. (Siehe Bereich «Design-Theme»).<br>
+Sie können ein einzigartiges Design für jeden Block im Verzeichnis blocks/ erstellen (block-name.php; name ist der Name des Blocks). Dazu:<br>
+1. Im Verzeichnis templates/design_theme/ muss eine Vorlagendatei mit dem Namen block-name.html erstellt werden.<br>
+2. In der erstellten Vorlage muss ein einzigartiges Design für den Block block-name.php erstellt werden.<br>
+[b]Beispiel:[/b]<br>
+Ein einzigartiges Design für den Block block-voting.php ist erforderlich. In diesem Fall wird eine Vorlagendatei im Verzeichnis templates/design_theme/ mit dem Namen block-voting.html erstellt. Das System findet diese Vorlagendatei automatisch und verwendet sie nur für die Gestaltung des Blocks block-voting.php.<br>
+<br>
+[b][i][color=orangered]Hinzufügen eines Dateiblocks[/color][/i][/b]<br>
+Um einen Dateiblock hinzuzufügen, müssen folgende Schritte ausgeführt werden:<br>
+<br>
+[b]1.[/b] Blockdatei erstellen.<br>
+Eine Datei für einen Dateiblock kann auf zwei Arten erstellt werden: über die Oberfläche des Administrationsbereichs und über die Dateistruktur der Website.<br>
+<br>
+[u]Dateierstellung über die Oberfläche des Administrationsbereichs[/u]<br>
+Wechseln Sie zur Registerkarte «Dateiblock hinzufügen», die das Formular zum Hinzufügen eines neuen Dateiblocks anzeigt.<br>
+Geben Sie den Namen der zu erstellenden Datei an (z.B. mysite), wobei SLAED CMS automatisch das Präfix «block-» zum Dateinamen hinzufügt.<br>
+Geben Sie den Typ der zu erstellenden Datei an.<br>
+Klicken Sie auf «Block erstellen», woraufhin ein Formular geladen wird, in das der Blockcode eingefügt werden muss.<br>
+[hr][color=red][b][i]Achtung![/b]<br>
+Im Programmcode des Blocks muss für die Informationsausgabe die Variable &#036;content anstelle der Standardmethoden echo oder print verwendet werden – dies ist die einzige Besonderheit, die zu beachten ist. Alles andere wird mit Standard-PHP- und HTML-Methoden und -Funktionen realisiert. Bei der Implementierung von Blöcken beachten Sie, dass jeder PHP-Code mit &lt;?php beginnen und mit ?&gt; enden muss.[/i][/color][hr] Nach dem Einfügen klicken Sie auf «Speichern» und die entsprechende Datei wird in der Dateistruktur der Website erstellt (z.B. block-mysite.php wie in unserem Beispiel).<br>
+[hr][color=red][b][i]Achtung![/b]<br>
+Beim Erstellen einer Dateiblockdatei müssen die Rechte CHMOD 777 auf den Ordner blocks/ und anschließend CHMOD 666 auf die erstellte Datei gesetzt werden.[/i][/color][hr]<br>
+[u]Dateierstellung über die Dateistruktur der Website[/u]<br>
+PHP-Dateien für Dateiblöcke werden im Verzeichnis «blocks» gespeichert, das sich im Stammverzeichnis der Website befindet. In diesem Verzeichnis können Sie Ihre eigene PHP-Datei erstellen, wobei sie unbedingt im Format «block-blockname.php» benannt werden muss (wenn das Namensformat abweicht, wird die Datei beim Hinzufügen des Blocks nicht in der Liste angezeigt).<br>
+<br>
+[b]2.[/b] Verbindung zwischen erstellter Datei und Block herstellen.<br>
+Um eine Verbindung zwischen Datei und Dateiblock herzustellen, muss ein neuer Block hinzugefügt werden, indem Sie zur Registerkarte «Block hinzufügen» wechseln.<br>
+Das Hinzufügeformular hat folgende Felder:<br>
+[li] [b][i]Titel[/i][/b] – der Blocktitel wird eingegeben (welcher Titel eingegeben wird, wird auch angezeigt);<br>
+[li] [b][i]Link zum RSS-Kanal[/i][/b] – falls im Block ein bestimmter RSS-Feed angezeigt werden soll, geben Sie den Link dazu an oder wählen Sie aus der Standardliste. Bei Eingabe eines RSS-Links muss keine Datei im Feld «Dateiname» ausgewählt und kein «Inhalt» ausgefüllt werden. Bei der Erstellung eines Dateiblocks bleibt dieses Feld unverändert.<br>
+[li] [b][i]Aktualisierungszeit[/i][/b] – wie oft der RSS-Feed aktualisiert werden soll. Bei der Erstellung eines Dateiblocks bleibt dieses Feld unverändert.<br>
+[li] [b][i]Dateiname[/i][/b] – bei der Erstellung eines Dateiblocks wird die zuvor erstellte Datei ausgewählt.<br>
+[li] [b][i]Inhalt[/i][/b] – wird nur bei der Erstellung eines HTML-Blocks ausgefüllt (bei Ausfüllen des Inhalts muss keine Datei ausgewählt werden). Bei der Erstellung eines Dateiblocks bleibt dieses Feld unverändert.<br>
+[li] [b][i]Position[/i][/b] – die Position wird ausgewählt, an der der Block angezeigt werden soll.<br>
+[li] [b][i]Block in Modulen anzeigen[/i][/b] – die Liste der Module wird ausgewählt, in denen der Block angezeigt werden soll.<br>
+[li] [b][i]Sprache[/i][/b] – Auswahl der Sprachversion, in der der Block angezeigt werden soll.<br>
+[li] [b][i]Aktivieren[/i][/b] – «ja» – der Block wird angezeigt, «nein» – der Block wird nicht angezeigt.<br>
+[li] [b][i]Arbeitszeit in Tagen[/i][/b] – Sie können die Anzahl der Tage angeben, in denen der Block aktiv sein soll. 0 – Block ist ohne Einschränkungen aktiv.<br>
+[li] [b][i]Nach Ablauf[/i][/b] – Sie können wählen, was das System automatisch mit dem Block nach Ablauf der Arbeitszeit tun soll.<br>
+[li] [b][i]Wer wird das sehen?[/i][/b] – Sie können angeben, für welche Benutzerkategorien die Blockansicht verfügbar ist.<br>
+<br>
+[color=orangered][b][i]Hinzufügen eines HTML-Blocks[/i][/b][/color]<br>
+HTML-Blöcke zu erstellen ist sehr praktisch für die Anzeige von Bannern, Links und anderen Elementen, für deren Anzeige die Verwendung von HTML-Code ausreicht.<br>
+Einen HTML-Block hinzuzufügen ist genauso einfach wie einen Dateiblock. Wechseln Sie dazu zur Registerkarte «Block hinzufügen» und füllen Sie die Felder wie bei der Erstellung eines Dateiblocks aus, aber anstatt eine Datei auszuwählen, füllen Sie das Feld «Inhalt» aus. Der Inhalt muss mit HTML-Code ausgefüllt werden.<br>
+<br>
+[color=orangered][b][i]Hinzufügen eines RSS-Blocks[/i][/b][/color]<br>
+Wechseln Sie zur Registerkarte «Block hinzufügen» und füllen Sie die Felder wie bei der Erstellung eines Dateiblocks aus, aber anstatt eine Datei auszuwählen, geben Sie den Link zum RSS-Kanal und die Aktualisierungszeit an.<br>
+<br>
+[color=orangered][b][i]Verwendung von Blöcken direkt in HTML-Dateien des Design-Themes[/i][/b][/color]<br>
+1. Erstellen Sie einen Block im System-Administrationspanel, es kann ein Standard- oder freier Block sein.<br>
+2. Aktivieren Sie den Block und ermitteln Sie seine Nr. – Nummer in der Blockliste.<br>
+3. Um einen Block einzufügen, z.B. in die Hauptdatei: index.html des Design-Themes, fügen Sie einfach den Code hinzu: {%BLOCKS n,XXX%}<br>
+<br>
+XXX – Nummer Ihres Blocks<br>
+n – ohne Gestaltung<br>
+oder<br>
+XXX – vollständiger Name der Blockdatei im Verzeichnis: blocks/ z.B.: block-forum.php<br>
+s – Standardgestaltung<br>
+<br>
+Andere Varianten sind nach Ihrem Ermessen möglich.<br>
+<br>
+[u]Beschreibung der Variablen[/u]<br>
+{%BLOCKS none,XXX%} oder {%BLOCKS n,XXX%} – Beliebiger Systemblock oder freier Block ohne Gestaltung, wobei XXX entweder die Block-ID oder der Blockdateiname ist.<br>
+<br>
+{%BLOCKS standart,XXX%} oder {%BLOCKS s,XXX%} – Beliebiger Systemblock oder freier Block mit Gestaltung des freien Blocks, wobei XXX entweder die Block-ID oder der Blockdateiname ist.<br>
+<br>
+[u]Erstellen einer persönlichen Gestaltung für einen Block[/u]<br>
+Um eine exklusive Gestaltung für einen Block zu erstellen, muss eine Vorlagendatei für diesen Block mit folgendem Namen erstellt werden:<br>
+<br>
+block-15.html<br>
+15 – ist die Blocknummer in der Blockliste. In der Datenbank (Tabelle präfix_blocks, Feld bid).<br>
+oder<br>
+block-name.html<br>
+name – ist der Blockname, vollständiger Name der Blockdatei im Verzeichnis: blocks/<br>
+<br>
+Die Blockgestaltungsdatei sollte im Hauptverzeichnis des Design-Themes zusammen mit anderen Standardsystemvorlagen platziert werden.<br>
+<br>
+[color=green][b]Freie (fly) Blöcke[/b][/color]<br>
+Ein freier Block (fly) kann an beliebiger Stelle auf der Website-Seite platziert werden, wofür der Erstellungscode dieses freien Blocks in die entsprechende PHP-Datei eingefügt werden muss (z.B. in config/config_header.php). In Vorlagen des Design-Themes (*.html-Dateien) kann kein Erstellungscode für freie Blöcke eingefügt werden, da in diesem Fall dieser PHP-Code nicht verarbeitet wird. Ausführlichere Informationen zum Einfügen von Blöcken in Design-Theme-Vorlagen finden Sie im Bereich «Design-Theme».<br>
+Ein freier Block wird im PHP-Skript durch die Funktion beschrieben: blocks(&quot;why&quot;, &quot;who&quot;), wobei blocks die Funktion zur Erstellung eines freien Blocks mit den Parametern why und who ist.<br>
+Je nach den Parametern why und who kann die Funktion zur Erstellung eines freien Blocks:<br>
+[li] Den geformten freien Block auf die Standardausgabe drucken (Block auf der Seite anzeigen).<br>
+[li] Eine Zeichenkette mit dem geformten freien Block zurückgeben (Blockausgabe in eine Variable zur späteren Einfügung dieses Blocks in eine HTML-Vorlage). Dabei kann dieser freie Block mit oder ohne Gestaltung sein – dies hängt von den why-Parametern ab.<br>
+<br>
+[u]Bedeutung der why-Parameter:[/u]<br>
+[li] [b][i]none[/i][/b] (gibt den Blockkörper auf der Seite ohne Gestaltung aus)<br>
+&#036;fly_block_1_1 = blocks(&quot;none&quot;, 15);<br>
+&#036;fly_block_1_2 = blocks(&quot;none&quot;, &quot;block-menu2.php&quot;);<br>
+[li] [b][i]standart[/i][/b] (gibt den Blockkörper auf der Seite mit Gestaltung aus)<br>
+&#036;fly_block_2_1 = blocks(&quot;standart&quot;, 15);<br>
+&#036;fly_block_2_2 = blocks(&quot;standart&quot;, &quot;block-menu2.php&quot;);<br>
+[li] [b][i]plzreturn[/i][/b] (gibt den Blockkörper in eine Variable ohne Seitenausgabe und ohne Gestaltung aus)<br>
+&#036;fly_block_3_1 = blocks(&quot;plzreturn&quot;, 15);<br>
+&#036;fly_block_3_2 = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
+[li] [b][i]oreturnform[/i][/b] (Blockkörper in Variable ohne Seitenausgabe, aber mit Gestaltung)<br>
+&#036;fly_block_4_1 = blocks(&quot;oreturnform&quot;, 15);<br>
+&#036;fly_block_4_1 = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);<br>
+* 15 – ist die bid, Blocknummer in der Datenbank (Blocknummer kann im Administrationspanel in der Zeile Nr. eingesehen werden).<br>
+<br>
+[u]Bedeutung der who-Parameter:[/u]<br>
+[li] [b][i]bid[/i][/b] des Blocks (Blocknummer in der Datenbank; Tabelle präf_blocks (präf – ist das DB-Tabellenpräfix), Feld bid)<br>
+&#036;fly_block_5_1 = blocks(&quot;none&quot;, 15);<br>
+&#036;fly_block_5_2 = blocks(&quot;standart&quot;, 15);<br>
+&#036;fly_block_5_3 = blocks(&quot;plzreturn&quot;, 15);<br>
+&#036;fly_block_5_4 = blocks(&quot;oreturnform&quot;, 15);<br>
+[li] [b][i]block-name.php[/i][/b] (Name der Block-PHP-Datei; name ist der Blockname)<br>
+&#036;fly_block_6_1 = blocks(&quot;none&quot;, &quot;block-menu2.php&quot;);<br>
+&#036;fly_block_6_2 = blocks(&quot;standart&quot;, &quot;block-menu2.php&quot;);<br>
+&#036;fly_block_6_3 = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
+&#036;fly_block_6_4 = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);<br>
+Um den erstellten freien Block zu verwenden, muss dieser Block aktiv sein. Auf diesem Block darf nur eine Markierung sein – «Freier Block», andernfalls wird dieser Block als Standard behandelt.<br>
+<br>
+Für eine exklusive Gestaltung für einen freien Block muss eine Vorlagendatei mit folgendem Namen erstellt werden:<br>
+[li] [b][i]fly-block-15.html[/i][/b] (15 – ist die Blocknummer in der Datenbank (Tabelle präf_blocks, Feld bid));<br>
+[li] [b][i]fly-block-name.html[/i][/b] (name – ist der Blockname).[/justify]<br>
+[b]Beispiel 1:[/b]<br>
+Ein freier Block mit folgenden Parametern muss erstellt werden:<br>
+[li] Ausgabe des freien Blockkörpers auf der Seite.<br>
+[li] Ohne Gestaltung.<br>
+[li] Nach Blocknummer in der Datenbank.<br>
+[php]blocks(&quot;none&quot;, 15);[/php]<br>
+[li] Mit Verwendung des Blocknamens.<br>
+[php]blocks(&quot;none&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[b]Beispiel 2:[/b]<br>
+Ein freier Block mit folgenden Parametern muss erstellt werden:<br>
+[li] Ausgabe des freien Blockkörpers auf der Seite.<br>
+[li] Mit Gestaltung.<br>
+[li] Nach Blocknummer in der Datenbank.<br>
+[php]blocks(&quot;standart&quot;, 15);[/php]<br>
+[li] Mit Verwendung des Blocknamens:<br>
+[php]blocks(&quot;standart&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[b]Beispiel 3:[/b]<br>
+Ein freier Block mit folgenden Parametern muss erstellt werden:<br>
+[li] Ausgabe des freien Blockkörpers in eine Variable.<br>
+[li] Ohne Gestaltung.<br>
+[li] Nach Blocknummer in der Datenbank<br>
+[php]global &#036;blockg;<br>
+ob_start();<br>
+blocks(&quot;plzreturn&quot;, 15);<br>
+&#036;blockg[&quot;15&quot;] = ob_get_clean();[/php]<br>
+[li] Mit Verwendung des Blocknamens:<br>
+[php]global &#036;blockg;<br>
+&#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[b]Beispiel 4:[/b]<br>
+Ein freier Block mit folgenden Parametern muss erstellt werden:<br>
+[li] Ausgabe des freien Blockkörpers in eine Variable.<br>
+[li] Mit Gestaltung.<br>
+[li] Nach Blocknummer in der Datenbank.<br>
+[php]global &#036;blockg;<br>
+ob_start();<br>
+blocks(&quot;oreturnform&quot;, 15);<br>
+&#036;blockg[&quot;15&quot;] = ob_get_clean();[/php]<br>
+[li] Mit Verwendung des Blocknamens.<br>
+[php]global &#036;blockg;<br>
+&#036;blockg[&quot;menu2&quot;] = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[justify]Um eine Variable, die den freien Blockkörper enthält, auf der Seite auszugeben, muss Folgendes getan werden:<br>
+Öffnen Sie die Datei config/config_header.php und fügen Sie den Code ein:[/justify]<br>
+[php]global &#036;blockg;<br>
+&#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[justify]An beliebiger Stelle in der Vorlage (z.B. in templates/ihr_theme/index.html) fügen Sie das Array &#036;blockg[menu2] ein (beachten Sie das Fehlen von Anführungszeichen innerhalb der eckigen Klammern!) Anstelle von &#036;blockg[menu2] wird auf der Seite der Block menu2 ausgegeben, dessen Code in der Datei blocks/block-menu2.php enthalten ist.<br>
+Für die korrekte Ausgabe eines freien Blocks auf der Seite, der aus der Datenbank per bid aus der Tabelle präf_blocks abgefragt wird, muss bei aktiviertem rss_info-Modul (Nachrichtenausgabe im RSS-Format) in die PHP-Datei config/config_header.php geschrieben werden:[/justify]<br>
+[php]global &#036;blockg;<br>
+&#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
+ob_start();<br>
+blocks(&quot;none&quot;, 15);<br>
+&#036;blockg[&quot;15&quot;] = ob_get_clean();[/php]<br>
+[justify]Ein freier Block kann auf Website-Seiten auf der gesamten Website angezeigt werden, wenn sein Code in das Design-Theme integriert ist, oder er kann in einem bestimmten Modul angezeigt werden, wenn sein Code in den Code dieses Moduls integriert ist.<br>
+Ein freier Block kann nicht vom System als Standardblock verarbeitet werden, aber ein Standardblock kann vom System als freier Block verarbeitet werden. Beispiel: Der Block modules mit bid 1 (Tabelle slaed_blocks) kann noch einmal als freier Block auf der Seite ausgegeben werden, und dann gelten für diesen Block alle Einschränkungen, die für den Block modules gelten (nur auf der Hauptseite anzeigen oder nur in einem Modul oder in ausgewählten Modulen oder in allen Modulen).<br>
+<br>
+[b][i][color=orangered]Ändern einer Blockdatei[/color][/i][/b]<br>
+Um eine Dateiblockdatei zu bearbeiten, wechseln Sie zur Registerkarte «Block bearbeiten» und wählen Sie die gewünschte Datei zur Bearbeitung aus.<br>
+<br>
+[b][i][color=orangered]Ändern eines Blocks[/color][/i][/b]<br>
+In der Registerkarte «Hauptseite» in der Spalte «Funktionen» klicken Sie auf (Vollständige Bearbeitung) – das Blockbearbeitungsformular wird angezeigt.<br>
+<br>
+[b][i][color=orangered]Ändern der Blockposition[/color][/i][/b]<br>
+In der Registerkarte «Hauptseite» in der Spalte «Position» ändern Sie mit den Pfeilen die Blockposition. Die ausgewählte Blockposition wird in der Spalte «Position» angezeigt.[/justify]

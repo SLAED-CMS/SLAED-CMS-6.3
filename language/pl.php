@@ -72,6 +72,7 @@ define("_CERROR8","Zabronione wysyłanie wiadomości do siebie!");
 define("_CERROR9","Umieszczanie linków w komentarzach zakaz palenia!");
 define("_CHANGE","Ustawienia");
 define("_CHANGEFREQ","Częstotliwość odświeżania");
+define("_CHANGELOG","Dziennik zmian");
 define("_CHARSET","utf-8");
 define("_CHECKALL","Zaznacz wszystko");
 define("_CHECKOP","Akcja z zaznaczonymi");

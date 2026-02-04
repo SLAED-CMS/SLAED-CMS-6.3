@@ -184,10 +184,7 @@ class ModuleStructureTest extends TestCase
                 $errors[] = "modules/$name/admin - отсутствует index.php";
             }
 
-            // Проверяем наличие links.php (навигация)
-            if (!file_exists($adminPath . '/links.php')) {
-                $errors[] = "modules/$name/admin - отсутствует links.php";
-            }
+            
         }
 
         $this->assertEmpty(

@@ -2486,7 +2486,7 @@ function is_user($usr="") {
 function is_user_id($name) {
     global $prefix, $db;
     $name = text_filter(substr($name, 0, 25));
-    list($uid) = $db->sql_fetchrow($db->sql_query("SELECT user_id FROM ".$prefix."_users WHERE user_name = '".$name."'"));
+    list($uid) = $db->sql_fetchrow($db->sql_query('SELECT user_id FROM '.$prefix.'_users WHERE user_name = :name', ['name' => $name]));
     return intval($uid);
 }
 
@@ -2501,7 +2501,7 @@ function is_admin($adm="") {
             $pwd = htmlspecialchars(substr($admin[2], 0, 40));
             $ip = getIp();
             if ($id && $name && $pwd && $ip) {
-                list($aname, $apwd, $aip) = $db->sql_fetchrow($db->sql_query("SELECT name, pwd, ip FROM ".$prefix."_admins WHERE id = '".$id."'"));
+                list($aname, $apwd, $aip) = $db->sql_fetchrow($db->sql_query('SELECT name, pwd, ip FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]));
                 if ($aname == $name && $aname != "" && $apwd == $pwd && $apwd != "" && $aip == $ip && $aip != "") {
                     $admintrue = 1;
                     return $admintrue;
@@ -2517,31 +2517,31 @@ function is_admin($adm="") {
     }
 }
 
+# Get admin module names (stored as names)
+function getAdminModuleNames(string $modules): array {
+    $list = array_filter(array_map('trim', explode(',', $modules)), 'strlen');
+    return array_values(array_unique($list));
+}
+
 # Check modul admin
 function is_admin_modul($modul) {
     global $prefix, $db, $admin;
     $aid = intval(substr($admin[0], 0, 11));
     $modul = addslashes(trim(substr($modul, 0, 25)));
-    static $modules;
-    if (!is_array($modules)) {
-        $result = $db->sql_query("SELECT mid, title FROM ".$prefix."_modules");
-        while (list($mid, $title) = $db->sql_fetchrow($result)) $modules[] = array($mid, $title);
-    }
-    static $amodules;
-    if (!is_array($amodules)) {
-        list($amodules) = $db->sql_fetchrow($db->sql_query("SELECT modules FROM ".$prefix."_admins WHERE id = '".$aid."'"));
-        $amodules = explode(",", $amodules);
-    }
-    foreach ($modules as $val) {
-        if ($modul == $val[1] && $modul != "") {
-            $admuser = 0;
-            foreach ($amodules as $val2) {
-                if ($val[0] == $val2) $admuser = 1;
-            }
-            if (is_admin_god() || $admuser == 1) return 1;
+    if ($modul == '') return 0;
+    if (is_admin_god()) return 1;
+    static $amodules = [];
+    if (!isset($amodules[$aid])) {
+        list($modules) = $db->sql_fetchrow($db->sql_query('SELECT modules FROM '.$prefix.'_admins WHERE id = :id', ['id' => $aid]));
+        $modules = $modules ?? '';
+        $names = getAdminModuleNames($modules);
+        $new_modules = implode(',', $names);
+        if ($new_modules !== $modules) {
+            $db->sql_query('UPDATE '.$prefix.'_admins SET modules = :modules WHERE id = :id', ['modules' => $new_modules, 'id' => $aid]);
         }
+        $amodules[$aid] = $names ? array_fill_keys($names, 1) : [];
     }
-    return 0;
+    return isset($amodules[$aid][$modul]) ? 1 : 0;
 }
 
 # Check moderator
@@ -2559,7 +2559,7 @@ function get_user() {
     global $prefix, $db;
     $let = analyze_name($_GET['term']);
     if ($let) {
-        $result = $db->sql_query("SELECT user_name FROM ".$prefix."_users WHERE user_name LIKE '".$let."%' ORDER BY user_name ASC");
+        $result = $db->sql_query('SELECT user_name FROM '.$prefix.'_users WHERE user_name LIKE :name ORDER BY user_name ASC', ['name' => $let.'%']);
         while(list($user_name) = $db->sql_fetchrow($result)) $name[]= "\"".$user_name."\"";
         echo "[".implode(", ", $name)."]";
     }
@@ -3548,22 +3548,19 @@ function cutstr($strip, $size, $type='') {
 
 # Check module
 function is_active($mod, $view='') {
-    global $prefix, $db;
-    static $name;
-    if (!is_array($name)) {
-        $where = isset($view) ? " AND view = '".intval($view)."'" : "";
-        $result = $db->sql_query("SELECT title FROM ".$prefix."_modules WHERE active = '1'".$where."");
-        while (list($title) = $db->sql_fetchrow($result)) $name[] = $title;
-    }
-    foreach ($name as $val) {
-        if ($val == $mod) {
-            $a = 1;
-            break;
-        } else {
-            $a = 0;
+    global $confmd;
+    static $list = null;
+    if ($list === null) {
+        $list = [];
+        foreach ($confmd as $name => $item) {
+            if (empty($item['active'])) continue;
+            $mview = intval($item['view'] ?? 0);
+            if (!isset($list[$mview])) $list[$mview] = [];
+            $list[$mview][$name] = 1;
         }
     }
-    return $a;
+    $vnum = intval($view);
+    return isset($list[$vnum][$mod]) ? 1 : 0;
 }
 
 # Rewrite mod
@@ -3844,16 +3841,24 @@ function addmail() {
         $subject = (isset($arg[4]) == 1) ? $conf['sitename']." - ".$arg[3]." - "._COMMENT : $conf['sitename']." - ".$arg[3];
         $puname = ($arg[2]) ? text_filter(substr($arg[2], 0, 25)) : $confu['anonym'];
         $message = (isset($arg[4]) == 1) ? str_replace("[text]", sprintf(_ADDMAILC, $puname, $arg[3], $arg[5]), $conf['mtemp']) : str_replace("[text]", sprintf(_ADDMAIL, $puname, $arg[3]), $conf['mtemp']);
-        list($mid) = $db->sql_fetchrow($db->sql_query("SELECT mid FROM ".$prefix."_modules WHERE title = '".$mod."'"));
-        $wlang = ($conf['multilingual']) ? "AND (lang = '".$locale."' OR lang = '')" : "";
-        $result = $db->sql_query("SELECT email, super, modules FROM ".$prefix."_admins WHERE smail = '1' ".$wlang." ORDER BY id");
-        while (list($email, $super, $modules) = $db->sql_fetchrow($result)) {
+        $params = [];
+        $where = ' WHERE smail = \'1\'';
+        if ($conf['multilingual']) {
+            $where .= ' AND (lang = :lang OR lang = \'\')';
+            $params['lang'] = $locale;
+        }
+        $result = $db->sql_query('SELECT id, email, super, modules FROM '.$prefix.'_admins'.$where.' ORDER BY id', $params);
+        while (list($id, $email, $super, $modules) = $db->sql_fetchrow($result)) {
             if ($super) {
                 mail_send($email, $conf['adminmail'], $subject, $message, 1, 1);
             } else {
-                $amid = explode(",", $modules);
+                $amid = getAdminModuleNames($modules);
+                $new_modules = implode(',', $amid);
+                if ($new_modules !== $modules) {
+                    $db->sql_query('UPDATE '.$prefix.'_admins SET modules = :modules WHERE id = :id', ['modules' => $new_modules, 'id' => $id]);
+                }
                 foreach ($amid as $val) {
-                    if ($val != "" && $val == $mid) {
+                    if ($val != '' && $val == $mod) {
                         mail_send($email, $conf['adminmail'], $subject, $message, 1, 1);
                         break;
                     }

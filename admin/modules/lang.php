@@ -21,18 +21,18 @@ function getLangPath(string $mod = '', string $typ = ''): string {
 }
 
 function lang(): void {
-    global $prefix, $db, $aroute;
+    global $confmd, $aroute;
     $modbase = [];
     $who_view = [];
-    $result = $db->sql_query('SELECT title, active, view FROM '.$prefix.'_modules ORDER BY title ASC');
-    while (list($ttl, $act, $view) = $db->sql_fetchrow($result)) {
-        $modbase[$ttl] = $act;
-        if ($view == 0) {
-            $who_view[] = _MVALL;
-        } elseif ($view == 1) {
-            $who_view[] = _MVUSERS;
-        } elseif ($view == 2) {
-            $who_view[] = _MVADMIN;
+    foreach ($confmd as $ttl => $info) {
+        $modbase[$ttl] = !empty($info['active']) ? 1 : 0;
+        $view = (int)($info['view'] ?? 0);
+        if ($view === 0) {
+            $who_view[$ttl] = _MVALL;
+        } elseif ($view === 1) {
+            $who_view[$ttl] = _MVUSERS;
+        } elseif ($view === 2) {
+            $who_view[$ttl] = _MVADMIN;
         }
     }
 
@@ -55,7 +55,7 @@ function lang(): void {
     for ($i = 0; $i < $ci; $i++) {
         $a = $i + 2;
         $act = isset($modbase[$mod[$i]]) && $modbase[$mod[$i]] ? 1 : 0;
-        $view = isset($who_view[$i]) ? $who_view[$i] : _MVALL;
+        $view = $who_view[$mod[$i]] ?? _MVALL;
         $cont .= '<tr><td>'.$a.'</td><td>'.deflmconst($mod[$i]).'</td><td>'.$mod[$i].'</td><td>'.$view.'</td><td>'.ad_status('', $act).'</td>';
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $eadmin = '';

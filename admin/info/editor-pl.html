@@ -1,1 +1,173 @@
-Opis moduіu w jкzyku polskim.
+[hr][color=red][b][i]Uwaga![/b]<br>
+Ta sekcja jest przeznaczona wyłącznie dla administratorów, którzy dobrze znają oprogramowanie serwerowe i język programowania PHP.[/i][/color][hr]<br>
+[justify]Sekcja «Edytor» umożliwia bezpośrednie zarządzanie głównymi plikami systemowymi poprzez panel administracyjny. Zarządzanie plikami odbywa się w zakładkach:<br>
+[li] [b][i]Rdzeń systemu[/i][/b] – plik wstrzykiwania do rdzenia systemu: config/system.php. W tej zakładce można dodać kod, który zostanie umieszczony w rdzeniu systemu.<br>
+[li] [b][i]Nagłówek systemu[/i][/b] – plik wstrzykiwania do nagłówka systemu: config/header.php. W tej zakładce można wstawić kod, który zostanie wstrzyknięty do head systemu. Z reguły ten plik jest używany do wstrzykiwania skryptów Java i metatagów.<br>
+[li] [b][i]Systemowy SEF[/i][/b] – plik konfiguracji reguł transformacji SEF na poziomie systemowym: config/rewrite.php. W tej zakładce można modyfikować lub uzupełniać standardowe reguły transformacji pasków adresu przeglądarki. Ta funkcjonalność jest obsługiwana tylko w przypadku zainstalowanego na serwerze Mod Rewrite.<br>
+[li] [b][i]Serwerowy SEF[/i][/b] – plik konfiguracji reguł transformacji SEF na poziomie serwera: .htaccess. W tej zakładce można modyfikować lub uzupełniać standardowe reguły transformacji pasków adresu przeglądarki na poziomie serwera. Ta funkcjonalność jest obsługiwana tylko w przypadku zainstalowanego na serwerze Mod Rewrite.<br>
+[li] [b][i]Reguły dla robotów[/i][/b] – plik konfiguracji instrukcji i parametrów indeksowania dla robotów wyszukiwarek: robots.txt. W tej zakładce można modyfikować lub uzupełniać plik tekstowy znajdujący się w katalogu głównym witryny, w którym zapisane są specjalne instrukcje dla robotów wyszukiwarek. Te instrukcje mogą zabraniać indeksowania niektórych sekcji lub stron witryny, wskazywać prawidłowe «lustro» domeny, zalecać robotowi wyszukiwarki przestrzeganie określonego interwału czasowego między pobieraniem dokumentów z serwera itp. W tym pliku możesz określić parametry indeksowania witryny zarówno dla wszystkich robotów naraz, jak i dla każdej wyszukiwarki oddzielnie.<br>
+<br>
+Aby wprowadzić zmiany w pliku, przejdź do odpowiedniej zakładki i wprowadź zmiany w otwartym edytorze zawartości pliku, kliknij «Zapisz», aby zapisać.[/justify]<br>
+<br>
+[hr][color=red][b][i]Uwaga![/b]<br>
+Jeśli pliki konfiguracyjne nie mają ustawionych odpowiednich uprawnień dostępu (CHMOD - 666), system wyświetli odpowiednie ostrzeżenie.[/i][/color][hr]<br>
+[b][color=green]Przykłady użycia edytora wstrzykiwania w sekcji «Nagłówek systemu»[/color][/b]<br>
+<br>
+[color=orangered][b][i]Przekierowanie odwiedzającego z określonej strony internetowej[/i][/b][/color]<br>
+Przejdź do zakładki «Nagłówek systemu» i dodaj następujący wpis:<br>
+[php]&#036;reflink = &quot;#slaed.net#i&quot;;<br>
+&#036;metlink = &quot;news.html&quot;;<br>
+&#036;referer = text_filter(getenv(&quot;HTTP_REFERER&quot;));<br>
+if (preg_match(&#036;reflink, &#036;referer)) { <br>
+echo &#039;&lt;meta http-equiv=&quot;refresh&quot; content=&quot;0; url=&#039;.&#036;metlink.&#039;&quot;&gt;&#039;; <br>
+}[/php]<br>
+[justify]&#036;reflink – odpowiada za adres strony, z której przyszedł odwiedzający.<br>
+Zamiast: slaed.net podaj swoją domenę.<br>
+&#036;metlink – odpowiada za stronę, na którą zostanie przekierowany odwiedzający.<br>
+Zamiast: news.html podaj wymaganą stronę lub witrynę.<br>
+<br>
+[color=orangered][b][i]Zakaz kopiowania informacji z witryny[/i][/b][/color]<br>
+Wszystko, co można przeczytać i zobaczyć, można odpowiednio skopiować. Nie istnieje skuteczna ochrona przed kopiowaniem. Ale to nie znaczy, że nie można jej utrudnić; możesz wyłączyć użycie prawego lub innych przycisków myszy, które są używane do kopiowania. Będzie to nieznaczna, ale jednak przeszkoda w kopiowaniu dla początkujących użytkowników.<br>
+Przejdź do zakładki «Nagłówek systemu» i dodaj następujący wpis:[/justify]<br>
+[php]echo &#039;&lt;script&gt;<br>
+&lt;!--//<br>
+function click() {<br>
+// Aby wyłączyć lewy przycisk, ustaw cyfrę 1 <br>
+// Aby wyłączyć trzeci przycisk, ustaw cyfrę 3 <br>
+if (event.button == 2) { <br>
+// Tutaj wpisz swój komunikat, który pojawi się w oknie ostrzeżenia <br>
+alert(&quot;Copyright Scriptic!&quot;); <br>
+}<br>
+}<br>
+document.onmousedown=click;<br>
+//--&gt;<br>
+&lt;/script&gt;&#039;;[/php]<br>
+[justify]Zauważ, że ten kod działa tylko w przeglądarkach Internet Explorer. Możliwe, że coś podobnego istnieje dla innych przeglądarek. Jeśli chcesz użyć innego kodu, po prostu zamień ten na swój kod, wstawiając go między echo &#039; i &#039;;[/justify]<br>
+<br>
+[color=orangered][b][i]Przekierowanie odwiedzającego z określonego kraju[/i][/b][/color]<br>
+Przejdź do zakładki «Nagłówek systemu» i dodaj następujący wpis:<br>
+[php]&#036;userlang = &quot;Russia&quot;; <br>
+&#036;metlink = &quot;news.html&quot;; <br>
+&#036;userip = user_geo_ip(getip(), 2); <br>
+if (&#036;userip == &#036;userlang) { <br>
+echo &#039;&lt;meta http-equiv=&quot;refresh&quot; content=&quot;0; url=&#039;.&#036;metlink.&#039;&quot;&gt;&#039;; <br>
+}[/php]<br>
+[justify]&#036;userlang – odpowiada za nazwę kraju, z którego przyszedł odwiedzający.<br>
+Nazwa kraju nie powinna być dowolna i musi odpowiadać standardom używania klasy. Poprawność pisowni danego kraju można sprawdzić w zmiennej &#036;COUNTRY_NAMES pliku: core/geo_ip.php<br>
+&#036;metlink – odpowiada za stronę, na którą zostanie przekierowany odwiedzający.<br>
+Zamiast: news.html podaj wymaganą stronę lub witrynę.<br>
+<br>
+[b][color=green]Przykłady użycia edytora wstrzykiwania w sekcji «Serwerowy SEF»[/color][/b]<br>
+<br>
+[color=orangered][b][i]Zakaz używania obrazów z witryny przez inne strony[/i][/b][/color]<br>
+Nie jest tajemnicą, że niektóre witryny, aby zaoszczędzić swój ruch i miejsce na serwerze, używają zdalnych obrazów z innych witryn, pochłaniając w ten sposób cudzy ruch i zwiększając obciążenie serwera. Aby temu zapobiec, proponujemy następujące metody.<br>
+Przejdź do zakładki «Serwerowy SEF» i dodaj po:[/justify]<br>
+[php]# Mod rewrite on<br>
+RewriteEngine On<br>
+RewriteBase /[/php]<br>
+następujący wpis:<br>
+[php]RewriteOptions MaxRedirects=100<br>
+RewriteCond %{HTTP_REFERER} !^http://(www&#092;.)?slaed&#092;.net/ [NC]<br>
+RewriteRule &#092;.(jpe?g|gif|bmp|png)&#036; http://www.slaed.net/templates/default/images/logos/slaed_logo_60x60.png [L][/php]<br>
+[justify]Zamiast: slaed podaj nazwę domeny swojej witryny.<br>
+Zamiast: net podaj strefę domeny swojej witryny.<br>
+Zamiast: http://www.slaed.net/templates/default/images/logos/slaed_logo_60x60.png podaj link do logo lub obrazu, który będzie wyświetlany na witrynie używającej obrazów z Twojej witryny.<br>
+<br>
+[color=orangered][b][i]Połączenie domeny z www i bez[/i][/b][/color]<br>
+Na pierwszy rzut oka domena z prefiksem www i bez niego wydaje się taka sama, ale tak nie jest. Serwer rozpoznaje je jako dwie różne domeny i z reguły można na nich zainstalować dwie zupełnie różne witryny. U niektórych hostingów łączenie dwóch domen jest przewidziane od początku i odbywa się automatycznie, u niektórych to ustawienie jest dostępne w panelu zarządzania hostingiem. Dla hostingów, gdzie łączenie nie jest przewidziane, można użyć następującej metody.<br>
+Przejdź do zakładki «Serwerowy SEF» i dodaj po:[/justify]<br>
+[php]# Mod rewrite on<br>
+RewriteEngine On<br>
+RewriteBase /[/php]<br>
+następujący wpis:<br>
+[php]# Redirect<br>
+RewriteCond %{HTTP_HOST} !^www&#092;.slaed&#092;.net [NC]<br>
+RewriteRule ^(.*)&#036; http://www.slaed.net/&#036;1 [R=301,L][/php]<br>
+[justify]Zamiast: slaed podaj nazwę domeny swojej witryny.<br>
+Zamiast: net podaj strefę domeny swojej witryny.<br>
+Aby ta metoda działała, serwer hostingu musi obsługiwać pracę z .htaccess, Mod Rewrite musi być zainstalowany i aktywowany.[/justify]<br>
+<br>
+[color=orangered][b][i]Możliwe reguły i ustawienia[/i][/b][/color]<br>
+[justify]W poniższym opisie przedstawione są możliwe reguły z opisem, które są dopuszczalne do użycia w naszym przypadku w «Serwerowym SEF», a mianowicie w głównym pliku .htaccess, który znajduje się w głównym katalogu systemu.[/justify]<br>
+<br>
+[php]# Zakaz listingu i przeglądania katalogów<br>
+Options All -ExecCGI -Indexes -Includes +FollowSymLinks[/php]<br>
+<br>
+[php]# Strona indeksowa witryny<br>
+DirectoryIndex index.php[/php]<br>
+<br>
+[php]# Domyślne kodowanie witryny<br>
+AddDefaultCharset utf-8[/php]<br>
+<br>
+[php]# Przekierowanie w przypadku odpowiedniego błędu serwera<br>
+ErrorDocument 400    /index.php?error=400<br>
+ErrorDocument 401    /index.php?error=401<br>
+ErrorDocument 403    /index.php?error=403<br>
+ErrorDocument 404    /index.php?error=404<br>
+ErrorDocument 500    /index.php?error=500<br>
+ErrorDocument 503    /index.php?error=503[/php]<br>
+<br>
+[php]# Ustawienia bezpieczeństwa, aktualne dla wersji poniżej PHP 5.3.0, nieaktualne dla PHP 5.4.0 i wyższych<br>
+php_flag register_globals off<br>
+php_flag safe_mode on<br>
+php_flag magic_quotes_gpc on[/php]<br>
+<br>
+[php]# Zakaz wyświetlania wersji oprogramowania serwera<br>
+ServerSignature Off[/php]<br>
+<br>
+Powyższa reguła niestety nie jest obsługiwana przez wszystkich hostingów. Opisane poniżej ustawienia są dostępne tylko w przypadku zainstalowanego na serwerze mod_rewrite.<br>
+<br>
+[php]# Włączenie mod_rewrite<br>
+RewriteEngine On[/php]<br>
+<br>
+[justify]Moduł mod_rewrite jest modułem programowym serwera internetowego Apache (zwróć uwagę, że nie będzie działał na innych serwerach internetowych!). Jego podstawową funkcją jest manipulacja działaniami z URL. Moduł jest bardzo uniwersalny i wszechstronny; tutaj pokazano kilka praktycznych przykładów.[/justify]<br>
+<br>
+[php]# Katalog główny<br>
+RewriteBase /[/php]<br>
+<br>
+[php]# Przekierowanie z www na bez www<br>
+RewriteCond %{HTTP_HOST}    ^www&#092;.(.*) [NC]<br>
+RewriteRule ^(.*)&#036;    http://%1/&#036;1 [R=301,L][/php]<br>
+<br>
+[php]# Przekierowanie z bez www na www<br>
+RewriteCond %{HTTP_HOST}    ^[^.]+&#092;.[^.]+&#036;<br>
+RewriteCond %{HTTPS}s    ^on(s)|<br>
+RewriteRule ^    http%1://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L][/php]<br>
+<br>
+[php]# Przekierowanie z protokołu http na https<br>
+RewriteCond %{HTTPS} off<br>
+RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L][/php]<br>
+<br>
+[php]# Przekierowanie adresów z index.php na bez index.php<br>
+RewriteCond %{THE_REQUEST}    ^GET.*index&#092;.php [NC]<br>
+RewriteRule (.*?)index&#092;.php/*(.*)    /&#036;1&#036;2 [R=301,L][/php]<br>
+<br>
+[php]# Przekierowanie do nowej kategorii<br>
+RewriteRule ^stara/(.*)&#036;    /nowa/&#036;1 [R=301,L][/php]<br>
+<br>
+[php]# Reguły przetwarzania żądań do blokowania popularnych exploitów<br>
+RewriteCond %{QUERY_STRING}    proc/self/environ [OR]<br>
+RewriteCond %{QUERY_STRING}    mosConfig_[a-zA-Z_]{1,21}(=|&#092;%3D) [OR]<br>
+RewriteCond %{QUERY_STRING}    base64_(en|de)code&#092;(.*&#092;) [OR]<br>
+RewriteCond %{QUERY_STRING}    base64_encode[^(]*&#092;([^)]*&#092;) [OR]<br>
+RewriteCond %{QUERY_STRING}    (&lt;|%3C)([^s]*s)+cript.*(&gt;|%3E) [NC,OR]<br>
+RewriteCond %{QUERY_STRING}    GLOBALS(=|&#092;[|&#092;%[0-9A-Z]{0,2}) [OR]<br>
+RewriteCond %{QUERY_STRING}    _REQUEST(=|&#092;[|&#092;%[0-9A-Z]{0,2})<br>
+RewriteRule .*    index.php [F][/php]<br>
+<br>
+[php]# Blokowanie iniekcji MySQL<br>
+RewriteCond %{QUERY_STRING}    CONCAT.*&#092;( [NC,OR]<br>
+RewriteCond %{QUERY_STRING}    UNION.*SELECT.*&#092;( [NC,OR]<br>
+RewriteCond %{QUERY_STRING}    UNION.*ALL.*SELECT [NC]<br>
+RewriteRule ^(.*)&#036;    index.php [F,L][/php]<br>
+<br>
+[php]# Blokowanie iniekcji plików<br>
+RewriteCond %{REQUEST_METHOD}    GET<br>
+RewriteCond %{QUERY_STRING}    [a-zA-Z0-9_]=http:// [OR]<br>
+RewriteCond %{QUERY_STRING}    [a-zA-Z0-9_]=(&#092;.&#092;.//?)+ [OR]<br>
+RewriteCond %{QUERY_STRING}    [a-zA-Z0-9_]=/([a-z0-9_.]//?)+ [NC]<br>
+RewriteRule .*    - [F][/php]<br>
+<br>
+[php]# Przekierowanie dla obcych domen<br>
+RewriteCond %{HTTP_HOST}    !^slaed&#092;.net&#036;<br>
+RewriteRule ^(.*)&#036;    http://slaed.net/&#036;1 [R=301,L][/php]

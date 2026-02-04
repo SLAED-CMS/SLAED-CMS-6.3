@@ -71,13 +71,13 @@ $confmd = array (
   array (
     'lang' => '_CHANGELOG',
     'img' => 'changelog.png',
-    'active' => '1',
+    'active' => '0',
     'view' => '0',
     'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
-    'type' => '0',
+    'type' => '1',
   ),
   'clients' => 
   array (
@@ -359,7 +359,7 @@ $confmd = array (
   array (
     'lang' => '_NEWS',
     'img' => 'news.png',
-    'active' => '0',
+    'active' => '1',
     'view' => '0',
     'menu' => '1',
     'group' => '0',
@@ -473,18 +473,6 @@ $confmd = array (
     'group' => '0',
     'side' => '0',
     'top' => '0',
-    'type' => '0',
-  ),
-  'rss_info' => 
-  array (
-    'lang' => '_RSS_INFO',
-    'img' => 'rss_info.png',
-    'active' => '0',
-    'view' => '0',
-    'menu' => '1',
-    'group' => '0',
-    'side' => '0',
-    'top' => '0',
     'type' => '1',
   ),
   'search' => 
@@ -527,13 +515,13 @@ $confmd = array (
   array (
     'lang' => '_SITEMAP',
     'img' => 'sitemap.png',
-    'active' => '1',
+    'active' => '0',
     'view' => '0',
     'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
-    'type' => '0',
+    'type' => '1',
   ),
   'statistic' => 
   array (
@@ -575,13 +563,13 @@ $confmd = array (
   array (
     'lang' => '_USERS',
     'img' => 'users.png',
-    'active' => '1',
+    'active' => '0',
     'view' => '0',
     'menu' => '1',
     'group' => '0',
     'side' => '0',
     'top' => '0',
-    'type' => '0',
+    'type' => '1',
   ),
   'voting' => 
   array (

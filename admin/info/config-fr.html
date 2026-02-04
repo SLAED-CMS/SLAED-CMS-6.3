@@ -1,1 +1,100 @@
-Description du module en français.
+[justify]La section «Configurations» est destinée à la gestion des paramètres principaux (configurations) du site et se compose des onglets suivants :<br>
+[li] [b][i]Paramètres de base[/i][/b] – les paramètres de base du site sont configurés ;<br>
+[li] [b][i]SEO[/i][/b] – paramètres pour l'optimisation du référencement du site ;<br>
+[li] [b][i]Langue[/i][/b] – gestion des paramètres multilingues du site ;<br>
+[li] [b][i]Censure[/i][/b] – paramètres d'exclusion des mots et expressions indésirables ;<br>
+[li] [b][i]Recherche[/i][/b] – paramètres de recherche du site ;<br>
+[li] [b][i]Robots de recherche[/i][/b] – définition du format d'affichage des informations sur les robots de recherche sur le site ;<br>
+[li] [b][i]Mise en cache[/i][/b] – définition des paramètres de mise en cache des pages du site ;<br>
+[li] [b][i]Courrier[/i][/b] – définition du modèle d'e-mail principal.<br>
+<br>
+[b][color=green]Paramètres de base[/color][/b]<br>
+[li] [b][i]Version du système[/i][/b] – affiche le nom et le numéro de version du système sur lequel le site est construit.<br>
+[li] [b][i]Nom du site[/i][/b] – le nom du site peut être défini ici, il sera affiché, par exemple, dans les titres des pages du site.<br>
+[li] [b][i]Adresse du site[/i][/b] – l'adresse URL complète du site est spécifiée.<br>
+[li] [b][i]Définir le logo du site[/i][/b] – le logo est sélectionné dans le répertoire : images/logos/. Le logo est utilisé dans la conception en fonction du thème du site.<br>
+[li] [b][i]Description[/i][/b] – cette description est utilisée dans la balise «description» des pages HTML du site (ce champ est analysé notamment par les moteurs de recherche).<br>
+[li] [b][i]Notes de l'administrateur[/i][/b] – informations qui seront disponibles pour tous les auteurs (utilisateurs de la section de gestion). Ces informations sont affichées dans la partie supérieure du panneau d'administration du système.<br>
+[li] [b][i]Date d'ouverture du site[/i][/b] – la date à laquelle le site a été lancé.<br>
+[li] [b][i]E-Mail de l'administrateur[/i][/b] – utilisé lors de l'envoi de messages d'information à l'administrateur du site (y compris lors de la récupération du mot de passe). Lors de l'envoi de messages aux utilisateurs, cet e-mail est indiqué dans le champ «De».<br>
+[li] [b][i]Nom des cookies pour les utilisateurs[/i][/b] – les cookies pour les utilisateurs sont nécessaires pour que le système identifie l'utilisateur. Par exemple, s'il est enregistré et s'est connecté auparavant, le système le reconnaîtra automatiquement (pas besoin de se reconnecter).<br>
+Il est recommandé de changer le nom de cookie par défaut, une taille de 3 à 5 caractères est suffisante.<br>
+[li] [b][i]Nom de session pour les administrateurs[/i][/b] – l'utilisation des sessions est similaire à l'utilisation des cookies utilisateur : détermination de l'activité de l'administrateur. Cependant, contrairement aux cookies, la session fonctionne côté serveur, sa durée est limitée et définie sur le serveur. Cette méthode est plus sécurisée. Une session est considérée comme terminée si aucune demande n'a été faite au site par l'utilisateur pendant une certaine période (généralement 15-30 minutes). Le seul inconvénient est qu'après la fermeture du navigateur ou la déconnexion du réseau, la session se termine, donc une reconnexion sera nécessaire.<br>
+Il est recommandé de changer le nom par défaut, une taille de 3 à 5 caractères est suffisante.<br>
+[li] [b][i]Durée de stockage des cookies utilisateur, en jours[/i][/b] – la durée de stockage des cookies sur l'ordinateur de l'utilisateur. Pendant toute la durée spécifiée, le système identifiera automatiquement l'utilisateur ; si le temps est écoulé, il demandera de se connecter avec son login/mot de passe. En règle générale, une valeur d'environ 30 jours est définie.<br>
+[li] [b][i]Durée de session, en minutes[/i][/b] – signifie : combien de minutes un utilisateur autorisé du site peut être inactif et être considéré comme en ligne (sur le site), son nom étant affiché dans le bloc User Info.<br>
+[li] [b][i]Nombre de contenus dans les modules du panneau d'administration[/i][/b] – le nombre d'enregistrements qui sera affiché par défaut sur une page (par exemple, dans la section «Actualités»).<br>
+[li] [b][i]Lien vers le profil du forum, Lien vers les messages privés du forum[/i][/b] – si un forum tiers est installé sur le site, des liens peuvent être spécifiés qui doivent mener au profil utilisateur et à la section «Messages privés» du forum. Ces liens apparaîtront dans le profil personnel des utilisateurs du site.<br>
+[li] [b][i]Lien vers le site de vérification d'adresse IP[/i][/b] – sur quel site la vérification des adresses IP (whois) sera effectuée. Les adresses IP sont, par exemple, visibles par l'administrateur à côté de l'auteur qui a laissé un commentaire sur le site, et si vous cliquez sur l'adresse IP, elle sera vérifiée par le service de vérification spécifié dans le champ.<br>
+[li] [b][i]Inscription générale des utilisateurs avec[/i][/b] – spécifie avec quel forum l'inscription automatique sera effectuée (sélectionné en fonction de la version du forum installée sur le site).<br>
+[li] [b][i]Thème de design[/i][/b] – le thème de design du site est sélectionné, celui qui doit être utilisé actuellement. La gestion des thèmes se fait dans la section «Thèmes de design» du panneau d'administration.<br>
+[li] [b][i]Module chargé sur la page d'accueil[/i][/b] – les modules qui doivent être chargés sur la page d'accueil du site sont spécifiés (si prévu par le thème du site).<br>
+[li] [b][i]Module chargé sur la page d'accueil de l'administrateur[/i][/b] – le module qui doit être chargé sur la page d'accueil de la section d'administration est spécifié (si prévu par le thème du site).<br>
+[li] [b][i]Type de code de sécurité[/i][/b] – le type de code de sécurité (Captcha) à utiliser sur le site est sélectionné. Vous pouvez choisir entre S-Captcha et K-Captcha. En dessous, en face du champ «Aperçu», l'apparence du code de sécurité actuel est affichée.<br>
+[li] [b][i]Paramètre responsable du code graphique[/i][/b] – sélectionne dans quels cas le code graphique (captcha) doit être affiché.<br>
+[li] [b][i]Qualité de l'image du code de sécurité, en pourcentage[/i][/b] – plus le pourcentage est bas, plus il est difficile de lire l'inscription.<br>
+[li] [b][i]Type de police dans l'image du code de sécurité[/i][/b] – le style d'écriture du contenu du code est sélectionné.<br>
+[li] [b][i]Utilisation de l'éditeur[/i][/b] – l'éditeur qui sera utilisé lors du remplissage du contenu des modules du site est sélectionné. Il peut s'agir des éditeurs : éditeur BB ; éditeur HTML TinyMCE 4 ; éditeur HTML TinyMCE 3.5 ; éditeur HTML CKEditor 4.2.<br>
+Vous pouvez rapidement changer d'éditeur dans la section d'administration dans le bloc «Utilisation de l'éditeur» (affiché à gauche).<br>
+[li] [b][i]Heure système globale[/i][/b] – spécifiez le fuseau horaire dont l'heure sera utilisée par le site. L'heure est affichée, par exemple, à côté de chaque commentaire ou message de forum.<br>
+[li] [b][i]Activer les extensions de débogage[/i][/b] – cette fonctionnalité permet d'afficher les informations suivantes pour les administrateurs et modérateurs du site (au choix) : informations système (niveau de charge du processeur) ; analyseur de variables GET, POST, COOKIE ; FILES, SESSION, SERVER ; analyseur de requêtes de base de données. Lorsqu'elles sont activées, les informations sont affichées en bas de la page du site (sous le pied de page). Cette fonctionnalité permet de suivre l'image technique complète du fonctionnement des modules et extensions (standard et tiers), ainsi que de détecter rapidement les problèmes de fonctionnement de l'hébergement.<br>
+[li] [b][i]Visibilité des fonctions de débogage[/i][/b] – permet de sélectionner l'option d'affichage des fonctions de débogage. Si le mode «Tous les visiteurs» est sélectionné, les informations seront visibles pour tous les visiteurs du projet ; dans l'option «Administrateurs uniquement», seulement pour les administrateurs du projet.<br>
+[li] [b][i]Activer les sessions des visiteurs ?[/i][/b] – lorsqu'elle est activée, le système suivra toutes les actions des visiteurs du site et les enregistrera dans la session. Si l'utilisateur n'a rien fait après l'expiration du temps spécifié dans le champ «Durée de session, en minutes», la session est supprimée. Si vous définissez la marque «Non», la charge sur le site diminuera légèrement.<br>
+[li] [b][i]Afficher les messages sur la page d'accueil ?[/i][/b] – si les messages de la section «Messages» du panneau d'administration seront affichés sur la page d'accueil.<br>
+[li] [b][i]Afficher la vitesse de génération de page ?[/i][/b] – les informations sur la vitesse de génération des pages sont affichées dans le pied de page du site au format : Génération : 0,2 sec. et 7 requêtes de base de données en 0,001 sec. (dans l'exemple, les données sont conditionnelles).<br>
+[li] [b][i]Activer le bloc administrateur «Informations système» ?[/i][/b] – le paramètre est responsable de l'affichage du bloc «Informations système».<br>
+[li] [b][i]Activer le panneau d'administration principal ?[/i][/b] – responsable du panneau d'administration. Si vous sélectionnez l'option «Non», tout le contenu du panneau d'administration sera affiché en mode abrégé dans les blocs de gauche ; cette méthode est conçue pour économiser de l'espace et offrir un meilleur aperçu du contenu.<br>
+[li] [b][i]Activer l'éditeur du département d'information ?[/i][/b] – si le paramètre est actif, vous pouvez modifier le système d'aide de la section d'administration (données dans l'onglet «Informations»). Par exemple, cette option peut être nécessaire si le système d'aide doit être ajusté aux spécificités de certains utilisateurs de la section de gestion.<br>
+[li] [b][i]Fermer le site pour maintenance ?[/i][/b] – l'option est utilisée lorsque des travaux de maintenance sont effectués sur le site. Lorsque l'option est activée, les visiteurs du site voient un message sur l'indisponibilité temporaire du site. Le style et le texte du message dépendent du thème du site.<br>
+<br>
+[b][color=green]SEO[/color][/b]<br>
+[li] [b][i]Caractère séparant les titres et en-têtes[/i][/b] – le caractère spécifié est utilisé pour séparer les composants du titre de page (title du navigateur).<br>
+[li] [b][i]Mots-clés du site[/i][/b] – les mots-clés sont saisis séparés par une virgule et un espace. Les mots-clés sont utilisés dans la balise «keywords» des pages HTML du site (ce champ est analysé notamment par les moteurs de recherche). Les mots-clés spécifiés dans ce champ sont utilisés par défaut ou lorsque la génération automatique de mots-clés est désactivée.<br>
+[li] [b][i]Nombre maximum de mots-clés[/i][/b] – le nombre spécifié est utilisé dans la génération automatique de mots-clés (autant de mots seront générés au maximum). Si la génération automatique de mots-clés n'est pas activée, ce paramètre ne sera pas utilisé. Il n'est pas recommandé de spécifier trop de mots-clés (15 - maximum).<br>
+[li] [b][i]Nombre minimum de caractères dans un mot[/i][/b] – le nombre spécifié est utilisé dans la génération automatique de mots-clés. Les mots dont la longueur est inférieure à celle spécifiée ne seront pas inclus dans la liste des mots-clés. Si la génération automatique de mots-clés n'est pas activée, ce paramètre ne sera pas utilisé.<br>
+[li] [b][i]Activer la génération automatique de mots-clés ?[/i][/b] – le système générera automatiquement des mots-clés pour chaque page du site en fonction du contenu de la page. Ainsi, chaque page contient différents ensembles de mots-clés.<br>
+[li] [b][i]Mélanger les mots-clés ?[/i][/b] – dans la balise «keywords», les mots-clés seront écrits de manière aléatoire à chaque actualisation de page. Le paramètre est actif à la fois avec la génération automatique et manuelle de mots-clés.<br>
+[li] [b][i]Activer la conversion d'URL en SEF ?[/i][/b] – SEF (Search Engine Friendly) – adresses web pratiques pour la perception humaine, ainsi que les systèmes et méthodes de construction de telles adresses. Lorsque cette option est activée, les URL du site sont converties selon le concept SEF. Notez que l'activation de cette option augmente le temps de génération des pages. Cette fonction n'est prise en charge que si Mod Rewrite est installé sur le serveur ; vous pouvez le vérifier dans le bloc «Informations système» : si Mod Rewrite est installé, «Mod Rewrite: On» sera affiché, sinon «Mod Rewrite: Off».<br>
+<br>
+[b][color=green]Langue[/color][/b]<br>
+[hr][color=red][b][i]Attention ![/b]<br>
+Les valeurs des variables de langue sont définies dans la section «Éditeur de langues».[/i][/color][hr]<br>
+[li] [b][i]Langue par défaut[/i][/b] – la langue du site qui sera chargée par défaut à l'ouverture.<br>
+[li] [b][i]Activer les propriétés multilingues[/i][/b] – en sélectionnant «Oui», le site contiendra des liens vers d'autres versions linguistiques.<br>
+[li] [b][i]Afficher les drapeaux au lieu du menu[/i][/b] – en sélectionnant «Oui», les liens pour changer la version linguistique du site seront présentés sous forme de drapeaux des pays correspondants.<br>
+[li] [b][i]Activer le détecteur de pays du visiteur[/i][/b] – le pays sera déterminé en fonction de la valeur de l'adresse IP de l'utilisateur.<br>
+[li] [b][i]Changer automatiquement la langue du site selon le pays du visiteur ?[/i][/b] – en sélectionnant «Oui», la langue du site passera à la valeur correspondante en fonction du pays du visiteur.<br>
+<br>
+[b][color=green]Censure[/color][/b]<br>
+À l'aide des paramètres de censure, vous pouvez limiter considérablement l'affichage de contenu indésirable sur les pages du site.<br>
+[li] [b][i]Méthode de censure[/i][/b] – actuellement, deux méthodes sont essentiellement disponibles : effectuer la censure ou non.<br>
+[li] [b][i]Remplacer les mots interdits par[/i][/b] – un ensemble de caractères est spécifié qui remplacera le mot interdit.<br>
+[li] [b][i]Mots interdits[/i][/b] – listés séparés par une virgule sans espace.<br>
+[li] [b][i]Convertir les adresses en hyperliens ?[/i][/b] – si le texte saisi via l'éditeur BB contient un texte de lien, il sera automatiquement affiché comme hyperlien. Vous pouvez voir quel éditeur est utilisé dans l'onglet «Paramètres de base» de la section «Configurations».<br>
+<br>
+[b][color=green]Recherche[/color][/b]<br>
+Dans cet onglet, les paramètres de recherche du site sont configurés.<br>
+[li] [b][i]Nombre minimum de caractères dans la requête de recherche[/i][/b] – si la requête de recherche contient moins de caractères que spécifié dans ce champ, le système affichera un avertissement correspondant.<br>
+[li] [b][i]Nombre de résultats de recherche par page[/i][/b] – les résultats de recherche sont affichés page par page et chaque page contiendra le nombre spécifié de résultats. Notez que si rien n'est spécifié, les résultats de recherche seront toujours vides.<br>
+[li] [b][i]Nombre maximum de numéros de pages utilisateurs[/i][/b] – la liste des pages comprendra le nombre spécifié de pages, puis le numéro de la dernière page séparé par des points de suspension sera affiché.<br>
+[li] [b][i]Recherche avec description étendue ?[/i][/b] – si «Oui» est sélectionné, chaque résultat de recherche affichera un fragment du contenu contenant le texte recherché. Si «Non» est sélectionné, chaque résultat ne contiendra que le titre de la page, ainsi que des informations sur le module et la catégorie auxquels le contenu appartient.<br>
+<br>
+[b][color=green]Robots de recherche[/color][/b]<br>
+Dans cet onglet, les règles d'affichage des informations sur les robots de recherche sur le site sont définies, ainsi que la liste des sites de moteurs de recherche à partir desquels les transitions vers votre projet sont enregistrées.<br>
+<br>
+[b][color=green]Optimisation[/color][/b]<br>
+La mise en cache conduit à un chargement plus rapide des pages du site et à une réduction de la charge du serveur.<br>
+<br>
+[li] [b][i]Mise en cache[/i][/b] – uniquement la page d'accueil ou toutes les zones du site. Pour les grands portails à fort trafic (plus de 5 000 visiteurs uniques par jour et plus de 25 000 pages de contenu), il est recommandé de mettre en cache uniquement la page d'accueil. Sinon, l'espace disque alloué par l'hébergement peut déborder, ainsi qu'une charge accrue sur celui-ci.<br>
+[li] [b][i]Temps de stockage du cache statistique, en secondes[/i][/b] – les informations mises en cache sont utilisées pendant la durée spécifiée, après quoi les fichiers seront écrasés.<br>
+[li] [b][i]Suppression forcée de l'ancien cache, en jours[/i][/b] – nettoyage automatique des fichiers cache lorsque la limite de temps est dépassée.<br>
+[li] [b][i]Compresser les fichiers mis en cache ?[/i][/b] – la compression des fichiers mis en cache réduit leur taille en supprimant les tabulations, les espaces dans les balises HTML, les commentaires dans les styles CSS, en écrivant tout le texte sur une seule ligne. L'économie de taille, selon le contenu, est d'environ 5-6%. Cela accélère le transfert de page vers le navigateur du visiteur. La copie non autorisée d'articles et d'autres contenus du site par des programmes automatiques et des grappilleurs est considérablement compliquée.<br>
+[li] [b][i]Activer la mise en cache du navigateur ?[/i][/b] – lors de la visualisation des pages du site, leur contenu sera stocké dans la mémoire de l'ordinateur, et lors de l'actualisation ou de la réouverture de la page par le navigateur, le chargement des données se fera essentiellement depuis l'ordinateur du visiteur.<br>
+[li] [b][i]Activer la compression GZip ?[/i][/b] – utilisé pour transmettre des données sous forme compressée (la plupart des navigateurs prennent en charge l'affichage de fichiers compressés GZip). En règle générale, cette fonctionnalité est utilisée pour accélérer la réception des informations demandées par les visiteurs du site, ainsi que pour réduire le trafic sortant du serveur.<br>
+<br>
+Le système de mise en cache de fichiers permet de réduire considérablement la charge du serveur en désactivant l'interpréteur PHP et les requêtes de base de données. Lors de la première demande à une URL, le fichier généré est enregistré sous une signature MD5 unique, et lors des demandes suivantes à cette URL, le fichier est servi à partir de la mémoire cache, ce qui réduit le temps de chargement de la page. Les requêtes de base de données et le démarrage de l'interpréteur PHP côté serveur ne sont pas effectués lors de la diffusion à partir du cache.<br>
+<br>
+[hr][b][color=blue]Attention ![/color][/b]<br>
+Si le site a beaucoup de contenus mis à jour, la mise en cache peut empêcher les utilisateurs de voir les mises à jour rapidement. Définissez un temps de stockage du cache adéquat en fonction du trafic du projet ; nous recommandons de 300 à 600 secondes.[hr]<br>
+[b][color=green]Courrier[/color][/b]<br>
+Dans cet onglet, le modèle d'e-mail principal envoyé par le système dans certains cas est défini (par exemple, lors de la récupération du mot de passe). Notez que [text] est le contenu qui sera substitué par le système, il ne doit donc pas être supprimé. Tout le reste peut être modifié à votre discrétion.[/justify]

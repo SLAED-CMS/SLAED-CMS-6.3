@@ -1,1 +1,194 @@
-Opis moduіu w jкzyku polskim.
+[justify]Sekcja «Bloki i Banery» umożliwia budowanie strony z «klocków» zwanych «blokami».<br>
+Istnieją następujące rodzaje bloków:<br>
+[li] [b][i]Standardowe[/i][/b] – umieszczane w określonych miejscach na stronie;<br>
+[li] [b][i]Wolne (fly)[/i][/b] – te bloki można używać w dowolnym miejscu, w szablonach lub modułach systemu.<br>
+Większość potrzeb funkcjonalnych strony jest pokrywana przez bloki standardowe, ale w niektórych przypadkach można używać bloków wolnych.<br>
+<br>
+[color=green][b]Bloki Standardowe[/b][/color]<br>
+Bloki standardowe można podzielić według następujących właściwości:<br>
+[li] [b][i]Według typu[/i][/b]:<br>
+* Plikowe – bloki, których informacje są wyświetlane za pomocą funkcji HTML i PHP zdefiniowanych w odpowiednim pliku.<br>
+* HTML – bloki, których informacje są wyświetlane za pomocą funkcji HTML zdefiniowanych w zawartości bloku.<br>
+* RSS – bloki wyświetlające informacje pobrane z linku RSS.<br>
+* Systemowe – do bloków systemowych należą: Admin, UserBox.<br>
+[li] [b][i]Według dostępności (kto widzi)[/i][/b]: wszyscy użytkownicy, tylko użytkownicy, tylko administratorzy, tylko anonimowi.<br>
+[li] [b][i]Według pozycji[/i][/b]: lewa, środek dół, środek góra, prawa, baner górny, baner dolny.<br>
+<br>
+[color=orangered][b][i]Stylizacja bloków standardowych[/i][/b][/color]<br>
+Za stylizację bloków standardowych odpowiadają szablony motywu: block-center.html, block-all.html, block-right.html i inne szablony z prefiksem block. (Zobacz sekcję «Motyw wyglądu»).<br>
+Możesz utworzyć unikalny design dla dowolnego bloku w katalogu blocks/ (block-name.php; name to nazwa bloku). Aby to zrobić:<br>
+1. W katalogu templates/motyw_wyglądu/ utwórz plik szablonu o nazwie block-name.html.<br>
+2. W utworzonym szablonie utwórz unikalny design dla bloku block-name.php.<br>
+[b]Przykład:[/b]<br>
+Wymagany jest unikalny design dla bloku block-voting.php. W tym przypadku plik szablonu jest tworzony w katalogu templates/motyw_wyglądu/ o nazwie block-voting.html. System automatycznie znajdzie ten plik szablonu i użyje go tylko do stylizacji bloku block-voting.php.<br>
+<br>
+[b][i][color=orangered]Dodawanie bloku plikowego[/color][/i][/b]<br>
+Aby dodać blok plikowy, należy wykonać następujące kroki:<br>
+<br>
+[b]1.[/b] Utwórz plik bloku.<br>
+Plik dla bloku plikowego można utworzyć na dwa sposoby: przez interfejs sekcji administracyjnej i przez strukturę plików strony.<br>
+<br>
+[u]Tworzenie pliku przez interfejs sekcji administracyjnej[/u]<br>
+Przejdź do zakładki «Dodaj blok plikowy», która wyświetla formularz dodawania nowego bloku plikowego.<br>
+Podaj nazwę pliku do utworzenia (np. mysite), zauważając, że SLAED CMS automatycznie doda prefiks «block-» do nazwy pliku.<br>
+Podaj typ pliku do utworzenia.<br>
+Kliknij «Utwórz blok» i załaduje się formularz, w którym należy wstawić kod bloku.<br>
+[hr][color=red][b][i]Uwaga![/b]<br>
+W kodzie programu bloku, do wyświetlania informacji należy użyć zmiennej &#036;content zamiast standardowych metod echo lub print – to jedyna wyróżniająca cecha do rozważenia. Wszystko inne jest implementowane przy użyciu standardowych metod i funkcji PHP i HTML. Podczas implementacji bloków pamiętaj, że każdy kod PHP musi zaczynać się od &lt;?php i kończyć ?&gt;.[/i][/color][hr] Po wstawieniu kliknij «Zapisz» i odpowiedni plik zostanie utworzony w strukturze plików strony (np. block-mysite.php jak w naszym przykładzie).<br>
+[hr][color=red][b][i]Uwaga![/b]<br>
+Podczas tworzenia pliku bloku plikowego należy ustawić uprawnienia CHMOD 777 na folder blocks/, a następnie CHMOD 666 na utworzony plik.[/i][/color][hr]<br>
+[u]Tworzenie pliku przez strukturę plików strony[/u]<br>
+Pliki PHP dla bloków plikowych są przechowywane w katalogu «blocks», który znajduje się w katalogu głównym strony. W tym katalogu możesz utworzyć własny plik PHP, obowiązkowo nazywając go w formacie «block-nazwabloku.php» (jeśli format nazwy się różni, plik nie będzie widoczny na liście podczas dodawania bloku).<br>
+<br>
+[b]2.[/b] Ustanów połączenie między utworzonym plikiem a blokiem.<br>
+Aby ustanowić połączenie między plikiem a blokiem plikowym, należy dodać nowy blok, przechodząc do zakładki «Dodaj blok».<br>
+Formularz dodawania ma następujące pola:<br>
+[li] [b][i]Tytuł[/i][/b] – wprowadzany jest tytuł bloku (jaki tytuł jest wprowadzony, taki jest wyświetlany);<br>
+[li] [b][i]Link do kanału RSS[/i][/b] – jeśli w bloku ma być wyświetlany określony kanał RSS, podaj link do niego lub wybierz ze standardowej listy. Podczas wprowadzania linku RSS nie musisz wybierać pliku w polu «Nazwa pliku» ani wypełniać «Zawartość». Podczas tworzenia bloku plikowego to pole pozostaje niezmienione.<br>
+[li] [b][i]Czas aktualizacji[/i][/b] – jak często kanał RSS powinien być aktualizowany. Podczas tworzenia bloku plikowego to pole pozostaje niezmienione.<br>
+[li] [b][i]Nazwa pliku[/i][/b] – podczas tworzenia bloku plikowego wybierany jest wcześniej utworzony plik.<br>
+[li] [b][i]Zawartość[/i][/b] – wypełniane tylko podczas tworzenia bloku HTML (podczas wypełniania zawartości nie trzeba wybierać pliku). Podczas tworzenia bloku plikowego to pole pozostaje niezmienione.<br>
+[li] [b][i]Pozycja[/i][/b] – wybierana jest pozycja, na której blok ma być wyświetlany.<br>
+[li] [b][i]Wyświetlaj blok w modułach[/i][/b] – wybierana jest lista modułów, w których blok ma być wyświetlany.<br>
+[li] [b][i]Język[/i][/b] – wybór wersji językowej, w której blok ma być wyświetlany.<br>
+[li] [b][i]Aktywuj[/i][/b] – «tak» – blok będzie pokazywany, «nie» – blok nie będzie pokazywany.<br>
+[li] [b][i]Czas pracy w dniach[/i][/b] – możesz określić liczbę dni, przez które blok powinien być aktywny. 0 – blok aktywny bez ograniczeń.<br>
+[li] [b][i]Po wygaśnięciu[/i][/b] – możesz wybrać, co system powinien automatycznie zrobić z blokiem po wygaśnięciu czasu pracy.<br>
+[li] [b][i]Kto to zobaczy?[/i][/b] – możesz określić, dla jakich kategorii użytkowników widok bloku jest dostępny.<br>
+<br>
+[color=orangered][b][i]Dodawanie bloku HTML[/i][/b][/color]<br>
+Tworzenie bloków HTML jest bardzo wygodne do wyświetlania banerów, linków i innych elementów, dla których kod HTML jest wystarczający.<br>
+Dodawanie bloku HTML jest tak proste jak bloku plikowego. Przejdź do zakładki «Dodaj blok» i wypełnij pola jak podczas tworzenia bloku plikowego, ale zamiast wybierać plik, wypełnij pole «Zawartość». Zawartość musi być wypełniona kodem HTML.<br>
+<br>
+[color=orangered][b][i]Dodawanie bloku RSS[/i][/b][/color]<br>
+Przejdź do zakładki «Dodaj blok» i wypełnij pola jak podczas tworzenia bloku plikowego, ale zamiast wybierać plik, podaj link do kanału RSS i czas aktualizacji.<br>
+<br>
+[color=orangered][b][i]Używanie bloków bezpośrednio w plikach HTML motywu wyglądu[/i][/b][/color]<br>
+1. Utwórz blok w panelu administracyjnym systemu; może to być blok standardowy lub wolny.<br>
+2. Aktywuj blok i określ jego Nr – numer na liście bloków.<br>
+3. Aby wstawić blok, np. do głównego pliku: index.html motywu wyglądu, wystarczy dodać kod: {%BLOCKS n,XXX%}<br>
+<br>
+XXX – numer twojego bloku<br>
+n – bez stylizacji<br>
+lub<br>
+XXX – pełna nazwa pliku bloku w katalogu: blocks/ np.: block-forum.php<br>
+s – standardowa stylizacja<br>
+<br>
+Inne opcje są możliwe według twojego uznania.<br>
+<br>
+[u]Opis zmiennych[/u]<br>
+{%BLOCKS none,XXX%} lub {%BLOCKS n,XXX%} – Dowolny blok systemowy lub blok wolny bez stylizacji, gdzie XXX to ID bloku lub nazwa pliku bloku.<br>
+<br>
+{%BLOCKS standart,XXX%} lub {%BLOCKS s,XXX%} – Dowolny blok systemowy lub blok wolny ze stylizacją bloku wolnego, gdzie XXX to ID bloku lub nazwa pliku bloku.<br>
+<br>
+[u]Tworzenie osobistej stylizacji dla bloku[/u]<br>
+Aby utworzyć ekskluzywną stylizację dla bloku, należy utworzyć plik szablonu dla tego bloku o nazwie:<br>
+<br>
+block-15.html<br>
+15 – to numer bloku na liście bloków. W bazie danych (tabela prefiks_blocks, pole bid).<br>
+lub<br>
+block-name.html<br>
+name – to nazwa bloku, pełna nazwa pliku bloku w katalogu: blocks/<br>
+<br>
+Plik stylizacji bloku powinien być umieszczony w głównym katalogu motywu wyglądu wraz z innymi standardowymi szablonami systemowymi.<br>
+<br>
+[color=green][b]Bloki Wolne (fly)[/b][/color]<br>
+Blok wolny (fly) można umieścić w dowolnym miejscu na stronie witryny, dla czego kod tworzenia tego wolnego bloku musi być wstawiony do odpowiedniego pliku PHP (np. w config/config_header.php). Kod tworzenia wolnego bloku nie może być wstawiany do szablonów motywu wyglądu (pliki *.html), ponieważ w tym przypadku ten kod PHP nie będzie przetwarzany. Bardziej kompletne informacje o wstawianiu bloków do szablonów motywu wyglądu znajdują się w sekcji «Motyw wyglądu».<br>
+Blok wolny jest opisywany w skrypcie PHP przez funkcję: blocks(&quot;why&quot;, &quot;who&quot;), gdzie blocks to funkcja do tworzenia wolnego bloku z parametrami: why i who.<br>
+W zależności od parametrów why i who, funkcja tworzenia wolnego bloku może:<br>
+[li] Drukować uformowany wolny blok na standardowe wyjście (wyświetlić blok na stronie).<br>
+[li] Zwracać ciąg z uformowanym wolnym blokiem (wyjście bloku do zmiennej do późniejszego wstawienia tego bloku do szablonu HTML). W tym przypadku ten wolny blok może być ze stylizacją lub bez – zależy to od parametrów why.<br>
+<br>
+[u]Znaczenie parametrów why:[/u]<br>
+[li] [b][i]none[/i][/b] (wyświetla ciało bloku na stronie bez stylizacji)<br>
+&#036;fly_block_1_1 = blocks(&quot;none&quot;, 15);<br>
+&#036;fly_block_1_2 = blocks(&quot;none&quot;, &quot;block-menu2.php&quot;);<br>
+[li] [b][i]standart[/i][/b] (wyświetla ciało bloku na stronie ze stylizacją)<br>
+&#036;fly_block_2_1 = blocks(&quot;standart&quot;, 15);<br>
+&#036;fly_block_2_2 = blocks(&quot;standart&quot;, &quot;block-menu2.php&quot;);<br>
+[li] [b][i]plzreturn[/i][/b] (wyświetla ciało bloku do zmiennej bez wyjścia na stronie i bez stylizacji)<br>
+&#036;fly_block_3_1 = blocks(&quot;plzreturn&quot;, 15);<br>
+&#036;fly_block_3_2 = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
+[li] [b][i]oreturnform[/i][/b] (ciało bloku do zmiennej bez wyjścia na stronie, ale ze stylizacją)<br>
+&#036;fly_block_4_1 = blocks(&quot;oreturnform&quot;, 15);<br>
+&#036;fly_block_4_1 = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);<br>
+* 15 – to bid, numer bloku w bazie danych (numer bloku można zobaczyć w panelu administracyjnym w wierszu Nr).<br>
+<br>
+[u]Znaczenie parametrów who:[/u]<br>
+[li] [b][i]bid[/i][/b] bloku (numer bloku w bazie danych; tabela pref_blocks (pref – to prefiks tabeli DB), pole bid)<br>
+&#036;fly_block_5_1 = blocks(&quot;none&quot;, 15);<br>
+&#036;fly_block_5_2 = blocks(&quot;standart&quot;, 15);<br>
+&#036;fly_block_5_3 = blocks(&quot;plzreturn&quot;, 15);<br>
+&#036;fly_block_5_4 = blocks(&quot;oreturnform&quot;, 15);<br>
+[li] [b][i]block-name.php[/i][/b] (nazwa pliku PHP bloku; name to nazwa bloku)<br>
+&#036;fly_block_6_1 = blocks(&quot;none&quot;, &quot;block-menu2.php&quot;);<br>
+&#036;fly_block_6_2 = blocks(&quot;standart&quot;, &quot;block-menu2.php&quot;);<br>
+&#036;fly_block_6_3 = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
+&#036;fly_block_6_4 = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);<br>
+Aby używać utworzonego wolnego bloku, ten blok musi być aktywny. Ten blok powinien mieć tylko jedno oznaczenie – «Blok wolny», w przeciwnym razie ten blok będzie traktowany jako standardowy.<br>
+<br>
+Aby utworzyć ekskluzywną stylizację dla wolnego bloku, należy utworzyć plik szablonu dla tego bloku o nazwie:<br>
+[li] [b][i]fly-block-15.html[/i][/b] (15 – to numer bloku w bazie danych (tabela pref_blocks, pole bid));<br>
+[li] [b][i]fly-block-name.html[/i][/b] (name – to nazwa bloku).[/justify]<br>
+[b]Przykład 1:[/b]<br>
+Blok wolny z następującymi parametrami musi być utworzony:<br>
+[li] Wyjście ciała wolnego bloku na stronie.<br>
+[li] Bez stylizacji.<br>
+[li] Według numeru bloku w bazie danych.<br>
+[php]blocks(&quot;none&quot;, 15);[/php]<br>
+[li] Używając nazwy bloku.<br>
+[php]blocks(&quot;none&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[b]Przykład 2:[/b]<br>
+Blok wolny z następującymi parametrami musi być utworzony:<br>
+[li] Wyjście ciała wolnego bloku na stronie.<br>
+[li] Ze stylizacją.<br>
+[li] Według numeru bloku w bazie danych.<br>
+[php]blocks(&quot;standart&quot;, 15);[/php]<br>
+[li] Używając nazwy bloku:<br>
+[php]blocks(&quot;standart&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[b]Przykład 3:[/b]<br>
+Blok wolny z następującymi parametrami musi być utworzony:<br>
+[li] Wyjście ciała wolnego bloku do zmiennej.<br>
+[li] Bez stylizacji.<br>
+[li] Według numeru bloku w bazie danych<br>
+[php]global &#036;blockg;<br>
+ob_start();<br>
+blocks(&quot;plzreturn&quot;, 15);<br>
+&#036;blockg[&quot;15&quot;] = ob_get_clean();[/php]<br>
+[li] Używając nazwy bloku:<br>
+[php]global &#036;blockg;<br>
+&#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[b]Przykład 4:[/b]<br>
+Blok wolny z następującymi parametrami musi być utworzony:<br>
+[li] Wyjście ciała wolnego bloku do zmiennej.<br>
+[li] Ze stylizacją.<br>
+[li] Według numeru bloku w bazie danych.<br>
+[php]global &#036;blockg;<br>
+ob_start();<br>
+blocks(&quot;oreturnform&quot;, 15);<br>
+&#036;blockg[&quot;15&quot;] = ob_get_clean();[/php]<br>
+[li] Używając nazwy bloku.<br>
+[php]global &#036;blockg;<br>
+&#036;blockg[&quot;menu2&quot;] = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[justify]Aby wyświetlić zmienną zawierającą ciało wolnego bloku na stronie, należy wykonać następujące czynności:<br>
+Otwórz plik config/config_header.php i wstaw kod:[/justify]<br>
+[php]global &#036;blockg;<br>
+&#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);[/php]<br>
+[justify]W dowolnym miejscu w szablonie (np. w templates/twój_motyw/index.html) wstaw tablicę &#036;blockg[menu2] (zwróć uwagę na brak cudzysłowów wewnątrz nawiasów kwadratowych!) Zamiast &#036;blockg[menu2] na stronie zostanie wyświetlony blok menu2, którego kod jest zawarty w pliku blocks/block-menu2.php.<br>
+Dla prawidłowego wyświetlenia wolnego bloku na stronie, który jest pobierany z bazy danych przez bid z tabeli pref_blocks, z włączonym modułem rss_info (wyjście wiadomości w formacie RSS), należy zapisać w pliku PHP config/config_header.php:[/justify]<br>
+[php]global &#036;blockg;<br>
+&#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
+ob_start();<br>
+blocks(&quot;none&quot;, 15);<br>
+&#036;blockg[&quot;15&quot;] = ob_get_clean();[/php]<br>
+[justify]Blok wolny może być wyświetlany na stronach witryny w całej witrynie, jeśli jego kod jest zintegrowany z motywem wyglądu, lub może być wyświetlany w określonym module, jeśli jego kod jest zintegrowany z kodem tego modułu.<br>
+Blok wolny nie może być przetwarzany przez system jako blok standardowy, ale blok standardowy może być przetwarzany przez system jako blok wolny. Przykład: blok modules z bid 1 (tabela slaed_blocks) można wyświetlić na stronie ponownie jako blok wolny, a wtedy wszystkie ograniczenia, które dotyczą bloku modules, dotyczą tego bloku (pokazuj tylko na stronie głównej lub tylko w jednym module lub w wybranych modułach lub we wszystkich modułach).<br>
+<br>
+[b][i][color=orangered]Zmiana pliku bloku[/color][/i][/b]<br>
+Aby edytować plik bloku plikowego, przejdź do zakładki «Edytuj blok» i wybierz plik do edycji.<br>
+<br>
+[b][i][color=orangered]Zmiana bloku[/color][/i][/b]<br>
+W zakładce «Strona główna» w kolumnie «Funkcje» kliknij (Pełna edycja) – zostanie wyświetlony formularz edycji bloku.<br>
+<br>
+[b][i][color=orangered]Zmiana pozycji bloku[/color][/i][/b]<br>
+W zakładce «Strona główna» w kolumnie «Pozycja» użyj strzałek, aby zmienić pozycję bloku. Wybrana pozycja bloku jest wyświetlana w kolumnie «Pozycja».[/justify]

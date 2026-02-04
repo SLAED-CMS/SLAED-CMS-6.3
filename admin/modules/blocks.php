@@ -12,6 +12,20 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     return getAdminTabs(_BLOCKS, 'blocks.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
+function getBlockModules(): array {
+    global $confmd;
+    static $mods = null;
+    if ($mods === null) {
+        $mods = [];
+        foreach ($confmd as $name => $info) {
+            if ((int)($info['type'] ?? 1) !== 1) continue;
+            $mods[] = $name;
+        }
+        sort($mods);
+    }
+    return $mods;
+}
+
 function blocks(): void {
     head();
     echo navi(0, 0, 0, 0).setTemplateBasic('open').'<div id="repajax_block">'.ajax_block().'</div>'.setTemplateBasic('close');
@@ -56,8 +70,8 @@ function add(): void {
     .'<tr><td>'._BLOCK_VIEW.':</td><td><table>';
     $a = 2;
     $i = 1;
-    $result = $db->sql_query('SELECT title FROM '.$prefix.'_modules');
-    while (list($title) = $db->sql_fetchrow($result)) {
+    $modules = getBlockModules();
+    foreach ($modules as $title) {
         $tdwidth = intval(100/$a);
         if (($i - 1) % $a == 0) $cont .= '<tr>';
         $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="blockwhere[]" value="'.$title.'"> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
@@ -326,8 +340,8 @@ function edit(): void {
     $where_mas = explode(',', $which);
     $a = 2;
     $i = 1;
-    $result = $db->sql_query('SELECT title FROM '.$prefix.'_modules');
-    while (list($title) = $db->sql_fetchrow($result)) {
+    $modules = getBlockModules();
+    foreach ($modules as $title) {
         $mel = '';
         foreach ($where_mas as $val) if ($val == $title) $mel = ' checked';
         $tdwidth = intval(100/$a);

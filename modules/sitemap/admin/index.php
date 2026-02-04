@@ -168,7 +168,7 @@ function save(): void {
 
 function info(): void {
     head();
-    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'sitemap').'</div>';
+    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 'sitemap', 0).'</div>';
     foot();
 }
 

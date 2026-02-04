@@ -1,1 +1,18 @@
-Description du module en français.
+[justify]Cette section est destinée à l'exécution des opérations de base pour l'administration de la base de données du site.<br>
+Dans cette section, vous pouvez effectuer les actions suivantes :<br>
+[li] [b][i]Optimisation de la base de données[/i][/b] – l'action est effectuée immédiatement après la navigation vers l'onglet du même nom. En optimisant régulièrement la base de données, sa taille est réduite et par conséquent le travail de récupération d'informations de la base de données est accéléré.<br>
+Il est recommandé d'utiliser cette fonction au moins une fois par semaine.<br>
+[li] [b][i]Réparation de la base de données[/i][/b] – l'action est effectuée immédiatement après la navigation vers l'onglet du même nom. En cas d'arrêt inattendu du serveur MySQL pendant l'exécution d'actions, la structure des tables de la base de données peut être endommagée. L'utilisation de cette fonction réparera les tables endommagées.[hr][color=blue][b]Attention ![/color][/b]<br>
+Dans les onglets «Optimisation de la base de données» et «Réparation de la base de données», la colonne «Overhead» est affichée, qui montre des informations sur l'espace libre libéré après l'optimisation ou la réparation de la base de données.[hr][li] [b][i]Requête de base de données[/i][/b] – permet d'exécuter une requête arbitraire dans la base de données. Via le formulaire affiché dans l'onglet, vous pouvez exécuter pratiquement toutes les requêtes sauf les requêtes de sélection de données (SELECT).<br>
+<br>
+[b][i][color=orangered]Exemples de requêtes de base de données[/color][/i][/b]<br>
+[li] Requête qui supprimera tous les utilisateurs enregistrés qui n'ont pas visité le projet depuis : 2010-02-29 18:15:00.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_lastvisit &lt; &quot;2010-02-29 18:15:00&quot;;[/code]<br>
+[justify][li] Requête qui supprimera tous les utilisateurs enregistrés qui n'ont jamais visité le projet.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_lastvisit = &quot;0000-00-00 00:00:00&quot;;[/code]<br>
+[justify][li] Requête qui supprimera tous les utilisateurs enregistrés utilisant l'adresse IP : 193.201.225.104. Cette fonctionnalité est utile pour la suppression en masse de robots spam en cas de leur inscription.[/justify]<br>
+[code]DELETE FROM {prefix}_users WHERE user_last_ip = &quot;193.201.225.104&quot;;[/code]<br>
+[justify][li] Dans certains cas, lors de la publication de textes volumineux avec un contenu dépassant 65535 caractères, il est nécessaire d'augmenter la taille des informations stockées au maximum. Exécutez le package de requêtes suivant :[/justify]<br>
+[code]ALTER TABLE `{prefix}_stories` CHANGE `hometext` `hometext` MEDIUMTEXT NULL DEFAULT NULL;<br>
+ALTER TABLE `{prefix}_stories` CHANGE `bodytext` `bodytext` LONGTEXT NOT NULL;[/code][justify][hr][color=red][b][i]Attention ![/b]<br>
+Après la requête, le système fournira un rapport sur les résultats de l'exécution des requêtes dans les tables individuelles : Ok (si tout s'est bien passé), Erreur (si une erreur s'est produite).[/i][/color][/justify]
