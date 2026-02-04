@@ -68,6 +68,12 @@ function modules(): void {
     }
     closedir($handle);
 
+    // Check for duplicate module names
+    $duplicates = array_diff_assoc($modlist, array_unique($modlist));
+    if (!empty($duplicates)) {
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'duplicates', 'text' => _MODULES_DUPLICATE.': '.implode(', ', array_unique($duplicates))]);
+    }
+
     // Remove modules from config that no longer exist in filesystem
     foreach (array_keys($confmd) as $module) {
         if (!in_array($module, $modlist)) {

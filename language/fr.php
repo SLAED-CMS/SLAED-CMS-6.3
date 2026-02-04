@@ -296,6 +296,7 @@ define("_MVADMIN","Seuls les administrateurs");
 define("_MVALL","Tous les visiteurs");
 define("_MVANON","Seulement anonymous");
 define("_MVUSERS","Seuls les utilisateurs");
+define("_MODULES_DUPLICATE","Modules en double trouvés");
 define("_NAME","Nom");
 define("_NEW","Nouvelles");
 define("_NEWLAST3DAYS","Ajout des 3 derniers jours");
