@@ -297,16 +297,8 @@ ALTER TABLE `{prefix}_message`
   MODIFY `mlanguage` VARCHAR(30) NOT NULL DEFAULT '',
   ADD KEY `active` (`active`),
   ADD KEY `mlanguage` (`mlanguage`);
-
-ALTER TABLE `{prefix}_modules`
-  MODIFY `mid` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `active` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `view` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `inmenu` BOOLEAN NOT NULL DEFAULT 1,
-  MODIFY `mod_group` INT UNSIGNED DEFAULT 0,
-  MODIFY `blocks` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `blocks_c` BOOLEAN NOT NULL DEFAULT 0,
-  ADD KEY `active` (`active`);
+  
+DROP TABLE `{prefix}_modules`;
 
 ALTER TABLE `{prefix}_news`
   MODIFY `sid` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -478,7 +470,6 @@ ANALYZE TABLE `{prefix}_jokes`;
 ANALYZE TABLE `{prefix}_links`;
 ANALYZE TABLE `{prefix}_media`;
 ANALYZE TABLE `{prefix}_message`;
-ANALYZE TABLE `{prefix}_modules`;
 ANALYZE TABLE `{prefix}_news`;
 ANALYZE TABLE `{prefix}_newsletter`;
 ANALYZE TABLE `{prefix}_order`;

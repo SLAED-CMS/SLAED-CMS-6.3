@@ -375,20 +375,6 @@ CREATE TABLE `{prefix}_message` (
   KEY `mlanguage` (`mlanguage`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
-CREATE TABLE `{prefix}_modules` (
-  `mid` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(50) NOT NULL,
-  `active` BOOLEAN NOT NULL DEFAULT 0,
-  `view` BOOLEAN NOT NULL DEFAULT 0,
-  `inmenu` BOOLEAN NOT NULL DEFAULT 1,
-  `mod_group` INT UNSIGNED DEFAULT 0,
-  `blocks` BOOLEAN NOT NULL DEFAULT 0,
-  `blocks_c` BOOLEAN NOT NULL DEFAULT 0,
-  PRIMARY KEY (`mid`),
-  KEY `title` (`title`),
-  KEY `active` (`active`)
-) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
-
 CREATE TABLE `{prefix}_news` (
   `sid` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `catid` INT UNSIGNED NOT NULL DEFAULT 0,

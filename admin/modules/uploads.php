@@ -28,7 +28,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
     }
     $search .= '</select><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploads"></form>';
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs(_UPLOADSEDIT, 'uploads.png', $search, $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
+    return getAdminTabs(_UPLOADS, 'uploads.png', $search, $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
 }
 
 function uploads(): void {

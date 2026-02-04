@@ -1,7 +1,7 @@
 # Contributing to SLAED CMS
 
 > **Contribution Guidelines for SLAED CMS 6.3**
-> *Last updated: January 2026*
+> *Last updated: February 2026*
 
 Thank you for your interest in contributing to SLAED CMS! This document provides guidelines and standards for contributing to the project.
 

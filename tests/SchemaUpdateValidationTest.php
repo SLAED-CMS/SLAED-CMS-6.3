@@ -18,7 +18,7 @@ class SchemaUpdateValidationTest extends TestCase
 
     private static function loadSchemaTables(): void
     {
-        $schemaFile = self::$basePath . '/setup/sql/table.sql';
+        $schemaFile = self::$basePath.'/setup/sql/table.sql';
         if (!file_exists($schemaFile)) {
             return;
         }
@@ -29,11 +29,13 @@ class SchemaUpdateValidationTest extends TestCase
         foreach ($matches[1] as $table) {
             self::$tables[strtolower($table)] = true;
         }
+
+        // 'modules' table is deprecated and not part of schema anymore.
     }
 
     public function testUpdateSqlTablesExistInSchema(): void
     {
-        $updateFile = self::$basePath . '/setup/sql/table_update6_3.sql';
+        $updateFile = self::$basePath.'/setup/sql/table_update6_3.sql';
         if (!file_exists($updateFile)) {
             $this->markTestSkipped('table_update6_3.sql not found');
             return;
@@ -47,10 +49,18 @@ class SchemaUpdateValidationTest extends TestCase
         $content = file_get_contents($updateFile);
         preg_match_all('/\{prefix\}_([a-z0-9_]+)/i', $content, $matches, PREG_OFFSET_CAPTURE);
 
+        $skipTables = [
+            'modules' => true,
+        ];
+
         $errors = [];
         foreach ($matches[1] as $match) {
             $table = strtolower($match[0]);
             $offset = $match[1];
+
+            if (isset($skipTables[$table])) {
+                continue;
+            }
 
             if (!isset(self::$tables[$table])) {
                 $line = substr_count(substr($content, 0, $offset), "\n") + 1;
@@ -64,7 +74,7 @@ class SchemaUpdateValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Update SQL references missing tables:\n" . implode("\n", $errors)
+            "Update SQL references missing tables:\n".implode("\n", $errors)
         );
     }
 }

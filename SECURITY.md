@@ -1,7 +1,7 @@
 # Security Policy
 
 > **SLAED CMS Security Information**
-> *Last updated: January 2026*
+> *Last updated: February 2026*
 
 ---
 
@@ -185,7 +185,7 @@ location /storage {
 
 ## Security Changelog
 
-### Version 6.3.0 (In Development - January 2026)
+### Version 6.3.0 (In Development - February 2026)
 
 **Major Security Improvements:**
 

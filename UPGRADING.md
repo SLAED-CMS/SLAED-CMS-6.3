@@ -1,7 +1,7 @@
 # Upgrading SLAED CMS
 
 > **Migration Guide for SLAED CMS**
-> *Last updated: January 2026*
+> *Last updated: February 2026*
 
 This document provides instructions for upgrading SLAED CMS between versions.
 
@@ -394,7 +394,7 @@ rm -rf storage/cache/*
 
 ### 6.3.0 (In Development - 2025/2026)
 
-**Status:** Active Development (50% Complete as of January 2026)
+**Status:** Active Development (~65% Complete as of February 2026)
 
 **Major Changes:**
 - PHP 8.4 compatibility (8.1+ minimum)
@@ -412,10 +412,11 @@ rm -rf storage/cache/*
 - 99 deprecated insecure functions removed
 - 1282 legacy code constructs updated
 
-**Modernized Admin Modules:**
-- `admins.php`, `blocks.php`, `categories.php`, `changelog.php`
-- `comments.php`, `database.php`, `editor.php`, `fields.php`
-- `groups.php`, `lang.php`, `sitemap.php`, `users.php`
+**Modernized Admin Modules (23/23 - 100%):**
+- All admin modules have been modernized with `navi()` function
+- Key modules: `admins.php`, `blocks.php`, `categories.php`, `comments.php`
+- `config.php`, `database.php`, `editor.php`, `fields.php`, `groups.php`
+- `lang.php`, `messages.php`, `modules.php`, `security.php`, `uploads.php`
 
 **Removed Files:**
 - `config/config_db.php` → use `config/db.php`

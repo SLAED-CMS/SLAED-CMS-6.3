@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'];
     $lang = [_HOME, _ADD, _POINTS, _INFO];
-    return getAdminTabs(_UGROUPS, 'groups.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs(_GROUPS, 'groups.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function groups(): void {

@@ -10,7 +10,7 @@ require_once CONFIG_DIR.'/lang.php';
 function navi(int $tab = 0, int $subtab = 0): string {
     $ops = ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
-    return getAdminTabs(_LANG_EDIT, 'lang.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_LANG, 'lang.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function getLangPath(string $mod = '', string $typ = ''): string {

@@ -455,7 +455,7 @@ function admininfo() {
                 
                 $s_cont = '<table class="sl_tab_bl">'
                 .'<tr><td>'._SCLOSE.':</td><td>'.getHint($conf['close'], 2, 0, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>'._STAT.':</td><td>'.getHint($confst['stat'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
+                .'<tr><td>'._STATISTIC.':</td><td>'.getHint($confst['stat'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
                 .'<tr><td>'._REFERERS.':</td><td>'.getHint($confr['refer'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
                 .'<tr><td>'._NEWSLETTER.':</td><td>'.getHint($conf['newsletter'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
                 .'<tr><td>'._SICACHE.':</td><td>'.getHint($conf['cache'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'

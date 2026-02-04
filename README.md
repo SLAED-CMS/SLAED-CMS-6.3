@@ -5,7 +5,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
-![Migration](https://img.shields.io/badge/Migration-50%25%20Complete-purple.svg)
+![Migration](https://img.shields.io/badge/Migration-65%25%20Complete-purple.svg)
 
 **Modern, Secure, High-Performance Content Management System**
 
@@ -78,6 +78,23 @@ chmod 666 config/*.php storage/logs/*.txt
 2. Navigate to `http://yoursite.com/setup.php`
 3. Follow the installation wizard
 4. Delete `setup.php` after successful installation
+
+---
+
+## Testing
+
+See `docs/TESTS.md` for the full guide, tools, and explanations.
+
+Quick commands:
+
+```bash
+./vendor/bin/phpunit
+./vendor/bin/phpstan analyse
+./vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no --config=.php-cs-fixer.dist.php <paths>
+php -l path/to/file.php
+```
+
+Tests must be run after about 100 changed lines and before merging into `master`.
 
 ---
 
@@ -175,7 +192,7 @@ slaed-cms/
 
 > [!NOTE]
 > SLAED CMS 6.3 is undergoing a major modernization to PHP 8.4 standards.
-> **Progress: 50% Complete** (as of January 2026)
+> **Progress: ~65% Complete** (as of February 2026)
 
 ### ✅ Completed
 
@@ -191,23 +208,33 @@ slaed-cms/
 - Quote consistency (single quotes throughout)
 - Template functions modernized (`setTemplateBasic()`, `setTemplateWarning()`)
 
-**Modernized Admin Modules (12):**
+**Modernized Admin Modules (23/23 - 100%):**
 - `admins.php` - Administrator management
 - `blocks.php` - Block management
 - `categories.php` - Category management
-- `changelog.php` - Changelog viewer
 - `comments.php` - Comment management
+- `config.php` - System configuration
 - `database.php` - Database operations (+186% refactored)
 - `editor.php` - Editor settings
+- `favorites.php` - Favorites management
 - `fields.php` - Custom fields
 - `groups.php` - User groups
 - `lang.php` - Language settings
-- `sitemap.php` - Sitemap generation
-- `users.php` - User management (+220 lines improved)
+- `messages.php` - Messages management
+- `modules.php` - Module management
+- `monitor.php` - System monitor
+- `newsletter.php` - Newsletter management
+- `privat.php` - Private messages
+- `ratings.php` - Ratings system
+- `referers.php` - Referers tracking
+- `replace.php` - Text replacement
+- `security.php` - Security settings
+- `statistic.php` - Statistics
+- `template.php` - Template management
+- `uploads.php` - Upload management
 
 ### 🚧 In Progress
-- Remaining admin modules (15 modules)
-- Frontend modules optimization
+- Frontend modules optimization (~35% remaining)
 - Performance improvements
 - Documentation updates
 
