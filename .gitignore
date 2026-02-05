@@ -61,6 +61,7 @@ package-lock.json
 # Composer
 vendor/
 composer.lock
+composer.phar
 
 # PHPUnit
 .phpunit.cache/
