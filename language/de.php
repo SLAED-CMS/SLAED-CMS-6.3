@@ -298,6 +298,8 @@ define("_MVALL","Alle Besucher");
 define("_MVANON","Nur anonyme Benutzer");
 define("_MVUSERS","Nur angemeldete Benutzer");
 define("_MODULES_DUPLICATE","Doppelte Module gefunden");
+define("_MODULES_NEW","Neue Module gefunden");
+define("_MODULES_DELETED","Module gelöscht");
 define("_NAME","Bezeichnung");
 define("_NEW","Neu");
 define("_NEWLAST3DAYS","Ist fьr die letzten 3 Tage beigefügt");

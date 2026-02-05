@@ -298,6 +298,8 @@ define("_MVALL","Всі відвідувачі");
 define("_MVANON","Тільки аноніми");
 define("_MVUSERS","Тільки користувачі");
 define("_MODULES_DUPLICATE","Знайдено дублікати модулів");
+define("_MODULES_NEW","Знайдено нові модулі");
+define("_MODULES_DELETED","Модулі видалено");
 define("_NAME","Название");
 define("_NEW","Нові");
 define("_NEWLAST3DAYS","Доданий за останні 3 дні");

@@ -7,19 +7,28 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=modules', 'name=modules&amp;op=info'];
+    global $aroute;
+    $mtype = getVar('req', 'type', 'num', 2);
+    $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
+    $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
+    $ops = ['name=modules'.$typelink, 'name=modules&amp;op=info'];
     $lang = [_HOME, _INFO];
-    return getAdminTabs(_MODULES, 'modules.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
+    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$aroute.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
+    return getAdminTabs(_MODULES, 'modules.png', $search, $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
 function modules(): void {
     global $confmd, $prefix, $db, $aroute, $infos;
+    $mtype = getVar('req', 'type', 'num', 2);
+    $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     head();
     $cont = navi(0, 0, 0, 0);
     if (isset($infos)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $infos]);
 
     $config = false;
     $modlist = [];
+    $new = [];
+    $removed = [];
 
     // Scan admin modules (admin/modules/*.php) - type 0
     $handle = opendir('admin/modules');
@@ -40,6 +49,7 @@ function modules(): void {
                     'type'   => 0,
                 ];
                 $config = true;
+                $new[] = $module;
             }
         }
     }
@@ -63,6 +73,7 @@ function modules(): void {
                     'type'   => 1,
                 ];
                 $config = true;
+                $new[] = $file;
             }
         }
     }
@@ -74,12 +85,25 @@ function modules(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MODULES_DUPLICATE.': '.implode(', ', array_unique($duplicates))]);
     }
 
+    if (!empty($new)) {
+        $new = array_values(array_unique($new));
+        sort($new, SORT_NATURAL | SORT_FLAG_CASE);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODULES_NEW.': '.implode(', ', $new)]);
+    }
+
     // Remove modules from config that no longer exist in filesystem
     foreach (array_keys($confmd) as $module) {
-        if (!in_array($module, $modlist)) {
+        if (!in_array($module, $modlist, true)) {
             unset($confmd[$module]);
+            $removed[] = $module;
             $config = true;
         }
+    }
+
+    if (!empty($removed)) {
+        $removed = array_values(array_unique($removed));
+        sort($removed, SORT_NATURAL | SORT_FLAG_CASE);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODULES_DELETED.': '.implode(', ', $removed)]);
     }
 
     // Save config if changed
@@ -87,19 +111,36 @@ function modules(): void {
         setConfigFile('modules.php', 'confmd', $confmd);
     }
 
-    // Sort modules alphabetically
-    ksort($confmd);
+    // Filter modules by type
+    $mods = [];
+    foreach ($confmd as $mname => $mdata) {
+        $type = (int)($mdata['type'] ?? 1);
+        if ($mtype === 2 || $mtype === $type) {
+            $mods[$mname] = $mdata;
+        }
+    }
+
+    // Sort modules by type (Admins=0, Users=1) then name
+    uksort($mods, function ($a, $b) use (&$mods) {
+        $ta = (int)($mods[$a]['type'] ?? 1);
+        $tb = (int)($mods[$b]['type'] ?? 1);
+        if ($ta === $tb) {
+            return strnatcasecmp($a, $b);
+        }
+        return $ta <=> $tb;
+    });
 
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
 
     $a = 1;
-    foreach ($confmd as $title => $mod) {
+    foreach ($mods as $title => $mod) {
         $lang = (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']);
         $active = $mod['active'];
         $view = $mod['view'];
         $menu = $mod['menu'];
         $group = $mod['group'];
+        $type = $mod['type'];
 
         $act = $active ? 0 : 1;
 
@@ -111,6 +152,7 @@ function modules(): void {
             $who_view = _MVADMIN;
         }
 
+        $typel = ($type == 0) ? 'tools' : 'people-fill';
         $titlel = ($menu == 0) ? title_tip(_NO_SICHT).$lang : $lang;
         
 
@@ -133,21 +175,42 @@ function modules(): void {
                 }
             }
             if ($install) {
+                $dbc = '<i class="bi bi-database-fill-dash"></i> ';
                 $sqlimg = '||<a href="'.$aroute.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1" OnClick="return DelCheck(this, \''._DB_DELETE.' &quot;'.$title.'&quot;?\');" title="'._DB_DELETE.'">'._DB_DELETE.'</a>';
             } else {
+                $dbc = '<i class="bi bi-database-fill-add"></i> ';
                 $sqlimg = '||<a href="'.$aroute.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2" OnClick="return DelCheck(this, \''._DB_INSTALL.' &quot;'.$title.'&quot;?\');" title="'._DB_INSTALL.'">'._DB_INSTALL.'</a>';
             }
         } else {
+            $dbc = '';
             $sqlimg = '';
         }
 
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
+            $dbu = '<i class="bi bi-database-fill-gear bi-green" title="'._DB_UPDATE.'"></i> ';
             $sqluimg = '||<a href="'.$aroute.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3" OnClick="return DelCheck(this, \''._DB_UPDATE.' &quot;'.$title.'&quot;?\');" title="'._DB_UPDATE.'">'._DB_UPDATE.'</a>';
         } else {
+            $dbu = '';
             $sqluimg = '';
         }
 
-        $cont .= '<tr><td>'.$a.'</td><td>'.$titlel.'</td><td>'.$title.'</td><td>'.$who_view.'</td><td>'.$group_name.'</td><td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($aroute.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active).'||<a href="'.$aroute.'.php?name=modules&amp;op=edit&amp;mod='.$title.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$sqlimg.$sqluimg).'</td></tr>';
+        $cont .= '<tr><td>'.$a.'</td><td><i class="bi bi-'.$typel.'"></i> '.$titlel.'</td><td>'.$title.'</td><td>'.$who_view.'</td><td>'.$group_name.'</td><td>'.$dbc.$dbu.'  
+        
+        
+        
+        <!-- <i class="bi bi-database" style="font-size:14px; color:#dc3545"></i>
+        <i class="bi bi-exclamation-triangle" style="font-size:14px; color:#dc3545"></i>
+        
+        <i class="bi bi-person-fill-check" style="font-size:18px; color:#dc3545"></i>
+
+        <i class="bi bi-exclamation-square-fill" style="font-size:16px; color:#dc3545"></i>
+        <i class="bi bi-info-square-fill" style="font-size:16px; color:green"></i>
+
+        
+        
+        '.ad_status('', $active).'-->
+        
+        </td><td>'.add_menu(ad_status($aroute.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active).'||<a href="'.$aroute.'.php?name=modules&amp;op=edit&amp;mod='.$title.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$sqlimg.$sqluimg).'</td></tr>';
         $a++;
     }
 
