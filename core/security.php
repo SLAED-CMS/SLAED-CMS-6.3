@@ -389,7 +389,8 @@ if (!is_admin_god()) {
         function checkPost($name, $val) {
             global $prefix, $confs, $conf, $admin;
             #$val = is_array($val) ? fields_save($val) : $val;
-            $editor = is_array($admin) ? intval(substr($admin[3], 0, 1)) : 0;
+            $flag = is_array($admin) ? ($admin[3] ?? '') : '';
+            $editor = (int)substr($flag, 0, 1);
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form).*?>#i';
             $string = '#'.$prefix.'_admins|'.$prefix.'_users#i';
@@ -814,7 +815,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
     $filters = [
         'num'   => fn($v) => num_filter($v),
         'let'   => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
-        'word'  => fn($v) => is_string($v) ? text_filter(trim($v)) : $v,
+        'word'  => fn($v) => is_string($v) ? var_filter(urldecode(trim($v))) : $v,
         'name'  => fn($v) => is_string($v) ? text_filter(mb_substr(trim($v), 0, 25, 'utf-8')) : $v,
         'title' => fn($v) => is_string($v) ? save_text(trim($v), 1) : $v,
         'text'  => fn($v) => is_string($v) ? save_text(trim($v)) : $v,
@@ -1097,7 +1098,8 @@ function url_clickable($text) {
 function save_text($text, $id='') {
     global $admin, $conf;
     if ($text) {
-        $editor = is_array($admin) ? intval(substr($admin[3], 0, 1)) : 0;
+        $flag = is_array($admin) ? ($admin[3] ?? '') : '';
+        $editor = (int)substr($flag, 0, 1);
         if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
             $text = ($conf['clickable'] && $id != 1) ? url_clickable($text) : $text;
             $out = nl2br(str_replace(array('$', '\\'), array('&#036;', '&#092;'), stripslashes(text_filter($text, 2))), false);

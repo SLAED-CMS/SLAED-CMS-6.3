@@ -421,7 +421,7 @@ function profil() {
 function last($uid, $modul) {
     global $prefix, $db, $user, $conf;
     $user_id = intval($uid);
-    $num = user_news($user[3], 25);
+    $num = user_news($user[3] ?? '', 25);
     $cont = '';
     if ($modul == 'comm') {
         $result = $db->sql_query("SELECT id, cid, modul, date, comment FROM ".$prefix."_comment WHERE uid = '".$user_id."' AND status != '0' ORDER BY id DESC LIMIT 0,".$num);

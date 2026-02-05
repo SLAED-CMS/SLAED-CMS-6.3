@@ -30,6 +30,10 @@ require_once BASE_DIR.'/core/legacy.php';
 require_once CONFIG_DIR.'/modules.php';
 require_once CONFIG_DIR.'/comments.php';
 require_once CONFIG_DIR.'/favorites.php';
+require_once CONFIG_DIR.'/fields.php';
+require_once CONFIG_DIR.'/statistic.php';
+require_once CONFIG_DIR.'/rss.php';
+    
 require_once CONFIG_DIR.'/config_privat.php';
 require_once CONFIG_DIR.'/config_voting.php';
 
@@ -1321,13 +1325,7 @@ function getImgText($text, $type='') {
 
 # OLD DELETE
 # Format SEO url
-$confse = [
-    'rewrite' => false,   // true = SEO-Link, false = klassischer Link
-    'sep'     => '/',    // Separator for base segments (name, op, id)
-    'title'   => true,   // insert title or not
-    'ctitle'  => true,   // insert ctitle or not
-    'tsep'    => '',    // Separator only for Title / CTitle
-];
+require_once CONFIG_DIR.'/config_seo.php';
 
 function getSeoUrl(array $params): string {
     global $confse;
@@ -1402,7 +1400,7 @@ function getHref($meta) {
             $keys = '';
             $img = '';
         } else {
-            $desc = ($conf['adesc']) ? cutstr(getTextClean($meta['4'], 1), $confse['dletter'], 2) : '';
+            $desc = ($conf['adesc']) ? cutstr(getTextClean($meta['4'], 1), $conf['dletter'], 2) : '';
             $keys = '0';
             if ($conf['akeys']) {
                 $keyg = $title.' '.getTextClean($meta['4'], 2);
@@ -1723,7 +1721,8 @@ function search_color($sourse, $word) {
 function replace_break($text) {
     global $admin, $conf;
     if ($text) {
-        $editor = intval(substr($admin[3], 0, 1));
+        $flag = is_array($admin) ? ($admin[3] ?? '') : '';
+        $editor = (int)substr($flag, 0, 1);
         $out = ((defined("ADMIN_FILE") && $editor == 1) || (!defined("ADMIN_FILE") && $conf['redaktor'] == 1)) ? preg_replace("#<br.*>#i", "", $text) : $text;
         return $out;
     }
@@ -2360,7 +2359,7 @@ function fields_in($fieldb, $mod) {
 
 # Fields out
 function fields_out($fieldb, $mod) {
-    require_once CONFIG_DIR.'/fields.php';
+    global $conffi;
     $mod = strtolower($mod);
     if ($fieldb && $mod) {
         $fieldc = $conffi[$mod];
@@ -2648,7 +2647,7 @@ function check_user() {
 
 # Format head
 function head() {
-    global $prefix, $db, $home, $index, $conf, $confs, $confr, $confse, $user, $admin, $name, $theme, $op;
+    global $prefix, $db, $home, $index, $conf, $confs, $confr, $confse, $confrs, $confst, $user, $admin, $name, $theme, $op;
     $name = $name ?? '';
     $ctime = time();
     $request = getenv('REQUEST_URI');
@@ -2739,7 +2738,6 @@ function head() {
             }
         }
     }
-    require_once CONFIG_DIR.'/statistic.php';
     if ($confst['stat']) {
         $sreferer = get_referer();
         $sreqhom = text_filter($request);
@@ -2897,10 +2895,7 @@ function head() {
             $strmeta .= str_replace($from, $to, $confse['graph']);
         }
         $strlink .= '<link rel="shortcut icon" href="templates/'.$theme.'/favicon.png">'."\n";
-        if (strpos($conf['homeurl'], get_host()) !== false) {
-            $strlink .= '<link rel="canonical" href="'.$purl.'">'."\n";
-        }
-        require_once CONFIG_DIR.'/rss.php';
+        if (strpos($conf['homeurl'], get_host()) !== false) $strlink .= '<link rel="canonical" href="'.$purl.'">'."\n";
         if ($confrs['act']) {
             $fieldc = explode('||', $confrs['rss']);
             foreach ($fieldc as $val) {
