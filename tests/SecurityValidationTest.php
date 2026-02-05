@@ -235,6 +235,72 @@ class SecurityValidationTest extends TestCase
     }
 
     /**
+     * Проверяет что include/require не используются внутри функций
+     */
+    public function testNoIncludesInsideFunctions(): void
+    {
+        $errors = [];
+
+        foreach (self::$phpFiles as $file) {
+            $content = file_get_contents($file);
+            $tokens = token_get_all($content);
+            $depth = 0;
+            $inFunction = false;
+            $funcDepth = 0;
+            $funcName = '';
+            $nextIsFuncName = false;
+
+            foreach ($tokens as $i => $token) {
+                if (is_string($token)) {
+                    if ($token === '{') {
+                        $depth++;
+                    } elseif ($token === '}') {
+                        $depth--;
+                        if ($inFunction && $depth < $funcDepth) {
+                            $inFunction = false;
+                        }
+                    }
+                    continue;
+                }
+
+                [$id, $text, $line] = $token;
+
+                if ($id === T_FUNCTION) {
+                    $nextIsFuncName = true;
+                    continue;
+                }
+
+                if ($nextIsFuncName && $id === T_STRING) {
+                    $nextIsFuncName = false;
+                    $inFunction = true;
+                    $funcDepth = $depth + 1;
+                    $funcName = $text;
+                    continue;
+                }
+
+                if ($nextIsFuncName) {
+                    $nextIsFuncName = false;
+                }
+
+                if ($inFunction && in_array($id, [T_REQUIRE, T_REQUIRE_ONCE, T_INCLUDE, T_INCLUDE_ONCE], true)) {
+                    $errors[] = sprintf(
+                        "%s:%d - %s внутри функции %s()",
+                        str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file),
+                        $line,
+                        strtolower($text),
+                        $funcName
+                    );
+                }
+            }
+        }
+
+        $this->assertEmpty(
+            $errors,
+            "Найдены include/require внутри функций (используйте global или подключайте файлы глобально):\n" . implode("\n", $errors)
+        );
+    }
+
+    /**
      * Проверяет что PHP файлы найдены
      */
     public function testPhpFilesFound(): void
