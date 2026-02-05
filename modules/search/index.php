@@ -13,7 +13,7 @@ get_lang($conf['name']);
 function search_result() {
     global $prefix, $db, $admin_file, $conf, $confu;
     $search = explode(",", $conf['search']);
-    $word = ($_POST['word']) ? var_filter(urldecode($_POST['word'])) : var_filter(urldecode($_GET['word']));
+    $word = getVar('req', 'word', 'word', 0);
     $mod = analyze($_POST['mod'] ?? $_GET['mod'] ?? '');
     $mod = in_array($mod, $search, true) ? $mod : '';
     $typ = (isset($_POST['typ'])) ? intval($_POST['typ']) : ((isset($_GET['typ'])) ? intval($_GET['typ']) : "");
@@ -63,6 +63,7 @@ function search_result() {
             }
         }
         $a = 1;
+        $conts = [];
         foreach ($search as $val) {
             if (($mod === '' || $mod === $val) && is_active($val) && $val !== '') {
                 if ($val == "auto_links") {
@@ -228,7 +229,7 @@ function search_result() {
         $set = ($num - 1) * $conf['snum'];
         $tnum = ($set) ? $conf['snum'] + $set : $conf['snum'];
         for ($i = $set; $i < $tnum; $i++) {
-            if ($conts[$i] != "") $cont .= tpl_func("basic", $conts[$i][0], $conts[$i][1], $conts[$i][2], $conts[$i][3], $conts[$i][4], $conts[$i][5], $conts[$i][6], $conts[$i][7]);
+            if (isset($conts[$i]) && $conts[$i] != "") $cont .= tpl_func("basic", $conts[$i][0], $conts[$i][1], $conts[$i][2], $conts[$i][3], $conts[$i][4], $conts[$i][5], $conts[$i][6], $conts[$i][7]);
         }
         if (!$anum) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOMATCHES));
         $pnum = ceil($anum / $conf['snum']);
