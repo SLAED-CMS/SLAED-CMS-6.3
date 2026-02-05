@@ -1,1 +1,20 @@
-Module Description English.
+[justify]The «Modules» section is designed for managing the sections (modules) of the website.<br>
+For all modules, editing and activation/deactivation functions are available. For the «News» module, the following additional functions are available:<br>
+[li] [b][i]Update database tables[/i][/b] – updating the module's database tables;<br>
+[li] [b][i]Delete database tables[/i][/b] – deleting the module's database tables;<br>
+[li] [b][i]Add database tables[/i][/b] – adding the module's database tables (available after deletion);<br>
+[li] [b][i]Clear database tables[/i][/b] – deletes the contents of the module's database tables without changing the structure (data cleanup).<br>
+<br>
+The functions for deleting and adding module database tables are also available for the «Order» module.<br>
+<br>
+[b][color=green]Editing module data[/color][/b]<br>
+Navigation to the module editing form is done by clicking the «Editor» button.<br>
+When editing a module, the following can be changed:<br>
+[li] [b][i]Who will see[/i][/b] – access rights for the module are set: visitor (all), user (authorized only), administrator.<br>
+[li] [b][i]For users in group[/i][/b] – access to viewing the module can be restricted depending on the user's group membership.<br>
+[li] [b][i]Block display in module[/i][/b] – you can specify at which positions blocks should be displayed on the module's pages.<br>
+[li] [b][i]Make visible in modules block[/i][/b] – activate or deactivate the display of the link to the module in the block-modules.php block.<br>
+<br>
+[color=orangered][b][i]Adding a module independently[/i][/b][/color]<br>
+SLAED CMS, being an open system, allows adding additional modules to the website structure. Modules are stored in the directory: modules/ (folders of new modules must be copied to the directory: modules/ accordingly).<br>
+With custom modules, the system's functionality can be significantly extended. If an additional module contains a table file in the module folder, for example: modules/news/sql/table.sql, then after adding the module folder to the folder: modules/, in the administration section «Modules» you need to launch the mechanism for creating the tables of the corresponding module by clicking on the value (Add database tables).[/justify]

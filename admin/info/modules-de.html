@@ -1,1 +1,20 @@
-Modulbeschreibung auf Deutsch.
+[justify]Der Bereich «Module» dient zur Verwaltung der Bereiche (Module) der Website.<br>
+Für alle Module stehen Funktionen zur Bearbeitung und Aktivierung/Deaktivierung zur Verfügung. Für das Modul «News (Nachrichten)» sind zusätzlich folgende Funktionen verfügbar:<br>
+[li] [b][i]Datenbanktabellen aktualisieren[/i][/b] – Aktualisierung der Datenbanktabellen des Moduls;<br>
+[li] [b][i]Datenbanktabellen löschen[/i][/b] – Löschen der Datenbanktabellen des Moduls;<br>
+[li] [b][i]Datenbanktabellen hinzufügen[/i][/b] – Hinzufügen der Datenbanktabellen des Moduls (verfügbar nach dem Löschen);<br>
+[li] [b][i]Datenbanktabellen leeren[/i][/b] – löscht den Inhalt der Datenbanktabellen des Moduls, ohne die Struktur zu ändern (Datenbereinigung).<br>
+<br>
+Die Funktionen zum Löschen und Hinzufügen von Datenbanktabellen des Moduls sind auch für das Modul «Order (Bestellformular)» verfügbar.<br>
+<br>
+[b][color=green]Bearbeitung der Moduldaten[/color][/b]<br>
+Der Übergang zum Bearbeitungsformular des Moduls erfolgt durch Klicken auf die Schaltfläche «Editor».<br>
+Bei der Bearbeitung des Moduls kann Folgendes geändert werden:<br>
+[li] [b][i]Wer wird sehen[/i][/b] – es werden die Zugriffsrechte für das Modul festgelegt: Besucher (alle), Benutzer (nur autorisierte), Administrator.<br>
+[li] [b][i]Für Benutzer der Gruppe[/i][/b] – der Zugriff auf die Ansicht des Moduls kann abhängig von der Gruppenzugehörigkeit des Benutzers eingeschränkt werden.<br>
+[li] [b][i]Blockanzeige im Modul[/i][/b] – es kann angegeben werden, an welchen Positionen die Blöcke auf den Seiten des Moduls angezeigt werden sollen.<br>
+[li] [b][i]Im Modulblock sichtbar machen[/i][/b] – Anzeige des Links zum Modul im Block block-modules.php aktivieren oder nicht.<br>
+<br>
+[color=orangered][b][i]Selbstständiges Hinzufügen eines Moduls[/i][/b][/color]<br>
+SLAED CMS ermöglicht als offenes System das Hinzufügen zusätzlicher Module zur Website-Struktur. Module werden im Verzeichnis modules/ gespeichert (Ordner neuer Module müssen entsprechend in das Verzeichnis modules/ kopiert werden).<br>
+Mit eigenen Modulen kann die Funktionalität des Systems erheblich erweitert werden. Falls ein zusätzliches Modul eine Tabellendatei im Modulordner enthält, z. B. modules/news/sql/table.sql, muss nach dem Hinzufügen des Modulordners zum Ordner modules/ im Administrationsbereich «Module» der Mechanismus zur Erstellung der Tabellen des entsprechenden Moduls gestartet werden, indem auf den Wert (Datenbanktabellen hinzufügen) geklickt wird.[/justify]

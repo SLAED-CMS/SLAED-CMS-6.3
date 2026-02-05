@@ -1,1 +1,113 @@
-Modulbeschreibung auf Deutsch.
+[justify]Der Bereich "Sicherheit" ist ein leistungsstarkes Werkzeug zum Schutz der Website vor verschiedenen Angriffen, von SQL-Injektionen bis hin zum Hochladen fremder Skripte in das Website-Verzeichnis. Dieser Bereich hilft dabei, Angreifer zu verfolgen, zu identifizieren und bei Bedarf zu blockieren, ebenso wie jeden anderen Benutzer oder Besucher des Projekts.<br>
+<br>
+[color=green][b]Registerkarte "Hauptseite"[/b][/color]<br>
+Stellt Statistiken zur Website-Nutzung bereit. Um die Statistiken anzuzeigen, klicken Sie auf den Wert (Information) neben der entsprechenden Statistikdatei. Die Informationen werden unterhalb der Statistikdateiliste angezeigt.<br>
+Um die Informationen als TXT-Datei herunterzuladen, klicken Sie auf den Wert (Herunterladen).<br>
+Um die Statistikdatei zu loeschen, klicken Sie auf den Wert (Objekt loeschen).<br>
+Um den Speicherpfad und den Namen der Statistikdatei auf dem Server anzuzeigen, klicken Sie auf das Symbol (i) links neben dem Namen der entsprechenden Statistik.<br>
+<br>
+[b][i][color=orangered]Statistik der modifizierten Dateien[/color][/i][/b]<br>
+Abhaengig von der in den Einstellungen angegebenen Zeit (Registerkarte "Konfigurationen", Parameter "Zeitintervall fuer die Dateimodifikationspruefung, <br>
+in Minuten") prueft das System alle Systemdateien auf Loeschungen, Aenderungen und neue Hinzufuegungen.<br>
+Die Erfassung dieser Statistik ist in Bezug auf die Sicherheit nuetzlich: Die oben beschriebenen Aktionen mit Dateien koennen nachverfolgt werden.<br>
+<br>
+[b][i][color=orangered]Statistik dynamischer Fehler[/color][/i][/b]<br>
+Verfolgt Skript- und Serverfehler. Zeichnet detaillierte Informationen (Fehlerbeschreibung, Skript, Zeile und Zeitpunkt des Fehlers) in der Statistik-Logdatei auf dem Server auf.<br>
+<br>
+[b][i][color=orangered]Statistik verbotener Aktionen[/color][/i][/b]<br>
+Verfolgt verbotene Aktionen. Einige Methoden der Informationsuebertragung duerfen nicht verwendet werden, sind aber gleichzeitig nicht kritisch fuer die Sicherheit des Systems. Zum Beispiel die Verwendung von HTML-Code in der Adressleiste des Browsers bei der Uebermittlung von Anfragen oder der Versuch, JavaScripts, IFrame usw. einzubetten. Zeichnet detaillierte Informationen (IP-Adresse des Angreifers, Browser-Daten, Aktionsbeschreibung, Zeitpunkt der Aktion) in der Statistik-Logdatei auf dem Server auf. <br>
+<br>
+[b][i][color=orangered]Statistik der Benutzeranmeldungen[/color][/i][/b]<br>
+Verfolgt alle Benutzeranmeldungen auf der Website. Erfasst:<br>
+[li] ob die Anmeldung erfolgreich war;<br>
+[li] IP-Adresse des Angemeldeten;<br>
+[li] Nickname;<br>
+[li] Browser;<br>
+[li] Datum und Uhrzeit.<br>
+<br>
+[b][i][color=orangered]Statistik aller eingehenden Informationen[/color][/i][/b]<br>
+Verfolgt alle Aktionen, die von Besuchern auf der Website durchgefuehrt werden (globale Variablen POST, GET, COOKIE, FILES, SESSION), im Grunde buchstaeblich alles, was Benutzer tun, welche Informationen sie anfordern, was sie senden usw. <br>
+Die Erfassung von Statistiken ist in Bezug auf die Sicherheit nuetzlich: Es kann detailliert nachverfolgt werden, was eine bestimmte IP auf der Website getan hat.<br>
+<br>
+[b][i][color=orangered]Angriffsstatistiken[/color][/i][/b]<br>
+Das wichtigste Informationspanel des Sicherheitssystems. Verfolgt Angreifer und ihre Aktionen. Zeichnet detaillierte Informationen (IP-Adresse des Angreifers, Browser-Daten, Angriffsbeschreibung, Zeitpunkt des Angriffs) in der Statistik-Logdatei auf dem Server auf.<br>
+<br>
+[b][i][color=orangered]Statistik der Administratoranmeldungen[/color][/i][/b]<br>
+Verfolgt alle Administratoranmeldungen auf der Website. Erfasst:<br>
+[li] ob die Anmeldung erfolgreich war;<br>
+[li] IP-Adresse des Angemeldeten;<br>
+[li] Nickname;<br>
+[li] Browser;<br>
+[li] Datum und Uhrzeit.<br>
+<br>
+[b][i][color=orangered]Statistik statischer Fehler[/color][/i][/b]<br>
+Verfolgt Serverfehler. Zeichnet detaillierte Informationen (Fehlerbeschreibung, Link und Zeitpunkt des Fehlers) in der Statistik-Logdatei auf dem Server auf.<br>
+<br>
+[b][i][color=orangered]Dateistruktur[/color][/i][/b]<br>
+Zeigt die gesamte Dateistruktur im Website-Verzeichnis an: Ordner und die darin enthaltenen Dateien.<br>
+Wird abhaengig von der Einstellung aktualisiert: Zeitintervall fuer die Dateimodifikationspruefung, <br>
+in Minuten (angegeben in der Registerkarte "Konfigurationen").<br>
+<br>
+[color=green][b]Registerkarte "Blockierung"[/b][/color]<br>
+Jeder Besucher des Projekts kann nach IP-Adresse oder IP-Netzmaske, nach verwendetem Browser sowie nach dem Benutzernamen eines auf der Website registrierten Benutzers blockiert werden. Die Anzahl der blockierten Besucher ist unbegrenzt. <br>
+<br>
+[b][i][color=orangered]Blockierte IP-Adressen[/i][/b][/color]<br>
+In diesem Unterbereich befindet sich die Liste der blockierten IP-Adressen. Adressen werden im Format 255.255.255.255 eingetragen.<br>
+Bei Bedarf koennen ganze Subnetze blockiert werden. Folgende Maske wird verwendet: 255.***.***.***<br>
+<br>
+[b]Beispiel 1:[/b]<br>
+IP: 77.245.112.0<br>
+Netzmaske: 255.255.***.***<br>
+Die gesamte Maske wird blockiert, einschliesslich bis 77.245.***.***<br>
+<br>
+Es ist auch moeglich, einen Angreifer gezielt anhand des Browser-Hashs zu blockieren.<br>
+<br>
+[b]Beispiel 2:[/b]<br>
+Browser: Opera/9.64 (Windows NT 6.0; U; ru) Presto/2.1.1<br>
+Browser-Hash: 83897c6b59842b5554ba4e0d20bf201a<br>
+<br>
+Der Hash kann in E-Mails gesehen werden, die ueber das Kontaktformular gesendet werden, sowie im Benutzerprofil.<br>
+Mithilfe der Blockierung nach Browser-Hash kann ein Angreifer gezielt ausgesperrt werden, waehrend Benutzer aus seinem Subnetz nicht betroffen sind.<br>
+<br>
+[b]Zum Blockieren eines Benutzers nach IP muessen folgende Felder ausgefuellt werden[/b]:<br>
+[li] [b][i]IP-Adresse[/i][/b] – muss ausgefuellt werden;<br>
+[li] [b][i]Netzmaske[/i][/b] – muss ausgewaehlt werden;<br>
+[li] [b][i]Browser-Hash[/i][/b] – wird bei Bedarf ausgefuellt;<br>
+[li] [b][i]Dauer, angegeben in Tagen[/i][/b] – Anzahl der Sperrtage;<br>
+[li] [b][i]Sperrgrund[/i][/b] – der Sperrgrund kann angegeben werden und wird dem Benutzer beim Zugriff auf die Website angezeigt.<br>
+<br>
+[b][i][color=orangered]Blockierte Benutzer[/i][/b][/color]<br>
+In diesem Bereich befindet sich die Liste der nach "Nickname" blockierten Website-Benutzer.<br>
+Um einen Projektbenutzer nach "Nickname" zu blockieren, muessen folgende Felder ausgefuellt werden:<br>
+[li] [b][i]Nickname[/i][/b] – muss ausgefuellt werden;<br>
+[li] [b][i]Dauer, angegeben in Tagen[/i][/b] – Anzahl der Sperrtage;<br>
+[li] [b][i]Sperrgrund[/i][/b] – der Sperrgrund kann angegeben werden und wird dem Benutzer beim Zugriff auf die Website angezeigt;<br>
+[li] [b][i]E-Mail-Benachrichtigung senden[/i][/b] – eine E-Mail-Vorlage kann ausgefuellt werden, die nach der Blockierung an den gesperrten Benutzer gesendet wird.<br>
+<br>
+[color=green][b]Registerkarte "Login und Passwort"[/b][/color]<br>
+Zur Erhoehung der Sicherheit koennen ein zusaetzlicher Login und ein Passwort fuer den Zugang zum Administrationssystem eingerichtet werden. Ausserdem kann der Zugang zum Administrationssystem des Projekts auf eine bestimmte IP-Adresse oder IP-Netzmaske beschraenkt werden. Diese Schutzmethode ist die optimale und schliesst jeden unbefugten Zugang zum Administrationspanel aus.<br>
+[li] [b][i]Nachricht bei Zugang mit unzulaessiger IP[/i][/b] – die Nachricht, die bei einem Versuch erscheint, mit einer unzulaessigen IP-Adresse auf das Administrationspanel zuzugreifen. <br>
+[color=blue][b]Tipp:[/color][/b] Ersetzen Sie die Nachricht durch etwas Neutrales, um dem Angreifer keine zusaetzlichen Informationen ueber den Schutz zu geben.<br>
+[li] [b][i]Nachricht bei fehlerhafter Eingabe von Login oder Passwort[/i][/b] – die Nachricht, die bei Eingabe eines falschen Logins und/oder Passworts des Administrators erscheint. <br>
+[color=blue][b]Tipp:[/color][/b] Ersetzen Sie die Nachricht durch etwas Neutrales, um dem Angreifer keine zusaetzlichen Informationen ueber den Schutz zu geben. <br>
+[li] [b][i]Netzmaske fuer den Zugang zum Administrationspanel[/i][/b] – der IP-Adressbereich, von dem aus der Zugang zum Administrationssystem erlaubt ist. Wenn die IP-Adresse dynamisch ist (Modemverbindung), kann der Adressbereich beim Provider erfragt werden.<br>
+[li] [b][i]Zulaessige IP-Adressen des Administrators[/i][/b] – in diesem Fenster wird die Liste der IP-Adressen aufgefuehrt, von denen aus der Zugang zum Administrationssystem erlaubt ist. Wird bei Verbindungen mit fester oder dynamischer IP-Adresse verwendet. <br>
+[li] [b][i]Zusaetzlicher Login und Passwort des Administrators[/i][/b] – zusaetzlicher Schutz des Administrationssystems, der jeden unbefugten Zugang zum Website-Verwaltungspanel ausschliesst. Die Anmeldedaten werden vor der Eingabe des Hauptlogins und Passworts des Administrators abgefragt. Diese Methode wird HTTP-Authentifizierung genannt.<br>
+[hr][color=red][b][i]Achtung![/b]<br>
+HTTP-Authentifizierung ist nur moeglich, wenn PHP als Apache-Modul oder im FastCGI-Modus mit installiertem Mod Rewrite laeuft. Beachten Sie, dass diese Funktion nicht auf Microsoft IIS-Servern und mit der CGI-Version von PHP funktioniert.[/i][/color][hr]<br>
+[color=green][b]Registerkarte "Konfigurationen"[/b][/color]<br>
+In dieser Registerkarte werden die grundlegenden Einstellungen des Sicherheitssystems festgelegt. Erlaeuterungen zu einigen Einstellungen:<br>
+[li] [b][i]Maximale Groesse der Statistikdateien, in Bytes[/i][/b] – wenn die eingestellte Groesse erreicht ist, wird die Datei in ein gZip-Archiv gepackt, dessen Name entsprechend dem Packdatum generiert wird. <br>
+Eine neue Datei wird erstellt. Gilt fuer alle Statistikdateien, die in der Registerkarte "Hauptseite" angezeigt werden.<br>
+[li] [b][i]Zeitintervall fuer die Datenbanksicherung, in Minuten[/i][/b] – das System kann automatisch Sicherungskopien der Datenbank erstellen. Das Intervall zwischen <br>
+den DB-Sicherungen wird in Minuten angegeben. Die Datenbankkopie wird in ein gZip-Archiv gepackt und erhaelt einen Namen entsprechend dem Erstellungszeitpunkt.<br>
+[li] [b][i]Automatische Datenbanksicherung?[/i][/b] – Sicherungskopien der DB erstellen oder nicht.<br>
+[li] [b][i]Fehlermeldungen anzeigen?[/i][/b] – verantwortlich fuer die Anzeige von PHP-Systemfehlern. Wir empfehlen die Deaktivierung (erhoeht das Sicherheitsniveau), <br>
+wenn die Website im Normalbetrieb laeuft. Wenn die Website im Debug-Modus laeuft (z.B. Tests, Erstellung eigener Module, Bloecke), empfehlen wir die Aktivierung, um Fehler und ihre Ursachen zu verfolgen. Im deaktivierten Modus werden Fehler nicht angezeigt, selbst wenn sie vorhanden sind.<br>
+[li] [b][i]JavaScript-Fehlermeldungen anzeigen?[/i][/b] – analog zu PHP-Fehlern (siehe Punkt oben).<br>
+[li] [b][i]Angreifer blockieren?[/i][/b] – der Benutzer oder die IP wird automatisch in die Sperrliste aufgenommen, danach ist der Zugang zur Website nicht mehr moeglich.<br>
+<br>
+[color=green][b]Moegliche Probleme und ihre Loesungen[/b][/color]<br>
+[li] Die Sicherheitsverwaltung kann durch uebermaessiges Anwachsen der Logdateien blockiert werden. Es wird empfohlen, die Protokolle regelmaessig von veralteten Nachrichten zu bereinigen. <br>
+[li] Zusaetzlicher Login und Passwort passen nicht – loeschen Sie den zusaetzlichen Login und das Passwort aus der Datei: config/security.php, Suche nach den Schluesseln login und password<br>
+[li] Administratorzugang nach IP blockiert – loeschen Sie Ihre IP-Adresse aus der Datei: config/security.php, Suche nach dem Schluessel blocker_ip[/justify]

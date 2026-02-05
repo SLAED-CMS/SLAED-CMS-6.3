@@ -1,1 +1,113 @@
-Module Description English.
+[justify]The "Security" section is a powerful tool for protecting the website from various types of attacks, from SQL injections to uploading third-party scripts to the website directory. This section will help track, identify, and if necessary block the attacker, as well as any other user or visitor of the project.<br>
+<br>
+[color=green][b]"Main" tab[/b][/color]<br>
+Provides statistics on website usage. To view statistics, click on the value (Information) next to the corresponding statistics file. The information will be displayed below the list of statistics files.<br>
+To download information as a TXT file, click on the value (Download).<br>
+To clear a statistics file, click on the value (Delete object).<br>
+To view the storage path and name of the statistics file on the server, click on the icon (i) to the left of the corresponding statistics name.<br>
+<br>
+[b][i][color=orangered]Modified files statistics[/color][/i][/b]<br>
+Depending on the time specified in the settings ("Configurations" tab, parameter "File modification check interval, <br>
+in minutes"), the system checks all system files for deletions, modifications, and new additions.<br>
+Collecting this statistics is useful for security purposes: the actions described above with files can be tracked.<br>
+<br>
+[b][i][color=orangered]Dynamic errors statistics[/color][/i][/b]<br>
+Tracks script and server errors. Records detailed information (error description, script, line, and time of the error) in the statistics log file on the server.<br>
+<br>
+[b][i][color=orangered]Forbidden actions statistics[/color][/i][/b]<br>
+Tracks forbidden actions. Some methods of transmitting information cannot be used, but at the same time they are not critical to the security of the system. For example, using HTML code in the browser address bar when transmitting requests, or attempting to embed JavaScripts, IFrame, etc. Records detailed information (attacker's IP address, browser data, action description, time of the action) in the statistics log file on the server. <br>
+<br>
+[b][i][color=orangered]User login statistics[/color][/i][/b]<br>
+Tracks all user logins to the website. Records:<br>
+[li] whether the login was successful;<br>
+[li] IP address of the logged-in user;<br>
+[li] Nickname;<br>
+[li] browser;<br>
+[li] date and time.<br>
+<br>
+[b][i][color=orangered]All incoming information statistics[/color][/i][/b]<br>
+Tracks all actions performed by visitors on the website (global variables POST, GET, COOKIE, FILES, SESSION), essentially literally everything that users do, what information they request, what they send, etc. <br>
+Collecting statistics is useful for security purposes: you can track in detail what a particular IP did on the website.<br>
+<br>
+[b][i][color=orangered]Attack statistics[/color][/i][/b]<br>
+The main information panel of the security system. Tracks attackers and their actions. Records detailed information (attacker's IP address, browser data, attack description, time of the attack) in the statistics log file on the server.<br>
+<br>
+[b][i][color=orangered]Administrator login statistics[/color][/i][/b]<br>
+Tracks all administrator logins to the website. Records:<br>
+[li] whether the login was successful;<br>
+[li] IP address of the logged-in administrator;<br>
+[li] Nickname;<br>
+[li] browser;<br>
+[li] date and time.<br>
+<br>
+[b][i][color=orangered]Static errors statistics[/color][/i][/b]<br>
+Tracks server errors. Records detailed information (error description, link, and time of the error) in the statistics log file on the server.<br>
+<br>
+[b][i][color=orangered]File structure[/color][/i][/b]<br>
+Displays the entire file structure in the website directory: folders and the files they contain.<br>
+Updated depending on the setting: File modification check interval, <br>
+in minutes (specified in the "Configurations" tab).<br>
+<br>
+[color=green][b]"Blocking" tab[/b][/color]<br>
+You can block any project visitor by IP address or IP network mask, by the browser used, as well as by the username of a user registered on the website. The number of blocked visitors is unlimited. <br>
+<br>
+[b][i][color=orangered]Blocked IP Addresses[/i][/b][/color]<br>
+This subsection contains the list of blocked IP addresses. Addresses are entered in the format 255.255.255.255.<br>
+If necessary, entire subnets can be blocked. The following mask is used: 255.***.***.***<br>
+<br>
+[b]Example 1:[/b]<br>
+IP: 77.245.112.0<br>
+Network mask: 255.255.***.***<br>
+The entire mask will be blocked, including up to 77.245.***.***<br>
+<br>
+You can also block an attacker specifically by browser hash.<br>
+<br>
+[b]Example 2:[/b]<br>
+Browser: Opera/9.64 (Windows NT 6.0; U; ru) Presto/2.1.1<br>
+Browser hash: 83897c6b59842b5554ba4e0d20bf201a<br>
+<br>
+The hash can be seen in emails sent via the contact form, as well as in the user profile.<br>
+Using browser hash blocking, you can specifically filter out an attacker while users from their subnet will not be affected.<br>
+<br>
+[b]To block a user by IP, the following fields must be filled in[/b]:<br>
+[li] [b][i]IP address[/i][/b] – must be filled in;<br>
+[li] [b][i]Network mask[/i][/b] – must be selected;<br>
+[li] [b][i]Browser hash[/i][/b] – filled in if necessary;<br>
+[li] [b][i]Duration, specified in days[/i][/b] – number of blocking days;<br>
+[li] [b][i]Blocking reason[/i][/b] – the blocking reason can be specified and will be shown to the user when accessing the website.<br>
+<br>
+[b][i][color=orangered]Blocked users[/i][/b][/color]<br>
+This section contains the list of website users blocked by "Nickname".<br>
+To block a project user by "Nickname", the following fields must be filled in:<br>
+[li] [b][i]Nickname[/i][/b] – must be filled in;<br>
+[li] [b][i]Duration, specified in days[/i][/b] – number of blocking days;<br>
+[li] [b][i]Blocking reason[/i][/b] – the blocking reason can be specified and will be shown to the user when accessing the website;<br>
+[li] [b][i]Send email notification[/i][/b] – an email template can be filled in, which will be sent to the blocked user after blocking.<br>
+<br>
+[color=green][b]"Login and Password" tab[/b][/color]<br>
+To enhance security, an additional login and password can be set for accessing the administration system. You can also restrict access to the project's administration system to a specific IP address or IP network mask. This protection method is the most optimal and excludes any unauthorized access to the administration panel.<br>
+[li] [b][i]Message when accessing with an incorrect IP[/i][/b] – the message that appears when attempting to access the administration panel from an unauthorized IP address. <br>
+[color=blue][b]Tip:[/color][/b] replace the message with something neutral to avoid giving the attacker additional information about the protection.<br>
+[li] [b][i]Message when login or password is entered incorrectly[/i][/b] – the message that appears when an incorrect administrator login and/or password is entered. <br>
+[color=blue][b]Tip:[/color][/b] replace the message with something neutral to avoid giving the attacker additional information about the protection. <br>
+[li] [b][i]Network mask for administrator panel access[/i][/b] – the range of IP addresses from which access to the administration system is allowed. If the IP address is dynamic (modem connection), the address range can be obtained from your provider(s).<br>
+[li] [b][i]Allowed administrator IP addresses[/i][/b] – this window lists the IP addresses from which access to the administration system is allowed. Used with connections having a static or dynamic IP address. <br>
+[li] [b][i]Additional administrator login and password[/i][/b] – additional protection of the administration system that excludes any unauthorized access to the website management panel. Authentication credentials are requested before entering the main administrator login and password. This method is called HTTP authentication.<br>
+[hr][color=red][b][i]Attention![/b]<br>
+HTTP authentication is only possible when running PHP as an Apache module or in FastCGI mode with the Mod Rewrite module installed. Note that this function does not work on Microsoft IIS servers and with the CGI version of PHP.[/i][/color][hr]<br>
+[color=green][b]"Configurations" tab[/b][/color]<br>
+In this tab, the main security system settings are configured. Explanations for some settings:<br>
+[li] [b][i]Maximum statistics file size, in bytes[/i][/b] – if the set size is reached, the file is packed into a gZip archive, the name of which is generated according to the packing date. <br>
+A new file is created. Applies to all statistics files displayed in the "Main" tab.<br>
+[li] [b][i]Database backup interval, in minutes[/i][/b] – the system can create backup copies of the database automatically. The interval between <br>
+DB backups is specified in minutes. The database copy is packed into a gZip archive and receives a name according to the creation time.<br>
+[li] [b][i]Automatic database backup?[/i][/b] – create DB backup copies or not.<br>
+[li] [b][i]Show error messages?[/i][/b] – responsible for displaying PHP system errors. We recommend disabling this (increases the security level) <br>
+if the website is running in normal mode. If the website is running in debug mode (e.g., testing, creating custom modules, blocks), we recommend enabling display to track errors and their causes. In disabled mode, errors are not shown even if they exist.<br>
+[li] [b][i]Show JavaScript error messages?[/i][/b] – similar to PHP errors (see the point above).<br>
+[li] [b][i]Block attackers?[/i][/b] – the user or IP is automatically added to the blocked list, after which access to the website is not possible.<br>
+<br>
+[color=green][b]Possible problems and their solutions[/b][/color]<br>
+[li] Security management may be blocked as a result of excessive growth of log files. It is recommended to periodically clear logs of outdated messages. <br>
+[li] Additional login and password do not work – delete the additional login and password from the file: config/security.php, search by keys login and password<br>
+[li] Administrator access blocked by IP – delete your IP address from the file: config/security.php, search by key blocker_ip[/justify]

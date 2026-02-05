@@ -1,1 +1,57 @@
-Modulbeschreibung auf Deutsch.
+[justify][color=green][b]Verwendung von Themes[/b][/color]<br>
+Um das Design der Website zu ändern, können Themes verwendet werden.<br>
+Ein Theme ist eine Sammlung von Dateien, die für das Erscheinungsbild der Website-Seiten verantwortlich sind. Ein Theme umfasst: CSS-Dateien (Cascading Style Sheets), die Farbe, Hintergrund, Schriftgröße usw. für Schlüsselelemente der Seite festlegen, Vorlagendateien für die Hauptelemente der Seiten sowie Grafikdateien. Um das Design der Website zu ändern, muss einfach das grafische Theme im Administrationspanel auf ein neues umgestellt werden.<br>
+[hr][color=blue][b]Bitte beachten![/b][/color]<br>
+In SLAED CMS werden Themes im Verzeichnis «templates» gespeichert.[hr]Wenn der Administrator über Kenntnisse in Webdesign und Layout verfügt, kann er selbständig ein Theme für die Website erstellen. Außerdem können bereits erstellte Themes angesehen und auf der eigenen Website ausprobiert werden, die im Dateikatalog der Website [url=https://slaed.net]slaed.net[/url] heruntergeladen werden können.<br>
+<br>
+[color=green][b]Registerkarte «Vorlagen»[/b][/color]<br>
+In dieser Registerkarte wird das HTML-Layout bestimmter Website-Blöcke festgelegt (zum Beispiel das Menü).<br>
+Um Änderungen an einer Datei vorzunehmen, klicken Sie einfach in der Dateiliste auf die gewünschte Datei, nehmen Sie die Änderungen im angezeigten Feld vor und klicken Sie auf die Schaltfläche «Änderungen speichern».<br>
+[hr][color=blue][b]Bitte beachten![/b][/color]<br>
+Änderungen werden am Theme vorgenommen, das in der Liste über der Dateiliste ausgewählt ist. Um das Theme zu wechseln, wählen Sie das gewünschte Theme in der Liste aus und klicken Sie auf «OK».[hr]<br>
+[b][i][color=orangered]Worauf beim Bearbeiten eines Themes zu achten ist[/color][/i][/b]<br>
+<br>
+[u]Theme-Variablen[/u]<br>
+Im Theme wird ein Variablentyp verwendet: &#036;arg[1], &#036;arg[2] usw.<br>
+Sie sind für die Ausgabe von Überschriften, Inhalten und anderen Komponenten verantwortlich, abhängig davon, zu welcher Systemkomponente das Design gehört.<br>
+<br>
+Variablen des Typs: &#036;lan[1], &#036;lan[2] usw. werden für die Ausgabe von Konstanten verwendet (Wörter in Abhängigkeit von der vom Besucher gewählten Sprache, falls diese Möglichkeit aktiviert ist, andernfalls in der standardmäßig eingestellten Sprache). Eigene Sprachkonstanten können dem entsprechenden Array in der Theme-Datei hinzugefügt werden: core/template.php<br>
+<br>
+Neben den beiden Haupttypen können im Theme globale Systemvariablen verwendet werden, wie: &#036;theme, &#036;conf<br>
+[li] [b][i]&#036;theme[/i][/b] – bestimmt den Namen des aktuellen Standard-Themes oder des vom Benutzer in den Profileinstellungen gewählten Themes, falls diese Möglichkeit aktiviert ist<br>
+[li] [b][i]&#036;conf[/i][/b] – ist für die Ausgabe der in der Hauptkonfigurationsdatei des Systems festgelegten Parameter verantwortlich<br>
+<br>
+[u]Datei index.html[/u]<br>
+Für das Hauptdesign des Systems ist die Datei index.html verantwortlich, die für die Bildung der Struktur und Reihenfolge der Anzeige von Modulen, Blöcken und anderen Systemkomponenten bestimmt ist. Der Webdesigner und Layouter können sie mit beliebigem HTML-Design füllen und alle möglichen und bekannten Layout-Techniken anwenden. Es ist möglich, das Haupttemplate individuell für die Startseite des Projekts zu verwenden, unabhängig vom installierten Modul, sowie individuell für jedes Modul und jede Kategorie des Systems.<br>
+In der Datei index.html werden zusätzliche Variablen verwendet, die für die globale Ausgabe von Modulen und Blöcken verantwortlich sind.<br>
+Nachfolgend finden Sie eine Beschreibung der Standardvariablen der Form {%XXXX%} und wofür sie verantwortlich sind. Diese Variablen können in beliebiger Reihenfolge über die gesamte Datei verteilt werden.<br>
+<br>
+[li] [b][i]{%META%}[/i][/b] – Standard-Header-Bildung - meta und title sowie Inhalte, die standardmäßig im System vorhanden sind.<br>
+[li] [b][i]{%LINK%}[/i][/b] – Standard-Header-Bildung - link und CSS-Styles sowie Inhalte, die standardmäßig im System vorhanden sind.<br>
+[li] [b][i]{%SCRIPT%}[/i][/b] – Standard-Header-Bildung - script und JavaScript sowie Inhalte, die standardmäßig im System vorhanden sind.<br>
+[li] [b][i]{%BLOCKS banner%} oder {%BLOCKS b%}[/i][/b] – oberes Banner.<br>
+[li] [b][i]{%BLOCKS left%} oder {%BLOCKS l%}[/i][/b] – linke Blöcke.<br>
+[li] [b][i]{%BLOCKS message%} oder {%BLOCKS m%}[/i][/b] – Nachricht auf der Hauptseite.<br>
+[li] [b][i]{%BLOCKS center%} oder {%BLOCKS c%}[/i][/b] – obere zentrale Blöcke.<br>
+[li] [b][i]{%MODULE%}[/i][/b] – Platzhalter für das Modul, das das System einsetzen soll (an dieser Stelle wird der Inhalt des Systemmoduls angezeigt).<br>
+[li] [b][i]{%BLOCKS down%} oder {%BLOCKS d%}[/i][/b] – untere zentrale Blöcke.<br>
+[li] [b][i]{%BLOCKS right%} oder {%BLOCKS r%}[/i][/b] – rechte Blöcke.<br>
+[li] [b][i]{%BLOCKS foot%} oder {%BLOCKS f%}[/i][/b] – unteres Banner.<br>
+[li] [b][i]{%LICENSE%}[/i][/b] – System-Copyrights.<br>
+[li] [b][i]{%BLOCKS time%} oder {%BLOCKS t%}[/i][/b] – Seitengenerierungszeit.<br>
+[li] [b][i]{%BLOCKS variables%}[/i][/b] – Debug-Erweiterungen: Systeminformationen, Variablen- und Datenbankabfrage-Analysator.<br>
+<br>
+Direkt im Haupttemplate können «Freie Blöcke» verwendet werden, für deren Ausgabe folgende Variablen verantwortlich sind:<br>
+[li] [b][i]{%BLOCKS none,XXX%} oder {%BLOCKS n,XXX%}[/i][/b] – beliebiger Systemblock oder freier Block ohne Design, wobei XXX entweder die Block-ID oder der Dateiname des Blocks ist.<br>
+[li] [b][i]{%BLOCKS standart,XXX%} oder {%BLOCKS s,XXX%}[/i][/b] – beliebiger Systemblock oder freier Block mit Design, wobei XXX entweder die Block-ID oder der Dateiname des Blocks ist.<br>
+Informationen zu zusammenfassenden Blöcken finden Sie im Bereich «Blöcke und Banner».<br>
+<br>
+[hr][color=red][b][i]Achtung![/b]<br>
+Bei der Verwendung von JavaScript direkt im Theme muss beim Schreiben des entsprechenden Codes anstelle der Zeichen:<br>
+&quot; – folgender Code verwendet werden: &amp;#034; oder &amp;quot;<br>
+&#039; – folgender Code verwendet werden: &amp;#039; oder &amp;apos;[/i][/color][hr]<br>
+[color=green][b]Registerkarte «Styles»[/b][/color]<br>
+In dieser Registerkarte werden die Website-Styles festgelegt (Verwaltung der CSS-Dateien des Themes).<br>
+Um Änderungen an einer CSS-Datei vorzunehmen, klicken Sie einfach in der Dateiliste auf die gewünschte Datei, nehmen Sie die Änderungen im angezeigten Feld vor und klicken Sie auf die Schaltfläche «Änderungen speichern».<br>
+[hr][color=blue][b]Bitte beachten![/b][/color]<br>
+Änderungen werden am Theme vorgenommen, das in der Liste über der Dateiliste ausgewählt ist. Um das Theme zu wechseln, wählen Sie das gewünschte Theme in der Liste aus und klicken Sie auf «OK».[/justify]

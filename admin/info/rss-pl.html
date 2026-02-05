@@ -1,1 +1,31 @@
-Opis moduіu w jкzyku polskim.
+[justify]RSS – miedzynarodowy format, specjalnie stworzony do przesylania danych z jednej strony internetowej na druga. Ponadto za pomoca RSS mozna czytac wiadomosci za pomoca specjalnych programow – agregatow wiadomosci – i w ten sposob szybko dowiadywac sie o aktualizacjach strony.<br>
+W sekcji Kanaly RSS mozna dostosowac ustawienia kanalow RSS strony. Istnieja dwa warianty korzystania z kanalu RSS.<br>
+1. Bezposredni dostep. Plik eksportowy index.php?go=rss znajduje sie w glownym katalogu strony. Link do kanalu RSS: http://site_adress/index.php?go=rss<br>
+2. Za posrednictwem modulu rss_info, gdzie uzytkownicy lub odwiedzajacy strone moga sami wybrac interesujacy ich kanal lub przegladac kanaly innych stron.<br>
+<br>
+[b][color=green]Tworzenie kanalow RSS[/color][/b]<br>
+Kanaly RSS sa tworzone w zakladce "Kanaly RSS". Kanaly sa dwoch rodzajow: standardowe i zewnetrzne.<br>
+Kanaly standardowe to kanaly strony, ktore zostana dodane do kodu naglowka strony w celu przegladania informacji przez inne strony, przegladarki lub inne odpowiednie programy. Kanaly zewnetrzne to kanaly innych stron, ktore zostana dodane do listy kanalow modulu do bezposredniego przegladania przez odwiedzajacych strone.<br>
+<br>
+Dla kazdego kanalu RSS mozna ustawic nastepujace informacje:<br>
+[li] [b][i]Nazwa[/i][/b] – wprowadzana jest nazwa dodawanego kanalu RSS.<br>
+[li] [b][i]Adres[/i][/b] – adres URL kanalu.<br>
+[li] [b][i]Uzycie[/i][/b]:<br>
+* Kanal standardowy – kanal strony. Za kanal odpowiada plik index.php?go=rss, ktory znajduje sie w glownym katalogu strony.<br>
+* Kanal zewnetrzny – mozna dodawac kanaly RSS innych stron (na przyklad [url=https://www.slaed.net/index.php?go=rss&amp;name=news]https://www.slaed.net/index.php?go=rss&amp;name=news[/url] – link do kanalu wiadomosci SLAED).<br>
+ <br>
+Aby dodac nowy kanal RSS, kliknij znak plusa obok ostatniego dodanego kanalu.<br>
+Aby usunac niewypelnione pola kanalu RSS – kliknij znak plusa obok pola znajdujacego sie przed niewypelnionymi polami.<br>
+Aby usunac wypelniony i wczesniej zapisany kanal RSS, nalezy w polach formularza kanalu wpisac wartosc 0.<br>
+Pamietaj, ze wszystkie zmiany wejda w zycie po kliknieciu przycisku "Zapisz zmiany".<br>
+<br>
+[b][color=green]Zakladka "Konfiguracje"[/color][/b]<br>
+Pozwala na ustawienie parametrow sekcji. Wsrod glownych ustawien mozna wyroznic:<br>
+[li] [b][i]Minimalna/maksymalna domyslna liczba[/i][/b] – ile wpisow bedzie przesylanych przez kanal RSS;<br>
+[li] [b][i]Szablon wyswietlania wiadomosci kanalu[/i][/b] – w tym polu mozesz ustawic reguly wyswietlania wpisow na stronie przesylanych w kanale RSS. Zwroc uwage, ze istnieja specjalne zmienne:<br>
+* [title] – Tytul wiadomosci;<br>
+* [date] – Data publikacji wiadomosci;<br>
+* [guid] – Link do wiadomosci;<br>
+* [description] – Tresc wiadomosci.<br>
+[li] [b][i]Aktywowac wyswietlanie kanalow na stronach witryny[/i][/b] – opcja odpowiada za wyswietlanie linku do kanalu RSS. Ten link jest wyswietlany standardowymi srodkami przegladarki (jesli jest to przewidziane). <br>
+[li] [b][i]Aktywowac przegladanie kanalow RSS?[/i][/b] – opcja oznacza: czy uzytkownicy beda mogli przegladac kanaly RSS strony w sekcji "Kanaly RSS (RSS info)" oraz na glownej stronie swojego profilu.[/justify]

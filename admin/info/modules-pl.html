@@ -1,1 +1,20 @@
-Opis moduіu w jкzyku polskim.
+[justify]Sekcja «Moduły» przeznaczona jest do zarządzania sekcjami (modułami) witryny.<br>
+Dla wszystkich modułów dostępne są funkcje edycji i aktywacji/dezaktywacji. Dla modułu «News (Aktualności)» dodatkowo dostępne są funkcje:<br>
+[li] [b][i]Aktualizacja tabel bazy[/i][/b] – aktualizacja tabel bazy danych modułu;<br>
+[li] [b][i]Usunięcie tabel bazy[/i][/b] – usunięcie tabel bazy danych modułu;<br>
+[li] [b][i]Dodanie tabel bazy[/i][/b] – dodanie tabel bazy danych modułu (dostępne po usunięciu);<br>
+[li] [b][i]Czyszczenie tabel bazy[/i][/b] – usuwa zawartość tabel bazy danych modułu, nie zmieniając przy tym struktury (czyszczenie danych).<br>
+<br>
+Funkcje usuwania i dodawania tabel bazy danych modułu są również dostępne dla modułu «Order (Formularz zamówienia)».<br>
+<br>
+[b][color=green]Edycja danych modułu[/color][/b]<br>
+Przejście do formularza edycji modułu następuje po kliknięciu przycisku «Edytor».<br>
+Podczas edycji modułu można zmienić:<br>
+[li] [b][i]Kto będzie widział[/i][/b] – ustawiane są prawa dostępu do modułu: odwiedzający (wszyscy), użytkownik (tylko autoryzowani), administrator.<br>
+[li] [b][i]Dla użytkowników należących do grupy[/i][/b] – można ograniczyć dostęp do przeglądania modułu w zależności od przynależności użytkownika do grupy.<br>
+[li] [b][i]Wyświetlanie bloków w module[/i][/b] – można wskazać, w których miejscach bloki powinny być wyświetlane na stronach modułu.<br>
+[li] [b][i]Uczynić widocznym w bloku modułów[/i][/b] – aktywować wyświetlanie linku do modułu w bloku block-modules.php lub nie.<br>
+<br>
+[color=orangered][b][i]Samodzielne dodawanie modułu[/i][/b][/color]<br>
+SLAED CMS, będąc systemem otwartym, pozwala na dodawanie dodatkowych modułów do struktury witryny. Moduły przechowywane są w katalogu: modules/ (foldery nowych modułów należy odpowiednio skopiować do katalogu: modules/).<br>
+Za pomocą własnych modułów można znacznie rozszerzyć funkcjonalność systemu. Jeśli dodatkowy moduł zawiera plik tabeli w folderze modułu, na przykład: modules/news/sql/table.sql, to po dodaniu folderu tego modułu do folderu: modules/ w sekcji administracyjnej «Moduły» należy uruchomić mechanizm tworzenia tabel odpowiedniego modułu, klikając na wartość (Dodanie tabel bazy).[/justify]

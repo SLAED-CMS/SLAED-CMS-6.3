@@ -1,1 +1,57 @@
-Module Description English.
+[justify][color=green][b]Using Themes[/b][/color]<br>
+To change the website design, you can use themes.<br>
+A theme is a set of files responsible for the appearance of website pages. A theme includes: CSS files (Cascading Style Sheets) that define color, background, font size, etc. for key page elements, template files for the main page elements, and graphic files. To change the website design, simply switch the graphic theme in the administration panel to a new one.<br>
+[hr][color=blue][b]Please note![/b][/color]<br>
+In SLAED CMS, themes are stored in the «templates» directory.[hr]If the administrator has layout and design skills, they can independently create a theme for the website. You can also view and try on your website themes that have already been created and can be downloaded from the file catalog at [url=https://slaed.net]slaed.net[/url].<br>
+<br>
+[color=green][b]"Templates" Tab[/b][/color]<br>
+In this tab, the HTML layout of specific website blocks is defined (for example, the menu).<br>
+To make changes to a file, simply click on the desired file in the file list, make changes in the displayed field, and click the "Save changes" button.<br>
+[hr][color=blue][b]Please note![/b][/color]<br>
+Changes are made to the theme selected in the list above the file list. To switch themes, select the desired theme in the list and click "OK".[hr]<br>
+[b][i][color=orangered]What to pay attention to when editing a theme[/color][/i][/b]<br>
+<br>
+[u]Theme variables[/u]<br>
+The theme uses one type of variables: &#036;arg[1], &#036;arg[2], etc.<br>
+They are responsible for displaying headings, content, and other components depending on which system component the design belongs to.<br>
+<br>
+Variables of the type: &#036;lan[1], &#036;lan[2], etc. are used for displaying constants (words depending on the language selected by the visitor, if this option is enabled, otherwise in the default language). You can add your own language constants to the corresponding array in the theme file: core/template.php<br>
+<br>
+In addition to the two main types, global system variables can be used in the theme, such as: &#036;theme, &#036;conf<br>
+[li] [b][i]&#036;theme[/i][/b] – determines the name of the current default theme, or the theme selected by the user in profile settings, if this option is enabled<br>
+[li] [b][i]&#036;conf[/i][/b] – is responsible for displaying parameters set in the main system configuration file<br>
+<br>
+[u]File index.html[/u]<br>
+The main design of the system is handled by the index.html file, which is intended for forming the structure and order of displaying modules, blocks, and other system components. The layout designer and web designer can fill it with any HTML design and apply all possible and known layout techniques. It is possible to use the main template individually for the project's main page, regardless of the installed module, as well as individually for each module and category of the system.<br>
+The index.html file uses additional variables responsible for the global output of modules and blocks.<br>
+Below is a description of the standard variables of the form {%XXXX%} and what they are responsible for. These variables can be placed throughout the file in any order.<br>
+<br>
+[li] [b][i]{%META%}[/i][/b] – standard header formation - meta and title, as well as content that is present in the system by default.<br>
+[li] [b][i]{%LINK%}[/i][/b] – standard header formation - link and CSS styles, as well as content that is present in the system by default.<br>
+[li] [b][i]{%SCRIPT%}[/i][/b] – standard header formation - script and JavaScript, as well as content that is present in the system by default.<br>
+[li] [b][i]{%BLOCKS banner%} or {%BLOCKS b%}[/i][/b] – top banner.<br>
+[li] [b][i]{%BLOCKS left%} or {%BLOCKS l%}[/i][/b] – left blocks.<br>
+[li] [b][i]{%BLOCKS message%} or {%BLOCKS m%}[/i][/b] – message on the main page.<br>
+[li] [b][i]{%BLOCKS center%} or {%BLOCKS c%}[/i][/b] – top center blocks.<br>
+[li] [b][i]{%MODULE%}[/i][/b] – placeholder for the module that the system should insert (the content of the system module will be displayed in this area).<br>
+[li] [b][i]{%BLOCKS down%} or {%BLOCKS d%}[/i][/b] – bottom center blocks.<br>
+[li] [b][i]{%BLOCKS right%} or {%BLOCKS r%}[/i][/b] – right blocks.<br>
+[li] [b][i]{%BLOCKS foot%} or {%BLOCKS f%}[/i][/b] – bottom banner.<br>
+[li] [b][i]{%LICENSE%}[/i][/b] – system copyrights.<br>
+[li] [b][i]{%BLOCKS time%} or {%BLOCKS t%}[/i][/b] – page generation time.<br>
+[li] [b][i]{%BLOCKS variables%}[/i][/b] – debug extensions: system information, variable and database query analyzer.<br>
+<br>
+Directly in the main template, you can use "Free Blocks", which are displayed using the following variables:<br>
+[li] [b][i]{%BLOCKS none,XXX%} or {%BLOCKS n,XXX%}[/i][/b] – any system block or free block without styling, where XXX is either the block ID or the block file name.<br>
+[li] [b][i]{%BLOCKS standart,XXX%} or {%BLOCKS s,XXX%}[/i][/b] – any system block or free block with styling, where XXX is either the block ID or the block file name.<br>
+Information about summary blocks can be found in the "Blocks and Banners" section.<br>
+<br>
+[hr][color=red][b][i]Attention![/b]<br>
+When using JavaScript directly in the theme, when writing the corresponding code, instead of the characters:<br>
+&quot; – you should use the code: &amp;#034; or &amp;quot;<br>
+&#039; – you should use the code: &amp;#039; or &amp;apos;[/i][/color][hr]<br>
+[color=green][b]"Styles" Tab[/b][/color]<br>
+In this tab, the website styles are defined (management of the theme's CSS files).<br>
+To make changes to a CSS file, simply click on the desired file in the file list, make changes in the displayed field, and click the "Save changes" button.<br>
+[hr][color=blue][b]Please note![/b][/color]<br>
+Changes are made to the theme selected in the list above the file list. To switch themes, select the desired theme in the list and click "OK".[/justify]

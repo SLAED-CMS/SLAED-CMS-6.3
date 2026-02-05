@@ -1,1 +1,113 @@
-Opis moduіu w jкzyku polskim.
+[justify]Sekcja "Bezpieczenstwo" jest poteznym narzedziem do ochrony strony przed roznymi rodzajami atakow, od iniekcji SQL po wgrywanie obcych skryptow do katalogu strony. Ta sekcja pomoze sledzic, identyfikowac i w razie potrzeby zablokowac atakujacego, a takze kazdego innego uzytkownika lub odwiedzajacego projekt.<br>
+<br>
+[color=green][b]Zakladka "Glowna"[/b][/color]<br>
+Udostepnia statystyki dotyczace korzystania ze strony. Aby wyswietlic statystyki, kliknij na wartosc (Informacja) obok odpowiedniego pliku statystyk. Informacje zostana wyswietlone ponizej listy plikow statystyk.<br>
+Aby pobrac informacje w postaci pliku TXT, kliknij na wartosc (Pobierz).<br>
+Aby wyczyścić plik statystyk, kliknij na wartosc (Usun obiekt).<br>
+Aby wyswietlic sciezke przechowywania i nazwe pliku statystyk na serwerze, kliknij na ikone (i) po lewej stronie od nazwy odpowiedniej statystyki.<br>
+<br>
+[b][i][color=orangered]Statystyki zmodyfikowanych plikow[/color][/i][/b]<br>
+W zaleznosci od czasu podanego w ustawieniach (Zakladka "Konfiguracje", parametr "Czas sprawdzania plikow <br>
+pod katem modyfikacji, w minutach") system sprawdza wszystkie pliki systemowe pod katem usuniec, zmian i nowych dodatkow.<br>
+Zbieranie tych statystyk jest przydatne z punktu widzenia bezpieczenstwa: mozna sledzic opisane powyzej dzialania na plikach.<br>
+<br>
+[b][i][color=orangered]Statystyki bledow dynamicznych[/color][/i][/b]<br>
+Sledzi bledy skryptow i serwera. Zapisuje szczegolowe informacje (opis bledu, skrypt, linia i czas wystapienia bledu) w pliku logu statystyk na serwerze.<br>
+<br>
+[b][i][color=orangered]Statystyki zabronionych dzialan[/color][/i][/b]<br>
+Sledzi zabronione dzialania. Niektorych metod przekazywania informacji nie mozna uzywac, ale jednoczesnie nie sa one krytyczne dla bezpieczenstwa systemu. Na przyklad uzycie kodu HTML w pasku adresu przegladarki podczas przesylania zapytan lub proba osadzenia JavaScripts, IFrame itp. Zapisuje szczegolowe informacje (adres IP atakujacego, dane przegladarki, opis dzialania, czas jego wykonania) w pliku logu statystyk na serwerze. <br>
+<br>
+[b][i][color=orangered]Statystyki logowan uzytkownikow[/color][/i][/b]<br>
+Sledzi wszystkie logowania uzytkownikow na stronie. Rejestruje:<br>
+[li] czy logowanie bylo udane;<br>
+[li] adres IP zalogowanego;<br>
+[li] nick;<br>
+[li] przegladarka;<br>
+[li] data i godzina.<br>
+<br>
+[b][i][color=orangered]Statystyki wszystkich przychodzacych informacji[/color][/i][/b]<br>
+Sledzi wszystkie dzialania wykonywane przez odwiedzajacych na stronie (zmienne globalne POST, GET, COOKIE, FILES, SESSION), w zasadzie dosłownie wszystko, co uzytkownicy robia, jakie informacje zadaja, co wysylaja itp. <br>
+Zbieranie statystyk jest przydatne z punktu widzenia bezpieczenstwa: mozna szczegolowo sledzic, co dany adres IP robil na stronie.<br>
+<br>
+[b][i][color=orangered]Statystyki atakow[/color][/i][/b]<br>
+Glowny panel informacyjny systemu bezpieczenstwa. Sledzi atakujacych i ich dzialania. Zapisuje szczegolowe informacje (adres IP atakujacego, dane przegladarki, opis ataku, czas jego przeprowadzenia) w pliku logu statystyk na serwerze.<br>
+<br>
+[b][i][color=orangered]Statystyki logowan administratorow[/color][/i][/b]<br>
+Sledzi wszystkie logowania administratorow na stronie. Rejestruje:<br>
+[li] czy logowanie bylo udane;<br>
+[li] adres IP zalogowanego;<br>
+[li] nick;<br>
+[li] przegladarka;<br>
+[li] data i godzina.<br>
+<br>
+[b][i][color=orangered]Statystyki bledow statycznych[/color][/i][/b]<br>
+Sledzi bledy serwera. Zapisuje szczegolowe informacje (opis bledu, link i czas wystapienia bledu) w pliku logu statystyk na serwerze.<br>
+<br>
+[b][i][color=orangered]Struktura plikow[/color][/i][/b]<br>
+Wyswietla cala strukture plikow w katalogu strony: foldery i zawarte w nich pliki.<br>
+Aktualizowana w zaleznosci od ustawienia: Czas sprawdzania plikow pod <br>
+katem modyfikacji, w minutach (podawany w zakladce "Konfiguracje").<br>
+<br>
+[color=green][b]Zakladka "Blokowanie"[/b][/color]<br>
+Mozna zablokowac dowolnego odwiedzajacego projekt wedlug adresu IP lub maski sieci IP, wedlug uzywanej przegladarki, a takze wedlug nazwy uzytkownika zarejestrowanego na stronie. Liczba zablokowanych odwiedzajacych jest nieograniczona. <br>
+<br>
+[b][i][color=orangered]Zablokowane adresy IP[/i][/b][/color]<br>
+W tej podsekcji znajduje sie lista zablokowanych adresow IP. Adresy zapisywane sa w formacie 255.255.255.255.<br>
+W razie potrzeby mozna blokowac cale podsieci. Stosowana jest nastepujaca maska: 255.***.***.***<br>
+<br>
+[b]Przyklad 1:[/b]<br>
+IP: 77.245.112.0<br>
+Maska sieci: 255.255.***.***<br>
+Cala maska zostanie zablokowana, wlacznie do 77.245.***.***<br>
+<br>
+Mozna rowniez zablokowac atakujacego celowo wedlug hasza przegladarki.<br>
+<br>
+[b]Przyklad 2:[/b]<br>
+Przegladarka: Opera/9.64 (Windows NT 6.0; U; ru) Presto/2.1.1<br>
+Hasz przegladarki: 83897c6b59842b5554ba4e0d20bf201a<br>
+<br>
+Hasz mozna zobaczyc w wiadomosciach e-mail wyslanych za posrednictwem formularza kontaktowego, a takze w profilu uzytkownika.<br>
+Dzieki blokowaniu wedlug hasza przegladarki mozna celowo odfiltrowac atakujacego, przy czym uzytkownicy z jego podsieci nie zostana dotkniety.<br>
+<br>
+[b]Aby zablokowac uzytkownika wedlug IP, nalezy wypelnic[/b]:<br>
+[li] [b][i]Adres IP[/i][/b] – wypelnienie obowiazkowe;<br>
+[li] [b][i]Maska sieci[/i][/b] – wybor obowiazkowy;<br>
+[li] [b][i]Hasz przegladarki[/i][/b] – wypelniany w razie potrzeby;<br>
+[li] [b][i]Czas, podawany w dobach[/i][/b] – liczba dni blokady;<br>
+[li] [b][i]Powod blokady[/i][/b] – mozna podac powod blokady, ktory zostanie wyswietlony uzytkownikowi przy wejsciu na strone.<br>
+<br>
+[b][i][color=orangered]Zablokowani uzytkownicy[/i][/b][/color]<br>
+W tej sekcji znajduje sie lista uzytkownikow strony zablokowanych wedlug "Nicku".<br>
+Aby zablokowac uzytkownika projektu wedlug "Nicku", nalezy wypelnic:<br>
+[li] [b][i]Nick[/i][/b] – wypelnienie obowiazkowe;<br>
+[li] [b][i]Czas, podawany w dobach[/i][/b] – liczba dni blokady;<br>
+[li] [b][i]Powod blokady[/i][/b] – mozna podac powod blokady, ktory zostanie wyswietlony uzytkownikowi przy wejsciu na strone;<br>
+[li] [b][i]Wyslij powiadomienie na e-mail[/i][/b] – mozna wypelnic szablon wiadomosci, ktora po zablokowaniu zostanie wyslana do zablokowanego uzytkownika.<br>
+<br>
+[color=green][b]Zakladka "Login i haslo"[/b][/color]<br>
+W celu zwiekszenia bezpieczenstwa mozna ustawic dodatkowy login i haslo do wejscia do systemu administracji. Mozna rowniez ograniczyc wejscie do systemu administracji projektu do okreslonego adresu IP lub maski sieci IP. Ta metoda ochrony jest najbardziej optymalna i wyklucza jakikolwiek nieautoryzowany dostep do panelu administracji.<br>
+[li] [b][i]Wiadomosc przy wejsciu z nieprawidlowym IP[/i][/b] – wiadomosc pojawiajaca sie przy probie wejscia do panelu administracji z niedozwolonego adresu IP. <br>
+[color=blue][b]Wskazowka:[/color][/b] zamien wiadomosc na cos neutralnego, aby nie dawac atakujacemu dodatkowych informacji o ochronie.<br>
+[li] [b][i]Wiadomosc przy blednym wpisaniu loginu lub hasla[/i][/b] – wiadomosc pojawiajaca sie przy wpisaniu nieprawidlowego loginu i/lub hasla administratora. <br>
+[color=blue][b]Wskazowka:[/color][/b] zamien wiadomosc na cos neutralnego, aby nie dawac atakujacemu dodatkowych informacji o ochronie. <br>
+[li] [b][i]Maska sieci do wejscia do panelu administratora[/i][/b] – zakres adresow IP, z ktorych dozwolony jest dostep do systemu administracji. Jesli adres IP jest dynamiczny (polaczenie modemowe), zakres adresow mozna uzyskac od swojego dostawcy (dostawcow).<br>
+[li] [b][i]Dopuszczalne adresy IP administratora[/i][/b] – w tym oknie wymieniana jest lista adresow IP, z ktorych dozwolony jest dostep do systemu administracji. Stosowane przy polaczeniach ze stalym lub dynamicznym adresem IP. <br>
+[li] [b][i]Dodatkowy login i haslo administratora[/i][/b] – dodatkowa ochrona systemu administracji, wykluczajaca jakikolwiek nieautoryzowany dostep do panelu zarzadzania strona. Dane autoryzacyjne sa wymagane przed wpisaniem glownego loginu i hasla administratora. Ta metoda nazywa sie uwierzytelnianiem HTTP.<br>
+[hr][color=red][b][i]Uwaga![/b]<br>
+Uwierzytelnianie HTTP jest mozliwe tylko przy uruchomieniu PHP jako modulu Apache lub w trybie FastCGI z zainstalowanym modulem Mod Rewrite. Zauważ, ze ta funkcja nie dziala na serwerach Microsoft IIS i z wersja CGI PHP.[/i][/color][hr]<br>
+[color=green][b]Zakladka "Konfiguracje"[/b][/color]<br>
+W tej zakladce ustawiane sa glowne ustawienia systemu bezpieczenstwa. Objasnienia do niektorych ustawien:<br>
+[li] [b][i]Maksymalny rozmiar plikow statystyk, w bajtach[/i][/b] – jesli ustawiony rozmiar zostanie osiagniety, plik jest pakowany do archiwum gZip, ktorego nazwa jest generowana zgodnie z data pakowania. <br>
+Tworzony jest nowy plik. Dotyczy wszystkich plikow statystyk wyswietlanych w zakladce "Glowna".<br>
+[li] [b][i]Odstep czasu kopiowania bazy danych, w minutach[/i][/b] – system moze tworzyc kopie zapasowe bazy danych automatycznie. Odstep miedzy <br>
+tworzeniami kopii BD podawany jest w minutach. Kopia bazy danych jest pakowana do archiwum gZip i otrzymuje nazwe zgodnie z czasem utworzenia.<br>
+[li] [b][i]Automatyczne kopiowanie bazy danych?[/i][/b] – tworzyc kopie zapasowe BD czy nie.<br>
+[li] [b][i]Pokazywac komunikaty o bledach?[/i][/b] – odpowiada za wyswietlanie bledow systemowych PHP. Zalecamy wylaczenie (zwieksza poziom <br>
+bezpieczenstwa), jesli strona dziala w normalnym trybie. Jesli strona dziala w trybie debugowania (np.: testowanie, tworzenie wlasnych modulow, blokow), zalecamy wlaczenie wyswietlania, aby sledzic bledy i ich przyczyny. W wylaczonym trybie bledy nie sa wyswietlane, nawet jesli istnieja.<br>
+[li] [b][i]Pokazywac komunikaty o bledach JavaScripts?[/i][/b] – analogicznie do bledow PHP (patrz punkt powyzej).<br>
+[li] [b][i]Blokowac atakujacych?[/i][/b] – uzytkownik lub IP automatycznie trafia na liste zablokowanych, po czym dostep do strony jest niemozliwy.<br>
+<br>
+[color=green][b]Mozliwe problemy i ich rozwiazania[/b][/color]<br>
+[li] Zarzadzanie bezpieczenstwem moze byc zablokowane w wyniku nadmiernego wzrostu rozmiaru plikow logu. Zaleca sie okresowe czyszczenie dziennikow z przestarzalych wiadomosci. <br>
+[li] Dodatkowy login i haslo nie pasuja – usun dodatkowy login i haslo z pliku: config/security.php, wyszukaj wedlug kluczy login i password<br>
+[li] Zablokowany dostep administratora wedlug IP – usun swoj adres IP z pliku: config/security.php, wyszukaj wedlug klucza blocker_ip[/justify]

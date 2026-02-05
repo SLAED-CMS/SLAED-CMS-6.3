@@ -1,1 +1,57 @@
-Opis moduіu w jкzyku polskim.
+[justify][color=green][b]Stosowanie motywów[/b][/color]<br>
+Aby zmienić wygląd strony, można użyć motywów.<br>
+Motyw to zestaw plików odpowiedzialnych za wygląd stron witryny. Motyw obejmuje: pliki arkuszy stylów CSS (Cascading Style Sheets) definiujące kolor, tło, rozmiar czcionki itp. dla kluczowych elementów strony, pliki szablonów głównych elementów stron oraz pliki graficzne. Aby zmienić wygląd strony, wystarczy zmienić motyw graficzny w panelu administracyjnym na nowy.<br>
+[hr][color=blue][b]Uwaga![/b][/color]<br>
+W SLAED CMS motywy są przechowywane w katalogu «templates».[hr]Jeśli administrator posiada umiejętności w zakresie projektowania i tworzenia stron, może samodzielnie stworzyć motyw dla witryny. Można również przeglądać i «przymierzać» na swojej stronie gotowe motywy, które można pobrać w katalogu plików na stronie [url=https://slaed.net]slaed.net[/url].<br>
+<br>
+[color=green][b]Zakładka «Szablony»[/b][/color]<br>
+W tej zakładce definiowany jest układ HTML określonych bloków witryny (na przykład menu).<br>
+Aby wprowadzić zmiany w pliku, wystarczy kliknąć na odpowiedni plik na liście, wprowadzić zmiany w wyświetlonym polu i kliknąć przycisk «Zapisz zmiany».<br>
+[hr][color=blue][b]Uwaga![/b][/color]<br>
+Zmiany są wprowadzane w motywie wybranym na liście nad listą plików. Aby zmienić motyw, wybierz odpowiedni motyw na liście i kliknij «OK».[hr]<br>
+[b][i][color=orangered]Na co zwrócić uwagę przy edycji motywu[/color][/i][/b]<br>
+<br>
+[u]Zmienne motywu[/u]<br>
+W motywie używany jest jeden typ zmiennych: &#036;arg[1], &#036;arg[2] itd.<br>
+Odpowiadają one za wyświetlanie nagłówków, treści i innych składników w zależności od przynależności projektu do danego komponentu systemu.<br>
+<br>
+Zmienne typu: &#036;lan[1], &#036;lan[2] itd. służą do wyświetlania stałych (słów w zależności od języka wybranego przez odwiedzającego, jeśli taka opcja jest aktywna, w przeciwnym razie w języku ustawionym domyślnie). Własne stałe językowe można dodać do odpowiedniej tablicy w pliku motywu: core/template.php<br>
+<br>
+Oprócz dwóch głównych typów w motywie można używać globalnych zmiennych systemowych, takich jak: &#036;theme, &#036;conf<br>
+[li] [b][i]&#036;theme[/i][/b] – określa nazwę aktualnego domyślnego motywu lub motywu wybranego przez użytkownika w ustawieniach profilu, jeśli taka opcja jest aktywna<br>
+[li] [b][i]&#036;conf[/i][/b] – odpowiada za wyświetlanie parametrów ustawionych w głównym pliku konfiguracyjnym systemu<br>
+<br>
+[u]Plik index.html[/u]<br>
+Za główny wygląd systemu odpowiada plik index.html, przeznaczony do kształtowania struktury i kolejności wyświetlania modułów, bloków i innych komponentów systemu. Projektant i webmaster mogą wypełnić go dowolnym projektem HTML i zastosować wszystkie możliwe i znane techniki tworzenia stron. Możliwe jest unikalne wykorzystanie głównego szablonu indywidualnie dla strony głównej projektu, niezależnie od zainstalowanego modułu, a także indywidualnie dla każdego modułu i kategorii systemu.<br>
+W pliku index.html używane są dodatkowe zmienne odpowiedzialne za globalne wyświetlanie modułów i bloków.<br>
+Poniżej przedstawiono opis standardowych zmiennych postaci {%XXXX%} oraz za co odpowiadają. Zmienne te można rozmieścić w dowolnej kolejności w całym pliku.<br>
+<br>
+[li] [b][i]{%META%}[/i][/b] – standardowe formowanie nagłówka - meta i title, a także zawartość domyślnie obecna w systemie.<br>
+[li] [b][i]{%LINK%}[/i][/b] – standardowe formowanie nagłówka - link i style CSS, a także zawartość domyślnie obecna w systemie.<br>
+[li] [b][i]{%SCRIPT%}[/i][/b] – standardowe formowanie nagłówka - script i skrypty JavaScript, a także zawartość domyślnie obecna w systemie.<br>
+[li] [b][i]{%BLOCKS banner%} lub {%BLOCKS b%}[/i][/b] – górny baner.<br>
+[li] [b][i]{%BLOCKS left%} lub {%BLOCKS l%}[/i][/b] – lewe bloki.<br>
+[li] [b][i]{%BLOCKS message%} lub {%BLOCKS m%}[/i][/b] – wiadomość na stronie głównej.<br>
+[li] [b][i]{%BLOCKS center%} lub {%BLOCKS c%}[/i][/b] – górne centralne bloki.<br>
+[li] [b][i]{%MODULE%}[/i][/b] – miejsce na moduł, który system powinien wstawić (w tym miejscu będzie wyświetlana zawartość modułu systemu).<br>
+[li] [b][i]{%BLOCKS down%} lub {%BLOCKS d%}[/i][/b] – dolne centralne bloki.<br>
+[li] [b][i]{%BLOCKS right%} lub {%BLOCKS r%}[/i][/b] – prawe bloki.<br>
+[li] [b][i]{%BLOCKS foot%} lub {%BLOCKS f%}[/i][/b] – dolny baner.<br>
+[li] [b][i]{%LICENSE%}[/i][/b] – prawa autorskie systemu.<br>
+[li] [b][i]{%BLOCKS time%} lub {%BLOCKS t%}[/i][/b] – czas generowania strony.<br>
+[li] [b][i]{%BLOCKS variables%}[/i][/b] – rozszerzenia debugowania: informacje systemowe, analizator zmiennych i zapytań do bazy danych.<br>
+<br>
+Bezpośrednio w głównym szablonie można używać «Wolnych bloków», za wyświetlanie których odpowiadają następujące zmienne:<br>
+[li] [b][i]{%BLOCKS none,XXX%} lub {%BLOCKS n,XXX%}[/i][/b] – dowolny blok systemowy lub wolny blok bez formatowania, gdzie XXX to ID bloku lub nazwa pliku bloku.<br>
+[li] [b][i]{%BLOCKS standart,XXX%} lub {%BLOCKS s,XXX%}[/i][/b] – dowolny blok systemowy lub wolny blok z formatowaniem, gdzie XXX to ID bloku lub nazwa pliku bloku.<br>
+Informacje o blokach zbiorczych można uzyskać w sekcji «Bloki i banery».<br>
+<br>
+[hr][color=red][b][i]Uwaga![/b]<br>
+Podczas używania JavaScript bezpośrednio w motywie, przy pisaniu odpowiedniego kodu, zamiast znaków:<br>
+&quot; – należy użyć kodu: &amp;#034; lub &amp;quot;<br>
+&#039; – należy użyć kodu: &amp;#039; lub &amp;apos;[/i][/color][hr]<br>
+[color=green][b]Zakładka «Style»[/b][/color]<br>
+W tej zakładce definiowane są style witryny (zarządzanie plikami CSS motywu).<br>
+Aby wprowadzić zmiany w pliku CSS, wystarczy kliknąć na odpowiedni plik na liście, wprowadzić zmiany w wyświetlonym polu i kliknąć przycisk «Zapisz zmiany».<br>
+[hr][color=blue][b]Uwaga![/b][/color]<br>
+Zmiany są wprowadzane w motywie wybranym na liście nad listą plików. Aby zmienić motyw, wybierz odpowiedni motyw na liście i kliknij «OK».[/justify]

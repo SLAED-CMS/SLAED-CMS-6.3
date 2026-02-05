@@ -1,1 +1,31 @@
-Description du module en français.
+[justify]RSS est un format international specialement cree pour la transmission de donnees d'un site web a un autre. De plus, grace au RSS, il est possible de lire les actualites avec des programmes speciaux – des agregateurs d'actualites – et ainsi etre rapidement informe des mises a jour du site.<br>
+Dans la section Canaux RSS, vous pouvez ajuster les parametres des canaux RSS du site. Il existe deux variantes d'utilisation d'un canal RSS.<br>
+1. Acces direct. Le fichier d'export index.php?go=rss se trouve dans le repertoire principal du site. Lien vers le canal RSS : http://site_adress/index.php?go=rss<br>
+2. Par le biais du module rss_info, ou les utilisateurs ou visiteurs du site pourront eux-memes choisir le canal qui les interesse ou consulter les canaux d'autres sites.<br>
+<br>
+[b][color=green]Creation de canaux RSS[/color][/b]<br>
+Les canaux RSS sont crees dans l'onglet "Canaux RSS". Il existe deux types de canaux : standard et externes.<br>
+Les canaux standard sont des canaux du site qui seront ajoutes au code de l'en-tete du site pour la consultation des informations par d'autres sites, navigateurs ou autres programmes correspondants. Les canaux externes sont des canaux d'autres sites qui seront ajoutes a la liste des canaux du module pour la consultation directe par les visiteurs du site.<br>
+<br>
+Pour chaque canal RSS, les informations suivantes peuvent etre definies :<br>
+[li] [b][i]Titre[/i][/b] – le nom du canal RSS ajoute est saisi.<br>
+[li] [b][i]Adresse[/i][/b] – l'adresse URL du canal.<br>
+[li] [b][i]Utilisation[/i][/b] :<br>
+* Canal standard – un canal du site. Le fichier index.php?go=rss, situe dans le repertoire principal du site, est responsable du canal.<br>
+* Canal externe – vous pouvez ajouter des canaux RSS d'autres sites (par exemple, [url=https://www.slaed.net/index.php?go=rss&amp;name=news]https://www.slaed.net/index.php?go=rss&amp;name=news[/url] – lien vers le canal d'actualites de SLAED).<br>
+ <br>
+Pour ajouter un nouveau canal RSS, cliquez sur le signe plus a cote du dernier canal ajoute.<br>
+Pour supprimer les champs vides d'un canal RSS, cliquez sur le signe plus a cote du champ precedant les champs vides.<br>
+Pour supprimer un canal RSS rempli et precedemment enregistre, vous devez saisir la valeur 0 dans les champs du formulaire du canal.<br>
+Notez que toutes les modifications prendront effet apres avoir clique sur le bouton "Enregistrer les modifications".<br>
+<br>
+[b][color=green]Onglet "Configurations"[/color][/b]<br>
+Permet de definir les parametres de la section. Parmi les principaux parametres, on peut distinguer :<br>
+[li] [b][i]Nombre minimum/maximum par defaut[/i][/b] – combien d'entrees seront transmises via le canal RSS ;<br>
+[li] [b][i]Modele de presentation des actualites du canal[/i][/b] – dans ce champ, vous pouvez definir les regles d'affichage des entrees sur le site transmises via le canal RSS. Notez qu'il existe des variables speciales :<br>
+* [title] – Titre de l'actualite ;<br>
+* [date] – Date de publication de l'actualite ;<br>
+* [guid] – Lien vers l'actualite ;<br>
+* [description] – Contenu de l'actualite.<br>
+[li] [b][i]Activer l'affichage des canaux sur les pages du site[/i][/b] – cette option est responsable de l'affichage du lien vers le canal RSS. Ce lien est affiche par les moyens standard du navigateur (si prevu). <br>
+[li] [b][i]Activer la consultation des canaux RSS ?[/i][/b] – cette option signifie : les utilisateurs pourront-ils consulter les canaux RSS du site dans la section "Canaux RSS (RSS info)" et sur la page principale de leur profil.[/justify]
