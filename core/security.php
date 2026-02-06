@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Reject "index.php/..." style requests (PATH_INFO tricks). This prevents bypasses where the CMS still processes a valid query string even though the URL path is malformed (e.g. /index.php/name=files&op=view).
+# Security: block /index.php/... PATH_INFO abuse to avoid routing bypass and unexpected module execution via malformed URLs.
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 if (!empty($_SERVER['PATH_INFO']) || strpos($uri, '/index.php/') !== false) {
     header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
