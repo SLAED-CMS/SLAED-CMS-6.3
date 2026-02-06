@@ -507,7 +507,7 @@ function admininfo() {
                 $ablocks .= setTemplateBlock('block-left', array('{%title%}' => _SYSTEM_INFO, '{%content%}' => $s_cont, '{%id%}' => '5'));
             }
         }
-        $editor = intval(substr($admin[3], 0, 1));
+        $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
         $e_cont = '<form method="post" action="'.$admin_file.'.php"><table><tr><td>'.redaktor('1', 'editor', '', $editor, 1).'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
         $ablocks .= setTemplateBlock('block-left', array('{%title%}' => _REDAKTOR, '{%content%}' => $e_cont, '{%id%}' => '6'));
         return $ablocks;
