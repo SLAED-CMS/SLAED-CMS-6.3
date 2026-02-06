@@ -27,7 +27,7 @@ function navigate($title, $cat='') {
 function media() {
 	global $prefix, $db, $admin_file, $user, $conf, $confu, $confm, $home, $op;
 	$cwhere = catmids($conf['name'], 'm.cid');
-	$unum = user_news($user[3], $confm['num']);
+	$unum = user_news($user[3] ?? 0, $confm['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	if (!$ncat && $op && $confm['rate']) {
 		$caton = 0;

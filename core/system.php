@@ -1248,7 +1248,8 @@ function getVariables() {
 # Number of user news
 function getUserNews($num) {
     global $confu, $user;
-    $num = (!empty($user[3]) && $user[3] <= $num && $confu['news'] == 1) ? intval($user[3]) : intval($num);
+    $unum = $user[3] ?? 0;
+    $num = (!empty($unum) && $unum <= $num && $confu['news'] == 1) ? intval($unum) : intval($num);
     return $num;
 }
 
@@ -4270,7 +4271,7 @@ function textarea() {
     include("config/config_uploads.php");
     $con = explode("|", $confup[strtolower($mod)]);
     $style = (defined('ADMIN_FILE')) ? ' sl_form' : ' '.$conf['style'];
-    $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 1;
+    $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     if ((defined("ADMIN_FILE") && $editor == 1) || (!defined("ADMIN_FILE") && $conf['redaktor'] == 1)) {
         $code = ($id == 1) ? "<script src=\"plugins/system/insert-code.js\"></script>" : "";
         $code .= "<table class=\"sl_table_form\"><tr><td><div class=\"sl_bb-editor\">
@@ -4550,7 +4551,7 @@ function textarea() {
 # Format ajax edit
 function textareae($obj, $go, $op, $id, $cid, $typ, $mod, $text, $rows) {
     global $conf, $admin;
-    $editor = intval(substr($admin[3], 0, 1));
+    $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     $desc = ((defined("ADMIN_FILE") && $editor == 1) || (!defined("ADMIN_FILE") && $conf['redaktor'] == 1)) ? replace_break($text) : $text;
     $code = "<form name=\"textareae\" id=\"form".$obj."\" method=\"post\">
     <textarea id=\"text\" name=\"text\" cols=\"65\" rows=\"".$rows."\" class=\"sl_earea\">".$desc."</textarea>

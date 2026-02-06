@@ -28,7 +28,7 @@ function help() {
 	global $prefix, $db, $admin_file, $user, $conf, $confu, $confh, $home, $op;
 	$cwhere = catmids($conf['name'], 's.catid');
 	$uid = intval($user[0]);
-	$unum = user_news($user[3], $confh['num']);
+	$unum = user_news($user[3] ?? 0, $confh['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	if (!$ncat && $op) {
 		$caton = 0;

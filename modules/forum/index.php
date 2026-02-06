@@ -224,7 +224,7 @@ function view() {
 	$ordern = (is_moder($conf['name'])) ? "WHERE (id = '".$id."' OR pid = '".$id."')" : "WHERE (id = '".$id."' OR pid = '".$id."') AND time <= NOW() AND status != '0'";
 	list($numfor) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".$prefix."_forum ".$ordern));
 	if ($id && $numfor > 0) {
-		$fornum = user_news($user[3], $conffo['num']);
+		$fornum = user_news($user[3] ?? 0, $conffo['num']);
 		$numpages = ceil($numfor / $fornum);
 		$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 		$num = ($last && $conffo['sort']) ? $numpages : $num;

@@ -27,7 +27,7 @@ function jokes() {
 	global $prefix, $db, $admin_file, $user, $conf, $confu, $confj, $home, $op;
 	$cwhere = catmids($conf['name'], 'j.cat');
 	$word = getVar('get', 'word', 'word');
-	$unum = user_news($user[3], $confj['num']);
+	$unum = user_news($user[3] ?? 0, $confj['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	if (!$ncat && $op && $confj['rate']) {
 		$caton = 0;

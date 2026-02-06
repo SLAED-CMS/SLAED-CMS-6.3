@@ -27,7 +27,7 @@ function navigate($title, $cat='') {
 function links() {
 	global $prefix, $db, $admin_file, $user, $conf, $confu, $confl, $home, $op;
 	$cwhere = catmids($conf['name'], 'f.cid');
-	$unum = user_news($user[3], $confl['num']);
+	$unum = user_news($user[3] ?? 0, $confl['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	if (!$ncat && $op && $confl['rate']) {
 		$caton = 0;

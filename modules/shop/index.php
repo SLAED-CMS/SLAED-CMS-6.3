@@ -26,7 +26,7 @@ function navigate($title, $cat='') {
 function shop() {
 	global $prefix, $db, $conf, $confso, $admin_file, $home, $user, $op;
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$unum = user_news($user[3], $confso['num']);
+	$unum = user_news($user[3] ?? 0, $confso['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	if (!$ncat && $op && $confso['rate']) {
 		$caton = 0;

@@ -22,7 +22,7 @@ function navigate($title, $cat='') {
 
 function autolink() {
 	global $prefix, $db, $admin_file, $user, $conf, $confal, $home, $op;
-	$unum = user_news($user[3], $confal['num']);
+	$unum = user_news($user[3] ?? 0, $confal['num']);
 	$word = getVar('get', 'word', 'word');
 	if ($op) {
 		$field = 'op='.$op.'&';

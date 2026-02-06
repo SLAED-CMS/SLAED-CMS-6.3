@@ -27,7 +27,7 @@ function navigate($title, $cat='') {
 function faq() {
 	global $prefix, $db, $admin_file, $user, $conf, $confu, $conffa, $home, $op;
 	$cwhere = catmids($conf['name'], 's.catid');
-	$unum = user_news($user[3], $conffa['num']);
+	$unum = user_news($user[3] ?? 0, $conffa['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	$word = getVar('get', 'word', 'word');
 	if (!$ncat && $op && $conffa['rate']) {
