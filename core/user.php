@@ -694,22 +694,21 @@ function favordel() {
 
 # RSS Channel
 function rss_channel() {
-    global $prefix, $db, $conf;
-    require_once CONFIG_DIR.'/rss.php';
+    global $prefix, $db, $conf, $confrs, $confu;
     get_lang();
     header_remove("X-Content-Type-Options");
     header("Content-Type: application/rss+xml; charset="._CHARSET);
     header("Content-Encoding: none");
 
-    $name = (isset($_POST['name'])) ? analyze($_POST['name']) : analyze($_GET['name']);
+    $name = analyze($_POST['name'] ?? $_GET['name'] ?? '');
     $hmodul = explode(",", $conf['module']);
     $hi = mt_rand(0, count($hmodul) - 1);
     $cname = $hmodul[$hi];
     $name = ($name) ? $name : $cname;
-    $cat = (isset($_POST['cat'])) ? intval($_POST['cat']) : intval($_GET['cat']);
-    $num = (isset($_POST['num'])) ? intval($_POST['num']) : intval($_GET['num']);
+    $cat = intval($_POST['cat'] ?? $_GET['cat'] ?? 0);
+    $num = intval($_POST['num'] ?? $_GET['num'] ?? 0);
     $num = ($num) ? (($num <= $confrs['max']) ? $num : $confrs['max']) : $confrs['min'];
-    $id = (isset($_POST['id'])) ? intval($_POST['id']) : intval($_GET['id']);
+    $id = intval($_POST['id'] ?? $_GET['id'] ?? 0);
 
     if (($name == "content") && $id) {
         $result = $db->sql_query("SELECT id, title, text, time FROM ".$prefix."_content WHERE id = '".$id."' AND time <= NOW()");

@@ -333,7 +333,7 @@ if ($confs['error_log']) {
         $url = text_filter(getenv('REQUEST_URI'));
         $refer = get_referer();
         $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-        $log = text_filter(trim($log));
+        $log = htmlspecialchars(trim($log), ENT_QUOTES);
         $path = 'config/logs/error_sql.txt';
         if ($fhandle = @fopen($path, 'ab')) {
             if (filesize($path) > $confs['log_size']) {
