@@ -83,6 +83,53 @@ Binary: `php`
 5. PHP-CS-Fixer apply changes:
 `./vendor/bin/php-cs-fixer fix --using-cache=no --config=.php-cs-fixer.dist.php <paths>`
 
+## Test Suites
+
+PHPUnit is configured with two test suites in `phpunit.xml`:
+
+### Unit (`tests/Unit/`)
+
+Isolated tests for core functions. No database or HTTP required.
+
+| File | Tests | Purpose |
+|------|-------|---------|
+| `ExampleTest.php` | 1 | Smoke test — verifies PHPUnit works |
+| `StructureTest.php` | 3 | Project directory structure validation |
+| `TemplateTest.php` | 3 | `setTemplateBasic()`, `setTemplateWarning()`, `getTemplateVars()` |
+| `TemplateIfTest.php` | 12 | `setTemplateIf()` conditional logic: true/false, else, nesting, coercion |
+| `PasswordHashTest.php` | 11 | `md5_salt()` algorithm + bcrypt readiness for password migration |
+| `InputFilterTest.php` | 19 | `num_filter`, `var_filter`, `isVar`, `text_filter`, `url_filter`, `save_text` |
+
+### Validation (`tests/` excluding `Unit/`)
+
+Static analysis tests that scan all project PHP files for patterns.
+
+| File | Tests | Purpose |
+|------|-------|---------|
+| `SecurityValidationTest.php` | 8 | Detects raw superglobals in SQL, eval with vars, shell_exec with user input |
+| `InsertValidationTest.php` | — | Validates INSERT/UPDATE query structure |
+| `ConfigValidationTest.php` | — | Checks config file format consistency |
+| `BlockValidationTest.php` | — | Validates block file structure |
+| `TemplateValidationTest.php` | — | Checks template HTML files |
+| `SetupFileWarningTest.php` | — | Verifies setup file access guards |
+| `LanguageValidationTest.php` | — | Checks language file completeness |
+| `PhpFileFormatTest.php` | — | PHP file format (BOM, tags, encoding) |
+| `ModuleStructureTest.php` | — | Module directory structure validation |
+| `SchemaUpdateValidationTest.php` | — | DB schema migration file checks |
+
+### Running a Single Suite
+
+```
+vendor/bin/phpunit --testsuite Unit
+vendor/bin/phpunit --testsuite Validation
+```
+
+### Running a Single Test File
+
+```
+vendor/bin/phpunit tests/Unit/PasswordHashTest.php
+```
+
 ## Recommended Order
 1. Run `php -l` on changed files to catch syntax errors fast.
 2. Run `phpstan` to catch type and static issues.
