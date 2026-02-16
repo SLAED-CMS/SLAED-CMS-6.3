@@ -293,6 +293,8 @@ function view() {
             $rating = array(_RATING, ajax_rating(1, $user_id, $conf['name'], $user_votes, $user_totalvotes, '', 1));
             $field = ($user_field) ? fields_out($user_field, $conf['name']) : '';
             $sgroup = ($gname) ? array(_SPEC_GROUP, '<span style="color: '.$gcolor.'">'.$gname.'</span>') : array(_SPEC_GROUP, _NO);
+            $rgroup = array();
+            $uranks = '';
             if ($confu['point'] && $user_points) {
                 $result = $db->sql_query("SELECT name, rank, color FROM ".$prefix."_groups WHERE points <= '".intval($user_points)."' AND extra != '1' ORDER BY points ASC");
                 $group = array();

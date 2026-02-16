@@ -13,6 +13,7 @@ include('config/config_forum.php');
 
 function forum() {
 	global $prefix, $db, $user, $conf, $confu, $conffo, $locale;
+	$massiv = array();
 	$mod = ($conf['name']) ? analyze($conf['name']) : 0;
 	$id = (isset($_POST['cat'])) ? ((isset($_POST['cat'])) ? intval($_POST['cat']) : 0) : ((isset($_GET['cat'])) ? intval($_GET['cat']) : 0);
 	if ($id) {
@@ -38,7 +39,7 @@ function forum() {
 		$isdelete = is_acess($massiv[0][15]);
 		$ismod = is_acess($massiv[0][16]);
 		$userinfo = getusrinfo();
-		$ulastvisit = ($userinfo['user_lastvisit']) ? $userinfo['user_lastvisit'] : 0;
+		$ulastvisit = (is_array($userinfo) && !empty($userinfo['user_lastvisit'])) ? intval($userinfo['user_lastvisit']) : 0;
 		$pagetitle = ($id) ? $conf['defis']." "._FORUM." ".$conf['defis']." ".$massiv[0][1] : $conf['defis']." "._FORUM;
 		head($pagetitle);
 		$a = 0;
@@ -219,6 +220,9 @@ function forum() {
 
 function view() {
 	global $prefix, $db, $admin_file, $user, $conf, $confu, $confpr, $conffo, $locale;
+	$cmassiv = array();
+	$where = array();
+	$umassiv = array();
 	$id = (isset($_GET['id'])) ? intval($_GET['id']) : 0;
 	$last = (isset($_GET['last'])) ? 1 : 0;
 	$ordern = (is_moder($conf['name'])) ? "WHERE (id = '".$id."' OR pid = '".$id."')" : "WHERE (id = '".$id."' OR pid = '".$id."') AND time <= NOW() AND status != '0'";
@@ -297,7 +301,7 @@ function view() {
 				$status = $val[17];
 				*/
 				unset($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor);
-				if ($umassiv) {
+				if (!empty($umassiv) && is_array($umassiv)) {
 					foreach ($umassiv as $val2) {
 						if (strtolower($val[3]) == strtolower($val2[0])) {
 							$user_id = $val2[0];

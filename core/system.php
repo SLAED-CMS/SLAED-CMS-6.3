@@ -3768,6 +3768,9 @@ function encode_attach($sourse, $mod) {
     for ($i = 0; $i < $match_count; $i++) {
         $type = strtolower(substr(strrchr($date[1][$i], "."), 1));
         $file = "uploads/".$mod."/".$date[1][$i];
+        $timg = $file;
+        $width = "";
+        $height = "";
         if (in_array($type, $ftype)) {
             $tfile = "uploads/".$mod."/thumb/".$date[1][$i];
             $dtfile = "uploads/".$mod."/thumb";
@@ -3780,12 +3783,12 @@ function encode_attach($sourse, $mod) {
             }
             if (file_exists($file)) list($width, $height) = getimagesize($file);
         } else {
-            $width = $date[4][$i];
-            $height = $date[5][$i];
+            $width = isset($date[4][$i]) ? $date[4][$i] : "";
+            $height = isset($date[5][$i]) ? $date[5][$i] : "";
         }
         $temp = $conftp[$type];
         $temp = str_replace("[src]", $file, $temp);
-        $temp = str_replace("[tsrc]", $timg, $temp);
+        $temp = str_replace("[tsrc]", (string)$timg, $temp);
         $temp = (!empty($width) && intval($width)) ? str_replace("[width]", $width, $temp) : str_replace("[width]", $confup['width'], $temp);
         $temp = str_replace("[twidth]", $con[6], $temp);
         $temp = (!empty($height) && intval($height)) ? str_replace("[height]", $height, $temp) : str_replace("[height]", $confup['height'], $temp);
