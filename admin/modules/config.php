@@ -172,7 +172,11 @@ function config(): void {
     .'<tr><td>'._ADESC.'</td><td>'.radio_form($conf['adesc'], 'adesc').'</td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
     .'<tr><td>'._RSEP.':</td><td><input type="text" name="sep" value="'.urldecode($conf['sep']).'" maxlength="255" class="sl_conf" placeholder="'._RSEP.'" required></td></tr>'
-    .'<tr><td>'._REWRITE_MOD.'<div class="sl_small">'._REWRITE_MODI.'</div></td><td>'.radio_form($conf['rewrite'], 'rewrite').'</td></tr></table>'
+    .'<tr><td>'._TSEP.':</td><td><input type="text" name="tsep" value="'.urldecode($conf['tsep']).'" maxlength="255" class="sl_conf" placeholder="'._TSEP.'" required></td></tr>'
+    .'<tr><td>'._REWRITE_MOD.'<div class="sl_small">'._REWRITE_MODI.'</div></td><td>'.radio_form($conf['rewrite'], 'rewrite').'</td></tr>'
+    .'<tr><td>'._SEOTITLE.'</td><td>'.radio_form($conf['title'] ?? 1, 'title').'</td></tr>'
+    .'<tr><td>'._SEOCTITLE.'</td><td>'.radio_form($conf['ctitle'] ?? 1, 'ctitle').'</td></tr>'    
+    .'</table>'
     .'</div>'
     .'<div id="tabc2" class="tabcont">'
     .'<table class="sl_table_conf">'
@@ -353,8 +357,11 @@ function save(): void {
         'ksep' => getVar('post', 'ksep', 'num'),
         'ltitle' => getVar('post', 'ltitle', 'num'),
         'adesc' => getVar('post', 'adesc', 'num'),
-        'sep' => urlencode(getVar('post', 'sep', 'let') ?: '|'),
+        'sep' => urlencode(getVar('post', 'sep', 'let') ?: '-'),
+        'tsep' => urlencode(getVar('post', 'tsep', 'let') ?: '-'),
         'rewrite' => getVar('post', 'rewrite', 'num'),
+        'title' => getVar('post', 'title', 'num'),
+        'ctitle' => getVar('post', 'ctitle', 'num'),
         'language' => getVar('post', 'language', 'var'),
         'multilingual' => getVar('post', 'multilingual', 'num'),
         'flags' => getVar('post', 'flags', 'num'),

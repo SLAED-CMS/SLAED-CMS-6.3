@@ -4,43 +4,56 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 $confse = array();
 
 #Активировать ЧПУ // true = SEO-Link, false = klassischer Link
-$confse['rewrite'] = false;
+# DELETE
+# $confse['rewrite'] = false;
 
 # Разделитель ЧПУ // Separator for base segments (name, op, id)
-$confse['sep'] = "/";
-
-// insert title or not
-$confse['title'] = true;
-
-// insert ctitle or not
-$confse['ctitle'] = true;
+# DELETE
+# $confse['sep'] = "/";
 
 # Разделитель заголовков old $conf['defis'] // Separator only for Title / CTitle
-$confse['tsep'] = "";
+# DELETE
+# $confse['tsep'] = "";
+
+# insert title or not
+# DELETE
+# $confse['title'] = true;
+
+# insert ctitle or not
+# DELETE
+# $confse['ctitle'] = true;
 
 # Длинные заголовки
-$confse['ltitle'] = "1";
+# DELETE
+# $confse['ltitle'] = "1";
 
 # Ключевые слова по умолчанию
-$confse['keys'] = "cms,php,html5,css3,jquery,ajax,mysql,web,сайт,бесплатно,просто,быстро,функционально,эффективно,безопасно";
+# DELETE
+# $confse['keys'] = "cms,php,html5,css3,jquery,ajax,mysql,web,сайт,бесплатно,просто,быстро,функционально,эффективно,безопасно";
 
 # Автоматическая генерация ключевых слов
-$confse['akeys'] = "1";
+# DELETE
+# $confse['akeys'] = "1";
 
 # Исключить следующие слова из ключевых
-$confse['dkeys'] = "quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это";
+# DELETE
+# $confse['dkeys'] = "quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это";
 
 # Количество ключвых слов
-$confse['kwords'] = "15";
+# DELETE
+# $confse['kwords'] = "15";
 
 # Количество знаков в ключевом слове
-$confse['kletter'] = "3";
+# DELETE
+# $confse['kletter'] = "3";
 
 # Перемешивать ключевые слова
-$confse['kmix'] = "0";
+# DELETE
+# $confse['kmix'] = "0";
 
 # Разделять ключевые слова через запятую
-$confse['ksep'] = "0";
+# DELETE
+# $confse['ksep'] = "0";
 
 # Автоматическая генерация описания
 $confse['adesc'] = "1";

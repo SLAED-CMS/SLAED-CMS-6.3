@@ -1329,9 +1329,9 @@ function getImgText($text, $type='') {
 require_once CONFIG_DIR.'/config_seo.php';
 
 function getSeoUrl(array $params): string {
-    global $confse;
-    $sep  = $confse['sep'] ?? '-';
-    $tsep = $confse['tsep'] ?? '-';
+    global $conf, $confse;
+    $sep  = $conf['sep'] ?? '-';
+    $tsep = $conf['tsep'] ?? '-';
 
     // base segments: name, op, id
     $segments = [
@@ -1342,13 +1342,13 @@ function getSeoUrl(array $params): string {
 
     // Optional: title / ctitle mit eigenem Separator
     foreach (['title', 'ctitle'] as $key) {
-        if (!empty($confse[$key]) && !empty($params[$key])) {
+        if (!empty($conf[$key]) && !empty($params[$key])) {
             $segments[] = slugify($params[$key], $tsep);
         }
     }
 
     // Return: SEO-Link or classic link
-    return ($confse['rewrite'] ?? false)
+    return ($conf['rewrite'] ?? false)
         ? implode($sep, $segments)
         : 'index.php?name=' . $segments[0] . '&op=' . $segments[1] . '&id=' . $segments[2];
 }
