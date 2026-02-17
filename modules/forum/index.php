@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -129,7 +129,7 @@ function forum() {
 						$cont .= tpl_eval("forum-list-basic-open", _NEWTOPICS, _POSTS, _POSTER, cutstr(_TVIEWS, 5, 1), _LASTMESSAGE);
 						$cont .= ($ismod) ? "<form action=\"index.php?name=".$conf['name']."\" method=\"post\">" : "";
 						while (list($sid, $catid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ip_send, $l_uid, $l_name, $l_id, $l_time, $status, $cid, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
-							$thref = getHref(array('name='.$conf['name'].'&op=view&id='.$sid, $time, $l_time, $title, $hometext, $ctitle, $cdesc, $cimg));
+							$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $sid, 'title' => $title, 'ctitle' => $ctitle]);
 							$view = 0;
 							if (!$status && is_moder($conf['name'])) {
 								$timg = "<a href=\"".$thref."\" title=\"".$title."\"><span title=\""._TOPICM."\" class=\"sl_t_clos_m\"></span></a>";

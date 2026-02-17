@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2022 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -25,7 +25,7 @@ function content() {
 			$edit = add_menu($moder.'<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._SHOW.'">'._SHOW.'</a>');
 			$cont .= '<tr id="'.$id.'">'
 			.'<td><a href="#'.$id.'" title="'.$id.'" class="sl_pnum">'.$id.'</a></td>'
-			.'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._READS.': '.$counter).'<a href="'.getHref(array('name='.$conf['name'].'&op=view&id='.$id, $time, '', $title, $text, '', '', '')).'" title="'.$title.'">'.$title.'</a> '.new_graphic($time).'</td>'
+			.'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._READS.': '.$counter).'<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]).'" title="'.$title.'">'.$title.'</a> '.new_graphic($time).'</td>'
 			.'<td>'.$edit.'</td></tr>';
 		}
 		$cont .= '</tbody></table>';

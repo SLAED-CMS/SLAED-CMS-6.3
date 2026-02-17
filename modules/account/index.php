@@ -27,7 +27,7 @@ function account() {
         .'<tr><td>'._NICKNAME.':</td><td><input type="text" name="user_name" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._NICKNAME.'" required></td></tr>'
         .'<tr><td>'._PASSWORD.':</td><td><input type="password" name="user_password" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._PASSWORD.'" required></td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.$captcha.'<input type="hidden" name="op" value="login"><input type="submit" value="'._USERLOGIN.'" class="sl_but_blue"></td></tr>'
-        .'<tr><td colspan="2" class="sl_center"><a href="'.getHref(array('name='.$conf['name'].'&op=passlost', '', '', '', '', '', '', '')).'" title="'._PASSWORDLOST.'" class="sl_but_foot">'._PASSWORDLOST.'</a><a href="'.getHref(array('name='.$conf['name'].'&op=newuser', '', '', '', '', '', '', '')).'" title="'._REGNEWUSER.'" class="sl_but_foot">'._REGNEWUSER.'</a></td></tr>';
+        .'<tr><td colspan="2" class="sl_center"><a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']).'" title="'._PASSWORDLOST.'" class="sl_but_foot">'._PASSWORDLOST.'</a><a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']).'" title="'._REGNEWUSER.'" class="sl_but_foot">'._REGNEWUSER.'</a></td></tr>';
         $cont .= ($confu['network']) ? '<tr><td colspan="2" class="sl_center">'._LOGINNETWORK.'</td></tr><tr><td colspan="2" class="sl_center">'.getNetworks().'</td></tr>' : '';
         $cont .= '</table></form>';
         $cont .= setTemplateBasic('close');
@@ -84,7 +84,7 @@ function newuser() {
                 .'<tr><td>'._RULES_OK.'</td><td><input type="checkbox" name="rules" value="1" class="sl_field '.$conf['style'].'" required></td></tr>';
             }
             $cont .= '<tr><td colspan="2" class="sl_center">'.$captcha.'<input type="hidden" name="op" value="finnewuser"><input type="submit" value="'._NEWUSER.'" class="sl_but_blue"></td></tr>'
-            .'<tr><td colspan="2" class="sl_center"><a href="'.getHref(array('name='.$conf['name'], '', '', '', '', '', '', '')).'" title="'._USERLOGIN.'" class="sl_but_foot">'._USERLOGIN.'</a><a href="'.getHref(array('name='.$conf['name'].'&op=passlost', '', '', '', '', '', '', '')).'" title="'._PASSWORDLOST.'" class="sl_but_foot">'._PASSWORDLOST.'</a></td></tr>';
+            .'<tr><td colspan="2" class="sl_center"><a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._USERLOGIN.'" class="sl_but_foot">'._USERLOGIN.'</a><a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']).'" title="'._PASSWORDLOST.'" class="sl_but_foot">'._PASSWORDLOST.'</a></td></tr>';
             $cont .= ($confu['network']) ? '<tr><td colspan="2" class="sl_center">'._LOGINNETWORK.'</td></tr><tr><td colspan="2" class="sl_center">'.getNetworks().'</td></tr>' : '';
             $cont .= '</table></form>';
             $cont .= setTemplateBasic('close');
@@ -312,8 +312,8 @@ function view() {
             $trank = ($gname) ? _GROUP.': '.$gname : ((is_array($rgroup)) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
             $rank = ($grank && file_exists(img_find('ranks/'.$grank))) ? array(_RANK, '<img src="'.img_find('ranks/'.$grank).'" alt="'.$trank.'" title="'.$trank.'">') : array('', '');
             $admin = (is_admin()) ? add_menu('<a href="'.$admin_file.'.php?op=users_add&amp;id='.$user_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$admin_file.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$admin_file.'.php?op=users_del&amp;id='.$user_id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $privat = ($confpr['act'] && $user_name) ? '<a href="'.getHref(array('name='.$conf['name'].'&op=privat&uname='.urlencode($user_name), '', '', '', '', '', '', '')).'" title="'._SENDMES.'" class="sl_but_green">'._MESSAGE.'</a>' : '';
-            $profil = (is_user() && $uname == $user_name) ? '<a href="'.getHref(array('name='.$conf['name'], '', '', '', '', '', '', '')).'" title="'._ACCOUNT.'" class="sl_but">'._ACCOUNT.'</a>' : '';
+            $privat = ($confpr['act'] && $user_name) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($user_name)]).'" title="'._SENDMES.'" class="sl_but_green">'._MESSAGE.'</a>' : '';
+            $profil = (is_user() && $uname == $user_name) ? '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._ACCOUNT.'" class="sl_but">'._ACCOUNT.'</a>' : '';
             $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
             $title[] = _COMMENTS;
             $text[] = last($user_id, 'comm');
@@ -431,7 +431,7 @@ function last($uid, $modul) {
             $cont .= '<table class="sl_table_amount">';
             while(list($id, $cid, $modul, $date, $comment) = $db->sql_fetchrow($result)) {
                 $comment = cutstr(str_replace(array(_QUOTE, _CODE), '', text_filter(bb_decode($comment, $conf['name']))), 70);
-                $cont .= '<tr><td style="width: 15%"><span class="sl_date" title="'._CHNGSTORY.': '.format_time($date, _TIMESTRING).'">'.format_time($date).'</span></td><td><a href="'.getHref(array('name='.$modul.'&op=view&id='.$cid, '', '', '', '', '', '', '')).'#'.$id.'" title="'.$comment.'" class="sl_last">'.$comment.'</a></td></tr>';
+                $cont .= '<tr><td style="width: 15%"><span class="sl_date" title="'._CHNGSTORY.': '.format_time($date, _TIMESTRING).'">'.format_time($date).'</span></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id.'" title="'.$comment.'" class="sl_last">'.$comment.'</a></td></tr>';
             }
             $cont .= '</table>';
         } else {
@@ -442,7 +442,7 @@ function last($uid, $modul) {
         $result = $db->sql_query("SELECT fid, title, time FROM ".$prefix."_faq WHERE uid = '".$user_id."' AND time <= NOW() AND status != '0' ORDER BY fid DESC LIMIT 0,".$num);
         if ($db->sql_numrows($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
-            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><span class="sl_date" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'">'.format_time($time).'</span></td><td><a href="'.getHref(array('name='.$modul.'&op=view&id='.$id, $time, '', $title, '', '', '', '')).'#'.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
+            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><span class="sl_date" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'">'.format_time($time).'</span></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
             $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
@@ -452,7 +452,7 @@ function last($uid, $modul) {
         $result = $db->sql_query("SELECT lid, title, date FROM ".$prefix."_files WHERE uid = '".$user_id."' AND date <= NOW() AND status != '0' ORDER BY lid DESC LIMIT 0,".$num);
         if ($db->sql_numrows($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
-            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><span class="sl_date" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'">'.format_time($time).'</span></td><td><a href="'.getHref(array('name='.$modul.'&op=view&id='.$id, $time, '', $title, '', '', '', '')).'#'.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
+            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><span class="sl_date" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'">'.format_time($time).'</span></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
             $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));

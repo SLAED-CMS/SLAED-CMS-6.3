@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -12,9 +12,9 @@ get_lang($conf['name']);
 
 function navigate($title, $cat='') {
 	global $conf;
-	$home = '<a href="'.getHref(array('name='.$conf['name'], '', '', '', '', '', '', '')).'" title="'._TOPUSERS.'" class="sl_but_navi">'._HOME.'</a>';
-	$rules = '<a href="'.getHref(array('name='.$conf['name'].'&op=rules', '', '', '', '', '', '', '')).'" title="'._TU_RULES.'" class="sl_but_navi">'._TU_RULES.'</a>';
-	$stats = '<a href="'.getHref(array('name='.$conf['name'].'&op=stats', '', '', '', '', '', '', '')).'" title="'._TU_STATS.'" class="sl_but_navi">'._TU_STATS.'</a>';
+	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._TOPUSERS.'" class="sl_but_navi">'._HOME.'</a>';
+	$rules = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'rules']).'" title="'._TU_RULES.'" class="sl_but_navi">'._TU_RULES.'</a>';
+	$stats = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'stats']).'" title="'._TU_STATS.'" class="sl_but_navi">'._TU_STATS.'</a>';
 	return setTemplateBasic('navi', array('{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $rules, '{%pop%}' => $stats, '{%liste%}' => '', '{%add%}' => '', '{%catshow%}' => ''));
 }
 

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2021 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -14,12 +14,12 @@ include('config/config_faq.php');
 function navigate($title, $cat='') {
 	global $conf, $conffa;
 	$ncat = getVar('get', 'cat', 'num');
-	$ncat = ($ncat) ? '&cat='.$ncat : '';
-	$home = '<a href="'.getHref(array('name='.$conf['name'], '', '', '', '', '', '', '')).'" title="'._FAQ.'" class="sl_but_navi">'._HOME.'</a>';
-	$best = ($conffa['rate']) ? '<a href="'.getHref(array('name='.$conf['name'].$ncat.'&op=best', '', '', '', '', '', '', '')).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-	$pop = ($conffa['rate']) ? '<a href="'.getHref(array('name='.$conf['name'].$ncat.'&op=pop', '', '', '', '', '', '', '')).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-	$liste = '<a href="'.getHref(array('name='.$conf['name'].'&op=liste', '', '', '', '', '', '', '')).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-	$add = ((is_user() && $conffa['add'] == 1) || (!is_user() && $conffa['addquest'] == 1)) ? '<a href="'.getHref(array('name='.$conf['name'].'&op=add', '', '', '', '', '', '', '')).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
+	$cpar = $ncat ? ['cat' => $ncat] : [];
+	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._FAQ.'" class="sl_but_navi">'._HOME.'</a>';
+	$best = ($conffa['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
+	$pop = ($conffa['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
+	$liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
+	$add = ((is_user() && $conffa['add'] == 1) || (!is_user() && $conffa['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
 	$catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
 	return setTemplateBasic('navi', array('{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow));
 }
@@ -93,8 +93,8 @@ function faq() {
 	$result = $db->sql_query("SELECT s.fid, s.catid, s.name, s.title, s.time, s.hometext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM ".$prefix."_faq AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) ".$order." ".$limit);
 	if ($db->sql_numrows($result) > 0) {
 		while (list($id, $cid, $uname, $stitle, $time, $hometext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
-			$thref = getHref(array('name='.$conf['name'].'&op=view&id='.$id, $time, '', $stitle, $hometext, $ctitle, $cdesc, $cimg));
-			$chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
+			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
+			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
 			$cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
@@ -140,8 +140,8 @@ function liste() {
 		$letter = ($conffa['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', array('{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _QUESTION, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE));
 		while (list($id, $cid, $uname, $title, $time, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
-			$thref = getHref(array('name='.$conf['name'].'&op=view&id='.$id, $time, '', $title, '', $ctitle, $cdesc, ''));
-			$chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, ''));
+			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
+			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
 			$cadesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cadesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
@@ -168,7 +168,7 @@ function view() {
 	if ($db->sql_numrows($result) == 1) {
 		$db->sql_query("UPDATE ".$prefix."_faq SET counter = counter+1 WHERE fid = '".$id."'");
 		list($cid, $uname, $title, $time, $hometext, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
-		$chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
+		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		head();
 		$cont = navigate(_FAQ, $conffa['viewcat']);
 		if ($cid) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $cid, $conffa['defis'], _FAQ)));
@@ -204,7 +204,7 @@ function view() {
 					$text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-					$cont .= setTemplateBasic('assoc-basic', array('{%href%}' => getHref(array('name='.$conf['name'].'&op=view&id='.$aid, $time, '', $title, $hometext, '', '', '')), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img));
+					$cont .= setTemplateBasic('assoc-basic', array('{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img));
 				}
 				$cont .= setTemplateBasic('assoc-close');
 			}

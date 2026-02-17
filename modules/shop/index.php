@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -14,11 +14,11 @@ include('config/config_shop.php');
 function navigate($title, $cat='') {
 	global $conf, $confso;
 	$ncat = getVar('get', 'cat', 'num');
-	$ncat = ($ncat) ? '&cat='.$ncat : '';
-	$home = '<a href="'.getHref(array('name='.$conf['name'], '', '', '', '', '', '', '')).'" title="'._SHOP.'" class="sl_but_navi">'._HOME.'</a>';
-	$best = ($confso['rate']) ? '<a href="'.getHref(array('name='.$conf['name'].$ncat.'&op=best', '', '', '', '', '', '', '')).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-	$pop = ($confso['rate']) ? '<a href="'.getHref(array('name='.$conf['name'].$ncat.'&op=pop', '', '', '', '', '', '', '')).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-	$liste = '<a href="'.getHref(array('name='.$conf['name'].'&op=liste', '', '', '', '', '', '', '')).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
+	$cpar = $ncat ? ['cat' => $ncat] : [];
+	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._SHOP.'" class="sl_but_navi">'._HOME.'</a>';
+	$best = ($confso['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
+	$pop = ($confso['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
+	$liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
 	$catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
 	return setTemplateBasic('navi', array('{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => '', '{%catshow%}' => $catshow));
 }
@@ -85,8 +85,8 @@ function shop() {
 		$i = 1;
 		$cont .= '<table>';
 		while (list($id, $cid, $time, $stitle, $text, $bodytext, $ppreis, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg) = $db->sql_fetchrow($result)) {
-			$thref = getHref(array('name='.$conf['name'].'&op=view&id='.$id, $time, '', $stitle, $text.$bodytext, $ctitle, $cdesc, $cimg));
-			$chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
+			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
+			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
 			$cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
@@ -152,8 +152,8 @@ function liste() {
 		$letter = ($confso['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', array('{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _PREIS, '{%date%}' => _DATE));
 		while (list($id, $cid, $time, $title, $preis, $ctitle, $cdesc) = $db->sql_fetchrow($result)) {
-			$thref = getHref(array('name='.$conf['name'].'&op=view&id='.$id, $time, '', $title, '', $ctitle, $cdesc, ''));
-			$chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, ''));
+			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
+			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
@@ -179,7 +179,7 @@ function view() {
 	if ($db->sql_numrows($result) == 1) {
 		$db->sql_query("UPDATE ".$prefix."_products SET count = count+1 WHERE id = '".$id."'");
 		list($cid, $time, $title, $text, $bodytext, $ppreis, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg) = $db->sql_fetchrow($result);
-		$chref = getHref(array('name='.$conf['name'].'&cat='.$cid, '', '', '', '', $ctitle, $cdesc, $cimg));
+		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		head();
 		$cont = navigate(_SHOP, $confso['viewcat']);
 		if ($cid) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $cid, $confso['defis'], _SHOP)));
@@ -226,7 +226,7 @@ function view() {
 					$text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-					$cont .= setTemplateBasic('assoc-basic', array('{%href%}' => getHref(array('name='.$conf['name'].'&op=view&id='.$aid, $time, '', $title, $hometext.$bodytext, '', '', '')), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img));
+					$cont .= setTemplateBasic('assoc-basic', array('{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img));
 				}
 				$cont .= setTemplateBasic('assoc-close');
 			}

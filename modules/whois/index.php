@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2021 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,8 +13,8 @@ include('config/config_whois.php');
 
 function navigate($title, $cat='') {
 	global $conf, $confw;
-	$home = '<a href="'.getHref(array('name='.$conf['name'], '', '', '', '', '', '', '')).'" title="'._WHOIS_LIC.'" class="sl_but_navi">'._HOME.'</a>';
-	$add = ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) ? '<a href="'.getHref(array('name='.$conf['name'].'&op=add', '', '', '', '', '', '', '')).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
+	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._WHOIS_LIC.'" class="sl_but_navi">'._HOME.'</a>';
+	$add = ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
 	return setTemplateBasic('navi', array('{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => '', '{%pop%}' => '', '{%liste%}' => '', '{%add%}' => $add, '{%catshow%}' => ''));
 }
 

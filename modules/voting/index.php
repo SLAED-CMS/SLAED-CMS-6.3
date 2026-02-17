@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -20,7 +20,7 @@ function voting() {
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= setTemplateBasic('voting-home-open', array('{%id%}' => _ID, '{%title%}' => _TITLE, '{%comm%}' => cutstr(_COMMENTS, 4, 1), '{%votes%}' => cutstr(_VOTES, 3, 1)));
 		while (list($id, $stitle, $questions, $answer, $date, $enddate, $comm, $acomm, $typ) = $db->sql_fetchrow($result)) {
-			$title = '<a href="'.getHref(array('name='.$conf['name'].'&op=view&id='.$id, $date, '', $stitle, str_replace('|', ' ', $questions), '', '', '')).'" title="'.$stitle.'">'.cutstr($stitle, 60).'</a> '.new_graphic($date);
+			$title = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle]).'" title="'.$stitle.'">'.cutstr($stitle, 60).'</a> '.new_graphic($date);
 			$comm = ($acomm && $comm) ? $comm : _NO;
 			$vote = array_sum(explode('|', $answer));
 			$type = ($typ == '1') ? _VOPEN : _VCLOSE;

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,10 +13,10 @@ include('config/config_auto_links.php');
 
 function navigate($title, $cat='') {
 	global $conf;
-	$home = '<a href="'.getHref(array('name='.$conf['name'], '', '', '', '', '', '', '')).'" title="'._A_LINKS.'" class="sl_but_navi">'._HOME.'</a>';
-	$new = '<a href="'.getHref(array('name='.$conf['name'].'&op=new', '', '', '', '', '', '', '')).'" title="'._NEW.'" class="sl_but_navi">'._NEW.'</a>';
-	$pop = '<a href="'.getHref(array('name='.$conf['name'].'&op=pop', '', '', '', '', '', '', '')).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>';
-	$add = '<a href="'.getHref(array('name='.$conf['name'].'&op=add', '', '', '', '', '', '', '')).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>';
+	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._A_LINKS.'" class="sl_but_navi">'._HOME.'</a>';
+	$new = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'new']).'" title="'._NEW.'" class="sl_but_navi">'._NEW.'</a>';
+	$pop = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>';
+	$add = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>';
 	return setTemplateBasic('navi', array('{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $new, '{%pop%}' => $pop, '{%liste%}' => '', '{%add%}' => $add, '{%catshow%}' => ''));
 }
 

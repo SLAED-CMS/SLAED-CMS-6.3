@@ -441,7 +441,7 @@ function setCategories($mod, $sub, $desc, $id='') {
                     $val[2] = defconst($val[2]);
                     if (is_acess($val[6])) {
                         $style = '';
-                        $href = getHref(array('name='.$mod.'&cat='.$val[0], '', '', '', '', $val[1], $val[2], $val[3]));
+                        $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
                         $ilink = ($val[3]) ? '<a href="'.$href.'" title="'.$val[1].'"><img src="'.img_find('categories/'.$val[3]).'" alt="'.$val[1].'" title="'.$val[1].'"></a>' : '<a href="'.$href.'" title="'.$val[1].'" class="sl_cat"></a>';
                         $alink = '<a href="'.$href.'" title="'.$val[1].'"><b>'.$val[1].'</b></a>';
                     } else {
@@ -456,7 +456,7 @@ function setCategories($mod, $sub, $desc, $id='') {
                             $catid[] = $sval[0];
                             if ($sub == 1) {
                                 $sval[1] = defconst($sval[1]);
-                                $shref = getHref(array('name='.$mod.'&cat='.$sval[0], '', '', '', '', $sval[1], $sval[2], $sval[3]));
+                                $shref = getSeoUrl(['name' => $mod, 'cat' => $sval[0]]);
                                 $sublink = (is_acess($sval[6])) ? ' <a href="'.$shref.'" title="'.$sval[1].'" class="sl_cat">'.$sval[1].'</a>' : '';
                                 $subcat .= '<div>'.$sublink.'</div>';
                             }
@@ -536,7 +536,7 @@ function setPageNumbers() {
         $cont = '';
         if ($num > 1) {
             $prev = $num - 1;
-            $cprev = (!defined('ADMIN_FILE')) ? '<a href="'.getHref(array('name='.$arg[1].'&'.$arg[5].$n.'='.$prev, '', '', '', '', '', '', '')).$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$prev.$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>';
+            $cprev = (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $arg[1], $arg[5].$n => $prev]).$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$prev.$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>';
         } else {
             $cprev = '<span class="sl_num" title="'._BACK.'">'._BACK.'</span>';
         }
@@ -544,7 +544,7 @@ function setPageNumbers() {
             if ($i == $num) {
                 $cont .= '<span title="'.$i.'">'.$i.'</span>';
             } else {
-                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $arg[3]) || ($i == 1)) $cont .= (!defined('ADMIN_FILE')) ? '<a href="'.getHref(array('name='.$arg[1].'&'.$arg[5].$n.'='.$i, '', '', '', '', '', '', '')).$anchor.'" title="'.$i.'">'.$i.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$i.$anchor.'" title="'.$i.'">'.$i.'</a>';
+                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $arg[3]) || ($i == 1)) $cont .= (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $arg[1], $arg[5].$n => $i]).$anchor.'" title="'.$i.'">'.$i.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$i.$anchor.'" title="'.$i.'">'.$i.'</a>';
             }
             if ($i < $arg[3]) {
                 if (($i > ($num - $nnum)) && ($i < ($num + $mnum))) $cont .= ' ';
@@ -554,7 +554,7 @@ function setPageNumbers() {
         }
         if ($num < $arg[3]) {
             $next = $num + 1;
-            $cnext = (!defined('ADMIN_FILE')) ? '<a href="'.getHref(array('name='.$arg[1].'&'.$arg[5].$n.'='.$next, '', '', '', '', '', '', '')).$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$next.$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>';
+            $cnext = (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $arg[1], $arg[5].$n => $next]).$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$next.$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>';
         } else {
             $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
         }
@@ -1324,33 +1324,31 @@ function getImgText($text, $type='') {
     return $img;
 }
 
-# OLD DELETE
 # Format SEO url
-require_once CONFIG_DIR.'/config_seo.php';
-
 function getSeoUrl(array $params): string {
     global $conf;
-    $sep  = $conf['sep'] ?? '-';
-    $tsep = $conf['tsep'] ?? '-';
+    $sep   = $conf['sep'] ?? '-';
+    $tsep  = $conf['tsep'] ?? '-';
+    $slugs = ['title', 'ctitle'];
 
-    // base segments: name, op, id
-    $segments = [
-        $params['name'] ?? 'home',
-        $params['op'] ?? 'view',
-        $params['id'] ?? '0',
-    ];
-
-    // Optional: title / ctitle mit eigenem Separator
-    foreach (['title', 'ctitle'] as $key) {
-        if (!empty($conf[$key]) && !empty($params[$key])) {
-            $segments[] = slugify($params[$key], $tsep);
-        }
+    $segments = [];
+    $query = [];
+    foreach ($params as $key => $val) {
+        if (in_array($key, $slugs, true)) continue;
+        $segments[] = $val;
+        $query[] = $key.'='.$val;
     }
 
-    // Return: SEO-Link or classic link
-    return ($conf['rewrite'] ?? false)
-        ? implode($sep, $segments)
-        : 'index.php?name=' . $segments[0] . '&op=' . $segments[1] . '&id=' . $segments[2];
+    if ($conf['rewrite'] ?? false) {
+        foreach ($slugs as $key) {
+            if (!empty($conf[$key]) && !empty($params[$key])) {
+                $segments[] = slugify($params[$key], $tsep);
+            }
+        }
+        return implode($sep, $segments);
+    }
+
+    return 'index.php?'.implode('&amp;', $query);
 }
 
 function slugify(string $text, string $sep = '-'): string {
@@ -1377,82 +1375,6 @@ function slugify(string $text, string $sep = '-'): string {
     return strtolower($text);
 }
 
-
-function getHref($meta) {
-    global $conf;
-
-    if (is_array($meta)) {
-        $href = $meta['0'];
-        if ($conf['rewrite']) {
-            $query = explode('&', str_replace('&amp;', '&', $href));
-            foreach($query as $q) {
-                list($key, $value) = explode('=', $q);
-                $ar[] = $value;
-            }
-            $url = implode(urldecode($conf['sep']), $ar);
-        } else {
-            $url = (stristr($href, '#') === false) ? $href : stristr($href, '#', true);
-        }
-        $time = empty($meta['1']) ? '0000-00-00 00:00:00' : $meta['1'];
-        $mtime = empty($meta['2']) ? '0000-00-00 00:00:00' : $meta['2'];
-        $title = empty($meta['3']) ? '' : getTextClean($meta['3'], 1);
-        if (empty($meta['4'])) {
-            $desc = '';
-            $img = '';
-        } else {
-            $desc = ($conf['adesc']) ? cutstr(getTextClean($meta['4'], 1), $conf['dletter'], 2) : '';
-            $img = getImgText($meta['4']);
-            $img = empty($img) ? '' : $img;
-        }
-        $ctitle = empty($meta['5']) ? '' : $meta['5'];
-        $cdesc = empty($meta['6']) ? '' : $meta['6'];
-        $cimg = empty($meta['7']) ? '' : $meta['7'];
-
-        ###
-        $url = urlencode($url);
-        $href = urlencode($href);
-        #list($durl, $dmtime) = $db->sql_fetchrow($db->sql_query("SELECT sl_url, sl_mtime FROM ".$prefix."_seo WHERE sl_url = '".$url."'"));
-        #$result = $db->sql_query("SELECT url FROM ".$prefix."_seo WHERE url = '".urlencode($url)."'");
-
-        #if ($url == $durl) {
-            #if ($mtime > $dmtime) {
-                # echo "UPDATE";
-                #$db->sql_query("UPDATE ".$prefix."_seo SET sl_url = '".$url."', sl_link = '".$href."', sl_time = '".$time."', sl_mtime = '".$mtime."', sl_title = '".$title."', sl_desc = '".$desc."', sl_keys = '".$keys."', sl_img = '".$img."', sl_ctitle = '".$ctitle."', sl_cdesc = '".$cdesc."', sl_cimg = '".$cimg."' WHERE sl_url = '".$url."'");
-            #}
-            #$result = $db->sql_query("SELECT mtime FROM ".$prefix."_seo WHERE mtime < '".$mtime."'");
-            #if ($db->sql_numrows($result) > 0) {
-                #$db->sql_query("UPDATE ".$prefix."_seo SET uname = '".$uname."', time = '".$ctime."', host_addr = '".$ip."', guest = '".$guest."', module = '".$name."', url = '".$url."' WHERE uname = '".$uname."'");
-            #}
-        #} else {
-            #$db->sql_query("INSERT INTO ".$prefix."_seo (url, link, time, mtime, title, desc, keys, img, ctitle, cdesc, cimg) VALUES ('".str_replace('&', '&amp;', $url)."', '".str_replace('&', '&amp;', $href)."', NOW(), '".$mtime."', '".$title."', '".$desc."', '".$keys."', '".$img."', '".$ctitle."', '".$cdesc."', '".$cimg."')");
-            #$db->sql_query("INSERT INTO ".$prefix."_seo VALUES (NULL, '".$url."', '".$href."', '".$time."', '".$mtime."', '".$title."', '".$desc."', '".$keys."', '".$img."', '".$ctitle."', '".$cdesc."', '".$cimg."')");
-        #}
-        ###
-
-        /*
-        $marray = $href.'||'.$time.'||'.$mtime.'||'.$title.'||'.$desc.'||'.$keys.'||'.$img.'||'.$ctitle.'||'.$cdesc.'||'.$cimg;
-        $array = array($url => $marray);
-        $result = !empty($confru[$url]) ? array_udiff_assoc(explode('||', $marray), explode('||', $confru[$url]), 'isCompare') : false;
-        if (empty($confru[$url])) {
-            $cont = array_merge($confru, $array);
-            $save = 1;
-        } elseif ($result) {
-            $cont = array_replace($confru, array($url => $confru[$url]), $array);
-            $save = 1;
-        } else {
-            $save = 0;
-        }
-        if ($save) {
-            ksort($cont, SORT_STRING);
-            save_conf('config/config_rules.php', $cont, '', 'confru');
-        }
-        */
-        $url = ($conf['rewrite']) ? urldecode($url) : 'index.php?'.str_replace('&', '&amp;', urldecode($href));
-    } else {
-        $url = false;
-    }
-    return $url;
-}
 
 # Theme include
 function setThemeInclude(): void {
@@ -2815,15 +2737,12 @@ function head() {
     $sep = urldecode($conf['defis']);
     if (!defined('ADMIN_FILE')) {
         $atime = date('Y-m-d H:i:s');
-        $meta = getUrlMeta();
-        $time = empty($meta['1']) ? $atime : $meta['1'];
-        $mtime = empty($meta['2']) ? $atime : $meta['2'];
-        $title = empty($meta['3']) ? $conf['sitename'] : $meta['3'];
-        $desc = empty($meta['4']) ? $conf['slogan'] : $meta['4'];
-        $img = empty($meta['6']) ? $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'] : $conf['homeurl'].'/'.$meta['6'];
-        $ctitle = empty($meta['7']) ? '0' : $meta['7'];
-        $cdesc = empty($meta['8']) ? '0' : $meta['8'];
-        $cimg = empty($meta['9']) ? '0' : $meta['9'];
+        $time = $atime;
+        $mtime = $atime;
+        $title = $conf['sitename'];
+        $desc = $conf['slogan'];
+        $img = $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'];
+        $ctitle = '';
         $url = ($conf['rewrite']) ? urldecode(substr($request, 1)) : urldecode(str_replace('index.php?', '', substr($request, 1)));
         $purl = ($conf['rewrite']) ? $conf['homeurl'].'/'.htmlspecialchars($url) : (($home) ? $conf['homeurl'] : $conf['homeurl'].'/index.php?'.htmlspecialchars($url));
         $type = 'article';

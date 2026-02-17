@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -9,7 +9,7 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $prefix, $db;
+global $prefix, $db, $conf;
 
 # Количество сообщений в блоке
 $blimit = '15';
@@ -21,7 +21,8 @@ $ordern = (is_moder("forum")) ? "" : "AND time <= now() AND status > '1'";
 $buffer = '';
 $result = $db->sql_query("SELECT id, uid, name, title, time, hometext, comments, counter, l_uid, l_name, l_id, l_time, status FROM ".$prefix."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
 while (list($id, $uid, $uname, $title, $time, $hometext, $comments, $counter, $l_uid, $l_name, $l_id, $l_time, $status) = $db->sql_fetchrow($result)) {
-	$thref = getHref(array('name=forum&op=view&id='.$id.'&last', $time, $l_time, $title, $hometext, '', '', ''));
+	$thref = getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'title' => $title]);
+	if (!($conf['rewrite'] ?? false)) $thref .= '&amp;last';
 	$post = ($uid) ? user_info($uname) : $uname;
 	$lposter = ($l_uid) ? user_info($l_name) : $l_name;
 	$class = ($status <= 1 || $time > date('Y-m-d H:i:s')) ? ' class="sl_hidden"' : '';
