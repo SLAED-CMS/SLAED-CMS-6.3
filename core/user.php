@@ -799,7 +799,6 @@ function open_search() {
     ."<OpenSearchDescription xmlns=\"http://a9.com/-/spec/opensearch/1.1/\">\n"
     ."<ShortName>".htmlspecialchars($conf['sitename'])."</ShortName>\n"
     ."<Description>".htmlspecialchars($conf['slogan'])."</Description>\n"
-    ."<Tags>".htmlspecialchars(str_replace(",", ", ", $conf['keys']))."</Tags>\n"
     ."<Url type=\"application/atom+xml\" template=\"".$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"
     ."<Url type=\"application/rss+xml\" template=\"".$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"
     ."<Url type=\"text/html\" template=\"".$conf['homeurl']."/index.php?name=search&amp;word={searchTerms}\"/>\n"

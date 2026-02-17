@@ -1329,7 +1329,7 @@ function getImgText($text, $type='') {
 require_once CONFIG_DIR.'/config_seo.php';
 
 function getSeoUrl(array $params): string {
-    global $conf, $confse;
+    global $conf;
     $sep  = $conf['sep'] ?? '-';
     $tsep = $conf['tsep'] ?? '-';
 
@@ -1379,7 +1379,7 @@ function slugify(string $text, string $sep = '-'): string {
 
 
 function getHref($meta) {
-    global $prefix, $db, $conf, $confse;
+    global $conf;
 
     if (is_array($meta)) {
         $href = $meta['0'];
@@ -1398,29 +1398,9 @@ function getHref($meta) {
         $title = empty($meta['3']) ? '' : getTextClean($meta['3'], 1);
         if (empty($meta['4'])) {
             $desc = '';
-            $keys = '';
             $img = '';
         } else {
             $desc = ($conf['adesc']) ? cutstr(getTextClean($meta['4'], 1), $conf['dletter'], 2) : '';
-            $keys = '0';
-            if ($conf['akeys']) {
-                $keyg = $title.' '.getTextClean($meta['4'], 2);
-                $keyg = explode(',', mb_strtolower($keyg, 'utf-8'));
-                $keyg = array_diff($keyg, explode(',', $conf['dkeys']));
-                $res = array_count_values($keyg);
-                arsort($res, SORT_NUMERIC);
-                if (is_array($res)) {
-                    $i = 1;
-                    foreach($res as $k => $v) {
-                        if (mb_strlen($k, 'utf-8') >= $conf['kletter']) {
-                            $akeys[] = $k;
-                            if ($i == $conf['kwords']) break;
-                            $i++;
-                        }
-                    }
-                    $keys = implode(',', $akeys);
-                }
-            }
             $img = getImgText($meta['4']);
             $img = empty($img) ? '' : $img;
         }
@@ -2647,7 +2627,7 @@ function check_user() {
 
 # Format head
 function head() {
-    global $prefix, $db, $home, $index, $conf, $confs, $confr, $confse, $confrs, $confst, $user, $admin, $name, $theme, $op;
+    global $prefix, $db, $home, $index, $conf, $confs, $confr, $confrs, $confst, $user, $admin, $name, $theme, $op;
     $name = $name ?? '';
     $ctime = time();
     $request = getenv('REQUEST_URI');
@@ -2709,7 +2689,7 @@ function head() {
                 fclose($fp);
             }
             $ip = getIp();
-            $uid = intval($user[0]);
+            $uid = is_user() ? intval($user[0]) : 0;
             $link = text_filter($request);
             if (is_active('auto_links')) {
                 list($exist) = $db->sql_fetchrow($db->sql_query("SELECT ip FROM ".$prefix."_referer WHERE ip = '".$ip."' AND lid != '0'"));
@@ -2840,7 +2820,6 @@ function head() {
         $mtime = empty($meta['2']) ? $atime : $meta['2'];
         $title = empty($meta['3']) ? $conf['sitename'] : $meta['3'];
         $desc = empty($meta['4']) ? $conf['slogan'] : $meta['4'];
-        $keys = empty($meta['5']) ? $conf['keys'] : $meta['5'];
         $img = empty($meta['6']) ? $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'] : $conf['homeurl'].'/'.$meta['6'];
         $ctitle = empty($meta['7']) ? '0' : $meta['7'];
         $cdesc = empty($meta['8']) ? '0' : $meta['8'];
@@ -2878,21 +2857,16 @@ function head() {
             }
         }
         $strmeta .= '<title>'.$title.'</title>'."\n"
-        .'<meta name="author" content="'.$conf['sitename'].'">'."\n";
-        $keys = explode(',', $keys);
-        if ($conf['kmix']) shuffle($keys);
-        $conf['keys'] = $keys;
-        $keys = ($conf['ksep']) ? implode(', ', array_map('trim', $keys)) : implode(' ', array_map('trim', $keys));
-        $strmeta .= '<meta name="keywords" content="'.$keys.'">'."\n"
+        .'<meta name="author" content="'.$conf['sitename'].'">'."\n"
         .'<meta name="description" content="'.$desc.'">'."\n"
         .'<meta name="robots" content="index, follow">'."\n"
         .'<meta name="revisit-after" content="1 days">'."\n"
         .'<meta name="rating" content="general">'."\n"
         .'<meta name="generator" content="SLAED CMS">'."\n";
-        if ($confse['agraph'] && !empty($confse['graph'])) {
+        if (!empty($conf['agraph']) && !empty($conf['graph'])) {
             $from = array('[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]');
             $to = array($conf['homeurl'], $conf['sitename'], $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'], _LOCALE, $time, $mtime, $title, $desc, $img, $ctitle, $type, $purl);
-            $strmeta .= str_replace($from, $to, $confse['graph']);
+            $strmeta .= str_replace($from, $to, $conf['graph']);
         }
         $strlink .= '<link rel="shortcut icon" href="templates/'.$theme.'/favicon.png">'."\n";
         if (strpos($conf['homeurl'], get_host()) !== false) $strlink .= '<link rel="canonical" href="'.$purl.'">'."\n";
@@ -2910,10 +2884,10 @@ function head() {
         $strmeta .= '<title>'.$conf['sitename'].' '.$sep.' '._ADMIN.'</title>'."\n";
     }
     $strlink .= doCss();
-    if (!defined('ADMIN_FILE') && $confse['aschema'] && !empty($confse['schema'])) {
+    if (!defined('ADMIN_FILE') && !empty($conf['aschema']) && !empty($conf['schema'])) {
         $from = array('[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]');
         $to = array($conf['homeurl'], $conf['sitename'], $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'], _LOCALE, $time, $mtime, $title, $desc, $img, $ctitle, $type, $purl);
-        $stscript = str_replace($from, $to, $confse['schema']);
+        $stscript = str_replace($from, $to, $conf['schema']);
     }
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
     $head = str_replace(array('{%META%}', '{%LINK%}', '{%SCRIPT%}'), array($strmeta, $strlink, $script), addblocks($head));

@@ -9,11 +9,12 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 $conf = array (
   'adesc' => '1',
   'admcol' => '5',
+  'agraph' => '1',
+  'aschema' => '1',
   'admin_c' => 'panel',
   'adminfo' => '1',
   'admininfo' => 'Информация, которая будет доступна всем авторам. Отображение данной информации производится в верхней части панели администратора системы.',
   'adminmail' => 'slaedpro@mail.ru',
-  'akeys' => '1',
   'alang' => '0',
   'amod' => 'news',
   'asearch' => '0',
@@ -41,20 +42,21 @@ $conf = array (
   'db_t' => '1',
   'dbsync' => '0',
   'defis' => '-',
-  'dkeys' => 'quot,amp,вам,вас,все,всех,где,даже,для,его,ей,если,есть,еще,её,и,или,их,как,когда,кого,кто,лишь,мне,мы,на,надо,нас,нет,но,он,она,они,оно,при,раз,так,уже,чем,что,эта,этих,это',
   'dletter' => '160',
   'fbots' => '21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com',
   'flags' => '1',
   'geo_ip' => '1',
   'gfx_chk' => '0',
+  'graph' => '<meta property="og:site_name" content="[site]">
+<meta property="og:locale" content="[loc]">
+<meta property="og:title" content="[title]">
+<meta property="og:description" content="[desc]">
+<meta property="og:image" content="[img]">
+<meta property="og:type" content="[type]">
+<meta property="og:url" content="[url]">',
   'gtime' => 'Europe/Berlin',
   'homeurl' => 'https://slaed.loc',
   'ip_link' => 'https://whatismyipaddress.com/ip/',
-  'keys' => 'slaed,php,html5,css3,jquery,ajax,modul,pro,news,cms,web',
-  'kletter' => '3',
-  'kmix' => '0',
-  'ksep' => '0',
-  'kwords' => '15',
   'language' => 'ru',
   'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==',
   'lic_h' => 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt',
@@ -77,6 +79,54 @@ support@slaed.net',
   'redaktor' => '1',
   'rewrite' => '0',
   'sblock' => '1',
+  'schema' => '<script type="application/ld+json">
+{
+	"@context": "http://schema.org",
+	"@type": "Organization",
+	"name": "[site]",
+	"url": "[homeurl]",
+	"image": "[logo]",
+	"sameAs": [
+		"https://vk.com/slaed_cms",
+		"https://www.facebook.com/SLAED-CMS-577310846059054",
+		"https://twitter.com/slaed_cms",
+		"https://plus.google.com/112343714768886483056"
+	]
+}
+</script>
+<script type="application/ld+json">
+{
+	"@context": "http://schema.org",
+	"@type": "Article",
+	"name": "[title]",
+	"description": "[desc]",
+	"articleSection": "[ctitle]",
+	"datePublished": "[time]",
+	"dateModified": "[mtime]",
+	"image": "[img]",
+	"url": "[url]",
+	"headline": "0",
+	"author": {
+		"@type": "Person",
+		"name": "[site]"
+	},
+	"publisher": {
+		"@type": "Organization",
+		"name": "[site]",
+		"url": "[homeurl]",
+		"logo": {
+			"@type": "ImageObject",
+			"name": "[site]",
+			"url": "[logo]"
+		}
+	},
+	"mainEntityOfPage": {
+		"@type": "WebPage",
+		"name": "[site]",
+		"url": "[homeurl]"
+	}
+}
+</script>',
   'script_a' => '0',
   'script_b' => '0',
   'script_c' => '0',

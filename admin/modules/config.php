@@ -160,14 +160,7 @@ function config(): void {
     .'<div id="tabc1" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._DEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['defis']).'" maxlength="255" class="sl_conf" placeholder="'._DEFIS.'" required></td></tr>'
-    .'<tr><td>'._SKWORDS.':<div class="sl_small">'._SKWORDSI.' '._NOKOMA.'</div></td><td><textarea name="keys" cols="65" rows="5" class="sl_conf" placeholder="'._SKWORDS.'" required>'.$conf['keys'].'</textarea></td></tr>'
-    .'<tr><td>'._SKDWORDS.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="dkeys" cols="65" rows="5" class="sl_conf" placeholder="'._SKDWORDS.'" required>'.$conf['dkeys'].'</textarea></td></tr>'
-    .'<tr><td>'._KWORDS.':<div class="sl_small">'._KWORDSI.'</div></td><td><input type="number" name="kwords" value="'.$conf['kwords'].'" class="sl_conf" placeholder="'._KWORDS.'" required></td></tr>'
-    .'<tr><td>'._KLETTER.':<div class="sl_small">'._KLETTERI.'</div></td><td><input type="number" name="kletter" value="'.$conf['kletter'].'" class="sl_conf" placeholder="'._KLETTER.'" required></td></tr>'
     .'<tr><td>'._DLETTER.':</td><td><input type="number" name="dletter" value="'.$conf['dletter'].'" class="sl_conf" placeholder="'._DLETTER.'" required></td></tr>'
-    .'<tr><td>'._KEY_STAT.'<div class="sl_small">'._KEY_STATI.'</div></td><td>'.radio_form($conf['akeys'], 'akeys').'</td></tr>'
-    .'<tr><td>'._KEY_SHUFFLE.'<div class="sl_small">'._KEY_SHUFFLEI.'</div></td><td>'.radio_form($conf['kmix'], 'kmix').'</td></tr>'
-    .'<tr><td>'._KEY_SEP.'</td><td>'.radio_form($conf['ksep'], 'ksep').'</td></tr>'
     .'<tr><td>'._LTITLE.'</td><td>'.radio_form($conf['ltitle'], 'ltitle').'</td></tr>'
     .'<tr><td>'._ADESC.'</td><td>'.radio_form($conf['adesc'], 'adesc').'</td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
@@ -175,7 +168,12 @@ function config(): void {
     .'<tr><td>'._TSEP.':</td><td><input type="text" name="tsep" value="'.urldecode($conf['tsep']).'" maxlength="255" class="sl_conf" placeholder="'._TSEP.'" required></td></tr>'
     .'<tr><td>'._REWRITE_MOD.'<div class="sl_small">'._REWRITE_MODI.'</div></td><td>'.radio_form($conf['rewrite'], 'rewrite').'</td></tr>'
     .'<tr><td>'._SEOTITLE.'</td><td>'.radio_form($conf['title'] ?? 1, 'title').'</td></tr>'
-    .'<tr><td>'._SEOCTITLE.'</td><td>'.radio_form($conf['ctitle'] ?? 1, 'ctitle').'</td></tr>'    
+    .'<tr><td>'._SEOCTITLE.'</td><td>'.radio_form($conf['ctitle'] ?? 1, 'ctitle').'</td></tr>'
+    .'<tr><td colspan="2"><hr></td></tr>'
+    .'<tr><td>Open Graph</td><td>'.radio_form($conf['agraph'] ?? 1, 'agraph').'</td></tr>'
+    .'<tr><td>Open Graph Template:<div class="sl_small">[site] [loc] [title] [desc] [img] [type] [url] [homeurl] [logo] [time] [mtime] [ctitle]</div></td><td><textarea name="graph" cols="65" rows="8" class="sl_conf" placeholder="Open Graph Template">'.htmlspecialchars($conf['graph'] ?? '', ENT_QUOTES, 'UTF-8').'</textarea></td></tr>'
+    .'<tr><td>Schema.org</td><td>'.radio_form($conf['aschema'] ?? 1, 'aschema').'</td></tr>'
+    .'<tr><td>Schema.org Template:<div class="sl_small">[site] [loc] [title] [desc] [img] [type] [url] [homeurl] [logo] [time] [mtime] [ctitle]</div></td><td><textarea name="schema" cols="65" rows="15" class="sl_conf" placeholder="Schema.org Template">'.htmlspecialchars($conf['schema'] ?? '', ENT_QUOTES, 'UTF-8').'</textarea></td></tr>'
     .'</table>'
     .'</div>'
     .'<div id="tabc2" class="tabcont">'
@@ -347,14 +345,7 @@ function save(): void {
         'adminfo' => getVar('post', 'adminfo', 'num'),
         'close' => getVar('post', 'close', 'num'),
         'defis' => urlencode(getVar('post', 'defis', 'let') ?: '|'),
-        'keys' => strtolower(strtr(getVar('post', 'keys', 'text') ?: '', $kprotect)),
-        'dkeys' => strtolower(strtr(getVar('post', 'dkeys', 'text') ?: '', $kprotect)),
-        'kwords' => getVar('post', 'kwords', 'num', 15),
-        'kletter' => getVar('post', 'kletter', 'num', 3),
         'dletter' => getVar('post', 'dletter', 'num', 160),
-        'akeys' => getVar('post', 'akeys', 'num'),
-        'kmix' => getVar('post', 'kmix', 'num'),
-        'ksep' => getVar('post', 'ksep', 'num'),
         'ltitle' => getVar('post', 'ltitle', 'num'),
         'adesc' => getVar('post', 'adesc', 'num'),
         'sep' => urlencode(getVar('post', 'sep', 'let') ?: '-'),
@@ -362,6 +353,10 @@ function save(): void {
         'rewrite' => getVar('post', 'rewrite', 'num'),
         'title' => getVar('post', 'title', 'num'),
         'ctitle' => getVar('post', 'ctitle', 'num'),
+        'agraph' => getVar('post', 'agraph', 'num'),
+        'graph' => preg_replace('#\\<br(\\s*)?\\/?\\>#i', '', getVar('post', 'graph', 'text')),
+        'aschema' => getVar('post', 'aschema', 'num'),
+        'schema' => preg_replace('#\\<br(\\s*)?\\/?\\>#i', '', getVar('post', 'schema', 'text')),
         'language' => getVar('post', 'language', 'var'),
         'multilingual' => getVar('post', 'multilingual', 'num'),
         'flags' => getVar('post', 'flags', 'num'),
