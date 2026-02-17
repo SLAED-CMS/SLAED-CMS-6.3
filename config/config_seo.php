@@ -56,10 +56,12 @@ $confse = array();
 # $confse['ksep'] = "0";
 
 # Автоматическая генерация описания
-$confse['adesc'] = "1";
+# DELETE
+# $confse['adesc'] = "1";
 
 # Количество знаков в описании
-$confse['dletter'] = "160";
+# DELETE
+# $confse['dletter'] = "160";
 
 # Активировать Open Graph
 $confse['agraph'] = "1";
