@@ -278,7 +278,7 @@ class SecurityValidationTest extends TestCase
                     continue;
                 }
 
-                if ($nextIsFuncName) {
+                if ($nextIsFuncName && !in_array($id, [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
                     $nextIsFuncName = false;
                 }
 

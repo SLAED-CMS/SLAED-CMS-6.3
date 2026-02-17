@@ -278,6 +278,72 @@ class LanguageValidationTest extends TestCase
     }
 
     /**
+     * Проверяет что все константы используются в коде
+     */
+    public function testNoUnusedConstants(): void
+    {
+        $searchDirs = ['core', 'admin', 'modules', 'blocks', 'templates', 'setup'];
+        $allFiles = [];
+
+        foreach ($searchDirs as $dir) {
+            $path = self::$basePath . '/' . $dir;
+            if (!is_dir($path)) continue;
+            $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path));
+            foreach ($it as $file) {
+                if ($file->getExtension() === 'php') {
+                    $allFiles[] = $file->getPathname();
+                }
+            }
+        }
+
+        // Root PHP files
+        foreach (glob(self::$basePath . '/*.php') as $f) {
+            $allFiles[] = $f;
+        }
+
+        // Exclude all language directories
+        $allFiles = array_filter($allFiles, function ($f) {
+            $real = realpath($f);
+            return $real !== false && !preg_match('#[/\\\\]language[/\\\\]#i', $real);
+        });
+
+        $allContent = '';
+        foreach ($allFiles as $file) {
+            $allContent .= file_get_contents($file) . "\n";
+        }
+
+        $errors = [];
+
+        // Find all ru.php language files dynamically
+        $langIterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(self::$basePath));
+        $langFiles = [];
+        foreach ($langIterator as $f) {
+            if ($f->getFilename() === 'ru.php' && preg_match('#[/\\\\]language[/\\\\]#i', $f->getPathname())) {
+                $langFiles[] = $f->getPathname();
+            }
+        }
+
+        foreach ($langFiles as $langPath) {
+            $langFile = str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $langPath);
+
+            $content = file_get_contents($langPath);
+            preg_match_all('/define\(\s*["\'](_[A-Z0-9_]+)["\']/', $content, $matches);
+            $constants = array_unique($matches[1]);
+
+            foreach ($constants as $const) {
+                if (strpos($allContent, $const) === false) {
+                    $errors[] = sprintf('%s - неиспользуемая константа %s', $langFile, $const);
+                }
+            }
+        }
+
+        $this->assertEmpty(
+            $errors,
+            "Найдены неиспользуемые константы:\n" . implode("\n", $errors)
+        );
+    }
+
+    /**
      * Проверяет что языковые файлы найдены
      */
     public function testLanguageFilesFound(): void
