@@ -158,7 +158,7 @@ function setTemplateHead($sub, $val = '') {
     }
     $mname = ($conf['name']) ? deflmconst($conf['name']) : '';
     $fcat = (isset($_GET['cat'])) ? intval($_GET['cat']) : 0;
-    $cname = ($fcat) ? catlink($conf['name'], $fcat, $conff['defis'], $mname) : '';
+    $cname = ($fcat && !empty($conff)) ? catlink($conf['name'], $fcat, $conff['defis'], $mname) : '';
     list($count) = $db->sql_fetchrow($db->sql_query("SELECT Count(fid) FROM ".$prefix."_faq WHERE time <= now() AND status != '0'"));
     $random = mt_rand(0, $count);
     $result = $db->sql_query("SELECT fid, title FROM ".$prefix."_faq ORDER BY fid DESC LIMIT ".$random.", 1");

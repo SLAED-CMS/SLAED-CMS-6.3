@@ -283,6 +283,7 @@ if ($confs['error_log']) {
             }
         }
         unset($error_log, $http);
+        setExit('Error '.$error, 1);
     }
     # PHP error reporting log
     function error_reporting_log($error_num, $error_var, $error_file, $error_line) {
@@ -542,7 +543,7 @@ function setExit($msg, $typ = '') {
     $cont .= ($typ) ? '<meta http-equiv="refresh" content="5; url='.$conf['homeurl'].'/index.php">'.PHP_EOL : '';
     $cont .= '</head>'.PHP_EOL
     .'<body style="margin:0; height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column;">'.PHP_EOL
-    .'<img src="'.$conf['homeurl'].'/'.img_find('logos/'.$conf['site_logo']).'" alt="'.$conf['sitename'].'" title="'.$conf['sitename'].'" style="max-width:90%; height:auto;">'.PHP_EOL
+    .'<img src="'.$conf['homeurl'].'/templates/'.$conf['theme'].'/images/logos/'.$conf['site_logo'].'" alt="'.$conf['sitename'].'" title="'.$conf['sitename'].'" style="max-width:90%; height:auto;">'.PHP_EOL
     .'<div style="margin-top:40px; font:18px Arial, Tahoma, Verdana, sans-serif; color:#1a4674; font-weight:bold; text-align:center;">'.$msg.'</div>'.PHP_EOL
     .'</body>'.PHP_EOL
     .'</html>';

@@ -2201,9 +2201,9 @@ function ad_save() {
 
 # Find img
 function img_find($img) {
-    global $conf, $theme;
-    $theme = (!isset($theme)) ? getTheme() : $theme;
-    return 'templates/'.$theme.'/images/'.$img;
+    static $base;
+    if (!$base) $base = 'templates/'.getTheme().'/images/';
+    return $base.$img;
 }
 
 # Format select RSS
@@ -2309,8 +2309,7 @@ function deflang($con) {
 
 # Fields in
 function fields_in($fieldb, $mod) {
-    global $conf;
-    require_once CONFIG_DIR.'/fields.php';
+    global $conf, $conffi;
     $mod = strtolower($mod);
     $style = (defined('ADMIN_FILE')) ? 'sl_field sl_form' : 'sl_field '.$conf['style'];
     $fieldc = $conffi[$mod];
@@ -3786,7 +3785,7 @@ function encode_attach($sourse, $mod) {
             $width = isset($date[4][$i]) ? $date[4][$i] : "";
             $height = isset($date[5][$i]) ? $date[5][$i] : "";
         }
-        $temp = $conftp[$type];
+        $temp = $conftp[$type] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
         $temp = str_replace("[src]", $file, $temp);
         $temp = str_replace("[tsrc]", (string)$timg, $temp);
         $temp = (!empty($width) && intval($width)) ? str_replace("[width]", $width, $temp) : str_replace("[width]", $confup['width'], $temp);
