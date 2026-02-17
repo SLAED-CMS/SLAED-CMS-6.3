@@ -516,10 +516,10 @@ function editsave(): void {
 
 function change(): void {
     global $prefix, $db, $aroute;
-    $bid = getVar('get', 'bid', 'num');
+    $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num', 0);
     $active = ($act) ? 0 : 1;
-    $db->sql_query('UPDATE '.$prefix.'_blocks SET active = :active WHERE bid = :bid', ['active' => $active, 'bid' => $bid]);
+    $db->sql_query('UPDATE '.$prefix.'_blocks SET active = :active WHERE bid = :id', ['active' => $active, 'id' => $id]);
     header('Location: '.$aroute.'.php?name=blocks');
     exit;
 }
