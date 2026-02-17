@@ -9,7 +9,6 @@ define("_CLERROR","Nutzen, diese Funktion kann nur up-to-date Client-System. Wen
 define("_CLERROR2","Es gab ein Problem beim anlegen eines Archivs, f&#252;r die L&#246;sung der Frage Kontaktieren Sie den Administrator des Projekts.");
 define("_CLIZENS","Generierung und laden der Lizenz");
 define("_CLOADS","Heruntergeladen");
-define("_CSIZE","Gr&#246;&#223;e");
 define("_CTITLE","Titel");
 define("_CVERSION","Version");
 define("_GZIPGEN","Erstellen Sie ein Archiv mit dem System");

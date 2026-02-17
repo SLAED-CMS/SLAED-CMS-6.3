@@ -9,7 +9,6 @@ define("_CLERROR","Utiliser cette fonction peut uniquement &#224; jour les syst&
 define("_CLERROR2","Le probl&#232;me est survenu lors de la cr&#233;ation des archives de r&#233;soudre le probl&#232;me, contactez l'administrateur du projet.");
 define("_CLIZENS","G&#233;n&#233;ration et le chargement d'une licence");
 define("_CLOADS","T&#233;l&#233;chargements");
-define("_CSIZE","Taille");
 define("_CTITLE","Nom");
 define("_CVERSION","Version");
 define("_GZIPGEN","Cr&#233;er un fichier d'archive avec le syst&#232;me");

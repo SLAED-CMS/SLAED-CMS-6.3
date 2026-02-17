@@ -9,7 +9,6 @@ define("_CLERROR","Use this function can only the actual client system. If You h
 define("_CLERROR2","There was a problem when creating an archive, to resolve the issue, contact the administrator of the project.");
 define("_CLIZENS","Generation and download license");
 define("_CLOADS","Downloads");
-define("_CSIZE","Size");
 define("_CTITLE","Name");
 define("_CVERSION","Version");
 define("_GZIPGEN","To create an archive with the system");

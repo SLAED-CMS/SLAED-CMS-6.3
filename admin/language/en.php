@@ -544,3 +544,7 @@ define("_LTITLE","Use long titles?");
 define("_ADESC","Automatic description generation?");
 define("_DLETTER","Maximum number of characters in description");
 define("_RSEP","URL separator");
+define("_TSEP","Title separator for SEO URLs");
+
+define("_SEOTITLE","Add title?");
+define("_SEOCTITLE","Add category title?");

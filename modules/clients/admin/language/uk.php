@@ -7,7 +7,6 @@
 define("_CADOWN","Активувати архів?");
 define("_CDATE","Дата релізу");
 define("_CLOADS","Завантажено");
-define("_CSIZE","Розмір");
 define("_CTITLE","Назва");
 define("_CVERSION","Версія");
 define("_CURL","Директорія архіву");

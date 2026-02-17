@@ -544,3 +544,7 @@ define("_LTITLE","Lange Titel verwenden?");
 define("_ADESC","Automatische Beschreibungsgenerierung?");
 define("_DLETTER","Maximale Anzahl der Zeichen in der Beschreibung");
 define("_RSEP","URL-Trennzeichen");
+define("_TSEP","Titeltrennzeichen für SEO-URLs");
+
+define("_SEOTITLE","Titel hinzufügen?");
+define("_SEOCTITLE","Kategorietitel hinzufügen?");

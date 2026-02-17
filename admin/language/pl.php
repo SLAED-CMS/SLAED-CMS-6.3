@@ -544,3 +544,7 @@ define("_LTITLE","Używać długich tytułów?");
 define("_ADESC","Automatyczne generowanie opisu?");
 define("_DLETTER","Maksymalna liczba znaków w opisie");
 define("_RSEP","Separator URL");
+define("_TSEP","Separator tytułów dla adresów SEO");
+
+define("_SEOTITLE","Dodać tytuł?");
+define("_SEOCTITLE","Dodać tytuł kategorii?");
