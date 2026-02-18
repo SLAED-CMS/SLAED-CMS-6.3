@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 get_lang($conf['name']);
-require_once CONFIG_DIR.'/changelog.php';
+$conflog = $conf['changelog'] ?? [];
 
 const CHLOG_GH_API_TIMEOUT = 10;
 const CHLOG_GH_API_CONNECT_TIMEOUT = 5;

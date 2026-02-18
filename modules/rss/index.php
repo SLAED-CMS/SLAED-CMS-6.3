@@ -9,7 +9,7 @@ if (!defined("MODULE_FILE")) {
     exit;
 }
 get_lang($conf['name']);
-require_once CONFIG_DIR.'/rss.php';
+$confrs = $conf['rss'] ?? [];
 
 function info() {
     global $db, $prefix, $conf, $confrs;

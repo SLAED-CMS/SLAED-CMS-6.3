@@ -9,8 +9,8 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 get_lang($conf['name']);
-include('config/config_news.php');
-require_once CONFIG_DIR.'/rss.php';
+$confn  = $conf['news'] ?? [];
+$confrs = $conf['rss']  ?? [];
 
 function account() {
     global $conf, $confu, $stop;

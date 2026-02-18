@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
-require_once CONFIG_DIR.'/changelog.php';
+$conflog = $conf['changelog'] ?? [];
 
 // ============================================================================
 // CONSTANTS

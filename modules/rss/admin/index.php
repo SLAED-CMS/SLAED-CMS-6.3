@@ -5,7 +5,7 @@
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
-require_once CONFIG_DIR.'/rss.php';
+$confrs = $conf['rss'] ?? [];
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ($opt == 1) ? ['name=rss', 'name=rss', 'name=rss&amp;op=info'] : ['', '', 'name=rss&amp;op=info'];

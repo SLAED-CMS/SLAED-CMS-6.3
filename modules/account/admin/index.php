@@ -94,7 +94,7 @@ function users(): void {
 
 function add(): void {
     global $prefix, $db, $aroute, $conf, $confu, $stop;
-    require_once CONFIG_DIR.'/config_news.php';
+    $confn = $conf['news'] ?? [];
     $id = getVar('req', 'id', 'num');
     if (is_numeric($id)) {
         $result = $db->sql_query('SELECT user_id, user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field FROM '.$prefix.'_users WHERE user_id = :id', ['id' => $id]);
