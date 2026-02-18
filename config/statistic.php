@@ -1,13 +1,13 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2025 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('FUNC_FILE')) die('Illegal file access');
-
-$confst = array (
-  'bet' => '42',
-  'shi' => '22',
-  'stat' => '1',
-);
+return [
+    'statistic' => [
+        'bet'  => '42',
+        'shi'  => '22',
+        'stat' => '1',
+    ],
+];

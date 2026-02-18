@@ -1,22 +1,26 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal File Access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$conffo = array();
-$conffo['defis'] = "%C2%BB";
-$conffo['listnum'] = "50";
-$conffo['pop'] = "25";
-$conffo['letter'] = "100";
-$conffo['num'] = "10";
-$conffo['pnum'] = "10";
-$conffo['recycle'] = "98";
-$conffo['sort'] = "1";
-$conffo['anonpost'] = "0";
-$conffo['add'] = "1";
-$conffo['qreply'] = "1";
-$conffo['ledit'] = "1";
-$conffo['addmail'] = "1";
-$conffo['privat'] = "1";
-$conffo['profil'] = "1";
-$conffo['web'] = "1";
-
-?>
+return [
+    'forum' => [
+        'add'      => '1',
+        'addmail'  => '1',
+        'anonpost' => '0',
+        'defis'    => '%C2%BB',
+        'ledit'    => '1',
+        'letter'   => '100',
+        'listnum'  => '50',
+        'num'      => '10',
+        'pnum'     => '10',
+        'pop'      => '25',
+        'privat'   => '1',
+        'profil'   => '1',
+        'qreply'   => '1',
+        'recycle'  => '98',
+        'sort'     => '1',
+        'web'      => '1',
+    ],
+];

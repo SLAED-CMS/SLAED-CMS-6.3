@@ -1,19 +1,45 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal File Access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$confmo = array();
-$confmo['proz'] = "10";
-$confmo['kurs'] = "1.15";
-$confmo['kurs2'] = "71";
-$confmo['bal'] = "300";
-$confmo['mail'] = "support@slaed.net";
-$confmo['form'] = "Кошелек WebMoney,Vorname,Name,Strasse,PLZ,Ort,IBAN,BIC-/SWIFT-Code,Kreditinstitut";
-$confmo['anum'] = "50";
-$confmo['anump'] = "10";
-$confmo['an'] = "1";
-$confmo['pr'] = "0";
-$confmo['ad'] = "1";
-$confmo['text'] = <<<HTML
+return [
+    'money' => [
+        'ad'       => '1',
+        'an'       => '1',
+        'anum'     => '50',
+        'anump'    => '10',
+        'autor'    => <<<HTML
+PLZ/Ort: 49179 Ostercappeln<br>
+Adresse: Im Siek 6<br>
+Telefon: +49 1799620634<br>
+E-Mail: [mail=support@slaed.net]support@slaed.net[/mail]<br>
+Internet: [url=http://www.slaed.net]http://www.slaed.net[/url]
+HTML,
+        'bal'      => '300',
+        'form'     => 'Кошелек WebMoney,Vorname,Name,Strasse,PLZ,Ort,IBAN,BIC-/SWIFT-Code,Kreditinstitut',
+        'info'     => <<<HTML
+Спасибо за заказ! Ваша заявка получена и поставлена в очередь на обработку. После её проверки администратором при соответствии всем требованиям, указанным в условиях обмена, Вы получите письменное уведомление на указанный при заказе контактный E-Mail с детальной информацией для дальнейших действий. Как правило, эта операция занимает не более 24 часов.
+HTML,
+        'kurs'     => '1.15',
+        'kurs2'    => '71',
+        'mail'     => 'support@slaed.net',
+        'pr'       => '0',
+        'proz'     => '10',
+        'sendinfo' => <<<HTML
+[center][b][color=red]Спасибо за заказ![/color][/b][/center]<br />
+[justify]Ваша заявка одобрена администратором и поставлена в очередь на обработку. Произведите оплату по указанному ниже способу. После этого, не позже, чем через 48 часов после поступления суммы на наш счет, на указанный Вами Z кошелек WebMoney будет перечислена соответствующая сумма, о чем Вы будете уведомлены по указанному Вами при заказе контактному E-Mail адресу.[/justify]<br />
+<br />
+[b]Данные для перевода[/b]<br />
+<br />
+Verwendungszweck/Firma: SLAED WebMoney<br />
+Kontoinhaber: Eduard Laas<br />
+Bank: Sparkasse Osnabrueck<br />
+BLZ: 26550105<br />
+Konto: 14071385
+HTML,
+        'text'     => <<<HTML
 [usehtml]<br />
 &lt;h4&gt;Банковский перевод денежных средств WebMoney в Германии&lt;/h4&gt;&lt;br&gt;<br />
 &lt;a href=&quot;https://passport.webmoney.ru/asp/certView.asp?wmid=429420748216&quot; target=&quot;_blank&quot; title=&quot;Аттестованный участник WebMoney - Аттестат продавца&quot;&gt;&lt;img src=&quot;http://www.slaed.net/uploads/all/WebMoney.gif&quot; alt=&quot;Аттестованный участник WebMoney - Аттестат продавца&quot; style=&quot;float: left; margin: 5px 5px 0 0;&quot;&gt;&lt;/a&gt;&lt;div style=&quot;text-align: justify;&quot;&gt;Наш проект осуществляет обмен денежных средств банковским переводом из Германии в систему WebMoney. Произвести перевод на наш банковский счёт в Германию Вы можете из самой Германии, а так же любой другой страны Евросоюза. Обмен производится в евровалюте или в любой другой валюте по курсу к евро.<br />
@@ -30,30 +56,8 @@ $confmo['text'] = <<<HTML
 &lt;h4&gt;Уведомление о рисках при обмене WebMoney в Германии&lt;/h4&gt;&lt;br&gt;<br />
 &lt;div style=&quot;text-align: justify;&quot;&gt;Предлагаемые товары и услуги предоставляются не по заказу лица либо предприятия, эксплуатирующего систему WebMoney Transfer. Мы являемся независимым предприятием, оказывающим услуги, и самостоятельно принимаем решения о ценах и предложениях. Предприятия, эксплуатирующие систему WebMoney Transfer, не получают комиссионных вознаграждений или иных вознаграждений за участие в предоставлении услуг и не несут никакой ответственности за нашу деятельность.<br />
 &lt;br&gt;&lt;br&gt;<br />
-Аттестация, произведенная со стороны WebMoney Transfer, лишь подтверждает наши реквизиты для связи и удостоверяет личность. Она осуществляется по нашему желанию и не означает, что мы каким-либо образом связаны с продажами операторов системы WebMoney.&lt;/div&gt;<br />
+Аттестация, произведенная со стороны WebMoney Transfer, лишь подтверждает наши реквизиты для связи и удостоверяет личность. Она осуществляется по нашему желанию и не означает, что мы каким-либо образом связаны с продажами операторов системы WebMoney.&lt;/div&gt;
 [/usehtml]
-HTML;
-$confmo['info'] = <<<HTML
-Спасибо за заказ! Ваша заявка получена и поставлена в очередь на обработку. После её проверки администратором при соответствии всем требованиям, указанным в условиях обмена, Вы получите письменное уведомление на указанный при заказе контактный E-Mail с детальной информацией для дальнейших действий. Как правило, эта операция занимает не более 24 часов.
-HTML;
-$confmo['sendinfo'] = <<<HTML
-[center][b][color=red]Спасибо за заказ![/color][/b][/center]<br />
-[justify]Ваша заявка одобрена администратором и поставлена в очередь на обработку. Произведите оплату по указанному ниже способу. После этого, не позже, чем через 48 часов после поступления суммы на наш счет, на указанный Вами Z кошелек WebMoney будет перечислена соответствующая сумма, о чем Вы будете уведомлены по указанному Вами при заказе контактному E-Mail адресу.[/justify]<br />
-<br />
-[b]Данные для перевода[/b]<br />
-<br />
-Verwendungszweck/Firma: SLAED WebMoney<br />
-Kontoinhaber: Eduard Laas<br />
-Bank: Sparkasse Osnabrueck<br />
-BLZ: 26550105<br />
-Konto: 14071385
-HTML;
-$confmo['autor'] = <<<HTML
-PLZ/Ort: 49179 Ostercappeln<br />
-Adresse: Im Siek 6<br />
-Telefon: +49 1799620634<br />
-E-Mail: [mail=support@slaed.net]support@slaed.net[/mail]<br />
-Internet: [url=http://www.slaed.net]http://www.slaed.net[/url]
-HTML;
-
-?>
+HTML,
+    ],
+];

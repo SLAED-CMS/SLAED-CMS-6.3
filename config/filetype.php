@@ -1,84 +1,88 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal file access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$conftp = array();
-$conftp['gif'] = <<<HTML
+return [
+    'filetype' => [
+        '7zip' => <<<HTML
+<a href="[src]" target="_blank" title="[title]">[title]</a>
+HTML,
+        'bmp'  => <<<HTML
 <a rel="[rel]" title="[title]" href="[src]" class="screens"><img src="[tsrc]" style="width: [twidth]px; float: [align]; margin: 0 5px 5px 0;" alt="[title]"></a>
-HTML;
-$conftp['jpg'] = <<<HTML
+HTML,
+        'gif'  => <<<HTML
 <a rel="[rel]" title="[title]" href="[src]" class="screens"><img src="[tsrc]" style="width: [twidth]px; float: [align]; margin: 0 5px 5px 0;" alt="[title]"></a>
-HTML;
-$conftp['jpeg'] = <<<HTML
+HTML,
+        'gzip' => <<<HTML
+<a href="[src]" target="_blank" title="[title]">[title]</a>
+HTML,
+        'jpeg' => <<<HTML
 <a rel="[rel]" title="[title]" href="[src]" class="screens"><img src="[tsrc]" style="width: [twidth]px; float: [align]; margin: 0 5px 5px 0;" alt="[title]"></a>
-HTML;
-$conftp['png'] = <<<HTML
+HTML,
+        'jpg'  => <<<HTML
 <a rel="[rel]" title="[title]" href="[src]" class="screens"><img src="[tsrc]" style="width: [twidth]px; float: [align]; margin: 0 5px 5px 0;" alt="[title]"></a>
-HTML;
-$conftp['bmp'] = <<<HTML
-<a rel="[rel]" title="[title]" href="[src]" class="screens"><img src="[tsrc]" style="width: [twidth]px; float: [align]; margin: 0 5px 5px 0;" alt="[title]"></a>
-HTML;
-$conftp['mp3'] = <<<HTML
+HTML,
+        'm4a'  => <<<HTML
+<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
+HTML,
+        'm4b'  => <<<HTML
+<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
+HTML,
+        'm4p'  => <<<HTML
+<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
+HTML,
+        'm4r'  => <<<HTML
+<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
+HTML,
+        'm4v'  => <<<HTML
+<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
+HTML,
+        'mp3'  => <<<HTML
 <audio controls><source src="[src]" type="audio/mpeg"></audio>
-HTML;
-$conftp['wav'] = <<<HTML
-<audio controls><source src="[src]" type="audio/wav"></audio>
-HTML;
-$conftp['wave'] = <<<HTML
-<audio controls><source src="[src]" type="audio/wav"></audio>
-HTML;
-$conftp['mp4'] = <<<HTML
+HTML,
+        'mp4'  => <<<HTML
 <video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
-HTML;
-$conftp['m4a'] = <<<HTML
-<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
-HTML;
-$conftp['m4p'] = <<<HTML
-<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
-HTML;
-$conftp['m4b'] = <<<HTML
-<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
-HTML;
-$conftp['m4r'] = <<<HTML
-<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
-HTML;
-$conftp['m4v'] = <<<HTML
-<video width="[width]" height="[height]" controls><source src="[src]" type="video/mp4"></video>
-HTML;
-$conftp['ogg'] = <<<HTML
+HTML,
+        'oga'  => <<<HTML
 <video width="[width]" height="[height]" controls><source src="[src]" type="video/ogg"></video>
-HTML;
-$conftp['oga'] = <<<HTML
+HTML,
+        'ogg'  => <<<HTML
 <video width="[width]" height="[height]" controls><source src="[src]" type="video/ogg"></video>
-HTML;
-$conftp['ogv'] = <<<HTML
+HTML,
+        'ogv'  => <<<HTML
 <video width="[width]" height="[height]" controls><source src="[src]" type="video/ogg"></video>
-HTML;
-$conftp['ogx'] = <<<HTML
+HTML,
+        'ogx'  => <<<HTML
 <video width="[width]" height="[height]" controls><source src="[src]" type="video/ogg"></video>
-HTML;
-$conftp['spx'] = <<<HTML
+HTML,
+        'opus' => <<<HTML
 <video width="[width]" height="[height]" controls><source src="[src]" type="video/ogg"></video>
-HTML;
-$conftp['opus'] = <<<HTML
-<video width="[width]" height="[height]" controls><source src="[src]" type="video/ogg"></video>
-HTML;
-$conftp['webm'] = <<<HTML
-<video width="[width]" height="[height]" controls><source src="[src]" type="video/webm"></video>
-HTML;
-$conftp['zip'] = <<<HTML
+HTML,
+        'png'  => <<<HTML
+<a rel="[rel]" title="[title]" href="[src]" class="screens"><img src="[tsrc]" style="width: [twidth]px; float: [align]; margin: 0 5px 5px 0;" alt="[title]"></a>
+HTML,
+        'rar'  => <<<HTML
 <a href="[src]" target="_blank" title="[title]">[title]</a>
-HTML;
-$conftp['rar'] = <<<HTML
-<a href="[src]" target="_blank" title="[title]">[title]</a>
-HTML;
-$conftp['gzip'] = <<<HTML
-<a href="[src]" target="_blank" title="[title]">[title]</a>
-HTML;
-$conftp['7zip'] = <<<HTML
-<a href="[src]" target="_blank" title="[title]">[title]</a>
-HTML;
-$conftp['swf'] = <<<HTML
+HTML,
+        'spx'  => <<<HTML
+<video width="[width]" height="[height]" controls><source src="[src]" type="video/ogg"></video>
+HTML,
+        'swf'  => <<<HTML
  <embed src="[src]" height="[height]" width="[width]" type="application/x-shockwave-flash">
-HTML;
-
-?>
+HTML,
+        'wav'  => <<<HTML
+<audio controls><source src="[src]" type="audio/wav"></audio>
+HTML,
+        'wave' => <<<HTML
+<audio controls><source src="[src]" type="audio/wav"></audio>
+HTML,
+        'webm' => <<<HTML
+<video width="[width]" height="[height]" controls><source src="[src]" type="video/webm"></video>
+HTML,
+        'zip'  => <<<HTML
+<a href="[src]" target="_blank" title="[title]">[title]</a>
+HTML,
+    ],
+];

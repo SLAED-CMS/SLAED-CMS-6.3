@@ -1,13 +1,17 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal File Access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$confv = array();
-$confv['voting_t'] = "2592000";
-$confv['num'] = "15";
-$confv['anum'] = "50";
-$confv['nump'] = "5";
-$confv['anump'] = "10";
-$confv['answ'] = "25";
-$confv['block'] = "2";
-
-?>
+return [
+    'voting' => [
+        'anum'     => '50',
+        'answ'     => '25',
+        'anump'    => '10',
+        'block'    => '2',
+        'num'      => '15',
+        'nump'     => '5',
+        'voting_t' => '2592000',
+    ],
+];

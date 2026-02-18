@@ -1,19 +1,23 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal File Access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$confh = array();
-$confh['defis'] = "%C2%BB";
-$confh['listnum'] = "50";
-$confh['num'] = "5";
-$confh['anum'] = "50";
-$confh['nump'] = "5";
-$confh['anump'] = "10";
-$confh['catdesc'] = "1";
-$confh['subcat'] = "1";
-$confh['addmail'] = "1";
-$confh['add'] = "1";
-$confh['date'] = "1";
-$confh['read'] = "1";
-$confh['letter'] = "1";
-
-?>
+return [
+    'help' => [
+        'add'     => '1',
+        'addmail' => '1',
+        'anum'    => '50',
+        'anump'   => '10',
+        'catdesc' => '1',
+        'date'    => '1',
+        'defis'   => '%C2%BB',
+        'letter'  => '1',
+        'listnum' => '50',
+        'num'     => '5',
+        'nump'    => '5',
+        'read'    => '1',
+        'subcat'  => '1',
+    ],
+];

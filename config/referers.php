@@ -1,11 +1,15 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal File Access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$confr = array();
-$confr['anum'] = "50";
-$confr['anump'] = "10";
-$confr['refer_t'] = "2592000";
-$confr['refer'] = "1";
-$confr['referb'] = "1";
-
-?>
+return [
+    'referers' => [
+        'anum'    => '50',
+        'anump'   => '10',
+        'refer'   => '1',
+        'referb'  => '1',
+        'refer_t' => '2592000',
+    ],
+];

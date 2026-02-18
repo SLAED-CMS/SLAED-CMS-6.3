@@ -1,17 +1,21 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal file access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$confra = array();
-$confra['account'] = "2592000|1|0";
-$confra['faq'] = "2592000|1|0";
-$confra['files'] = "2592000|1|0";
-$confra['forum'] = "2592000|1|0";
-$confra['help'] = "2592000|1|1";
-$confra['jokes'] = "2592000|1|0";
-$confra['links'] = "2592000|1|0";
-$confra['media'] = "2592000|1|0";
-$confra['news'] = "2592000|1|0";
-$confra['pages'] = "2592000|1|0";
-$confra['shop'] = "2592000|1|0";
-
-?>
+return [
+    'ratings' => [
+        'account' => '2592000|1|0',
+        'faq'     => '2592000|1|0',
+        'files'   => '2592000|1|0',
+        'forum'   => '2592000|1|0',
+        'help'    => '2592000|1|1',
+        'jokes'   => '2592000|1|0',
+        'links'   => '2592000|1|0',
+        'media'   => '2592000|1|0',
+        'news'    => '2592000|1|0',
+        'pages'   => '2592000|1|0',
+        'shop'    => '2592000|1|0',
+    ],
+];

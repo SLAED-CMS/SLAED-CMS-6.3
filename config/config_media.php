@@ -1,33 +1,37 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal File Access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$confm = array();
-$confm['defis'] = "%C2%BB";
-$confm['linknum'] = "2";
-$confm['listnum'] = "25";
-$confm['num'] = "10";
-$confm['anum'] = "25";
-$confm['nump'] = "5";
-$confm['anump'] = "10";
-$confm['lang'] = "Русский любительский перевод,Русский профессиональный перевод,Русский дублированный,Русский,Deutsch,English";
-$confm['format'] = "DVD,DivX,XviD,SVCD,VCD,mp3,Zip,GZip,Rar";
-$confm['quality'] = "DVD,DVDRip,VCD,VHS";
-$confm['links'] = "10";
-$confm['mdefis'] = "%2F";
-$confm['homcat'] = "1";
-$confm['viewcat'] = "1";
-$confm['catdesc'] = "1";
-$confm['subcat'] = "1";
-$confm['addmail'] = "1";
-$confm['add'] = "1";
-$confm['addquest'] = "1";
-$confm['broc'] = "1";
-$confm['hide'] = "1";
-$confm['autor'] = "1";
-$confm['date'] = "1";
-$confm['read'] = "1";
-$confm['rate'] = "1";
-$confm['letter'] = "1";
-$confm['link'] = "1";
-
-?>
+return [
+    'media' => [
+        'add'      => '1',
+        'addmail'  => '1',
+        'addquest' => '1',
+        'anum'     => '25',
+        'anump'    => '10',
+        'autor'    => '1',
+        'broc'     => '1',
+        'catdesc'  => '1',
+        'date'     => '1',
+        'defis'    => '%C2%BB',
+        'format'   => 'DVD,DivX,XviD,SVCD,VCD,mp3,Zip,GZip,Rar',
+        'hide'     => '1',
+        'homcat'   => '1',
+        'lang'     => 'Русский любительский перевод,Русский профессиональный перевод,Русский дублированный,Русский,Deutsch,English',
+        'letter'   => '1',
+        'link'     => '1',
+        'linknum'  => '2',
+        'links'    => '10',
+        'listnum'  => '25',
+        'mdefis'   => '%2F',
+        'num'      => '10',
+        'nump'     => '5',
+        'quality'  => 'DVD,DVDRip,VCD,VHS',
+        'rate'     => '1',
+        'read'     => '1',
+        'subcat'   => '1',
+        'viewcat'  => '1',
+    ],
+];

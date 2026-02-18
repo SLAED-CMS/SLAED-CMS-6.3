@@ -1,26 +1,30 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal File Access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$confp = array();
-$confp['defis'] = "%C2%BB";
-$confp['linknum'] = "5";
-$confp['listnum'] = "25";
-$confp['num'] = "10";
-$confp['anum'] = "25";
-$confp['nump'] = "5";
-$confp['anump'] = "10";
-$confp['homcat'] = "0";
-$confp['viewcat'] = "1";
-$confp['catdesc'] = "1";
-$confp['subcat'] = "1";
-$confp['addmail'] = "1";
-$confp['add'] = "1";
-$confp['addquest'] = "1";
-$confp['autor'] = "1";
-$confp['date'] = "1";
-$confp['read'] = "1";
-$confp['rate'] = "1";
-$confp['letter'] = "1";
-$confp['link'] = "1";
-
-?>
+return [
+    'pages' => [
+        'add'      => '1',
+        'addmail'  => '1',
+        'addquest' => '1',
+        'anum'     => '25',
+        'anump'    => '10',
+        'autor'    => '1',
+        'catdesc'  => '1',
+        'date'     => '1',
+        'defis'    => '%C2%BB',
+        'homcat'   => '0',
+        'letter'   => '1',
+        'link'     => '1',
+        'linknum'  => '5',
+        'listnum'  => '25',
+        'num'      => '10',
+        'nump'     => '5',
+        'rate'     => '1',
+        'read'     => '1',
+        'subcat'   => '1',
+        'viewcat'  => '1',
+    ],
+];

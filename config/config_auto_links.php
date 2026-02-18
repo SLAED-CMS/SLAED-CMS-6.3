@@ -1,14 +1,18 @@
 <?php
-if (!defined("FUNC_FILE")) die("Illegal File Access");
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$confal = array();
-$confal['img'] = "slaed_3.gif";
-$confal['num'] = "10";
-$confal['anum'] = "50";
-$confal['nump'] = "8";
-$confal['anump'] = "10";
-$confal['strip'] = "15";
-$confal['limit'] = "20";
-$confal['addmail'] = "1";
-
-?>
+return [
+    'auto_links' => [
+        'addmail' => '1',
+        'anum'    => '50',
+        'anump'   => '10',
+        'img'     => 'slaed_3.gif',
+        'limit'   => '20',
+        'num'     => '10',
+        'nump'    => '8',
+        'strip'   => '15',
+    ],
+];

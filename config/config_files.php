@@ -1,35 +1,39 @@
 <?php
-if (!defined('FUNC_FILE')) die('Illegal file access');
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-$conff = array();
-$conff['defis'] = "%C2%BB";
-$conff['temp'] = "uploads/files/temp";
-$conff['path'] = "uploads/files/public";
-$conff['max_size'] = "10485760";
-$conff['typefile'] = "zip,gzip,7z,rar,tar";
-$conff['linknum'] = "5";
-$conff['listnum'] = "25";
-$conff['num'] = "10";
-$conff['anum'] = "25";
-$conff['nump'] = "5";
-$conff['anump'] = "10";
-$conff['stream'] = "0";
-$conff['homcat'] = "1";
-$conff['viewcat'] = "1";
-$conff['catdesc'] = "1";
-$conff['subcat'] = "1";
-$conff['addmail'] = "1";
-$conff['add'] = "1";
-$conff['addquest'] = "1";
-$conff['broc'] = "1";
-$conff['down'] = "1";
-$conff['upload'] = "1";
-$conff['autor'] = "1";
-$conff['date'] = "1";
-$conff['read'] = "1";
-$conff['hits'] = "1";
-$conff['rate'] = "1";
-$conff['letter'] = "1";
-$conff['link'] = "1";
-
-?>
+return [
+    'files' => [
+        'add'      => '1',
+        'addmail'  => '1',
+        'addquest' => '1',
+        'anum'     => '25',
+        'anump'    => '10',
+        'autor'    => '1',
+        'broc'     => '1',
+        'catdesc'  => '1',
+        'date'     => '1',
+        'defis'    => '%C2%BB',
+        'down'     => '1',
+        'hits'     => '1',
+        'homcat'   => '1',
+        'letter'   => '1',
+        'link'     => '1',
+        'linknum'  => '5',
+        'listnum'  => '25',
+        'max_size' => '10485760',
+        'num'      => '10',
+        'nump'     => '5',
+        'path'     => 'uploads/files/public',
+        'rate'     => '1',
+        'read'     => '1',
+        'stream'   => '0',
+        'subcat'   => '1',
+        'temp'     => 'uploads/files/temp',
+        'typefile' => 'zip,gzip,7z,rar,tar',
+        'upload'   => '1',
+        'viewcat'  => '1',
+    ],
+];
