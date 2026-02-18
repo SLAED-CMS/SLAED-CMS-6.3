@@ -13,36 +13,67 @@ if (!empty($_SERVER['PATH_INFO']) || strpos($uri, '/index.php/') !== false) {
     $_GET['error'] = 404;
 }
 
-# Config file include
-require_once CONFIG_DIR.'/global.php';
-require_once CONFIG_DIR.'/users.php';
+# Load unified config - merges all /config/*.php into $conf, applies local.php overrides
+$conf = getConfig();
 
 # Murder variables
 unset($name, $file, $admin, $user, $admintrue, $godtrue, $usertrue, $aid, $uname, $guest, $userinfo, $stop);
 
-# Set the default timezone to use. Available since PHP 5.1
+# Set the default timezone
 date_default_timezone_set($conf['gtime']);
 
 # Language on
 get_lang();
 
-# SQL class file include
-require_once CONFIG_DIR.'/db.php';
+# Database connection using unified config
 require_once BASE_DIR.'/core/classes/pdo.php';
-$db = new sql_db($confdb['host'], $confdb['uname'], $confdb['pass'], $confdb['name'], $confdb['charset']);
-if ($confdb['sync']) $db->sql_query("SET LOCAL time_zone = '".date('P')."'");
-$prefix = $confdb['prefix'];
+$db = new sql_db($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
+if ($conf['db']['sync']) $db->sql_query("SET LOCAL time_zone = '".date('P')."'");
+define('PREFIX_DB', $conf['db']['prefix']);
+$prefix = $conf['db']['prefix'];
 
-# Security config file include
-require_once CONFIG_DIR.'/security.php';
-$aroute = $confs['afile'];
+# Security and routing aliases
+$afile = $conf['security']['afile'];
+$aroute = $conf['security']['afile'];
+$admin_file = $conf['security']['afile'];
 
-# OLD DELETE
-$admin_file = $confs['afile'];
+# Transition aliases - existing code references these globals; remove after full migration to $conf
+$confdb  = $conf['db']         ?? [];
+$confmd  = $conf['modules']    ?? [];
+$confu   = $conf['users']      ?? [];
+$confs   = $conf['security']   ?? [];
+$confc   = $conf['comments']   ?? [];
+$conffav = $conf['favorites']  ?? [];
+$conffi  = $conf['fields']     ?? [];
+$confst  = $conf['statistic']  ?? [];
+$confrs  = $conf['rss']        ?? [];
+$confra  = $conf['ratings']    ?? [];
+$confre  = $conf['replace']    ?? [];
+$confr   = $conf['referers']   ?? [];
+$confpr  = $conf['privat']     ?? [];
+$confv   = $conf['voting']     ?? [];
+# Module-specific aliases (set once here; include('config/config_X.php') in modules becomes a no-op)
+$confn   = $conf['news']       ?? [];
+$conffa  = $conf['faq']        ?? [];
+$conff   = $conf['files']      ?? [];
+$confw   = $conf['whois']      ?? [];
+$confal  = $conf['auto_links'] ?? [];
+$confl   = $conf['links']      ?? [];
+$confj   = $conf['jokes']      ?? [];
+$conffo  = $conf['forum']      ?? [];
+$confh   = $conf['help']       ?? [];
+$confp   = $conf['pages']      ?? [];
+$confso  = $conf['shop']       ?? [];
+$confm   = $conf['media']      ?? [];
+$confmo  = $conf['money']      ?? [];
+$confor  = $conf['order']      ?? [];
+$confco  = $conf['contact']    ?? [];
+$confcn  = $conf['content']   ?? [];
+$confma  = $conf['sitemap']    ?? [];
+$conflog = $conf['changelog']  ?? [];
 
 # Report PHP errors
-$confs['error'] = 2;
-$emode = isset($confs['error']) ? (int)$confs['error'] : 0;
+$emode = (int)($confs['error'] ?? 0);
 if ($emode === 2) {
     ini_set('display_errors', '1');
     error_reporting(E_ALL);
@@ -362,12 +393,12 @@ if (!is_admin_god()) {
     # Checking GET variable for safety
     if (isset($_GET)) {
         function checkGet($name, $val) {
-            global $prefix, $confs;
+            global $confs;
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
             $char = '#\([^>]*\"?[^)]*\)#';
             $quote = '#\"|\'|\.\.\/|\*#';
-            $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.$prefix.'_admins|'.$prefix.'_users|admins_show|admins_add|admins_save|admins_del#i';
+            $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
             if ($confs['url_get']) if (preg_match($links, $val)) doWarnReport('URL in GET - '.$name.' = '. $val);
@@ -395,13 +426,13 @@ if (!is_admin_god()) {
     # Checking POST variable for safety
     if (isset($_POST)) {
         function checkPost($name, $val) {
-            global $prefix, $confs, $conf, $admin;
+            global $confs, $conf, $admin;
             #$val = is_array($val) ? fields_save($val) : $val;
             $flag = is_array($admin) ? ($admin[3] ?? '') : '';
             $editor = (int)substr($flag, 0, 1);
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form).*?>#i';
-            $string = '#'.$prefix.'_admins|'.$prefix.'_users#i';
+            $string = '#'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
             if ($confs['ref_post'] && isset($_FILES['file']['size'])) if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), get_host())) doWarnReport('POST from referer - '.$name.' = '. $val);
@@ -429,10 +460,9 @@ if (!is_admin_god()) {
     # Checking COOKIE variable for safety
     if (isset($_COOKIE)) {
         function checkCookie($name, $val) {
-            global $prefix;
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
-            $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.$prefix.'_admins|'.$prefix.'_users|admins_show|admins_add|admins_save|admins_del#i';
+            $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
             if (preg_match($links, $val)) doHackReport('URL in COOKIE - '.$name.' = '. $val);
@@ -504,7 +534,7 @@ reset($_FILES);
 
 # Check super admin
 function is_admin_god() {
-    global $prefix, $db, $admin;
+    global $db, $admin;
     static $godtrue;
     if (!empty($admin)) {
         if (!isset($godtrue)) {
@@ -513,7 +543,7 @@ function is_admin_god() {
             $pwd = htmlspecialchars(substr($admin[2], 0, 40));
             $ip = getIp();
             if ($id && $name && $pwd && $ip) {
-                list($aname, $apwd, $aip) = $db->sql_fetchrow($db->sql_query("SELECT name, pwd, ip FROM ".$prefix."_admins WHERE id = '".$id."' AND super = '1'"));
+                list($aname, $apwd, $aip) = $db->sql_fetchrow($db->sql_query("SELECT name, pwd, ip FROM ".PREFIX_DB."_admins WHERE id = '".$id."' AND super = '1'"));
                 if ($aname == $name && $aname != '' && $apwd == $pwd && $apwd != '' && $aip == $ip && $aip != '') {
                     $godtrue = 1;
                     return $godtrue;
