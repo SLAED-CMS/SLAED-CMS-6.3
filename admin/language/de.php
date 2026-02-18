@@ -376,7 +376,6 @@ define("_REPLACEINFO","Im Inhalt ersetzen es zulässig, für die Verwendung als 
 define("_REPLACE_FIELD","Austauschen");
 define('_REPTEXT','Bei modernen InnoDB-Tabellen treten Beschädigungen nur selten auf, da MySQL die Wiederherstellung nach einem Absturz automatisch durchführt. Die Reparaturfunktion sollte nur bei tatsächlichen Fehlern eingesetzt werden, beispielsweise nach einem unerwarteten Serverabbruch oder wenn eine Tabelle beschädigt erscheint.');
 define("_REWRITE_MOD","Umwandlung der Links aktivieren - Rewrite Mod?");
-define("_REWRITE_MODI","Die Möglichkeit der Umwandlung der Links in die Rewrite Mod - «Mensch Klare Ziel-URL», ist nur in dem Fall, wenn auf dem Server installiert und aktiviert Modul «Mod-Rewrite».");
 define("_RIGHT","Rechts");
 define("_RIGHTBLOCK","Rechter Block");
 define("_ROWS","Zeilen");
@@ -545,6 +544,10 @@ define("_ADESC","Automatische Beschreibungsgenerierung?");
 define("_DLETTER","Maximale Anzahl der Zeichen in der Beschreibung");
 define("_RSEP","URL-Trennzeichen");
 define("_TSEP","Titeltrennzeichen für SEO-URLs");
-
 define("_SEOTITLE","Titel hinzufügen?");
 define("_SEOCTITLE","Kategorietitel hinzufügen?");
+define("_OGRAPH","Open Graph");
+define("_OGRAPHT","Open Graph Vorlage:");
+define("_SCHEMA","Schema.org");
+define("_SCHEMAT","Schema.org Vorlage:");
+define("_TPLVARS","<b>[site]</b> - Seitenname<br><b>[loc]</b> - Seiten-URL<br><b>[title]</b> - Titel<br><b>[desc]</b> - Beschreibung<br><b>[img]</b> - Bild<br><b>[type]</b> - Inhaltstyp<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Startseite<br><b>[logo]</b> - Logo<br><b>[time]</b> - Veröffentlichungsdatum<br><b>[mtime]</b> - Änderungsdatum<br><b>[ctitle]</b> - Kategorie");

@@ -376,7 +376,6 @@ define("_REPLACEINFO","У змісті заміни допустимо вико�
 define("_REPLACE_FIELD","Заміна");
 define('_REPTEXT','У сучасних таблицях InnoDB більшість проблем автоматично усуваються після аварійного завершення роботи. Функцію ремонту слід використовувати лише при реальних помилках таблиць.');
 define("_REWRITE_MOD","Активувати перетворення посилань в ЧПУ?");
-define("_REWRITE_MODI","Можливість перетворення посилань в ЧПУ - «Людино Зрозумілий Url», доступна тільки в тому випадку, якщо на сервері встановлений і активований модуль «Mod Rewrite».");
 define("_RIGHT","Праворуч");
 define("_RIGHTBLOCK","Правий блок");
 define("_ROWS","Рядків");
@@ -545,6 +544,10 @@ define("_ADESC","Автоматична генерація опису?");
 define("_DLETTER","Максимальна кількість знаків в описі");
 define("_RSEP","Розділювач ЧПУ");
 define("_TSEP","Розділювач заголовків ЧПУ");
-
 define("_SEOTITLE","Додавати заголовок?");
 define("_SEOCTITLE","Додавати заголовок категорії?");
+define("_OGRAPH","Open Graph");
+define("_OGRAPHT","Шаблон Open Graph:");
+define("_SCHEMA","Schema.org");
+define("_SCHEMAT","Шаблон Schema.org:");
+define("_TPLVARS","<b>[site]</b> - Назва сайту<br><b>[loc]</b> - URL сторінки<br><b>[title]</b> - Заголовок<br><b>[desc]</b> - Опис<br><b>[img]</b> - Зображення<br><b>[type]</b> - Тип контенту<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Головна<br><b>[logo]</b> - Логотип<br><b>[time]</b> - Дата публікації<br><b>[mtime]</b> - Дата зміни<br><b>[ctitle]</b> - Категорія");

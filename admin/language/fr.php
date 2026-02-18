@@ -376,7 +376,6 @@ define("_REPLACEINFO","Dans le contenu de remplacement admissible à l'utilisati
 define("_REPLACE_FIELD","Remplacement de");
 define('_REPTEXT','Avec les tables InnoDB modernes, la récupération après un arrêt inattendu est généralement automatique. La fonction de réparation n\'est nécessaire qu\'en cas d\'erreurs réelles dans les tables.');
 define("_REWRITE_MOD","Activer les options de conversion dans la machine CNC?");
-define("_REWRITE_MODI","La capacité de convertir les liens dans NC - \"URL Embellir\" n'est disponible que lorsque le serveur est installé et activé le module «Mod Rewrite».");
 define("_RIGHT","Droite");
 define("_RIGHTBLOCK","Le bloc de droite");
 define("_ROWS","Lignes");
@@ -545,6 +544,10 @@ define("_ADESC","Génération automatique de la description?");
 define("_DLETTER","Nombre maximal de caractères dans la description");
 define("_RSEP","Séparateur d'URL");
 define("_TSEP","Séparateur de titres pour les URLs SEO");
-
 define("_SEOTITLE","Ajouter le titre ?");
 define("_SEOCTITLE","Ajouter le titre de la catégorie ?");
+define("_OGRAPH","Open Graph");
+define("_OGRAPHT","Modèle Open Graph :");
+define("_SCHEMA","Schema.org");
+define("_SCHEMAT","Modèle Schema.org :");
+define("_TPLVARS","<b>[site]</b> - Nom du site<br><b>[loc]</b> - URL de la page<br><b>[title]</b> - Titre<br><b>[desc]</b> - Description<br><b>[img]</b> - Image<br><b>[type]</b> - Type de contenu<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Page d'accueil<br><b>[logo]</b> - Logo<br><b>[time]</b> - Date de publication<br><b>[mtime]</b> - Date de modification<br><b>[ctitle]</b> - Catégorie");

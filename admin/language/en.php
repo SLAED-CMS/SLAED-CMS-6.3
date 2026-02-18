@@ -376,7 +376,6 @@ define("_REPLACEINFO","In the content of the replacement of the permitted use, a
 define("_REPLACE_FIELD","Replacing");
 define('_REPTEXT','With modern InnoDB tables, most issues are automatically recovered after an unexpected shutdown. The repair function should only be used when real table errors are detected.');
 define("_REWRITE_MOD","Activate transformation of links - Mod rewrite?");
-define("_REWRITE_MODI","The ability to convert the links in the Rewrite Mod - «the Man Intuitive Url», is available only in the case if the server is installed and activated module «Mod Rewrite».");
 define("_RIGHT","Right");
 define("_RIGHTBLOCK","Right Block");
 define("_ROWS","Lines");
@@ -545,6 +544,10 @@ define("_ADESC","Automatic description generation?");
 define("_DLETTER","Maximum number of characters in description");
 define("_RSEP","URL separator");
 define("_TSEP","Title separator for SEO URLs");
-
 define("_SEOTITLE","Add title?");
 define("_SEOCTITLE","Add category title?");
+define("_OGRAPH","Open Graph");
+define("_OGRAPHT","Open Graph Template:");
+define("_SCHEMA","Schema.org");
+define("_SCHEMAT","Schema.org Template:");
+define("_TPLVARS","<b>[site]</b> - Site name<br><b>[loc]</b> - Page URL<br><b>[title]</b> - Title<br><b>[desc]</b> - Description<br><b>[img]</b> - Image<br><b>[type]</b> - Content type<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Homepage<br><b>[logo]</b> - Logo<br><b>[time]</b> - Publish date<br><b>[mtime]</b> - Modified date<br><b>[ctitle]</b> - Category");

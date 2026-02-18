@@ -376,7 +376,6 @@ define("_REPLACEINFO","W treści wymiany dopuszczalne wykorzystania, jak zwykły
 define("_REPLACE_FIELD","Wymiana");
 define('_REPTEXT','W nowoczesnych tabelach InnoDB odzyskiwanie danych po awarii odbywa się automatycznie. Funkcja naprawy powinna być używana tylko w przypadku faktycznych błędów tabel.');
 define("_REWRITE_MOD","Aktywacja konwersja linków w Rewrite Mod?");
-define("_REWRITE_MODI","Możliwość konwersji linków w Rewrite Mod - «Człowiek Przyjazny Url», jest dostępna tylko w przypadku, jeśli na serwerze jest zainstalowany i aktywowany moduł «Mod Rewrite».");
 define("_RIGHT","Po prawej stronie");
 define("_RIGHTBLOCK","Prawy blok");
 define("_ROWS","Wierszy");
@@ -545,6 +544,10 @@ define("_ADESC","Automatyczne generowanie opisu?");
 define("_DLETTER","Maksymalna liczba znaków w opisie");
 define("_RSEP","Separator URL");
 define("_TSEP","Separator tytułów dla adresów SEO");
-
 define("_SEOTITLE","Dodać tytuł?");
 define("_SEOCTITLE","Dodać tytuł kategorii?");
+define("_OGRAPH","Open Graph");
+define("_OGRAPHT","Szablon Open Graph:");
+define("_SCHEMA","Schema.org");
+define("_SCHEMAT","Szablon Schema.org:");
+define("_TPLVARS","<b>[site]</b> - Nazwa strony<br><b>[loc]</b> - URL strony<br><b>[title]</b> - Tytuł<br><b>[desc]</b> - Opis<br><b>[img]</b> - Obraz<br><b>[type]</b> - Typ treści<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Strona główna<br><b>[logo]</b> - Logo<br><b>[time]</b> - Data publikacji<br><b>[mtime]</b> - Data modyfikacji<br><b>[ctitle]</b> - Kategoria");
