@@ -617,12 +617,14 @@ function checkFileChmod(string $dir, int $chm): string {
         $per=substr(decoct(fileperms($dir)), -3);
         if (php_uname('s') === 'Linux' && $per != $chm) {
             $tdir = CONFIG_DIR.'/chmod.php';
+            file_put_contents($tdir, '');
             chmod($tdir, '0'.$chm);
             $tper = substr(decoct(fileperms($tdir)), -3);
             if ($tper == $chm) {
                 chmod($dir, '0'.$chm);
                 $per = substr(decoct(fileperms($dir)),-3);
             }
+            unlink($tdir);
         }
         $out = ($per != $chm) ? $dir.' '._ERRORPERM.' CHMOD - '.$chm : '';
     }
@@ -2325,7 +2327,7 @@ function engines_word($refer) {
     $refer= str_replace(array("&#038;", "&amp;"), "&", $refer);
     $tmp = parse_url(urldecode(trim($refer)));
     $site = $tmp['host'];
-    $str = $tmp['query'];
+    $str = $tmp['query'] ?? '';
     parse_str($str, $arr);
 
     foreach ($engines as $key => $value) {
@@ -2578,7 +2580,7 @@ function head() {
         $past = $ctime - intval($conf['sess_t']);
         if ($sess_t < $past) {
             $db->sql_query("DELETE FROM ".$prefix."_session WHERE time < '".$past."'");
-            unlink($sess_f);
+            if (file_exists($sess_f)) unlink($sess_f);
             $fp = fopen($sess_f, "wb");
             fwrite($fp, $ctime);
             fclose($fp);
@@ -2915,7 +2917,7 @@ function create_dump($dir, &$log) {
                 if (filetype($location) == 'dir') {
                     create_dump($location.'/', $log);
                 } else {
-                    $log[$location] = md5_file($location);
+                    if (is_readable($location)) $log[$location] = md5_file($location);
                 }
             }
             closedir($dh);
@@ -3519,7 +3521,7 @@ function bb_decode($sourse, $mod, $id="") {
     $bb[] = "#\*(\d{2})#";
     $html[] = "<img src=\"".img_find("smilies/\\1.gif")."\" alt=\""._SMILIE." - \\1\" title=\""._SMILIE." - \\1\">";
 
-    $sourse = str_replace(array("&#034;", "&#039;"), array("\"", "'"), preg_replace($bb, $html, $sourse));
+    $sourse = str_replace(array("&#034;", "&#039;"), array("\"", "'"), preg_replace($bb, $html, (string)($sourse ?? '')));
     # $sourse = preg_replace($bb, $html, $sourse);
 
     while (preg_match("#\[quote\](.*?)\[/quote\]#si", $sourse)) $sourse = preg_replace_callback("#\[quote\](.*?)\[/quote\]#si", "encode_quote", $sourse);

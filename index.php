@@ -36,7 +36,7 @@ if (empty($go)) {
             }
         }
     }
-    $file = (getVar('req', 'file', 'var')) ? $file : 'index';
+    $file = getVar('req', 'file', 'var') ?: 'index';
     $theme = getTheme();
     if ($name) {
         $conf['name'] = $name;
