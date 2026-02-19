@@ -11,7 +11,7 @@ fieldset {
 }
 
 body { background: #c0deed url(images/pagebg.jpg) repeat-x; }
-body, select, input, textarea, button { font: 12px/16px Tahoma, Arial, Verdana, sans-serif; color: #222; outline: none; }
+body, select, input, textarea, button { font: 13px/16px Tahoma, Arial, Verdana, sans-serif; color: #222; outline: none; }
 
 h1, h2, h3, h4, h5 { line-height: normal; }
 h1 { font-size: 1.8em; }

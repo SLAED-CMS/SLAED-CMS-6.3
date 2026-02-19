@@ -1,9 +1,9 @@
 /* Подлючение плагинов системы */
 /* Code Mirror - Динамичная подсветка кода */
-.CodeMirror { font: 11px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
+.CodeMirror { font: 12px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
 .sl_table_conf td .CodeMirror { max-width: 352px; }
 .CodeMirror:hover { box-shadow: 0 0 3px #34c8ed; }
-.CodeMirror-hints { font: 11px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
+.CodeMirror-hints { font: 12px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
 
 /* jQuery UI Autocomplete - Автодополнение */
 .ui-autocomplete { max-height: 250px; overflow-y: auto; overflow-x: hidden; }
