@@ -53,12 +53,23 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     foreach ($arr as $k => $v) $arr[$k] = $normalize($v);
     $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
     $data = ($key === 'global') ? $arr : [$key => $arr];
+    $exp  = function (array $a, int $d = 0) use (&$exp): string {
+        $p = str_repeat('    ', $d);
+        $i = $p.'    ';
+        $s = "[\n";
+        foreach ($a as $k => $v) {
+            $s .= $i.var_export($k, true).' => ';
+            $s .= is_array($v) ? $exp($v, $d + 1) : var_export($v, true);
+            $s .= ",\n";
+        }
+        return $s.$p.']';
+    };
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
     .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
-    .'return '.var_export($data, true).';'.PHP_EOL;
+    .'return '.$exp($data).';'.PHP_EOL;
     file_put_contents($fp, $cnt, LOCK_EX);
 }
 
