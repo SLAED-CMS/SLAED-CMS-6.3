@@ -311,7 +311,7 @@ $name = getVar('post', 'name', 'name', '');
 $url = getVar('post', 'url', 'url', 'https://');
 
 // ✅ SQL prepared statements
-$db->sql_query('SELECT * FROM '.$prefix.'_users WHERE id = :id', ['id' => $id]);
+$db->sql_query('SELECT * FROM '.REFIX_DB.'_users WHERE id = :id', ['id' => $id]);
 
 // ✅ Output escaping
 echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');

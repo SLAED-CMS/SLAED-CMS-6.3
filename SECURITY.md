@@ -64,7 +64,7 @@ All database queries use **prepared statements** with named placeholders:
 ```php
 // Safe - Using prepared statements
 $db->sql_query(
-    'SELECT * FROM '.$prefix.'_users WHERE id = :id',
+    'SELECT * FROM '.REFIX_DB.'_users WHERE id = :id',
     ['id' => $id]
 );
 ```

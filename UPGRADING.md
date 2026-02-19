@@ -230,7 +230,7 @@ All SQL queries now require prepared statements:
 $db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
 
 // New (6.3.x) - SECURE
-$db->sql_query('SELECT * FROM '.$prefix.'_users WHERE id = :id', ['id' => $id]);
+$db->sql_query('SELECT * FROM '.REFIX_DB.'_users WHERE id = :id', ['id' => $id]);
 ```
 
 #### Input Validation

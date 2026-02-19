@@ -185,7 +185,7 @@ $html = '<div class="' . $cls . '">' . $text . '</div>';
 ```php
 // Correct - Safe
 $db->sql_query(
-    'SELECT * FROM '.$prefix.'_users WHERE id = :id AND status = :status',
+    'SELECT * FROM '.REFIX_DB.'_users WHERE id = :id AND status = :status',
     ['id' => $id, 'status' => $active]
 );
 
@@ -278,8 +278,8 @@ Extract inline code into separate functions:
 ```php
 // ✅ Correct
 function status(): void {
-    global $prefix, $db, $aroute, $act, $id;
-    $db->sql_query('UPDATE '.$prefix.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
+    global $db, $afile, $act, $id;
+    $db->sql_query('UPDATE '.REFIX_DB.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
     header('Location: '.$aroute.'.php?name=categories');
     exit;
 }
