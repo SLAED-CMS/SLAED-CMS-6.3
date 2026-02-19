@@ -40,12 +40,18 @@ RewriteBase /
 RewriteRule ^config/ - [F,L]
 RewriteRule ^setup/ - [F,L]
 
+# Block PHP execution in uploads
+RewriteRule ^uploads/.*\.php$ - [F,L,NC]
+
 # Rewrite rules to block out some common exploits
-RewriteCond %{QUERY_STRING} base64_encode[^(]*\([^)]*\) [OR]
+RewriteCond %{QUERY_STRING} base64_encode[^(]*\([^)]*\) [NC,OR]
 RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
-RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
-RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
-RewriteRule .* index.php [F]
+RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [NC,OR]
+RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [NC]
+RewriteRule .* - [F,L]
+
+# HTTP Authentication (must be BEFORE the front controller rule)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 # Redirecting non-www to www
 # RewriteCond %{HTTP_HOST} ^[^.]+\.[^.]+$
@@ -56,6 +62,3 @@ RewriteRule .* index.php [F]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^.*$ index.php [QSA,L]
-
-# HTTP Authentication
-RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]
