@@ -16,7 +16,6 @@ parameters:
         - '#Variable \$confn might not be defined#'
         - '#Variable \$user might not be defined#'
         - '#Variable \$module_name might not be defined#'
-        - '#include\(\) "config/config_uploads\.php" is not a file or it does not exist#'
         - '#Inner named functions are not supported by PHPStan#'
         - '#require_once\(\) ".*config/db\.php" is not a file or it does not exist#'
         - '#require_once\(\) ".*config/changelog\.php" is not a file or it does not exist#'

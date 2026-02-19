@@ -248,9 +248,9 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 #### Global Variables
 
 ```php
-// ✅ Correct - use $aroute
-global $aroute;
-header('Location: '.$aroute.'.php?name=modules');
+// ✅ Correct - use $afile
+global $afile;
+header('Location: '.$afile.'.php?name=modules');
 exit;
 
 // ❌ Wrong - deprecated
@@ -264,11 +264,11 @@ Always add `exit;` after header redirects and use simplified URLs:
 
 ```php
 // ✅ Correct
-header('Location: '.$aroute.'.php?name=modules');
+header('Location: '.$afile.'.php?name=modules');
 exit;
 
 // ❌ Wrong - unnecessary &op=show
-header('Location: '.$aroute.'.php?name=modules&op=show');
+header('Location: '.$afile.'.php?name=modules&op=show');
 ```
 
 #### Switch-Case Structure
@@ -280,7 +280,7 @@ Extract inline code into separate functions:
 function status(): void {
     global $db, $afile, $act, $id;
     $db->sql_query('UPDATE '.REFIX_DB.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
-    header('Location: '.$aroute.'.php?name=categories');
+    header('Location: '.$afile.'.php?name=categories');
     exit;
 }
 

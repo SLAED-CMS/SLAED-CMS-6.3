@@ -209,7 +209,7 @@ return [
 
 | Old (6.2.x) | New (6.3.x) |
 |-------------|-------------|
-| `$admin_file` | `$aroute` |
+| `$admin_file` | `$afile` |
 
 ```php
 // Old
@@ -217,8 +217,8 @@ global $admin_file;
 header('Location: '.$admin_file.'.php?name=modules');
 
 // New
-global $aroute;
-header('Location: '.$aroute.'.php?name=modules');
+global $afile;
+header('Location: '.$afile.'.php?name=modules');
 ```
 
 #### SQL Query Changes
@@ -287,7 +287,7 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 ### Admin Modules
 
 - [ ] Rename navigation function to `navi()`
-- [ ] Replace `$admin_file` with `$aroute`
+- [ ] Replace `$admin_file` with `$afile`
 - [ ] Add `exit;` after all `header()` redirects
 - [ ] Remove `&op=show` from navigation URLs
 - [ ] Extract inline switch-cases into separate functions
