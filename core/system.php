@@ -719,11 +719,11 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     $exp  = function (array $arr, int $dep = 0) use (&$exp): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
-        $out = "[\n";
+        $out = '['.PHP_EOL;
         foreach ($arr as $key => $val) {
             $out .= $ind.var_export($key, true).' => ';
             $out .= is_array($val) ? $exp($val, $dep + 1) : var_export($val, true);
-            $out .= ",\n";
+            $out .= ','.PHP_EOL;
         }
         return $out.$pad.']';
     };
@@ -776,9 +776,9 @@ function doScript() {
                 $cont = (file_exists($sfile) && !$conf['script_h']) ? '<script '.$async.'src="index.php?go=script"></script>' : $cont;
             }
         }
-        if (file_exists('config/config_header.php')) {
+        if (file_exists('config/header.php')) {
             ob_start();
-            include('config/config_header.php');
+            include('config/header.php');
             $cont .= ob_get_clean();
         }
     } else {
@@ -2733,7 +2733,7 @@ function head() {
             if (date('d.m.Y') != $con[0]) {
                 $fpd = fopen($spath.'days.log', 'ab');
                 flock($fpd, 2);
-                fwrite($fpd, $sdate[0]."\r\n");
+                fwrite($fpd, $sdate[0].PHP_EOL);
                 flock($fpd, 3);
                 fclose($fpd);
                 if (file_exists($spath.'statistic.log')) unlink($spath.'statistic.log');

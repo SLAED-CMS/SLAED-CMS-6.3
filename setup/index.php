@@ -56,11 +56,11 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     $exp  = function (array $arr, int $dep = 0) use (&$exp): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
-        $out = "[\n";
+        $out = '['.PHP_EOL;
         foreach ($arr as $key => $val) {
             $out .= $ind.var_export($key, true).' => ';
             $out .= is_array($val) ? $exp($val, $dep + 1) : var_export($val, true);
-            $out .= ",\n";
+            $out .= ','.PHP_EOL;
         }
         return $out.$pad.']';
     };

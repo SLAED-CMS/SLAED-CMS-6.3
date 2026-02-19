@@ -1,10 +1,13 @@
 # Author: Eduard Laas
-# Copyright © 2005 - 2022 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 # Default charset
 AddDefaultCharset utf-8
+
+# Prevent directory listing
+Options -Indexes
 
 # Errors
 ErrorDocument 400 /index.php?error=400
@@ -14,23 +17,28 @@ ErrorDocument 404 /index.php?error=404
 ErrorDocument 500 /index.php?error=500
 ErrorDocument 503 /index.php?error=503
 
-# Security, warning: This feature has been DEPRECATED as of PHP 5.3.0 and REMOVED as of PHP 5.4.0
-# php_flag register_globals off
-# php_flag safe_mode on
-# php_flag magic_quotes_gpc on
-
-# Deflate compression and expires by mime type
+# Deflate compression
 # <IfModule mod_deflate.c>
+# <FilesMatch "\.(js|css)$">
+# SetOutputFilter DEFLATE
+# </FilesMatch>
+# </IfModule>
+
+# Browser cache expires
+# <IfModule mod_expires.c>
 # <FilesMatch "\.(js|jpg|jpeg|gif|png|css)$">
 # ExpiresActive On
 # ExpiresDefault "access plus 1 month"
-# SetOutputFilter DEFLATE
 # </FilesMatch>
 # </IfModule>
 
 # Mod rewrite on
 RewriteEngine On
 RewriteBase /
+
+# Block access to sensitive directories
+RewriteRule ^config/ - [F,L]
+RewriteRule ^setup/ - [F,L]
 
 # Rewrite rules to block out some common exploits
 RewriteCond %{QUERY_STRING} base64_encode[^(]*\([^)]*\) [OR]
