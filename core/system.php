@@ -4851,7 +4851,7 @@ function redaktor($id, $name, $class, $editor, $submit) {
     $submit = ($submit) ? ' OnChange="submit()"' : '';
     $class = ($class) ? ' class="'.$class.'"' : '';
     $content = '<select name="'.$name.'"'.$submit.$class.'>';
-    $ename = ($id == 1) ? array(0 => _NO, 1 => _EDITOR.' SLAED BB '.substr($conf['version'], 0, strrpos($conf['version'], '.')), 2 => _EDITOR.' TinyMCE 4.5.6', 3 => _EDITOR.' CKEditor 4.6.2', 4 => _EDITOR.' CodeMirror 5.25.0') : array(0 => _NO, 1 => _EDITOR.' SLAED BB '.substr($conf['version'], 0, strrpos($conf['version'], '.')), 2 => _EDITOR.' TinyMCE 4.5.6', 3 => _EDITOR.' CKEditor 4.6.2');
+    $ename = ($id == 1) ? array(0 => _NO, 1 => 'SLAED BB '.substr($conf['version'], 0, strrpos($conf['version'], '.')), 2 => 'TinyMCE 4.5.6', 3 => 'CKEditor 4.6.2', 4 => 'CodeMirror 5.25.0') : array(0 => _NO, 1 => 'SLAED BB '.substr($conf['version'], 0, strrpos($conf['version'], '.')), 2 => 'TinyMCE 4.5.6', 3 => 'CKEditor 4.6.2');
     foreach ($ename as $key => $value) {
         $sel = ($editor == $key) ? ' selected' : '';
         if ($key <= 1) {

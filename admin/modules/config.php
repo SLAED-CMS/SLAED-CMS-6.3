@@ -110,7 +110,7 @@ function config(): void {
     .'<tr><td>'._CAPKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td><input type="text" name="capkey" value="'.$conf['capkey'].'" maxlength="255" class="sl_conf" placeholder="'._CAPKEY.'"></td></tr>'
     .'<tr><td>'._CAPSECKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td><input type="text" name="capsec" value="'.$conf['capsec'].'" maxlength="255" class="sl_conf" placeholder="'._CAPSECKEY.'"></td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
-    .'<tr><td>'._REDAKTOR.':</td><td>'.redaktor('2', 'redaktor', 'sl_conf', $conf['redaktor'], 0).'</td></tr>';
+    .'<tr><td>'._EDITOR.':</td><td>'.redaktor('2', 'redaktor', 'sl_conf', $conf['redaktor'], 0).'</td></tr>';
     $gtime = timezone_identifiers_list();
     $sel = $conf['gtime'] ?? '';
     $gcont = '';
