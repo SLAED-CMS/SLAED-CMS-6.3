@@ -397,7 +397,7 @@ function save(): void {
         'lic_h' => 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt',
         'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
     ];
-    setConfigFile('global.php', 'conf', $cont);
+    setConfigFile('global.php', $cont);
     header('Location: '.$aroute.'.php?name=config');
     exit;
 }

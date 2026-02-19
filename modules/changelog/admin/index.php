@@ -627,7 +627,7 @@ function save(): void {
         'exporten' => getVar('post', 'exporten', 'num', 0)
     ];
 
-    setConfigFile('changelog.php', 'conflog', $confdata);
+    setConfigFile('changelog.php', $confdata);
     header('Location: '.$aroute.'.php?name=changelog&op=conf');
     exit;
 }

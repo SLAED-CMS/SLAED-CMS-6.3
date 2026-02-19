@@ -241,7 +241,7 @@ function confsave(): void {
         'count' => getVar('post', 'count', 'num', 0),
         'per_page' => getVar('post', 'per_page', 'num', 100)
     ];
-    setConfigFile('lang.php', 'confla', $cont, $confla);
+    setConfigFile('lang.php', $cont, $confla);
     header('Location: '.$aroute.'.php?name=lang&op=conf');
     exit;
 }

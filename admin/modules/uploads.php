@@ -139,7 +139,7 @@ function templsave(): void {
     $typm = explode(',', $confup['typ']);
     $tmp = getVar('post', 'tmp', 'raw');
     for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i];
-    setConfigFile('filetype.php', 'conftp', $cont);
+    setConfigFile('filetype.php', $cont);
     header('Location: '.$aroute.'.php?name=uploads&op=templconf');
     exit;
 }
@@ -252,7 +252,7 @@ function confsave(): void {
             $i++;
         }
     }
-    setConfigFile('uploads.php', 'confup', $confup);
+    setConfigFile('uploads.php', $confup);
     header('Location: '.$aroute.'.php?name=uploads&op=conf');
     exit;
 }

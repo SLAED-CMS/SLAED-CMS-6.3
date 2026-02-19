@@ -50,7 +50,7 @@ function save(): void {
         $content[$val] = $time.'|'.$in.'|'.$view;
         $i++;
     }
-    setConfigFile('ratings.php', 'confra', $content);
+    setConfigFile('ratings.php', $content);
     header('Location: '.$aroute.'.php?name=ratings');
     exit;
 }

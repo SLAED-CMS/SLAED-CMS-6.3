@@ -111,7 +111,7 @@ function save(): void {
         'shi' => getVar('post', 'shi', 'num', 22),
         'stat' => getVar('post', 'stat', 'num')
     ];
-    setConfigFile('statistic.php', 'confst', $cont);
+    setConfigFile('statistic.php', $cont);
     header('Location: '.$aroute.'.php?name=statistic&op=conf');
     exit;
 }

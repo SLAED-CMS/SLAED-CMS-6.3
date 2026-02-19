@@ -35,7 +35,7 @@ if ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ
 $copyright = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
 
 # Saving configurations to a file
-function setConfigFile(string $fp, string $name, array $arr, array $act = [], string $type = ''): void {
+function setConfigFile(string $fp, array $arr, array $act = []): void {
     $fp = BASE_DIR.'/config/'.$fp;
     if (!empty($act)) $arr = array_replace_recursive($arr, $act);
     ksort($arr);
@@ -51,14 +51,14 @@ function setConfigFile(string $fp, string $name, array $arr, array $act = [], st
         return (string)$v;
     };
     foreach ($arr as $k => $v) $arr[$k] = $normalize($v);
-    $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
+    $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
+    $data = ($key === 'global') ? $arr : [$key => $arr];
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
     .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
-    .'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL
-    .'$'.$name.' = '.var_export($arr, true).';'.PHP_EOL;
+    .'return '.var_export($data, true).';'.PHP_EOL;
     file_put_contents($fp, $cnt, LOCK_EX);
 }
 
@@ -323,7 +323,7 @@ function save(): void {
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
 
     $cont = array('language' => $clang, 'homeurl' => $url);
-    setConfigFile('global.php', 'conf', $conf, $cont);
+    setConfigFile('global.php', $conf, $cont);
     require_once BASE_DIR.'/config/global.php';
 
     $tafile = ($confs['afile']) ? $confs['afile'] : 'admin';
@@ -335,12 +335,12 @@ function save(): void {
         $xafile = file_exists($xafile.'.php') ? $xafile : $tafile;
     }
     $cont = array('afile' => $xafile);
-    setConfigFile('security.php', 'confs', $confs, $cont);
+    setConfigFile('security.php', $confs, $cont);
     require_once BASE_DIR.'/config/security.php';
     
     require_once BASE_DIR.'/config/db.php';
     $cont = array('host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync);
-    setConfigFile('db.php', 'confdb', $confdb, $cont);
+    setConfigFile('db.php', $confdb, $cont);
 
     require_once 'core/classes/pdo.php';
     $db = new sql_db($xhost, $xuname, $xpass, $xname, $xcharset);
@@ -532,7 +532,7 @@ function save(): void {
                 }
             }
         }
-        setConfigFile('modules.php', 'confmd', $cont);
+        setConfigFile('modules.php', $cont);
         $title = _SAVE_UPDATE;
         $bodytext .= executeSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     }

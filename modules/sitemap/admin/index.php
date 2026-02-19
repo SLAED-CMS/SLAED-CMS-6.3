@@ -161,7 +161,7 @@ function save(): void {
         'xsl' => getVar('post', 'xsl', 'num'),
         'txt' => getVar('post', 'txt', 'num')
     ];
-    setConfigFile('sitemap.php', 'confma', $cont);
+    setConfigFile('sitemap.php', $cont);
     header('Location: '.$aroute.'.php?name=sitemap&op=conf');
     exit;
 }

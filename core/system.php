@@ -702,7 +702,7 @@ function checkFileChmod(string $dir, int $chm): string {
 }
 
 # Saving configurations to a file
-function setConfigFile(string $fp, string $name, array $arr, array $act = [], string $type = ''): void {
+function setConfigFile(string $fp, array $arr, array $act = []): void {
     $fp = CONFIG_DIR.'/'.$fp;
     if (!empty($act)) $arr = array_replace_recursive($act, $arr);
     ksort($arr);
@@ -714,14 +714,14 @@ function setConfigFile(string $fp, string $name, array $arr, array $act = [], st
         return is_bool($v) ? (string)(int)$v : (string)$v;
     };
     foreach ($arr as $k => $v) $arr[$k] = $normalize($v);
-    $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
+    $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
+    $data = ($key === 'global') ? $arr : [$key => $arr];
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
     .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
-    .'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL
-    .'$'.$name.' = '.var_export($arr, true).';'.PHP_EOL;
+    .'return '.var_export($data, true).';'.PHP_EOL;
     file_put_contents($fp, $cnt, LOCK_EX);
 }
 
@@ -1836,7 +1836,7 @@ function updateNewsletter(): void {
             foreach ($outmail as $val) if ($val != "") mail_send($val, $conf['adminmail'], $title, bb_decode($content, "all"), 0, 3);
             if (!$inmail) {
                 $cont = array('newsletter' => '0');
-                setConfigFile('global.php', 'conf', $cont, $conf, '');
+                setConfigFile('global.php', $cont, $conf);
             }
         }
     }
@@ -2182,7 +2182,7 @@ function img_find($img) {
 
 # Format select RSS
 function rss_select() {
-    global $conf;
+    global $conf, $confrs;
     require_once CONFIG_DIR.'/rss.php';
     $fieldc = explode("||", $confrs['rss']);
     $url = (isset($_POST['url'])) ? url_filter($_POST['url']) : "";
@@ -3591,7 +3591,7 @@ function bb_decode($sourse, $mod, $id="") {
     $bb[] = "#\*(\d{2})#";
     $html[] = "<img src=\"".img_find("smilies/\\1.gif")."\" alt=\""._SMILIE." - \\1\" title=\""._SMILIE." - \\1\">";
 
-    $sourse = str_replace(array("&#034;", "&#039;"), array("\"", "'"), preg_replace($bb, $html, (string)($sourse ?? '')));
+    $sourse = str_replace(array("&#034;", "&#039;"), array("\"", "'"), preg_replace($bb, $html, (string)($sourse ?? '')) ?? '');
     # $sourse = preg_replace($bb, $html, $sourse);
 
     while (preg_match("#\[quote\](.*?)\[/quote\]#si", $sourse)) $sourse = preg_replace_callback("#\[quote\](.*?)\[/quote\]#si", "encode_quote", $sourse);

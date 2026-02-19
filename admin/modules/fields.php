@@ -89,7 +89,7 @@ function save(): void {
         $a++;
         $cont[$val] = $fields;
     }
-    setConfigFile('fields.php', 'conffi', $cont);
+    setConfigFile('fields.php', $cont);
     header('Location: '.$aroute.'.php?name=fields');
     exit;
 }

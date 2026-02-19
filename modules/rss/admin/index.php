@@ -85,7 +85,7 @@ function save(): void {
         $rss .= $ident.$field1.'|'.$field2.'|'.$field3;
     }
     $cont['rss'] = $rss;
-    setConfigFile('rss.php', 'confrs', $cont);
+    setConfigFile('rss.php', $cont);
     header('Location: '.$aroute.'.php?name=rss');
     exit;
 }

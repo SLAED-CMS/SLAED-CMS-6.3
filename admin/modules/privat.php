@@ -61,7 +61,7 @@ function save(): void {
         'web' => getVar('post', 'web', 'num'),
         'act' => getVar('post', 'act', 'num')
     ];
-    setConfigFile('config_privat.php', 'confpr', $cont);
+    setConfigFile('config_privat.php', $cont);
     header('Location: '.$aroute.'.php?name=privat&op=conf');
     exit;
 }

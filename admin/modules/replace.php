@@ -71,7 +71,7 @@ function save(): void {
         $a++;
         $cont[$val] = $fields;
     }
-    setConfigFile('replace.php', 'confre', $cont);
+    setConfigFile('replace.php', $cont);
     header('Location: '.$aroute.'.php?name=replace');
     exit;
 }

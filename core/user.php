@@ -289,7 +289,7 @@ function prmess() {
     $typ = ($arg[3]) ? $arg[3] : intval($_GET['typ']);
     $uid = intval($user[0]);
     $newlistnum = intval($confpr['num']);
-    $num = ($_GET['cid']) ? intval($_GET['cid']) : "1";
+    $num = isset($_GET['cid']) ? intval($_GET['cid']) : 1;
     $offset = ($num-1) * $newlistnum;
     $offset = intval($offset);
     $conf['name'] = "account";
@@ -364,6 +364,7 @@ function prmess() {
         $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $confpr['nump'], $num, "0", "1", "prmess", "prmessou", "", "2", "");
     } elseif ($typ == 3) {
         list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin = '".$uid."' AND status = '2'"));
+        $fstatus = '';
         if ($pr_num >= $confpr['messsav']) {
             $messinfo = sprintf(_PRSAVEEXIT, $confpr['messsav']);
             $fstatus = "warn";
@@ -453,9 +454,9 @@ function prmess() {
             $sendname = (isset($_POST['name'])) ? ((isset($_POST['name'])) ? text_filter(substr($_POST['name'], 0, 25)) : "") : ((isset($_GET['uname'])) ? text_filter(substr(urldecode($_GET['uname']), 0, 25)) : "");
             $sеndtitle = (isset($_POST['title'])) ? text_filter(trim($_POST['title'])) : "";
             $sеndcontent = (isset($_POST['text'])) ? text_filter(trim($_POST['text'])) : "";
-            $rpost = ($sendname) ? $sendname : (($user_name) ? $user_name : "");
-            $rtitle = ($sеndtitle) ? $sеndtitle : (($title) ? _PRREP.": ".$title : "");
-            $rcontent = ($sеndcontent) ? $sеndcontent : (($content) ? "[quote]".$content."[/quote]" : "");
+            $rpost = ($sendname) ? $sendname : (($user_name ?? '') ? $user_name : "");
+            $rtitle = ($sеndtitle) ? $sеndtitle : (($title ?? '') ? _PRREP.": ".$title : "");
+            $rcontent = ($sеndcontent) ? $sеndcontent : (($content ?? '') ? "[quote]".$content."[/quote]" : "");
             
             $idp = ($id) ? "2" : "1";
             $cont .= "<form name=\"post\" id=\"form".$prmid."\" method=\"post\">"

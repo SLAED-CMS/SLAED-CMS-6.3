@@ -111,7 +111,7 @@ function save(): void {
         'refer' => getVar('post', 'refer', 'num', 0),
         'referb' => getVar('post', 'referb', 'num', 0),
     ];
-    setConfigFile('referers.php', 'confr', $content);
+    setConfigFile('referers.php', $content);
     header('Location: '.$aroute.'.php?name=referers&op=conf');
     exit;
 }

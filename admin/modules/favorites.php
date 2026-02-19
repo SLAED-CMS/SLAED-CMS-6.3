@@ -47,7 +47,7 @@ function save(): void {
         'favorites' => getVar('post', 'favorites', 'num'),
         'favact' => getVar('post', 'favact', 'num')
     ];
-    setConfigFile('favorites.php', 'conffav', $cont);
+    setConfigFile('favorites.php', $cont);
     header('Location: '.$aroute.'.php?name=favorites&op=conf');
     exit;
 }

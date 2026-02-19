@@ -108,7 +108,7 @@ function modules(): void {
 
     // Save config if changed
     if ($config) {
-        setConfigFile('modules.php', 'confmd', $confmd);
+        setConfigFile('modules.php', $confmd);
     }
 
     // Filter modules by type
@@ -306,7 +306,7 @@ function status(): void {
     $act = getVar('get', 'act', 'num');
     if (isset($confmd[$mod])) {
         $confmd[$mod]['active'] = $act;
-        setConfigFile('modules.php', 'confmd', $confmd);
+        setConfigFile('modules.php', $confmd);
     }
     header('Location: '.$aroute.'.php?name=modules');
     exit;
@@ -330,7 +330,7 @@ function save(): void {
             'top'    => getVar('post', 'top', 'num'),
             'type'   => $type,
         ];
-        setConfigFile('modules.php', 'confmd', $confmd);
+        setConfigFile('modules.php', $confmd);
     }
     header('Location: '.$aroute.'.php?name=modules');
     exit;

@@ -118,7 +118,7 @@ function save(): void {
         'profil' => getVar('post', 'profil', 'num'),
         'web' => getVar('post', 'web', 'num'),
     ];
-    setConfigFile('comments.php', 'confc', $cont);
+    setConfigFile('comments.php', $cont);
     header('Location: '.$aroute.'.php?name=comments&op=conf');
     exit;
 }

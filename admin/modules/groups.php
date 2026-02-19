@@ -147,7 +147,7 @@ function pointssave(): void {
     if ($spoints) {
         $npoints = implode(',', $spoints);
         $cont = ['points' => $npoints];
-        setConfigFile('users.php', 'confu', $cont, $confu);
+        setConfigFile('users.php', $cont, $confu);
     }
     header('Location: '.$aroute.'.php?name=groups&op=points');
     exit;
@@ -165,7 +165,7 @@ function del(): void {
                 $changed = true;
             }
         }
-        if ($changed) setConfigFile('modules.php', 'confmd', $confmd);
+        if ($changed) setConfigFile('modules.php', $confmd);
     }
     header('Location: '.$aroute.'.php?name=groups');
     exit;

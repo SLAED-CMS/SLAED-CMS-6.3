@@ -177,7 +177,7 @@ function blocksave(): void {
             $send = '&send=1';
         }
     }
-    setConfigFile('security.php', 'confs', $cont);
+    setConfigFile('security.php', $cont);
     header('Location: '.$aroute.'.php?name=security&op=block'.$send);
     exit;
 }
@@ -226,7 +226,7 @@ function passsave(): void {
     $cont['login'] = $xlogin;
     $cont['password'] = $xpassword;
     
-    setConfigFile('security.php', 'confs', $cont);
+    setConfigFile('security.php', $cont);
     header('Location: '.$aroute.'.php?name=security&op=pass');
     exit;
 }
@@ -329,7 +329,7 @@ function confsave(): void {
     $cont['login'] = $confs['login'];
     $cont['password'] = $confs['password'];
     
-    setConfigFile('security.php', 'confs', $cont);
+    setConfigFile('security.php', $cont);
     header('Location: '.$aroute.'.php?name=security&op=conf');
     exit;
 }

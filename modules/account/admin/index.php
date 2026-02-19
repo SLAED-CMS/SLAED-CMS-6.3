@@ -425,7 +425,7 @@ function save(): void {
         'mail_b' => strtolower(strtr(getVar('post', 'mail_b', 'text'), $protect)),
         'points' => $confu['points']
     ];
-    setConfigFile('users.php', 'confu', $cont);
+    setConfigFile('users.php', $cont);
     header('Location: '.$aroute.'.php?name=account&op=conf');
     exit;
 }
