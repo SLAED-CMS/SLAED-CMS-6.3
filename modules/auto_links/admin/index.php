@@ -41,12 +41,12 @@ function auto_links_navi() {
 }
 
 function auto_links() {
-	global $prefix, $db, $admin_file, $confal;
+	global $db, $admin_file, $confal;
 	head();
 	$cont = auto_links_navi(0, 0, 0, 0);
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confal['anum'];
-	$result = $db->sql_query("SELECT id, sitename, link, hits, outs, added FROM ".$prefix."_auto_links ORDER BY hits ASC LIMIT ".$offset.", ".$confal['anum']);
+	$result = $db->sql_query("SELECT id, sitename, link, hits, outs, added FROM ".PREFIX_DB."_auto_links ORDER BY hits ASC LIMIT ".$offset.", ".$confal['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._SITENAME."</th><th>"._SITEURL."</th><th>"._HITS."</th><th>"._OUTS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -70,7 +70,7 @@ function auto_links() {
 }
 
 function auto_links_stat() {
-	global $prefix, $db, $admin_file, $confal;
+	global $db, $admin_file, $confal;
 	$a_id = getVar('req', 'a_id', 'num');
 	$sort = getVar('req', 'sort', 'num');
 	$order = getVar('req', 'order', 'num');
@@ -109,7 +109,7 @@ function auto_links_stat() {
 		$ordby = "date";
 	}
 	$ordsc = ($order == 1) ? "ASC" : "DESC";
-	$result = $db->sql_query("SELECT Count(".$count.") AS hits, uid, name, ip, referer, link, date FROM ".$prefix."_referer WHERE lid = '".$a_id."' GROUP BY ".$count." ORDER BY ".$ordby." ".$ordsc);
+	$result = $db->sql_query("SELECT Count(".$count.") AS hits, uid, name, ip, referer, link, date FROM ".PREFIX_DB."_referer WHERE lid = '".$a_id."' GROUP BY ".$count." ORDER BY ".$ordby." ".$ordsc);
 	head();
 	$cont = auto_links_navi(0, 0, 0, 0);
 	$massiv = array();
@@ -142,10 +142,10 @@ function auto_links_stat() {
 }
 
 function auto_links_add() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	if (isset($_REQUEST['id'])) {
 		$a_id = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT id, sitename, description, link, mail, hits, outs, added FROM ".$prefix."_auto_links WHERE id = '".$a_id."'");
+		$result = $db->sql_query("SELECT id, sitename, description, link, mail, hits, outs, added FROM ".PREFIX_DB."_auto_links WHERE id = '".$a_id."'");
 		list($a_id, $a_sitename, $a_description, $a_sitelink, $a_adminemail, $a_hits, $a_outs, $a_added) = $db->sql_fetchrow($result);
 	} else {
 		$a_id = (isset($_POST['a_id'])) ? intval($_POST['a_id']) : 0;
@@ -175,7 +175,7 @@ function auto_links_add() {
 }
 
 function auto_links_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$a_id = intval($_POST['a_id']);
 	$a_sitename = save_text($_POST['a_sitename'], 1);
 	$a_description = save_text($_POST['a_description']);
@@ -189,9 +189,9 @@ function auto_links_save() {
 	if (!$a_sitelink) $stop[] = _CERROR4;
 	if (!$stop && $_POST['posttype'] == "save") {
 		if ($a_id) {
-			$db->sql_query("UPDATE ".$prefix."_auto_links SET sitename = '".$a_sitename."', description = '".$a_description."', link = '".$a_sitelink."', mail = '".$a_adminemail."', hits = '".$a_hits."', outs = '".$a_outs."' WHERE id = '".$a_id."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_auto_links SET sitename = '".$a_sitename."', description = '".$a_description."', link = '".$a_sitelink."', mail = '".$a_adminemail."', hits = '".$a_hits."', outs = '".$a_outs."' WHERE id = '".$a_id."'");
 		} else {
-			$db->sql_query("INSERT INTO ".$prefix."_auto_links VALUES (NULL, '".$a_sitename."', '".$a_description."', '".$a_sitelink."', '".$a_adminemail."', '".$a_hits."', '".$a_outs."', now())");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_auto_links VALUES (NULL, '".$a_sitename."', '".$a_description."', '".$a_sitelink."', '".$a_adminemail."', '".$a_hits."', '".$a_outs."', now())");
 		}
 		header("Location: ".$admin_file.".php?op=auto_links");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -202,12 +202,12 @@ function auto_links_save() {
 }
 
 function auto_links_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".$prefix."_auto_links WHERE id = '".$id."'");
-		$db->sql_query("DELETE FROM ".$prefix."_referer WHERE lid = '".$id."'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_auto_links WHERE id = '".$id."'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_referer WHERE lid = '".$id."'");
 	}
 	referer($admin_file.".php?op=auto_links");
 }
@@ -289,13 +289,13 @@ switch ($op) {
 	break;
 	
 	case "auto_links_null":
-	$db->sql_query("UPDATE ".$prefix."_auto_links SET hits = '0', outs = '0'");
-	$db->sql_query("DELETE FROM ".$prefix."_referer WHERE lid != '0'");
+	$db->sql_query("UPDATE ".PREFIX_DB."_auto_links SET hits = '0', outs = '0'");
+	$db->sql_query("DELETE FROM ".PREFIX_DB."_referer WHERE lid != '0'");
 	header("Location: ".$admin_file.".php?op=auto_links");
 	break;
 	
 	case "auto_links_noindel":
-	$db->sql_query("DELETE FROM ".$prefix."_auto_links WHERE hits = '0'");
+	$db->sql_query("DELETE FROM ".PREFIX_DB."_auto_links WHERE hits = '0'");
 	header("Location: ".$admin_file.".php?op=auto_links");
 	break;
 	

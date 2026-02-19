@@ -17,7 +17,7 @@ function whois_navi() {
 }
 
 function whois() {
-	global $prefix, $db, $admin_file, $confw, $confu;
+	global $db, $admin_file, $confw, $confu;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confw['anum'];
@@ -33,7 +33,7 @@ function whois() {
 		$refer = "&amp;refer=1";
 		$cont = whois_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.hometext, w.st_domain, w.st_host, w.st_dc, u.user_name FROM ".$prefix."_whois AS w LEFT JOIN ".$prefix."_users AS u ON (w.uid = u.user_id) WHERE status = '".$status."' ORDER BY w.time DESC LIMIT ".$offset.", ".$confw['anum']);
+	$result = $db->sql_query("SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.hometext, w.st_domain, w.st_host, w.st_dc, u.user_name FROM ".PREFIX_DB."_whois AS w LEFT JOIN ".PREFIX_DB."_users AS u ON (w.uid = u.user_id) WHERE status = '".$status."' ORDER BY w.time DESC LIMIT ".$offset.", ".$confw['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list\"><thead><tr><th>"._ID."</th><th>"._POSTEDBY."</th><th colspan=\"2\">"._SITE."</th><th colspan=\"2\">"._HOST."</th><th colspan=\"2\">"._DC."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -61,7 +61,7 @@ function whois() {
 }
 
 function whois_act() {
-	global $prefix, $db, $admin_file;
+	global $db, $admin_file;
 	$id = intval($_GET['id']);
 	$fid = intval($_GET['fid']);
 	if ($fid == 1) {
@@ -74,18 +74,18 @@ function whois_act() {
 		$field = "";
 	}
 	if ($id && $field) {
-		list($active) = $db->sql_fetchrow($db->sql_query("SELECT ".$field." FROM ".$prefix."_whois WHERE id = '".$id."'"));
+		list($active) = $db->sql_fetchrow($db->sql_query("SELECT ".$field." FROM ".PREFIX_DB."_whois WHERE id = '".$id."'"));
 		$active = ($active) ? 0 : 1;
-		$db->sql_query("UPDATE ".$prefix."_whois SET ".$field." = '".$active."' WHERE id = '".$id."'");
+		$db->sql_query("UPDATE ".PREFIX_DB."_whois SET ".$field." = '".$active."' WHERE id = '".$id."'");
 	}
 	referer($admin_file.".php?op=whois");
 }
 
 function whois_add() {
-	global $prefix, $db, $admin_file, $confu, $stop;
+	global $db, $admin_file, $confu, $stop;
 	if (isset($_REQUEST['id'])) {
 		$wid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT w.id, w.name, w.domain, w.host, w.dc, w.hometext, u.user_name FROM ".$prefix."_whois AS w LEFT JOIN ".$prefix."_users AS u ON (w.uid = u.user_id) WHERE id = '".$wid."'");
+		$result = $db->sql_query("SELECT w.id, w.name, w.domain, w.host, w.dc, w.hometext, u.user_name FROM ".PREFIX_DB."_whois AS w LEFT JOIN ".PREFIX_DB."_users AS u ON (w.uid = u.user_id) WHERE id = '".$wid."'");
 		list($id, $uname, $domain, $host, $dc, $hometext, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
@@ -113,7 +113,7 @@ function whois_add() {
 }
 
 function whois_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$wid = intval($_POST['wid']);
 	$postname = $_POST['postname'];
 	$domain = url_filter($_POST['domain']);
@@ -127,10 +127,10 @@ function whois_save() {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($wid) {
-			$db->sql_query("UPDATE ".$prefix."_whois SET uid = '".$postid."', name = '".$postname."', domain = '".$domain."', host = '".$host."', dc = '".$dc."', hometext = '".$hometext."', status = '1' WHERE id = '".$wid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_whois SET uid = '".$postid."', name = '".$postname."', domain = '".$domain."', host = '".$host."', dc = '".$dc."', hometext = '".$hometext."', status = '1' WHERE id = '".$wid."'");
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, '".$postid."', '".$postname."', '".$ip."', now(), '".$domain."', '".$host."', '".$dc."', '".$hometext."', '0', '0', '0', '1')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, '".$postid."', '".$postname."', '".$ip."', now(), '".$domain."', '".$host."', '".$dc."', '".$hometext."', '0', '0', '0', '1')");
 		}
 		header("Location: ".$admin_file.".php?op=whois");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -141,10 +141,10 @@ function whois_save() {
 }
 
 function whois_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".$prefix."_whois WHERE id = '".$id."'");
+	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_whois WHERE id = '".$id."'");
 	referer($admin_file.".php?op=whois");
 }
 

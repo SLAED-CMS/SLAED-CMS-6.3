@@ -33,7 +33,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function referers(): void {
-    global $prefix, $db, $confr;
+    global $db, $confr;
     $sort = getVar('req', 'sort', 'num', 10);
     $order = getVar('req', 'order', 'num', 2);
     $num = getVar('get', 'num', 'num', 1);
@@ -49,7 +49,7 @@ function referers(): void {
     $count = $sortmap[$sort][0] ?? 'date';
     $ordby = $sortmap[$sort][1] ?? 'date';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    $result = $db->sql_query('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, date FROM '.$prefix.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
+    $result = $db->sql_query('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, date FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     head();
     $cont = navi(0, 0, 0, 0);
     if ($db->sql_numrows($result) > 0) {
@@ -117,8 +117,8 @@ function save(): void {
 }
 
 function del(): void {
-    global $prefix, $db, $aroute;
-    $db->sql_query('DELETE FROM '.$prefix.'_referer WHERE lid = 0');
+    global $db, $aroute;
+    $db->sql_query('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = 0');
     header('Location: '.$aroute.'.php?name=referers');
     exit;
 }

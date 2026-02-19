@@ -7,7 +7,7 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 function setTemplateHead($sub, $val = '') {
-	global $theme, $user, $conf, $confu, $prefix, $db, $blocks, $admin, $admin_file;
+	global $theme, $user, $conf, $confu, $db, $blocks, $admin, $admin_file;
 	$langs = $menu = $blocks = $login = '';
 	if (is_admin()) {
 		if ($conf['multilingual'] == 1) {
@@ -39,7 +39,7 @@ function setTemplateHead($sub, $val = '') {
 		}
 		$blocks = getAdminPanelBlocks().admininfo().adminblock();
 	} else {
-		$login = ($db->sql_numrows($db->sql_query("SELECT * FROM ".$prefix."_admins")) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
+		$login = ($db->sql_numrows($db->sql_query("SELECT * FROM ".PREFIX_DB."_admins")) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
 	}
 	$value = array('{%langs%}' => $langs, '{%menu%}' => $menu, '{%blocks%}' => $blocks, '{%login%}' => $login, '{%theme%}' => $theme, '{%lang%}' => substr(_LOCALE, 0, 2));
 	$value = is_array($val) ? array_merge($value, $val) : $value;

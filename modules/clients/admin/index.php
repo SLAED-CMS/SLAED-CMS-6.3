@@ -15,11 +15,11 @@ function clients_navi() {
 }
 
 function clients() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	head();
 	$cont = clients_navi(0, 0, 0, 0);
 	if ($stop) $cont .= tpl_warn("warn", _CERROR, "", "","warn");
-	$result = $db->sql_query("SELECT id, title, infotext, url, num, hits, prod_id, status FROM ".$prefix."_clients_down");
+	$result = $db->sql_query("SELECT id, title, infotext, url, num, hits, prod_id, status FROM ".PREFIX_DB."_clients_down");
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._CTITLE."</th><th>"._CVERSION."</th><th>"._CDATE."</th><th>"._ID."</th><th>"._CLOADS."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -46,10 +46,10 @@ function clients() {
 }
 
 function clients_add() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	if (isset($_REQUEST['id'])) {
 		$cid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT title, infotext, url, num, code, prod_id, status FROM ".$prefix."_clients_down WHERE id = '".$cid."'");
+		$result = $db->sql_query("SELECT title, infotext, url, num, code, prod_id, status FROM ".PREFIX_DB."_clients_down WHERE id = '".$cid."'");
 		list($title, $infotext, $url, $num, $code, $prod_id, $status) = $db->sql_fetchrow($result);
 	} else {
 		$cid = $_POST['cid'];
@@ -81,7 +81,7 @@ function clients_add() {
 }
 
 function clients_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$cid = intval($_POST['cid']);
 	$title = save_text($_POST['title'], 1);
 	$infotext = save_text($_POST['infotext']);
@@ -94,9 +94,9 @@ function clients_save() {
 	if (!$infotext) $stop[] = _CERROR1;
 	if (!$stop && $_POST['posttype'] == "save") {
 		if ($cid) {
-			$db->sql_query("UPDATE ".$prefix."_clients_down SET title = '".$title."', infotext = '".$infotext."', url = '".$url."', num = '".$num."', code = '".$code."', prod_id = '".$prod_id."', status = '".$status."' WHERE id = '".$cid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_clients_down SET title = '".$title."', infotext = '".$infotext."', url = '".$url."', num = '".$num."', code = '".$code."', prod_id = '".$prod_id."', status = '".$status."' WHERE id = '".$cid."'");
 		} else {
-			$db->sql_query("INSERT INTO ".$prefix."_clients_down VALUES (NULL, '".$title."', '".$infotext."', '".$url."', '".$num."', '".$code."', '0', '".$prod_id."', '".$status."')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_clients_down VALUES (NULL, '".$title."', '".$infotext."', '".$url."', '".$num."', '".$code."', '0', '".$prod_id."', '".$status."')");
 		}
 		header("Location: ".$admin_file.".php?op=clients");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -107,10 +107,10 @@ function clients_save() {
 }
 
 function clients_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".$prefix."_clients_down WHERE id = '".$id."'");
+	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_clients_down WHERE id = '".$id."'");
 	header("Location: ".$admin_file.".php?op=clients");
 }
 
@@ -134,7 +134,7 @@ switch($op) {
 	break;
 	
 	case "clients_active":
-	$db->sql_query("UPDATE ".$prefix."_clients_down SET status = '".$act."' WHERE id = '".$id."'");
+	$db->sql_query("UPDATE ".PREFIX_DB."_clients_down SET status = '".$act."' WHERE id = '".$id."'");
 	header("Location: ".$admin_file.".php?op=clients");
 	break;
 	

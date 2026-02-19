@@ -142,7 +142,7 @@ function block(): void {
 }
 
 function blocksave(): void {
-    global $prefix, $db, $conf, $confs, $aroute;
+    global $db, $conf, $confs, $aroute;
     $send = '';
     $id = getVar('req', 'id', 'num');
     $ip = getVar('req', 'ip', 'text');
@@ -170,7 +170,7 @@ function blocksave(): void {
         $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
         $cont['blocker_user'] = $confs['blocker_user'].$name.'|'.$time.'|'.$info.'||';
         if ($mail) {
-            list($mail_addr) = $db->sql_fetchrow($db->sql_query('SELECT user_email FROM '.$prefix.'_users WHERE user_name = :name', ['name' => $name]));
+            list($mail_addr) = $db->sql_fetchrow($db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
             $subject = $conf['sitename'].' - '._SECURITY;
             $msg = nl2br(bb_decode(str_replace('[time]', rest_time($time), str_replace('[info]', $info, $mailtext)), 'all'), false);
             mail_send($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);

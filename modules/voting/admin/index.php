@@ -15,13 +15,13 @@ function voting_navi() {
 }
 
 function voting() {
-	global $prefix, $db, $admin_file, $conf, $confv;
+	global $db, $admin_file, $conf, $confv;
 	head();
 	$cont = voting_navi(0, 0, 0, 0);
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confv['anum'];
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT id, modul, date, enddate, title, language, typ FROM ".$prefix."_voting ORDER BY id DESC LIMIT ".$offset.", ".$confv['anum']);
+	$result = $db->sql_query("SELECT id, modul, date, enddate, title, language, typ FROM ".PREFIX_DB."_voting ORDER BY id DESC LIMIT ".$offset.", ".$confv['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th>";
@@ -58,10 +58,10 @@ function voting() {
 }
 
 function voting_add() {
-	global $prefix, $db, $admin_file, $conf, $confv, $stop;
+	global $db, $admin_file, $conf, $confv, $stop;
 	if (isset($_REQUEST['id'])) {
 		$pid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT id, modul, title, questions, answer, date, enddate, multi, language, acomm, typ, status FROM ".$prefix."_voting WHERE id = '".$pid."'");
+		$result = $db->sql_query("SELECT id, modul, title, questions, answer, date, enddate, multi, language, acomm, typ, status FROM ".PREFIX_DB."_voting WHERE id = '".$pid."'");
 		list($id, $modul, $title, $questions, $answer, $date, $enddate, $multi, $language, $acomm, $typ, $status) = $db->sql_fetchrow($result);
 		$questions = explode("|", $questions);
 		$answer = explode("|", $answer);
@@ -131,7 +131,7 @@ function voting_add() {
 }
 
 function voting_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$id = intval($_POST['id']);
 	$modul = analyze($_POST['modul']);
 	$title = save_text($_POST['title'], 1);
@@ -156,10 +156,10 @@ function voting_save() {
 	if (!$title) $stop[] = _CERROR;
 	if (!$stop && $_POST['posttype'] == "save") {
 		if ($id) {
-			$db->sql_query("UPDATE ".$prefix."_voting SET modul = '".$modul."', title = '".$title."', questions = '".$quest."', answer = '".$answ."', date = '".$date."', enddate = '".$enddate."', multi = '".$multi."', language = '".$language."', acomm = '".$acomm."', typ = '".$typ."', status = '".$status."' WHERE id = '".$id."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_voting SET modul = '".$modul."', title = '".$title."', questions = '".$quest."', answer = '".$answ."', date = '".$date."', enddate = '".$enddate."', multi = '".$multi."', language = '".$language."', acomm = '".$acomm."', typ = '".$typ."', status = '".$status."' WHERE id = '".$id."'");
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_voting (id, modul, title, questions, answer, date, enddate, multi, language, acomm, ip, typ, status) VALUES (NULL, '".$modul."', '".$title."', '".$quest."', '".$answ."', '".$date."', '".$enddate."', '".$multi."', '".$language."', '".$acomm."', '".$ip."', '".$typ."', '".$status."')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_voting (id, modul, title, questions, answer, date, enddate, multi, language, acomm, ip, typ, status) VALUES (NULL, '".$modul."', '".$title."', '".$quest."', '".$answ."', '".$date."', '".$enddate."', '".$multi."', '".$language."', '".$acomm."', '".$ip."', '".$typ."', '".$status."')");
 		}
 		header("Location: ".$admin_file.".php?op=voting");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -170,12 +170,12 @@ function voting_save() {
 }
 
 function voting_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".$prefix."_comment WHERE cid = '".$id."' AND modul = 'voting'");
-		$db->sql_query("DELETE FROM ".$prefix."_voting WHERE id = '".$id."'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND modul = 'voting'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_voting WHERE id = '".$id."'");
 	}
 	referer($admin_file.".php?op=voting");
 }

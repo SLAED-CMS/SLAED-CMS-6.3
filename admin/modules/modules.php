@@ -18,7 +18,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function modules(): void {
-    global $confmd, $prefix, $db, $aroute, $infos;
+    global $confmd, $db, $aroute, $infos;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     head();
@@ -157,7 +157,7 @@ function modules(): void {
         
 
         if ($group != 0) {
-            $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.$prefix.'_groups WHERE id = :id', ['id' => $group]));
+            $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
             $group_name = $grp['name'];
         } else {
             $group_name = _NONE;
@@ -168,7 +168,7 @@ function modules(): void {
             $stringdump = explode(';', $filename);
             $install = '';
             for ($i = 0; $i < count($stringdump); $i++) {
-                $string = str_replace('{prefix}', $prefix, $stringdump[$i]);
+                $string = str_replace('{prefix}', PREFIX_DB, $stringdump[$i]);
                 if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
                     $table = explode('`', $string);
                     $install = $db->sql_fetchrow($db->sql_query('SELECT Count(*) FROM '.$table[1]));
@@ -221,7 +221,7 @@ function modules(): void {
 }
 
 function edit(): void {
-    global $confmd, $prefix, $db, $aroute;
+    global $confmd, $db, $aroute;
     $mod = getVar('get', 'mod', 'var');
     if (!isset($confmd[$mod])) {
         header('Location: '.$aroute.'.php?name=modules');
@@ -261,10 +261,10 @@ function edit(): void {
         $cont .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
     }
     $cont .= '</select></td></tr>';
-    $numrow = $db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_groups'));
+    $numrow = $db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
         $cont .= '<tr><td>'._UGROUP.':</td><td><select name="group" class="sl_conf">';
-        $result2 = $db->sql_query('SELECT id, name FROM '.$prefix.'_groups');
+        $result2 = $db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_groups');
         while (list($gid, $gname) = $db->sql_fetchrow($result2)) {
             $gsel = ($gid == $group) ? ' selected' : '';
             if (empty($none)) {
@@ -337,7 +337,7 @@ function save(): void {
 }
 
 function add(): void {
-    global $prefix, $db, $id, $infos;
+    global $db, $id, $infos;
     $module = getVar('get', 'mod', 'var');
     if ($module && $id) {
         $filename = ($id == 3) ? file_get_contents('modules/'.$module.'/sql/update.sql') : file_get_contents('modules/'.$module.'/sql/table.sql');
@@ -350,7 +350,7 @@ function add(): void {
         }
         $stringdump = explode(';', $filename);
         for ($i = 0; $i < count($stringdump); $i++) {
-            $string = str_replace('{prefix}', $prefix, $stringdump[$i]);
+            $string = str_replace('{prefix}', PREFIX_DB, $stringdump[$i]);
             if ($id != 1) $ident = $db->sql_query(stripslashes($string));
             if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
                 $table = explode('`', $string);

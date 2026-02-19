@@ -19,7 +19,7 @@ function navigate($title, $cat='') {
 }
 
 function mwhois() {
-	global $prefix, $db, $admin_file, $user, $conf, $confu, $confw, $home, $locale;
+	global $db, $admin_file, $user, $conf, $confu, $confw, $home, $locale;
 	global $domain_whois, $ext, $nomatch, $server, $domain_option;
 	$domain_licens = getVar('req', 'domain_licens', 'word');
 	
@@ -80,7 +80,7 @@ function mwhois() {
 	$cont .= setTemplateBasic('open');
 	$cont .= $licens_option;
 	if ($option == "licens" && !namecheck($domain_licens)) {
-		$result = $db->sql_query("SELECT website FROM ".$prefix."_clients WHERE active != '2'");
+		$result = $db->sql_query("SELECT website FROM ".PREFIX_DB."_clients WHERE active != '2'");
 		while (list($website) = $db->sql_fetchrow($result)) $cwebsite[] = $website;
 		$cwebsite = implode(",", $cwebsite);
 		$cmassiv = explode(",", $cwebsite);
@@ -127,7 +127,7 @@ function mwhois() {
 }
 
 function add() {
-	global $prefix, $db, $user, $conf, $confw, $confu, $stop;
+	global $db, $user, $conf, $confw, $confu, $stop;
 	if ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) {
 		head();
 		$cont = navigate(_WHOIS_LICENS_SEND);
@@ -161,7 +161,7 @@ function add() {
 }
 
 function send() {
-	global $prefix, $db, $user, $conf, $confw, $stop;
+	global $db, $user, $conf, $confw, $stop;
 	if ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) {
 		$postname = getVar('post', 'postname', 'name');
 		$domain = url_filter($_POST['domain']);
@@ -172,11 +172,11 @@ function send() {
 		if (!$postname && !is_user()) $stop[] = _CERROR3;
 		if (!$domain) $stop[] = _CERROR4;
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-		if ($db->sql_numrows($db->sql_query("SELECT domain FROM ".$prefix."_whois WHERE domain = '".$domain."'")) > 0) $stop[] = _LINKEXIST;
+		if ($db->sql_numrows($db->sql_query("SELECT domain FROM ".PREFIX_DB."_whois WHERE domain = '".$domain."'")) > 0) $stop[] = _LINKEXIST;
 		if (!$stop) {
 			$postid = (is_user()) ? intval($user[0]) : "";
 			$uname = (!is_user()) ? $postname : "";
-			$db->sql_query("INSERT INTO ".$prefix."_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, '".$postid."', '".$uname."', '".getIp()."', NOW(), '".$domain."', '".$host."', '".$dc."', '".$hometext."', '0', '0', '0', '0')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, '".$postid."', '".$uname."', '".getIp()."', NOW(), '".$domain."', '".$host."', '".$dc."', '".$hometext."', '0', '0', '0', '0')");
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confw['addmail'], $conf['name'], $puname, _WHOIS);
 			head();

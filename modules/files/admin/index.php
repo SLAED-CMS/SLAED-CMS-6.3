@@ -17,7 +17,7 @@ function files_navi() {
 }
 
 function files() {
-	global $prefix, $db, $admin_file, $conff, $confu;
+	global $db, $admin_file, $conff, $confu;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $conff['anum'];
@@ -38,7 +38,7 @@ function files() {
 		$refer = "";
 		$cont = files_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT f.lid, f.cid, f.name, f.title, f.date, f.ip_sender, c.title, u.user_name FROM ".$prefix."_files AS f LEFT JOIN ".$prefix."_categories AS c ON (f.cid = c.id) LEFT JOIN ".$prefix."_users AS u ON (f.uid = u.user_id) WHERE f.status = '".$status."' ORDER BY f.date DESC LIMIT ".$offset.", ".$conff['anum']);
+	$result = $db->sql_query("SELECT f.lid, f.cid, f.name, f.title, f.date, f.ip_sender, c.title, u.user_name FROM ".PREFIX_DB."_files AS f LEFT JOIN ".PREFIX_DB."_categories AS c ON (f.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.status = '".$status."' ORDER BY f.date DESC LIMIT ".$offset.", ".$conff['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -71,10 +71,10 @@ function files() {
 }
 
 function files_add() {
-	global $prefix, $db, $admin_file, $conff, $confu, $stop;
+	global $db, $admin_file, $conff, $confu, $stop;
 	if (isset($_REQUEST['id'])) {
 		$fid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.date, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.user_name FROM ".$prefix."_files AS f LEFT JOIN ".$prefix."_users AS u ON (f.uid = u.user_id) WHERE lid = '".$fid."'");
+		$result = $db->sql_query("SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.date, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.user_name FROM ".PREFIX_DB."_files AS f LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE lid = '".$fid."'");
 		list($cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $homepage, $ihome, $acomm, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
@@ -133,7 +133,7 @@ function files_add() {
 }
 
 function files_save() {
-	global $prefix, $db, $admin_file, $stop, $conff;
+	global $db, $admin_file, $stop, $conff;
 	$fid = intval($_POST['fid']);
 	$cid = intval($_POST['cid']);
 	$postname = $_POST['postname'];
@@ -153,7 +153,7 @@ function files_save() {
 	if (!$title) $stop[] = _CERROR;
 	if (!$description) $stop[] = _CERROR1;
 	if (!$postname) $stop[] = _CERROR3;
-	if (!$fid && $db->sql_numrows($db->sql_query("SELECT title FROM ".$prefix."_files WHERE title = '".$title."'")) > 0) $stop[] = _MEDIAEXIST;
+	if (!$fid && $db->sql_numrows($db->sql_query("SELECT title FROM ".PREFIX_DB."_files WHERE title = '".$title."'")) > 0) $stop[] = _MEDIAEXIST;
 	$filename = upload(1, $conff['path'], $conff['typefile'], $conff['max_size'], "files", "1600", "1600", '1');
 	$url = ($filename) ? $conff['path']."/".$filename : $url;
 	$filesize = ($filename) ? filesize($url) : $filesize;
@@ -174,10 +174,10 @@ function files_save() {
 					$url = $path."/".$filel[0];
 				}
 			}
-			$db->sql_query("UPDATE ".$prefix."_files SET cid = '".$cid."', uid = '".$postid."', name = '".$postname."', title = '".$title."', description = '".$description."', bodytext = '".$bodytext."', url = '".$url."', date = '".$date."', filesize = '".$filesize."', version = '".$version."', email = '".$email."', homepage = '".$homepage."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE lid = '".$fid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_files SET cid = '".$cid."', uid = '".$postid."', name = '".$postname."', title = '".$title."', description = '".$description."', bodytext = '".$bodytext."', url = '".$url."', date = '".$date."', filesize = '".$filesize."', version = '".$version."', email = '".$email."', homepage = '".$homepage."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE lid = '".$fid."'");
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, ihome, acomm, status) VALUES (NULL, '".$cid."', '".$postid."', '".$postname."', '".$title."', '".$description."', '".$bodytext."', '".$url."', '".$date."', '".$filesize."', '".$version."', '".$email."', '".$homepage."', '".$ip."', '".$ihome."', '".$acomm."', '1')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, ihome, acomm, status) VALUES (NULL, '".$cid."', '".$postid."', '".$postname."', '".$title."', '".$description."', '".$bodytext."', '".$url."', '".$date."', '".$filesize."', '".$version."', '".$email."', '".$homepage."', '".$ip."', '".$ihome."', '".$acomm."', '1')");
 		}
 		header("Location: ".$admin_file.".php?op=files");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -188,21 +188,21 @@ function files_save() {
 }
 
 function files_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		list($url) = $db->sql_fetchrow($db->sql_query("SELECT url FROM ".$prefix."_files WHERE lid = '".$id."'"));
+		list($url) = $db->sql_fetchrow($db->sql_query("SELECT url FROM ".PREFIX_DB."_files WHERE lid = '".$id."'"));
 		if (file_exists($url)) unlink($url);
-		$db->sql_query("DELETE FROM ".$prefix."_comment WHERE cid = '".$id."' AND modul = 'files'");
-		$db->sql_query("DELETE FROM ".$prefix."_favorites WHERE fid = '".$id."' AND modul = 'files'");
-		$db->sql_query("DELETE FROM ".$prefix."_files WHERE lid = '".$id."'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND modul = 'files'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'files'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_files WHERE lid = '".$id."'");
 	}
 	referer($admin_file.".php?op=files");
 }
 
 function files_conf() {
-	global $prefix, $db, $admin_file, $conff;
+	global $db, $admin_file, $conff;
 	head();
 	$cont = files_navi(0, 4, 0, 0);
 	$permtest = end_chmod("config/config_files.php", 666);
@@ -318,7 +318,7 @@ switch ($op) {
 	break;
 	
 	case "files_ignore":
-	$db->sql_query("UPDATE ".$prefix."_files SET status = '1' WHERE lid = '".$id."'");
+	$db->sql_query("UPDATE ".PREFIX_DB."_files SET status = '1' WHERE lid = '".$id."'");
 	header("Location: ".$admin_file.".php?op=files&status=2");
 	break;
 	

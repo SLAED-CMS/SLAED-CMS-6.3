@@ -12,7 +12,7 @@ get_lang($conf['name']);
 $confrs = $conf['rss'] ?? [];
 
 function info() {
-    global $db, $prefix, $conf, $confrs;
+    global $db, $conf, $confrs;
     $url = (isset($_POST['url'])) ? url_filter($_POST['url']) : "";
     $mod = (isset($_POST['mod'])) ? analyze($_POST['mod']) : "news";
     $cat = (isset($_POST['cat'])) ? intval($_POST['cat']) : "";

@@ -10,9 +10,9 @@ if (!defined("BLOCK_FILE")) {
 }
 
 include("config/config_auto_links.php");
-global $prefix, $db;
+global $db;
 $content = "";
-$result = $db->sql_query("SELECT id, sitename, description FROM ".$prefix."_auto_links WHERE hits != '0' ORDER BY hits DESC LIMIT 0,".intval($confal['limit'])."");
+$result = $db->sql_query("SELECT id, sitename, description FROM ".PREFIX_DB."_auto_links WHERE hits != '0' ORDER BY hits DESC LIMIT 0,".intval($confal['limit'])."");
 while(list($a_id, $a_site, $a_description) = $db->sql_fetchrow($result)) {
 	$a_site = cutstr($a_site, $confal['strip']);
 	$title = text_filter(cutstr(bb_decode($a_description, ""), 250), 1);

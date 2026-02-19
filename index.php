@@ -56,7 +56,7 @@ if (empty($go)) {
                 $group = $mconf['group'] ?? 0;
                 $gname = '';
                 if ($group) {
-                    $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.$prefix.'_groups WHERE id = :id', ['id' => $group]));
+                    $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
                     $gname = $grp['name'] ?? '';
                 }
                 if ($gname) $info .= _ADDITIONALYGRP.': '.$gname;

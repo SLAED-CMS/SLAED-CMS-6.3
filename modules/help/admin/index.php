@@ -17,7 +17,7 @@ function help_navi() {
 }
 
 function help() {
-	global $prefix, $db, $admin_file, $confu, $confh;
+	global $db, $admin_file, $confu, $confh;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confh['anum'];
@@ -33,7 +33,7 @@ function help() {
 		$refer = "";
 		$cont = help_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT s.sid, s.catid, s.title, s.time, s.comments, s.ip_sender, s.status, c.title, u.user_name FROM ".$prefix."_help AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) WHERE s.pid = '0' AND s.status = '".$status."' ORDER BY s.time DESC LIMIT ".$offset.", ".$confh['anum']);
+	$result = $db->sql_query("SELECT s.sid, s.catid, s.title, s.time, s.comments, s.ip_sender, s.status, c.title, u.user_name FROM ".PREFIX_DB."_help AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) WHERE s.pid = '0' AND s.status = '".$status."' ORDER BY s.time DESC LIMIT ".$offset.", ".$confh['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._POSTEDBY."</th><th>".cutstr(_MESSAGES, 4, 1)."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -60,9 +60,9 @@ function help() {
 }
 
 function help_view() {
-	global $prefix, $db, $admin_file, $confu;
+	global $db, $admin_file, $confu;
 	$id = intval($_GET['id']);
-	$result = $db->sql_query("SELECT s.sid, s.pid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, c.title, c.description, u.user_name FROM ".$prefix."_help AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.aid = u.user_id) WHERE s.sid = '".$id."' OR s.pid = '".$id."' AND s.time <= now() ORDER BY s.time ASC");
+	$result = $db->sql_query("SELECT s.sid, s.pid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, c.title, c.description, u.user_name FROM ".PREFIX_DB."_help AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.aid = u.user_id) WHERE s.sid = '".$id."' OR s.pid = '".$id."' AND s.time <= now() ORDER BY s.time ASC");
 	head();
 	$cont = help_navi(0, 0, 0, 0);
 	$cont .= tpl_eval("open");
@@ -96,8 +96,8 @@ function help_view() {
 }
 
 function help_add_view($id) {
-	global $prefix, $db, $admin_file, $admin;
-	$result = $db->sql_query("SELECT catid, uid, status FROM ".$prefix."_help WHERE sid = '".$id."'");
+	global $db, $admin_file, $admin;
+	$result = $db->sql_query("SELECT catid, uid, status FROM ".PREFIX_DB."_help WHERE sid = '".$id."'");
 	list($catid, $uid, $status) = $db->sql_fetchrow($result);
 	$cont .= tpl_eval("open");
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_form\">"
@@ -111,10 +111,10 @@ function help_add_view($id) {
 }
 
 function help_add() {
-	global $prefix, $db, $admin_file, $confu, $stop;
+	global $db, $admin_file, $confu, $stop;
 	if (isset($_REQUEST['id'])) {
 		$sid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT s.pid, s.catid, s.title, s.time, s.hometext, s.field, s.status, u.user_name FROM ".$prefix."_help AS s LEFT JOIN ".$prefix."_users AS u ON (s.aid = u.user_id) WHERE s.sid = '".$sid."'");
+		$result = $db->sql_query("SELECT s.pid, s.catid, s.title, s.time, s.hometext, s.field, s.status, u.user_name FROM ".PREFIX_DB."_help AS s LEFT JOIN ".PREFIX_DB."_users AS u ON (s.aid = u.user_id) WHERE s.sid = '".$sid."'");
 		list($pid, $cat, $subject, $time, $hometext, $field, $status, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : $confu['anonym'];
 	} else {
@@ -147,7 +147,7 @@ function help_add() {
 }
 
 function help_save() {
-	global $prefix, $db, $admin_file, $admin, $conf, $stop;
+	global $db, $admin_file, $admin, $conf, $stop;
 	$sid = intval($_POST['sid']);
 	$pid = intval($_POST['pid']);
 	$uid = intval($_POST['uid']);
@@ -166,16 +166,16 @@ function help_save() {
 	if (!$stop && $_POST['posttype'] == "save") {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		if ($sid) {
-			$db->sql_query("UPDATE ".$prefix."_help SET catid = '".$cat."', aid = '".$postid."', title = '".$subject."', time = '".$time."', hometext = '".$hometext."', field = '".$field."' WHERE sid = '".$sid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_help SET catid = '".$cat."', aid = '".$postid."', title = '".$subject."', time = '".$time."', hometext = '".$hometext."', field = '".$field."' WHERE sid = '".$sid."'");
 			$hid = ($pid) ? $pid : $sid;
 			header("Location: ".$admin_file.".php?op=help_view&id=".$hid);
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_help (sid, pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (NULL, '".$pid."', '".$cat."', '".$uid."', '".$postid."', '".$subject."', now(), '".$hometext."', '', '".$ip."', '0')");
-			$db->sql_query("UPDATE ".$prefix."_help SET comments = comments+1, status = '".$status."'WHERE sid = '".$pid."'");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_help (sid, pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (NULL, '".$pid."', '".$cat."', '".$uid."', '".$postid."', '".$subject."', now(), '".$hometext."', '', '".$ip."', '0')");
+			$db->sql_query("UPDATE ".PREFIX_DB."_help SET comments = comments+1, status = '".$status."'WHERE sid = '".$pid."'");
 			
 			if ($umail) {
-				$result = $db->sql_query("SELECT user_email FROM ".$prefix."_users WHERE user_id = '".$uid."'");
+				$result = $db->sql_query("SELECT user_email FROM ".PREFIX_DB."_users WHERE user_id = '".$uid."'");
 				if ($db->sql_numrows($result) == 1) {
 					list($user_email) = $db->sql_fetchrow($result);
 					$finishlink = $conf['homeurl']."/index.php?name=help&amp;op=view&amp;id=".$pid;
@@ -195,12 +195,12 @@ function help_save() {
 }
 
 function help_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".$prefix."_favorites WHERE fid = '".$id."' AND modul = 'help'");
-		$db->sql_query("DELETE FROM ".$prefix."_help WHERE sid = '".$id."' OR pid = '".$id."'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'help'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_help WHERE sid = '".$id."' OR pid = '".$id."'");
 	}
 	referer($admin_file.".php?op=help");
 }

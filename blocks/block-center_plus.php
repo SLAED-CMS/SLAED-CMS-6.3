@@ -7,13 +7,13 @@ if (!defined("BLOCK_FILE")) {
 	exit;
 }
 
-global $prefix, $db;
+global $db;
 $strip = 40;
 $content = "<table class=\"sl_table_list\"><thead class=\"sl_table_list_head\"><tr><th style=\"width: 50%;\">"._JOKES."</th><th>"._FAQ."</th></tr></thead><tbody class=\"sl_table_list_body\">";
 
 // Last added jokes
 $content .="<tr><td>";
-$result = $db->sql_query("SELECT jokeid, title FROM ".$prefix."_jokes WHERE date <= now() AND status != '0' ORDER BY date DESC LIMIT 5");
+$result = $db->sql_query("SELECT jokeid, title FROM ".PREFIX_DB."_jokes WHERE date <= now() AND status != '0' ORDER BY date DESC LIMIT 5");
 while(list($jokeid, $title) = $db->sql_fetchrow($result)) {
 	$linkstrip = cutstr($title, $strip);
 	$content .= "<table><tr><td><a href=\"index.php?name=jokes#".$jokeid."\" title=\"".$title."\">".$linkstrip."</a></td></tr></table>";
@@ -21,7 +21,7 @@ while(list($jokeid, $title) = $db->sql_fetchrow($result)) {
 
 // Last added faq
 $content .="</td><td>";
-$result = $db->sql_query("SELECT fid, title FROM ".$prefix."_faq WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
+$result = $db->sql_query("SELECT fid, title FROM ".PREFIX_DB."_faq WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
 while(list($fid, $title) = $db->sql_fetchrow($result)) {
 	$linkstrip = cutstr($title, $strip);
 	$content .= "<table><tr><td><a href=\"index.php?name=faq&amp;op=view&amp;id=".$fid."\" title=\"".$title."\">".$linkstrip."</a></td></tr></table>";

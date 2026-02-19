@@ -17,7 +17,7 @@ function page_navi() {
 }
 
 function page() {
-	global $prefix, $db, $admin_file, $confp, $confu;
+	global $db, $admin_file, $confp, $confu;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confp['anum'];
@@ -33,7 +33,7 @@ function page() {
 		$refer = "";
 		$cont = page_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT p.pid, p.catid, p.name, p.title, p.time, p.ip_sender, t.title, u.user_name FROM ".$prefix."_pages AS p LEFT JOIN ".$prefix."_categories AS t ON (p.catid = t.id) LEFT JOIN ".$prefix."_users AS u ON (p.uid = u.user_id) WHERE p.status = '".$status."' ORDER BY p.time DESC LIMIT ".$offset.", ".$confp['anum']);
+	$result = $db->sql_query("SELECT p.pid, p.catid, p.name, p.title, p.time, p.ip_sender, t.title, u.user_name FROM ".PREFIX_DB."_pages AS p LEFT JOIN ".PREFIX_DB."_categories AS t ON (p.catid = t.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (p.uid = u.user_id) WHERE p.status = '".$status."' ORDER BY p.time DESC LIMIT ".$offset.", ".$confp['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -65,10 +65,10 @@ function page() {
 }
 
 function page_add() {
-	global $prefix, $db, $admin_file, $confu, $stop;
+	global $db, $admin_file, $confu, $stop;
 	if (isset($_REQUEST['id'])) {
 		$pid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT p.catid, p.name, p.title, p.time, p.hometext, p.bodytext, p.acomm, u.user_name FROM ".$prefix."_pages AS p LEFT JOIN ".$prefix."_users AS u ON (p.uid = u.user_id) WHERE pid = '".$pid."'");
+		$result = $db->sql_query("SELECT p.catid, p.name, p.title, p.time, p.hometext, p.bodytext, p.acomm, u.user_name FROM ".PREFIX_DB."_pages AS p LEFT JOIN ".PREFIX_DB."_users AS u ON (p.uid = u.user_id) WHERE pid = '".$pid."'");
 		list($cat, $uname, $subject, $time, $hometext, $bodytext, $acomm, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
@@ -103,7 +103,7 @@ function page_add() {
 }
 
 function page_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$pid = intval($_POST['pid']);
 	$postname = $_POST['postname'];
 	$subject = save_text($_POST['subject'], 1);
@@ -121,10 +121,10 @@ function page_save() {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($pid) {
-			$db->sql_query("UPDATE ".$prefix."_pages SET catid = '".$cat."', uid = '".$postid."', name = '".$postname."', title = '".$subject."', time = '".$time."', hometext = '".$hometext."', bodytext = '".$bodytext."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE pid = '".$pid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_pages SET catid = '".$cat."', uid = '".$postid."', name = '".$postname."', title = '".$subject."', time = '".$time."', hometext = '".$hometext."', bodytext = '".$bodytext."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE pid = '".$pid."'");
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_pages (pid, catid, uid, name, title, time, hometext, bodytext, comments, counter, ihome, acomm, score, ratings, ip_sender, status) VALUES (NULL, '".$cat."', '".$postid."', '".$postname."', '".$subject."', '".$time."', '".$hometext."', '".$bodytext."', '0', '0', '".$ihome."', '".$acomm."', '0', '0', '".$ip."', '1')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_pages (pid, catid, uid, name, title, time, hometext, bodytext, comments, counter, ihome, acomm, score, ratings, ip_sender, status) VALUES (NULL, '".$cat."', '".$postid."', '".$postname."', '".$subject."', '".$time."', '".$hometext."', '".$bodytext."', '0', '0', '".$ihome."', '".$acomm."', '0', '0', '".$ip."', '1')");
 		}
 		header("Location: ".$admin_file.".php?op=page");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -135,13 +135,13 @@ function page_save() {
 }
 
 function page_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".$prefix."_comment WHERE cid = '".$id."' AND modul = 'pages'");
-		$db->sql_query("DELETE FROM ".$prefix."_favorites WHERE fid = '".$id."' AND modul = 'pages'");
-		$db->sql_query("DELETE FROM ".$prefix."_pages WHERE pid = '".$id."'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND modul = 'pages'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'pages'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_pages WHERE pid = '".$id."'");
 	}
 	referer($admin_file.".php?op=page");
 }

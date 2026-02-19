@@ -17,7 +17,7 @@ function jokes_navi() {
 }
 
 function jokes() {
-	global $prefix, $db, $admin_file, $conf, $confj, $confu;
+	global $db, $admin_file, $conf, $confj, $confu;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confj['anum'];
@@ -33,7 +33,7 @@ function jokes() {
 		$refer = "";
 		$cont = jokes_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.ip_sender, c.title, u.user_name FROM ".$prefix."_jokes AS j LEFT JOIN ".$prefix."_categories AS c ON (j.cat = c.id) LEFT JOIN ".$prefix."_users AS u ON (j.uid = u.user_id) WHERE j.status = '".$status."' ORDER BY j.date DESC LIMIT ".$offset.", ".$confj['anum']);
+	$result = $db->sql_query("SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.ip_sender, c.title, u.user_name FROM ".PREFIX_DB."_jokes AS j LEFT JOIN ".PREFIX_DB."_categories AS c ON (j.cat = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (j.uid = u.user_id) WHERE j.status = '".$status."' ORDER BY j.date DESC LIMIT ".$offset.", ".$confj['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -65,10 +65,10 @@ function jokes() {
 }
 
 function jokes_add() {
-	global $prefix, $db, $admin_file, $confu, $stop;
+	global $db, $admin_file, $confu, $stop;
 	if (isset($_REQUEST['id'])) {
 		$jokeid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM ".$prefix."_jokes AS j LEFT JOIN ".$prefix."_users AS u ON (j.uid = u.user_id) WHERE jokeid = '".$jokeid."'");
+		$result = $db->sql_query("SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM ".PREFIX_DB."_jokes AS j LEFT JOIN ".PREFIX_DB."_users AS u ON (j.uid = u.user_id) WHERE jokeid = '".$jokeid."'");
 		list($jokeid, $uname, $date, $title, $cat, $joke, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
@@ -97,7 +97,7 @@ function jokes_add() {
 }
 
 function jokes_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$jokeid = intval($_POST['jokeid']);
 	$postname = $_POST['postname'];
 	$date = save_datetime(1, "date");
@@ -108,15 +108,15 @@ function jokes_save() {
 	if (!$title) $stop[] = _CERROR;
 	if (!$joke) $stop[] = _CERROR1;
 	if (!$postname) $stop[] = _CERROR3;
-	if (!$jokeid && $db->sql_numrows($db->sql_query("SELECT title FROM ".$prefix."_jokes WHERE title = '".$title."'")) > 0) $stop[] = _JOKEEXIST;
+	if (!$jokeid && $db->sql_numrows($db->sql_query("SELECT title FROM ".PREFIX_DB."_jokes WHERE title = '".$title."'")) > 0) $stop[] = _JOKEEXIST;
 	if (!$stop && $_POST['posttype'] == "save") {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($jokeid) {
-			$db->sql_query("UPDATE ".$prefix."_jokes SET uid = '".$postid."', name = '".$postname."', date = '".$date."', title = '".$title."', cat = '".$cat."', joke = '".$joke."', status = '1' WHERE jokeid = '".$jokeid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_jokes SET uid = '".$postid."', name = '".$postname."', date = '".$date."', title = '".$title."', cat = '".$cat."', joke = '".$joke."', status = '1' WHERE jokeid = '".$jokeid."'");
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, '".$postid."', '".$postname."', '".$date."', '".$title."', '".$cat."', '".$joke."', '".$ip."', '1')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, '".$postid."', '".$postname."', '".$date."', '".$title."', '".$cat."', '".$joke."', '".$ip."', '1')");
 		}
 		header("Location: ".$admin_file.".php?op=jokes");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -127,12 +127,12 @@ function jokes_save() {
 }
 
 function jokes_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".$prefix."_favorites WHERE fid = '".$id."' AND modul = 'jokes'");
-		$db->sql_query("DELETE FROM ".$prefix."_jokes WHERE jokeid = '".$id."'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'jokes'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_jokes WHERE jokeid = '".$id."'");
 	}
 	referer($admin_file.".php?op=jokes");
 }

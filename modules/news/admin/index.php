@@ -17,7 +17,7 @@ function news_navi() {
 }
 
 function news() {
-	global $prefix, $db, $admin_file, $confn, $confu;
+	global $db, $admin_file, $confn, $confu;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confn['anum'];
@@ -33,7 +33,7 @@ function news() {
 		$refer = "";
 		$cont = news_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, s.vote, s.ip_sender, c.title, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) WHERE s.status = '".$status."' ORDER BY s.fix DESC, s.time DESC LIMIT ".$offset.", ".$confn['anum']);
+	$result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, s.vote, s.ip_sender, c.title, u.user_name FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) WHERE s.status = '".$status."' ORDER BY s.fix DESC, s.time DESC LIMIT ".$offset.", ".$confn['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\">"
@@ -70,10 +70,10 @@ function news() {
 }
 
 function news_add() {
-	global $prefix, $db, $admin_file, $confu, $stop;
+	global $db, $admin_file, $confu, $stop;
 	if (isset($_REQUEST['id'])) {
 		$sid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.ihome, s.acomm, s.associated, s.fix, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) WHERE sid = '".$sid."'");
+		$result = $db->sql_query("SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.ihome, s.acomm, s.associated, s.fix, u.user_name FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) WHERE sid = '".$sid."'");
 		list($cat, $uname, $subject, $time, $hometext, $bodytext, $field, $vote, $ihome, $acomm, $associated, $fix, $user_name) = $db->sql_fetchrow($result);
 		$associated = explode(",", $associated);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
@@ -103,7 +103,7 @@ function news_add() {
 	."<tr><td>"._POSTEDBY.":</td><td>".get_user_search("postname", $postname, "25", "sl_form", "1")."</td></tr>"
 	."<tr><td>"._TITLE.":</td><td><input type=\"text\" name=\"subject\" value=\"".$subject."\" maxlength=\"100\" class=\"sl_form\" placeholder=\""._TITLE."\" required></td></tr>"
 	."<tr><td>"._CATEGORY.":</td><td>".getcat("news", $cat, "cat", "sl_form", "<option value=\"\">"._HOMECAT."</option>")."</td></tr>";
-	$result2 = $db->sql_query("SELECT id, title FROM ".$prefix."_categories WHERE modul = 'news' ORDER BY parentid, title");
+	$result2 = $db->sql_query("SELECT id, title FROM ".PREFIX_DB."_categories WHERE modul = 'news' ORDER BY parentid, title");
 	if ($db->sql_numrows($result2) > 0) {
 		$cont .= "<tr><td>"._ASSOTOPIC.":<div class=\"sl_small\">"._ASSOTOPICI."</div></td><td><table class=\"sl_form\"><tr>";
 		while (list($cid, $ctitle) = $db->sql_fetchrow($result2)) {
@@ -133,7 +133,7 @@ function news_add() {
 }
 
 function news_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$sid = intval($_POST['sid']);
 	$postname = $_POST['postname'];
 	$subject = save_text($_POST['subject'], 1);
@@ -155,10 +155,10 @@ function news_save() {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($sid) {
-			$db->sql_query("UPDATE ".$prefix."_news SET catid = '".$cat."', uid = '".$postid."', name = '".$postname."', title = '".$subject."', time = '".$time."', hometext = '".$hometext."', bodytext = '".$bodytext."', field = '".$field."', vote = '".$vote."', ihome = '".$ihome."', acomm = '".$acomm."', associated = '".$associated."', fix = '".$fix."', status = '1' WHERE sid = '".$sid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_news SET catid = '".$cat."', uid = '".$postid."', name = '".$postname."', title = '".$subject."', time = '".$time."', hometext = '".$hometext."', bodytext = '".$bodytext."', field = '".$field."', vote = '".$vote."', ihome = '".$ihome."', acomm = '".$acomm."', associated = '".$associated."', fix = '".$fix."', status = '1' WHERE sid = '".$sid."'");
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_news (sid, catid, uid, name, title, time, hometext, bodytext, field, vote, comments, counter, ihome, acomm, score, ratings, associated, ip_sender, fix, status) VALUES (NULL, '".$cat."', '".$postid."', '".$postname."', '".$subject."', '".$time."', '".$hometext."', '".$bodytext."', '".$field."', '".$vote."', '0', '0', '".$ihome."', '".$acomm."', '0', '0', '".$associated."', '".$ip."', '".$fix."', '1')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_news (sid, catid, uid, name, title, time, hometext, bodytext, field, vote, comments, counter, ihome, acomm, score, ratings, associated, ip_sender, fix, status) VALUES (NULL, '".$cat."', '".$postid."', '".$postname."', '".$subject."', '".$time."', '".$hometext."', '".$bodytext."', '".$field."', '".$vote."', '0', '0', '".$ihome."', '".$acomm."', '0', '0', '".$associated."', '".$ip."', '".$fix."', '1')");
 		}
 		header("Location: ".$admin_file.".php?op=news");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -169,7 +169,7 @@ function news_save() {
 }
 
 function news_admin() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	$id = (is_array($id)) ? implode(",", $id) : intval($id);
@@ -177,21 +177,21 @@ function news_admin() {
 	$typ = (is_numeric($vtyp[0])) ? intval($vtyp) : intval(substr($vtyp, 1));
 	if ($id) {
 		if ($vtyp[0] == "a") {
-			$db->sql_query("UPDATE ".$prefix."_news SET status = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_news SET status = '".$typ."' WHERE sid IN (".$id.")");
 		} elseif ($vtyp[0] == "f") {
-			$db->sql_query("UPDATE ".$prefix."_news SET fix = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_news SET fix = '".$typ."' WHERE sid IN (".$id.")");
 		} elseif ($vtyp[0] == "h") {
-			$db->sql_query("UPDATE ".$prefix."_news SET ihome = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_news SET ihome = '".$typ."' WHERE sid IN (".$id.")");
 		} elseif ($vtyp[0] == "t") {
-			$db->sql_query("UPDATE ".$prefix."_news SET time = NOW() WHERE sid IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_news SET time = NOW() WHERE sid IN (".$id.")");
 		} elseif ($vtyp[0] == "c") {
-			$db->sql_query("UPDATE ".$prefix."_news SET acomm = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_news SET acomm = '".$typ."' WHERE sid IN (".$id.")");
 		} elseif ($vtyp[0] == "d") {
-			$db->sql_query("DELETE FROM ".$prefix."_comment WHERE cid IN (".$id.") AND modul = 'news'");
-			$db->sql_query("DELETE FROM ".$prefix."_favorites WHERE fid IN (".$id.") AND modul = 'news'");
-			$db->sql_query("DELETE FROM ".$prefix."_news WHERE sid IN (".$id.")");
+			$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid IN (".$id.") AND modul = 'news'");
+			$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid IN (".$id.") AND modul = 'news'");
+			$db->sql_query("DELETE FROM ".PREFIX_DB."_news WHERE sid IN (".$id.")");
 		} elseif (is_numeric($vtyp[0])) {
-			$db->sql_query("UPDATE ".$prefix."_news SET catid = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_news SET catid = '".$typ."' WHERE sid IN (".$id.")");
 		}
 	}
 	referer($admin_file.".php?op=news");

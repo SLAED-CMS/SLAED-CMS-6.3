@@ -93,7 +93,7 @@ function money() {
 }
 
 function send() {
-	global $prefix, $db, $conf, $confmo, $stop;
+	global $db, $conf, $confmo, $stop;
 	if ($confmo['an']) {
 		$sum = intval($_POST['sum']);
 		$mail = text_filter($_POST['mail']);
@@ -118,7 +118,7 @@ function send() {
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			$status = ($confmo['pr']) ? "0" : "1";
-			$db->sql_query("INSERT INTO ".$prefix."_money VALUES (NULL, '".$sum."', '".$mail."', '".$binfo."', '".$com."', '".getIp()."', '".getAgent()."', NOW(), '".$status."')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_money VALUES (NULL, '".$sum."', '".$mail."', '".$binfo."', '".$com."', '".getIp()."', '".getAgent()."', NOW(), '".$status."')");
 			if ($confmo['ad']) {
 				$form = explode(",", $confmo['form']);
 				$i = 0;

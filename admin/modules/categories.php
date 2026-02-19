@@ -26,20 +26,20 @@ function categories(): void {
 }
 
 function fix(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     $modul = getVar('req', 'modul', 'var', 'forum');
-    $result = $db->sql_query('SELECT id FROM '.$prefix.'_categories WHERE modul = :modul ORDER BY ordern ASC', ['modul' => $modul]);
+    $result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern ASC', ['modul' => $modul]);
     $ordern = 0;
     while (list($id) = $db->sql_fetchrow($result)) {
         $ordern++;
-        $db->sql_query('UPDATE '.$prefix.'_categories SET ordern = :ordern WHERE id = :id', ['ordern' => $ordern, 'id' => $id]);
+        $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :id', ['ordern' => $ordern, 'id' => $id]);
     }
     header('Location: '.$aroute.'.php?name=categories&modul='.$modul);
     exit;
 }
 
 function add(): void {
-    global $prefix, $db, $conf, $aroute;
+    global $db, $conf, $aroute;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
@@ -91,11 +91,11 @@ function add(): void {
 }
     
 function subadd(): void {
-    global $prefix, $db, $conf, $aroute;
+    global $db, $conf, $aroute;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     head();
-    if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
+    if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont = navi(0, 2, 1, 0, 'subadd');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
         $cont .= setTemplateBasic('open');
@@ -149,11 +149,11 @@ function subadd(): void {
 }
 
 function addedit(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     $modul = getVar('get', 'modul', 'var', 'forum');
     head();
     $cont = navi(0, 3, 0, 0);
-    if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
+    if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_form"><form action="'.$aroute.'.php" method="post">'
         .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, '', 'cid', 'sl_form').'</td></tr>'
@@ -167,10 +167,10 @@ function addedit(): void {
 }
 
 function edit(): void {
-    global $prefix, $db, $conf, $aroute;
+    global $db, $conf, $aroute;
     $cid = getVar('req', 'cid', 'num');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
-    $result = $db->sql_query('SELECT modul, title, description, img, language, parentid, cstatus, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod FROM '.$prefix.'_categories WHERE id = :cid', ['cid' => $cid]);
+    $result = $db->sql_query('SELECT modul, title, description, img, language, parentid, cstatus, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
     list($modul, $title, $description, $imgcat, $language, $parentid, $cstatus, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod) = $db->sql_fetchrow($result);
     head();
     $cont = navi(0, 3, 1, 0, 'edit');
@@ -230,7 +230,7 @@ function edit(): void {
 }
 
 function addsave(): void {
-    global $prefix, $db, $conf, $aroute;
+    global $db, $conf, $aroute;
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
     $description = getVar('post', 'description', 'text');
@@ -240,7 +240,7 @@ function addsave(): void {
     $imgcat = str_replace('templates/'.$conf['theme'].'/images/categories/', '', $imgcat);
     $imgcat = (!$imgcat || $imgcat == 'no.png') ? '' : $imgcat;
     $cstatus = getVar('post', 'cstatus', 'num');
-    list($ordern) = $db->sql_fetchrow($db->sql_query('SELECT ordern FROM '.$prefix.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
+    list($ordern) = $db->sql_fetchrow($db->sql_query('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
     $ordern++;
     $auth_view = (isset($_POST['auth_view'])) ? scatacess($_POST['auth_view']) : '0|0';
     $auth_read = (isset($_POST['auth_read'])) ? scatacess($_POST['auth_read']) : '0|0';
@@ -249,7 +249,7 @@ function addsave(): void {
     $auth_edit = (isset($_POST['auth_edit'])) ? scatacess($_POST['auth_edit']) : '3|0';
     $auth_delete = (isset($_POST['auth_delete'])) ? scatacess($_POST['auth_delete']) : '3|0';
     $auth_mod = (isset($_POST['auth_mod'])) ? scatacess($_POST['auth_mod']) : '3|0';
-    $db->sql_query('INSERT INTO '.$prefix.'_categories (id, modul, title, description, img, language, parentid, cstatus, ordern, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod) VALUES (NULL, :modul, :title, :description, :img, :language, :parentid, :cstatus, :ordern, :auth_view, :auth_read, :auth_post, :auth_reply, :auth_edit, :auth_delete, :auth_mod)', [
+    $db->sql_query('INSERT INTO '.PREFIX_DB.'_categories (id, modul, title, description, img, language, parentid, cstatus, ordern, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod) VALUES (NULL, :modul, :title, :description, :img, :language, :parentid, :cstatus, :ordern, :auth_view, :auth_read, :auth_post, :auth_reply, :auth_edit, :auth_delete, :auth_mod)', [
         'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $cid, 'cstatus' => $cstatus, 'ordern' => $ordern, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod
     ]);
     header('Location: '.$aroute.'.php?name=categories&modul='.$modul);
@@ -257,7 +257,7 @@ function addsave(): void {
 }
 
 function save(): void {
-    global $prefix, $db, $conf, $aroute;
+    global $db, $conf, $aroute;
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
@@ -275,7 +275,7 @@ function save(): void {
     $auth_edit = (isset($_POST['auth_edit'])) ? scatacess($_POST['auth_edit']) : '3|0';
     $auth_delete = (isset($_POST['auth_delete'])) ? scatacess($_POST['auth_delete']) : '3|0';
     $auth_mod = (isset($_POST['auth_mod'])) ? scatacess($_POST['auth_mod']) : '3|0';
-    $db->sql_query('UPDATE '.$prefix.'_categories SET modul = :modul, title = :title, description = :description, img = :img, language = :language, parentid = :parentid, cstatus = :cstatus, auth_view = :auth_view, auth_read = :auth_read, auth_post = :auth_post, auth_reply = :auth_reply, auth_edit = :auth_edit, auth_delete = :auth_delete, auth_mod = :auth_mod WHERE id = :id', [
+    $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET modul = :modul, title = :title, description = :description, img = :img, language = :language, parentid = :parentid, cstatus = :cstatus, auth_view = :auth_view, auth_read = :auth_read, auth_post = :auth_post, auth_reply = :auth_reply, auth_edit = :auth_edit, auth_delete = :auth_delete, auth_mod = :auth_mod WHERE id = :id', [
         'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $parentid, 'cstatus' => $cstatus, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod, 'id' => $id
     ]);
     header('Location: '.$aroute.'.php?name=categories&modul='.$modul);
@@ -283,10 +283,10 @@ function save(): void {
 }
 
 function del(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     $id = getVar('get', 'id', 'num');
-    $db->sql_query('DELETE FROM '.$prefix.'_categories WHERE id = :id', ['id' => $id]);
-    $db->sql_query('DELETE FROM '.$prefix.'_categories WHERE parentid = :id', ['id' => $id]);
+    $db->sql_query('DELETE FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id]);
+    $db->sql_query('DELETE FROM '.PREFIX_DB.'_categories WHERE parentid = :id', ['id' => $id]);
     referer($aroute.'.php?name=categories');
 }
 

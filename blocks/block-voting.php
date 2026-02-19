@@ -9,16 +9,16 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $prefix, $db, $locale, $conf, $confv;
+global $db, $locale, $conf, $confv;
 $querylang = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND modul = '' AND date <= now()" : "modul = '' AND date <= now()";
 if ($confv['block'] <= 1) {
 	$querylang = ($confv['block'] == 1) ? $querylang." AND enddate <= now() AND status = '1'" : $querylang." AND enddate >= now()";
-	$result = $db->sql_query("SELECT id FROM ".$prefix."_voting WHERE ".$querylang." ORDER BY id DESC LIMIT 0, 1");
+	$result = $db->sql_query("SELECT id FROM ".PREFIX_DB."_voting WHERE ".$querylang." ORDER BY id DESC LIMIT 0, 1");
 	list($id) = $db->sql_fetchrow($result);
 	$bid = $id;
 } elseif ($confv['block'] >= 2) {
 	$querylang = ($confv['block'] == 3) ? $querylang." AND enddate <= now() AND status = '1'" : $querylang." AND enddate >= now()";
-	$result = $db->sql_query("SELECT id FROM ".$prefix."_voting WHERE ".$querylang);
+	$result = $db->sql_query("SELECT id FROM ".PREFIX_DB."_voting WHERE ".$querylang);
 	while (list($id) = $db->sql_fetchrow($result)) $input[] = $id;
 	if (is_array($input)) {
 		$rkey = array_rand($input, 1);

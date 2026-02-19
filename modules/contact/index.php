@@ -12,7 +12,7 @@ get_lang($conf['name']);
 include('config/config_contact.php');
 
 function contact() {
-	global $prefix, $db, $conf, $confco, $locale, $stop;
+	global $db, $conf, $confco, $locale, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
 		$sname = getVar('post', 'sname', 'name', $userinfo['user_name']);
@@ -24,7 +24,7 @@ function contact() {
 	$message = getVar('post', 'message', 'text');
 	if ($confco['admins']) {
 		$wlang = ($conf['multilingual']) ? "AND (lang = '".$locale."' OR lang = '')" : '';
-		$result = $db->sql_query("SELECT id, name, title FROM ".$prefix."_admins WHERE smail = '1' ".$wlang." ORDER BY id");
+		$result = $db->sql_query("SELECT id, name, title FROM ".PREFIX_DB."_admins WHERE smail = '1' ".$wlang." ORDER BY id");
 		$asend = '';
 		if ($db->sql_numrows($result) > 0) {
 			while (list($id, $aname, $atitle) = $db->sql_fetchrow($result)) {
@@ -62,7 +62,7 @@ function contact() {
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			if ($confco['admins'] && $id) {
-				list($adminmail) = $db->sql_fetchrow($db->sql_query("SELECT email FROM ".$prefix."_admins WHERE id = '".$id."' AND smail = '1'"));
+				list($adminmail) = $db->sql_fetchrow($db->sql_query("SELECT email FROM ".PREFIX_DB."_admins WHERE id = '".$id."' AND smail = '1'"));
 				$to = $adminmail;
 			} else {
 				$to = $conf['adminmail'];

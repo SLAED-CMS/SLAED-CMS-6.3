@@ -21,7 +21,7 @@ function navigate($title, $cat='') {
 }
 
 function autolink() {
-	global $prefix, $db, $admin_file, $user, $conf, $confal, $home, $op;
+	global $db, $admin_file, $user, $conf, $confal, $home, $op;
 	$unum = user_news($user[3] ?? 0, $confal['num']);
 	$word = getVar('get', 'word', 'word');
 	if ($op) {
@@ -42,7 +42,7 @@ function autolink() {
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
 	$a = ($num) ? $offset + 1 : 1;
-	$result = $db->sql_query("SELECT id, sitename, description, hits, outs, added FROM ".$prefix."_auto_links WHERE hits != '0' ORDER BY ".$order." DESC LIMIT ".$offset.", ".$unum);
+	$result = $db->sql_query("SELECT id, sitename, description, hits, outs, added FROM ".PREFIX_DB."_auto_links WHERE hits != '0' ORDER BY ".$order." DESC LIMIT ".$offset.", ".$unum);
 	head();
 	$cont = '';
 	if (!$home) $cont .= navigate($ntitle);
@@ -65,11 +65,11 @@ function autolink() {
 }
 
 function view() {
-	global $prefix, $db, $conf;
+	global $db, $conf;
 	$id = getVar('get', 'id', 'num');
 	if ($id) {
-		list($link)= $db->sql_fetchrow($db->sql_query("SELECT link FROM ".$prefix."_auto_links WHERE id = '".$id."'"));
-		$db->sql_query("UPDATE ".$prefix."_auto_links SET outs = outs+1 WHERE id = '".$id."'");
+		list($link)= $db->sql_fetchrow($db->sql_query("SELECT link FROM ".PREFIX_DB."_auto_links WHERE id = '".$id."'"));
+		$db->sql_query("UPDATE ".PREFIX_DB."_auto_links SET outs = outs+1 WHERE id = '".$id."'");
 		update_points(4);
 		header('Location: '.$link);
 	} else {
@@ -108,7 +108,7 @@ function add() {
 }
 
 function send() {
-	global $prefix, $db, $user, $stop, $conf, $confal;
+	global $db, $user, $stop, $conf, $confal;
 	$sitename = save_text($_POST['sitename'], 1);
 	$description = save_text($_POST['description']);
 	$sitelink = url_filter($_POST['sitelink']);
@@ -119,11 +119,11 @@ function send() {
 	if (!$sitelink) $stop[] = _CERROR4;
 	checkemail($adminemail);
 	if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-	if ($db->sql_numrows($db->sql_query("SELECT link FROM ".$prefix."_auto_links WHERE link = '".$sitelink."'")) > 0) $stop[] = _LINKEXIST;
+	if ($db->sql_numrows($db->sql_query("SELECT link FROM ".PREFIX_DB."_auto_links WHERE link = '".$sitelink."'")) > 0) $stop[] = _LINKEXIST;
 	if (!$stop && $_POST['posttype'] == "save") {
 		head();
 		$cont = navigate(_ADD);
-		$db->sql_query("INSERT INTO ".$prefix."_auto_links VALUES (NULL, '".$sitename."', '".$description."', '".$sitelink."', '".$adminemail."', 0, 0, NOW())");
+		$db->sql_query("INSERT INTO ".PREFIX_DB."_auto_links VALUES (NULL, '".$sitename."', '".$description."', '".$sitelink."', '".$adminemail."', 0, 0, NOW())");
 		$puname = (is_user()) ? $user[1] : "";
 		addmail($confal['addmail'], $conf['name'], $puname, _A_LINKS);
 		$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_OK));

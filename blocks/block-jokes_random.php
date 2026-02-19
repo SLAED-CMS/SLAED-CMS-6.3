@@ -7,10 +7,10 @@ if (!defined("BLOCK_FILE")) {
 	exit;
 }
 
-global $prefix, $db;
-list($count) = $db->sql_fetchrow($db->sql_query("SELECT Count(jokeid) FROM ".$prefix."_jokes WHERE date <= now() AND status != '0'"));
+global $db;
+list($count) = $db->sql_fetchrow($db->sql_query("SELECT Count(jokeid) FROM ".PREFIX_DB."_jokes WHERE date <= now() AND status != '0'"));
 $random = mt_rand(0, $count - 1);
-$result = $db->sql_query("SELECT joke FROM ".$prefix."_jokes ORDER BY jokeid DESC LIMIT ".$random.", 1");
+$result = $db->sql_query("SELECT joke FROM ".PREFIX_DB."_jokes ORDER BY jokeid DESC LIMIT ".$random.", 1");
 list($joke) = $db->sql_fetchrow($result);
 $content = $joke;
 ?>

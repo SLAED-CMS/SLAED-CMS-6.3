@@ -9,13 +9,13 @@ if (!defined("MODULE_FILE")) {
 get_lang($conf['name']);
 
 function systems() {
-	global $prefix, $db, $conf, $admin_file, $user, $stop, $info;
+	global $db, $conf, $admin_file, $user, $stop, $info;
 	head($conf['defis']." "._PRODUCTSINFO);
 	$cont = tpl_eval("title", _PRODUCTSINFO);
 	$cont .= navi();
 	if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
 	if ($info) $cont .= tpl_warn("warn", $info, "", "", "info");
-	$result = $db->sql_query("SELECT id, title, infotext, url, num, hits, prod_id, status FROM ".$prefix."_clients_down WHERE status != '0'");
+	$result = $db->sql_query("SELECT id, title, infotext, url, num, hits, prod_id, status FROM ".PREFIX_DB."_clients_down WHERE status != '0'");
 	if ($db->sql_numrows($result) > 0) {
 		$user_id = intval($user['0']);
 		$cont .= tpl_eval("open");
@@ -48,13 +48,13 @@ function systems() {
 }
 
 function download() {
-	global $prefix, $db, $user, $conf, $stop, $info;
+	global $db, $user, $conf, $stop, $info;
 	$prod_id = intval($_GET['prod_id']);
 	$user_id = intval($user['0']);
-	$result = $db->sql_query("SELECT website FROM ".$prefix."_clients WHERE active = '1' AND id_user = '".$user_id."'");
+	$result = $db->sql_query("SELECT website FROM ".PREFIX_DB."_clients WHERE active = '1' AND id_user = '".$user_id."'");
 	if (is_user() && $db->sql_numrows($result) > 0) {
 		$id = intval($_GET['id']);
-		list($pid, $url, $num) = $db->sql_fetchrow($db->sql_query("SELECT id, url, num FROM ".$prefix."_clients_down WHERE status != '0' AND id = '".$id."'"));
+		list($pid, $url, $num) = $db->sql_fetchrow($db->sql_query("SELECT id, url, num FROM ".PREFIX_DB."_clients_down WHERE status != '0' AND id = '".$id."'"));
 		$tpath = "uploads/clients/thumb/".$pid."_".$user_id.".zip";
 		if (!file_exists($tpath)) {
 			$ipath = "uploads/clients/images";
@@ -84,7 +84,7 @@ function download() {
 				systems();
 			}
 		} else {
-			$db->sql_query("UPDATE ".$prefix."_clients_down SET hits = hits+1 WHERE id = '".$id."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_clients_down SET hits = hits+1 WHERE id = '".$id."'");
 			stream($tpath, date("d.m.Y")."_".str_replace(" ", "_", $num).".zip");
 		}
 	} else {
@@ -106,15 +106,15 @@ function save_hidden($path, $ipath, $code) {
 }
 
 function generator($path="") {
-	global $prefix, $db, $user, $conf, $stop;
+	global $db, $user, $conf, $stop;
 	$prod_id = intval($_GET['prod_id']);
 	$user_id = intval($user['0']);
-	$result = $db->sql_query("SELECT website FROM ".$prefix."_clients WHERE active = '1' AND id_user = '".$user_id."'");
+	$result = $db->sql_query("SELECT website FROM ".PREFIX_DB."_clients WHERE active = '1' AND id_user = '".$user_id."'");
 	if (is_user() && $db->sql_numrows($result) > 0) {
 		while (list($domain) = $db->sql_fetchrow($result)) $domains[] = $domain;
 		$domains = preg_replace("/http\:\/\/|www\./i", "", implode(",", $domains));
 		$id = intval($_GET['id']);
-		list($pass) = $db->sql_fetchrow($db->sql_query("SELECT code FROM ".$prefix."_clients_down WHERE status != '0' AND id = '".$id."'"));
+		list($pass) = $db->sql_fetchrow($db->sql_query("SELECT code FROM ".PREFIX_DB."_clients_down WHERE status != '0' AND id = '".$id."'"));
 		$massiv = explode(",", $domains);
 		foreach ($massiv as $val) {
 			if ($val != "") {

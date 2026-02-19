@@ -17,7 +17,7 @@ function media_navi() {
 }
 
 function media() {
-	global $prefix, $db, $admin_file, $confu, $confm;
+	global $db, $admin_file, $confu, $confm;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confm['anum'];
@@ -38,7 +38,7 @@ function media() {
 		$refer = "";
 		$cont = media_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, m.ip_sender, c.title, u.user_name FROM ".$prefix."_media AS m LEFT JOIN ".$prefix."_categories AS c ON (m.cid = c.id) LEFT JOIN ".$prefix."_users AS u ON (m.uid = u.user_id) WHERE m.status = '".$status."' ORDER BY m.date DESC LIMIT ".$offset.", ".$confm['anum']);
+	$result = $db->sql_query("SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, m.ip_sender, c.title, u.user_name FROM ".PREFIX_DB."_media AS m LEFT JOIN ".PREFIX_DB."_categories AS c ON (m.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (m.uid = u.user_id) WHERE m.status = '".$status."' ORDER BY m.date DESC LIMIT ".$offset.", ".$confm['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -72,11 +72,11 @@ function media() {
 }
 
 function media_add() {
-	global $prefix, $db, $admin_file, $confu, $confm, $stop;
+	global $db, $admin_file, $confu, $confm, $stop;
 	$date = getdate();
 	if (isset($_REQUEST['id'])) {
 		$mid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.ihome, m.acomm, u.user_name FROM ".$prefix."_media AS m LEFT JOIN ".$prefix."_users AS u ON (m.uid = u.user_id) WHERE id = '".$mid."'");
+		$result = $db->sql_query("SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.ihome, m.acomm, u.user_name FROM ".PREFIX_DB."_media AS m LEFT JOIN ".PREFIX_DB."_users AS u ON (m.uid = u.user_id) WHERE id = '".$mid."'");
 		list($cid, $uname, $title, $subtitle, $myear, $director, $roles, $description, $createdby, $duration, $mlang, $note, $mformat, $mquality, $size, $released, $links, $mdate, $ihome, $acomm, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 		$links = explode(",", $links);
@@ -172,7 +172,7 @@ function media_add() {
 }
 
 function media_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$mid = intval($_POST['mid']);
 	$cid = intval($_POST['cid']);
 	$postname = $_POST['postname'];
@@ -198,15 +198,15 @@ function media_save() {
 	if (!$title) $stop[] = _CERROR;
 	if (!$description) $stop[] = _CERROR1;
 	if (!$postname) $stop[] = _CERROR3;
-	if (!$mid && $db->sql_numrows($db->sql_query("SELECT title, subtitle FROM ".$prefix."_media WHERE title = '".$title."' AND subtitle = '".$subtitle."'")) > 0) $stop[] = _MEDIAEXIST;
+	if (!$mid && $db->sql_numrows($db->sql_query("SELECT title, subtitle FROM ".PREFIX_DB."_media WHERE title = '".$title."' AND subtitle = '".$subtitle."'")) > 0) $stop[] = _MEDIAEXIST;
 	if (!$stop && $_POST['posttype'] == "save") {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($mid) {
-			$db->sql_query("UPDATE ".$prefix."_media SET cid = '".$cid."', uid = '".$postid."', name = '".$postname."', title = '".$title."', subtitle = '".$subtitle."', year = '".$myears."', director = '".$director."', roles = '".$roles."', description = '".$description."', createdby = '".$createdby."', duration = '".$duration."', lang = '".$lang."', note = '".$note."', format = '".$format."', quality = '".$quality."', size = '".$size."', released = '".$released."', links = '".$links."', date = '".$mdate."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE id = '".$mid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_media SET cid = '".$cid."', uid = '".$postid."', name = '".$postname."', title = '".$title."', subtitle = '".$subtitle."', year = '".$myears."', director = '".$director."', roles = '".$roles."', description = '".$description."', createdby = '".$createdby."', duration = '".$duration."', lang = '".$lang."', note = '".$note."', format = '".$format."', quality = '".$quality."', size = '".$size."', released = '".$released."', links = '".$links."', date = '".$mdate."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE id = '".$mid."'");
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".$prefix."_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ihome, acomm, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$postname."', '".$title."', '".$subtitle."', '".$myears."', '".$director."', '".$roles."', '".$description."', '".$createdby."', '".$duration."', '".$lang."', '".$note."', '".$format."', '".$quality."', '".$size."', '".$released."', '".$links."', '".$mdate."', '".$ihome."', '".$acomm."', '".$ip."', '1')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ihome, acomm, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$postname."', '".$title."', '".$subtitle."', '".$myears."', '".$director."', '".$roles."', '".$description."', '".$createdby."', '".$duration."', '".$lang."', '".$note."', '".$format."', '".$quality."', '".$size."', '".$released."', '".$links."', '".$mdate."', '".$ihome."', '".$acomm."', '".$ip."', '1')");
 		}
 		header("Location: ".$admin_file.".php?op=media");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -217,13 +217,13 @@ function media_save() {
 }
 
 function media_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".$prefix."_comment WHERE cid = '".$id."' AND modul = 'media'");
-		$db->sql_query("DELETE FROM ".$prefix."_favorites WHERE fid = '".$id."' AND modul = 'media'");
-		$db->sql_query("DELETE FROM ".$prefix."_media WHERE id = '".$id."'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND modul = 'media'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'media'");
+		$db->sql_query("DELETE FROM ".PREFIX_DB."_media WHERE id = '".$id."'");
 	}
 	referer($admin_file.".php?op=media");
 }
@@ -333,7 +333,7 @@ switch ($op) {
 	break;
 	
 	case "media_ignore":
-	$db->sql_query("UPDATE ".$prefix."_media SET status = '1' WHERE id = '".$id."'");
+	$db->sql_query("UPDATE ".PREFIX_DB."_media SET status = '1' WHERE id = '".$id."'");
 	header("Location: ".$admin_file.".php?op=media&status=2");
 	break;
 	

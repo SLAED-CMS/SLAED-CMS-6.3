@@ -9,7 +9,7 @@ if (!defined("BLOCK_FILE")) {
 	exit;
 }
 
-global $prefix, $db;
+global $db;
 
 # Количество сообщений в блоке
 $blimit = "3";
@@ -19,7 +19,7 @@ $bclos = "97, 98";
 $bwhere = ($bclos) ? "catid NOT IN (".$bclos.") AND" : "";
 $ordern = (is_moder("forum")) ? "" : "AND time <= now() AND status > '1'";
 $buffer = "";
-$result = $db->sql_query("SELECT id, title, time, l_uid, l_name, l_id, l_time, status FROM ".$prefix."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
+$result = $db->sql_query("SELECT id, title, time, l_uid, l_name, l_id, l_time, status FROM ".PREFIX_DB."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
 while (list($id, $title, $time, $l_uid, $l_name, $l_id, $l_time, $status) = $db->sql_fetchrow($result)) {
 	$lposter = ($l_uid) ? user_info($l_name) : $l_name;
 	$class = ($status <= 1 || $time > date("Y-m-d H:i:s")) ? " class=\"sl_hidden\"" : "";

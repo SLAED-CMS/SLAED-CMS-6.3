@@ -19,14 +19,14 @@ function navigate($title, $cat='') {
 }
 
 function users() {
-	global $prefix, $db, $conf, $confu, $confra;
+	global $db, $conf, $confu, $confra;
 	head();
 	$cont = navigate(_TOPUSERS);
 	$unum = 50;
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$count = ($num) ? $offset + 1 : 1;
-	$result = $db->sql_query("SELECT user_id, user_name, user_website, user_regdate, user_from, user_lastvisit, user_points, user_last_ip, user_gender, user_votes, user_totalvotes FROM ".$prefix."_users ORDER BY user_points DESC LIMIT ".$offset.", ".$unum);
+	$result = $db->sql_query("SELECT user_id, user_name, user_website, user_regdate, user_from, user_lastvisit, user_points, user_last_ip, user_gender, user_votes, user_totalvotes FROM ".PREFIX_DB."_users ORDER BY user_points DESC LIMIT ".$offset.", ".$unum);
 	if ($db->sql_numrows($result) > 0) {
 		$con = explode("|", $confra['account']);
 		$title_a = (is_moder($conf['name'])) ? _IP : _REG;
@@ -57,7 +57,7 @@ function users() {
 }
 
 function rules() {
-	global $prefix, $db, $conf, $confu;
+	global $db, $conf, $confu;
 	head();
 	$cont = navigate(_TOPUSERS);
 	$cont .= setTemplateBasic('open');
@@ -77,20 +77,20 @@ function rules() {
 }
 
 function stats(){
-	global $prefix, $db, $conf;
+	global $db, $conf;
 	head();
 	$cont = navigate(_TOPUSERS);
-	$result = $db->sql_query("SELECT id, name, description, points, extra, rank, color FROM ".$prefix."_groups ORDER BY points");
+	$result = $db->sql_query("SELECT id, name, description, points, extra, rank, color FROM ".PREFIX_DB."_groups ORDER BY points");
 	if ($result) {
 		$cont .= setTemplateBasic('open');
 		$cont .= "<table class=\"sl_table_list_sort\"><thead class=\"sl_table_list_head\"><tr><th>"._RANK."</th><th>"._DESCRIPTION."</th><th>"._POINTS."</th><th>"._TU_USERSCOUNT."</th><th>".cutstr(_SPEC, 4, 1)."</th></tr></thead><tbody class=\"sl_table_list_body\">";
 		while (list($grid, $grname, $description, $points, $extra, $rank, $color) = $db->sql_fetchrow($result)) {
 			if (intval($extra)) {
 				$extra = _YES;
-				list($users_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(*) FROM ".$prefix."_users WHERE user_group = '".$grid."'"));
+				list($users_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(*) FROM ".PREFIX_DB."_users WHERE user_group = '".$grid."'"));
 			} else {
 				$extra = _NO;
-				list($users_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(*) FROM ".$prefix."_users WHERE user_points >= '".$points."'"));
+				list($users_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(*) FROM ".PREFIX_DB."_users WHERE user_points >= '".$points."'"));
 			}
 			$trank = ($grname) ? _GROUP.": ".$grname : _RANK;
 			$cont .= "<tr>"

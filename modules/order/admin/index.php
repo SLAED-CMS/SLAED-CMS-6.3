@@ -17,17 +17,17 @@ function order_navi() {
 }
 
 function order() {
-	global $prefix, $db, $admin_file, $conf, $confor;
+	global $db, $admin_file, $conf, $confor;
 	head();
 	$cont = order_navi(0, 0, 0, 0);
 	if (isset($_GET['send'])) $cont .= tpl_warn("warn", _OR_8, "", "", "info");
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confor['anum'];
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT id, mail, info, com, ip, agent, date, status FROM ".$prefix."_order ORDER BY date DESC LIMIT ".$offset.", ".$confor['anum']);
+	$result = $db->sql_query("SELECT id, mail, info, com, ip, agent, date, status FROM ".PREFIX_DB."_order ORDER BY date DESC LIMIT ".$offset.", ".$confor['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
-		list($numstories) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".$prefix."_order"));
+		list($numstories) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_order"));
 		$r = $numstories;
 		if ($numstories > $offset) $r -= $offset;
 		$numpages = ceil($numstories / $confor['anum']);
@@ -54,10 +54,10 @@ function order() {
 }
 
 function order_add() {
-	global $prefix, $db, $admin_file, $stop, $confor;
+	global $db, $admin_file, $stop, $confor;
 	if (isset($_REQUEST['id'])) {
 		$mid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT mail, info, com, date FROM ".$prefix."_order WHERE id = '".$mid."'");
+		$result = $db->sql_query("SELECT mail, info, com, date FROM ".PREFIX_DB."_order WHERE id = '".$mid."'");
 		list($mail, $info, $com, $date) = $db->sql_fetchrow($result);
 	} else {
 		$mid = $_POST['mid'];
@@ -83,7 +83,7 @@ function order_add() {
 }
 
 function order_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$mid = intval($_POST['mid']);
 	$mail = text_filter($_POST['mail']);
 	$info = fields_save($_POST['field']);
@@ -92,11 +92,11 @@ function order_save() {
 	checkemail($mail);
 	if (!$stop && $_POST['posttype'] == "save") {
 		if ($mid) {
-			$db->sql_query("UPDATE ".$prefix."_order SET mail = '".$mail."', info = '".$info."', com = '".$com."', date = '".$date."' WHERE id = '".$mid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_order SET mail = '".$mail."', info = '".$info."', com = '".$com."', date = '".$date."' WHERE id = '".$mid."'");
 		} else {
 			$ip = getip();
 			$agent = getagent();
-			$db->sql_query("INSERT INTO ".$prefix."_order VALUES (NULL, '".$mail."', '".$info."', '".$com."', '".$ip."', '".$agent."', '".$date."', '1')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_order VALUES (NULL, '".$mail."', '".$info."', '".$com."', '".$ip."', '".$agent."', '".$date."', '1')");
 		}
 		header("Location: ".$admin_file.".php?op=order");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -107,10 +107,10 @@ function order_save() {
 }
 
 function order_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".$prefix."_order WHERE id = '".$id."'");
+	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_order WHERE id = '".$id."'");
 	referer($admin_file.".php?op=order");
 }
 
@@ -175,9 +175,9 @@ switch($op) {
 	break;
 	
 	case "order_active":
-	$db->sql_query("UPDATE ".$prefix."_order SET status = '".$act."' WHERE id = '".$id."'");
+	$db->sql_query("UPDATE ".PREFIX_DB."_order SET status = '".$act."' WHERE id = '".$id."'");
 	if ($act) {
-		list($mail) = $db->sql_fetchrow($db->sql_query("SELECT mail FROM ".$prefix."_order WHERE id = '".$id."'"));
+		list($mail) = $db->sql_fetchrow($db->sql_query("SELECT mail FROM ".PREFIX_DB."_order WHERE id = '".$id."'"));
 		$amail = ($confor['mail']) ? $confor['mail'] : $conf['adminmail'];
 		$subject = $conf['sitename']." - "._ORDER;
 		$msg = $conf['sitename']." - "._ORDER."<br><br>";

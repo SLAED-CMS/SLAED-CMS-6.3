@@ -25,7 +25,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function users(): void {
-    global $prefix, $db, $aroute, $confu;
+    global $db, $aroute, $confu;
     $search = getVar('req', 'search', 'num');
     $chng = getVar('req', 'chng');
     head();
@@ -69,7 +69,7 @@ function users(): void {
     $cnt_params = $params;
     $params['offset'] = $offset;
     $params['limit'] = $confu['anum'];
-    $sql = 'SELECT u.user_id, u.user_name, u.user_email, u.user_website, u.user_regdate, u.user_lastvisit, u.user_points, u.user_last_ip, u.user_gender, u.user_agent, g.name, g.color FROM '.$prefix.'_users AS u LEFT JOIN '.$prefix.'_groups AS g ON (g.id = u.user_group) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
+    $sql = 'SELECT u.user_id, u.user_name, u.user_email, u.user_website, u.user_regdate, u.user_lastvisit, u.user_points, u.user_last_ip, u.user_gender, u.user_agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.user_group) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
     $res = $db->sql_query($sql,$params);
     if ($db->sql_numrows($res) > 0) {
         $cont .= setTemplateBasic('open');
@@ -93,11 +93,11 @@ function users(): void {
 }
 
 function add(): void {
-    global $prefix, $db, $aroute, $conf, $confu, $stop;
+    global $db, $aroute, $conf, $confu, $stop;
     $confn = $conf['news'] ?? [];
     $id = getVar('req', 'id', 'num');
     if (is_numeric($id)) {
-        $result = $db->sql_query('SELECT user_id, user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field FROM '.$prefix.'_users WHERE user_id = :id', ['id' => $id]);
+        $result = $db->sql_query('SELECT user_id, user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $id]);
         list($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_occ, $user_from, $user_interests, $user_sig, $user_viewemail, $user_password, $user_storynum, $user_blockon, $user_block, $user_theme, $user_newsletter, $user_lang, $user_points, $user_warnings, $user_acess, $user_group, $user_birthday, $user_gender, $user_field) = $db->sql_fetchrow($result);
         $user_warnings = ($user_warnings) ? explode('|', $user_warnings) : '';
     } else {
@@ -186,7 +186,7 @@ function add(): void {
     .'<tr><td>'._UACESS.'</td><td>'.radio_form($user_acess, 'user_acess').'</td></tr>'
     .'<tr><td>'._SPEC_GROUP.':</td><td><select name="user_group" class="sl_form">'
     .'<option value="0">'._NO.'</option>';
-    $result = $db->sql_query('SELECT id, name FROM '.$prefix.'_groups WHERE extra = :extra', ['extra' => '1']);
+    $result = $db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
     while (list($grid, $grname) = $db->sql_fetchrow($result)) {
         $sel = ($grid == $user_group) ? ' selected' : '';
         $cont .= '<option value="'.$grid.'"'.$sel.'>'.$grname.'</option>';
@@ -207,7 +207,7 @@ function add(): void {
 }
 
 function addsave(): void {
-    global $prefix, $db, $aroute, $conf, $stop;
+    global $db, $aroute, $conf, $stop;
     $user_id = getVar('post', 'user_id', 'num');
     $user_name = getVar('post', 'user_name', 'name');
     $user_rank = getVar('post', 'user_rank');
@@ -239,11 +239,11 @@ function addsave(): void {
 
     if (!$user_id && (!$user_name || !$user_email || !$user_password || !$user_password2)) $stop[] = _ERROR_ALL;
     if ($user_name) {
-        list($uid, $uname) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.$prefix.'_users WHERE user_name = :name', ['name' => $user_name]));
-        list($tuid, $tuname) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.$prefix.'_users_temp WHERE user_name = :name', ['name' => $user_name]));
+        list($uid, $uname) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $user_name]));
+        list($tuid, $tuname) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.PREFIX_DB.'_users_temp WHERE user_name = :name', ['name' => $user_name]));
         if (($user_id != $uid && $user_name == $uname) || ($user_id != $tuid && $user_name == $tuname)) $stop[] = _USEREXIST;
-        list($uid, $email) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.$prefix.'_users WHERE user_email = :email', ['email' => $user_email]));
-        list($tuid, $temail) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.$prefix.'_users_temp WHERE user_email = :email', ['email' => $user_email]));
+        list($uid, $email) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.PREFIX_DB.'_users WHERE user_email = :email', ['email' => $user_email]));
+        list($tuid, $temail) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.PREFIX_DB.'_users_temp WHERE user_email = :email', ['email' => $user_email]));
         if (($user_id != $uid && $user_email == $email) || ($user_id != $tuid && $user_email == $temail)) $stop[] = _ERROR_EMAIL;
     } else {
         $stop[] = _ERROR_ALL;
@@ -255,17 +255,17 @@ function addsave(): void {
         if ($user_id) {
             if ($user_password && $user_password == $user_password2) {
                 $saltpass = md5_salt($user_password);
-                $db->sql_query('UPDATE '.$prefix.'_users SET user_name = :name, user_rank = :rank, user_email = :email, user_website = :website, user_avatar = :avatar, user_regdate = :regdate, user_occ = :occ, user_from = :from, user_interests = :interests, user_sig = :sig, user_viewemail = :viewemail, user_password = :password, user_storynum = :storynum, user_blockon = :blockon, user_block = :block, user_theme = :theme, user_newsletter = :newsletter, user_lang = :lang, user_points = :points, user_warnings = :warnings, user_acess = :acess, user_group = :group, user_birthday = :birthday, user_gender = :gender, user_field = :field WHERE user_id = :id', [
+                $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_name = :name, user_rank = :rank, user_email = :email, user_website = :website, user_avatar = :avatar, user_regdate = :regdate, user_occ = :occ, user_from = :from, user_interests = :interests, user_sig = :sig, user_viewemail = :viewemail, user_password = :password, user_storynum = :storynum, user_blockon = :blockon, user_block = :block, user_theme = :theme, user_newsletter = :newsletter, user_lang = :lang, user_points = :points, user_warnings = :warnings, user_acess = :acess, user_group = :group, user_birthday = :birthday, user_gender = :gender, user_field = :field WHERE user_id = :id', [
                     'name' => $user_name, 'rank' => $user_rank, 'email' => $user_email, 'website' => $user_website, 'avatar' => $user_avatar, 'regdate' => $user_regdate, 'occ' => $user_occ, 'from' => $user_from, 'interests' => $user_interests, 'sig' => $user_sig, 'viewemail' => $user_viewemail, 'password' => $saltpass, 'storynum' => $user_storynum, 'blockon' => $user_blockon, 'block' => $user_block, 'theme' => $user_theme, 'newsletter' => $user_newsletter, 'lang' => $user_lang, 'points' => $user_points, 'warnings' => $user_warnings, 'acess' => $user_acess, 'group' => $user_group, 'birthday' => $user_birthday, 'gender' => $user_gender, 'field' => $user_field, 'id' => $user_id
                 ]);
             } else {
-                $db->sql_query('UPDATE '.$prefix.'_users SET user_name = :name, user_rank = :rank, user_email = :email, user_website = :website, user_avatar = :avatar, user_regdate = :regdate, user_occ = :occ, user_from = :from, user_interests = :interests, user_sig = :sig, user_viewemail = :viewemail, user_storynum = :storynum, user_blockon = :blockon, user_block = :block, user_theme = :theme, user_newsletter = :newsletter, user_lang = :lang, user_points = :points, user_warnings = :warnings, user_acess = :acess, user_group = :group, user_birthday = :birthday, user_gender = :gender, user_field = :field WHERE user_id = :id', [
+                $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_name = :name, user_rank = :rank, user_email = :email, user_website = :website, user_avatar = :avatar, user_regdate = :regdate, user_occ = :occ, user_from = :from, user_interests = :interests, user_sig = :sig, user_viewemail = :viewemail, user_storynum = :storynum, user_blockon = :blockon, user_block = :block, user_theme = :theme, user_newsletter = :newsletter, user_lang = :lang, user_points = :points, user_warnings = :warnings, user_acess = :acess, user_group = :group, user_birthday = :birthday, user_gender = :gender, user_field = :field WHERE user_id = :id', [
                     'name' => $user_name, 'rank' => $user_rank, 'email' => $user_email, 'website' => $user_website, 'avatar' => $user_avatar, 'regdate' => $user_regdate, 'occ' => $user_occ, 'from' => $user_from, 'interests' => $user_interests, 'sig' => $user_sig, 'viewemail' => $user_viewemail, 'storynum' => $user_storynum, 'blockon' => $user_blockon, 'block' => $user_block, 'theme' => $user_theme, 'newsletter' => $user_newsletter, 'lang' => $user_lang, 'points' => $user_points, 'warnings' => $user_warnings, 'acess' => $user_acess, 'group' => $user_group, 'birthday' => $user_birthday, 'gender' => $user_gender, 'field' => $user_field, 'id' => $user_id
                 ]);
             }
         } else {
             $saltpass = md5_salt($user_password);
-            $db->sql_query('INSERT INTO '.$prefix.'_users (user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, :storynum, :blockon, :block, :theme, :newsletter, :lang, :points, :warnings, :acess, :group, :birthday, :gender, :field)', [
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_users (user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, :storynum, :blockon, :block, :theme, :newsletter, :lang, :points, :warnings, :acess, :group, :birthday, :gender, :field)', [
                 'name' => $user_name, 'rank' => $user_rank, 'email' => $user_email, 'website' => $user_website, 'avatar' => $user_avatar, 'regdate' => $user_regdate, 'occ' => $user_occ, 'from' => $user_from, 'interests' => $user_interests, 'sig' => $user_sig, 'viewemail' => $user_viewemail, 'password' => $saltpass, 'storynum' => $user_storynum, 'blockon' => $user_blockon, 'block' => $user_block, 'theme' => $user_theme, 'newsletter' => $user_newsletter, 'lang' => $user_lang, 'points' => $user_points, 'warnings' => $user_warnings, 'acess' => $user_acess, 'group' => $user_group, 'birthday' => $user_birthday, 'gender' => $user_gender, 'field' => $user_field
             ]);
         }
@@ -284,12 +284,12 @@ function addsave(): void {
 }
 
 function newuser(): void {
-    global $prefix, $db, $aroute, $conf, $confu;
+    global $db, $aroute, $conf, $confu;
     head();
     $cont = navi(0, 2, 0, 0);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $confu['anum'];
-    $result = $db->sql_query('SELECT user_id, user_name, user_email, user_password, user_regdate, check_num FROM '.$prefix.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $confu['anum']]);
+    $result = $db->sql_query('SELECT user_id, user_name, user_email, user_password, user_regdate, check_num FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $confu['anum']]);
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._EMAIL.'</th><th>'._PASSWORD.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -328,15 +328,15 @@ function nullpoints(): void {
 }
 
 function nullsave(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     $points = getVar('post', 'points', 'num');
     $votes = getVar('post', 'votes', 'num');
     $warnings = getVar('post', 'warnings', 'num');
     $sig = getVar('post', 'sig', 'num');
-    if ($points == 1) $db->sql_query('UPDATE '.$prefix.'_users SET user_points = :zero', ['zero' => '0']);
-    if ($votes == 1) $db->sql_query('UPDATE '.$prefix.'_users SET user_votes = :zero, user_totalvotes = :zero', ['zero' => '0']);
-    if ($warnings == 1) $db->sql_query('UPDATE '.$prefix.'_users SET user_warnings = :zero', ['zero' => '0']);
-    if ($sig == 1) $db->sql_query('UPDATE '.$prefix.'_users SET user_sig = :empty', ['empty' => '']);
+    if ($points == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_points = :zero', ['zero' => '0']);
+    if ($votes == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_votes = :zero, user_totalvotes = :zero', ['zero' => '0']);
+    if ($warnings == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_warnings = :zero', ['zero' => '0']);
+    if ($sig == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_sig = :empty', ['empty' => '']);
     header('Location: '.$aroute.'.php?name=account');
     exit;
 }
@@ -431,19 +431,19 @@ function save(): void {
 }
 
 function newdel(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     $id = getVar('get', 'id', 'num');
-    if ($id) $db->sql_query('DELETE FROM '.$prefix.'_users_temp WHERE user_id = :id', ['id' => $id]);
+    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_users_temp WHERE user_id = :id', ['id' => $id]);
     referer($aroute.'.php?name=account');
 }
 
 function del(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     $id = getVar('get', 'id', 'num');
     if ($id) {
-        $db->sql_query('DELETE FROM '.$prefix.'_users WHERE user_id = :id', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.$prefix.'_favorites WHERE uid = :id', ['id' => $id]);
-        # $db->sql_query('DELETE FROM '.$prefix.'_comment WHERE uid = :id', ['id' => $id]);
+        $db->sql_query('DELETE FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $id]);
+        $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
+        # $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE uid = :id', ['id' => $id]);
     }
     referer($aroute.'.php?name=account');
 }

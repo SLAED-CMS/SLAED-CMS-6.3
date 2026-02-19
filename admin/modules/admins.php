@@ -13,13 +13,13 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function admins(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     head();
     $cont = navi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._URL.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE.'</th><th>'._IP.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-    $result = $db->sql_query('SELECT id, name, title, url, email, pwd, super, lang, ip, regdate, lastvisit FROM '.$prefix.'_admins ORDER BY id');
+    $result = $db->sql_query('SELECT id, name, title, url, email, pwd, super, lang, ip, regdate, lastvisit FROM '.PREFIX_DB.'_admins ORDER BY id');
     while (list($id, $name, $title, $url, $email, $pwd, $super, $lang, $ip, $regdate, $lastvisit) = $db->sql_fetchrow($result)) {
         $lang = (!$lang) ? _ALL : $lang;
         $cont .= '<tr><td>'.title_tip(_REG.': '.format_time($regdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($lastvisit, _TIMESTRING)).$name.'</td><td>'.$title.'</td><td>'.domain($url).'</td><td>'.mailto($email).'</td><td>'.deflang($lang).'</td><td>'.user_geo_ip($ip, 4).'</td>'
@@ -32,16 +32,16 @@ function admins(): void {
 }
 
 function add(): void {
-    global $prefix, $db, $aroute, $conf, $confmd, $stop;
+    global $db, $aroute, $conf, $confmd, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->sql_query('SELECT id, name, title, url, email, pwd, super, editor, smail, modules, lang FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
+        $result = $db->sql_query('SELECT id, name, title, url, email, pwd, super, editor, smail, modules, lang FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
         list($aid, $name, $title, $url, $email, $pwd, $super, $editor, $smail, $modules, $lang) = $db->sql_fetchrow($result);
         $modules = $modules ?? '';
         $names = getAdminModuleNames($modules);
         $new_modules = implode(',', $names);
         if ($new_modules !== $modules) {
-            $db->sql_query('UPDATE '.$prefix.'_admins SET modules = :modules WHERE id = :id', ['modules' => $new_modules, 'id' => $aid]);
+            $db->sql_query('UPDATE '.PREFIX_DB.'_admins SET modules = :modules WHERE id = :id', ['modules' => $new_modules, 'id' => $aid]);
             $modules = $new_modules;
         }
     } else {
@@ -74,7 +74,7 @@ function add(): void {
     .'<tr><td>'._SMAIL.'</td><td>'.radio_form($smail, 'smail').'</td></tr>'
     .'<tr><td>'._MAIL_SENDE.'</td><td><input type="checkbox" name="mail" value="1" OnClick="CloseOpen(\'sl_close_9\', 0);"'.$check.'></td></tr>'
     .'<tr><td colspan="2"><div id="sl_close_9"><table class="sl_table_form"><tr><td>'._MAIL_TEXT.':<div class="sl_small">'._MAIL_PASS_INFO.'</div></td><td>'.textarea('1', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, '').'</td></tr></table></div></td></tr>'
-    .'<tr><td>'._REDAKTOR.':</td><td>'.redaktor('1', 'editor', 'sl_form', $editor, 0).'</td></tr>';
+    .'<tr><td>'._EDITOR.':</td><td>'.redaktor('1', 'editor', 'sl_form', $editor, 0).'</td></tr>';
     if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language($lang).'</select></td></tr>';
     $cont .= '<tr><td>'._PERMISSIONS.':</td><td>'
     .'<table>';
@@ -108,7 +108,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $prefix, $db, $aroute, $conf, $stop;
+    global $db, $aroute, $conf, $stop;
     $aid = getVar('post', 'aid', 'num', 0);
     $name = getVar('post', 'adminname', 'name');
     $title = getVar('post', 'title', 'title');
@@ -127,9 +127,9 @@ function save(): void {
     $send = '';
     if (!$aid && !$pwd && !$pwd2) $stop[] = _NOPASS;
     if ($name) {
-        list($adid, $adname) = $db->sql_fetchrow($db->sql_query('SELECT id, name FROM '.$prefix.'_admins WHERE name = :name', ['name' => $name]));
+        list($adid, $adname) = $db->sql_fetchrow($db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name]));
         if ($aid != $adid && $name == $adname) $stop[] = _USEREXIST;
-        list($adid, $ademail) = $db->sql_fetchrow($db->sql_query('SELECT id, email FROM '.$prefix.'_admins WHERE email = :email', ['email' => $email]));
+        list($adid, $ademail) = $db->sql_fetchrow($db->sql_query('SELECT id, email FROM '.PREFIX_DB.'_admins WHERE email = :email', ['email' => $email]));
         if ($aid != $adid && $email == $ademail) $stop[] = _ERROR_EMAIL;
     } else {
         $stop[] = _ERROR_ALL;
@@ -141,17 +141,17 @@ function save(): void {
         if ($aid) {
             if ($pwd && $pwd == $pwd2) {
                 $newpass = md5_salt($pwd);
-                $db->sql_query('UPDATE '.$prefix.'_admins SET name = :name, title = :title, url = :url, email = :email, pwd = :pwd, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
+                $db->sql_query('UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, pwd = :pwd, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
                     'name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pwd' => $newpass, 'super' => $super, 'editor' => $editor, 'smail' => $smail, 'modules' => $modules, 'lang' => $lang, 'id' => $aid
                 ]);
             } else {
-                $db->sql_query('UPDATE '.$prefix.'_admins SET name = :name, title = :title, url = :url, email = :email, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
+                $db->sql_query('UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
                     'name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'super' => $super, 'editor' => $editor, 'smail' => $smail, 'modules' => $modules, 'lang' => $lang, 'id' => $aid
                 ]);
             }
         } else {
             $password = md5_salt($pwd);
-            $db->sql_query('INSERT INTO '.$prefix.'_admins (name, title, url, email, pwd, super, editor, smail, modules, lang, regdate) VALUES (:name, :title, :url, :email, :pwd, :super, :editor, :smail, :modules, :lang, now())', [
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_admins (name, title, url, email, pwd, super, editor, smail, modules, lang, regdate) VALUES (:name, :title, :url, :email, :pwd, :super, :editor, :smail, :modules, :lang, now())', [
                 'name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pwd' => $password, 'super' => $super, 'editor' => $editor, 'smail' => $smail, 'modules' => $modules, 'lang' => $lang
             ]);
         }
@@ -170,9 +170,9 @@ function save(): void {
 }
 
 function del(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     $id = getVar('get', 'id', 'num');
-    $db->sql_query('DELETE FROM '.$prefix.'_admins WHERE id = :id', ['id' => $id]);
+    $db->sql_query('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
     header('Location: '.$aroute.'.php?name=admins');
     exit;
 }

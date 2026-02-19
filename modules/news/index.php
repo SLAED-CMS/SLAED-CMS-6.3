@@ -25,7 +25,7 @@ function navigate($title, $cat='') {
 }
 
 function news() {
-	global $prefix, $db, $admin_file, $conf, $confu, $confn, $home, $op;
+	global $db, $admin_file, $conf, $confu, $confn, $home, $op;
 	$cwhere = catmids($conf['name'], 's.catid');
 	$unum = getUserNews($confn['num']);
 	$ncat = getVar('get', 'cat', 'num');
@@ -44,11 +44,11 @@ function news() {
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
 		$orderby = ($op) ? (($op == 'best') ? '(s.score/s.ratings) DESC' : '(s.counter/(TO_DAYS(NOW()) - TO_DAYS(s.time))) DESC') : 's.fix DESC, s.time DESC';
-		list($ctitle) = $db->sql_fetchrow($db->sql_query("SELECT title FROM ".$prefix."_categories WHERE id = '".$ncat."'"));
+		list($ctitle) = $db->sql_fetchrow($db->sql_query("SELECT title FROM ".PREFIX_DB."_categories WHERE id = '".$ncat."'"));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (s.catid = '".$ncat."' OR s.associated REGEXP '[[:<:]]".$ncat."[[:>:]]' OR c.parentid = '".$ncat."') AND s.time <= NOW() AND s.status != '0' ".$cwhere." ORDER BY ".$orderby;
 		$catid = array();
-		$result = $db->sql_query("SELECT id FROM ".$prefix."_categories WHERE parentid = '".$ncat."'");
+		$result = $db->sql_query("SELECT id FROM ".PREFIX_DB."_categories WHERE parentid = '".$ncat."'");
 		while (list($caid) = $db->sql_fetchrow($result)) $catid[] = $caid;
 		unset($result);
 		if (isArray($catid)) {
@@ -79,7 +79,7 @@ function news() {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) ".$order." LIMIT ".$offset.", ".$unum);
+	$result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) ".$order." LIMIT ".$offset.", ".$unum);
 	if ($db->sql_numrows($result) > 0) {
 		$width_tab = 100 / $confn['bascol'];
 		$i = 1;
@@ -125,7 +125,7 @@ function news() {
 }
 
 function liste() {
-	global $prefix, $db, $conf, $confu, $confn;
+	global $db, $conf, $confu, $confn;
 	$cwhere = catmids($conf['name'], 's.catid');
 	$listnum = intval($confn['listnum']);
 	$let = getVar('get', 'let', 'let');
@@ -139,7 +139,7 @@ function liste() {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) ".$order." ".$cwhere." ORDER BY s.fix DESC, s.time DESC LIMIT ".$offset.", ".$listnum);
+	$result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) ".$order." ".$cwhere." ORDER BY s.fix DESC, s.time DESC LIMIT ".$offset.", ".$listnum);
 	head();
 	$cont = navigate(_LIST);
 	if ($db->sql_numrows($result) > 0) {
@@ -165,14 +165,14 @@ function liste() {
 }
 
 function view() {
-	global $prefix, $db, $admin_file, $conf, $confu, $confn;
+	global $db, $admin_file, $conf, $confu, $confn;
 	$id = getVar('get', 'id', 'num');
 	$pag = getVar('get', 'num', 'num', '1');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 's.catid');
-	$result = $db->sql_query("SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.counter, s.acomm, s.score, s.ratings, s.associated, c.title, c.description, c.img, u.user_name FROM ".$prefix."_news AS s LEFT JOIN ".$prefix."_categories AS c ON (s.catid = c.id) LEFT JOIN ".$prefix."_users AS u ON (s.uid = u.user_id) WHERE s.sid = '".$id."' AND s.time <= NOW() AND s.status != '0' ".$cwhere);
+	$result = $db->sql_query("SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.counter, s.acomm, s.score, s.ratings, s.associated, c.title, c.description, c.img, u.user_name FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) WHERE s.sid = '".$id."' AND s.time <= NOW() AND s.status != '0' ".$cwhere);
 	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query("UPDATE ".$prefix."_news SET counter = counter+1 WHERE sid = '".$id."'");
+		$db->sql_query("UPDATE ".PREFIX_DB."_news SET counter = counter+1 WHERE sid = '".$id."'");
 		list($cid, $uname, $title, $time, $hometext, $bodytext, $field, $vote, $counter, $acomm, $score, $ratings, $associated, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		head();
@@ -204,10 +204,10 @@ function view() {
 		$cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $confn['nump'], '', '#'.$id, '');
 		if ($confn['assoc']) {
 			$limit = intval($confn['asocnum']);
-			list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".$prefix."_news WHERE catid IN (".$associated.") AND sid != '".$id."' AND time <= NOW() AND status != '0'"));
+			list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".PREFIX_DB."_news WHERE catid IN (".$associated.") AND sid != '".$id."' AND time <= NOW() AND status != '0'"));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->sql_query("SELECT sid, title, time, hometext, bodytext FROM ".$prefix."_news WHERE catid IN (".$associated.") AND sid != '".$id."' AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.", ".$limit);
+				$result = $db->sql_query("SELECT sid, title, time, hometext, bodytext FROM ".PREFIX_DB."_news WHERE catid IN (".$associated.") AND sid != '".$id."' AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.", ".$limit);
 				$cont .= setTemplateBasic('assoc-open', array('{%title%}' => _ASSTORY));
 				while (list($aid, $title, $time, $hometext, $bodytext) = $db->sql_fetchrow($result)) {
 					$date = ($confn['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</span>' : '';
@@ -228,7 +228,7 @@ function view() {
 }
 
 function add() {
-	global $prefix, $db, $user, $conf, $confu, $confn, $stop;
+	global $db, $user, $conf, $confu, $confn, $stop;
 	if ((is_user() && $confn['add'] == 1) || (!is_user() && $confn['addquest'] == 1)) {
 		$title = getVar('post', 'title', 'title');
 		$cid = getVar('post', 'catid', 'num');
@@ -264,7 +264,7 @@ function add() {
 }
 
 function send() {
-	global $prefix, $db, $user, $conf, $confn, $stop;
+	global $db, $user, $conf, $confn, $stop;
 	if ((is_user() && $confn['add'] == 1) || (!is_user() && $confn['addquest'] == 1)) {
 		$title = getVar('post', 'title', 'title');
 		$cid = getVar('post', 'catid', 'num');
@@ -280,7 +280,7 @@ function send() {
 		if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->sql_query("INSERT INTO ".$prefix."_news (sid, catid, uid, name, title, time, hometext, bodytext, field, associated, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', NOW(), '".$hometext."', '".$bodytext."', '".$field."', '', '".getIp()."', '0')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_news (sid, catid, uid, name, title, time, hometext, bodytext, field, associated, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', NOW(), '".$hometext."', '".$bodytext."', '".$field."', '', '".getIp()."', '0')");
 			update_points(31);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confn['addmail'], $conf['name'], $puname, _NEWS);

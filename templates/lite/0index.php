@@ -112,13 +112,13 @@ function setTemplateMenu() {
 }
 
 function setTemplateForum() {
-	global $prefix, $db;
+	global $db;
 	$blimit = "3";
 	$bclos = "97, 98, 99, 100, 101";
 	$bwhere = ($bclos) ? "catid NOT IN (".$bclos.") AND" : "";
 	$ordern = (is_moder("forum")) ? "" : "AND time <= now() AND status > '1'";
 	$buffer = "";
-	$result = $db->sql_query("SELECT id, title, l_time, l_uid, l_name, l_id, l_time, status FROM ".$prefix."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
+	$result = $db->sql_query("SELECT id, title, l_time, l_uid, l_name, l_id, l_time, status FROM ".PREFIX_DB."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
 	while (list($id, $title, $time, $l_uid, $l_name, $l_id, $l_time, $status) = $db->sql_fetchrow($result)) {
 		$lposter = ($l_uid) ? user_info($l_name) : $l_name;
 		$class = ($status <= 1 || $time > date("Y-m-d H:i:s")) ? " class=\"sl_hidden\"" : "";
@@ -129,7 +129,7 @@ function setTemplateForum() {
 }
 
 function setTemplateHead($sub, $val = '') {
-	global $theme, $user, $conf, $confu, $conff, $prefix, $db;
+	global $theme, $user, $conf, $confu, $conff, $db;
 	if (is_user()) {
 		$uname = htmlspecialchars(substr($user[1], 0, 25));
 		$userinfo = getusrinfo();
@@ -146,9 +146,9 @@ function setTemplateHead($sub, $val = '') {
 	$mname = ($conf['name']) ? deflmconst($conf['name']) : '';
 	$fcat = (isset($_GET['cat'])) ? intval($_GET['cat']) : 0;
 	$cname = ($fcat) ? catlink($conf['name'], $fcat, $conff['defis'], $mname) : '';
-	list($count) = $db->sql_fetchrow($db->sql_query("SELECT Count(fid) FROM ".$prefix."_faq WHERE time <= now() AND status != '0'"));
+	list($count) = $db->sql_fetchrow($db->sql_query("SELECT Count(fid) FROM ".PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
 	$random = mt_rand(0, $count);
-	$result = $db->sql_query("SELECT fid, title FROM ".$prefix."_faq ORDER BY fid DESC LIMIT ".$random.", 1");
+	$result = $db->sql_query("SELECT fid, title FROM ".PREFIX_DB."_faq ORDER BY fid DESC LIMIT ".$random.", 1");
 	list($fid, $title) = $db->sql_fetchrow($result);
 	$faq = '<a class="ico i_fav" href="index.php?name=faq&amp;op=view&amp;id='.$fid.'" title="'.$title.'">'.$title.'</a>';
 	$value = array('{%login%}' => $cont, '{%theme%}' => $theme, '{%lang%}' => substr(_LOCALE, 0, 2), '{%sitename%}' => $conf['sitename'], '{%logo%}' => $conf['site_logo'], '{%homeurl%}' => $conf['homeurl'], '{%slogan%}' => $conf['slogan'], '{%home%}' => _HOME, '{%account%}' => _ACCOUNT, '{%album%}' => _ALBUM, '{%alinks%}' => _A_LINKS, '{%feedback%}' => _FEEDBACK, '{%content%}' => _CONTENT, '{%faq%}' => _FAQ, '{%files%}' => _FILES, '{%forum%}' => _FORUM, '{%help%}' => _HELP, '{%radio%}' => _RADIO, '{%jokes%}' => _JOKES, '{%links%}' => _LINKS, '{%media%}' => _MEDIA, '{%users%}' => _USERS, '{%news%}' => _NEWS, '{%order%}' => _ORDER, '{%pages%}' => _PAGES, '{%recommend%}' => _RECOMMEND, '{%rss%}' => _RSS, '{%search%}' => _SEARCH, '{%shop%}' => _SHOP, '{%topusers%}' => _TOPUSERS, '{%voting%}' => _VOTING, '{%favorites%}' => _S_FAVORITEN, '{%homepage%}' => _S_STARTSEITE, '{%season%}' => setTemplateSeason(), '{%modul%}' => $conf['name'], '{%menu%}' => setTemplateMenu(), '{%modulname%}' => $mname, '{%catname%}' => $cname, '{%faqtitle%}' => $faq);

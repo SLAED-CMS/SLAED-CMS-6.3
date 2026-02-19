@@ -25,7 +25,7 @@ function navigate($title, $cat='') {
 }
 
 function links() {
-	global $prefix, $db, $admin_file, $user, $conf, $confu, $confl, $home, $op;
+	global $db, $admin_file, $user, $conf, $confu, $confl, $home, $op;
 	$cwhere = catmids($conf['name'], 'f.cid');
 	$unum = user_news($user[3] ?? 0, $confl['num']);
 	$ncat = getVar('get', 'cat', 'num');
@@ -44,11 +44,11 @@ function links() {
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
 		$orderby = ($op) ? (($op == 'best') ? '(f.totalvotes/f.votes) DESC' : '(f.hits/(TO_DAYS(NOW()) - TO_DAYS(f.date))) DESC') : 'f.date DESC';
-		list($ctitle) = $db->sql_fetchrow($db->sql_query("SELECT title FROM ".$prefix."_categories WHERE id = '".$ncat."'"));
+		list($ctitle) = $db->sql_fetchrow($db->sql_query("SELECT title FROM ".PREFIX_DB."_categories WHERE id = '".$ncat."'"));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (f.cid = '".$ncat."' OR c.parentid = '".$ncat."') AND f.date <= NOW() AND f.status != '0' ".$cwhere." ORDER BY ".$orderby;
 		$catid = array();
-		$result = $db->sql_query("SELECT id FROM ".$prefix."_categories WHERE parentid = '".$ncat."'");
+		$result = $db->sql_query("SELECT id FROM ".PREFIX_DB."_categories WHERE parentid = '".$ncat."'");
 		while (list($caid) = $db->sql_fetchrow($result)) $catid[] = $caid;
 		unset($result);
 		if (isArray($catid)) {
@@ -79,7 +79,7 @@ function links() {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT f.lid, f.cid, f.name, f.title, f.description, f.bodytext, f.date, f.counter, f.acomm, f.votes, f.totalvotes, f.totalcomments, f.hits, c.title, c.description, c.img, u.user_name FROM ".$prefix."_links AS f LEFT JOIN ".$prefix."_categories AS c ON (f.cid = c.id) LEFT JOIN ".$prefix."_users AS u ON (f.uid = u.user_id) ".$order." LIMIT ".$offset.", ".$unum);
+	$result = $db->sql_query("SELECT f.lid, f.cid, f.name, f.title, f.description, f.bodytext, f.date, f.counter, f.acomm, f.votes, f.totalvotes, f.totalcomments, f.hits, c.title, c.description, c.img, u.user_name FROM ".PREFIX_DB."_links AS f LEFT JOIN ".PREFIX_DB."_categories AS c ON (f.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) ".$order." LIMIT ".$offset.", ".$unum);
 	if ($db->sql_numrows($result) > 0) {
 		while (list($id, $cid, $uname, $stitle, $description, $bodytext, $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
@@ -109,7 +109,7 @@ function links() {
 }
 
 function liste() {
-	global $prefix, $db, $conf, $confu, $confl;
+	global $db, $conf, $confu, $confl;
 	$cwhere = catmids($conf['name'], 'f.cid');
 	$listnum = intval($confl['listnum']);
 	$let = getVar('get', 'let', 'let');
@@ -123,7 +123,7 @@ function liste() {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT f.lid, f.cid, f.name, f.title, f.date, c.title, c.description, u.user_name FROM ".$prefix."_links AS f LEFT JOIN ".$prefix."_categories AS c ON (f.cid = c.id) LEFT JOIN ".$prefix."_users AS u ON (f.uid = u.user_id) ".$order." ".$cwhere." ORDER BY date DESC LIMIT ".$offset.", ".$listnum);
+	$result = $db->sql_query("SELECT f.lid, f.cid, f.name, f.title, f.date, c.title, c.description, u.user_name FROM ".PREFIX_DB."_links AS f LEFT JOIN ".PREFIX_DB."_categories AS c ON (f.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) ".$order." ".$cwhere." ORDER BY date DESC LIMIT ".$offset.", ".$listnum);
 	head();
 	$cont = navigate(_LIST);
 	if ($db->sql_numrows($result) > 0) {
@@ -149,13 +149,13 @@ function liste() {
 }
 
 function view() {
-	global $prefix, $db, $admin_file, $conf, $confu, $confl;
+	global $db, $admin_file, $conf, $confu, $confl;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'f.cid');
-	$result = $db->sql_query("SELECT f.cid, f.name, f.title, f.url, f.description, f.bodytext, f.date, f.email, f.counter, f.acomm, f.votes, f.totalvotes, f.hits, f.status, c.title, c.description, c.img, u.user_name FROM ".$prefix."_links AS f LEFT JOIN ".$prefix."_categories AS c ON (f.cid = c.id) LEFT JOIN ".$prefix."_users AS u ON (f.uid = u.user_id) WHERE lid = '".$id."' AND date <= NOW() AND f.status != '0' ".$cwhere);
+	$result = $db->sql_query("SELECT f.cid, f.name, f.title, f.url, f.description, f.bodytext, f.date, f.email, f.counter, f.acomm, f.votes, f.totalvotes, f.hits, f.status, c.title, c.description, c.img, u.user_name FROM ".PREFIX_DB."_links AS f LEFT JOIN ".PREFIX_DB."_categories AS c ON (f.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE lid = '".$id."' AND date <= NOW() AND f.status != '0' ".$cwhere);
 	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query("UPDATE ".$prefix."_links SET counter = counter+1 WHERE lid = '".$id."'");
+		$db->sql_query("UPDATE ".PREFIX_DB."_links SET counter = counter+1 WHERE lid = '".$id."'");
 		list($cid, $uname, $title, $authorurl, $description, $bodytext, $date, $aemail, $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		head();
@@ -188,10 +188,10 @@ function view() {
 		$cont .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '', '{%size%}' => '', '{%version%}' => '', '{%download%}' => $download, '{%broken%}' => $broken, '{%email%}' => $email, '{%home%}' => $home));
 		if ($confl['link']) {
 			$limit = intval($confl['linknum']);
-			list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".$prefix."_links WHERE cid = '".$cid."' AND lid != '".$id."' AND date <= NOW() AND status != '0'"));
+			list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".PREFIX_DB."_links WHERE cid = '".$cid."' AND lid != '".$id."' AND date <= NOW() AND status != '0'"));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->sql_query("SELECT lid, title, description, bodytext, date FROM ".$prefix."_links WHERE cid = '".$cid."' AND lid != '".$id."' AND date <= NOW() AND status != '0' ORDER BY date DESC LIMIT ".$random.", ".$limit);
+				$result = $db->sql_query("SELECT lid, title, description, bodytext, date FROM ".PREFIX_DB."_links WHERE cid = '".$cid."' AND lid != '".$id."' AND date <= NOW() AND status != '0' ORDER BY date DESC LIMIT ".$random.", ".$limit);
 				$cont .= setTemplateBasic('assoc-open', array('{%title%}' => _CATASSOC));
 				while(list($aid, $title, $hometext, $bodytext, $time) = $db->sql_fetchrow($result)) {
 					$date = ($confl['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</span>' : '';
@@ -212,7 +212,7 @@ function view() {
 }
 
 function add() {
-	global $db, $prefix, $user, $conf, $confu, $confl, $stop;
+	global $db, $user, $conf, $confu, $confl, $stop;
 	if ((is_user() && $confl['add'] == 1) || (!is_user() && $confl['addquest'] == 1)) {
 		$title = getVar('post', 'title', 'title');
 		$cid = getVar('post', 'cid', 'num');
@@ -256,7 +256,7 @@ function add() {
 }
 
 function send() {
-	global $prefix, $db, $user, $conf, $confl, $stop;
+	global $db, $user, $conf, $confl, $stop;
 	if ((is_user() && $confl['add'] == 1) || (!is_user() && $confl['addquest'] == 1)) {
 		$title = getVar('post', 'title', 'title');
 		$cid = getVar('post', 'cid', 'num');
@@ -272,11 +272,11 @@ function send() {
 		if (!$authorurl) $stop[] = _CERROR4;
 		checkemail($authormail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-		if ($db->sql_numrows($db->sql_query("SELECT url FROM ".$prefix."_links WHERE url = '".$authorurl."'")) > 0) $stop[] = _LINKEXIST;
+		if ($db->sql_numrows($db->sql_query("SELECT url FROM ".PREFIX_DB."_links WHERE url = '".$authorurl."'")) > 0) $stop[] = _LINKEXIST;
 		if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->sql_query("INSERT INTO ".$prefix."_links (lid, cid, uid, name, title, description, bodytext, url, date, email, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', '".$description."', '".$bodytext."', '".$authorurl."', NOW(), '".$authormail."', '".getIp()."', '0')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_links (lid, cid, uid, name, title, description, bodytext, url, date, email, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', '".$description."', '".$bodytext."', '".$authorurl."', NOW(), '".$authormail."', '".getIp()."', '0')");
 			update_points(21);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confl['addmail'], $conf['name'], $puname, _LINKS);
@@ -292,10 +292,10 @@ function send() {
 }
 
 function broken() {
-	global $prefix, $db, $conf, $confl;
+	global $db, $conf, $confl;
 	$id = getVar('get', 'id', 'num');
 	if ($confl['broc'] == '1' && $id) {
-		$db->sql_query("UPDATE ".$prefix."_links SET status = '2' WHERE lid = '".$id."' AND status != '0'");
+		$db->sql_query("UPDATE ".PREFIX_DB."_links SET status = '2' WHERE lid = '".$id."' AND status != '0'");
 		head();
 		echo navigate(_BROCLINK).setTemplateWarning('warn', array('time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEL));
 		foot();
@@ -305,11 +305,11 @@ function broken() {
 }
 
 function loading() {
-	global $prefix, $db, $conf, $confl;
+	global $db, $conf, $confl;
 	$id = getVar('post', 'id', 'num');
 	if (($id && is_user()) || ($id && $confl['links'] == '1')) {
-		$db->sql_query("UPDATE ".$prefix."_links SET hits = hits+1 WHERE lid = '".$id."'");
-		list($title, $url) = $db->sql_fetchrow($db->sql_query("SELECT title, url FROM ".$prefix."_links WHERE lid = '".$id."'"));
+		$db->sql_query("UPDATE ".PREFIX_DB."_links SET hits = hits+1 WHERE lid = '".$id."'");
+		list($title, $url) = $db->sql_fetchrow($db->sql_query("SELECT title, url FROM ".PREFIX_DB."_links WHERE lid = '".$id."'"));
 		update_points(23);
 		$info = sprintf(_NOTELINKLOAD, $title, domain($url));
 		head();

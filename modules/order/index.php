@@ -43,7 +43,7 @@ function order() {
 }
 
 function send() {
-	global $prefix, $db, $conf, $confor, $stop;
+	global $db, $conf, $confor, $stop;
 	if ($confor['an']) {
 		$mail = text_filter($_POST['mail']);
 		$info = getVar('post', 'field', 'field');
@@ -53,7 +53,7 @@ function send() {
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			$status = ($confor['pr']) ? "0" : "1";
-			$db->sql_query("INSERT INTO ".$prefix."_order VALUES (NULL, '".$mail."', '".$info."', '".$com."', '".getIp()."', '".getAgent()."', NOW(), '".$status."')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_order VALUES (NULL, '".$mail."', '".$info."', '".$com."', '".getIp()."', '".getAgent()."', NOW(), '".$status."')");
 			if ($confor['ad']) {
 				$infos = fields_out($info, $conf['name']);
 				$amail = ($confor['mail']) ? $confor['mail'] : $conf['adminmail'];

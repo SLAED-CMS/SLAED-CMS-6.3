@@ -15,19 +15,19 @@ function forum_navi() {
 }
 
 function forum_synch() {
-	global $prefix, $db;
-	$db->sql_query("UPDATE ".$prefix."_categories SET topics = '0', posts = '0', lpost_id = '0' WHERE modul = 'forum'");
-	$result = $db->sql_query("SELECT id, parentid FROM ".$prefix."_categories WHERE modul = 'forum' ORDER BY ordern");
+	global $db;
+	$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics = '0', posts = '0', lpost_id = '0' WHERE modul = 'forum'");
+	$result = $db->sql_query("SELECT id, parentid FROM ".PREFIX_DB."_categories WHERE modul = 'forum' ORDER BY ordern");
 	while (list($id, $parentid) = $db->sql_fetchrow($result)) $massiv[$id] = array($parentid);
 	foreach ($massiv as $key => $val) {
-		list($topics) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".$prefix."_forum WHERE pid = '0' AND catid = '".$key."'"));
-		list($posts) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".$prefix."_forum WHERE pid != '0' AND catid = '".$key."'"));
-		list($id, $pid) = $db->sql_fetchrow($db->sql_query("SELECT id, pid FROM ".$prefix."_forum WHERE catid = '".$key."' AND ((pid != '0' && status = '1') || (pid = '0' && status > '1')) ORDER BY id DESC LIMIT 1"));
+		list($topics) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_forum WHERE pid = '0' AND catid = '".$key."'"));
+		list($posts) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_forum WHERE pid != '0' AND catid = '".$key."'"));
+		list($id, $pid) = $db->sql_fetchrow($db->sql_query("SELECT id, pid FROM ".PREFIX_DB."_forum WHERE catid = '".$key."' AND ((pid != '0' && status = '1') || (pid = '0' && status > '1')) ORDER BY id DESC LIMIT 1"));
 		$lid = ($pid) ? $pid : $id;
-		$db->sql_query("UPDATE ".$prefix."_categories SET topics = '".$topics."', posts = '".$posts."', lpost_id = '".$lid."' WHERE id = '".$key."' AND modul = 'forum'");
+		$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics = '".$topics."', posts = '".$posts."', lpost_id = '".$lid."' WHERE id = '".$key."' AND modul = 'forum'");
 		$flag = $val[0];
 		while ($flag != 0) {
-			$db->sql_query("UPDATE ".$prefix."_categories SET topics = topics+".$topics.", posts = posts+".$posts.", lpost_id = '".$lid."' WHERE id = '".$flag."' AND modul = 'forum'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics = topics+".$topics.", posts = posts+".$posts.", lpost_id = '".$lid."' WHERE id = '".$flag."' AND modul = 'forum'");
 			$flag = intval($massiv[$flag][0]);
 		}
 	}
@@ -36,7 +36,7 @@ function forum_synch() {
 	$cont .= tpl_warn("warn", _SYNCHIN, "", "", "info");
 	$cont .= tpl_eval("open");
 	$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._FORUM."</th><th>"._NEWTOPICS."</th><th>"._MESSAGES."</th><th class=\"{sorter: false}\">"._STATUS."</th></tr></thead><tbody>";
-	$result = $db->sql_query("SELECT id, title, description, cstatus, topics, posts FROM ".$prefix."_categories WHERE modul = 'forum' ORDER BY ordern");
+	$result = $db->sql_query("SELECT id, title, description, cstatus, topics, posts FROM ".PREFIX_DB."_categories WHERE modul = 'forum' ORDER BY ordern");
 	while (list($id, $title, $description, $cstatus, $topics, $posts) = $db->sql_fetchrow($result)) {
 		$descript = ($description) ? $description : _NO;
 		$ltitle = title_tip(_DESCRIPTION.": ".$descript)."<a href=\"index.php?name=forum&amp;cat=".$id."\" target=\"_blank\" title=\"".$title."\" class=\"sl_note\">".cutstr($title, 60)."</a>";

@@ -11,12 +11,12 @@ if (!defined('MODULE_FILE')) {
 include('config/config_content.php');
 
 function content() {
-	global $prefix, $db, $admin_file, $conf, $confcn;
+	global $db, $admin_file, $conf, $confcn;
 	head();
 	$cont = setTemplateBasic('title', array('{%title%}' => _CONTENT));
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $confcn['num'];
-	$result = $db->sql_query("SELECT id, title, text, time, counter FROM ".$prefix."_content WHERE time <= NOW() ORDER BY time DESC LIMIT ".$offset.", ".$confcn['num']);
+	$result = $db->sql_query("SELECT id, title, text, time, counter FROM ".PREFIX_DB."_content WHERE time <= NOW() ORDER BY time DESC LIMIT ".$offset.", ".$confcn['num']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
@@ -39,18 +39,18 @@ function content() {
 }
 
 function view() {
-	global $prefix, $db, $conf, $confn, $admin_file;
+	global $db, $conf, $confn, $admin_file;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
-	$result = $db->sql_query("SELECT id, title, text, field, url, time, refresh FROM ".$prefix."_content WHERE id = '".$id."' AND time <= NOW()");
+	$result = $db->sql_query("SELECT id, title, text, field, url, time, refresh FROM ".PREFIX_DB."_content WHERE id = '".$id."' AND time <= NOW()");
 	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query("UPDATE ".$prefix."_content SET counter = counter+1 WHERE id = '".$id."'");
+		$db->sql_query("UPDATE ".PREFIX_DB."_content SET counter = counter+1 WHERE id = '".$id."'");
 		list($id, $title, $text, $field, $url, $time, $refresh) = $db->sql_fetchrow($result);
 		if ($url) {
 			$past = time() - $refresh;
 			if (strtotime($time) < $past) {
 				$content = rss_read($url, 1);
-				$db->sql_query("UPDATE ".$prefix."_content SET text = '".$content."', time = NOW() WHERE id = '".$id."'");
+				$db->sql_query("UPDATE ".PREFIX_DB."_content SET text = '".$content."', time = NOW() WHERE id = '".$id."'");
 			}
 		}
 		$fields = fields_out($field, $conf['name']);

@@ -20,11 +20,11 @@ function comments(): void {
 }
 
 function edit(): void {
-    global $db, $prefix, $aroute;
+    global $db, $aroute;
     $id = getVar('get', 'id', 'num');
     head();
     $cont = navi(0, 0, 0, 0);
-    $result = $db->sql_query('SELECT id, modul, comment FROM '.$prefix.'_comment WHERE id = :id', ['id' => $id]);
+    $result = $db->sql_query('SELECT id, modul, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     list($id, $modul, $com_text) = $db->sql_fetchrow($result);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
@@ -36,10 +36,10 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $prefix, $db, $aroute;
+    global $db, $aroute;
     $id = getVar('post', 'id', 'num');
     $com_text = save_text($_POST['comment']);
-    $db->sql_query('UPDATE '.$prefix.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
+    $db->sql_query('UPDATE '.PREFIX_DB.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
     header('Location: '.$aroute.'.php?name=comments');
     exit;
 }
@@ -124,15 +124,15 @@ function save(): void {
 }
 
 function act(): void {
-    global $db, $prefix, $aroute;
+    global $db, $aroute;
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
     if (is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
-                list($cid, $mod, $uid, $status) = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.$prefix.'_comment WHERE id = :id', ['id' => $val]));
+                list($cid, $mod, $uid, $status) = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
                 if (!$status && $cid && $mod) {
-                    $db->sql_query('UPDATE '.$prefix.'_comment SET status = \'1\' WHERE id = :id', ['id' => $val]);
+                    $db->sql_query('UPDATE '.PREFIX_DB.'_comment SET status = \'1\' WHERE id = :id', ['id' => $val]);
                     numcom($cid, $mod, 0, $uid);
                 }
             }
@@ -142,15 +142,15 @@ function act(): void {
 }
 
 function del(): void {
-    global $db, $prefix, $aroute;
+    global $db, $aroute;
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
     if (is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
-                list($cid, $mod, $uid, $status) = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.$prefix.'_comment WHERE id = :id', ['id' => $val]));
+                list($cid, $mod, $uid, $status) = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
                 if ($cid && $mod) {
-                    $db->sql_query('DELETE FROM '.$prefix.'_comment WHERE id = :id', ['id' => $val]);
+                    $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]);
                     if ($status) numcom($cid, $mod, 1, $uid);
                 }
             }

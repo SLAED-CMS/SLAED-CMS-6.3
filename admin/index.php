@@ -121,8 +121,8 @@ function getAdminPanel(): void {
 
 # OLD FUNCTIONS - REFAKTORING NEEDED
 function add_admin() {
-    global $prefix, $db, $aroute, $conf, $stop;
-    if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_admins')) == 0) {
+    global $db, $aroute, $conf, $stop;
+    if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $aname = $_POST['aname'];
         $aurl = url_filter($_POST['aurl']);
         $aemail = $_POST['aemail'];
@@ -137,12 +137,12 @@ function add_admin() {
         if ($apwd != $apwd2) $stop = _ERROR_PASS;
         if (strlen($aname) > 25) $stop = _NICKLONG;
         if (!$stop) {
-            $db->sql_query('INSERT INTO '.$prefix."_admins VALUES (NULL, '".$aname."', 'Admin', '".$aurl."', '".$aemail."', '".$apwd."', '1', '".$aeditor."', '1', '', '".$alang."', '".$aip."', now(), now())");
+            $db->sql_query('INSERT INTO '.PREFIX_DB."_admins VALUES (NULL, '".$aname."', 'Admin', '".$aurl."', '".$aemail."', '".$apwd."', '1', '".$aeditor."', '1', '', '".$alang."', '".$aip."', now(), now())");
             if ($auser_new == 1) {
                 $auser_avatar = 'default/00.gif';
-                $user_exist = $db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix."_users WHERE user_name = '".$aname."'"));
-                if ($user_exist) $db->sql_query('DELETE FROM '.$prefix."_users WHERE user_name='".$aname."'");
-                $db->sql_query('INSERT INTO '.$prefix."_users (user_id, user_name, user_email, user_website, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_block, user_warnings, user_field) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."', '', '', '')");
+                $user_exist = $db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB."_users WHERE user_name = '".$aname."'"));
+                if ($user_exist) $db->sql_query('DELETE FROM '.PREFIX_DB."_users WHERE user_name='".$aname."'");
+                $db->sql_query('INSERT INTO '.PREFIX_DB."_users (user_id, user_name, user_email, user_website, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_block, user_warnings, user_field) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."', '', '', '')");
             }
             header('Location: '.$aroute.'.php');
         } else {
@@ -154,12 +154,12 @@ function add_admin() {
 }
 
 function check_admin() {
-    global $prefix, $db, $aroute, $conf, $stop;
+    global $db, $aroute, $conf, $stop;
     if (($conf['gfx_chk'] == 1 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) && checkCaptcha(2)) $stop = _SECCODEINCOR;
     $name = htmlspecialchars(trim(substr($_POST['name'], 0, 25)));
     $pwd = htmlspecialchars(trim(substr($_POST['pwd'], 0, 25)));
     if (!$name || !$pwd) $stop = _LOGININCOR;
-    $result = $db->sql_query('SELECT id, name, pwd, editor FROM '.$prefix."_admins WHERE name = '".$name."' AND pwd = '".md5_salt($pwd)."'");
+    $result = $db->sql_query('SELECT id, name, pwd, editor FROM '.PREFIX_DB."_admins WHERE name = '".$name."' AND pwd = '".md5_salt($pwd)."'");
     if ($db->sql_numrows($result) != 1) $stop = _LOGININCOR;
     list($aid, $aname, $apwd, $aeditor) = $db->sql_fetchrow($result);
     if (!$aid || $aname != $name || $apwd != md5_salt($pwd)) $stop = _LOGININCOR;
@@ -168,8 +168,8 @@ function check_admin() {
         $info = base64_encode($aid.':'.$aname.':'.$apwd.':'.$aeditor);
         $_SESSION[$conf['admin_c']] = $info;
         $ip = getip();
-        $db->sql_query('DELETE FROM '.$prefix."_session WHERE uname = '".$ip."'");
-        $db->sql_query('UPDATE '.$prefix."_admins SET ip = '".$ip."', lastvisit = now() WHERE id = '".$aid."'");
+        $db->sql_query('DELETE FROM '.PREFIX_DB."_session WHERE uname = '".$ip."'");
+        $db->sql_query('UPDATE '.PREFIX_DB."_admins SET ip = '".$ip."', lastvisit = now() WHERE id = '".$aid."'");
         login_report(1, 1, $name, '');
         header('Location: '.$aroute.'.php');
     } else {
@@ -179,9 +179,9 @@ function check_admin() {
 }
 
 function login() {
-    global $prefix, $db, $aroute, $conf, $stop;
+    global $db, $aroute, $conf, $stop;
     head();
-    if ($db->sql_numrows($db->sql_query('SELECT * FROM '.$prefix.'_admins')) == 0) {
+    if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
         $cont .= tpl_eval('registration', $aroute, _NICKNAME, $_POST['aname'], _HOMEPAGE, get_host(), _EMAIL, $_POST['aemail'], _PASSWORD, _RETYPEPASSWORD, _CREATEUSERDATA, _YES, _NO, _SEND);
     } else {
@@ -194,21 +194,21 @@ function login() {
 }
 
 function changeeditor() {
-    global $prefix, $db, $admin, $aroute, $conf;
+    global $db, $admin, $aroute, $conf;
     $editor = (isset($_POST['editor'])) ? intval($_POST['editor']) : intval($conf['redaktor']);
     $aid = intval(substr($admin[0], 0, 11));
     $info = base64_decode($_SESSION[$conf['admin_c']]);
     $sinfo = base64_encode(substr($info, 0, -1).$editor);
     unset($_SESSION[$conf['admin_c']]);
     $_SESSION[$conf['admin_c']] = $sinfo;
-    $db->sql_query('UPDATE '.$prefix."_admins SET editor = '".$editor."' WHERE id = '".$aid."'");
+    $db->sql_query('UPDATE '.PREFIX_DB."_admins SET editor = '".$editor."' WHERE id = '".$aid."'");
     referer($aroute.'.php');
 }
 
 function logout() {
-    global $prefix, $db, $admin, $aroute, $conf;
+    global $db, $admin, $aroute, $conf;
     $aname = text_filter(substr($admin[1], 0, 25), 1);
-    $db->sql_query('DELETE FROM '.$prefix."_session WHERE uname = '".$aname."' AND guest = '3'");
+    $db->sql_query('DELETE FROM '.PREFIX_DB."_session WHERE uname = '".$aname."' AND guest = '3'");
     unset($_SESSION[$conf['admin_c']], $admin);
     header('Location: '.$aroute.'.php');
 }

@@ -40,7 +40,7 @@ function shop_navi() {
 }
 
 function shop_clients() {
-	global $prefix, $db, $admin_file, $confso, $confu;
+	global $db, $admin_file, $confso, $confu;
 	$csearch = $_POST['csearch'];
 	$tsearch = intval($_POST['search']);
 	head();
@@ -81,7 +81,7 @@ function shop_clients() {
 		$refer = "&amp;refer=1";
 		$cont = shop_navi(0, 0, 1, 0);
 	}
-	$result = $db->sql_query("SELECT c.id, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_name, p.title FROM ".$prefix."_clients AS c LEFT JOIN ".$prefix."_users AS u ON (u.user_id = c.id_user) LEFT JOIN ".$prefix."_products AS p ON (p.id = c.id_product) WHERE c.".$sqlstatus." ".$sqlstring." LIMIT ".$offset.", ".$confso['anum']);
+	$result = $db->sql_query("SELECT c.id, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_name, p.title FROM ".PREFIX_DB."_clients AS c LEFT JOIN ".PREFIX_DB."_users AS u ON (u.user_id = c.id_user) LEFT JOIN ".PREFIX_DB."_products AS p ON (p.id = c.id_product) WHERE c.".$sqlstatus." ".$sqlstring." LIMIT ".$offset.", ".$confso['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._PRODUCT."</th><th>"._SITE."</th><th>"._NICKNAME."</th><th>"._DATE."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -124,19 +124,19 @@ function shop_clients() {
 }
 
 function shop_clients_act() {
-	global $prefix, $db, $admin_file;
+	global $db, $admin_file;
 	$id = intval($_GET['id']);
-	list($active) = $db->sql_fetchrow($db->sql_query("SELECT active FROM ".$prefix."_clients WHERE id = '".$id."'"));
+	list($active) = $db->sql_fetchrow($db->sql_query("SELECT active FROM ".PREFIX_DB."_clients WHERE id = '".$id."'"));
 	$active = ($active) ? 0 : 1;
-	$db->sql_query("UPDATE ".$prefix."_clients SET active = '".$active."' WHERE id = '".$id."'");
+	$db->sql_query("UPDATE ".PREFIX_DB."_clients SET active = '".$active."' WHERE id = '".$id."'");
 	referer($admin_file.".php?op=shop_clients");
 }
 
 function shop_clients_add() {
-	global $prefix, $db, $admin_file, $confso, $confu, $stop;
+	global $db, $admin_file, $confso, $confu, $stop;
 	if (isset($_REQUEST['cid'])) {
 		$cid = intval($_REQUEST['cid']);
-		$result = $db->sql_query("SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name FROM ".$prefix."_clients AS c LEFT JOIN ".$prefix."_users AS u ON (u.user_id = c.id_partner) WHERE c.id = '".$cid."'");
+		$result = $db->sql_query("SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name FROM ".PREFIX_DB."_clients AS c LEFT JOIN ".PREFIX_DB."_users AS u ON (u.user_id = c.id_partner) WHERE c.id = '".$cid."'");
 		list($cid, $cid_user, $cid_product, $cid_partner, $cpartner_proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $user_id, $user_name) = $db->sql_fetchrow($result);
 		$cregdate = date("Y-m-d H:i:s", $cregdate);
 		$cenddate = ($cenddate) ? date("Y-m-d H:i:s", $cenddate) : date("Y-m-d H:i:s");
@@ -161,7 +161,7 @@ function shop_clients_add() {
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_form\">";
 	if ($cid_partner) {
 		if (!$cpartner_proz) {
-			$num = $db->sql_numrows($db->sql_query("SELECT id_partner FROM ".$prefix."_clients WHERE id_partner = '".$cid_partner."' AND active != 2"));
+			$num = $db->sql_numrows($db->sql_query("SELECT id_partner FROM ".PREFIX_DB."_clients WHERE id_partner = '".$cid_partner."' AND active != 2"));
 			if ($num >= $confso['clients2']) {
 				$cpartner_proz = $confso['proz2'];
 			} elseif ($num >= $confso['clients1']) {
@@ -181,7 +181,7 @@ function shop_clients_add() {
 		."<tr><td>"._PERCENT.":</td><td>".$cpartner_proz." %</td></tr>";
 	}
 	$cont .= "<tr><td>"._USER_ID.":</td><td><input type=\"number\" name=\"cid_user\" value=\"".$cid_user."\" class=\"sl_form\" placeholder=\""._USER_ID."\"></td></tr>";
-	$productslist = $db->sql_query("SELECT id, title FROM ".$prefix."_products ORDER BY title");
+	$productslist = $db->sql_query("SELECT id, title FROM ".PREFIX_DB."_products ORDER BY title");
 	$cont .= "<tr><td>"._PRODUCT.":</td><td><select name=\"cid_product\" class=\"sl_form\">";
 	while(list($pid, $ptitle) = $db->sql_fetchrow($productslist)) {
 		$cont .= "<option value=\"".$pid."\"";
@@ -205,7 +205,7 @@ function shop_clients_add() {
 }
 
 function shop_clients_save() {
-	global $prefix, $db, $admin_file, $confso, $stop;
+	global $db, $admin_file, $confso, $stop;
 	$cid_partner = $_POST['cid_partner'];
 	$cid_user = $_POST['cid_user'];
 	$cid_product = $_POST['cid_product'];
@@ -228,8 +228,8 @@ function shop_clients_save() {
 	if (!$stop && $_POST['posttype'] == "save") {
 		if ($cid) {
 			if ($cid_partner && $cppi) {
-				list($ppreis) = $db->sql_fetchrow($db->sql_query("SELECT preis FROM ".$prefix."_products WHERE id = '".$cid_product."'"));
-				$num = $db->sql_numrows($db->sql_query("SELECT id_partner FROM ".$prefix."_clients WHERE id_partner = '".$cid_partner."' AND active != 2"));
+				list($ppreis) = $db->sql_fetchrow($db->sql_query("SELECT preis FROM ".PREFIX_DB."_products WHERE id = '".$cid_product."'"));
+				$num = $db->sql_numrows($db->sql_query("SELECT id_partner FROM ".PREFIX_DB."_clients WHERE id_partner = '".$cid_partner."' AND active != 2"));
 				if ($num >= $confso['clients2']) {
 					$confso['proz2'] = ($confso['proz2']) ? $confso['proz2'] : 1;
 					$end_preis = $ppreis / 100 * $confso['proz2'];
@@ -243,13 +243,13 @@ function shop_clients_save() {
 					$end_preis = $ppreis / 100 * $confso['proz'];
 					$cpartner_proz = $confso['proz'];
 				}
-				$db->sql_query("UPDATE ".$prefix."_partners SET rest = rest+".$end_preis." WHERE id_user = '".$cid_partner."'");
-				$db->sql_query("UPDATE ".$prefix."_clients SET id_user = '".$cid_user."', id_product = '".$cid_product."', id_partner = '".$cid_partner."', partner_proz = '".$cpartner_proz."', name = '".$cname."', adres = '".$cadres."', phone = '".$cphone."', email = '".$cemail."', website = '".$cwebsite."', regdate = '".$cregdate."', enddate = '".$cenddate."', info = '".$cinfo."', active = '".$cactive."' WHERE id = '".$cid."'");
+				$db->sql_query("UPDATE ".PREFIX_DB."_partners SET rest = rest+".$end_preis." WHERE id_user = '".$cid_partner."'");
+				$db->sql_query("UPDATE ".PREFIX_DB."_clients SET id_user = '".$cid_user."', id_product = '".$cid_product."', id_partner = '".$cid_partner."', partner_proz = '".$cpartner_proz."', name = '".$cname."', adres = '".$cadres."', phone = '".$cphone."', email = '".$cemail."', website = '".$cwebsite."', regdate = '".$cregdate."', enddate = '".$cenddate."', info = '".$cinfo."', active = '".$cactive."' WHERE id = '".$cid."'");
 			} else {
-				$db->sql_query("UPDATE ".$prefix."_clients SET id_user = '".$cid_user."', id_product = '".$cid_product."', name = '".$cname."', adres = '".$cadres."', phone = '".$cphone."', email = '".$cemail."', website = '".$cwebsite."', regdate = '".$cregdate."', enddate = '".$cenddate."', info = '".$cinfo."', active = '".$cactive."' WHERE id = '".$cid."'");
+				$db->sql_query("UPDATE ".PREFIX_DB."_clients SET id_user = '".$cid_user."', id_product = '".$cid_product."', name = '".$cname."', adres = '".$cadres."', phone = '".$cphone."', email = '".$cemail."', website = '".$cwebsite."', regdate = '".$cregdate."', enddate = '".$cenddate."', info = '".$cinfo."', active = '".$cactive."' WHERE id = '".$cid."'");
 			}
 		} else {
-			$db->sql_query("INSERT INTO ".$prefix."_clients VALUES(NULL, '".$cid_user."', '".$cid_product."', '0', '0', '".$cname."', '".$cadres."', '".$cphone."', '".$cemail."', '".$cwebsite."', '".$cregdate."', '".$cenddate."', '".$cinfo."', '".$cactive."')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_clients VALUES(NULL, '".$cid_user."', '".$cid_product."', '0', '0', '".$cname."', '".$cadres."', '".$cphone."', '".$cemail."', '".$cwebsite."', '".$cregdate."', '".$cenddate."', '".$cinfo."', '".$cactive."')");
 		}
 		header("Location: ".$admin_file.".php?op=shop_clients");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -260,15 +260,15 @@ function shop_clients_save() {
 }
 
 function shop_clients_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".$prefix."_clients WHERE id = '".$id."'");
+	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_clients WHERE id = '".$id."'");
 	referer($admin_file.".php?op=shop_clients");
 }
 
 function shop_products() {
-	global $prefix, $db, $admin_file, $confso;
+	global $db, $admin_file, $confso;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confso['anum'];
@@ -284,7 +284,7 @@ function shop_products() {
 		$refer = "&amp;refer=1";
 		$cont = shop_navi(1, 1, 1, 0);
 	}
-	$result = $db->sql_query("SELECT p.id, p.cid, p.time, p.title, p.preis, p.vote, p.active, c.title FROM ".$prefix."_products AS p LEFT JOIN ".$prefix."_categories AS c ON (p.cid = c.id) WHERE ".$sqlstatus." ORDER BY p.fix DESC, p.time DESC LIMIT ".$offset.", ".$confso['anum']);
+	$result = $db->sql_query("SELECT p.id, p.cid, p.time, p.title, p.preis, p.vote, p.active, c.title FROM ".PREFIX_DB."_products AS p LEFT JOIN ".PREFIX_DB."_categories AS c ON (p.cid = c.id) WHERE ".$sqlstatus." ORDER BY p.fix DESC, p.time DESC LIMIT ".$offset.", ".$confso['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\">"
@@ -320,10 +320,10 @@ function shop_products() {
 }
 
 function shop_products_add() {
-	global $prefix, $db, $admin_file, $confso, $stop;
+	global $db, $admin_file, $confso, $stop;
 	if (isset($_REQUEST['id'])) {
 		$id = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT id, cid, time, title, text, bodytext, preis, vote, assoc, ihome, acomm, count, fix, active FROM ".$prefix."_products WHERE id = '".$id."'");
+		$result = $db->sql_query("SELECT id, cid, time, title, text, bodytext, preis, vote, assoc, ihome, acomm, count, fix, active FROM ".PREFIX_DB."_products WHERE id = '".$id."'");
 		list($pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $ppreis, $vote, $passoc, $ihome, $acomm, $pcount, $fix, $pactive) = $db->sql_fetchrow($result);
 		$associated = explode(",", $passoc);
 	} else {
@@ -350,7 +350,7 @@ function shop_products_add() {
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_form\">"
 	."<tr><td>"._TITLE." / "._PRODUCT.":</td><td><input type=\"text\" name=\"ptitle\" value=\"".$ptitle."\" maxlength=\"100\" class=\"sl_form\" placeholder=\""._TITLE."\" required></td></tr>"
 	."<tr><td>"._CATEGORY.":</td><td>".getcat("shop", $pcid, "pcid", "sl_form", "<option value=\"\">"._HOMECAT."</option>")."</td></tr>";
-	$result2 = $db->sql_query("SELECT id, title FROM ".$prefix."_categories WHERE modul = 'shop' ORDER BY parentid, title");
+	$result2 = $db->sql_query("SELECT id, title FROM ".PREFIX_DB."_categories WHERE modul = 'shop' ORDER BY parentid, title");
 	if ($db->sql_numrows($result2) > 0) {
 		$cont .= "<tr><td>"._ASSOTOPIC.":<div class=\"sl_small\">"._ASSOTOPICI."</div></td><td><table class=\"sl_form\"><tr>";
 		while (list($id, $title) = $db->sql_fetchrow($result2)) {
@@ -381,7 +381,7 @@ function shop_products_add() {
 }
 
 function shop_products_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$pid = $_POST['pid'];
 	$pcid = $_POST['pcid'];
 	$ptitle = save_text($_POST['ptitle'], 1);
@@ -400,9 +400,9 @@ function shop_products_save() {
 	if (!$ptitle || !$ptext || !$ppreis) $stop[] = _ERROR_ALL;
 	if (!$stop && $_POST['posttype'] == "save") {
 		if ($pid) {
-			$db->sql_query("UPDATE ".$prefix."_products SET cid = '".$pcid."', time = '".$ptime."', title = '".$ptitle."', text = '".$ptext."', bodytext = '".$pbodytext."', preis = '".$ppreis."', vote = '".$vote."', assoc = '".$associated."', ihome = '".$ihome."', acomm = '".$acomm."', fix = '".$fix."', active = '".$pactive."' WHERE id = '".$pid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_products SET cid = '".$pcid."', time = '".$ptime."', title = '".$ptitle."', text = '".$ptext."', bodytext = '".$pbodytext."', preis = '".$ppreis."', vote = '".$vote."', assoc = '".$associated."', ihome = '".$ihome."', acomm = '".$acomm."', fix = '".$fix."', active = '".$pactive."' WHERE id = '".$pid."'");
 		} else {
-			$db->sql_query("INSERT INTO ".$prefix."_products VALUES (NULL, '".$pcid."', '".$ptime."', '".$ptitle."', '".$ptext."', '".$pbodytext."', '".$ppreis."', '".$vote."', '".$associated."', '".$ihome."', '".$acomm."', '0', '0', '0', '0', '".$fix."', '".$pactive."')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_products VALUES (NULL, '".$pcid."', '".$ptime."', '".$ptitle."', '".$ptext."', '".$pbodytext."', '".$ppreis."', '".$vote."', '".$associated."', '".$ihome."', '".$acomm."', '0', '0', '0', '0', '".$fix."', '".$pactive."')");
 		}
 		header("Location: ".$admin_file.".php?op=shop_products");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -413,7 +413,7 @@ function shop_products_save() {
 }
 
 function shop_products_admin() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	$id = (is_array($id)) ? implode(",", $id) : intval($id);
@@ -421,28 +421,28 @@ function shop_products_admin() {
 	$typ = (is_numeric($vtyp[0])) ? intval($vtyp) : intval(substr($vtyp, 1));
 	if ($id) {
 		if ($vtyp[0] == "a") {
-			$db->sql_query("UPDATE ".$prefix."_products SET active = '".$typ."' WHERE id IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_products SET active = '".$typ."' WHERE id IN (".$id.")");
 		} elseif ($vtyp[0] == "f") {
-			$db->sql_query("UPDATE ".$prefix."_products SET fix = '".$typ."' WHERE id IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_products SET fix = '".$typ."' WHERE id IN (".$id.")");
 		} elseif ($vtyp[0] == "h") {
-			$db->sql_query("UPDATE ".$prefix."_products SET ihome = '".$typ."' WHERE id IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_products SET ihome = '".$typ."' WHERE id IN (".$id.")");
 		} elseif ($vtyp[0] == "t") {
-			$db->sql_query("UPDATE ".$prefix."_products SET time = now() WHERE id IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_products SET time = now() WHERE id IN (".$id.")");
 		} elseif ($vtyp[0] == "c") {
-			$db->sql_query("UPDATE ".$prefix."_products SET acomm = '".$typ."' WHERE id IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_products SET acomm = '".$typ."' WHERE id IN (".$id.")");
 		} elseif ($vtyp[0] == "d") {
-			$db->sql_query("DELETE FROM ".$prefix."_comment WHERE cid IN (".$id.") AND modul = 'shop'");
-			$db->sql_query("DELETE FROM ".$prefix."_favorites WHERE fid IN (".$id.") AND modul = 'shop'");
-			$db->sql_query("DELETE FROM ".$prefix."_products WHERE id IN (".$id.")");
+			$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid IN (".$id.") AND modul = 'shop'");
+			$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid IN (".$id.") AND modul = 'shop'");
+			$db->sql_query("DELETE FROM ".PREFIX_DB."_products WHERE id IN (".$id.")");
 		} elseif (is_numeric($vtyp[0])) {
-			$db->sql_query("UPDATE ".$prefix."_products SET cid = '".$typ."' WHERE id IN (".$id.")");
+			$db->sql_query("UPDATE ".PREFIX_DB."_products SET cid = '".$typ."' WHERE id IN (".$id.")");
 		}
 	}
 	referer($admin_file.".php?op=shop_products");
 }
 
 function shop_partners() {
-	global $prefix, $db, $admin_file, $confso, $confu;
+	global $db, $admin_file, $confso, $confu;
 	head();
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num - 1) * $confso['anum'];
@@ -463,7 +463,7 @@ function shop_partners() {
 		$refer = "&amp;refer=1";
 		$cont = shop_navi(2, 2, 1, 0);
 	}
-	$result = $db->sql_query("SELECT p.id, p.name, p.adres, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.active, u.user_name FROM ".$prefix."_partners AS p LEFT JOIN ".$prefix."_users AS u ON (u.user_id = p.id_user) WHERE ".$sqlstatus." LIMIT ".$offset.", ".$confso['anum']);
+	$result = $db->sql_query("SELECT p.id, p.name, p.adres, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.active, u.user_name FROM ".PREFIX_DB."_partners AS p LEFT JOIN ".PREFIX_DB."_users AS u ON (u.user_id = p.id_user) WHERE ".$sqlstatus." LIMIT ".$offset.", ".$confso['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._NICKNAME."</th><th>"._PARTNERREST."</th><th>"._PARTNERBEK."</th><th>"._SITE."</th><th>"._REG."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -494,19 +494,19 @@ function shop_partners() {
 }
 
 function shop_partners_act() {
-	global $prefix, $db, $admin_file;
+	global $db, $admin_file;
 	$id = intval($_GET['id']);
-	list($active) = $db->sql_fetchrow($db->sql_query("SELECT active FROM ".$prefix."_partners WHERE id = '".$id."'"));
+	list($active) = $db->sql_fetchrow($db->sql_query("SELECT active FROM ".PREFIX_DB."_partners WHERE id = '".$id."'"));
 	$active = ($active == 1) ? 0 : 1;
-	$db->sql_query("UPDATE ".$prefix."_partners SET active = '".$active."' WHERE id = '".$id."'");
+	$db->sql_query("UPDATE ".PREFIX_DB."_partners SET active = '".$active."' WHERE id = '".$id."'");
 	referer($admin_file.".php?op=shop_partners");
 }
 
 function shop_partners_add() {
-	global $prefix, $db, $admin_file, $confu, $stop;
+	global $db, $admin_file, $confu, $stop;
 	if (isset($_REQUEST['paid'])) {
 		$paid = intval($_REQUEST['paid']);
-		$result = $db->sql_query("SELECT p.id, p.id_user, p.name, p.adres, p.phone, p.email, p.website, p.webmoney, p.paypal, p.regdate, p.rest, p.bek, p.active, u.user_name FROM ".$prefix."_partners AS p LEFT JOIN ".$prefix."_users AS u ON (u.user_id = p.id_user) WHERE p.id = '".$paid."'");
+		$result = $db->sql_query("SELECT p.id, p.id_user, p.name, p.adres, p.phone, p.email, p.website, p.webmoney, p.paypal, p.regdate, p.rest, p.bek, p.active, u.user_name FROM ".PREFIX_DB."_partners AS p LEFT JOIN ".PREFIX_DB."_users AS u ON (u.user_id = p.id_user) WHERE p.id = '".$paid."'");
 		list($paid, $paid_user, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive, $user_name) = $db->sql_fetchrow($result);
 		$paregdate = ($paregdate) ? date("Y-m-d H:i:s", $paregdate) : date("Y-m-d H:i:s");
 	} else {
@@ -554,7 +554,7 @@ function shop_partners_add() {
 }
 
 function shop_partners_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$paid_user = $_POST['paid_user'];
 	$paname = $_POST['paname'];
 	$paadres = $_POST['paadres'];
@@ -573,9 +573,9 @@ function shop_partners_save() {
 	if (!$paname || !$paadres || !$paphone) $stop[] = _ERROR_ALL;
 	if (!$stop && $_POST['posttype'] == "save") {
 		if ($paid) {
-			$db->sql_query("UPDATE ".$prefix."_partners SET id_user = '".$paid_user."', name = '".$paname."', adres = '".$paadres."', phone = '".$paphone."', email = '".$paemail."', website = '".$pawebsite."', webmoney = '".$pawebmoney."', paypal = '".$papaypal."', regdate = '".$paregdate."', rest = '".$parest."', bek = '".$pabek."', active = '".$paactive."' WHERE id = '".$paid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_partners SET id_user = '".$paid_user."', name = '".$paname."', adres = '".$paadres."', phone = '".$paphone."', email = '".$paemail."', website = '".$pawebsite."', webmoney = '".$pawebmoney."', paypal = '".$papaypal."', regdate = '".$paregdate."', rest = '".$parest."', bek = '".$pabek."', active = '".$paactive."' WHERE id = '".$paid."'");
 		} else {
-			$db->sql_query("INSERT INTO ".$prefix."_partners VALUES(NULL, '".$paid_user."', '".$paname."', '".$paadres."', '".$paphone."', '".$paemail."', '".$pawebsite."', '".$pawebmoney."', '".$papaypal."', '".$paregdate."', '".$parest."', '".$pabek."', '".$paactive."')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_partners VALUES(NULL, '".$paid_user."', '".$paname."', '".$paadres."', '".$paphone."', '".$paemail."', '".$pawebsite."', '".$pawebmoney."', '".$papaypal."', '".$paregdate."', '".$parest."', '".$pabek."', '".$paactive."')");
 		}
 		header("Location: ".$admin_file.".php?op=shop_partners");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -586,21 +586,21 @@ function shop_partners_save() {
 }
 
 function shop_partners_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".$prefix."_partners WHERE id = '".$id."'");
+	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_partners WHERE id = '".$id."'");
 	referer($admin_file.".php?op=shop_partners");
 }
 
 function shop_partners_details() {
-	global $prefix, $db, $admin_file, $confso;
+	global $db, $admin_file, $confso;
 	$paid = $_GET['paid'];
 	head();
 	$cont = shop_navi(2, 2, 1, 1);
-	$result = $db->sql_query("SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM ".$prefix."_partners WHERE id = '".$paid."'");
+	$result = $db->sql_query("SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM ".PREFIX_DB."_partners WHERE id = '".$paid."'");
 	list($paid, $paid_user, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive) = $db->sql_fetchrow($result);
-	$result = $db->sql_query("SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM ".$prefix."_clients AS c LEFT JOIN ".$prefix."_users AS u ON (u.user_id=c.id_user) LEFT JOIN ".$prefix."_products AS p ON (p.id=c.id_product) WHERE c.id_partner = '".$paid_user."' AND c.active != 2 ORDER BY c.id ASC");
+	$result = $db->sql_query("SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM ".PREFIX_DB."_clients AS c LEFT JOIN ".PREFIX_DB."_users AS u ON (u.user_id=c.id_user) LEFT JOIN ".PREFIX_DB."_products AS p ON (p.id=c.id_product) WHERE c.id_partner = '".$paid_user."' AND c.active != 2 ORDER BY c.id ASC");
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._NICKNAME."</th><th>"._PRODUCT."</th><th>"._PREIS."</th><th>"._PERCENT."</th><th>"._DATE."</th><th class=\"{sorter: false}\">"._SUM."</th></tr></thead><tbody>";
@@ -636,23 +636,23 @@ function shop_partners_details() {
 }
 
 function shop_export() {
-	global $prefix, $db, $admin_file;
+	global $db, $admin_file;
 	$id = intval($_POST['id']);
 	$bd = $_POST['bd'];
 	if ($id == 1 && $bd) {
 		$list = array();
 		if ($bd == "products") {
-			$result = $db->sql_query("SELECT id, cid, time, title, text, bodytext, preis, vote, assoc, com, count, votes, totalvotes, fix, active FROM ".$prefix."_products ORDER BY id");
+			$result = $db->sql_query("SELECT id, cid, time, title, text, bodytext, preis, vote, assoc, com, count, votes, totalvotes, fix, active FROM ".PREFIX_DB."_products ORDER BY id");
 			while(list($pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $ppreis, $pvote, $passoc, $pcom, $pcount, $pvotes, $ptotalvotes, $pfix, $pactive) = $db->sql_fetchrow($result)) {
 				$list[] = $pid."||".$pcid."||".$ptime."||".$ptitle."||".$ptext."||".$pbodytext."||".$ppreis."||".$pvote."||".$passoc."||".$pcom."||".$pcount."||".$pvotes."||".$ptotalvotes."||".$pfix."||".$pactive;
 			}
 		} elseif ($bd == "clients") {
-			$result = $db->sql_query("SELECT id, id_user, id_product, id_partner, partner_proz, name, adres, phone, email, website, regdate, enddate, info, active FROM ".$prefix."_clients ORDER BY id");
+			$result = $db->sql_query("SELECT id, id_user, id_product, id_partner, partner_proz, name, adres, phone, email, website, regdate, enddate, info, active FROM ".PREFIX_DB."_clients ORDER BY id");
 			while(list($cid, $cid_user, $cid_product, $cid_partner, $cpartner_proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive) = $db->sql_fetchrow($result)) {
 				$list[] = $cid."||".$cid_user."||".$cid_product."||".$cid_partner."||".$cpartner_proz."||".$cname."||".$cadres."||".$cphone."||".$cemail."||".$cwebsite."||".$cregdate."||".$cenddate."||".$cinfo."||".$cactive;
 			}
 		} elseif ($bd == "partners") {
-			$result = $db->sql_query("SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM ".$prefix."_partners ORDER BY id");
+			$result = $db->sql_query("SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM ".PREFIX_DB."_partners ORDER BY id");
 			while(list($paid, $paid_user, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive) = $db->sql_fetchrow($result)) {
 				$list[] = $paid."||".$paid_user."||".$paname."||".$paadres."||".$paphone."||".$paemail."||".$pawebsite."||".$pawebmoney."||".$papaypal."||".$paregdate."||".$parest."||".$pabek."||".$paactive;
 			}
@@ -688,13 +688,13 @@ function shop_export() {
 			}
 			$id = intval($data[0]);
 			if ($id) {
-				if ($db->sql_numrows($db->sql_query("SELECT ".$iid." FROM ".$prefix."_".$idb." WHERE ".$iid." = '".$id."'"))) {
-					$db->sql_query("UPDATE ".$prefix."_".$idb." SET ".$uquery." WHERE ".$iid." = '".$id."'");
+				if ($db->sql_numrows($db->sql_query("SELECT ".$iid." FROM ".PREFIX_DB."_".$idb." WHERE ".$iid." = '".$id."'"))) {
+					$db->sql_query("UPDATE ".PREFIX_DB."_".$idb." SET ".$uquery." WHERE ".$iid." = '".$id."'");
 				} else {
-					$db->sql_query("INSERT INTO ".$prefix."_".$idb." VALUES('".$id."', ".$squery.")");
+					$db->sql_query("INSERT INTO ".PREFIX_DB."_".$idb." VALUES('".$id."', ".$squery.")");
 				}
 			} else {
-				$db->sql_query("INSERT INTO ".$prefix."_".$idb." VALUES(NULL, ".$squery.")");
+				$db->sql_query("INSERT INTO ".PREFIX_DB."_".$idb." VALUES(NULL, ".$squery.")");
 			}
 		}
 		fclose ($handle);
@@ -705,9 +705,9 @@ function shop_export() {
 		$permtest = end_chmod("uploads/shop/temp", 777);
 		if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
 		$cont .= tpl_warn("warn", _S_NOTE, "", "", "info");
-		list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".$prefix."_products"));
-		list($cl_num) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".$prefix."_clients"));
-		list($pa_num) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".$prefix."_partners"));
+		list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_products"));
+		list($cl_num) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_clients"));
+		list($pa_num) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_partners"));
 		$content = "<div id=\"tabcs0\" class=\"tabcont\">";
 		if ($pr_num || $cl_num || $pa_num) {
 			$content .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_form\">"

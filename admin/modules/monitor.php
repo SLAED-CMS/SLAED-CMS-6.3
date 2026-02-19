@@ -133,7 +133,7 @@ function is_mod_active($mod) {
 }
 
 function monitor(): void {
-    global $prefix, $db, $conf, $confdb;
+    global $db, $conf, $confdb;
     head();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
@@ -162,7 +162,7 @@ function monitor(): void {
         $uptime = 'Windows';
     }
 
-    $userson = $db->sql_numrows($db->sql_query('SELECT id FROM '.$prefix.'_session'));
+    $userson = $db->sql_numrows($db->sql_query('SELECT id FROM '.PREFIX_DB.'_session'));
 
     // DB Stats
     $dbsize = 0;
@@ -189,8 +189,8 @@ function monitor(): void {
     $off = '<span style="color:#ef4444">Off</span>';
 
     // Counts for Overview Strip
-    $cntfile = $db->sql_numrows($db->sql_query('SELECT lid FROM '.$prefix.'_files WHERE status != \'0\''));
-    $cntnews = $db->sql_numrows($db->sql_query('SELECT sid FROM '.$prefix.'_news WHERE status != \'0\''));
+    $cntfile = $db->sql_numrows($db->sql_query('SELECT lid FROM '.PREFIX_DB.'_files WHERE status != \'0\''));
+    $cntnews = $db->sql_numrows($db->sql_query('SELECT sid FROM '.PREFIX_DB.'_news WHERE status != \'0\''));
 
     // Calculate dashboard metrics
     $loadP = min($load[0] * 10, 100);

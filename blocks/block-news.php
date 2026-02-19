@@ -7,9 +7,9 @@ if (!defined("BLOCK_FILE")) {
 	exit;
 }
 
-global $prefix, $db;
+global $db;
 $strip = 20;
-$result = $db->sql_query("SELECT sid, title FROM ".$prefix."_news WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
+$result = $db->sql_query("SELECT sid, title FROM ".PREFIX_DB."_news WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
 while(list($sid, $title) = $db->sql_fetchrow($result)) {
 	$linkstrip = cutstr($title, $strip);
 	$content .= "<table class=\"sl_table_block\"><tr><td><a href=\"index.php?name=news&amp;op=view&amp;id=".$sid."\" title=\"".$title."\">".$linkstrip."</a></td></tr></table>";

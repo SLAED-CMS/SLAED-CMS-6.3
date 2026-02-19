@@ -15,17 +15,17 @@ function money_navi() {
 }
 
 function money() {
-	global $prefix, $db, $admin_file, $conf, $confmo;
+	global $db, $admin_file, $conf, $confmo;
 	head();
 	$cont = money_navi(0, 0, 0, 0);
 	if (isset($_GET['send'])) $cont .= tpl_warn("warn", _MA_15, "", "", "info");
 	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
 	$offset = ($num-1) * $confmo['anum'];
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT id, sum, mail, info, com, ip, agent, date, status FROM ".$prefix."_money ORDER BY date DESC LIMIT ".$offset.", ".$confmo['anum']);
+	$result = $db->sql_query("SELECT id, sum, mail, info, com, ip, agent, date, status FROM ".PREFIX_DB."_money ORDER BY date DESC LIMIT ".$offset.", ".$confmo['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
-		list($numstories) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".$prefix."_money"));
+		list($numstories) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_money"));
 		$r = $numstories;
 		if ($numstories > $offset) $r -= $offset;
 		$numpages = ceil($numstories / $confmo['anum']);
@@ -62,10 +62,10 @@ function money() {
 }
 
 function money_add() {
-	global $prefix, $db, $admin_file, $stop, $confmo;
+	global $db, $admin_file, $stop, $confmo;
 	if (isset($_REQUEST['id'])) {
 		$mid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT sum, mail, info, com, date FROM ".$prefix."_money WHERE id = '".$mid."'");
+		$result = $db->sql_query("SELECT sum, mail, info, com, date FROM ".PREFIX_DB."_money WHERE id = '".$mid."'");
 		list($sum, $mail, $info, $com, $date) = $db->sql_fetchrow($result);
 		$info = explode("|", $info);
 	} else {
@@ -112,7 +112,7 @@ function money_add() {
 }
 
 function money_save() {
-	global $prefix, $db, $admin_file, $stop;
+	global $db, $admin_file, $stop;
 	$mid = intval($_POST['mid']);
 	$sum = intval($_POST['sum']);
 	$mail = text_filter($_POST['mail']);
@@ -122,11 +122,11 @@ function money_save() {
 	checkemail($mail);
 	if (!$stop && $_POST['posttype'] == "save") {
 		if ($mid) {
-			$db->sql_query("UPDATE ".$prefix."_money SET sum = '".$sum."', mail = '".$mail."', info = '".$info."', com = '".$com."', date = '".$date."' WHERE id = '".$mid."'");
+			$db->sql_query("UPDATE ".PREFIX_DB."_money SET sum = '".$sum."', mail = '".$mail."', info = '".$info."', com = '".$com."', date = '".$date."' WHERE id = '".$mid."'");
 		} else {
 			$ip = getip();
 			$agent = getagent();
-			$db->sql_query("INSERT INTO ".$prefix."_money VALUES (NULL, '".$sum."', '".$mail."', '".$info."', '".$com."', '".$ip."', '".$agent."', '".$date."', '1')");
+			$db->sql_query("INSERT INTO ".PREFIX_DB."_money VALUES (NULL, '".$sum."', '".$mail."', '".$info."', '".$com."', '".$ip."', '".$agent."', '".$date."', '1')");
 		}
 		header("Location: ".$admin_file.".php?op=money");
 	} elseif ($_POST['posttype'] == "delete") {
@@ -137,10 +137,10 @@ function money_save() {
 }
 
 function money_delete() {
-	global $prefix, $db, $admin_file, $id;
+	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".$prefix."_money WHERE id = '".$id."'");
+	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_money WHERE id = '".$id."'");
 	referer($admin_file.".php?op=money");
 }
 
@@ -165,9 +165,9 @@ function billing($title, $autor, $infos, $num, $date, $menge, $kurs, $sum) {
 }
 
 function money_rechn() {
-	global $prefix, $db, $admin_file, $conf, $confmo;
+	global $db, $admin_file, $conf, $confmo;
 	$id = intval($_GET['id']);
-	list($sum, $mail, $info, $com, $ip, $agent, $date) = $db->sql_fetchrow($db->sql_query("SELECT sum, mail, info, com, ip, agent, date FROM ".$prefix."_money WHERE id = '".$id."'"));
+	list($sum, $mail, $info, $com, $ip, $agent, $date) = $db->sql_fetchrow($db->sql_query("SELECT sum, mail, info, com, ip, agent, date FROM ".PREFIX_DB."_money WHERE id = '".$id."'"));
 	setThemeInclude();
 	$conf['defis'] = urldecode($conf['defis']);
 	$title = _RECHN." ".$conf['defis']." "._MONEY." ".$conf['defis']." ".$conf['sitename'];
@@ -266,9 +266,9 @@ switch($op) {
 	break;
 	
 	case "money_active":
-	$db->sql_query("UPDATE ".$prefix."_money SET status = '".$act."' WHERE id = '".$id."'");
+	$db->sql_query("UPDATE ".PREFIX_DB."_money SET status = '".$act."' WHERE id = '".$id."'");
 	if ($act) {
-		list($mail) = $db->sql_fetchrow($db->sql_query("SELECT mail FROM ".$prefix."_money WHERE id = '".$id."'"));
+		list($mail) = $db->sql_fetchrow($db->sql_query("SELECT mail FROM ".PREFIX_DB."_money WHERE id = '".$id."'"));
 		$amail = ($confmo['mail']) ? $confmo['mail'] : $conf['adminmail'];
 		$subject = $conf['sitename']." - "._MONEY;
 		$msg = $conf['sitename']." - "._MONEY."<br><br>";
