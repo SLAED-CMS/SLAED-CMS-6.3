@@ -706,26 +706,26 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     $fp = CONFIG_DIR.'/'.$fp;
     if (!empty($act)) $arr = array_replace_recursive($act, $arr);
     ksort($arr);
-    $normalize = function ($v) use (&$normalize) {
-        if (is_array($v)) {
-            foreach ($v as $k => $vv) $v[$k] = $normalize($vv);
-            return $v;
+    $norm = function ($val) use (&$norm) {
+        if (is_array($val)) {
+            foreach ($val as $k => $vv) $val[$k] = $norm($vv);
+            return $val;
         }
-        return is_bool($v) ? (string)(int)$v : (string)$v;
+        return is_bool($val) ? (string)(int)$val : (string)$val;
     };
-    foreach ($arr as $k => $v) $arr[$k] = $normalize($v);
+    foreach ($arr as $key => $val) $arr[$key] = $norm($val);
     $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
     $data = ($key === 'global') ? $arr : [$key => $arr];
-    $exp  = function (array $a, int $d = 0) use (&$exp): string {
-        $p = str_repeat('    ', $d);
-        $i = $p.'    ';
-        $s = "[\n";
-        foreach ($a as $k => $v) {
-            $s .= $i.var_export($k, true).' => ';
-            $s .= is_array($v) ? $exp($v, $d + 1) : var_export($v, true);
-            $s .= ",\n";
+    $exp  = function (array $arr, int $dep = 0) use (&$exp): string {
+        $pad = str_repeat('    ', $dep);
+        $ind = $pad.'    ';
+        $out = "[\n";
+        foreach ($arr as $key => $val) {
+            $out .= $ind.var_export($key, true).' => ';
+            $out .= is_array($val) ? $exp($val, $dep + 1) : var_export($val, true);
+            $out .= ",\n";
         }
-        return $s.$p.']';
+        return $out.$pad.']';
     };
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
