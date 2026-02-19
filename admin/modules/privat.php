@@ -22,7 +22,7 @@ function conf(): void {
     global $aroute, $confpr;
     head();
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkPerms('config_privat.php');
+    $cont .= checkPerms('privat.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$confpr['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
@@ -61,7 +61,7 @@ function save(): void {
         'web' => getVar('post', 'web', 'num'),
         'act' => getVar('post', 'act', 'num')
     ];
-    setConfigFile('config_privat.php', $cont);
+    setConfigFile('privat.php', $cont);
     header('Location: '.$aroute.'.php?name=privat&op=conf');
     exit;
 }

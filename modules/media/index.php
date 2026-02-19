@@ -9,7 +9,6 @@ if (!defined('MODULE_FILE')) {
 	exit;
 }
 get_lang($conf['name']);
-include('config/config_media.php');
 
 function navigate($title, $cat='') {
 	global $conf, $confm;

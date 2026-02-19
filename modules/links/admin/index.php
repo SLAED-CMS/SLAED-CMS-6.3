@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("links")) die("Illegal file access");
 
-include("config/config_links.php");
 
 function links_navi() {
 	panel();
@@ -165,8 +164,7 @@ function links_conf() {
 	global $admin_file, $confl;
 	head();
 	$cont = links_navi(0, 4, 0, 0);
-	$permtest = end_chmod("config/config_links.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('links.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($confl['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -201,31 +199,32 @@ function links_conf() {
 function links_conf_save() {
 	global $admin_file;
 	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
-	$content = "\$confl = array();\n"
-	."\$confl['defis'] = \"".$xdefis."\";\n"
-	."\$confl['linknum'] = \"".$_POST['linknum']."\";\n"
-	."\$confl['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$confl['num'] = \"".$_POST['num']."\";\n"
-	."\$confl['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confl['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confl['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confl['homcat'] = \"".$_POST['homcat']."\";\n"
-	."\$confl['viewcat'] = \"".$_POST['viewcat']."\";\n"
-	."\$confl['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$confl['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$confl['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$confl['add'] = \"".$_POST['add']."\";\n"
-	."\$confl['addquest'] = \"".$_POST['addquest']."\";\n"
-	."\$confl['broc'] = \"".$_POST['broc']."\";\n"
-	."\$confl['links'] = \"".$_POST['links']."\";\n"
-	."\$confl['autor'] = \"".$_POST['autor']."\";\n"
-	."\$confl['date'] = \"".$_POST['date']."\";\n"
-	."\$confl['read'] = \"".$_POST['read']."\";\n"
-	."\$confl['hits'] = \"".$_POST['hits']."\";\n"
-	."\$confl['rate'] = \"".$_POST['rate']."\";\n"
-	."\$confl['letter'] = \"".$_POST['letter']."\";\n"
-	."\$confl['link'] = \"".$_POST['link']."\";\n";
-	save_conf("config/config_links.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'linknum' => $_POST['linknum'],
+		'listnum' => $_POST['listnum'],
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'homcat' => $_POST['homcat'],
+		'viewcat' => $_POST['viewcat'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'addquest' => $_POST['addquest'],
+		'broc' => $_POST['broc'],
+		'links' => $_POST['links'],
+		'autor' => $_POST['autor'],
+		'date' => $_POST['date'],
+		'read' => $_POST['read'],
+		'hits' => $_POST['hits'],
+		'rate' => $_POST['rate'],
+		'letter' => $_POST['letter'],
+		'link' => $_POST['link'],
+	];
+	setConfigFile('links.php', $cont);
 	header("Location: ".$admin_file.".php?op=links_conf");
 }
 

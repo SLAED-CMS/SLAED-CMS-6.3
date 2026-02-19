@@ -6,7 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('content')) die('Illegal file access');
 
-include('config/config_content.php');
 
 function content_navi() {
 	panel();
@@ -139,8 +138,7 @@ function content_conf() {
 	global $admin_file, $confcn;
 	head();
 	$cont = content_navi(0, 2, 0, 0);
-	$permtest = end_chmod("config/config_content.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('content.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._C_33.":</td><td><input type=\"number\" name=\"num\" value=\"".$confcn['num']."\" class=\"sl_conf\" placeholder=\""._C_33."\" required></td></tr>"
@@ -155,12 +153,13 @@ function content_conf() {
 
 function content_conf_save() {
 	global $admin_file;
-	$content = "\$confcn = array();\n"
-	."\$confcn['num'] = \"".$_POST['num']."\";\n"
-	."\$confcn['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confcn['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confcn['anump'] = \"".$_POST['anump']."\";\n";
-	save_conf("config/config_content.php", $content);
+	$cont = [
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+	];
+	setConfigFile('content.php', $cont);
 	header("Location: ".$admin_file.".php?op=content_conf");
 }
 

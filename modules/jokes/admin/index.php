@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("jokes")) die("Illegal file access");
 
-include("config/config_jokes.php");
 
 function jokes_navi() {
 	panel();
@@ -141,8 +140,7 @@ function jokes_conf() {
 	global $admin_file, $confj;
 	head();
 	$cont = jokes_navi(0, 3, 0, 0);
-	$permtest = end_chmod("config/config_jokes.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('jokes.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($confj['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -167,21 +165,22 @@ function jokes_conf() {
 function jokes_conf_save() {
 	global $admin_file;
 	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
-	$content = "\$confj = array();\n"
-	."\$confj['defis'] = \"".$xdefis."\";\n"
-	."\$confj['num'] = \"".$_POST['num']."\";\n"
-	."\$confj['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confj['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confj['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confj['homcat'] = \"".$_POST['homcat']."\";\n"
-	."\$confj['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$confj['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$confj['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$confj['add'] = \"".$_POST['add']."\";\n"
-	."\$confj['addquest'] = \"".$_POST['addquest']."\";\n"
-	."\$confj['date'] = \"".$_POST['date']."\";\n"
-	."\$confj['rate'] = \"".$_POST['rate']."\";\n";
-	save_conf("config/config_jokes.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'homcat' => $_POST['homcat'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'addquest' => $_POST['addquest'],
+		'date' => $_POST['date'],
+		'rate' => $_POST['rate'],
+	];
+	setConfigFile('jokes.php', $cont);
 	header("Location: ".$admin_file.".php?op=jokes_conf");
 }
 

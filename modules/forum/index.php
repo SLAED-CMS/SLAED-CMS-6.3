@@ -9,7 +9,6 @@ if (!defined('MODULE_FILE')) {
 	exit;
 }
 get_lang($conf['name']);
-include('config/config_forum.php');
 
 function forum() {
 	global $db, $user, $conf, $confu, $conffo, $locale;

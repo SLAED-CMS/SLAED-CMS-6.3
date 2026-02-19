@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("help")) die("Illegal file access");
 
-include("config/config_help.php");
 
 function help_navi() {
 	panel();
@@ -209,8 +208,7 @@ function help_conf() {
 	global $admin_file, $confh;
 	head();
 	$cont = help_navi(0, 2, 0, 0);
-	$permtest = end_chmod("config/config_help.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('help.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($confh['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -235,21 +233,22 @@ function help_conf() {
 function help_conf_save() {
 	global $admin_file;
 	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
-	$content = "\$confh = array();\n"
-	."\$confh['defis'] = \"".$xdefis."\";\n"
-	."\$confh['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$confh['num'] = \"".$_POST['num']."\";\n"
-	."\$confh['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confh['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confh['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confh['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$confh['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$confh['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$confh['add'] = \"".$_POST['add']."\";\n"
-	."\$confh['date'] = \"".$_POST['date']."\";\n"
-	."\$confh['read'] = \"".$_POST['read']."\";\n"
-	."\$confh['letter'] = \"".$_POST['letter']."\";\n";
-	save_conf("config/config_help.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'listnum' => $_POST['listnum'],
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'date' => $_POST['date'],
+		'read' => $_POST['read'],
+		'letter' => $_POST['letter'],
+	];
+	setConfigFile('help.php', $cont);
 	header("Location: ".$admin_file.".php?op=help_conf");
 }
 

@@ -6,7 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('auto_links')) die('Illegal file access');
 
-include('config/config_auto_links.php');
 
 function auto_links_navi() {
 	global $admin_file, $confr;
@@ -216,8 +215,7 @@ function auto_links_conf() {
 	global $admin_file, $conf, $confal;
 	head();
 	$cont = auto_links_navi(0, 4, 0, 0);
-	$permtest = end_chmod("config/config_auto_links.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('auto_links.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._A_1.":</td><td><select name=\"img\" id=\"img_replace\" class=\"sl_conf\">";
@@ -248,16 +246,17 @@ function auto_links_conf() {
 function auto_links_conf_save() {
 	global $admin_file, $conf;
 	$ximg = str_replace("templates/".$conf['theme']."/images/banners/", "", $_POST['img']);
-	$content = "\$confal = array();\n"
-	."\$confal['img'] = \"".$ximg."\";\n"
-	."\$confal['num'] = \"".$_POST['num']."\";\n"
-	."\$confal['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confal['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confal['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confal['strip'] = \"".$_POST['strip']."\";\n"
-	."\$confal['limit'] = \"".$_POST['limit']."\";\n"
-	."\$confal['addmail'] = \"".$_POST['addmail']."\";\n";
-	save_conf("config/config_auto_links.php", $content);
+	$cont = [
+		'img' => $ximg,
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'strip' => $_POST['strip'],
+		'limit' => $_POST['limit'],
+		'addmail' => $_POST['addmail'],
+	];
+	setConfigFile('auto_links.php', $cont);
 	header("Location: ".$admin_file.".php?op=auto_links_conf");
 }
 

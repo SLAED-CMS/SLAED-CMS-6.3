@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("faq")) die("Illegal file access");
 
-include("config/config_faq.php");
 
 function faq_navi() {
 	panel();
@@ -148,8 +147,7 @@ function faq_conf() {
 	global $admin_file, $conffa;
 	head();
 	$cont = faq_navi(0, 3, 0, 0);
-	$permtest = end_chmod("config/config_faq.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('faq.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($conffa['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -181,28 +179,29 @@ function faq_conf() {
 function faq_conf_save() {
 	global $admin_file;
 	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
-	$content = "\$conffa = array();\n"
-	."\$conffa['defis'] = \"".$xdefis."\";\n"
-	."\$conffa['linknum'] = \"".$_POST['linknum']."\";\n"
-	."\$conffa['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$conffa['num'] = \"".$_POST['num']."\";\n"
-	."\$conffa['anum'] = \"".$_POST['anum']."\";\n"
-	."\$conffa['nump'] = \"".$_POST['nump']."\";\n"
-	."\$conffa['anump'] = \"".$_POST['anump']."\";\n"
-	."\$conffa['homcat'] = \"".$_POST['homcat']."\";\n"
-	."\$conffa['viewcat'] = \"".$_POST['viewcat']."\";\n"
-	."\$conffa['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$conffa['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$conffa['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$conffa['add'] = \"".$_POST['add']."\";\n"
-	."\$conffa['addquest'] = \"".$_POST['addquest']."\";\n"
-	."\$conffa['autor'] = \"".$_POST['autor']."\";\n"
-	."\$conffa['date'] = \"".$_POST['date']."\";\n"
-	."\$conffa['read'] = \"".$_POST['read']."\";\n"
-	."\$conffa['rate'] = \"".$_POST['rate']."\";\n"
-	."\$conffa['letter'] = \"".$_POST['letter']."\";\n"
-	."\$conffa['link'] = \"".$_POST['link']."\";\n";
-	save_conf("config/config_faq.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'linknum' => $_POST['linknum'],
+		'listnum' => $_POST['listnum'],
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'homcat' => $_POST['homcat'],
+		'viewcat' => $_POST['viewcat'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'addquest' => $_POST['addquest'],
+		'autor' => $_POST['autor'],
+		'date' => $_POST['date'],
+		'read' => $_POST['read'],
+		'rate' => $_POST['rate'],
+		'letter' => $_POST['letter'],
+		'link' => $_POST['link'],
+	];
+	setConfigFile('faq.php', $cont);
 	header("Location: ".$admin_file.".php?op=faq_conf");
 }
 

@@ -108,8 +108,8 @@ function search_result() {
                     if (is_moder("forum")) {
                         $frecycle = "";
                     } else {
-                        include("config/config_forum.php");
-                        $frecycle = "f.catid != '".$conffo['recycle']."' AND";
+                        $conffo = $conf['forum'] ?? [];
+                        $frecycle = "f.catid != '".($conffo['recycle'] ?? '0')."' AND";
                     }
                     $result = $db->sql_query("SELECT f.id, f.pid, f.name, f.title, f.time, c.id, c.title, c.description, u.user_name FROM ".PREFIX_DB."_forum AS f LEFT JOIN ".PREFIX_DB."_categories AS c ON (f.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE ".$frecycle." f.pid = '0' AND f.time <= NOW() AND f.status != '0' AND (f.title LIKE '%".$word."%' OR f.hometext LIKE '%".$word."%') ORDER BY f.time DESC");
                     while (list($id, $pid, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
@@ -154,7 +154,7 @@ function search_result() {
                         $a++;
                     }
                 } elseif ($val == "media") {
-                    include("config/config_media.php");
+                    $confm = $conf['media'] ?? [];
                     if ($typ == 1 && $word) {
                         $sqlstring = "(m.title LIKE '%".$word."%' OR m.subtitle LIKE '%".$word."%') ORDER BY m.title ASC";
                     } elseif ($typ == 2 && $word) {

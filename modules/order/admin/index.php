@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("order")) die("Illegal file access");
 
-include("config/config_order.php");
 
 function order_navi() {
 	panel();
@@ -118,8 +117,7 @@ function order_conf() {
 	global $admin_file, $confor;
 	head();
 	$cont = order_navi(0, 2, 0, 0);
-	$permtest = end_chmod("config/config_order.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('order.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._OR_1.":</td><td><input type=\"email\" name=\"mail\" value=\"".$confor['mail']."\" maxlength=\"255\" class=\"sl_conf\" placeholder=\""._OR_1."\" required></td></tr>"
@@ -141,17 +139,18 @@ function order_conf_save() {
 	$xtext= save_text($_POST['text']);
 	$xinfo = save_text($_POST['info']);
 	$xsendinfo = save_text($_POST['sendinfo']);
-	$content = "\$confor = array();\n"
-	."\$confor['mail'] = \"".$_POST['mail']."\";\n"
-	."\$confor['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confor['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confor['an'] = \"".$_POST['an']."\";\n"
-	."\$confor['pr'] = \"".$_POST['pr']."\";\n"
-	."\$confor['ad'] = \"".$_POST['ad']."\";\n"
-	."\$confor['text'] = <<<HTML\n".$xtext."\nHTML;\n"
-	."\$confor['info'] = <<<HTML\n".$xinfo."\nHTML;\n"
-	."\$confor['sendinfo'] = <<<HTML\n".$xsendinfo."\nHTML;\n";
-	save_conf("config/config_order.php", $content);
+	$cont = [
+		'mail' => $_POST['mail'],
+		'anum' => $_POST['anum'],
+		'anump' => $_POST['anump'],
+		'an' => $_POST['an'],
+		'pr' => $_POST['pr'],
+		'ad' => $_POST['ad'],
+		'text' => $xtext,
+		'info' => $xinfo,
+		'sendinfo' => $xsendinfo,
+	];
+	setConfigFile('order.php', $cont);
 	header("Location: ".$admin_file.".php?op=order_conf");
 }
 

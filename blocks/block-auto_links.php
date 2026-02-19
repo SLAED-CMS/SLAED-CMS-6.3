@@ -9,7 +9,6 @@ if (!defined("BLOCK_FILE")) {
 	exit;
 }
 
-include("config/config_auto_links.php");
 global $db;
 $content = "";
 $result = $db->sql_query("SELECT id, sitename, description FROM ".PREFIX_DB."_auto_links WHERE hits != '0' ORDER BY hits DESC LIMIT 0,".intval($confal['limit'])."");

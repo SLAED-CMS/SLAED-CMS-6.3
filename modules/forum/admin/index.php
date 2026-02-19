@@ -4,7 +4,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("forum")) die("Illegal file access");
 
-include("config/config_forum.php");
 
 function forum_navi() {
 	panel();
@@ -53,8 +52,7 @@ function forum_conf() {
 	head();
 	$cont = forum_navi(0, 1, 0, 0);
 	$cont .= tpl_warn("warn", _SYNCHINF, "", "", "info");
-	$permtest = end_chmod("config/config_forum.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('forum.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($conffo['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -96,24 +94,25 @@ function forum_conf() {
 function forum_conf_save() {
 	global $admin_file;
 	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
-	$content = "\$conffo = array();\n"
-	."\$conffo['defis'] = \"".$xdefis."\";\n"
-	."\$conffo['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$conffo['pop'] = \"".$_POST['pop']."\";\n"
-	."\$conffo['letter'] = \"".$_POST['letter']."\";\n"
-	."\$conffo['num'] = \"".$_POST['num']."\";\n"
-	."\$conffo['pnum'] = \"".$_POST['pnum']."\";\n"
-	."\$conffo['recycle'] = \"".$_POST['recycle']."\";\n"
-	."\$conffo['sort'] = \"".$_POST['sort']."\";\n"
-	."\$conffo['anonpost'] = \"".$_POST['anonpost']."\";\n"
-	."\$conffo['add'] = \"".$_POST['add']."\";\n"
-	."\$conffo['qreply'] = \"".$_POST['qreply']."\";\n"
-	."\$conffo['ledit'] = \"".$_POST['ledit']."\";\n"
-	."\$conffo['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$conffo['privat'] = \"".$_POST['privat']."\";\n"
-	."\$conffo['profil'] = \"".$_POST['profil']."\";\n"
-	."\$conffo['web'] = \"".$_POST['web']."\";\n";
-	save_conf("config/config_forum.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'listnum' => $_POST['listnum'],
+		'pop' => $_POST['pop'],
+		'letter' => $_POST['letter'],
+		'num' => $_POST['num'],
+		'pnum' => $_POST['pnum'],
+		'recycle' => $_POST['recycle'],
+		'sort' => $_POST['sort'],
+		'anonpost' => $_POST['anonpost'],
+		'add' => $_POST['add'],
+		'qreply' => $_POST['qreply'],
+		'ledit' => $_POST['ledit'],
+		'addmail' => $_POST['addmail'],
+		'privat' => $_POST['privat'],
+		'profil' => $_POST['profil'],
+		'web' => $_POST['web'],
+	];
+	setConfigFile('forum.php', $cont);
 	header("Location: ".$admin_file.".php?op=forum_conf");
 }
 

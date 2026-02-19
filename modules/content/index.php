@@ -8,7 +8,6 @@ if (!defined('MODULE_FILE')) {
 	header('Location: ../../index.php');
 	exit;
 }
-include('config/config_content.php');
 
 function content() {
 	global $db, $admin_file, $conf, $confcn;

@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("shop")) die("Illegal file access");
 
-include("config/config_shop.php");
 
 function shop_navi() {
 	global $admin_file;
@@ -702,8 +701,7 @@ function shop_export() {
 	} else {
 		head();
 		$cont = shop_navi(3, 3, 1, 0, "shop_export");
-		$permtest = end_chmod("uploads/shop/temp", 777);
-		if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+		$cont .= checkPerms('uploads/shop/temp', 1);
 		$cont .= tpl_warn("warn", _S_NOTE, "", "", "info");
 		list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_products"));
 		list($cl_num) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_clients"));
@@ -754,8 +752,7 @@ function shop_conf() {
 	global $admin_file, $confso;
 	head();
 	$cont = shop_navi(0, 4, 0, 0);
-	$permtest = end_chmod("config/config_shop.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('shop.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($confso['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -811,44 +808,45 @@ function shop_conf_save() {
 	$xpartinfo = save_text($_POST['partinfo']);
 	$xpartinfo2 = save_text($_POST['partinfo2']);
 	$xshopinfo = save_text($_POST['shopinfo']);
-	$content = "\$confso = array();\n"
-	."\$confso['defis'] = \"".$xdefis."\";\n"
-	."\$confso['clients'] = \"".$_POST['clients']."\";\n"
-	."\$confso['clients1'] = \"".$_POST['clients1']."\";\n"
-	."\$confso['clients2'] = \"".$_POST['clients2']."\";\n"
-	."\$confso['proz'] = \"".$_POST['proz']."\";\n"
-	."\$confso['proz1'] = \"".$_POST['proz1']."\";\n"
-	."\$confso['proz2'] = \"".$_POST['proz2']."\";\n"
-	."\$confso['valute'] = \"".$_POST['valute']."\";\n"
-	."\$confso['mail'] = \"".$_POST['mail']."\";\n"
-	."\$confso['shop_t'] = \"".$xshop_t."\";\n"
-	."\$confso['part_t'] = \"".$xpart_t."\";\n"
-	."\$confso['bascol'] = \"".$xbascol."\";\n"
-	."\$confso['assocnum'] = \"".$_POST['assocnum']."\";\n"
-	."\$confso['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$confso['num'] = \"".$_POST['num']."\";\n"
-	."\$confso['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confso['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confso['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confso['homcat'] = \"".$_POST['homcat']."\";\n"
-	."\$confso['viewcat'] = \"".$_POST['viewcat']."\";\n"
-	."\$confso['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$confso['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$confso['mailuser'] = \"".$_POST['mailuser']."\";\n"
-	."\$confso['date'] = \"".$_POST['date']."\";\n"
-	."\$confso['read'] = \"".$_POST['read']."\";\n"
-	."\$confso['rate'] = \"".$_POST['rate']."\";\n"
-	."\$confso['letter'] = \"".$_POST['letter']."\";\n"
-	."\$confso['assoc'] = \"".$_POST['assoc']."\";\n"
-	."\$confso['mailsend'] = \"".$_POST['mailsend']."\";\n"
-	."\$confso['part'] = \"".$_POST['part']."\";\n"
-	."\$confso['partlink'] = \"".$conf['homeurl']."/index.php?name=shop&amp;op=part&amp;id=[id]\";\n"
-	."\$confso['sende'] = <<<HTML\n".$xsende."\nHTML;\n"
-	."\$confso['userinfo'] = <<<HTML\n".$xuserinfo."\nHTML;\n"
-	."\$confso['partinfo'] = <<<HTML\n".$xpartinfo."\nHTML;\n"
-	."\$confso['partinfo2'] = <<<HTML\n".$xpartinfo2."\nHTML;\n"
-	."\$confso['shopinfo'] = <<<HTML\n".$xshopinfo."\nHTML;\n";
-	save_conf("config/config_shop.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'clients' => $_POST['clients'],
+		'clients1' => $_POST['clients1'],
+		'clients2' => $_POST['clients2'],
+		'proz' => $_POST['proz'],
+		'proz1' => $_POST['proz1'],
+		'proz2' => $_POST['proz2'],
+		'valute' => $_POST['valute'],
+		'mail' => $_POST['mail'],
+		'shop_t' => $xshop_t,
+		'part_t' => $xpart_t,
+		'bascol' => $xbascol,
+		'assocnum' => $_POST['assocnum'],
+		'listnum' => $_POST['listnum'],
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'homcat' => $_POST['homcat'],
+		'viewcat' => $_POST['viewcat'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'mailuser' => $_POST['mailuser'],
+		'date' => $_POST['date'],
+		'read' => $_POST['read'],
+		'rate' => $_POST['rate'],
+		'letter' => $_POST['letter'],
+		'assoc' => $_POST['assoc'],
+		'mailsend' => $_POST['mailsend'],
+		'part' => $_POST['part'],
+		'partlink' => $conf['homeurl']."/index.php?name=shop&amp;op=part&amp;id=[id]",
+		'sende' => $xsende,
+		'userinfo' => $xuserinfo,
+		'partinfo' => $xpartinfo,
+		'partinfo2' => $xpartinfo2,
+		'shopinfo' => $xshopinfo,
+	];
+	setConfigFile('shop.php', $cont);
 	header("Location: ".$admin_file.".php?op=shop_conf");
 }
 

@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("media")) die("Illegal file access");
 
-include("config/config_media.php");
 
 function media_navi() {
 	panel();
@@ -232,8 +231,7 @@ function media_conf() {
 	global $admin_file, $confm;
 	head();
 	$cont = media_navi(0, 4, 0, 0);
-	$permtest = end_chmod("config/config_media.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('media.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($confm['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -277,35 +275,36 @@ function media_conf_save() {
 	$xformat = str_replace($protect, ",", $_POST['format']);
 	$xquality = str_replace($protect, ",", $_POST['quality']);
 	$xmdefis = ($_POST['mdefis']) ? urlencode($_POST['mdefis']) : "%7C";
-	$content = "\$confm = array();\n"
-	."\$confm['defis'] = \"".$xdefis."\";\n"
-	."\$confm['linknum'] = \"".$_POST['linknum']."\";\n"
-	."\$confm['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$confm['num'] = \"".$_POST['num']."\";\n"
-	."\$confm['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confm['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confm['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confm['lang'] = \"".$xlang."\";\n"
-	."\$confm['format'] = \"".$xformat."\";\n"
-	."\$confm['quality'] = \"".$xquality."\";\n"
-	."\$confm['links'] = \"".$_POST['links']."\";\n"
-	."\$confm['mdefis'] = \"".$xmdefis."\";\n"
-	."\$confm['homcat'] = \"".$_POST['homcat']."\";\n"
-	."\$confm['viewcat'] = \"".$_POST['viewcat']."\";\n"
-	."\$confm['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$confm['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$confm['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$confm['add'] = \"".$_POST['add']."\";\n"
-	."\$confm['addquest'] = \"".$_POST['addquest']."\";\n"
-	."\$confm['broc'] = \"".$_POST['broc']."\";\n"
-	."\$confm['hide'] = \"".$_POST['hide']."\";\n"
-	."\$confm['autor'] = \"".$_POST['autor']."\";\n"
-	."\$confm['date'] = \"".$_POST['date']."\";\n"
-	."\$confm['read'] = \"".$_POST['read']."\";\n"
-	."\$confm['rate'] = \"".$_POST['rate']."\";\n"
-	."\$confm['letter'] = \"".$_POST['letter']."\";\n"
-	."\$confm['link'] = \"".$_POST['link']."\";\n";
-	save_conf("config/config_media.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'linknum' => $_POST['linknum'],
+		'listnum' => $_POST['listnum'],
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'lang' => $xlang,
+		'format' => $xformat,
+		'quality' => $xquality,
+		'links' => $_POST['links'],
+		'mdefis' => $xmdefis,
+		'homcat' => $_POST['homcat'],
+		'viewcat' => $_POST['viewcat'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'addquest' => $_POST['addquest'],
+		'broc' => $_POST['broc'],
+		'hide' => $_POST['hide'],
+		'autor' => $_POST['autor'],
+		'date' => $_POST['date'],
+		'read' => $_POST['read'],
+		'rate' => $_POST['rate'],
+		'letter' => $_POST['letter'],
+		'link' => $_POST['link'],
+	];
+	setConfigFile('media.php', $cont);
 	header("Location: ".$admin_file.".php?op=media_conf");
 }
 

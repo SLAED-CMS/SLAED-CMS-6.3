@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("news")) die("Illegal file access");
 
-include("config/config_news.php");
 
 function news_navi() {
 	panel();
@@ -201,8 +200,7 @@ function news_conf() {
 	global $admin_file, $confn;
 	head();
 	$cont = news_navi(0, 3, 0, 0);
-	$permtest = end_chmod("config/config_news.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('news.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($confn['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -236,29 +234,30 @@ function news_conf_save() {
 	global $admin_file;
 	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
 	$xbascol = (!intval($_POST['bascol'])) ? "1" : $_POST['bascol'];
-	$content = "\$confn = array();\n"
-	."\$confn['defis'] = \"".$xdefis."\";\n"
-	."\$confn['bascol'] = \"".$xbascol."\";\n"
-	."\$confn['asocnum'] = \"".$_POST['asocnum']."\";\n"
-	."\$confn['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$confn['num'] = \"".$_POST['num']."\";\n"
-	."\$confn['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confn['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confn['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confn['homcat'] = \"".$_POST['homcat']."\";\n"
-	."\$confn['viewcat'] = \"".$_POST['viewcat']."\";\n"
-	."\$confn['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$confn['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$confn['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$confn['add'] = \"".$_POST['add']."\";\n"
-	."\$confn['addquest'] = \"".$_POST['addquest']."\";\n"
-	."\$confn['autor'] = \"".$_POST['autor']."\";\n"
-	."\$confn['date'] = \"".$_POST['date']."\";\n"
-	."\$confn['read'] = \"".$_POST['read']."\";\n"
-	."\$confn['rate'] = \"".$_POST['rate']."\";\n"
-	."\$confn['letter'] = \"".$_POST['letter']."\";\n"
-	."\$confn['assoc'] = \"".$_POST['assoc']."\";\n";
-	save_conf("config/config_news.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'bascol' => $xbascol,
+		'asocnum' => $_POST['asocnum'],
+		'listnum' => $_POST['listnum'],
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'homcat' => $_POST['homcat'],
+		'viewcat' => $_POST['viewcat'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'addquest' => $_POST['addquest'],
+		'autor' => $_POST['autor'],
+		'date' => $_POST['date'],
+		'read' => $_POST['read'],
+		'rate' => $_POST['rate'],
+		'letter' => $_POST['letter'],
+		'assoc' => $_POST['assoc'],
+	];
+	setConfigFile('news.php', $cont);
 	header("Location: ".$admin_file.".php?op=news_conf");
 }
 

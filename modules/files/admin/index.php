@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("files")) die("Illegal file access");
 
-include("config/config_files.php");
 
 function files_navi() {
 	panel();
@@ -205,8 +204,7 @@ function files_conf() {
 	global $db, $admin_file, $conff;
 	head();
 	$cont = files_navi(0, 4, 0, 0);
-	$permtest = end_chmod("config/config_files.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('files.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($conff['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -260,37 +258,38 @@ function files_conf_save() {
 	$protect = array("\n" => "", "\t" => "", "\r" => "", " " => "");
 	$xmax_size = (!intval($_POST['max_size'])) ? 1048576 : $_POST['max_size'];
 	$xtypefile = (!$_POST['typefile']) ? "zip,gzip,7z,rar,tar" : strtolower(strtr($_POST['typefile'], $protect));
-	$content = "\$conff = array();\n"
-	."\$conff['defis'] = \"".$xdefis."\";\n"
-	."\$conff['temp'] = \"".$_POST['temp']."\";\n"
-	."\$conff['path'] = \"".$_POST['path']."\";\n"
-	."\$conff['max_size'] = \"".$xmax_size."\";\n"
-	."\$conff['typefile'] = \"".$xtypefile."\";\n"
-	."\$conff['linknum'] = \"".$_POST['linknum']."\";\n"
-	."\$conff['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$conff['num'] = \"".$_POST['num']."\";\n"
-	."\$conff['anum'] = \"".$_POST['anum']."\";\n"
-	."\$conff['nump'] = \"".$_POST['nump']."\";\n"
-	."\$conff['anump'] = \"".$_POST['anump']."\";\n"
-	."\$conff['stream'] = \"".$_POST['stream']."\";\n"
-	."\$conff['homcat'] = \"".$_POST['homcat']."\";\n"
-	."\$conff['viewcat'] = \"".$_POST['viewcat']."\";\n"
-	."\$conff['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$conff['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$conff['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$conff['add'] = \"".$_POST['add']."\";\n"
-	."\$conff['addquest'] = \"".$_POST['addquest']."\";\n"
-	."\$conff['broc'] = \"".$_POST['broc']."\";\n"
-	."\$conff['down'] = \"".$_POST['down']."\";\n"
-	."\$conff['upload'] = \"".$_POST['upload']."\";\n"
-	."\$conff['autor'] = \"".$_POST['autor']."\";\n"
-	."\$conff['date'] = \"".$_POST['date']."\";\n"
-	."\$conff['read'] = \"".$_POST['read']."\";\n"
-	."\$conff['hits'] = \"".$_POST['hits']."\";\n"
-	."\$conff['rate'] = \"".$_POST['rate']."\";\n"
-	."\$conff['letter'] = \"".$_POST['letter']."\";\n"
-	."\$conff['link'] = \"".$_POST['link']."\";\n";
-	save_conf("config/config_files.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'temp' => $_POST['temp'],
+		'path' => $_POST['path'],
+		'max_size' => $xmax_size,
+		'typefile' => $xtypefile,
+		'linknum' => $_POST['linknum'],
+		'listnum' => $_POST['listnum'],
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'stream' => $_POST['stream'],
+		'homcat' => $_POST['homcat'],
+		'viewcat' => $_POST['viewcat'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'addquest' => $_POST['addquest'],
+		'broc' => $_POST['broc'],
+		'down' => $_POST['down'],
+		'upload' => $_POST['upload'],
+		'autor' => $_POST['autor'],
+		'date' => $_POST['date'],
+		'read' => $_POST['read'],
+		'hits' => $_POST['hits'],
+		'rate' => $_POST['rate'],
+		'letter' => $_POST['letter'],
+		'link' => $_POST['link'],
+	];
+	setConfigFile('files.php', $cont);
 	header("Location: ".$admin_file.".php?op=files_conf");
 }
 

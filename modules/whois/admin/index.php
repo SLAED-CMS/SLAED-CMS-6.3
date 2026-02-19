@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("whois")) die("Illegal file access");
 
-include("config/config_whois.php");
 
 function whois_navi() {
 	panel();
@@ -152,8 +151,7 @@ function whois_conf() {
 	global $admin_file, $confw;
 	head();
 	$cont = whois_navi(0, 3, 0, 0);
-	$permtest = end_chmod("config/config_whois.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('whois.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._C_34.":</td><td><input type=\"number\" name=\"anum\" value=\"".$confw['anum']."\" class=\"sl_conf\" placeholder=\""._C_34."\" required></td></tr>"
@@ -169,13 +167,14 @@ function whois_conf() {
 
 function whois_conf_save() {
 	global $admin_file;
-	$content = "\$confw = array();\n"
-	."\$confw['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confw['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confw['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$confw['add'] = \"".$_POST['add']."\";\n"
-	."\$confw['addquest'] = \"".$_POST['addquest']."\";\n";
-	save_conf("config/config_whois.php", $content);
+	$cont = [
+		'anum' => $_POST['anum'],
+		'anump' => $_POST['anump'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'addquest' => $_POST['addquest'],
+	];
+	setConfigFile('whois.php', $cont);
 	header("Location: ".$admin_file.".php?op=whois_conf");
 }
 

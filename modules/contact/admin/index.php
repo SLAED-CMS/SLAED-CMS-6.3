@@ -18,9 +18,7 @@ function contact_conf() {
 	global $admin_file;
 	head();
 	$cont = contact_navi(0, 0, 0, 0);
-	include('config/config_contact.php');
-	$permtest = end_chmod('config/config_contact.php', 666);
-	if ($permtest) $cont .= tpl_warn('warn', $permtest, '', '', 'warn');
+	$cont .= checkPerms('contact.php');
 	$cont .= tpl_eval('open');
 	$cont .= '<form name="post" action="'.$admin_file.'.php" method="post"><table class="sl_table_form">'
 	.'<tr><td>'._CONTACTINFO.':</td><td>'.textarea('1', 'info', $confco['info'], 'all', '10', _CONTACTINFO, '0').'</td></tr>'
@@ -33,9 +31,11 @@ function contact_conf() {
 
 function contact_conf_save() {
 	global $admin_file;
-	$xinfo = "<<<HTML\n".save_text($_POST['info'])."\nHTML";
-	$cont = array('info' => $xinfo, 'admins' => $_POST['admins']);
-	save_conf('config/config_contact.php', $cont, '', 'confco');
+	$cont = [
+		'info' => save_text($_POST['info']),
+		'admins' => $_POST['admins'],
+	];
+	setConfigFile('contact.php', $cont);
 	header('Location: '.$admin_file.'.php?op=contact_conf');
 }
 

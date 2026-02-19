@@ -184,8 +184,7 @@ function voting_conf() {
 	global $admin_file, $confv;
 	head();
 	$cont = voting_navi(0, 2, 0, 0);
-	$permtest = end_chmod("config/config_voting.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('voting.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._VOTING_TIME.":</td><td><input type=\"number\" name=\"voting_t\" value=\"".intval($confv['voting_t'] / 86400)."\" class=\"sl_conf\" placeholder=\""._VOTING_TIME."\" required></td></tr>"
@@ -217,15 +216,16 @@ function voting_conf() {
 function voting_conf_save() {
 	global $admin_file;
 	$xvoting_t = (!$_POST['voting_t']) ? 86400 : intval($_POST['voting_t'] * 86400);
-	$content = "\$confv = array();\n"
-	."\$confv['voting_t'] = \"".$xvoting_t."\";\n"
-	."\$confv['num'] = \"".$_POST['num']."\";\n"
-	."\$confv['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confv['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confv['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confv['answ'] = \"".$_POST['answ']."\";\n"
-	."\$confv['block'] = \"".$_POST['block']."\";\n";
-	save_conf("config/config_voting.php", $content);
+	$cont = [
+		'voting_t' => $xvoting_t,
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'answ' => $_POST['answ'],
+		'block' => $_POST['block'],
+	];
+	setConfigFile('voting.php', $cont);
 	header("Location: ".$admin_file.".php?op=voting_conf");
 }
 

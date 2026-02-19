@@ -6,7 +6,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("pages")) die("Illegal file access");
 
-include("config/config_pages.php");
 
 function page_navi() {
 	panel();
@@ -150,8 +149,7 @@ function page_conf() {
 	global $admin_file, $confp;
 	head();
 	$cont = page_navi(0, 3, 0, 0);
-	$permtest = end_chmod("config/config_pages.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('pages.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($confp['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
@@ -183,28 +181,29 @@ function page_conf() {
 function page_conf_save() {
 	global $admin_file;
 	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
-	$content = "\$confp = array();\n"
-	."\$confp['defis'] = \"".$xdefis."\";\n"
-	."\$confp['linknum'] = \"".$_POST['linknum']."\";\n"
-	."\$confp['listnum'] = \"".$_POST['listnum']."\";\n"
-	."\$confp['num'] = \"".$_POST['num']."\";\n"
-	."\$confp['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confp['nump'] = \"".$_POST['nump']."\";\n"
-	."\$confp['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confp['homcat'] = \"".$_POST['homcat']."\";\n"
-	."\$confp['viewcat'] = \"".$_POST['viewcat']."\";\n"
-	."\$confp['catdesc'] = \"".$_POST['catdesc']."\";\n"
-	."\$confp['subcat'] = \"".$_POST['subcat']."\";\n"
-	."\$confp['addmail'] = \"".$_POST['addmail']."\";\n"
-	."\$confp['add'] = \"".$_POST['add']."\";\n"
-	."\$confp['addquest'] = \"".$_POST['addquest']."\";\n"
-	."\$confp['autor'] = \"".$_POST['autor']."\";\n"
-	."\$confp['date'] = \"".$_POST['date']."\";\n"
-	."\$confp['read'] = \"".$_POST['read']."\";\n"
-	."\$confp['rate'] = \"".$_POST['rate']."\";\n"
-	."\$confp['letter'] = \"".$_POST['letter']."\";\n"
-	."\$confp['link'] = \"".$_POST['link']."\";\n";
-	save_conf("config/config_pages.php", $content);
+	$cont = [
+		'defis' => $xdefis,
+		'linknum' => $_POST['linknum'],
+		'listnum' => $_POST['listnum'],
+		'num' => $_POST['num'],
+		'anum' => $_POST['anum'],
+		'nump' => $_POST['nump'],
+		'anump' => $_POST['anump'],
+		'homcat' => $_POST['homcat'],
+		'viewcat' => $_POST['viewcat'],
+		'catdesc' => $_POST['catdesc'],
+		'subcat' => $_POST['subcat'],
+		'addmail' => $_POST['addmail'],
+		'add' => $_POST['add'],
+		'addquest' => $_POST['addquest'],
+		'autor' => $_POST['autor'],
+		'date' => $_POST['date'],
+		'read' => $_POST['read'],
+		'rate' => $_POST['rate'],
+		'letter' => $_POST['letter'],
+		'link' => $_POST['link'],
+	];
+	setConfigFile('pages.php', $cont);
 	header("Location: ".$admin_file.".php?op=page_conf");
 }
 

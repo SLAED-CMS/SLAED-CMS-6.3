@@ -9,7 +9,6 @@ if (!defined('MODULE_FILE')) {
 	exit;
 }
 get_lang($conf['name']);
-include('config/config_order.php');
 
 function order() {
 	global $conf, $confor, $stop;

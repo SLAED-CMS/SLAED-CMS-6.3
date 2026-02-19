@@ -133,7 +133,7 @@ if (empty($go)) {
         get_lang('shop');
         setThemeInclude();
         setCache('0');
-        require_once CONFIG_DIR.'/config_shop.php';
+        require_once CONFIG_DIR.'/shop.php';
         switch($op) {
             default: show_kasse(); break;
             case 'add_kasse': add_kasse(); break;
@@ -149,7 +149,7 @@ if (empty($go)) {
         }
     } elseif ($go == 4) {
         setCache('0');
-        require_once CONFIG_DIR.'/config_uploads.php';
+        require_once CONFIG_DIR.'/uploads.php';
         $mod = (getVar('get', 'mod', 'var')) ? strtolower(getVar('get', 'mod', 'var')) : '';
         if ($mod) {
             $userid = (getVar('get', 'userid', 'num')) ? getVar('get', 'userid', 'num') : '0';

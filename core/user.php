@@ -94,7 +94,7 @@ function navi() {
         $ititle[] = _CLIENTINFO;
         $link[] = 'index.php?name=shop&amp;op=clients';
         $img[] = 'account/clients.png';
-        include('config/config_shop.php');
+        $confso = $conf['shop'] ?? [];
         if ($confso['part'] == 1) {
             $title[] = _PARTNER;
             $ititle[] = _PARTNERINFO;
@@ -234,8 +234,8 @@ function savecom() {
 
 # Save edit forum post
 function editpost() {
-    global $db, $user;
-    include("config/config_forum.php");
+    global $db, $user, $conf;
+    $conffo = $conf['forum'] ?? [];
     $id = (isset($_POST['id'])) ? ((isset($_POST['id'])) ? intval($_POST['id']) : "") : ((isset($_GET['id'])) ? intval($_GET['id']) : "");
     $catid = (isset($_POST['cid'])) ? ((isset($_POST['cid'])) ? intval($_POST['cid']) : "") : ((isset($_GET['cid'])) ? intval($_GET['cid']) : "");
     $typ = (isset($_POST['typ'])) ? ((isset($_POST['typ'])) ? intval($_POST['typ']) : "") : ((isset($_GET['typ'])) ? intval($_GET['typ']) : "");
@@ -298,6 +298,7 @@ function prmess() {
     $cont = "";
     if ($typ == 1) {
         list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin = '".$uid."' AND status <= '1'"));
+        $fstatus = '';
         if ($pr_num >= $confpr['messin']) {
             $messinfo = sprintf(_PRINEXIT, $confpr['messin']);
             $fstatus = "warn";
@@ -598,13 +599,13 @@ function favoradd() {
 
 # Favorites liste view
 function favorliste() {
-    global $db, $user, $conffav;
+    global $db, $user, $conffav, $conf;
     $arg = func_get_args();
     $obj = analyze($arg[0]);
     $uid = intval($user[0]);
     
     $newlistnum = intval($conffav['num']);
-    $num = ($_GET['cid']) ? intval($_GET['cid']) : "1";
+    $num = isset($_GET['cid']) ? intval($_GET['cid']) : 1;
     $offset = ($num-1) * $newlistnum;
     $offset = intval($offset);
     $a = ($num) ? $offset+1 : 1;
@@ -642,7 +643,7 @@ function favorliste() {
                 $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_links AS n ON (f.fid=n.lid) WHERE f.uid = '".$uid."' AND n.lid IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "media") {
-                include("config/config_media.php");
+                $confm = $conf['media'] ?? [];
                 $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, n.subtitle FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_media AS n ON (f.fid=n.id) WHERE f.uid = '".$uid."' AND n.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
                 while (list($id, $fid, $modul, $title, $subtitle) = $db->sql_fetchrow($result)) {
                     $title = ($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;

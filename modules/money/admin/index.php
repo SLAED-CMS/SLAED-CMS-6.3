@@ -4,7 +4,6 @@
 
 if (!defined("ADMIN_FILE") || !is_admin_modul("money")) die("Illegal file access");
 
-include("config/config_money.php");
 
 function money_navi() {
 	panel();
@@ -191,8 +190,7 @@ function money_conf() {
 	global $admin_file, $confmo;
 	head();
 	$cont = money_navi(0, 2, 0, 0);
-	$permtest = end_chmod("config/config_money.php", 666);
-	if ($permtest) $cont .= tpl_warn("warn", $permtest, "", "", "warn");
+	$cont .= checkPerms('money.php');
 	$cont .= tpl_eval("open");
 	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
 	."<tr><td>"._MA_3.":</td><td><input type=\"text\" name=\"proz\" value=\"".$confmo['proz']."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._MA_3."\" required></td></tr>"
@@ -226,23 +224,24 @@ function money_conf_save() {
 	$xinfo = save_text($_POST['info']);
 	$xsendinfo = save_text($_POST['sendinfo']);
 	$xautor = save_text($_POST['autor']);
-	$content = "\$confmo = array();\n"
-	."\$confmo['proz'] = \"".$_POST['proz']."\";\n"
-	."\$confmo['kurs'] = \"".$xkurs."\";\n"
-	."\$confmo['kurs2'] = \"".$xkurs2."\";\n"
-	."\$confmo['bal'] = \"".$_POST['bal']."\";\n"
-	."\$confmo['mail'] = \"".$_POST['mail']."\";\n"
-	."\$confmo['form'] = \"".$xform."\";\n"
-	."\$confmo['anum'] = \"".$_POST['anum']."\";\n"
-	."\$confmo['anump'] = \"".$_POST['anump']."\";\n"
-	."\$confmo['an'] = \"".$_POST['an']."\";\n"
-	."\$confmo['pr'] = \"".$_POST['pr']."\";\n"
-	."\$confmo['ad'] = \"".$_POST['ad']."\";\n"
-	."\$confmo['text'] = <<<HTML\n".$xtext."\nHTML;\n"
-	."\$confmo['info'] = <<<HTML\n".$xinfo."\nHTML;\n"
-	."\$confmo['sendinfo'] = <<<HTML\n".$xsendinfo."\nHTML;\n"
-	."\$confmo['autor'] = <<<HTML\n".$xautor."\nHTML;\n";
-	save_conf("config/config_money.php", $content);
+	$cont = [
+		'proz' => $_POST['proz'],
+		'kurs' => $xkurs,
+		'kurs2' => $xkurs2,
+		'bal' => $_POST['bal'],
+		'mail' => $_POST['mail'],
+		'form' => $xform,
+		'anum' => $_POST['anum'],
+		'anump' => $_POST['anump'],
+		'an' => $_POST['an'],
+		'pr' => $_POST['pr'],
+		'ad' => $_POST['ad'],
+		'text' => $xtext,
+		'info' => $xinfo,
+		'sendinfo' => $xsendinfo,
+		'autor' => $xautor,
+	];
+	setConfigFile('money.php', $cont);
 	header("Location: ".$admin_file.".php?op=money_conf");
 }
 
