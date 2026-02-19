@@ -41,7 +41,7 @@ class ConfigValidationTest extends TestCase
     {
         $required = [
             'db.php',
-            'config_global.php',
+            'global.php',
         ];
 
         $errors = [];
@@ -175,7 +175,7 @@ class ConfigValidationTest extends TestCase
 
         // Файлы которые должны содержать массивы
         $arrayConfigs = [
-            'config_global.php' => 'conf',
+            'global.php' => 'conf',
             'db.php' => 'confdb',
             'modules.php' => 'confmd',
         ];

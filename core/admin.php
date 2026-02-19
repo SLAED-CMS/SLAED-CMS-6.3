@@ -509,7 +509,7 @@ function admininfo() {
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
         $e_cont = '<form method="post" action="'.$admin_file.'.php"><table><tr><td>'.redaktor('1', 'editor', '', $editor, 1).'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
-        $ablocks .= setTemplateBlock('block-left', array('{%title%}' => _REDAKTOR, '{%content%}' => $e_cont, '{%id%}' => '6'));
+        $ablocks .= setTemplateBlock('block-left', array('{%title%}' => _EDITOR, '{%content%}' => $e_cont, '{%id%}' => '6'));
         return $ablocks;
     }
 }
@@ -534,7 +534,7 @@ function end_chmod($dir, $chm) {
     if (file_exists($dir) && intval($chm)) {
         $per = substr(decoct(fileperms($dir)), -3);
         if (php_uname('s') == 'Linux' && PHP_VERSION >= '5.3' && $per != $chm) {
-            $tdir = 'config/config_chmod.php';
+            $tdir = 'config/chmod.php';
             chmod($tdir, '0'.$chm);
             $tper = substr(decoct(fileperms($tdir)), -3);
             if ($tper == $chm) {

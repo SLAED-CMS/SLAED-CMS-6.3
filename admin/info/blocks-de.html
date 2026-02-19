@@ -93,7 +93,7 @@ name – ist der Blockname, vollständiger Name der Blockdatei im Verzeichnis: b
 Die Blockgestaltungsdatei sollte im Hauptverzeichnis des Design-Themes zusammen mit anderen Standardsystemvorlagen platziert werden.<br>
 <br>
 [color=green][b]Freie (fly) Blöcke[/b][/color]<br>
-Ein freier Block (fly) kann an beliebiger Stelle auf der Website-Seite platziert werden, wofür der Erstellungscode dieses freien Blocks in die entsprechende PHP-Datei eingefügt werden muss (z.B. in config/config_header.php). In Vorlagen des Design-Themes (*.html-Dateien) kann kein Erstellungscode für freie Blöcke eingefügt werden, da in diesem Fall dieser PHP-Code nicht verarbeitet wird. Ausführlichere Informationen zum Einfügen von Blöcken in Design-Theme-Vorlagen finden Sie im Bereich «Design-Theme».<br>
+Ein freier Block (fly) kann an beliebiger Stelle auf der Website-Seite platziert werden, wofür der Erstellungscode dieses freien Blocks in die entsprechende PHP-Datei eingefügt werden muss (z.B. in config/header.php). In Vorlagen des Design-Themes (*.html-Dateien) kann kein Erstellungscode für freie Blöcke eingefügt werden, da in diesem Fall dieser PHP-Code nicht verarbeitet wird. Ausführlichere Informationen zum Einfügen von Blöcken in Design-Theme-Vorlagen finden Sie im Bereich «Design-Theme».<br>
 Ein freier Block wird im PHP-Skript durch die Funktion beschrieben: blocks(&quot;why&quot;, &quot;who&quot;), wobei blocks die Funktion zur Erstellung eines freien Blocks mit den Parametern why und who ist.<br>
 Je nach den Parametern why und who kann die Funktion zur Erstellung eines freien Blocks:<br>
 [li] Den geformten freien Block auf die Standardausgabe drucken (Block auf der Seite anzeigen).<br>
@@ -171,11 +171,11 @@ blocks(&quot;oreturnform&quot;, 15);<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);[/php]<br>
 [justify]Um eine Variable, die den freien Blockkörper enthält, auf der Seite auszugeben, muss Folgendes getan werden:<br>
-Öffnen Sie die Datei config/config_header.php und fügen Sie den Code ein:[/justify]<br>
+Öffnen Sie die Datei config/header.php und fügen Sie den Code ein:[/justify]<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);[/php]<br>
 [justify]An beliebiger Stelle in der Vorlage (z.B. in templates/ihr_theme/index.html) fügen Sie das Array &#036;blockg[menu2] ein (beachten Sie das Fehlen von Anführungszeichen innerhalb der eckigen Klammern!) Anstelle von &#036;blockg[menu2] wird auf der Seite der Block menu2 ausgegeben, dessen Code in der Datei blocks/block-menu2.php enthalten ist.<br>
-Für die korrekte Ausgabe eines freien Blocks auf der Seite, der aus der Datenbank per bid aus der Tabelle präf_blocks abgefragt wird, muss bei aktiviertem rss_info-Modul (Nachrichtenausgabe im RSS-Format) in die PHP-Datei config/config_header.php geschrieben werden:[/justify]<br>
+Für die korrekte Ausgabe eines freien Blocks auf der Seite, der aus der Datenbank per bid aus der Tabelle präf_blocks abgefragt wird, muss bei aktiviertem rss_info-Modul (Nachrichtenausgabe im RSS-Format) in die PHP-Datei config/header.php geschrieben werden:[/justify]<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
 ob_start();<br>

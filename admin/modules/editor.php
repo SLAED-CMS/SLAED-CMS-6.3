@@ -7,8 +7,8 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=editrewrite', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
-    $lang = [_EFUNCN, _EHEADN, _EREWN, _EHTN, _ERON, _INFO];
+    $ops = ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
+    $lang = [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO];
     return getAdminTabs(_EDITOR_IN, 'editor.png', '', $ops, $lang, [], [], $tab, $subtab);
 }
 
@@ -33,7 +33,7 @@ function editheader(): void {
     global $aroute;
     head();
     $cont = navi(0, 1, 0, 0);
-    $file = 'config/config_header.php';
+    $file = CONFIG_DIR.'/header.php';
     $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EHEAD.': '.$file.' '._EINFO2]);
@@ -46,28 +46,11 @@ function editheader(): void {
     foot();
 }
 
-function editrewrite(): void {
-    global $aroute;
-    head();
-    $cont = navi(0, 2, 0, 0);
-    $file = 'config/config_rewrite.php';
-    $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
-    $cont .= checkPerms($file);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EREW.': '.$file.' '._EINFO3]);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
-    $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="editrewrite"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
-    echo $cont;
-    foot();
-}
-
 function htaccess(): void {
     global $aroute;
     head();
-    $cont = navi(0, 3, 0, 0);
-    $file = '.htaccess';
+    $cont = navi(0, 2, 0, 0);
+    $file = BASE_DIR.'/.htaccess';
     $conts = file_get_contents($file);
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EHT.': '.$file.' '._EINFO4]);
@@ -82,8 +65,8 @@ function htaccess(): void {
 function robots(): void {
     global $aroute;
     head();
-    $cont = navi(0, 4, 0, 0);
-    $file = 'robots.txt';
+    $cont = navi(0, 3, 0, 0);
+    $file = BASE_DIR.'/robots.txt';
     $conts = file_get_contents($file);
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EROB.': '.$file.' '._EINFO5]);
@@ -97,7 +80,7 @@ function robots(): void {
 
 function info(): void {
     head();
-    echo navi(1, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'editor').'</div>';
+    echo navi(1, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'editor').'</div>';
     foot();
 }
 
@@ -107,12 +90,8 @@ function save(): void {
     $file = getVar('post', 'file');
     $template = filter_input(INPUT_POST, 'template', FILTER_UNSAFE_RAW);
     $type = ['.htaccess', 'robots.txt'];
-    $template = (in_array($file, $type)) ? $template : '<?php\r\nif (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');\r\n'.$template.'\r\n?>';
-    if ($file && $template) {
-        $handle = fopen($file, 'wb');
-        fwrite($handle, $template);
-        fclose($handle);
-    }
+    $template = (in_array($file, $type)) ? $template : '<?php'.PHP_EOL.'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'.PHP_EOL.$template.PHP_EOL;
+    if ($file && $template) file_put_contents($file, $template, LOCK_EX);
     header('Location: '.$aroute.'.php?name=editor&op='.$editor);
     exit;
 }
@@ -120,7 +99,6 @@ function save(): void {
 switch ($op) {
     default: editor(); break;
     case 'editheader': editheader(); break;
-    case 'editrewrite': editrewrite(); break;
     case 'htaccess': htaccess(); break;
     case 'robots': robots(); break;
     case 'save': save(); break;

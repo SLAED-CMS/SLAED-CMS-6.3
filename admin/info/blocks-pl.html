@@ -93,7 +93,7 @@ name – to nazwa bloku, pełna nazwa pliku bloku w katalogu: blocks/<br>
 Plik stylizacji bloku powinien być umieszczony w głównym katalogu motywu wyglądu wraz z innymi standardowymi szablonami systemowymi.<br>
 <br>
 [color=green][b]Bloki Wolne (fly)[/b][/color]<br>
-Blok wolny (fly) można umieścić w dowolnym miejscu na stronie witryny, dla czego kod tworzenia tego wolnego bloku musi być wstawiony do odpowiedniego pliku PHP (np. w config/config_header.php). Kod tworzenia wolnego bloku nie może być wstawiany do szablonów motywu wyglądu (pliki *.html), ponieważ w tym przypadku ten kod PHP nie będzie przetwarzany. Bardziej kompletne informacje o wstawianiu bloków do szablonów motywu wyglądu znajdują się w sekcji «Motyw wyglądu».<br>
+Blok wolny (fly) można umieścić w dowolnym miejscu na stronie witryny, dla czego kod tworzenia tego wolnego bloku musi być wstawiony do odpowiedniego pliku PHP (np. w config/header.php). Kod tworzenia wolnego bloku nie może być wstawiany do szablonów motywu wyglądu (pliki *.html), ponieważ w tym przypadku ten kod PHP nie będzie przetwarzany. Bardziej kompletne informacje o wstawianiu bloków do szablonów motywu wyglądu znajdują się w sekcji «Motyw wyglądu».<br>
 Blok wolny jest opisywany w skrypcie PHP przez funkcję: blocks(&quot;why&quot;, &quot;who&quot;), gdzie blocks to funkcja do tworzenia wolnego bloku z parametrami: why i who.<br>
 W zależności od parametrów why i who, funkcja tworzenia wolnego bloku może:<br>
 [li] Drukować uformowany wolny blok na standardowe wyjście (wyświetlić blok na stronie).<br>
@@ -171,11 +171,11 @@ blocks(&quot;oreturnform&quot;, 15);<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);[/php]<br>
 [justify]Aby wyświetlić zmienną zawierającą ciało wolnego bloku na stronie, należy wykonać następujące czynności:<br>
-Otwórz plik config/config_header.php i wstaw kod:[/justify]<br>
+Otwórz plik config/header.php i wstaw kod:[/justify]<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);[/php]<br>
 [justify]W dowolnym miejscu w szablonie (np. w templates/twój_motyw/index.html) wstaw tablicę &#036;blockg[menu2] (zwróć uwagę na brak cudzysłowów wewnątrz nawiasów kwadratowych!) Zamiast &#036;blockg[menu2] na stronie zostanie wyświetlony blok menu2, którego kod jest zawarty w pliku blocks/block-menu2.php.<br>
-Dla prawidłowego wyświetlenia wolnego bloku na stronie, który jest pobierany z bazy danych przez bid z tabeli pref_blocks, z włączonym modułem rss_info (wyjście wiadomości w formacie RSS), należy zapisać w pliku PHP config/config_header.php:[/justify]<br>
+Dla prawidłowego wyświetlenia wolnego bloku na stronie, który jest pobierany z bazy danych przez bid z tabeli pref_blocks, z włączonym modułem rss_info (wyjście wiadomości w formacie RSS), należy zapisać w pliku PHP config/header.php:[/justify]<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
 ob_start();<br>

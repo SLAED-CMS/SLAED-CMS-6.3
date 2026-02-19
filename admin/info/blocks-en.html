@@ -93,7 +93,7 @@ name – is the block name, full name of the block file in the directory: blocks
 The block styling file should be placed in the main directory of the design theme along with other standard system templates.<br>
 <br>
 [color=green][b]Free (fly) Blocks[/b][/color]<br>
-A free block (fly) can be placed anywhere on the website page, for which the creation code of this free block must be inserted into the corresponding PHP file (e.g., in config/config_header.php). Free block creation code cannot be inserted into design theme templates (*.html files), as in this case this PHP code will not be processed. More complete information about inserting blocks into design theme templates is provided in the «Design Theme» section.<br>
+A free block (fly) can be placed anywhere on the website page, for which the creation code of this free block must be inserted into the corresponding PHP file (e.g., in config/header.php). Free block creation code cannot be inserted into design theme templates (*.html files), as in this case this PHP code will not be processed. More complete information about inserting blocks into design theme templates is provided in the «Design Theme» section.<br>
 A free block is described in a PHP script by the function: blocks(&quot;why&quot;, &quot;who&quot;), where blocks is the function for creating a free block with parameters: why and who.<br>
 Depending on the why and who parameters, the free block creation function can:<br>
 [li] Print the formed free block to standard output (display the block on the page).<br>
@@ -171,11 +171,11 @@ blocks(&quot;oreturnform&quot;, 15);<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);[/php]<br>
 [justify]To output a variable containing the free block body on the page, the following must be done:<br>
-Open the file config/config_header.php and insert the code:[/justify]<br>
+Open the file config/header.php and insert the code:[/justify]<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);[/php]<br>
 [justify]Anywhere in the template (e.g., in templates/your_theme/index.html) insert the array &#036;blockg[menu2] (note the absence of quotes inside the square brackets!) Instead of &#036;blockg[menu2], the menu2 block will be output on the page, whose code is contained in the file blocks/block-menu2.php.<br>
-For correct output of a free block on the page, which is requested from the database by bid from the pref_blocks table, with the rss_info module enabled (news output in RSS format), the following must be written in the PHP file config/config_header.php:[/justify]<br>
+For correct output of a free block on the page, which is requested from the database by bid from the pref_blocks table, with the rss_info module enabled (news output in RSS format), the following must be written in the PHP file config/header.php:[/justify]<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
 ob_start();<br>

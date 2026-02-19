@@ -93,7 +93,7 @@ name – est le nom du bloc, nom complet du fichier de bloc dans le répertoire 
 Le fichier de mise en forme du bloc doit être placé dans le répertoire principal du thème de design avec les autres modèles système standard.<br>
 <br>
 [color=green][b]Blocs Libres (fly)[/b][/color]<br>
-Un bloc libre (fly) peut être placé n'importe où sur la page du site, pour lequel le code de création de ce bloc libre doit être inséré dans le fichier PHP correspondant (par exemple, dans config/config_header.php). Le code de création de bloc libre ne peut pas être inséré dans les modèles de thème de design (fichiers *.html), car dans ce cas ce code PHP ne sera pas traité. Des informations plus complètes sur l'insertion de blocs dans les modèles de thème de design sont fournies dans la section «Thème de design».<br>
+Un bloc libre (fly) peut être placé n'importe où sur la page du site, pour lequel le code de création de ce bloc libre doit être inséré dans le fichier PHP correspondant (par exemple, dans config/header.php). Le code de création de bloc libre ne peut pas être inséré dans les modèles de thème de design (fichiers *.html), car dans ce cas ce code PHP ne sera pas traité. Des informations plus complètes sur l'insertion de blocs dans les modèles de thème de design sont fournies dans la section «Thème de design».<br>
 Un bloc libre est décrit dans un script PHP par la fonction : blocks(&quot;why&quot;, &quot;who&quot;), où blocks est la fonction de création d'un bloc libre avec les paramètres : why et who.<br>
 Selon les paramètres why et who, la fonction de création de bloc libre peut :<br>
 [li] Imprimer le bloc libre formé vers la sortie standard (afficher le bloc sur la page).<br>
@@ -171,11 +171,11 @@ blocks(&quot;oreturnform&quot;, 15);<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;oreturnform&quot;, &quot;block-menu2.php&quot;);[/php]<br>
 [justify]Pour afficher une variable contenant le corps du bloc libre sur la page, vous devez faire ce qui suit :<br>
-Ouvrez le fichier config/config_header.php et insérez le code :[/justify]<br>
+Ouvrez le fichier config/header.php et insérez le code :[/justify]<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);[/php]<br>
 [justify]N'importe où dans le modèle (par exemple, dans templates/votre_thème/index.html) insérez le tableau &#036;blockg[menu2] (notez l'absence de guillemets à l'intérieur des crochets !) Au lieu de &#036;blockg[menu2], le bloc menu2 sera affiché sur la page, dont le code est contenu dans le fichier blocks/block-menu2.php.<br>
-Pour une sortie correcte d'un bloc libre sur la page, qui est demandé à la base de données par bid de la table préf_blocks, avec le module rss_info activé (sortie des nouvelles au format RSS), vous devez écrire dans le fichier PHP config/config_header.php :[/justify]<br>
+Pour une sortie correcte d'un bloc libre sur la page, qui est demandé à la base de données par bid de la table préf_blocks, avec le module rss_info activé (sortie des nouvelles au format RSS), vous devez écrire dans le fichier PHP config/header.php :[/justify]<br>
 [php]global &#036;blockg;<br>
 &#036;blockg[&quot;menu2&quot;] = blocks(&quot;plzreturn&quot;, &quot;block-menu2.php&quot;);<br>
 ob_start();<br>
