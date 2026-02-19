@@ -729,7 +729,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     };
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
-    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# Copyright Â© 2005 - '.date('Y').' SLAED'.PHP_EOL
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
     .'return '.$exp($data).';'.PHP_EOL;
@@ -743,7 +743,7 @@ function doConfig($fp, $name, $array, $actual='', $type='') {
         ksort($array);
         array_walk($array, function (&$v) { $v = is_bool($v) ? strval(intval($v)) : strval($v); });
         $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
-        $cont = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL.'$'.$name.' = '.var_export($array, true).';';
+        $cont = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL.'$'.$name.' = '.var_export($array, true).';';
         file_put_contents($fp, $cont, LOCK_EX);
     }
 }
@@ -841,14 +841,16 @@ function doCss() {
 # Create a sitemap
 function doSitemap() {
     global $db, $conf;
-    include('config/sitemap.php');
-    if (defined('ADMIN_FILE') || $confma['auto']) {
+    $sitemap_data = include('config/sitemap.php');
+    $confma = $sitemap_data['sitemap'] ?? [];
+    if (defined('ADMIN_FILE') || !empty($confma['auto'])) {
         $sess_f = 'sitemap.xml';
         $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
-        $past = time() - intval($confma['auto_t']);
+        $past = time() - intval($confma['auto_t'] ?? 0);
         if (defined('ADMIN_FILE') || $sess_b < $past) {
             $date = date('Y-m-d');
-            $mod = empty($confma['mod'][0]) ? '0' : explode(',', $confma['mod']);
+            $modules_raw = (string)($confma['mod'] ?? '');
+            $mod = ($modules_raw === '') ? array('0') : explode(',', $modules_raw);
             for ($i = 0; $i < count($mod); $i++) {
                 if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
                     $result = $db->sql_query("SELECT user_id, user_name, user_lastvisit FROM ".PREFIX_DB."_users");
@@ -949,7 +951,7 @@ function doSitemap() {
                 }
                 $buffer .= '</ol>';
                 if ($conf['rewrite']) {
-                    include('config/config_rewrite.php');
+                    include('config/rewrite.php');
                     $buffer = preg_replace($in, $out, $buffer);
                 }
                 file_put_contents('config/sitemap/sitemap.txt', $buffer);
@@ -977,7 +979,7 @@ function doSitemap() {
                     $cont .= ($confma['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
                     $cont .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$urls.'</urlset>';
                     if ($conf['rewrite']) {
-                        include('config/config_rewrite.php');
+                        include('config/rewrite.php');
                         $cont = str_replace($conf['homeurl'].'/', '', $cont);
                         $cont = preg_replace($in, $out, $cont);
                         $cont = preg_replace('#<loc>(.*?)</loc>#is','<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
@@ -1002,7 +1004,7 @@ function doSitemap() {
             $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
             $cont .= ($confma['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n".$set : $set;
             if ($conf['rewrite']) {
-                include('config/config_rewrite.php');
+                include('config/rewrite.php');
                 $cont = str_replace($conf['homeurl'].'/', '', $cont);
                 $cont = preg_replace($in, $out, $cont);
                 $cont = preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
@@ -1037,7 +1039,7 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
 
 # Transliteration
 function getTranslit($st, $lo='') {
-    $st = strtr($st, array('а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ж' => 'g', 'з' => 'z', 'и' => 'i', 'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f', 'ы' => 'i', 'э' => 'e', 'А' => 'A', 'Б' => 'B', 'В' => 'V', 'Г' => 'G', 'Д' => 'D', 'Е' => 'E', 'Ж' => 'G', 'З' => 'Z', 'И' => 'I', 'Й' => 'Y', 'К' => 'K', 'Л' => 'L', 'М' => 'M', 'Н' => 'N', 'О' => 'O', 'П' => 'P', 'Р' => 'R', 'С' => 'S', 'Т' => 'T', 'У' => 'U', 'Ф' => 'F', 'Ы' => 'I', 'Э' => 'E', 'ё' => 'yo', 'х' => 'h', 'ц' => 'ts', 'ч' => 'ch', 'ш' => 'sh', 'щ' => 'shch', 'ъ' => '', 'ь' => '', 'ю' => 'yu', 'я' => 'ya', 'Ё' => 'Yo', 'Х' => 'H', 'Ц' => 'Ts', 'Ч' => 'Ch', 'Ш' => 'Sh', 'Щ' => 'Shch', 'Ъ' => '', 'Ь' => '', 'Ю' => 'Yu', 'Я' => 'Ya'));
+    $st = strtr($st, array('Ð°' => 'a', 'Ð±' => 'b', 'Ð²' => 'v', 'Ð³' => 'g', 'Ð´' => 'd', 'Ðµ' => 'e', 'Ð¶' => 'g', 'Ð·' => 'z', 'Ð¸' => 'i', 'Ð¹' => 'y', 'Ðº' => 'k', 'Ð»' => 'l', 'Ð¼' => 'm', 'Ð½' => 'n', 'Ð¾' => 'o', 'Ð¿' => 'p', 'Ñ€' => 'r', 'Ñ' => 's', 'Ñ‚' => 't', 'Ñƒ' => 'u', 'Ñ„' => 'f', 'Ñ‹' => 'i', 'Ñ' => 'e', 'Ð' => 'A', 'Ð‘' => 'B', 'Ð’' => 'V', 'Ð“' => 'G', 'Ð”' => 'D', 'Ð•' => 'E', 'Ð–' => 'G', 'Ð—' => 'Z', 'Ð˜' => 'I', 'Ð™' => 'Y', 'Ðš' => 'K', 'Ð›' => 'L', 'Ðœ' => 'M', 'Ð' => 'N', 'Ðž' => 'O', 'ÐŸ' => 'P', 'Ð ' => 'R', 'Ð¡' => 'S', 'Ð¢' => 'T', 'Ð£' => 'U', 'Ð¤' => 'F', 'Ð«' => 'I', 'Ð­' => 'E', 'Ñ‘' => 'yo', 'Ñ…' => 'h', 'Ñ†' => 'ts', 'Ñ‡' => 'ch', 'Ñˆ' => 'sh', 'Ñ‰' => 'shch', 'ÑŠ' => '', 'ÑŒ' => '', 'ÑŽ' => 'yu', 'Ñ' => 'ya', 'Ð' => 'Yo', 'Ð¥' => 'H', 'Ð¦' => 'Ts', 'Ð§' => 'Ch', 'Ð¨' => 'Sh', 'Ð©' => 'Shch', 'Ðª' => '', 'Ð¬' => '', 'Ð®' => 'Yu', 'Ð¯' => 'Ya'));
     $st = empty($lo) ? $st : mb_strtolower($st);
     $st = preg_replace('#[^a-zA-Z0-9]#', '', $st);
     $st = trim($st);
@@ -1159,7 +1161,7 @@ function getCompressCode($code) {
 function getCompressHtml($html) {
     preg_match_all('#(<(?:code|pre|textarea|script|style)[^>]+>.*?</(?:code|pre|textarea|script|style)>)#si', $html, $pre);
     $html = preg_replace('#<(?:code|pre|textarea|script|style)[^>]+>.*?</(?:code|pre|textarea|script|style)>#si', '%pre%', $html);
-    $html = preg_replace('#<!–[^\[].+–>#', '', $html);
+    $html = preg_replace('#<!â€“[^\[].+â€“>#', '', $html);
     $html = preg_replace('#[\r\n\t]+#', ' ', $html);
     $html = preg_replace('#>[\s]+<#', '><', $html);
     $html = preg_replace('#[\s]+#', ' ', $html);
@@ -1173,17 +1175,17 @@ function getCompressHtml($html) {
 
 # DELETE
 function getCompressCodeOld($cont) {
-    # Удаление пробелов между HTML тегов
+    # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð¿Ñ€Ð¾Ð±ÐµÐ»Ð¾Ð² Ð¼ÐµÐ¶Ð´Ñƒ HTML Ñ‚ÐµÐ³Ð¾Ð²
     $cont = preg_replace('#(?:(?<=\>)|(?<=\/\>))\s+(?=\<\/?)#', '', $cont);
-    # Исключение <pre>
+    # Ð˜ÑÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ <pre>
     if (false === strpos($cont, '<pre')) $cont = preg_replace('#\s+#', ' ', $cont);
-    # Удаление новых строк, за которыми пробелы
+    # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð½Ð¾Ð²Ñ‹Ñ… ÑÑ‚Ñ€Ð¾Ðº, Ð·Ð° ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¼Ð¸ Ð¿Ñ€Ð¾Ð±ÐµÐ»Ñ‹
     $cont = preg_replace("#[\t\r]\s+#", ' ', $cont);
-    # Сохранение комментариев для IE
+    # Ð¡Ð¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ðµ ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸ÐµÐ² Ð´Ð»Ñ IE
     $cont = preg_replace('#<!(--)([^\[|\|])^(<!-->.*<!--.*-->)#', '', $cont);
-    # Удаленией комментариев CSS
+    # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸ÐµÐ¹ ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸ÐµÐ² CSS
     $cont = preg_replace('#\/\*.*?\*\/#', '', $cont);
-        # Удаление табуляторов, замена двойных пробелов одинарным
+        # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ‚Ð°Ð±ÑƒÐ»ÑÑ‚Ð¾Ñ€Ð¾Ð², Ð·Ð°Ð¼ÐµÐ½Ð° Ð´Ð²Ð¾Ð¹Ð½Ñ‹Ñ… Ð¿Ñ€Ð¾Ð±ÐµÐ»Ð¾Ð² Ð¾Ð´Ð¸Ð½Ð°Ñ€Ð½Ñ‹Ð¼
     $cont = str_replace(array("  ", "\s\s", "\n", "\r", "\t"), ' ', $cont);
     return $cont;
 }
@@ -1371,21 +1373,7 @@ function user_news($unum, $mnum) {
     return $num;
 }
 
-# Сохранение конфигураций в файл DELETE
-function save_conf($fp, $arr, $type='', $var='') {
-    if (file_exists($fp) && $arr) {
-        if (is_array($arr) && $var) {
-            $cont = "\$".$var." = array();\n";
-            foreach ($arr as $key => $value) $cont .= (preg_match('#<<<HTML#', $value)) ? "\$".$var."['".$key."'] = ".$value.";" : "\$".$var."['".$key."'] = \"".$value."\";";
-        } else {
-            $cont = $arr;
-        }
-        $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
-        $cont = "<?php\nif (!defined('".$cons."')) die('Illegal file access');\n\n".$cont;
-        file_put_contents($fp, $cont, LOCK_EX);
-    }
-}
-
+# Ð¡Ð¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ðµ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¹ Ð² Ñ„Ð°Ð¹Ð» DELETE
 # Clear text from HTML and BB code
 function getTextClean($text, $id) {
     $text = htmlspecialchars(strip_tags(htmlspecialchars_decode($text)), ENT_QUOTES);
@@ -1439,15 +1427,15 @@ function slugify(string $text, string $sep = '-'): string {
 
     // Russische Buchstaben transliterieren
     $rus = [
-        'А'=>'A','Б'=>'B','В'=>'V','Г'=>'G','Д'=>'D','Е'=>'E','Ё'=>'E','Ж'=>'Zh',
-        'З'=>'Z','И'=>'I','Й'=>'I','К'=>'K','Л'=>'L','М'=>'M','Н'=>'N','О'=>'O',
-        'П'=>'P','Р'=>'R','С'=>'S','Т'=>'T','У'=>'U','Ф'=>'F','Х'=>'Kh','Ц'=>'Ts',
-        'Ч'=>'Ch','Ш'=>'Sh','Щ'=>'Shch','Ы'=>'Y','Э'=>'E','Ю'=>'Yu','Я'=>'Ya',
-        'Ь'=>'','Ъ'=>'',
-        'а'=>'a','б'=>'b','в'=>'v','г'=>'g','д'=>'d','е'=>'e','ё'=>'e','ж'=>'zh',
-        'з'=>'z','и'=>'i','й'=>'i','к'=>'k','л'=>'l','м'=>'m','н'=>'n','о'=>'o',
-        'п'=>'p','р'=>'r','с'=>'s','т'=>'t','у'=>'u','ф'=>'f','х'=>'kh','ц'=>'ts',
-        'ч'=>'ch','ш'=>'sh','щ'=>'shch','ы'=>'y','э'=>'e','ю'=>'yu','я'=>'ya',
+        'Ð'=>'A','Ð‘'=>'B','Ð’'=>'V','Ð“'=>'G','Ð”'=>'D','Ð•'=>'E','Ð'=>'E','Ð–'=>'Zh',
+        'Ð—'=>'Z','Ð˜'=>'I','Ð™'=>'I','Ðš'=>'K','Ð›'=>'L','Ðœ'=>'M','Ð'=>'N','Ðž'=>'O',
+        'ÐŸ'=>'P','Ð '=>'R','Ð¡'=>'S','Ð¢'=>'T','Ð£'=>'U','Ð¤'=>'F','Ð¥'=>'Kh','Ð¦'=>'Ts',
+        'Ð§'=>'Ch','Ð¨'=>'Sh','Ð©'=>'Shch','Ð«'=>'Y','Ð­'=>'E','Ð®'=>'Yu','Ð¯'=>'Ya',
+        'Ð¬'=>'','Ðª'=>'',
+        'Ð°'=>'a','Ð±'=>'b','Ð²'=>'v','Ð³'=>'g','Ð´'=>'d','Ðµ'=>'e','Ñ‘'=>'e','Ð¶'=>'zh',
+        'Ð·'=>'z','Ð¸'=>'i','Ð¹'=>'i','Ðº'=>'k','Ð»'=>'l','Ð¼'=>'m','Ð½'=>'n','Ð¾'=>'o',
+        'Ð¿'=>'p','Ñ€'=>'r','Ñ'=>'s','Ñ‚'=>'t','Ñƒ'=>'u','Ñ„'=>'f','Ñ…'=>'kh','Ñ†'=>'ts',
+        'Ñ‡'=>'ch','Ñˆ'=>'sh','Ñ‰'=>'shch','Ñ‹'=>'y','Ñ'=>'e','ÑŽ'=>'yu','Ñ'=>'ya',
     ];
     $text = strtr($text, $rus);
 
@@ -2001,13 +1989,14 @@ function ajax_rating($typ, $id, $mod, $rat, $scor, $obj="", $stl="") {
 # Show editor files
 function show_files() {
     global $conf, $user;
-    include("config/config_uploads.php");
+    $uploads_data = include('config/uploads.php');
+    $confup = $uploads_data['uploads'] ?? [];
     $id = (isset($_GET['id'])) ? analyze($_GET['id']) : 0;
     $dir = (isset($_GET['dir'])) ? strtolower($_GET['dir']) : "";
     $gzip = (isset($_GET['cid'])) ? intval($_GET['cid']) : 0;
-    $con = explode("|", $confup[$dir]);
-    $connum = (intval($con[7])) ? $con[7] : "50";
-    $eallf = (is_moder()) ? intval($con[8]) : intval($con[9]);
+    $con = explode("|", (string)($confup[$dir] ?? ''));
+    $connum = (isset($con[7]) && intval($con[7])) ? $con[7] : "50";
+    $eallf = (is_moder()) ? intval($con[8] ?? 0) : intval($con[9] ?? 0);
     $file = (isset($_GET['file'])) ? text_filter($_GET['file']) : "";
     $num = ($gzip) ? $gzip : "1";
     $uname = (is_user()) ? intval($user[0]) : 0;
@@ -2916,11 +2905,12 @@ function head() {
             $cron = 0;
         }
     }
-    include('config/sitemap.php');
-    if ($confma['auto'] && !$cron) {
+    $sitemap_data = include('config/sitemap.php');
+    $confma = $sitemap_data['sitemap'] ?? [];
+    if (!empty($confma['auto']) && !$cron) {
         $sess_f = 'sitemap.xml';
         $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
-        $past = $ctime - intval($confma['auto_t']);
+        $past = $ctime - intval($confma['auto_t'] ?? 0);
         if ($sess_b < $past) {
             $head = preg_replace("#<body(.*?)>#si", "<body OnLoad=\"AjaxLoad('GET', '0', 'sitemap', 'go=3&amp;op=sitemap', ''); return false;\"$1>", $head);
             $cron = 1;
@@ -3153,24 +3143,24 @@ function addBackupDb(): bool {
     }
     if (!$safe && function_exists("set_time_limit")) @set_time_limit(600);
 
-    # Кодировка соединения с MySQL
-    # auto - автоматический выбор (устанавливается кодировка таблицы), latin1, cp1251, utf8 и т.п.
+    # ÐšÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ MySQL
+    # auto - Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ð¹ Ð²Ñ‹Ð±Ð¾Ñ€ (ÑƒÑÑ‚Ð°Ð½Ð°Ð²Ð»Ð¸Ð²Ð°ÐµÑ‚ÑÑ ÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÐ° Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹), latin1, cp1251, utf8 Ð¸ Ñ‚.Ð¿.
     $ccharset = "auto";
 
-    # Типы таблиц у которых сохраняется только структура, разделенные запятой
+    # Ð¢Ð¸Ð¿Ñ‹ Ñ‚Ð°Ð±Ð»Ð¸Ñ† Ñƒ ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ñ… ÑÐ¾Ñ…Ñ€Ð°Ð½ÑÐµÑ‚ÑÑ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ ÑÑ‚Ñ€ÑƒÐºÑ‚ÑƒÑ€Ð°, Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð½Ñ‹Ðµ Ð·Ð°Ð¿ÑÑ‚Ð¾Ð¹
     $conlycreate = "MRG_MyISAM,MERGE,HEAP,MEMORY";
 
-    # В фильтре таблиц указываются специальные шаблоны по которым отбираются таблицы. В шаблонах можно использовать следующие специальные символы:
-    # символ * — означает любое количество символов;
-    # символ ? — означает один любой символ;
-    # символ ^ — означает исключение из списка таблицы или таблиц.
+    # Ð’ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ðµ Ñ‚Ð°Ð±Ð»Ð¸Ñ† ÑƒÐºÐ°Ð·Ñ‹Ð²Ð°ÑŽÑ‚ÑÑ ÑÐ¿ÐµÑ†Ð¸Ð°Ð»ÑŒÐ½Ñ‹Ðµ ÑˆÐ°Ð±Ð»Ð¾Ð½Ñ‹ Ð¿Ð¾ ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¼ Ð¾Ñ‚Ð±Ð¸Ñ€Ð°ÑŽÑ‚ÑÑ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹. Ð’ ÑˆÐ°Ð±Ð»Ð¾Ð½Ð°Ñ… Ð¼Ð¾Ð¶Ð½Ð¾ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ðµ ÑÐ¿ÐµÑ†Ð¸Ð°Ð»ÑŒÐ½Ñ‹Ðµ ÑÐ¸Ð¼Ð²Ð¾Ð»Ñ‹:
+    # ÑÐ¸Ð¼Ð²Ð¾Ð» * â€” Ð¾Ð·Ð½Ð°Ñ‡Ð°ÐµÑ‚ Ð»ÑŽÐ±Ð¾Ðµ ÐºÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÑÐ¸Ð¼Ð²Ð¾Ð»Ð¾Ð²;
+    # ÑÐ¸Ð¼Ð²Ð¾Ð» ? â€” Ð¾Ð·Ð½Ð°Ñ‡Ð°ÐµÑ‚ Ð¾Ð´Ð¸Ð½ Ð»ÑŽÐ±Ð¾Ð¹ ÑÐ¸Ð¼Ð²Ð¾Ð»;
+    # ÑÐ¸Ð¼Ð²Ð¾Ð» ^ â€” Ð¾Ð·Ð½Ð°Ñ‡Ð°ÐµÑ‚ Ð¸ÑÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ Ð¸Ð· ÑÐ¿Ð¸ÑÐºÐ° Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð¸Ð»Ð¸ Ñ‚Ð°Ð±Ð»Ð¸Ñ†.
 
-    # Примеры:
-    # slaed_* все таблицы начинающиеся с "slaed_" (все таблицы форума invision board)
-    # slaed_*, ^slaed_session все таблицы начинающиеся с "slaed_", кроме "slaed_session"
-    # slaed_s*s, ^slaed_session все таблицы начинающиеся с "slaed_s" и заканчивающиеся буквой "s", кроме "slaed_session"
-    # ^*s все таблицы, кроме таблиц заканчивающихся буквой "s"
-    # ^slaed_???? все таблицы, кроме таблиц, которые начинаются с "slaed_" und содержат 4 символа после знака подчеркивания
+    # ÐŸÑ€Ð¸Ð¼ÐµÑ€Ñ‹:
+    # slaed_* Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‰Ð¸ÐµÑÑ Ñ "slaed_" (Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ñ„Ð¾Ñ€ÑƒÐ¼Ð° invision board)
+    # slaed_*, ^slaed_session Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‰Ð¸ÐµÑÑ Ñ "slaed_", ÐºÑ€Ð¾Ð¼Ðµ "slaed_session"
+    # slaed_s*s, ^slaed_session Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‰Ð¸ÐµÑÑ Ñ "slaed_s" Ð¸ Ð·Ð°ÐºÐ°Ð½Ñ‡Ð¸Ð²Ð°ÑŽÑ‰Ð¸ÐµÑÑ Ð±ÑƒÐºÐ²Ð¾Ð¹ "s", ÐºÑ€Ð¾Ð¼Ðµ "slaed_session"
+    # ^*s Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹, ÐºÑ€Ð¾Ð¼Ðµ Ñ‚Ð°Ð±Ð»Ð¸Ñ† Ð·Ð°ÐºÐ°Ð½Ñ‡Ð¸Ð²Ð°ÑŽÑ‰Ð¸Ñ…ÑÑ Ð±ÑƒÐºÐ²Ð¾Ð¹ "s"
+    # ^slaed_???? Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹, ÐºÑ€Ð¾Ð¼Ðµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†, ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ðµ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‚ÑÑ Ñ "slaed_" und ÑÐ¾Ð´ÐµÑ€Ð¶Ð°Ñ‚ 4 ÑÐ¸Ð¼Ð²Ð¾Ð»Ð° Ð¿Ð¾ÑÐ»Ðµ Ð·Ð½Ð°ÐºÐ° Ð¿Ð¾Ð´Ñ‡ÐµÑ€ÐºÐ¸Ð²Ð°Ð½Ð¸Ñ
     $ctables = "^ipb_*";
 
     $bsize = 0;
@@ -3324,7 +3314,7 @@ function addBackupDb(): bool {
         $res = $db->sql_query("SHOW CREATE TABLE `{$table}`");
         $tab = $res->fetch(PDO::FETCH_NUM);
 
-        // Для MariaDB 10+ НЕ используем условные комментарии
+        // Ð”Ð»Ñ MariaDB 10+ ÐÐ• Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÐ¼ ÑƒÑÐ»Ð¾Ð²Ð½Ñ‹Ðµ ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸Ð¸
         if (isset($tab[1])) {
             fwrite($fp, "DROP TABLE IF EXISTS `{$table}`;\n{$tab[1]};\n\n");
         }
@@ -3353,9 +3343,9 @@ function addBackupDb(): bool {
                     $countThisBatch++;
                     $i++;
 
-                    // ✅ КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Проверяем разделение ПЕРЕД записью строки
+                    // âœ… ÐšÐ Ð˜Ð¢Ð˜Ð§Ð•Ð¡ÐšÐžÐ• Ð˜Ð¡ÐŸÐ ÐÐ’Ð›Ð•ÐÐ˜Ð•: ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð¸Ðµ ÐŸÐ•Ð Ð•Ð” Ð·Ð°Ð¿Ð¸ÑÑŒÑŽ ÑÑ‚Ñ€Ð¾ÐºÐ¸
                     if ($i > 1 && ($i - 1) % 10000 == 0) {
-                        // Закрываем предыдущий INSERT и начинаем новый
+                        // Ð—Ð°ÐºÑ€Ñ‹Ð²Ð°ÐµÐ¼ Ð¿Ñ€ÐµÐ´Ñ‹Ð´ÑƒÑ‰Ð¸Ð¹ INSERT Ð¸ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÐµÐ¼ Ð½Ð¾Ð²Ñ‹Ð¹
                         fwrite($fp, ";\n\nINSERT INTO `{$table}` VALUES");
                     }
 
@@ -3367,7 +3357,7 @@ function addBackupDb(): bool {
                         }
                     }
 
-                    // Добавляем запятую ПЕРЕД строкой (кроме первой и после разделения)
+                    // Ð”Ð¾Ð±Ð°Ð²Ð»ÑÐµÐ¼ Ð·Ð°Ð¿ÑÑ‚ÑƒÑŽ ÐŸÐ•Ð Ð•Ð” ÑÑ‚Ñ€Ð¾ÐºÐ¾Ð¹ (ÐºÑ€Ð¾Ð¼Ðµ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð¸ Ð¿Ð¾ÑÐ»Ðµ Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð¸Ñ)
                     $is_first_in_block = ($i == 1) || (($i - 1) % 10000 == 0);
                     fwrite($fp, ($is_first_in_block ? "\n" : ",\n")."(".implode(",", $row).")");
                 }
@@ -3537,7 +3527,7 @@ function is_active($mod, $view='') {
 # Rewrite mod
 function rewrite() {
     $contents = ob_get_clean();
-    include("config/config_rewrite.php");
+    include('config/rewrite.php');
     $rewrite = preg_replace($in, $out, $contents);
     echo $rewrite;
 }
@@ -3727,8 +3717,10 @@ function use_php($str) {
 
 # Format attach
 function encode_attach($sourse, $mod) {
-    include("config/config_uploads.php");
-    include("config/config_templ.php");
+    $uploads_data = include('config/uploads.php');
+    $confup = $uploads_data['uploads'] ?? [];
+    $filetype_data = include('config/filetype.php');
+    $conftp = $filetype_data['filetype'] ?? [];
     if (stripos($sourse, "rel=") && stripos($sourse, "width=")) {
         $match_count = preg_match_all("#\[attach=([a-zA-Z0-9\_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9\_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+) rel=([a-zA-Z0-9\_\-]+)\]#siu", $sourse, $date);
     } elseif (stripos($sourse, "width=")) {
@@ -3736,9 +3728,11 @@ function encode_attach($sourse, $mod) {
     } else {
         $match_count = preg_match_all("#\[attach=([a-zA-Z0-9\_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9\_\-\.\"\s]+)\]#siu", $sourse, $date);
     }
-    $con = explode("|", $confup[$mod]);
+    $con = explode("|", (string)($confup[$mod] ?? ''));
+    $thumb_width = isset($con[6]) ? $con[6] : ($confup['width'] ?? '250');
     $file = '';
-    $text ='';
+    $text = $sourse;
+    $cont = array();
     $ftype = array("png", "jpg", "jpeg", "gif", "bmp");
     for ($i = 0; $i < $match_count; $i++) {
         $type = strtolower(substr(strrchr($date[1][$i], "."), 1));
@@ -3751,7 +3745,7 @@ function encode_attach($sourse, $mod) {
             $dtfile = "uploads/".$mod."/thumb";
             if ($mod != "" && file_exists($file) && !file_exists($tfile)) {
                 if (!file_exists($dtfile)) mkdir($dtfile);
-                $thumb = create_img_gd($file, $tfile, $con[6]);
+                $thumb = create_img_gd($file, $tfile, $thumb_width);
                 $timg = ($thumb) ? $tfile : $file;
             } else {
                 $timg = $tfile;
@@ -3764,9 +3758,9 @@ function encode_attach($sourse, $mod) {
         $temp = $conftp[$type] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
         $temp = str_replace("[src]", $file, $temp);
         $temp = str_replace("[tsrc]", (string)$timg, $temp);
-        $temp = (!empty($width) && intval($width)) ? str_replace("[width]", $width, $temp) : str_replace("[width]", $confup['width'], $temp);
-        $temp = str_replace("[twidth]", $con[6], $temp);
-        $temp = (!empty($height) && intval($height)) ? str_replace("[height]", $height, $temp) : str_replace("[height]", $confup['height'], $temp);
+        $temp = (!empty($width) && intval($width)) ? str_replace("[width]", $width, $temp) : str_replace("[width]", (string)($confup['width'] ?? '500'), $temp);
+        $temp = str_replace("[twidth]", (string)$thumb_width, $temp);
+        $temp = (!empty($height) && intval($height)) ? str_replace("[height]", $height, $temp) : str_replace("[height]", (string)($confup['height'] ?? '500'), $temp);
         $temp = str_replace("[align]", $date[2][$i], $temp);
         $temp = str_replace("[title]", $date[3][$i], $temp);
         $temp = str_replace("[quot]", "&quot;", $temp);
@@ -4246,8 +4240,9 @@ function textarea() {
     $required = (!empty($arg[6])) ? " required" : "";
     $stloc = substr(_LOCALE, 0, 2);
     $desc = ($var) ? $var : (isset($_POST[$name]) ? save_text($_POST[$name]) : "");
-    include("config/config_uploads.php");
-    $con = explode("|", $confup[strtolower($mod)]);
+    $uploads_data = include('config/uploads.php');
+    $confup = $uploads_data['uploads'] ?? [];
+    $con = explode("|", (string)($confup[strtolower($mod)] ?? ''));
     $style = (defined('ADMIN_FILE')) ? ' sl_form' : ' '.$conf['style'];
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     if ((defined("ADMIN_FILE") && $editor == 1) || (!defined("ADMIN_FILE") && $conf['redaktor'] == 1)) {
@@ -4305,9 +4300,9 @@ function textarea() {
             $code .= "<div class=\"sl_drop\"><span OnClick=\"HideShow('l-form-".$id."', 'blind', 'up', 500); changelanguage();\" class=\"sl_bb_translate\" title=\""._EAUTOTR."\"></span>
             <div id=\"l-form-".$id."\" class=\"sl_drop-form\">
                 <table class=\"sl_bb_trans\"><tr>
-                <td>А</td><td>Б</td><td>В</td><td>Г</td><td>Д</td><td>Е</td><td>Ё</td><td>Ж</td><td>З</td><td>И</td><td>Й</td>
-                <td>К</td><td>Л</td><td>М</td><td>Н</td><td>О</td><td>П</td><td>Р</td><td>С</td><td>Т</td><td>У</td><td>Ф</td>
-                <td>Х</td><td>Ц</td><td>Ч</td><td>Ш</td><td>Щ</td><td>Ь</td><td>Ы</td><td>Ъ</td><td>Э</td><td>Ю</td><td>Я</td>
+                <td>Ð</td><td>Ð‘</td><td>Ð’</td><td>Ð“</td><td>Ð”</td><td>Ð•</td><td>Ð</td><td>Ð–</td><td>Ð—</td><td>Ð˜</td><td>Ð™</td>
+                <td>Ðš</td><td>Ð›</td><td>Ðœ</td><td>Ð</td><td>Ðž</td><td>ÐŸ</td><td>Ð </td><td>Ð¡</td><td>Ð¢</td><td>Ð£</td><td>Ð¤</td>
+                <td>Ð¥</td><td>Ð¦</td><td>Ð§</td><td>Ð¨</td><td>Ð©</td><td>Ð¬</td><td>Ð«</td><td>Ðª</td><td>Ð­</td><td>Ð®</td><td>Ð¯</td>
                 </tr><tr>
                 <td>A</td><td>B</td><td>V</td><td>G</td><td>D</td><td>E</td><td>JO</td><td>ZH</td><td>Z</td><td>I</td><td>J</td>
                 <td>K</td><td>L</td><td>M</td><td>N</td><td>O</td><td>P</td><td>R</td><td>S</td><td>T</td><td>U</td><td>F</td>
@@ -4971,7 +4966,7 @@ function ashowcom() {
             $profil = ($confc['profil'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
             $web = ($confc['web'] && !empty($user_website)) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
 
-            # Будущие функции
+            # Ð‘ÑƒÐ´ÑƒÑ‰Ð¸Ðµ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸
             #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
             #$thank = "<a href=\"javascript: scroll(0, 0);\" title=\""._THANK."\">"._THANK."</a>";
             $warn = "";
@@ -5264,8 +5259,8 @@ function create_img_gd($imgfile, $imgthumb, $newwidth) {
 # Format function mb_strtolower the strtolower version to support most amount of languages including russian, french and so on
 if (!function_exists("mb_strtolower")) {
     function mb_strtolower($str){
-        $to = array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "a", "a", "a", "a", "a", "a", "?", "c", "e", "e", "e", "e", "i", "i", "i", "i", "?", "n", "o", "o", "o", "o", "o", "o", "u", "u", "u", "u", "y", "а", "б", "в", "г", "д", "е", "ё", "ж", "з", "и", "й", "к", "л", "м", "н", "о", "п", "р", "с", "т", "у", "ф", "х", "ц", "ч", "ш", "щ", "ъ", "ы", "ь", "э", "ю", "я");
-        $from = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "A", "A", "A", "A", "A", "?", "C", "E", "E", "E", "E", "I", "I", "I", "I", "?", "N", "O", "O", "O", "O", "O", "O", "U", "U", "U", "U", "Y", "А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т", "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Ъ", "Ъ", "Ь", "Э", "Ю", "Я");
+        $to = array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "a", "a", "a", "a", "a", "a", "?", "c", "e", "e", "e", "e", "i", "i", "i", "i", "?", "n", "o", "o", "o", "o", "o", "o", "u", "u", "u", "u", "y", "Ð°", "Ð±", "Ð²", "Ð³", "Ð´", "Ðµ", "Ñ‘", "Ð¶", "Ð·", "Ð¸", "Ð¹", "Ðº", "Ð»", "Ð¼", "Ð½", "Ð¾", "Ð¿", "Ñ€", "Ñ", "Ñ‚", "Ñƒ", "Ñ„", "Ñ…", "Ñ†", "Ñ‡", "Ñˆ", "Ñ‰", "ÑŠ", "Ñ‹", "ÑŒ", "Ñ", "ÑŽ", "Ñ");
+        $from = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "A", "A", "A", "A", "A", "?", "C", "E", "E", "E", "E", "I", "I", "I", "I", "?", "N", "O", "O", "O", "O", "O", "O", "U", "U", "U", "U", "Y", "Ð", "Ð‘", "Ð’", "Ð“", "Ð”", "Ð•", "Ð", "Ð–", "Ð—", "Ð˜", "Ð™", "Ðš", "Ð›", "Ðœ", "Ð", "Ðž", "ÐŸ", "Ð ", "Ð¡", "Ð¢", "Ð£", "Ð¤", "Ð¥", "Ð¦", "Ð§", "Ð¨", "Ð©", "Ðª", "Ðª", "Ð¬", "Ð­", "Ð®", "Ð¯");
         return str_replace($from, $to, $str);
     }
 }

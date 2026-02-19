@@ -51,7 +51,7 @@ $confre  = $conf['replace']    ?? [];
 $confr   = $conf['referers']   ?? [];
 $confpr  = $conf['privat']     ?? [];
 $confv   = $conf['voting']     ?? [];
-# Module-specific aliases (set once here; include('config/config_X.php') in modules becomes a no-op)
+# Module-specific aliases for legacy globals used across modules
 $confn   = $conf['news']       ?? [];
 $conffa  = $conf['faq']        ?? [];
 $conff   = $conf['files']      ?? [];
@@ -70,6 +70,9 @@ $confco  = $conf['contact']    ?? [];
 $confcn  = $conf['content']   ?? [];
 $confma  = $conf['sitemap']    ?? [];
 $conflog = $conf['changelog']  ?? [];
+$confup  = $conf['uploads']    ?? [];
+$conftp  = $conf['filetype']   ?? [];
+$confla  = $conf['lang']       ?? [];
 
 # Report PHP errors
 $emode = (int)($confs['error'] ?? 0);
@@ -317,7 +320,8 @@ if ($confs['error_log']) {
     }
     # PHP error reporting log
     function error_reporting_log($error_num, $error_var, $error_file, $error_line) {
-        global $confs;
+        global $conf;
+        $cfg = $conf['security'] ?? [];
         $error_write = false;
         switch ($error_num) {
             case 1:
@@ -351,14 +355,20 @@ if ($confs['error_log']) {
             $url = text_filter(getenv('REQUEST_URI'));
             $refer = get_referer();
             $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-            $path = 'config/logs/error.txt';
+            $path = LOGS_DIR.'/error_php.log';
             if ($fhandle = @fopen($path, 'ab')) {
-                if (filesize($path) > $confs['log_size']) {
-                    zip_compress($path, 'config/logs/error_'.date('Y-m-d_H-i').'.txt');
-                    @unlink($path);
+                clearstatcache(true, $path);
+                if (filesize($path) > ($cfg['log_size'] ?? 10485760)) {
+                    fclose($fhandle);
+                    $ts = date('Ymd_His');
+                    $rot = $path.'.'.$ts;
+                    addCompress(dirname($rot), $path, basename($rot), 'auto', true, true);
+                    $fhandle = @fopen($path, 'ab');
                 }
-                fwrite($fhandle, getVariablesInfo()._ERROR.': '.$error_desc.': '.$error_var.' Line: '.$error_line.' in file '.$error_file.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
-                fclose($fhandle);
+                if ($fhandle) {
+                    fwrite($fhandle, getVariablesInfo()._ERROR.': '.$error_desc.': '.$error_var.' Line: '.$error_line.' in file '.$error_file.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
+                    fclose($fhandle);
+                }
             }
         }
     }
@@ -571,9 +581,9 @@ function setExit($msg, $typ = '') {
     .'<meta name="generator" content="SLAED CMS '.$conf['version'].'">'.PHP_EOL;
     $cont .= ($typ) ? '<meta http-equiv="refresh" content="5; url='.$conf['homeurl'].'/index.php">'.PHP_EOL : '';
     $cont .= '</head>'.PHP_EOL
-    .'<body style="margin:0; height:100vh; display:flex; justify-content:center; align-items:center; flex-direction:column;">'.PHP_EOL
-    .'<img src="'.$conf['homeurl'].'/templates/'.$conf['theme'].'/images/logos/'.$conf['site_logo'].'" alt="'.$conf['sitename'].'" title="'.$conf['sitename'].'" style="max-width:90%; height:auto;">'.PHP_EOL
-    .'<div style="margin-top:40px; font:18px Arial, Tahoma, Verdana, sans-serif; color:#1a4674; font-weight:bold; text-align:center;">'.$msg.'</div>'.PHP_EOL
+    .'<body style="margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; flex-direction: column;">'.PHP_EOL
+    .'<img src="'.$conf['homeurl'].'/templates/'.$conf['theme'].'/images/logos/'.$conf['site_logo'].'" alt="'.$conf['sitename'].'" title="'.$conf['sitename'].'" style="max-width: 90%; height: auto;">'.PHP_EOL
+    .'<div style="margin-top: 40px; font: 24px Arial, Tahoma, Verdana, sans-serif; color: #1a4674; font-weight: bold; text-align: center;">'.$msg.'</div>'.PHP_EOL
     .'</body>'.PHP_EOL
     .'</html>';
     die($cont);
@@ -822,8 +832,6 @@ function zip_compress($src, $dst) {
  * @return mixed Gefilterter Wert oder Default / false
  */
 function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
-    global $conf;
-
     // Bracket-Notation parsen: field[0] oder field[]
     $array_index = null;
     $is_array_all = false;
