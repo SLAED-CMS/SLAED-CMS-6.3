@@ -155,7 +155,8 @@ function config(): void {
     .'<tr><td>'._TIME_DB.'</td><td>'.radio_form($conf['db_t'], 'db_t').'</td></tr>'
     .'<tr><td>'._ADMIN_SBLOCK.'</td><td>'.radio_form($conf['sblock'], 'sblock').'</td></tr>'
     .'<tr><td>'._ADMINFOEDIT.'</td><td>'.radio_form($conf['adminfo'], 'adminfo').'</td></tr>'
-    .'<tr><td>'._SITE_CLOSE.'</td><td>'.radio_form($conf['close'], 'close').'</td></tr></table>'
+    .'<tr><td>'._SITE_CLOSE.'</td><td>'.radio_form($conf['close'], 'close').'</td></tr>'
+    .'<tr><td>'._DEVMODE.'</td><td>'.radio_form($conf['dev_mode'] ?? 0, 'dev_mode').'</td></tr></table>'
     .'</div>'
     .'<div id="tabc1" class="tabcont">'
     .'<table class="sl_table_conf">'
@@ -391,6 +392,7 @@ function save(): void {
         'script_a' => getVar('post', 'script_a', 'num'),
         'script_b' => getVar('post', 'script_b', 'num'),
         'mtemp' => getVar('post', 'mtemp', 'raw'),
+        'dev_mode' => getVar('post', 'dev_mode', 'num'),
         'newsletter' => $conf['newsletter'],
         'newslettercount' => $conf['newslettercount'],
         'sitekey' => getPass(25),

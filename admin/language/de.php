@@ -177,6 +177,7 @@ define("_DB_INSTALL","Die Installation der Tabellen");
 define("_DB_SYNC","Synchronisierung der «PHP timezone» und «MySQL timezone»?");
 define("_DB_UPDATE","Die Erneuerung der Tabellen");
 define("_DEAKTIVE","Inaktive");
+define("_DEVMODE","Entwicklermodus");
 define("_DEFIS","Das Symbol, den Titel und die Kopfteile abtrennen");
 define("_DELSETUP","Zwecks der Erhöhung der Sicherheit muß man die Datei der Anlage des Systems setup.php in das Hauptverzeichnis der Web-Seite löschen oder umbenennen!");
 define("_DENYING","Ausgewahlte Module nicht Anzeigen");

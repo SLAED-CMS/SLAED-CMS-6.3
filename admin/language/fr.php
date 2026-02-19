@@ -177,6 +177,7 @@ define("_DB_INSTALL","Installation des tables de la base");
 define("_DB_SYNC","Synchroniser l'heure «PHP timezone» et «MySQL timezone»?");
 define("_DB_UPDATE","Mettre à jour les tables de la base");
 define("_DEAKTIVE","Inactifs");
+define("_DEVMODE","Mode développeur");
 define("_DEFIS","Symbole séparant Titley et les titres");
 define("_DELSETUP","Afin d'améliorer la sécurité, vous devez supprimer ou renommer le fichier d'installation du système setup.php dans le répertoire principal site!");
 define("_DENYING","La négation de la étiqueté modules");

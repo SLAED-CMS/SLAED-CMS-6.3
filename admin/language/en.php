@@ -177,6 +177,7 @@ define("_DB_INSTALL","Installation of tables of a database");
 define("_DB_SYNC","Synchronize time «PHP timezone» and «MySQL timezone»?");
 define("_DB_UPDATE","Updating of tables of a database");
 define("_DEAKTIVE","Inactive");
+define("_DEVMODE","Developer Mode");
 define("_DEFIS","Symbol separating titles and headings");
 define("_DELSETUP","With a view of increase of safety it is necessary to remove or rename a file of installation of system setup.php in the basic directory of a site!");
 define("_DENYING","Denying of noted modules");
