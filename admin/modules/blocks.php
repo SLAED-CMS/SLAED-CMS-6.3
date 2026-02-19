@@ -102,8 +102,7 @@ function fileadd(): void {
     global $aroute;
     head();
     $cont = navi(0, 2, 0, 0);
-    $permtest = end_chmod('blocks/', 777);
-    if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
+    $cont .= checkPerms('blocks/', 1);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><input type="text" name="bf" maxlength="200" class="sl_form" placeholder="'._FILENAME.'" required></td></tr>'
@@ -224,12 +223,10 @@ function filecode(): void {
         }
         head();
         $cont = navi(0, 3, 0, 0);
-        $permtest = end_chmod('blocks/', 777);
-        if ($permtest) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtest]);
+        $cont .= checkPerms('blocks/', 1);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _BLOCK.': '.$bf]);
         if (file_exists('blocks/'.$bf)) {
-            $permtestf = end_chmod('blocks/'.$bf, 666);
-            if ($permtestf) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $permtestf]);
+            $cont .= checkPerms('blocks/'.$bf, 1);
             $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _B_FEDIT]);
         }
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);

@@ -528,25 +528,6 @@ function db_version() {
     return $dbv;
 }
 
-# DELETE OLD
-function end_chmod($dir, $chm) {
-    $out = '';
-    if (file_exists($dir) && intval($chm)) {
-        $per = substr(decoct(fileperms($dir)), -3);
-        if (php_uname('s') == 'Linux' && PHP_VERSION >= '5.3' && $per != $chm) {
-            $tdir = 'config/chmod.php';
-            chmod($tdir, '0'.$chm);
-            $tper = substr(decoct(fileperms($tdir)), -3);
-            if ($tper == $chm) {
-                chmod($dir, '0'.$chm);
-                $per = substr(decoct(fileperms($dir)), -3);
-            }
-        }
-        $out = ($per != $chm) ? $dir.' '._ERRORPERM.' CHMOD - '.$chm : '';
-    }
-    return $out;
-}
-
 function ajax_cat() {
     global $db, $admin_file, $conf;
     $arg = func_get_args();
@@ -771,7 +752,7 @@ function blocks_order() {
 
 # Favorites list view
 function fav_aliste() {
-    global $db, $conffav;
+    global $db, $conffav, $conf;
     $arg = func_get_args();
     $obj = empty($arg[0]) ? 0 : 1;
     
@@ -804,7 +785,7 @@ function fav_aliste() {
                 $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_links AS n ON (f.fid = n.lid) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "media") {
-                include("config/config_media.php");
+                $confm = $conf['media'] ?? [];
                 $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, n.subtitle, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_media AS n ON (f.fid = n.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
                 while (list($id, $fid, $modul, $title, $subtitle, $uname) = $db->sql_fetchrow($result)) {
                     $title = ($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;
@@ -904,13 +885,13 @@ function ajax_privat_del() {
 
 # Show uploads files for admin
 function ashow_files() {
-    global $user;
-    include("config/config_uploads.php");
+    global $user, $conf;
+    $confup = $conf['uploads'] ?? [];
     $id = isset($_GET['id']) ? analyze($_GET['id']) : 0;
     $dir = isset($_GET['dir']) ? strtolower($_GET['dir']) : "";
     $gzip = isset($_GET['cid']) ? intval($_GET['cid']) : 0;
-    $con = explode("|", $confup[$dir]);
-    $connum = intval($con[7]) ? $con[7] : "50";
+    $con = explode("|", (string)($confup[$dir] ?? ''));
+    $connum = (!empty($con[7]) && intval($con[7])) ? $con[7] : "50";
     $file = isset($_GET['file']) ? text_filter($_GET['file']) : "";
     $num = ($gzip) ? $gzip : "1";
     $path = ($id == 1) ? "uploads/".$dir."/" : "uploads/".$dir."/thumb/";
@@ -1075,8 +1056,7 @@ function adm_info() {
         $dir = $mod."admin/info/".$name.".html";
         $thefile = (file_exists($dir)) ? file_get_contents($dir) : _NO_INFO;
         if ($conf['adminfo']) {
-            $permtest = end_chmod($dir, 666);
-            if ($permtest) $cont = tpl_warn("warn", $permtest, "", "", "warn");
+            $cont .= checkPerms($dir, 1);
         }
     }
     $cont .= setTemplateBasic('open');
