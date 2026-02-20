@@ -48,7 +48,7 @@ function lang(): void {
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
     foreach ($files as $file) {
-        if ($file !== '.' && $file !== '..' && is_file(BASE_DIR.'/modules/'.$file.'/index.php')) $mod[] = $file;
+        if ($file !== '.' && $file !== '..' && is_dir(BASE_DIR.'/modules/'.$file) && is_file(BASE_DIR.'/modules/'.$file.'/index.php')) $mod[] = $file;
     }
     sort($mod);
     $ci = count($mod);
