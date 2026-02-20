@@ -687,14 +687,21 @@ function checkFileChmod(string $dir, int $chm): string {
         $per=substr(decoct(fileperms($dir)), -3);
         if (php_uname('s') === 'Linux' && $per != $chm) {
             $tdir = CONFIG_DIR.'/chmod.php';
-            file_put_contents($tdir, '');
-            chmod($tdir, '0'.$chm);
-            $tper = substr(decoct(fileperms($tdir)), -3);
-            if ($tper == $chm) {
-                chmod($dir, '0'.$chm);
-                $per = substr(decoct(fileperms($dir)),-3);
+            $mode = octdec((string)$chm);
+            $uid = function_exists('posix_geteuid') ? (int)posix_geteuid() : -1;
+            if (file_put_contents($tdir, '') !== false) {
+                $own = (int)fileowner($tdir);
+                $can = ($uid > -1) ? ($own === $uid) : is_writable($tdir);
+                if ($can && is_writable($tdir)) chmod($tdir, $mode);
+                $tper = substr(decoct(fileperms($tdir)), -3);
+                if ($tper == $chm) {
+                    $down = (int)fileowner($dir);
+                    $cdir = ($uid > -1) ? ($down === $uid) : is_writable($dir);
+                    if ($cdir && is_writable($dir)) chmod($dir, $mode);
+                    $per = substr(decoct(fileperms($dir)),-3);
+                }
+                unlink($tdir);
             }
-            unlink($tdir);
         }
         $out = ($per != $chm) ? $dir.' '._ERRORPERM.' CHMOD - '.$chm : '';
     }
