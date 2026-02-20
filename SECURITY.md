@@ -64,7 +64,7 @@ All database queries use **prepared statements** with named placeholders:
 ```php
 // Safe - Using prepared statements
 $db->sql_query(
-    'SELECT * FROM '.REFIX_DB.'_users WHERE id = :id',
+    'SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id',
     ['id' => $id]
 );
 ```
@@ -196,11 +196,23 @@ location /storage {
 - [x] Deprecated insecure functions removed (99 functions)
 - [x] 1282 legacy code constructs updated
 
+**Logging & Error Handling Hardening (`core/security.php`):**
+
+- [x] `set_exception_handler()` added — catches all uncaught exceptions, logs to `error_php.log`
+- [x] `register_shutdown_function()` added — catches fatal errors (E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR)
+- [x] `set_error_handler()` extended with new error levels: E_USER_ERROR (256), E_USER_WARNING (512), E_USER_NOTICE (1024), E_RECOVERABLE_ERROR (4096), E_USER_DEPRECATED (16384)
+- [x] Log rotation bug fixed in all 6 log functions — proper fclose → compress → reopen pattern
+- [x] All log files renamed from `.txt` to `.log`
+- [x] All log rotation uses `addCompress()` with `$del=true` instead of `zip_compress()` + `unlink()`
+- [x] Unified `log_size` fallback to 10 MB across all log functions
+- [x] Unified `filesize() >= $max` comparison (previously inconsistent `>` vs `>=`)
+- [x] Unified log path variable `$log` and archive timestamp format `Y-m-d_H-i-s`
+
 **Modules Secured:**
 
 | Module | Status | Notes |
 |--------|--------|-------|
-| Admin Panel | ✅ Secured | All 27 modules protected |
+| Admin Panel | ✅ Secured | All 23 admin modules protected |
 | User Authentication | ✅ Secured | Session management improved |
 | Forum | ✅ Secured | High-priority public module |
 | Search | ✅ Secured | Previously main attack target |

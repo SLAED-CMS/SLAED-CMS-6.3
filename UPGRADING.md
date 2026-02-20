@@ -125,7 +125,7 @@ mysql -u root -p your_database < slaed-new/setup/sql/table_update6_3.sql
 
 ```bash
 chmod -R 755 config/ storage/ uploads/
-chmod 666 config/*.php storage/logs/*.txt
+chmod 666 config/*.php storage/logs/*.log
 ```
 
 #### Step 6: Clear Cache
@@ -230,7 +230,7 @@ All SQL queries now require prepared statements:
 $db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
 
 // New (6.3.x) - SECURE
-$db->sql_query('SELECT * FROM '.REFIX_DB.'_users WHERE id = :id', ['id' => $id]);
+$db->sql_query('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
 ```
 
 #### Input Validation
@@ -334,7 +334,7 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 ```
 
-Check `storage/logs/error.log` for details.
+Check `storage/logs/error_php.log` and `storage/logs/error_site.log` for details.
 
 #### Database Connection Failed
 
@@ -394,7 +394,7 @@ rm -rf storage/cache/*
 
 ### 6.3.0 (In Development - 2025/2026)
 
-**Status:** Active Development (~65% Complete as of February 2026)
+**Status:** Active Development (~70% Complete as of February 2026)
 
 **Major Changes:**
 - PHP 8.4 compatibility (8.1+ minimum)
@@ -430,6 +430,11 @@ rm -rf storage/cache/*
 - `modules/news/admin/info/pl.html` → `polish.html`
 - `modules/news/admin/info/ru.html` → `russian.html`
 - `modules/news/admin/info/uk.html` → `ukrainian.html`
+- `storage/logs/log.txt` → `log.log`
+- `storage/logs/error_site.txt` → `error_site.log`
+- `storage/logs/error_sql.txt` → `error_sql.log`
+- `storage/logs/hack.txt` → `hack.log`
+- `storage/logs/warn.txt` → `warn.log`
 
 ### 6.2.0 (2017)
 

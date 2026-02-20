@@ -66,7 +66,7 @@ mysql -u root -p your_database < setup/sql/table.sql
 
 ```bash
 chmod -R 755 config/ storage/ uploads/
-chmod 666 config/*.php storage/logs/*.txt
+chmod 666 config/*.php storage/logs/*.log
 ```
 
 ### 4. Run Setup
@@ -185,7 +185,7 @@ $html = '<div class="' . $cls . '">' . $text . '</div>';
 ```php
 // Correct - Safe
 $db->sql_query(
-    'SELECT * FROM '.REFIX_DB.'_users WHERE id = :id AND status = :status',
+    'SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id AND status = :status',
     ['id' => $id, 'status' => $active]
 );
 
@@ -279,7 +279,7 @@ Extract inline code into separate functions:
 // ✅ Correct
 function status(): void {
     global $db, $afile, $act, $id;
-    $db->sql_query('UPDATE '.REFIX_DB.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
+    $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
     header('Location: '.$afile.'.php?name=categories');
     exit;
 }

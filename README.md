@@ -5,7 +5,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
-![Migration](https://img.shields.io/badge/Migration-65%25%20Complete-purple.svg)
+![Migration](https://img.shields.io/badge/Migration-70%25%20Complete-purple.svg)
 
 **Modern, Secure, High-Performance Content Management System**
 
@@ -63,7 +63,7 @@ http://localhost/slaed-cms/
 
 ```bash
 chmod -R 755 config/ storage/ uploads/
-chmod 666 config/*.php storage/logs/*.txt
+chmod 666 config/*.php storage/logs/*.log
 ```
 
 7. **Run setup** by accessing `http://yoursite.com/setup.php`
@@ -192,7 +192,7 @@ slaed-cms/
 
 > [!NOTE]
 > SLAED CMS 6.3 is undergoing a major modernization to PHP 8.4 standards.
-> **Progress: ~65% Complete** (as of February 2026)
+> **Progress: ~70% Complete** (as of February 2026)
 
 ### ✅ Completed
 
@@ -311,7 +311,7 @@ $name = getVar('post', 'name', 'name', '');
 $url = getVar('post', 'url', 'url', 'https://');
 
 // ✅ SQL prepared statements
-$db->sql_query('SELECT * FROM '.REFIX_DB.'_users WHERE id = :id', ['id' => $id]);
+$db->sql_query('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
 
 // ✅ Output escaping
 echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');
