@@ -70,8 +70,9 @@ function shop() {
 	head();
 	$cont = '';
 	if (!$home || ($home && $confso['homcat'])) {
+		$defis = $confso['defis'] ?? ($conf['defis'] ?? '-');
 		$cont .= navigate($ntitle, $caton);
-		if ($ncat) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $ncat, $confso['defis'], _SHOP)));
+		if ($ncat) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $ncat, $defis, _SHOP)));
 		if ($caton == 1) $cont .= setCategories($conf['name'], $confso['subcat'], $confso['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
@@ -181,7 +182,8 @@ function view() {
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		head();
 		$cont = navigate(_SHOP, $confso['viewcat']);
-		if ($cid) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $cid, $confso['defis'], _SHOP)));
+		$defis = $confso['defis'] ?? ($conf['defis'] ?? '-');
+		if ($cid) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $cid, $defis, _SHOP)));
 		if ($confso['viewcat']) $cont .= setCategories($conf['name'], $confso['subcat'], $confso['catdesc'], 0);
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
 		$text = ($bodytext) ? $text.'<br><br>'.$bodytext : $text;

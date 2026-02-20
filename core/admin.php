@@ -340,7 +340,7 @@ function navi_gen(...$arg): string
 
 
 function admininfo() {
-    global $db, $admin, $admin_file, $conf, $confdb, $confr, $panel;
+    global $db, $admin, $admin_file, $conf, $confdb, $confr, $confst, $panel;
     if (is_admin()) {
         $ablocks = '';
         if ($panel) {
@@ -452,11 +452,13 @@ function admininfo() {
                 $gzip = function_exists("gzopen") ? 1 : 0;
                 $bzip = function_exists("bzopen") ? 1 : 0;
                 $zip = checkCompress() ? 1 : 0;
+                $stat = (is_array($confst) && isset($confst['stat'])) ? $confst['stat'] : 0;
+                $refer = (is_array($confr) && isset($confr['refer'])) ? $confr['refer'] : 0;
                 
                 $s_cont = '<table class="sl_tab_bl">'
                 .'<tr><td>'._SCLOSE.':</td><td>'.getHint($conf['close'], 2, 0, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>'._STATISTIC.':</td><td>'.getHint($confst['stat'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>'._REFERERS.':</td><td>'.getHint($confr['refer'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
+                .'<tr><td>'._STATISTIC.':</td><td>'.getHint($stat, 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
+                .'<tr><td>'._REFERERS.':</td><td>'.getHint($refer, 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
                 .'<tr><td>'._NEWSLETTER.':</td><td>'.getHint($conf['newsletter'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
                 .'<tr><td>'._SICACHE.':</td><td>'.getHint($conf['cache'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
                 .'<tr><td>'._SIREWRITE.':</td><td>'.getHint($conf['rewrite'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
