@@ -321,7 +321,6 @@ if ($confs['error_log']) {
     # PHP error reporting log
     function error_reporting_log($error_num, $error_var, $error_file, $error_line) {
         global $conf;
-        $cfg = $conf['security'] ?? [];
         $error_write = false;
         switch ($error_num) {
             case 1:
@@ -355,17 +354,19 @@ if ($confs['error_log']) {
             $url = text_filter(getenv('REQUEST_URI'));
             $refer = get_referer();
             $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-            $path = LOGS_DIR.'/error_php.log';
-            if ($fhandle = @fopen($path, 'ab')) {
-                clearstatcache(true, $path);
-                if (filesize($path) > ($cfg['log_size'] ?? 10485760)) {
+            $log = LOGS_DIR.'/error_php.log';
+            $cfg = $conf['security'] ?? [];
+            $max = $cfg['log_size'] ?? 10485760;
+            $fhandle = fopen($log, 'ab');
+            if ($fhandle !== false) {
+                clearstatcache(true, $log);
+                if (filesize($log) >= $max) {
                     fclose($fhandle);
-                    $ts = date('Ymd_His');
-                    $rot = $path.'.'.$ts;
-                    addCompress(dirname($rot), $path, basename($rot), 'auto', true, true);
-                    $fhandle = @fopen($path, 'ab');
+                    $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+                    addCompress(dirname($log), $log, $safe, 'auto', true, true);
+                    $fhandle = fopen($log, 'ab');
                 }
-                if ($fhandle) {
+                if ($fhandle !== false) {
                     fwrite($fhandle, getVariablesInfo()._ERROR.': '.$error_desc.': '.$error_var.' Line: '.$error_line.' in file '.$error_file.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
                     fclose($fhandle);
                 }
