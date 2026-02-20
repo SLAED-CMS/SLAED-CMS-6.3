@@ -139,24 +139,24 @@ function log_report(): bool {
         $luser = substr((string)$anon, 0, 25);
     }
 
-    $path = 'config/logs/log.txt';
-    $maxsize = $confs['log_size'] ?? 1048576; // fallback 1 MB
+    $log = LOGS_DIR.'/log.log';
+    $max = $confs['log_size'] ?? 10485760; // fallback 10 MB
 
-    $fhandle = fopen($path, 'ab');
+    $fhandle = fopen($log, 'ab');
     if ($fhandle === false) {
         return false;
     }
 
     // Ensure up-to-date file size information
-    clearstatcache(true, $path);
-    if (filesize($path) > $maxsize) {
+    clearstatcache(true, $log);
+    if (filesize($log) >= $max) {
         // rotate
         fclose($fhandle);
-        zip_compress($path, 'config/logs/log_'.date('Y-m-d_H-i').'.txt');
-        unlink($path);
+        $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+        addCompress(dirname($log), $log, $safe, 'auto', true, true);
 
         // recreate log file
-        $fhandle = fopen($path, 'ab');
+        $fhandle = fopen($log, 'ab');
         if ($fhandle === false) {
             return false;
         }
@@ -305,14 +305,21 @@ if ($confs['error_log']) {
             $url = text_filter(getenv('REQUEST_URI'));
             $refer = get_referer();
             $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-            $path = 'config/logs/error_site.txt';
-            if ($fhandle = @fopen($path, 'ab')) {
-                if (filesize($path) > $confs['log_size']) {
-                    zip_compress($path, 'config/logs/error_site_'.date('Y-m-d_H-i').'.txt');
-                    @unlink($path);
+            $log = LOGS_DIR.'/error_site.log';
+            $max = $confs['log_size'] ?? 10485760;
+            $fhandle = fopen($log, 'ab');
+            if ($fhandle !== false) {
+                clearstatcache(true, $log);
+                if (filesize($log) >= $max) {
+                    fclose($fhandle);
+                    $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+                    addCompress(dirname($log), $log, $safe, 'auto', true, true);
+                    $fhandle = fopen($log, 'ab');
                 }
-                fwrite($fhandle, getVariablesInfo()._ERROR.': '.$error_log.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
-                fclose($fhandle);
+                if ($fhandle !== false) {
+                    fwrite($fhandle, getVariablesInfo()._ERROR.': '.$error_log.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
+                    fclose($fhandle);
+                }
             }
         }
         unset($error_log, $http);
@@ -347,6 +354,26 @@ if ($confs['error_log']) {
             $error_desc = 'DEPRECATED';
             $error_write = true;
             break;
+            case 256:
+            $error_desc = 'USER_ERROR';
+            $error_write = true;
+            break;
+            case 512:
+            $error_desc = 'USER_WARNING';
+            $error_write = true;
+            break;
+            case 1024:
+            $error_desc = 'USER_NOTICE';
+            $error_write = false;
+            break;
+            case 4096:
+            $error_desc = 'RECOVERABLE_ERROR';
+            $error_write = true;
+            break;
+            case 16384:
+            $error_desc = 'USER_DEPRECATED';
+            $error_write = true;
+            break;
         }
         if ($error_write) {
             $ip = getIp();
@@ -374,23 +401,66 @@ if ($confs['error_log']) {
         }
     }
     set_error_handler('error_reporting_log');
+    set_exception_handler(function(Throwable $e) use ($conf) {
+        $log = LOGS_DIR.'/error_php.log';
+        $cfg = $conf['security'] ?? [];
+        $max = $cfg['log_size'] ?? 10485760;
+        $ip = getIp();
+        $agent = getAgent();
+        $url = text_filter(getenv('REQUEST_URI'));
+        $fhandle = @fopen($log, 'ab');
+        if ($fhandle !== false) {
+            clearstatcache(true, $log);
+            if (filesize($log) >= $max) {
+                fclose($fhandle);
+                $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+                addCompress(dirname($log), $log, $safe, 'auto', true, true);
+                $fhandle = @fopen($log, 'ab');
+            }
+            if ($fhandle !== false) {
+                fwrite($fhandle, 'ERROR: EXCEPTION: '.get_class($e).': '.$e->getMessage().' Line: '.$e->getLine().' in file '.$e->getFile().PHP_EOL.'IP: '.$ip.PHP_EOL.'URL: '.$url.PHP_EOL.'BROWSER: '.$agent.PHP_EOL.'DATE: '.date('Y-m-d H:i:s').PHP_EOL.'----'.PHP_EOL);
+                fclose($fhandle);
+            }
+        }
+    });
+    register_shutdown_function(function() {
+        $e = error_get_last();
+        if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+            $log = LOGS_DIR.'/error_php.log';
+            $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+            $url = getenv('REQUEST_URI') ?: '';
+            $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+            $fhandle = @fopen($log, 'ab');
+            if ($fhandle !== false) {
+                fwrite($fhandle, 'ERROR: FATAL: '.$e['message'].' Line: '.$e['line'].' in file '.$e['file'].PHP_EOL.'IP: '.$ip.PHP_EOL.'URL: '.$url.PHP_EOL.'BROWSER: '.$agent.PHP_EOL.'DATE: '.date('Y-m-d H:i:s').PHP_EOL.'----'.PHP_EOL);
+                fclose($fhandle);
+            }
+        }
+    });
     # SQL error reporting log
-    function error_sql_log($errno, $error, $log) {
+    function error_sql_log($errno, $error, $sql) {
         global $confs;
         $ip = getIp();
         $agent = getAgent();
         $url = text_filter(getenv('REQUEST_URI'));
         $refer = get_referer();
         $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-        $log = htmlspecialchars(trim($log), ENT_QUOTES);
-        $path = 'config/logs/error_sql.txt';
-        if ($fhandle = @fopen($path, 'ab')) {
-            if (filesize($path) > $confs['log_size']) {
-                zip_compress($path, 'config/logs/error_sql_'.date('Y-m-d_H-i').'.txt');
-                @unlink($path);
+        $sql = htmlspecialchars(trim($sql), ENT_QUOTES);
+        $log = LOGS_DIR.'/error_sql.log';
+        $max = $confs['log_size'] ?? 10485760;
+        $fhandle = fopen($log, 'ab');
+        if ($fhandle !== false) {
+            clearstatcache(true, $log);
+            if (filesize($log) >= $max) {
+                fclose($fhandle);
+                $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+                addCompress(dirname($log), $log, $safe, 'auto', true, true);
+                $fhandle = fopen($log, 'ab');
             }
-            fwrite($fhandle, getVariablesInfo()._ERROR.': '.$errno.' - '.$error.PHP_EOL.'SQL: '.$log.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
-            fclose($fhandle);
+            if ($fhandle !== false) {
+                fwrite($fhandle, getVariablesInfo()._ERROR.': '.$errno.' - '.$error.PHP_EOL.'SQL: '.$sql.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
+                fclose($fhandle);
+            }
         }
     }
 }
@@ -1193,14 +1263,21 @@ function doHackReport($msg) {
         mail_send($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
     }
     if ($confs['write_h']) {
-        $path = 'config/logs/hack.txt';
-        if ($fhandle = @fopen($path, 'ab')) {
-            if (filesize($path) > $confs['log_size']) {
-                zip_compress($path, 'config/logs/hack_'.date('Y-m-d_H-i').'.txt');
-                @unlink($path);
+        $log = LOGS_DIR.'/hack.log';
+        $max = $confs['log_size'] ?? 10485760;
+        $fhandle = fopen($log, 'ab');
+        if ($fhandle !== false) {
+            clearstatcache(true, $log);
+            if (filesize($log) >= $max) {
+                fclose($fhandle);
+                $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+                addCompress(dirname($log), $log, $safe, 'auto', true, true);
+                $fhandle = fopen($log, 'ab');
             }
-            fwrite($fhandle, _HACK.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$user.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$date_time.PHP_EOL.'----'.PHP_EOL);
-            fclose($fhandle);
+            if ($fhandle !== false) {
+                fwrite($fhandle, _HACK.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$user.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$date_time.PHP_EOL.'----'.PHP_EOL);
+                fclose($fhandle);
+            }
         }
     }
     setExit(_HACK.'!', 1);
@@ -1223,14 +1300,21 @@ function doWarnReport($msg) {
         mail_send($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
     }
     if ($confs['write_w']) {
-        $path = 'config/logs/warn.txt';
-        if ($fhandle = @fopen($path, 'ab')) {
-            if (filesize($path) > $confs['log_size']) {
-                zip_compress($path, 'config/logs/warn_'.date('Y-m-d_H-i').'.txt');
-                @unlink($path);
+        $log = LOGS_DIR.'/warn.log';
+        $max = $confs['log_size'] ?? 10485760;
+        $fhandle = fopen($log, 'ab');
+        if ($fhandle !== false) {
+            clearstatcache(true, $log);
+            if (filesize($log) >= $max) {
+                fclose($fhandle);
+                $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+                addCompress(dirname($log), $log, $safe, 'auto', true, true);
+                $fhandle = fopen($log, 'ab');
             }
-            fwrite($fhandle, _WARN.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$user.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$date_time.PHP_EOL.'----'.PHP_EOL);
-            fclose($fhandle);
+            if ($fhandle !== false) {
+                fwrite($fhandle, _WARN.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$user.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$date_time.PHP_EOL.'----'.PHP_EOL);
+                fclose($fhandle);
+            }
         }
     }
     setExit(_WARN.'!', 1);
