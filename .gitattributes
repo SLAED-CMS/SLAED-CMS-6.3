@@ -1,1 +1,39 @@
+# Force LF line endings for all text files
+* text=auto eol=lf
+
+# Source code
 *.php text eol=lf
+*.html text eol=lf
+*.htm text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.sql text eol=lf
+*.xml text eol=lf
+*.tpl text eol=lf
+
+# Config & docs
+*.md text eol=lf
+*.txt text eol=lf
+*.ini text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+.htaccess text eol=lf
+
+# Binary files — no conversion
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+*.zip binary
+*.gz binary
+*.bz2 binary
+*.pdf binary
