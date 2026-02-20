@@ -20,6 +20,23 @@ function get_server_load_data() {
     return $load;
 }
 
+function is_proc_readable(string $path): bool {
+    if (strpos($path, '/proc/') !== 0) return false;
+    $base = (string)ini_get('open_basedir');
+    if ($base !== '') {
+        $allow = false;
+        foreach (explode(PATH_SEPARATOR, $base) as $root) {
+            $root = rtrim(trim($root), '/');
+            if ($root !== '' && ($path === $root || strpos($path, $root.'/') === 0)) {
+                $allow = true;
+                break;
+            }
+        }
+        if (!$allow) return false;
+    }
+    return is_readable($path);
+}
+
 function get_memory_info() {
     $free = 0;
     $total = 0;
@@ -45,11 +62,12 @@ function get_memory_info() {
             }
         }
     } else {
-        $data = @file_get_contents('/proc/meminfo');
+        $data = is_proc_readable('/proc/meminfo') ? file_get_contents('/proc/meminfo') : false;
         if ($data) {
             $data = explode("\n", $data);
             $meminfo = [];
             foreach ($data as $line) {
+                if (strpos($line, ':') === false) continue;
                 list($key, $val) = explode(':', $line);
                 $meminfo[trim($key)] = trim($val);
             }
@@ -110,7 +128,7 @@ function get_network_stats() {
             }
         }
     } else {
-        $data = @file_get_contents('/proc/net/dev');
+        $data = is_proc_readable('/proc/net/dev') ? file_get_contents('/proc/net/dev') : false;
         if ($data) {
             $lines = explode("\n", $data);
             foreach ($lines as $line) {
@@ -150,7 +168,7 @@ function monitor(): void {
 
     $uptime = 'N/A';
     if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
-        $upt = @file_get_contents('/proc/uptime');
+        $upt = is_proc_readable('/proc/uptime') ? file_get_contents('/proc/uptime') : false;
         if ($upt) {
             $upt = explode(' ', $upt)[0];
             $days = floor($upt / 86400);
