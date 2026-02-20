@@ -2697,37 +2697,40 @@ function head() {
         $sreferer = get_referer();
         $sreqhom = text_filter($request);
         $spath = COUNTER_DIR.'/';
-        $sdate = file($spath.'statistic.log');
+        $slog = $spath.'statistic.log';
+        $sdate = file_exists($slog) ? file($slog) : false;
         if ($sdate) {
             $con = explode('|', trim($sdate[0]));
             if (date('d.m.Y') != $con[0]) {
                 $fpd = fopen($spath.'days.log', 'ab');
-                flock($fpd, 2);
+                flock($fpd, LOCK_EX);
                 fwrite($fpd, $sdate[0].PHP_EOL);
-                flock($fpd, 3);
+                flock($fpd, LOCK_UN);
                 fclose($fpd);
                 if (file_exists($spath.'statistic.log')) unlink($spath.'statistic.log');
                 if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
                 if (file_exists($spath.'user.log')) unlink($spath.'user.log');
                 if (substr($con[0], 3) != date('m.Y')) {
                     $month = date('Y-m', strtotime('-1 month'));
-                    rename($spath.'days.log', $spath.'statistic/statistic_'.$month.'.log');
+                    $sdir = $spath.'statistic';
+                    if (!is_dir($sdir)) mkdir($sdir, 0755, true);
+                    rename($spath.'days.log', $sdir.'/statistic_'.$month.'.log');
                     if (file_exists($spath.'days.log')) unlink($spath.'days.log');
                 }
-                $ahits = ($con[3]) ? ($con[3]+1) : '1';
-                $sengine = ($conf['session'] && !empty($guest) == 1) ? '1' : '0';
+                $ahits = ($con[3] ?? 0) ? (($con[3] ?? 0) + 1) : '1';
+                $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
                 $srefer = ($sreferer) ? '1' : '0';
                 $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
                 $wc = date('d.m.Y').'|0|1|'.$ahits.'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
             } else {
                 $check = checkUniqueIp();
                 $checku = check_user();
-                $shost = ($check) ? intval($con[1]+1) : $con[1];
-                $sengine = ($check && $conf['session'] && $guest == 1) ? intval($con[4]+1) : $con[4];
-                $srefer = ($check && $sreferer) ? intval($con[5]+1) : $con[5];
-                $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? intval($con[6]+1) : $con[6];
-                $suser = ($checku && $conf['session'] && $guest == 2) ? intval($con[7]+1) : $con[7];
-                $wc = $con[0].'|'.$shost.'|'.intval($con[2]+1).'|'.intval($con[3]+1).'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
+                $shost = ($check) ? intval(($con[1] ?? 0) + 1) : ($con[1] ?? 0);
+                $sengine = ($check && $conf['session'] && $guest == 1) ? intval(($con[4] ?? 0) + 1) : ($con[4] ?? 0);
+                $srefer = ($check && $sreferer) ? intval(($con[5] ?? 0) + 1) : ($con[5] ?? 0);
+                $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? intval(($con[6] ?? 0) + 1) : ($con[6] ?? 0);
+                $suser = ($checku && $conf['session'] && $guest == 2) ? intval(($con[7] ?? 0) + 1) : ($con[7] ?? 0);
+                $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
             }
             $fps = fopen($spath.'statistic.log', 'wb');
             if (flock($fps, LOCK_EX)) {
@@ -2737,17 +2740,17 @@ function head() {
                 flock($fps, LOCK_UN);
             }
             fclose($fps);
-        } elseif (!file_exists($spath.'statistic.log') || (date('d.m.Y', filemtime($spath.'statistic.log')) < date('d.m.Y', time()))) {
-            unlink($spath.'ips.log');
-            unlink($spath.'user.log');
+        } elseif (!file_exists($slog) || filemtime($slog) < strtotime('today midnight')) {
+            if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
+            if (file_exists($spath.'user.log')) unlink($spath.'user.log');
             $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
             $srefer = ($sreferer) ? '1' : '0';
             $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
             $wc = date('d.m.Y').'|0|1|1|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
-            $fps = fopen($spath.'statistic.log', 'wb');
-            flock($fps, 2);
+            $fps = fopen($slog, 'wb');
+            flock($fps, LOCK_EX);
             fwrite($fps, $wc);
-            flock($fps, 3);
+            flock($fps, LOCK_UN);
             fclose($fps);
         }
     }
