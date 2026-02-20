@@ -160,7 +160,7 @@ function addFile(string $file, string $src, string $comp = 'none', bool $del = f
         addErrorFile(_ERR_WRITE.': '.$file);
         return 2;
     }
-    if ($comp !== 'none') return addCompress(dirname($file), $file, basename($file), $comp, filesize($file) > $max || $del);
+    if ($comp !== 'none') return addCompress(dirname($file), $file, basename($file), $comp, filesize($file) > $max || $del) ? 0 : 3;
     return 0;
 }
 
@@ -200,7 +200,7 @@ function checkUniqueIp(): bool {
 }
 
 # Compress a file, folder or string (zip, gz, bz2)
-function addCompress(string $dir, string $src, string $name, string $mode = 'auto', bool $del = false): bool {
+function addCompress(string $dir, string $src, string $name, string $mode = 'auto', bool $del = false, bool $bak = false): bool {
     if (!is_dir($dir) || !is_writable($dir)) {
         addErrorFile(_ERR_DIR.': '.$dir);
         return false;
@@ -219,6 +219,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
         default => 'invalid'
     };
     if ($algo === 'none') {
+        if ($bak && is_file($src)) return rename($src, rtrim($dir, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$name.'.bak');
         addErrorFile(_ERR_NOCOMP);
         return false;
     }
@@ -272,37 +273,12 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
         }
         // Handle string content
         else {
-            // Validate that $src is a string
-            if (!is_string($src)) {
-                $zip->close();
-                addErrorFile(_ERR_TYPE.': '.gettype($src));
-                return false;
-            }
-
-            $tmp = tempnam(sys_get_temp_dir(), 'zip_');
-            if ($tmp === false) {
-                $zip->close();
-                addErrorFile(_ERR_WRITE.': Temp file creation failed');
-                return false;
-            }
-
-            if (file_put_contents($tmp, $src) === false) {
-                $zip->close();
-                if (file_exists($tmp)) unlink($tmp);
-                addErrorFile(_ERR_WRITE.': '.$tmp);
-                return false;
-            }
-
-            // Use logical internal name
             $iname = $nbase.'.txt';
-            if (!$zip->addFile($tmp, $iname)) {
+            if (!$zip->addFromString($iname, $src)) {
                 $zip->close();
-                unlink($tmp);
-                addErrorFile(_ERR_ZADD.': '.$tmp);
+                addErrorFile(_ERR_ZADD.': '.$iname);
                 return false;
             }
-
-            unlink($tmp);
         }
 
         $zip->close();
@@ -310,7 +286,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
         // Delete source if requested
         if ($del) {
             if (is_file($src)) {
-                unlink($src);
+                if (!unlink($src)) addErrorFile(_ERR_DELETE.': '.$src);
             } elseif (is_dir($src)) {
                 if (!deleteDir($src)) {
                     addErrorFile(_ERR_DELETE.': '.$src);
@@ -400,39 +376,37 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
 
     // Delete source if requested
     if ($del) {
-        unlink($src);
+        if (!unlink($src)) addErrorFile(_ERR_DELETE.': '.$src);
     }
 
     return true;
 }
 
-/**
- * Error logging with rotation and compression
- */
+# Error logging with rotation and compression
 function addErrorFile(string $msg): bool {
+    global $conf;
+    static $running = false;
+    if ($running) {
+        error_log('[LOG] Recursive call prevented: '.$msg);
+        return false;
+    }
+    $running = true;
     $log = LOGS_DIR.'/error_file.log';
-    $max = 10485760;
-
+    $cfg = $conf['security'] ?? [];
+    $max = $cfg['log_size'] ?? 10485760;
     $line = '['.date('Y-m-d H:i:s').'] '.$msg.PHP_EOL;
     if (file_put_contents($log, $line, FILE_APPEND | LOCK_EX) === false) {
         error_log('[LOG] Write failed: '.$log.' | '.$msg);
+        $running = false;
         return false;
     }
-
     if (filesize($log) >= $max) {
-        $ts = date('Ymd_His');
-        $rot = $log.'.'.$ts;
-        $cmp = checkCompress();
-        $typ = array_key_first(array_intersect_key(['zip' => 1, 'gz' => 1, 'bz2' => 1], $cmp));
-        if ($typ) {
-            addCompress(dirname($rot), $log, basename($rot), $typ, true);
-        } else {
-            rename($log, $rot.'.bak');
-        }
+        $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
+        addCompress(dirname($log), $log, $safe, 'auto', true, true);
     }
+    $running = false;
     return true;
 }
-
 
 # Captcha check
 function checkCaptcha($id) {
@@ -3378,7 +3352,7 @@ function addBackupDb(): bool {
     }
 
     fclose($fp);
-    addCompress($backup_dir, $filepath, $name, 'auto', true);
+    if (!addCompress($backup_dir, $filepath, $name, 'auto', true)) return false;
 
     // Performance-Logging
     $duration = round(microtime(true) - $backup_start, 2);
