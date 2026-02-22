@@ -36,8 +36,9 @@
 *.tar
 
 # Editor files
+AGENT.md
+.agents/
 .claude/
-.rules/
 .vscode/
 .idea/
 plans/
