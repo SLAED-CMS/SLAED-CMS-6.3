@@ -48,22 +48,22 @@ function mwhois() {
 	."</fieldset>";
 
 	$serverdefs = array(
-	"ru"		=> array("whois.ripn.net","No entries found"),
-	"com"	=> array("whois.crsnic.net","No match for"),
-	"net"	=> array("whois.crsnic.net","No match for"),
-	"org"	=> array("whois.publicinterestregistry.net","NOT FOUND"),
+	"ru"		=> array("whois.tcinet.ru","No entries found"),
+	"com"	=> array("whois.verisign-grs.com","No match for"),
+	"net"	=> array("whois.verisign-grs.com","No match for"),
+	"org"	=> array("whois.publicinterestregistry.org","NOT FOUND"),
 	"biz"	=> array("whois.nic.biz","Not found"),
-	"info"	=> array("whois.afilias.net","NOT FOUND"),
+	"info"	=> array("whois.nic.info","NOT FOUND"),
 	"name"	=> array("whois.nic.name","No match"),
 	"us"		=> array("whois.nic.us","Not found:"),
-	"de"	=> array("whois.nic.de","status:      free"),
-	"in"		=> array("whois.registry.in","NOT FOUND"),
-	"co.in"	=> array("whois.registry.in","NOT FOUND"),
-	"firm.in"	=> array("whois.registry.in","NOT FOUND"),
-	"gen.in"	=> array("whois.registry.in","NOT FOUND"),
-	"ind.in"	=> array("whois.registry.in","NOT FOUND"),
-	"net.in"	=> array("whois.registry.in","NOT FOUND"),
-	"org.in"	=> array("whois.registry.in","NOT FOUND"),
+	"de"	=> array("whois.denic.de","Status: free"),
+	"in"		=> array("whois.nixiregistry.in","NOT FOUND"),
+	"co.in"	=> array("whois.nixiregistry.in","NOT FOUND"),
+	"firm.in"	=> array("whois.nixiregistry.in","NOT FOUND"),
+	"gen.in"	=> array("whois.nixiregistry.in","NOT FOUND"),
+	"ind.in"	=> array("whois.nixiregistry.in","NOT FOUND"),
+	"net.in"	=> array("whois.nixiregistry.in","NOT FOUND"),
+	"org.in"	=> array("whois.nixiregistry.in","NOT FOUND"),
 	"com.ru"	=> array("whois.ripn.net","No entries found"),
 	"net.ru"	=> array("whois.ripn.net","No entries found"),
 	"org.ru"	=> array("whois.ripn.net","No entries found"),
@@ -192,7 +192,10 @@ function send() {
 function check_domain($domain_whois, $ext) {
 	global $nomatch, $server;
 	$output = "";
-	if (($sc = fsockopen($server, 43)) == false) {
+	set_error_handler(function() { return true; }, E_WARNING);
+	$sc = fsockopen($server, 43, $errno, $errstr, 10);
+	restore_error_handler();
+	if ($sc === false) {
 		return 2;
 	}
 	fputs($sc, $domain_whois.".".$ext."\n");
@@ -210,13 +213,14 @@ function check_domain($domain_whois, $ext) {
 function whois($domain_whois, $ext) {
 	global $server;
 	$cont = "";
-	if (($sc = fsockopen($server, 43)) == false) {
-		if (($sc = fsockopen($server, 43)) == false) {
-			$cont .= "There is a temporary service disruption Please again try later";
-			$layout = 2;
-			$cont .= print_results($layout, 0);
-			exit;
-		}
+	set_error_handler(function() { return true; }, E_WARNING);
+	$sc = fsockopen($server, 43, $errno, $errstr, 10);
+	restore_error_handler();
+	if ($sc === false) {
+		$cont .= "There is a temporary service disruption Please again try later";
+		$layout = 2;
+		$cont .= print_results($layout, 0);
+		exit;
 	}
 	if ($ext=="com" || $ext=="net") {
 		fputs($sc, $domain_whois.".".$ext."\n");
@@ -228,7 +232,10 @@ function whois($domain_whois, $ext) {
 			}
 		}
 		fclose($sc);
-		if (($sc = fsockopen($server, 43)) == false) {
+		set_error_handler(function() { return true; }, E_WARNING);
+		$sc = fsockopen($server, 43, $errno, $errstr, 10);
+		restore_error_handler();
+		if ($sc === false) {
 			$layout = 2;
 			$cont .= print_results($layout, 0);
 			exit;

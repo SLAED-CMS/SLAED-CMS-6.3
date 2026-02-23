@@ -13,7 +13,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function admins(): void {
-    global $db, $aroute;
+    global $db, $afile;
     head();
     $cont = navi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
@@ -23,7 +23,7 @@ function admins(): void {
     while (list($id, $name, $title, $url, $email, $pwd, $super, $lang, $ip, $regdate, $lastvisit) = $db->sql_fetchrow($result)) {
         $lang = (!$lang) ? _ALL : $lang;
         $cont .= '<tr><td>'.title_tip(_REG.': '.format_time($regdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($lastvisit, _TIMESTRING)).$name.'</td><td>'.$title.'</td><td>'.domain($url).'</td><td>'.mailto($email).'</td><td>'.deflang($lang).'</td><td>'.user_geo_ip($ip, 4).'</td>'
-        .'<td>'.add_menu('<a href="'.$aroute.'.php?name=admins&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$aroute.'.php?name=admins&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+        .'<td>'.add_menu('<a href="'.$afile.'.php?name=admins&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=admins&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
     }
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
@@ -32,7 +32,7 @@ function admins(): void {
 }
 
 function add(): void {
-    global $db, $aroute, $conf, $confmd, $stop;
+    global $db, $afile, $conf, $confmd, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->sql_query('SELECT id, name, title, url, email, pwd, super, editor, smail, modules, lang FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
@@ -62,7 +62,7 @@ function add(): void {
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $check = (empty($_COOKIE['sl_close_9'])) ? '' : ' checked';
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php?name=admins" method="post">'
+    $cont .= '<form name="post" action="'.$afile.'.php?name=admins" method="post">'
     .'<input type="hidden" name="op" value="save">'
     .'<table class="sl_table_form">'
     .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('adminname', $name, '25', 'sl_form', '1').'</td></tr>'
@@ -108,7 +108,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $aroute, $conf, $stop;
+    global $db, $afile, $conf, $stop;
     $aid = getVar('post', 'aid', 'num', 0);
     $name = getVar('post', 'adminname', 'name');
     $title = getVar('post', 'title', 'title');
@@ -162,7 +162,7 @@ function save(): void {
             mail_send($email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
-        header('Location: '.$aroute.'.php?name=admins'.$send);
+        header('Location: '.$afile.'.php?name=admins'.$send);
         exit;
     } else {
         add();
@@ -170,10 +170,10 @@ function save(): void {
 }
 
 function del(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $db->sql_query('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
-    header('Location: '.$aroute.'.php?name=admins');
+    header('Location: '.$afile.'.php?name=admins');
     exit;
 }
 
