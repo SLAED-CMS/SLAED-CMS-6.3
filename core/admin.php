@@ -215,7 +215,7 @@ function getAdminTabs(
     int $act_sub = 0,
     string $mtab = 'menutab'
 ): string {
-    global $admin_file;
+    global $afile;
 
     $cnt = '<ul id="'.$mtab.'" class="reset tabmenu">';
     $scnt = '';
@@ -241,7 +241,7 @@ function getAdminTabs(
 
                 $ssel = ($l === $act_sub) ? ' class="selected"' : '';
                 $href_sub = !empty($subops[$l])
-                    ? 'href="'.$admin_file.'.php?'.$subops[$l].'"'
+                    ? 'href="'.$afile.'.php?'.$subops[$l].'"'
                     : 'rel="tabcs'.$l.'" href="#"';
 
                 $scnt .= '<li><a '.$href_sub.$ssel.'><b>'.$stab.'</b></a></li>';
@@ -252,7 +252,7 @@ function getAdminTabs(
         }
 
         $href = !empty($ops[$k])
-            ? 'href="'.$admin_file.'.php?'.$ops[$k].'"'
+            ? 'href="'.$afile.'.php?'.$ops[$k].'"'
             : 'rel="tabc'.$k.'" href="#"';
 
         $cnt .= '<li><a '.$href.$sel.'><b>'.$tab.'</b></a></li>';
@@ -340,7 +340,7 @@ function navi_gen(...$arg): string
 
 
 function admininfo() {
-    global $db, $admin, $admin_file, $conf, $confdb, $confr, $confst, $panel;
+    global $db, $admin, $afile, $conf, $confdb, $confr, $confst, $panel;
     if (is_admin()) {
         $ablocks = '';
         if ($panel) {
@@ -348,74 +348,74 @@ function admininfo() {
             if (is_active("account") && is_admin_modul("account")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT user_id FROM ".PREFIX_DB."_users_temp"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=users_new\" title=\""._NEW_USER."\">"._USERS."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=users_new\" title=\""._NEW_USER."\">"._USERS."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("album") && is_admin_modul("album")) {
                 #$num = $db->sql_numrows($db->sql_query("SELECT pid FROM ".PREFIX_DB."_album_pictures_newpicture"));
                 #$num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                #$n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=album&amp;do=validnew&amp;type=checknew\" title=\""._ALBUM."\">"._ALBUM."</a>:</td><td>".$num."</td></tr>";
+                #$n_cont .= "<tr><td><a href=\"".$afile.".php?op=album&amp;do=validnew&amp;type=checknew\" title=\""._ALBUM."\">"._ALBUM."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("faq") && is_admin_modul("faq")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT fid FROM ".PREFIX_DB."_faq WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=faq&amp;status=1\" title=\""._FAQ."\">"._FAQ."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=faq&amp;status=1\" title=\""._FAQ."\">"._FAQ."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("files") && is_admin_modul("files")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT lid FROM ".PREFIX_DB."_files WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=files&amp;status=1\" title=\""._FILES."\">"._FILES."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=files&amp;status=1\" title=\""._FILES."\">"._FILES."</a>:</td><td>".$num."</td></tr>";
                 $num = $db->sql_numrows($db->sql_query("SELECT lid FROM ".PREFIX_DB."_files WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=files&amp;status=2\" title=\""._BROCFILES."\">"._BROCFILES."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=files&amp;status=2\" title=\""._BROCFILES."\">"._BROCFILES."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("help") && is_admin_modul("help")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT sid FROM ".PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=help\" title=\""._HELP."\">"._HELP."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=help\" title=\""._HELP."\">"._HELP."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("jokes") && is_admin_modul("jokes")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT jokeid FROM ".PREFIX_DB."_jokes WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=jokes&amp;status=1\" title=\""._JOKES."\">"._JOKES."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=jokes&amp;status=1\" title=\""._JOKES."\">"._JOKES."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("links") && is_admin_modul("links")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT lid FROM ".PREFIX_DB."_links WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=links&amp;status=1\" title=\""._LINKS."\">"._LINKS."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=links&amp;status=1\" title=\""._LINKS."\">"._LINKS."</a>:</td><td>".$num."</td></tr>";
                 $num = $db->sql_numrows($db->sql_query("SELECT lid FROM ".PREFIX_DB."_links WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=links&amp;status=2\" title=\""._BROCLINKS."\">"._BROCLINKS."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=links&amp;status=2\" title=\""._BROCLINKS."\">"._BROCLINKS."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("media") && is_admin_modul("media")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_media WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=media&amp;status=1\" title=\""._MEDIA."\">"._MEDIA."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=media&amp;status=1\" title=\""._MEDIA."\">"._MEDIA."</a>:</td><td>".$num."</td></tr>";
                 $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_media WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=media&amp;status=2\" title=\""._BROCMFILES."\">"._BROCMFILES."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=media&amp;status=2\" title=\""._BROCMFILES."\">"._BROCMFILES."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("news") && is_admin_modul("news")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT sid FROM ".PREFIX_DB."_news WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=news&amp;status=1\" title=\""._NEWS."\">"._NEWS."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=news&amp;status=1\" title=\""._NEWS."\">"._NEWS."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("pages") && is_admin_modul("pages")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT pid FROM ".PREFIX_DB."_pages WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=page&amp;status=1\" title=\""._PAGES."\">"._PAGES."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=page&amp;status=1\" title=\""._PAGES."\">"._PAGES."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("shop") && is_admin_modul("shop")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_clients WHERE active = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=shop_clients\" title=\""._CLIENTS."\">"._CLIENTS."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=shop_clients\" title=\""._CLIENTS."\">"._CLIENTS."</a>:</td><td>".$num."</td></tr>";
                 $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_partners WHERE active = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=shop_partners\" title=\""._PARTNERS."\">"._PARTNERS."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=shop_partners\" title=\""._PARTNERS."\">"._PARTNERS."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("whois") && is_admin_modul("whois")) {
                 $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_whois WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-                $n_cont .= "<tr><td><a href=\"".$admin_file.".php?op=whois&amp;status=1\" title=\""._WHOIS."\">"._WHOIS."</a>:</td><td>".$num."</td></tr>";
+                $n_cont .= "<tr><td><a href=\"".$afile.".php?op=whois&amp;status=1\" title=\""._WHOIS."\">"._WHOIS."</a>:</td><td>".$num."</td></tr>";
             }
             $n_cont .= "</table>";
             $ablocks = setTemplateBlock('block-left', array('{%title%}' => _NEW, '{%content%}' => $n_cont, '{%id%}' => '3'));
@@ -423,7 +423,7 @@ function admininfo() {
             $w_cont = "<table class=\"sl_tab_bl\">";
             $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_comment WHERE status = '0'"));
             $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
-            $w_cont .= "<tr><td><a href=\"".$admin_file.".php?op=comm_show&amp;status=1\" title=\""._COMMENTS."\">"._COMMENTS."</a>:</td><td>".$num."</td></tr>";
+            $w_cont .= "<tr><td><a href=\"".$afile.".php?op=comm_show&amp;status=1\" title=\""._COMMENTS."\">"._COMMENTS."</a>:</td><td>".$num."</td></tr>";
             $w_cont .= "</table>";
             $ablocks .= setTemplateBlock('block-left', array('{%title%}' => _WAITINGCONT, '{%content%}' => $w_cont, '{%id%}' => '4'));
             
@@ -510,7 +510,7 @@ function admininfo() {
             }
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
-        $e_cont = '<form method="post" action="'.$admin_file.'.php"><table><tr><td>'.redaktor('1', 'editor', '', $editor, 1).'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
+        $e_cont = '<form method="post" action="'.$afile.'.php"><table><tr><td>'.redaktor('1', 'editor', '', $editor, 1).'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
         $ablocks .= setTemplateBlock('block-left', array('{%title%}' => _EDITOR, '{%content%}' => $e_cont, '{%id%}' => '6'));
         return $ablocks;
     }
@@ -531,7 +531,7 @@ function db_version() {
 }
 
 function ajax_cat() {
-    global $db, $admin_file, $conf;
+    global $db, $afile, $conf;
     $arg = func_get_args();
     $modul = analyze($arg[0]);
     $obj = analyze($arg[1]);
@@ -594,7 +594,7 @@ function ajax_cat() {
             $descript = ($description) ? $description : _NO;
             $subcat = ($ispid) ? $ispid : _NO;
             $clang = ($conf['multilingual'] == 1) ? ((!$language) ? "<br>"._LANGUAGE.": "._ALL : "<br>"._LANGUAGE.": ".deflang($language)) : "";
-            $delete = (!$pnum && !$ispid) ? "||<a href=\"".$admin_file.".php?op=cat_del&amp;id=".$id.$modlink."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>" : "";
+            $delete = (!$pnum && !$ispid) ? "||<a href=\"".$afile.".php?op=cat_del&amp;id=".$id.$modlink."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>" : "";
             $fcont .= "<tr><td>".$id."</td>"
             ."<td>".title_tip(_DESCRIPTION.": ".$descript."<br>"._CATEGORIES.": ".$subcat.$clang)."<span title=\"".$title."\" class=\"sl_note\">".cutstr($title, 50)."</span></td>"
             ."<td>".$pnum."</td>"
@@ -604,7 +604,7 @@ function ajax_cat() {
             $fcont .= ($con1) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_cat', 'go=5&amp;op=cat_order&amp;id=".$id."&amp;cid=".$con1."&amp;typ=".$ordernm."&amp;mod=".$modul."&amp;ordern=".$ordern."', ''); return false;\" title=\""._BLOCKUP."\" class=\"sl_bl_up\"></span>" : "";
             $fcont .= ($con2) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_cat', 'go=5&amp;op=cat_order&amp;id=".$id."&amp;cid=".$con2."&amp;typ=".$ordernp."&amp;mod=".$modul."&amp;ordern=".$ordern."', ''); return false;\" title=\""._BLOCKDOWN."\" class=\"sl_bl_down\"></span>" : "";
             $fcont .= "</td><td>".ad_status("", $cstatus)."</td>"
-            ."<td>".add_menu("<a href=\"".$admin_file.".php?op=cat_edit&amp;cid=".$id.$modlink."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>".$delete)."</td></tr>";
+            ."<td>".add_menu("<a href=\"".$afile.".php?op=cat_edit&amp;cid=".$id.$modlink."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>".$delete)."</td></tr>";
         }
         $cont = "<table class=\"sl_table_list\"><thead><tr><th>"._ID."</th><th>"._CATEGORY."</th><th>".cutstr(_CONTENT, 3, 1)."</th><th>".cutstr(_SUBCATEGORY, 3, 1)."</th><th>".cutstr(_IMG, 2, 1)."</th><th colspan=\"2\">"._WEIGHT."</th><th>"._STATUS."</th><th>"._FUNCTIONS."</th></tr></thead><tbody>".$fcont."</tbody></table>";
     } else {
@@ -684,7 +684,7 @@ function scatacess($auth) {
 }
 
 function ajax_block() {
-    global $db, $conf, $admin_file;
+    global $db, $conf, $afile;
     $fcont = "";
     $result = $db->sql_query("SELECT a.bid, a.bkey, a.title, a.url, a.bposition, a.weight, a.active, a.blanguage, a.blockfile, a.view, a.expire, a.action, b.bid, b.bposition, b.weight, c.bid, c.bposition, c.weight FROM ".PREFIX_DB."_blocks AS a LEFT JOIN ".PREFIX_DB."_blocks AS b ON (b.bposition = a.bposition AND b.weight = a.weight-1) LEFT JOIN ".PREFIX_DB."_blocks AS c ON (c.bposition = a.bposition AND c.weight = a.weight+1) ORDER BY a.bposition, a.weight");
     while (list($bid, $bkey, $title, $url, $bposition, $weight, $active, $blanguage, $blockfile, $view, $expire, $action, $con1, $bposition1, $weight1, $con2, $bposition2, $weight2) = $db->sql_fetchrow($result)) {
@@ -735,7 +735,7 @@ function ajax_block() {
         ."<td>".$weight."</td><td>";
         $fcont .= ($con1) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_block', 'go=5&amp;op=blocks_order&amp;id=".$bid."&amp;cid=".$con1."&amp;typ=".$weight_minus."&amp;ordern=".$weight."', ''); return false;\" title=\""._BLOCKUP."\" class=\"sl_bl_up\"></span>" : "";
         $fcont .= ($con2) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_block', 'go=5&amp;op=blocks_order&amp;id=".$bid."&amp;cid=".$con2."&amp;typ=".$weight_plus."&amp;ordern=".$weight."', ''); return false;\" title=\""._BLOCKDOWN."\" class=\"sl_bl_down\"></span>" : "";
-        $fcont .= "</td><td>".ad_status("", $active)."</td><td>".add_menu(ad_status($admin_file.".php?name=blocks&amp;op=change&amp;id=".$bid."&amp;act=".$active, $active)."||<a href=\"".$admin_file.".php?name=blocks&amp;op=edit&amp;id=".$bid."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?name=blocks&amp;op=del&amp;id=".$bid."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>")."</td></tr>";
+        $fcont .= "</td><td>".ad_status("", $active)."</td><td>".add_menu(ad_status($afile.".php?name=blocks&amp;op=change&amp;id=".$bid."&amp;act=".$active, $active)."||<a href=\"".$afile.".php?name=blocks&amp;op=edit&amp;id=".$bid."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$afile.".php?name=blocks&amp;op=del&amp;id=".$bid."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>")."</td></tr>";
     }
     $cont = "<table class=\"sl_table_list\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._TYPE."</th><th>"._VIEW."</th><th>"._POSITION."</th><th colspan=\"2\">"._WEIGHT."</th><th>"._STATUS."</th><th>"._FUNCTIONS."</th></tr></thead><tbody>".$fcont."</tbody></table>";
     return $cont;
@@ -754,7 +754,7 @@ function blocks_order() {
 
 # Favorites list view
 function fav_aliste() {
-    global $db, $conffav, $conf;
+    global $db, $conffav, $conf, $confu;
     $arg = func_get_args();
     $obj = empty($arg[0]) ? 0 : 1;
     
@@ -952,7 +952,7 @@ function ashow_files() {
 # Navi admin bookmarks
 /*
 function navi_gen() {
-    global $admin_file;
+    global $afile;
     $narg = func_get_args();
     $menutab = empty($narg[11]) ? "menutab" : $narg[11];
     $cont = "<ul id=\"".$menutab."\" class=\"reset tabmenu\">";
@@ -966,14 +966,14 @@ function navi_gen() {
                 foreach ($narg[6] as $vals) {
                     if ($vals != "") {
                         $ssel = ($l== $narg[10]) ? " class=\"selected\"" : "";
-                        $hrefs = ($narg[5][$l]) ? "href=\"".$admin_file.".php?op=".$narg[5][$l] : "rel=\"tabcs".$l."\" href=\"#";
+                        $hrefs = ($narg[5][$l]) ? "href=\"".$afile.".php?op=".$narg[5][$l] : "rel=\"tabcs".$l."\" href=\"#";
                         $scont .= "<li><a ".$hrefs."\"".$ssel."><b>".$vals."</b></a></li>";
                         $l++;
                     }
                 }
                 $scont .= "</ul>";
             }
-            $href = ($narg[3][$k]) ? "href=\"".$admin_file.".php?op=".$narg[3][$k] : "rel=\"tabc".$k."\" href=\"#";
+            $href = ($narg[3][$k]) ? "href=\"".$afile.".php?op=".$narg[3][$k] : "rel=\"tabc".$k."\" href=\"#";
             $cont .= "<li><a ".$href."\"".$sel."><b>".$val."</b></a></li>";
             $k++;
         }

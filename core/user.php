@@ -33,7 +33,7 @@ function setComShow() {
 
 # Showing messages on the home page
 function setMessageShow() {
-    global $db, $admin_file, $conf, $currentlang;
+    global $db, $afile, $conf, $currentlang;
     if ($conf['message'] == 1) {
         $querylang = ($conf['multilingual'] == 1) ? "AND (mlanguage = '".$currentlang."' OR mlanguage = '')" : '';
         $result = $db->sql_query("SELECT mid, title, content, expire, view FROM ".PREFIX_DB."_message WHERE active = '1' ".$querylang);
@@ -44,7 +44,7 @@ function setMessageShow() {
                 $content = bb_decode($content, 'all');
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? display_time($exp) : _UNLIMITED;
-                $info = '| '._PURCHASED.': '.$exp.' | <a href="'.$admin_file.'.php?op=msg_add&amp;id='.$mid.'" title="'._EDIT.'">'._EDIT.'</a> ]</div>';
+                $info = '| '._PURCHASED.': '.$exp.' | <a href="'.$afile.'.php?op=msg_add&amp;id='.$mid.'" title="'._EDIT.'">'._EDIT.'</a> ]</div>';
                 if ($view == 4 && is_moder()) {
                     $content .= '<div class="sl_center">[ '._VIEW.': '._MVADMIN.' '.$info;
                     return setTemplateBasic('messagebox', array('{%title%}' => $title, '{%content%}' => $content));
