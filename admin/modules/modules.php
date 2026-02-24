@@ -7,18 +7,18 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $aroute;
+    global $afile;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
     $ops = ['name=modules'.$typelink, 'name=modules&amp;op=info'];
     $lang = [_HOME, _INFO];
-    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$aroute.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
+    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
     return getAdminTabs(_MODULES, 'modules.png', $search, $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
 function modules(): void {
-    global $confmd, $db, $aroute, $infos;
+    global $confmd, $db, $afile, $infos;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     head();
@@ -176,10 +176,10 @@ function modules(): void {
             }
             if ($install) {
                 $dbc = '<i class="bi bi-database-fill-dash"></i> ';
-                $sqlimg = '||<a href="'.$aroute.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1" OnClick="return DelCheck(this, \''._DB_DELETE.' &quot;'.$title.'&quot;?\');" title="'._DB_DELETE.'">'._DB_DELETE.'</a>';
+                $sqlimg = '||<a href="'.$afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1" OnClick="return DelCheck(this, \''._DB_DELETE.' &quot;'.$title.'&quot;?\');" title="'._DB_DELETE.'">'._DB_DELETE.'</a>';
             } else {
                 $dbc = '<i class="bi bi-database-fill-add"></i> ';
-                $sqlimg = '||<a href="'.$aroute.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2" OnClick="return DelCheck(this, \''._DB_INSTALL.' &quot;'.$title.'&quot;?\');" title="'._DB_INSTALL.'">'._DB_INSTALL.'</a>';
+                $sqlimg = '||<a href="'.$afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2" OnClick="return DelCheck(this, \''._DB_INSTALL.' &quot;'.$title.'&quot;?\');" title="'._DB_INSTALL.'">'._DB_INSTALL.'</a>';
             }
         } else {
             $dbc = '';
@@ -188,7 +188,7 @@ function modules(): void {
 
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
             $dbu = '<i class="bi bi-database-fill-gear bi-green" title="'._DB_UPDATE.'"></i> ';
-            $sqluimg = '||<a href="'.$aroute.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3" OnClick="return DelCheck(this, \''._DB_UPDATE.' &quot;'.$title.'&quot;?\');" title="'._DB_UPDATE.'">'._DB_UPDATE.'</a>';
+            $sqluimg = '||<a href="'.$afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3" OnClick="return DelCheck(this, \''._DB_UPDATE.' &quot;'.$title.'&quot;?\');" title="'._DB_UPDATE.'">'._DB_UPDATE.'</a>';
         } else {
             $dbu = '';
             $sqluimg = '';
@@ -210,7 +210,7 @@ function modules(): void {
         
         '.ad_status('', $active).'-->
         
-        </td><td>'.add_menu(ad_status($aroute.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active).'||<a href="'.$aroute.'.php?name=modules&amp;op=edit&amp;mod='.$title.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$sqlimg.$sqluimg).'</td></tr>';
+        </td><td>'.add_menu(ad_status($afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active).'||<a href="'.$afile.'.php?name=modules&amp;op=edit&amp;mod='.$title.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$sqlimg.$sqluimg).'</td></tr>';
         $a++;
     }
 
@@ -221,10 +221,10 @@ function modules(): void {
 }
 
 function edit(): void {
-    global $confmd, $db, $aroute;
+    global $confmd, $db, $afile;
     $mod = getVar('get', 'mod', 'var');
     if (!isset($confmd[$mod])) {
-        header('Location: '.$aroute.'.php?name=modules');
+        header('Location: '.$afile.'.php?name=modules');
         exit;
     }
     $lang = $confmd[$mod]['lang'] ?? '_'.strtoupper($mod);
@@ -238,7 +238,7 @@ function edit(): void {
     head();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._LANGUAGE.':</td><td><input type="text" name="lang" value="'.$lang.'" maxlength="50" class="sl_conf" placeholder="'._LANGUAGE.'"></td></tr>'
     .'<tr><td>'._LOGO.':</td><td><select name="img" id="img_replace" class="sl_conf">';
     $path = 'templates/admin/images/admin/';
@@ -301,19 +301,19 @@ function edit(): void {
 }
 
 function status(): void {
-    global $confmd, $aroute;
+    global $confmd, $afile;
     $mod = getVar('get', 'mod', 'var');
     $act = getVar('get', 'act', 'num');
     if (isset($confmd[$mod])) {
         $confmd[$mod]['active'] = $act;
         setConfigFile('modules.php', $confmd);
     }
-    header('Location: '.$aroute.'.php?name=modules');
+    header('Location: '.$afile.'.php?name=modules');
     exit;
 }
 
 function save(): void {
-    global $confmd, $aroute;
+    global $confmd, $afile;
     $mod = getVar('post', 'mod', 'var');
     if (isset($confmd[$mod])) {
         $view = getVar('post', 'view', 'num');
@@ -332,7 +332,7 @@ function save(): void {
         ];
         setConfigFile('modules.php', $confmd);
     }
-    header('Location: '.$aroute.'.php?name=modules');
+    header('Location: '.$afile.'.php?name=modules');
     exit;
 }
 

@@ -14,12 +14,12 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function config(): void {
-    global $aroute, $conf;
+    global $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0, 'config');
     $cont .= checkPerms('global.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php" method="post">'
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post">'
     .'<div id="tabc0" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._VERSION.':</td><td><a href="//slaed.net" target="_blank" title="'._VERSION.'">SLAED CMS '.$conf['version'].'</a></td></tr>'
@@ -281,7 +281,7 @@ function config(): void {
 }
 
 function save(): void {
-    global $aroute, $conf;
+    global $afile, $conf;
     $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
     $kprotect = [', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ','];
 
@@ -400,7 +400,7 @@ function save(): void {
         'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
     ];
     setConfigFile('global.php', $cont);
-    header('Location: '.$aroute.'.php?name=config');
+    header('Location: '.$afile.'.php?name=config');
     exit;
 }
 

@@ -33,11 +33,11 @@ function blocks(): void {
 }
 
 function add(): void {
-    global $db, $conf, $aroute;
+    global $db, $conf, $afile;
     head();
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post">'
+    $cont .= '<form action="'.$afile.'.php" method="post">'
     .'<table class="sl_table_form">'
     .'<tr><td>'._TITLE.':<div class="sl_small">'._ADDCONST.'</div></td><td><input type="text" name="title" maxlength="60" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._RSSFILE.':</td><td><input type="text" name="url" class="sl_form" placeholder="'._RSSFILE.'"></td></tr>'
@@ -99,12 +99,12 @@ function add(): void {
 }
 
 function fileadd(): void {
-    global $aroute;
+    global $afile;
     head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms('blocks/', 1);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><input type="text" name="bf" maxlength="200" class="sl_form" placeholder="'._FILENAME.'" required></td></tr>'
     .'<tr><td>'._TYPE.':</td><td><input type="radio" name="flag" value="php" checked> PHP <input type="radio" name="flag" value="html"> HTML</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
@@ -114,11 +114,11 @@ function fileadd(): void {
 }
 
 function fileedit(): void {
-    global $db, $aroute;
+    global $db, $afile;
     head();
     $cont = navi(0, 3, 0, 0);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><select name="bf" class="sl_form">';
     $files = scandir('blocks');
     foreach ($files as $file) {
@@ -134,7 +134,7 @@ function fileedit(): void {
 }
 
 function fix(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $pos = ['b', 'c', 'd', 'f', 'l', 'r'];
     foreach ($pos as $val) {
         $result = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE bposition = :val ORDER BY weight ASC', ['val' => $val]);
@@ -144,12 +144,12 @@ function fix(): void {
             $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $bid]);
         }
     }
-    header('Location: '.$aroute.'.php?name=blocks');
+    header('Location: '.$afile.'.php?name=blocks');
     exit;
 }
 
 function addsave(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
     $url = getVar('post', 'url', 'url', '');
@@ -195,13 +195,13 @@ function addsave(): void {
         $db->sql_query('INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bposition, :weight, :active, :refresh, :btime, :blanguage, :blockfile, :view, :expire, :action, :which)', [
             'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
         ]);
-        header('Location: '.$aroute.'.php?name=blocks');
+        header('Location: '.$afile.'.php?name=blocks');
         exit;
     }
 }
 
 function filecode(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $bf = getVar('post', 'bf', 'var', '');
     if ($bf != '') {
         $flag = getVar('post', 'flag', 'var', '');
@@ -231,7 +231,7 @@ function filecode(): void {
         }
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
         $cont .= setTemplateBasic('open');
-        $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_edit">'
+        $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit">'
         .'<tr><td>'.textarea_code('code', 'blocktext', 'sl_form', 'text/x-php', trim($out[1])).'</td></tr>'
         .'<tr><td class="sl_center"><input type="hidden" name="bf" value="'.$bf.'">'
         .'<input type="hidden" name="flag" value="'.$flaged.'">'
@@ -242,13 +242,13 @@ function filecode(): void {
         echo $cont;
         foot();
     } else {
-        header('Location: '.$aroute.'.php?name=blocks&op=file');
+        header('Location: '.$afile.'.php?name=blocks&op=file');
         exit;
     }
 }
 
 function filecodesave(): void {
-    global $db, $aroute;
+    global $afile;
     $blocktext = filter_input(INPUT_POST, 'blocktext', FILTER_UNSAFE_RAW);
     $bf = getVar('post', 'bf', 'var', '');
     if ($blocktext && $bf) {
@@ -262,14 +262,14 @@ function filecodesave(): void {
             }
             fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
             fclose($handle);
-            header('Location: '.$aroute.'.php?name=blocks');
+            header('Location: '.$afile.'.php?name=blocks');
             exit;
         }
     }
 }
 
 function edit(): void {
-    global $db, $aroute, $conf;
+    global $db, $afile, $conf;
     head();
     $cont = navi(0, 1, 0, 0);
     $bid = getVar('get', 'bid', 'num');
@@ -283,7 +283,7 @@ function edit(): void {
     }
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _BLOCK.': '.$title.' '.$type]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.':<div class="sl_small">'._ADDCONST.'</div></td><td><input type="text" name="title" maxlength="50" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>';
     if ($blockfile != '') {
         $cont .= '<tr><td>'._FILENAME.':</td><td><select name="blockfile" class="sl_form">';
@@ -397,7 +397,7 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $newexpire = getVar('post', 'newexpire', 'num', 0);
     $bid = getVar('post', 'bid', 'num');
     $bkey = getVar('post', 'bkey', 'var', '');
@@ -472,7 +472,7 @@ function editsave(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
             ]);
         }
-        header('Location: '.$aroute.'.php?name=blocks');
+        header('Location: '.$afile.'.php?name=blocks');
         exit;
     } else {
         if ($oldposition != $bposition) {
@@ -506,23 +506,23 @@ function editsave(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
             ]);
         }
-        header('Location: '.$aroute.'.php?name=blocks');
+        header('Location: '.$afile.'.php?name=blocks');
         exit;
     }
 }
 
 function change(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num', 0);
     $active = ($act) ? 0 : 1;
     $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET active = :active WHERE bid = :id', ['active' => $active, 'id' => $id]);
-    header('Location: '.$aroute.'.php?name=blocks');
+    header('Location: '.$afile.'.php?name=blocks');
     exit;
 }
 
 function del(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $id = getVar('get', 'id', 'num');
     list($bposition, $weight) = $db->sql_fetchrow($db->sql_query('SELECT bposition, weight FROM '.PREFIX_DB.'_blocks WHERE bid = :id', ['id' => $id]));
     $result = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight > :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
@@ -531,7 +531,7 @@ function del(): void {
         $weight++;
     }
     $db->sql_query('DELETE FROM '.PREFIX_DB.'_blocks WHERE bid = :id', ['id' => $id]);
-    header('Location: '.$aroute.'.php?name=blocks');
+    header('Location: '.$afile.'.php?name=blocks');
     exit;
 }
 
