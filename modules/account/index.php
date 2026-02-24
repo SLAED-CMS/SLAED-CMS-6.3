@@ -37,7 +37,7 @@ function account() {
 }
 
 function checkuser($user_name, $user_email, $rules) {
-    global $db, $conf, $confu, $stop;
+    global $db, $confu, $stop;
     if ($confu['rule'] && $rules != '1') $stop[] = _ERROR_RULES;
     checkemail($user_email);
     $mail_b = explode(',', $confu['mail_b']);
@@ -252,7 +252,7 @@ function activate(): void {
 }
 
 function view() {
-    global $db, $conf, $confu, $confpr, $admin_file;
+    global $db, $conf, $confu, $confpr, $afile;
     if ($confu['prof'] != 1 || ($confu['prof'] == 1 && is_user()) || is_admin()) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $where = ($uname) ? "BINARY user_name = '".$uname."'" : "user_id = '".getVar('get', 'id', 'num')."'";
@@ -313,7 +313,7 @@ function view() {
             }
             $trank = ($gname) ? _GROUP.': '.$gname : ((is_array($rgroup)) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
             $rank = ($grank && file_exists(img_find('ranks/'.$grank))) ? array(_RANK, '<img src="'.img_find('ranks/'.$grank).'" alt="'.$trank.'" title="'.$trank.'">') : array('', '');
-            $admin = (is_admin()) ? add_menu('<a href="'.$admin_file.'.php?op=users_add&amp;id='.$user_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$admin_file.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$admin_file.'.php?op=users_del&amp;id='.$user_id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+            $admin = (is_admin()) ? add_menu('<a href="'.$afile.'.php?op=users_add&amp;id='.$user_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?op=users_del&amp;id='.$user_id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
             $privat = ($confpr['act'] && $user_name) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($user_name)]).'" title="'._SENDMES.'" class="sl_but_green">'._MESSAGE.'</a>' : '';
             $profil = (is_user() && $uname == $user_name) ? '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._ACCOUNT.'" class="sl_but">'._ACCOUNT.'</a>' : '';
             $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
