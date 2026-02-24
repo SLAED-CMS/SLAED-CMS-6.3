@@ -19,9 +19,9 @@ function content() {
 	global $db, $admin_file, $conf, $confcn;
 	head();
 	$cont = content_navi(0, 0, 0, 0);
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $confcn['anum'];
-	$result = $db->sql_query("SELECT id, title, time, counter FROM ".PREFIX_DB."_content ORDER BY id DESC LIMIT ".$offset.", ".$confcn['anum']."");
+	$result = $db->sql_query('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content ORDER BY id DESC LIMIT '.$offset.', '.$confcn['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._DATE."</th><th>".cutstr(_READS, 4, 1)."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -53,17 +53,17 @@ function content() {
 function content_add() {
 	global $db, $admin_file, $stop;
 	if (isset($_REQUEST['id'])) {
-		$id = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT id, title, text, field, url, time, refresh FROM ".PREFIX_DB."_content WHERE id = '".$id."'");
+		$id = getVar('req', 'id', 'num');
+		$result = $db->sql_query('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
 		list($cid, $title, $text, $field, $url, $time, $refresh) = $db->sql_fetchrow($result);
 	} else {
-		$cid = $_POST['cid'];
-		$title = save_text($_POST['title'], 1);
-		$text = save_text($_POST['text']);
-		$field = fields_save($_POST['field']);
-		$url = $_POST['url'];
+		$cid = getVar('post', 'cid', 'num');
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$text = save_text(getVar('post', 'text', 'text'));
+		$field = fields_save(getVar('post', 'field', 'array'));
+		$url = getVar('post', 'url', 'text');
 		$time = save_datetime(1, "time");
-		$refresh = $_POST['refresh'];
+		$refresh = getVar('post', 'refresh', 'num');
 	}
 	head();
 	$cont = content_navi(0, 1, 0, 0);
@@ -102,24 +102,26 @@ function content_add() {
 
 function content_save() {
 	global $db, $admin_file, $stop;
-	$cid = intval($_POST['cid']);
-	$title = save_text($_POST['title'], 1);
-	$url = $_POST['url'];
-	$text = ($url) ? rss_read($url, 1) : save_text($_POST['text']);
-	$field = fields_save($_POST['field']);
+	$cid = getVar('post', 'cid', 'num');
+	$title = save_text(getVar('post', 'title', 'text'), 1);
+	$url = getVar('post', 'url', 'text');
+	$post_text = getVar('post', 'text', 'text');
+	$text = ($url) ? rss_read($url, 1) : save_text($post_text);
+	$field = fields_save(getVar('post', 'field', 'array'));
 	$time = save_datetime(1, "time");
-	$refresh = $_POST['refresh'];
+	$refresh = getVar('post', 'refresh', 'num');
 	if (!$title) $stop[] = _CERROR;
 	if (!$text && !$url) $stop[] = _CERROR1;
 	if (!$text && $url) $stop[] = _RSSFAIL;
-	if (!$stop && $_POST['posttype'] == "save") {
+	$posttype = getVar('post', 'posttype', 'text');
+	if (!$stop && $posttype == "save") {
 		if ($cid) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_content SET title = '".$title."', text = '".$text."', field = '".$field."', url = '".$url."', time = '".$time."', refresh = '".$refresh."' WHERE id = '".$cid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_content SET title = :title, text = :text, field = :field, url = :url, time = :time, refresh = :refresh WHERE id = :cid', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh, 'cid' => $cid]);
 		} else {
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_content VALUES (NULL, '".$title."', '".$text."', '".$field."', '".$url."', '".$time."', '".$refresh."', '0')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_content VALUES (NULL, :title, :text, :field, :url, :time, :refresh, \'0\')', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh]);
 		}
 		header("Location: ".$admin_file.".php?op=content");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif ($posttype == "delete") {
 		content_delete($cid);
 	} else {
 		content_add();
@@ -129,8 +131,8 @@ function content_save() {
 function content_delete() {
 	global $db, $admin_file, $id;
 	$arg = func_get_args();
-	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_content WHERE id = '".$id."'");
+	$id = (!empty($arg[0])) ? $arg[0] : getVar('req', 'id', 'num');
+	if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
 	referer($admin_file.".php?op=content");
 }
 
@@ -154,10 +156,10 @@ function content_conf() {
 function content_conf_save() {
 	global $admin_file;
 	$cont = [
-		'num' => $_POST['num'],
-		'anum' => $_POST['anum'],
-		'nump' => $_POST['nump'],
-		'anump' => $_POST['anump'],
+		'num' => getVar('post', 'num', 'num'),
+		'anum' => getVar('post', 'anum', 'num'),
+		'nump' => getVar('post', 'nump', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
 	];
 	setConfigFile('content.php', $cont);
 	header("Location: ".$admin_file.".php?op=content_conf");

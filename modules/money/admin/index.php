@@ -17,8 +17,8 @@ function money() {
 	global $db, $admin_file, $conf, $confmo;
 	head();
 	$cont = money_navi(0, 0, 0, 0);
-	if (isset($_GET['send'])) $cont .= tpl_warn("warn", _MA_15, "", "", "info");
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	if (getVar('get', 'send')) $cont .= tpl_warn("warn", _MA_15, "", "", "info");
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $confmo['anum'];
 	$offset = intval($offset);
 	$result = $db->sql_query("SELECT id, sum, mail, info, com, ip, agent, date, status FROM ".PREFIX_DB."_money ORDER BY date DESC LIMIT ".$offset.", ".$confmo['anum']);
@@ -62,17 +62,16 @@ function money() {
 
 function money_add() {
 	global $db, $admin_file, $stop, $confmo;
-	if (isset($_REQUEST['id'])) {
-		$mid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT sum, mail, info, com, date FROM ".PREFIX_DB."_money WHERE id = '".$mid."'");
+	if ($mid = getVar('req', 'id', 'num')) {
+		$result = $db->sql_query('SELECT sum, mail, info, com, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $mid]);
 		list($sum, $mail, $info, $com, $date) = $db->sql_fetchrow($result);
 		$info = explode("|", $info);
 	} else {
-		$mid = $_POST['mid'];
-		$sum= $_POST['sum'];
-		$mail = $_POST['mail'];
-		$info = $_POST['info'];
-		$com = save_text($_POST['com'], 1);
+		$mid = getVar('post', 'mid', 'num');
+		$sum= getVar('post', 'sum', 'num');
+		$mail = getVar('post', 'mail', 'text');
+		$info = getVar('post', 'info', 'array');
+		$com = save_text(getVar('post', 'com', 'text'), 1);
 		$date = save_datetime(1, "date");
 	}
 	head();
@@ -112,23 +111,24 @@ function money_add() {
 
 function money_save() {
 	global $db, $admin_file, $stop;
-	$mid = intval($_POST['mid']);
-	$sum = intval($_POST['sum']);
-	$mail = text_filter($_POST['mail']);
-	$info = (isset($_POST['info'])) ? text_filter(implode("|", $_POST['info'])) : "";
-	$com = text_filter($_POST['com']);
+	$mid = getVar('post', 'mid', 'num');
+	$sum = getVar('post', 'sum', 'num');
+	$mail = text_filter(getVar('post', 'mail', 'text'));
+	$info_val = getVar('post', 'info', 'array');
+	$info = (!empty($info_val)) ? text_filter(implode("|", $info_val)) : "";
+	$com = text_filter(getVar('post', 'com', 'text'));
 	$date = save_datetime(1, "date");
 	checkemail($mail);
-	if (!$stop && $_POST['posttype'] == "save") {
+	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 		if ($mid) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_money SET sum = '".$sum."', mail = '".$mail."', info = '".$info."', com = '".$com."', date = '".$date."' WHERE id = '".$mid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_money SET sum = :sum, mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['sum' => $sum, 'mail' => $mail, 'info' => $info, 'com' => $com, 'date' => $date, 'mid' => $mid]);
 		} else {
 			$ip = getip();
 			$agent = getagent();
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_money VALUES (NULL, '".$sum."', '".$mail."', '".$info."', '".$com."', '".$ip."', '".$agent."', '".$date."', '1')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['sum' => $sum, 'mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
 		}
 		header("Location: ".$admin_file.".php?op=money");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif (getVar('post', 'posttype', 'text') == "delete") {
 		money_delete($mid);
 	} else {
 		money_add();
@@ -139,7 +139,7 @@ function money_delete() {
 	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_money WHERE id = '".$id."'");
+	if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]);
 	referer($admin_file.".php?op=money");
 }
 
@@ -165,8 +165,8 @@ function billing($title, $autor, $infos, $num, $date, $menge, $kurs, $sum) {
 
 function money_rechn() {
 	global $db, $admin_file, $conf, $confmo;
-	$id = intval($_GET['id']);
-	list($sum, $mail, $info, $com, $ip, $agent, $date) = $db->sql_fetchrow($db->sql_query("SELECT sum, mail, info, com, ip, agent, date FROM ".PREFIX_DB."_money WHERE id = '".$id."'"));
+	$id = getVar('get', 'id', 'num');
+	list($sum, $mail, $info, $com, $ip, $agent, $date) = $db->sql_fetchrow($db->sql_query('SELECT sum, mail, info, com, ip, agent, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
 	setThemeInclude();
 	$conf['defis'] = urldecode($conf['defis']);
 	$title = _RECHN." ".$conf['defis']." "._MONEY." ".$conf['defis']." ".$conf['sitename'];
@@ -180,7 +180,7 @@ function money_rechn() {
 			$i++;
 		}
 	}
-	$num = $_GET['rnum'];
+	$num = getVar('get', 'rnum', 'text');
 	$menge = $sum /100 * $confmo['kurs'] * (100 - $confmo['proz']);
 	$kurs = round($sum / $menge, 2);
 	billing($title, bb_decode($confmo['autor'], "money"), bb_decode($infos, "money"), $num, format_time($date), round($menge, 2), $kurs." EUR", $sum." EUR");
@@ -217,25 +217,25 @@ function money_conf() {
 function money_conf_save() {
 	global $admin_file;
 	$protect = array("\n" => "", "\t" => "", "\r" => "");
-	$xkurs = str_replace(",", ".", $_POST['kurs']);
-	$xkurs2 = str_replace(",", ".", $_POST['kurs2']);
-	$xform = strtr($_POST['form'], $protect);
-	$xtext= save_text($_POST['text']);
-	$xinfo = save_text($_POST['info']);
-	$xsendinfo = save_text($_POST['sendinfo']);
-	$xautor = save_text($_POST['autor']);
+	$xkurs = str_replace(",", ".", getVar('post', 'kurs', 'text'));
+	$xkurs2 = str_replace(",", ".", getVar('post', 'kurs2', 'text'));
+	$xform = strtr(getVar('post', 'form', 'raw'), $protect);
+	$xtext= save_text(getVar('post', 'text', 'text'));
+	$xinfo = save_text(getVar('post', 'info', 'text'));
+	$xsendinfo = save_text(getVar('post', 'sendinfo', 'text'));
+	$xautor = save_text(getVar('post', 'autor', 'text'));
 	$cont = [
-		'proz' => $_POST['proz'],
+		'proz' => getVar('post', 'proz', 'text'),
 		'kurs' => $xkurs,
 		'kurs2' => $xkurs2,
-		'bal' => $_POST['bal'],
-		'mail' => $_POST['mail'],
+		'bal' => getVar('post', 'bal', 'text'),
+		'mail' => getVar('post', 'mail', 'text'),
 		'form' => $xform,
-		'anum' => $_POST['anum'],
-		'anump' => $_POST['anump'],
-		'an' => $_POST['an'],
-		'pr' => $_POST['pr'],
-		'ad' => $_POST['ad'],
+		'anum' => getVar('post', 'anum', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
+		'an' => getVar('post', 'an', 'num'),
+		'pr' => getVar('post', 'pr', 'num'),
+		'ad' => getVar('post', 'ad', 'num'),
 		'text' => $xtext,
 		'info' => $xinfo,
 		'sendinfo' => $xsendinfo,
@@ -265,9 +265,11 @@ switch($op) {
 	break;
 	
 	case "money_active":
-	$db->sql_query("UPDATE ".PREFIX_DB."_money SET status = '".$act."' WHERE id = '".$id."'");
+	$act = getVar('get', 'act', 'num');
+	$id = getVar('get', 'id', 'num');
+	$db->sql_query('UPDATE '.PREFIX_DB.'_money SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
 	if ($act) {
-		list($mail) = $db->sql_fetchrow($db->sql_query("SELECT mail FROM ".PREFIX_DB."_money WHERE id = '".$id."'"));
+		list($mail) = $db->sql_fetchrow($db->sql_query('SELECT mail FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
 		$amail = ($confmo['mail']) ? $confmo['mail'] : $conf['adminmail'];
 		$subject = $conf['sitename']." - "._MONEY;
 		$msg = $conf['sitename']." - "._MONEY."<br><br>";

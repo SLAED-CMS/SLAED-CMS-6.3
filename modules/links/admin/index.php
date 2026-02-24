@@ -18,15 +18,15 @@ function links_navi() {
 function links() {
 	global $db, $admin_file, $confl, $confu;
 	head();
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $confl['anum'];
 	$offset = intval($offset);
-	if ($_GET['status'] == 1) {
+	if (getVar('get', 'status', 'num') == 1) {
 		$status = "0";
 		$field = "op=links&amp;status=1&amp;";
 		$refer = "&amp;refer=1";
 		$cont = links_navi(0, 2, 0, 0);
-	} elseif ($_GET['status'] == 2) {
+	} elseif (getVar('get', 'status', 'num') == 2) {
 		$status = "2";
 		$field = "op=links&amp;status=2&amp;";
 		$refer = "&amp;refer=1";
@@ -37,7 +37,7 @@ function links() {
 		$refer = "&amp;refer=1";
 		$cont = links_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT l.lid, l.cid, l.name, l.title, l.url, l.date, l.ip_sender, c.title, u.user_name FROM ".PREFIX_DB."_links AS l LEFT JOIN ".PREFIX_DB."_categories AS c ON (l.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (l.uid = u.user_id) WHERE l.status = '".$status."' ORDER BY l.date DESC LIMIT ".$offset.", ".$confl['anum']);
+	$result = $db->sql_query('SELECT l.lid, l.cid, l.name, l.title, l.url, l.date, l.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.user_id) WHERE l.status = :status ORDER BY l.date DESC LIMIT '.$offset.', '.$confl['anum'], ['status' => $status]);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._SITEURL."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -72,23 +72,22 @@ function links() {
 
 function links_add() {
 	global $db, $admin_file, $confu, $stop;
-	if (isset($_REQUEST['id'])) {
-		$fid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT l.cid, l.name, l.title, l.description, l.bodytext, l.url, l.date, l.email, l.ihome, l.acomm, u.user_name FROM ".PREFIX_DB."_links AS l LEFT JOIN ".PREFIX_DB."_users AS u ON (l.uid = u.user_id) WHERE lid = '".$fid."'");
+	if ($fid = getVar('req', 'id', 'num')) {
+		$result = $db->sql_query('SELECT l.cid, l.name, l.title, l.description, l.bodytext, l.url, l.date, l.email, l.ihome, l.acomm, u.user_name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.user_id) WHERE lid = :fid', ['fid' => $fid]);
 		list($cid, $uname, $title, $description, $bodytext, $url, $date, $email, $ihome, $acomm, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
-		$fid = $_POST['fid'];
-		$cid = $_POST['cid'];
-		$title = save_text($_POST['title'], 1);
-		$description = save_text($_POST['description']);
-		$bodytext = save_text($_POST['bodytext']);
-		$url = (isset($_POST['url'])) ? $_POST['url'] : "http://";
+		$fid = getVar('post', 'fid', 'num');
+		$cid = getVar('post', 'cid', 'num');
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$description = save_text(getVar('post', 'description', 'text'));
+		$bodytext = save_text(getVar('post', 'bodytext', 'text'));
+		$url = getVar('post', 'url', 'url', 'http://');
 		$date = save_datetime(1, "date");
-		$ihome = $_POST['ihome'];
-		$acomm = $_POST['acomm'];
-		$postname = $_POST['postname'];
-		$email = $_POST['email'];
+		$ihome = getVar('post', 'ihome', 'num');
+		$acomm = getVar('post', 'acomm', 'num');
+		$postname = getVar('post', 'postname', 'name');
+		$email = getVar('post', 'email', 'text');
 	}
 	head();
 	$cont = links_navi(0, 1, 0, 0);
@@ -115,33 +114,33 @@ function links_add() {
 
 function links_save() {
 	global $db, $admin_file, $stop;
-	$fid = intval($_POST['fid']);
-	$cid = intval($_POST['cid']);
-	$title = save_text($_POST['title'], 1);
-	$description = save_text($_POST['description']);
-	$bodytext = save_text($_POST['bodytext']);
-	$url = url_filter($_POST['url']);
+	$fid = getVar('post', 'fid', 'num');
+	$cid = getVar('post', 'cid', 'num');
+	$title = save_text(getVar('post', 'title', 'text'), 1);
+	$description = save_text(getVar('post', 'description', 'text'));
+	$bodytext = save_text(getVar('post', 'bodytext', 'text'));
+	$url = url_filter(getVar('post', 'url', 'text'));
 	$date = save_datetime(1, "date");
-	$ihome = $_POST['ihome'];
-	$acomm = $_POST['acomm'];
-	$postname = $_POST['postname'];
-	$email = text_filter($_POST['email']);
+	$ihome = getVar('post', 'ihome', 'num');
+	$acomm = getVar('post', 'acomm', 'num');
+	$postname = getVar('post', 'postname', 'name');
+	$email = text_filter(getVar('post', 'email', 'text'));
 	$stop = array();
 	if (!$title) $stop[] = _CERROR;
 	if (!$description) $stop[] = _CERROR1;
 	if (!$postname) $stop[] = _CERROR3;
-	if (!$fid && $db->sql_numrows($db->sql_query("SELECT title FROM ".PREFIX_DB."_links WHERE title = '".$title."'")) > 0) $stop[] = _LINKEXIST;
-	if (!$stop && $_POST['posttype'] == "save") {
+	if (!$fid && $db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_links WHERE title = :title', ['title' => $title])) > 0) $stop[] = _LINKEXIST;
+	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($fid) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_links SET cid = '".$cid."', uid = '".$postid."', name = '".$postname."', title = '".$title."', description = '".$description."', bodytext = '".$bodytext."', url = '".$url."', date = '".$date."', email = '".$email."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE lid = '".$fid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_links SET cid = :cid, uid = :uid, name = :name, title = :title, description = :description, bodytext = :bodytext, url = :url, date = :date, email = :email, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE lid = :fid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'email' => $email, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_links (lid, cid, uid, name, title, description, bodytext, url, date, email, ip_sender, ihome, acomm, status) VALUES (NULL, '".$cid."', '".$postid."', '".$postname."', '".$title."', '".$description."', '".$bodytext."', '".$url."', '".$date."', '".$email."', '".$ip."', '".$ihome."', '".$acomm."', '1')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_links (lid, cid, uid, name, title, description, bodytext, url, date, email, ip_sender, ihome, acomm, status) VALUES (NULL, :cid, :uid, :name, :title, :description, :bodytext, :url, :date, :email, :ip, :ihome, :acomm, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'email' => $email, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm]);
 		}
 		header("Location: ".$admin_file.".php?op=links");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif (getVar('post', 'posttype', 'text') == "delete") {
 		links_delete($fid);
 	} else {
 		links_add();
@@ -153,9 +152,9 @@ function links_delete() {
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND modul = 'links'");
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'links'");
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_links WHERE lid = '".$id."'");
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.$id.') AND modul = \'links\'');
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$id.') AND modul = \'links\'');
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_links WHERE lid IN ('.$id.')');
 	}
 	referer($admin_file.".php?op=links");
 }
@@ -198,31 +197,32 @@ function links_conf() {
 
 function links_conf_save() {
 	global $admin_file;
-	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
+	$defis_val = getVar('post', 'defis', 'text');
+	$xdefis = ($defis_val) ? urlencode($defis_val) : "%3E";
 	$cont = [
 		'defis' => $xdefis,
-		'linknum' => $_POST['linknum'],
-		'listnum' => $_POST['listnum'],
-		'num' => $_POST['num'],
-		'anum' => $_POST['anum'],
-		'nump' => $_POST['nump'],
-		'anump' => $_POST['anump'],
-		'homcat' => $_POST['homcat'],
-		'viewcat' => $_POST['viewcat'],
-		'catdesc' => $_POST['catdesc'],
-		'subcat' => $_POST['subcat'],
-		'addmail' => $_POST['addmail'],
-		'add' => $_POST['add'],
-		'addquest' => $_POST['addquest'],
-		'broc' => $_POST['broc'],
-		'links' => $_POST['links'],
-		'autor' => $_POST['autor'],
-		'date' => $_POST['date'],
-		'read' => $_POST['read'],
-		'hits' => $_POST['hits'],
-		'rate' => $_POST['rate'],
-		'letter' => $_POST['letter'],
-		'link' => $_POST['link'],
+		'linknum' => getVar('post', 'linknum', 'num'),
+		'listnum' => getVar('post', 'listnum', 'num'),
+		'num' => getVar('post', 'num', 'num'),
+		'anum' => getVar('post', 'anum', 'num'),
+		'nump' => getVar('post', 'nump', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
+		'homcat' => getVar('post', 'homcat', 'num'),
+		'viewcat' => getVar('post', 'viewcat', 'num'),
+		'catdesc' => getVar('post', 'catdesc', 'num'),
+		'subcat' => getVar('post', 'subcat', 'num'),
+		'addmail' => getVar('post', 'addmail', 'num'),
+		'add' => getVar('post', 'add', 'num'),
+		'addquest' => getVar('post', 'addquest', 'num'),
+		'broc' => getVar('post', 'broc', 'num'),
+		'links' => getVar('post', 'links', 'num'),
+		'autor' => getVar('post', 'autor', 'num'),
+		'date' => getVar('post', 'date', 'num'),
+		'read' => getVar('post', 'read', 'num'),
+		'hits' => getVar('post', 'hits', 'num'),
+		'rate' => getVar('post', 'rate', 'num'),
+		'letter' => getVar('post', 'letter', 'num'),
+		'link' => getVar('post', 'link', 'num'),
 	];
 	setConfigFile('links.php', $cont);
 	header("Location: ".$admin_file.".php?op=links_conf");
@@ -252,7 +252,8 @@ switch ($op) {
 	break;
 	
 	case "links_ignore":
-	$db->sql_query("UPDATE ".PREFIX_DB."_links SET status = '1' WHERE lid = '".$id."'");
+	$id = getVar('get', 'id', 'num');
+	$db->sql_query('UPDATE '.PREFIX_DB.'_links SET status = \'1\' WHERE lid = :id', ['id' => $id]);
 	header("Location: ".$admin_file.".php?op=links&status=2");
 	break;
 	

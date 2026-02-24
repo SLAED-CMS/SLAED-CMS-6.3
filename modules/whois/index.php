@@ -79,7 +79,7 @@ function mwhois() {
 	$cont .= setTemplateBasic('open');
 	$cont .= $licens_option;
 	if ($option == "licens" && !namecheck($domain_licens)) {
-		$result = $db->sql_query("SELECT website FROM ".PREFIX_DB."_clients WHERE active != '2'");
+		$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active != \'2\'');
 		while (list($website) = $db->sql_fetchrow($result)) $cwebsite[] = $website;
 		$cwebsite = implode(",", $cwebsite);
 		$cmassiv = explode(",", $cwebsite);
@@ -163,19 +163,19 @@ function send() {
 	global $db, $user, $conf, $confw, $stop;
 	if ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) {
 		$postname = getVar('post', 'postname', 'name');
-		$domain = url_filter($_POST['domain']);
-		$host = url_filter($_POST['host']);
-		$dc = url_filter($_POST['dc']);
-		$hometext = text_filter($_POST['hometext']);
+		$domain = getVar('post', 'domain', 'url');
+		$host = getVar('post', 'host', 'url');
+		$dc = getVar('post', 'dc', 'url');
+		$hometext = getVar('post', 'hometext', 'text');
 		$stop = array();
 		if (!$postname && !is_user()) $stop[] = _CERROR3;
 		if (!$domain) $stop[] = _CERROR4;
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-		if ($db->sql_numrows($db->sql_query("SELECT domain FROM ".PREFIX_DB."_whois WHERE domain = '".$domain."'")) > 0) $stop[] = _LINKEXIST;
+		if ($db->sql_numrows($db->sql_query('SELECT domain FROM '.PREFIX_DB.'_whois WHERE domain = :domain', ['domain' => $domain])) > 0) $stop[] = _LINKEXIST;
 		if (!$stop) {
 			$postid = (is_user()) ? intval($user[0]) : "";
 			$uname = (!is_user()) ? $postname : "";
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, '".$postid."', '".$uname."', '".getIp()."', NOW(), '".$domain."', '".$host."', '".$dc."', '".$hometext."', '0', '0', '0', '0')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :hometext, \'0\', \'0\', \'0\', \'0\')', ['uid' => $postid, 'name' => $uname, 'ip' => getIp(), 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confw['addmail'], $conf['name'], $puname, _WHOIS);
 			head();

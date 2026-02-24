@@ -18,10 +18,10 @@ function faq_navi() {
 function faq() {
 	global $db, $admin_file, $conf, $conffa, $confu;
 	head();
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $conffa['anum'];
 	$offset = intval($offset);
-	if ($_GET['status'] == 1) {
+	if (getVar('get', 'status', 'num') == 1) {
 		$status = "0";
 		$field = "op=faq&amp;status=1&amp;";
 		$refer = "&amp;refer=1";
@@ -32,7 +32,7 @@ function faq() {
 		$refer = "";
 		$cont = faq_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT f.fid, f.catid, f.name, f.title, f.time, f.ip_sender, t.title, u.user_name FROM ".PREFIX_DB."_faq AS f LEFT JOIN ".PREFIX_DB."_categories AS t ON (f.catid = t.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.status = '".$status."' ORDER BY f.time DESC LIMIT ".$offset.", ".$conffa['anum']);
+	$result = $db->sql_query('SELECT f.fid, f.catid, f.name, f.title, f.time, f.ip_sender, t.title, u.user_name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.catid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$conffa['anum'], ['status' => $status]);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._QUESTION."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -64,21 +64,20 @@ function faq() {
 }
 
 function faq_add() {
-	global $db, $admin_file, $stop;
-	if (isset($_REQUEST['id'])) {
-		$fid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT s.catid, s.name, s.title, s.time, s.hometext, s.ihome, s.acomm, u.user_name FROM ".PREFIX_DB."_faq AS s LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) WHERE fid = '".$fid."'");
+	global $db, $admin_file, $stop, $confu;
+	if ($fid = getVar('req', 'id', 'num')) {
+		$result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.ihome, s.acomm, u.user_name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE fid = :fid', ['fid' => $fid]);
 		list($cat, $uname, $subject, $time, $hometext, $ihome, $acomm, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
-		$fid = $_POST['fid'];
-		$postname = $_POST['postname'];
-		$subject = save_text($_POST['subject'], 1);
+		$fid = getVar('post', 'fid', 'num');
+		$postname = getVar('post', 'postname', 'name');
+		$subject = save_text(getVar('post', 'subject', 'text'), 1);
 		$time = save_datetime(1, "time");
-		$cat = $_POST['cat'];
-		$hometext = save_text($_POST['hometext']);
-		$ihome = $_POST['ihome'];
-		$acomm = $_POST['acomm'];
+		$cat = getVar('post', 'cat', 'num');
+		$hometext = save_text(getVar('post', 'hometext', 'text'));
+		$ihome = getVar('post', 'ihome', 'num');
+		$acomm = getVar('post', 'acomm', 'num');
 	}
 	head();
 	$cont = faq_navi(0, 1, 0, 0);
@@ -102,29 +101,29 @@ function faq_add() {
 
 function faq_save() {
 	global $db, $admin_file, $stop;
-	$fid = intval($_POST['fid']);
-	$postname = $_POST['postname'];
-	$subject = save_text($_POST['subject'], 1);
-	$cat = $_POST['cat'];
-	$hometext = save_text($_POST['hometext']);
-	$ihome = $_POST['ihome'];
-	$acomm = $_POST['acomm'];
+	$fid = getVar('post', 'fid', 'num');
+	$postname = getVar('post', 'postname', 'name');
+	$subject = save_text(getVar('post', 'subject', 'text'), 1);
+	$cat = getVar('post', 'cat', 'num');
+	$hometext = save_text(getVar('post', 'hometext', 'text'));
+	$ihome = getVar('post', 'ihome', 'num');
+	$acomm = getVar('post', 'acomm', 'num');
 	$time = save_datetime(1, "time");
 	$stop = array();
 	if (!$subject) $stop[] = _CERROR;
 	if (!$hometext) $stop[] = _CERROR1;
 	if (!$postname) $stop[] = _CERROR3;
-	if (!$stop && $_POST['posttype'] == "save") {
+	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($fid) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_faq SET catid = '".$cat."', uid = '".$postid."', name = '".$postname."', title = '".$subject."', time = '".$time."', hometext = '".$hometext."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE fid = '".$fid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_faq SET catid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, hometext = :hometext, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE fid = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_faq (fid, catid, uid, name, title, time, hometext, ihome, acomm, ip_sender, status) VALUES (NULL, '".$cat."', '".$postid."', '".$postname."', '".$subject."', '".$time."', '".$hometext."', '".$ihome."', '".$acomm."', '".$ip."', '1')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_faq (fid, catid, uid, name, title, time, hometext, ihome, acomm, ip_sender, status) VALUES (NULL, :cat, :postid, :postname, :subject, :time, :hometext, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
 		}
 		header("Location: ".$admin_file.".php?op=faq");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif (getVar('post', 'posttype', 'text') == "delete") {
 		faq_delete($fid);
 	} else {
 		faq_add();
@@ -136,9 +135,9 @@ function faq_delete() {
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND modul = 'faq'");
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'faq'");
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_faq WHERE fid = '".$id."'");
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.$id.') AND modul = \'faq\'');
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$id.') AND modul = \'faq\'');
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_faq WHERE fid IN ('.$id.')');
 	}
 	referer($admin_file.".php?op=faq");
 }
@@ -178,28 +177,29 @@ function faq_conf() {
 
 function faq_conf_save() {
 	global $admin_file;
-	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
+	$defis_val = getVar('post', 'defis', 'text');
+	$xdefis = ($defis_val) ? urlencode($defis_val) : "%3E";
 	$cont = [
 		'defis' => $xdefis,
-		'linknum' => $_POST['linknum'],
-		'listnum' => $_POST['listnum'],
-		'num' => $_POST['num'],
-		'anum' => $_POST['anum'],
-		'nump' => $_POST['nump'],
-		'anump' => $_POST['anump'],
-		'homcat' => $_POST['homcat'],
-		'viewcat' => $_POST['viewcat'],
-		'catdesc' => $_POST['catdesc'],
-		'subcat' => $_POST['subcat'],
-		'addmail' => $_POST['addmail'],
-		'add' => $_POST['add'],
-		'addquest' => $_POST['addquest'],
-		'autor' => $_POST['autor'],
-		'date' => $_POST['date'],
-		'read' => $_POST['read'],
-		'rate' => $_POST['rate'],
-		'letter' => $_POST['letter'],
-		'link' => $_POST['link'],
+		'linknum' => getVar('post', 'linknum', 'num'),
+		'listnum' => getVar('post', 'listnum', 'num'),
+		'num' => getVar('post', 'num', 'num'),
+		'anum' => getVar('post', 'anum', 'num'),
+		'nump' => getVar('post', 'nump', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
+		'homcat' => getVar('post', 'homcat', 'num'),
+		'viewcat' => getVar('post', 'viewcat', 'num'),
+		'catdesc' => getVar('post', 'catdesc', 'num'),
+		'subcat' => getVar('post', 'subcat', 'num'),
+		'addmail' => getVar('post', 'addmail', 'num'),
+		'add' => getVar('post', 'add', 'num'),
+		'addquest' => getVar('post', 'addquest', 'num'),
+		'autor' => getVar('post', 'autor', 'num'),
+		'date' => getVar('post', 'date', 'num'),
+		'read' => getVar('post', 'read', 'num'),
+		'rate' => getVar('post', 'rate', 'num'),
+		'letter' => getVar('post', 'letter', 'num'),
+		'link' => getVar('post', 'link', 'num'),
 	];
 	setConfigFile('faq.php', $cont);
 	header("Location: ".$admin_file.".php?op=faq_conf");

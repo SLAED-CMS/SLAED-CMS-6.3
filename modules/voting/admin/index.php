@@ -18,10 +18,10 @@ function voting() {
 	global $db, $admin_file, $conf, $confv;
 	head();
 	$cont = voting_navi(0, 0, 0, 0);
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $confv['anum'];
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT id, modul, date, enddate, title, language, typ FROM ".PREFIX_DB."_voting ORDER BY id DESC LIMIT ".$offset.", ".$confv['anum']);
+	$result = $db->sql_query('SELECT id, modul, date, enddate, title, language, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$confv['anum']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th>";
@@ -59,24 +59,23 @@ function voting() {
 
 function voting_add() {
 	global $db, $admin_file, $conf, $confv, $stop;
-	if (isset($_REQUEST['id'])) {
-		$pid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT id, modul, title, questions, answer, date, enddate, multi, language, acomm, typ, status FROM ".PREFIX_DB."_voting WHERE id = '".$pid."'");
+	if ($pid = getVar('req', 'id', 'num')) {
+		$result = $db->sql_query('SELECT id, modul, title, questions, answer, date, enddate, multi, language, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $pid]);
 		list($id, $modul, $title, $questions, $answer, $date, $enddate, $multi, $language, $acomm, $typ, $status) = $db->sql_fetchrow($result);
 		$questions = explode("|", $questions);
 		$answer = explode("|", $answer);
 	} else {
-		$modul = $_POST['modul'];
-		$title = save_text($_POST['title'], 1);
-		$questions = $_POST['questions'];
-		$answer = $_POST['answer'];
+		$modul = getVar('post', 'modul', 'text');
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$questions = getVar('post', 'questions', 'array', []);
+		$answer = getVar('post', 'answer', 'array', []);
 		$date = save_datetime(1, "date");
 		$enddate = save_datetime(1, "enddate");
-		$multi = intval($_POST['multi']);
-		$language = $_POST['language'];
-		$acomm = intval($_POST['acomm']);
-		$typ = intval($_POST['typ']);
-		$status = intval($_POST['status']);
+		$multi = getVar('post', 'multi', 'num');
+		$language = getVar('post', 'language', 'text');
+		$acomm = getVar('post', 'acomm', 'num');
+		$typ = getVar('post', 'typ', 'num');
+		$status = getVar('post', 'status', 'num');
 	}
 	head();
 	$cont = voting_navi(0, 1, 0, 0);
@@ -132,11 +131,11 @@ function voting_add() {
 
 function voting_save() {
 	global $db, $admin_file, $stop;
-	$id = intval($_POST['id']);
-	$modul = analyze($_POST['modul']);
-	$title = save_text($_POST['title'], 1);
-	$questions = $_POST['questions'];
-	$answer = $_POST['answer'];
+	$id = getVar('post', 'id', 'num');
+	$modul = analyze(getVar('post', 'modul', 'text'));
+	$title = save_text(getVar('post', 'title', 'text'), 1);
+	$questions = getVar('post', 'questions', 'array', []);
+	$answer = getVar('post', 'answer', 'array', []);
 	for ($q = 0; $q < count($questions); $q++) {
 		if ($questions[$q] != "") {
 			$quest[] = $questions[$q];
@@ -147,22 +146,22 @@ function voting_save() {
 	$answ = is_array($answ) ? implode("|", $answ) : "";
 	$date = save_datetime(1, "date");
 	$enddate = save_datetime(1, "enddate");
-	$multi = intval($_POST['multi']);
-	$language = $_POST['language'];
-	$acomm = ($modul) ? "0" : intval($_POST['acomm']);
-	$typ = intval($_POST['typ']);
-	$status = (!$typ) ? "0" : intval($_POST['status']);
+	$multi = getVar('post', 'multi', 'num');
+	$language = getVar('post', 'language', 'text');
+	$acomm = ($modul) ? "0" : getVar('post', 'acomm', 'num');
+	$typ = getVar('post', 'typ', 'num');
+	$status = (!$typ) ? "0" : getVar('post', 'status', 'num');
 	$stop = array();
 	if (!$title) $stop[] = _CERROR;
-	if (!$stop && $_POST['posttype'] == "save") {
+	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 		if ($id) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_voting SET modul = '".$modul."', title = '".$title."', questions = '".$quest."', answer = '".$answ."', date = '".$date."', enddate = '".$enddate."', multi = '".$multi."', language = '".$language."', acomm = '".$acomm."', typ = '".$typ."', status = '".$status."' WHERE id = '".$id."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, questions = :quest, answer = :answ, date = :date, enddate = :enddate, multi = :multi, language = :language, acomm = :acomm, typ = :typ, status = :status WHERE id = :id', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'date' => $date, 'enddate' => $enddate, 'multi' => $multi, 'language' => $language, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id]);
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_voting (id, modul, title, questions, answer, date, enddate, multi, language, acomm, ip, typ, status) VALUES (NULL, '".$modul."', '".$title."', '".$quest."', '".$answ."', '".$date."', '".$enddate."', '".$multi."', '".$language."', '".$acomm."', '".$ip."', '".$typ."', '".$status."')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, questions, answer, date, enddate, multi, language, acomm, ip, typ, status) VALUES (NULL, :modul, :title, :quest, :answ, :date, :enddate, :multi, :language, :acomm, :ip, :typ, :status)', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'date' => $date, 'enddate' => $enddate, 'multi' => $multi, 'language' => $language, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status]);
 		}
 		header("Location: ".$admin_file.".php?op=voting");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif (getVar('post', 'posttype', 'text') == "delete") {
 		voting_delete($id);
 	} else {
 		voting_add();
@@ -174,8 +173,8 @@ function voting_delete() {
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND modul = 'voting'");
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_voting WHERE id = '".$id."'");
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'voting\'', ['id' => $id]);
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
 	}
 	referer($admin_file.".php?op=voting");
 }
@@ -215,15 +214,16 @@ function voting_conf() {
 
 function voting_conf_save() {
 	global $admin_file;
-	$xvoting_t = (!$_POST['voting_t']) ? 86400 : intval($_POST['voting_t'] * 86400);
+	$voting_t_val = getVar('post', 'voting_t', 'num');
+	$xvoting_t = (!$voting_t_val) ? 86400 : intval($voting_t_val * 86400);
 	$cont = [
 		'voting_t' => $xvoting_t,
-		'num' => $_POST['num'],
-		'anum' => $_POST['anum'],
-		'nump' => $_POST['nump'],
-		'anump' => $_POST['anump'],
-		'answ' => $_POST['answ'],
-		'block' => $_POST['block'],
+		'num' => getVar('post', 'num', 'num'),
+		'anum' => getVar('post', 'anum', 'num'),
+		'nump' => getVar('post', 'nump', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
+		'answ' => getVar('post', 'answ', 'num'),
+		'block' => getVar('post', 'block', 'num'),
 	];
 	setConfigFile('voting.php', $cont);
 	header("Location: ".$admin_file.".php?op=voting_conf");

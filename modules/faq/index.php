@@ -163,9 +163,9 @@ function view() {
 	$pag = getVar('get', 'num', 'num', '1');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 's.catid');
-	$result = $db->sql_query("SELECT s.catid, s.name, s.title, s.time, s.hometext, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM ".PREFIX_DB."_faq AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) WHERE s.fid = '".$id."' AND s.time <= NOW() AND s.status != '0' ".$cwhere);
+	$result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.fid = :id AND s.time <= NOW() AND s.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query("UPDATE ".PREFIX_DB."_faq SET counter = counter+1 WHERE fid = '".$id."'");
+		$db->sql_query('UPDATE '.PREFIX_DB.'_faq SET counter = counter+1 WHERE fid = :id', ['id' => $id]);
 		list($cid, $uname, $title, $time, $hometext, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		head();
@@ -193,10 +193,10 @@ function view() {
 		$cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conffa['nump'], '', '#'.$id, '');
 		if ($conffa['link']) {
 			$limit = intval($conffa['linknum']);
-			list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(fid) FROM ".PREFIX_DB."_faq WHERE catid = '".$cid."' AND fid != '".$id."' AND time <= NOW() AND status != '0'"));
+			list($count) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(fid) FROM '.PREFIX_DB.'_faq WHERE catid = :cid AND fid != :id AND time <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->sql_query("SELECT fid, title, time, hometext FROM ".PREFIX_DB."_faq WHERE catid = '".$cid."' AND fid != '".$id."' AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.", ".$limit);
+				$result = $db->sql_query('SELECT fid, title, time, hometext FROM '.PREFIX_DB.'_faq WHERE catid = :cid AND fid != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
 				$cont .= setTemplateBasic('assoc-open', array('{%title%}' => _CATASSOC));
 				while(list($aid, $title, $time, $hometext) = $db->sql_fetchrow($result)) {
 					$date = ($conffa['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</span>' : '';
@@ -262,7 +262,7 @@ function send() {
 		if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_faq (fid, catid, uid, name, title, time, hometext, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', NOW(), '".$hometext."', '".getIp()."', '0')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_faq (fid, catid, uid, name, title, time, hometext, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :hometext, :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'hometext' => $hometext, 'ip' => getIp()]);
 			update_points(6);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($conffa['addmail'], $conf['name'], $puname, _FAQ);

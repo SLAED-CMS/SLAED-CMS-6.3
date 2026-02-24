@@ -15,7 +15,7 @@ function contact_navi() {
 }
 
 function contact_conf() {
-	global $admin_file;
+	global $admin_file, $confco;
 	head();
 	$cont = contact_navi(0, 0, 0, 0);
 	$cont .= checkPerms('contact.php');
@@ -32,8 +32,8 @@ function contact_conf() {
 function contact_conf_save() {
 	global $admin_file;
 	$cont = [
-		'info' => save_text($_POST['info']),
-		'admins' => $_POST['admins'],
+		'info' => save_text(getVar('post', 'info', 'text')),
+		'admins' => getVar('post', 'admins', 'num'),
 	];
 	setConfigFile('contact.php', $cont);
 	header('Location: '.$admin_file.'.php?op=contact_conf');

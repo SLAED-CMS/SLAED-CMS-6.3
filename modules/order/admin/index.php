@@ -19,8 +19,8 @@ function order() {
 	global $db, $admin_file, $conf, $confor;
 	head();
 	$cont = order_navi(0, 0, 0, 0);
-	if (isset($_GET['send'])) $cont .= tpl_warn("warn", _OR_8, "", "", "info");
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	if (getVar('get', 'send', 'num')) $cont .= tpl_warn("warn", _OR_8, "", "", "info");
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $confor['anum'];
 	$offset = intval($offset);
 	$result = $db->sql_query("SELECT id, mail, info, com, ip, agent, date, status FROM ".PREFIX_DB."_order ORDER BY date DESC LIMIT ".$offset.", ".$confor['anum']);
@@ -54,15 +54,14 @@ function order() {
 
 function order_add() {
 	global $db, $admin_file, $stop, $confor;
-	if (isset($_REQUEST['id'])) {
-		$mid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT mail, info, com, date FROM ".PREFIX_DB."_order WHERE id = '".$mid."'");
+	if ($mid = getVar('req', 'id', 'num')) {
+		$result = $db->sql_query('SELECT mail, info, com, date FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
 		list($mail, $info, $com, $date) = $db->sql_fetchrow($result);
 	} else {
-		$mid = $_POST['mid'];
-		$mail = $_POST['mail'];
-		$info = fields_save($_POST['field']);
-		$com = save_text($_POST['com'], 1);
+		$mid = getVar('post', 'mid', 'num');
+		$mail = getVar('post', 'mail', 'text');
+		$info = fields_save(getVar('post', 'field', 'array'));
+		$com = save_text(getVar('post', 'com', 'text'), 1);
 		$date = save_datetime(1, "date");
 	}
 	head();
@@ -83,22 +82,22 @@ function order_add() {
 
 function order_save() {
 	global $db, $admin_file, $stop;
-	$mid = intval($_POST['mid']);
-	$mail = text_filter($_POST['mail']);
-	$info = fields_save($_POST['field']);
-	$com = text_filter($_POST['com']);
+	$mid = getVar('post', 'mid', 'num');
+	$mail = text_filter(getVar('post', 'mail', 'text'));
+	$info = fields_save(getVar('post', 'field', 'array'));
+	$com = text_filter(getVar('post', 'com', 'text'));
 	$date = save_datetime(1, "date");
 	checkemail($mail);
-	if (!$stop && $_POST['posttype'] == "save") {
+	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 		if ($mid) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_order SET mail = '".$mail."', info = '".$info."', com = '".$com."', date = '".$date."' WHERE id = '".$mid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['mail' => $mail, 'info' => $info, 'com' => $com, 'date' => $date, 'mid' => $mid]);
 		} else {
 			$ip = getip();
 			$agent = getagent();
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_order VALUES (NULL, '".$mail."', '".$info."', '".$com."', '".$ip."', '".$agent."', '".$date."', '1')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
 		}
 		header("Location: ".$admin_file.".php?op=order");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif (getVar('post', 'posttype', 'text') == "delete") {
 		order_delete($mid);
 	} else {
 		order_add();
@@ -109,7 +108,7 @@ function order_delete() {
 	global $db, $admin_file, $id;
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_order WHERE id = '".$id."'");
+	if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
 	referer($admin_file.".php?op=order");
 }
 
@@ -136,16 +135,16 @@ function order_conf() {
 }
 function order_conf_save() {
 	global $admin_file;
-	$xtext= save_text($_POST['text']);
-	$xinfo = save_text($_POST['info']);
-	$xsendinfo = save_text($_POST['sendinfo']);
+	$xtext= save_text(getVar('post', 'text', 'text'));
+	$xinfo = save_text(getVar('post', 'info', 'text'));
+	$xsendinfo = save_text(getVar('post', 'sendinfo', 'text'));
 	$cont = [
-		'mail' => $_POST['mail'],
-		'anum' => $_POST['anum'],
-		'anump' => $_POST['anump'],
-		'an' => $_POST['an'],
-		'pr' => $_POST['pr'],
-		'ad' => $_POST['ad'],
+		'mail' => getVar('post', 'mail', 'text'),
+		'anum' => getVar('post', 'anum', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
+		'an' => getVar('post', 'an', 'num'),
+		'pr' => getVar('post', 'pr', 'num'),
+		'ad' => getVar('post', 'ad', 'num'),
 		'text' => $xtext,
 		'info' => $xinfo,
 		'sendinfo' => $xsendinfo,
@@ -174,9 +173,11 @@ switch($op) {
 	break;
 	
 	case "order_active":
-	$db->sql_query("UPDATE ".PREFIX_DB."_order SET status = '".$act."' WHERE id = '".$id."'");
+	$act = getVar('get', 'act', 'num');
+	$id = getVar('get', 'id', 'num');
+	$db->sql_query('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
 	if ($act) {
-		list($mail) = $db->sql_fetchrow($db->sql_query("SELECT mail FROM ".PREFIX_DB."_order WHERE id = '".$id."'"));
+		list($mail) = $db->sql_fetchrow($db->sql_query('SELECT mail FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
 		$amail = ($confor['mail']) ? $confor['mail'] : $conf['adminmail'];
 		$subject = $conf['sitename']." - "._ORDER;
 		$msg = $conf['sitename']." - "._ORDER."<br><br>";

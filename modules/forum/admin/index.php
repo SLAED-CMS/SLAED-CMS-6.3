@@ -15,18 +15,18 @@ function forum_navi() {
 
 function forum_synch() {
 	global $db;
-	$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics = '0', posts = '0', lpost_id = '0' WHERE modul = 'forum'");
-	$result = $db->sql_query("SELECT id, parentid FROM ".PREFIX_DB."_categories WHERE modul = 'forum' ORDER BY ordern");
+	$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost_id = \'0\' WHERE modul = \'forum\'');
+	$result = $db->sql_query('SELECT id, parentid FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
 	while (list($id, $parentid) = $db->sql_fetchrow($result)) $massiv[$id] = array($parentid);
 	foreach ($massiv as $key => $val) {
-		list($topics) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_forum WHERE pid = '0' AND catid = '".$key."'"));
-		list($posts) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_forum WHERE pid != '0' AND catid = '".$key."'"));
-		list($id, $pid) = $db->sql_fetchrow($db->sql_query("SELECT id, pid FROM ".PREFIX_DB."_forum WHERE catid = '".$key."' AND ((pid != '0' && status = '1') || (pid = '0' && status > '1')) ORDER BY id DESC LIMIT 1"));
+		list($topics) = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid = \'0\' AND catid = :key', ['key' => $key]));
+		list($posts) = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid != \'0\' AND catid = :key', ['key' => $key]));
+		list($id, $pid) = $db->sql_fetchrow($db->sql_query('SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE catid = :key AND ((pid != \'0\' && status = \'1\') || (pid = \'0\' && status > \'1\')) ORDER BY id DESC LIMIT 1', ['key' => $key]));
 		$lid = ($pid) ? $pid : $id;
-		$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics = '".$topics."', posts = '".$posts."', lpost_id = '".$lid."' WHERE id = '".$key."' AND modul = 'forum'");
+		$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost_id = :lid WHERE id = :key AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'key' => $key]);
 		$flag = $val[0];
 		while ($flag != 0) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics = topics+".$topics.", posts = posts+".$posts.", lpost_id = '".$lid."' WHERE id = '".$flag."' AND modul = 'forum'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = topics+:topics, posts = posts+:posts, lpost_id = :lid WHERE id = :flag AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'flag' => $flag]);
 			$flag = intval($massiv[$flag][0]);
 		}
 	}
@@ -35,7 +35,7 @@ function forum_synch() {
 	$cont .= tpl_warn("warn", _SYNCHIN, "", "", "info");
 	$cont .= tpl_eval("open");
 	$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._FORUM."</th><th>"._NEWTOPICS."</th><th>"._MESSAGES."</th><th class=\"{sorter: false}\">"._STATUS."</th></tr></thead><tbody>";
-	$result = $db->sql_query("SELECT id, title, description, cstatus, topics, posts FROM ".PREFIX_DB."_categories WHERE modul = 'forum' ORDER BY ordern");
+	$result = $db->sql_query('SELECT id, title, description, cstatus, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
 	while (list($id, $title, $description, $cstatus, $topics, $posts) = $db->sql_fetchrow($result)) {
 		$descript = ($description) ? $description : _NO;
 		$ltitle = title_tip(_DESCRIPTION.": ".$descript)."<a href=\"index.php?name=forum&amp;cat=".$id."\" target=\"_blank\" title=\"".$title."\" class=\"sl_note\">".cutstr($title, 60)."</a>";
@@ -93,24 +93,25 @@ function forum_conf() {
 
 function forum_conf_save() {
 	global $admin_file;
-	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
+	$post_defis = getVar('post', 'defis', 'text');
+	$xdefis = ($post_defis) ? urlencode($post_defis) : "%3E";
 	$cont = [
 		'defis' => $xdefis,
-		'listnum' => $_POST['listnum'],
-		'pop' => $_POST['pop'],
-		'letter' => $_POST['letter'],
-		'num' => $_POST['num'],
-		'pnum' => $_POST['pnum'],
-		'recycle' => $_POST['recycle'],
-		'sort' => $_POST['sort'],
-		'anonpost' => $_POST['anonpost'],
-		'add' => $_POST['add'],
-		'qreply' => $_POST['qreply'],
-		'ledit' => $_POST['ledit'],
-		'addmail' => $_POST['addmail'],
-		'privat' => $_POST['privat'],
-		'profil' => $_POST['profil'],
-		'web' => $_POST['web'],
+		'listnum' => getVar('post', 'listnum', 'num'),
+		'pop' => getVar('post', 'pop', 'num'),
+		'letter' => getVar('post', 'letter', 'num'),
+		'num' => getVar('post', 'num', 'num'),
+		'pnum' => getVar('post', 'pnum', 'num'),
+		'recycle' => getVar('post', 'recycle', 'num'),
+		'sort' => getVar('post', 'sort', 'num'),
+		'anonpost' => getVar('post', 'anonpost', 'num'),
+		'add' => getVar('post', 'add', 'num'),
+		'qreply' => getVar('post', 'qreply', 'num'),
+		'ledit' => getVar('post', 'ledit', 'num'),
+		'addmail' => getVar('post', 'addmail', 'num'),
+		'privat' => getVar('post', 'privat', 'num'),
+		'profil' => getVar('post', 'profil', 'num'),
+		'web' => getVar('post', 'web', 'num'),
 	];
 	setConfigFile('forum.php', $cont);
 	header("Location: ".$admin_file.".php?op=forum_conf");

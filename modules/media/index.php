@@ -117,10 +117,10 @@ function liste() {
 		$field = 'op=liste&';
 		$order = "WHERE m.date <= NOW() AND m.status != '0'";
 	}
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $listnum;
 	$offset = intval($offset);
-	$result = $db->sql_query("SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, c.title, u.user_name FROM ".PREFIX_DB."_media AS m LEFT JOIN ".PREFIX_DB."_categories AS c ON (m.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (m.uid=u.user_id) ".$order." ".$cwhere." ORDER BY date DESC LIMIT ".$offset.", ".$listnum);
+	$result = $db->sql_query('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, c.title, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid=u.user_id) '.$order.' '.$cwhere.' ORDER BY date DESC LIMIT '.$offset.', '.$listnum);
 	head();
 	$cont = navigate(_LIST);
 	if ($db->sql_numrows($result) > 0) {
@@ -145,12 +145,12 @@ function liste() {
 
 function view() {
 	global $db, $admin_file, $conf, $confu, $confm;
-	$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
-	$word = isset($_GET['word']) ? text_filter($_GET['word']) : "";
+	$id = getVar('get', 'id', 'num');
+	$word = getVar('get', 'word', 'text');
 	$cwhere = catmids($conf['name'], "m.cid");
-	$result = $db->sql_query("SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.hits, m.status, c.title, c.description, c.img, u.user_name FROM ".PREFIX_DB."_media AS m LEFT JOIN ".PREFIX_DB."_categories AS c ON (m.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (m.uid = u.user_id) WHERE m.id = '".$id."' AND m.date <= NOW() AND m.status != '0' ".$cwhere);
+	$result = $db->sql_query('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.hits, m.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.id = :id AND m.date <= NOW() AND m.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query("UPDATE ".PREFIX_DB."_media SET hits = hits+1 WHERE id = '".$id."'");
+		$db->sql_query('UPDATE '.PREFIX_DB.'_media SET hits = hits+1 WHERE id = :id', ['id' => $id]);
 		list($cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $date, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
 		$ptitle = ($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;
 		head();
@@ -209,10 +209,10 @@ function view() {
 		$cont .= tpl_eval("basic", $cid, $cimg, $ctitle, $id, search_color($ptitle, $word), search_color(bb_decode($description, $conf['name']), $word), "", $post, $date, $reads, "", "", $rating, $admin, $favorites, $goback, "", "", "", "", $broc, "", "", $year, $director, $roles, $createdby, $duration, $lang, $format, $quality, $size, $released, $note, _MURLS, $mlinks);
 		if ($confm['link']) {
 			$limit = intval($confm['linknum']);
-			list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_media WHERE cid = '".$cid."' AND id != '".$id."' AND date <= NOW() AND status != '0'"));
+			list($count) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->sql_query("SELECT id, title, subtitle, description, date FROM ".PREFIX_DB."_media WHERE cid = '".$cid."' AND id != '".$id."' AND date <= NOW() AND status != '0' ORDER BY date DESC LIMIT ".$random.", ".$limit);
+				$result = $db->sql_query('SELECT id, title, subtitle, description, date FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\' ORDER BY date DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
 				$cont .= tpl_eval("assoc-open", _CATASSOC);
 				while(list($aid, $title, $subtitle, $hometext, $time) = $db->sql_fetchrow($result)) {
 					$title = ($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;
@@ -242,24 +242,25 @@ function add() {
 	global $db, $user, $conf, $confu, $confm, $stop;
 	if ((is_user() && $confm['add'] == 1) || (!is_user() && $confm['addquest'] == 1)) {
 		$date = getdate();
-		$title = save_text($_POST['title'], 1);
-		$subtitle = save_text($_POST['subtitle'], 1);
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$subtitle = save_text(getVar('post', 'subtitle', 'text'), 1);
 		$mtitle = isset($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;
-		$cid = intval($_POST['cid']);
-		$myear =  isset($_POST['year']) ? intval($_POST['year']) : $date[year];
-		$director = save_text($_POST['director']);
-		$roles = save_text($_POST['roles']);
-		$description = save_text($_POST['description']);
-		$createdby = save_text($_POST['createdby']);
-		$duration = save_text($_POST['duration']);
-		$mlang = text_filter($_POST['lang']);
-		$note = save_text($_POST['note']);
-		$mformat = text_filter($_POST['format']);
-		$mquality = text_filter($_POST['quality']);
-		$size = save_text($_POST['size']);
-		$released = save_text($_POST['released']);
-		$links = $_POST['links'];
-		$postname = text_filter(substr($_POST['postname'], 0, 25));
+		$cid = getVar('post', 'cid', 'num');
+		$myear =  getVar('post', 'year', 'num', $date['year']);
+		$director = save_text(getVar('post', 'director', 'text'));
+		$roles = save_text(getVar('post', 'roles', 'text'));
+		$description = save_text(getVar('post', 'description', 'text'));
+		$createdby = save_text(getVar('post', 'createdby', 'text'));
+		$duration = save_text(getVar('post', 'duration', 'text'));
+		$mlang = text_filter(getVar('post', 'lang', 'text'));
+		$note = save_text(getVar('post', 'note', 'text'));
+		$mformat = text_filter(getVar('post', 'format', 'text'));
+		$mquality = text_filter(getVar('post', 'quality', 'text'));
+		$size = save_text(getVar('post', 'size', 'text'));
+		$released = save_text(getVar('post', 'released', 'text'));
+		$links = getVar('post', 'links', 'array');
+		if (!$links || !is_array($links)) $links = [];
+		$postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
 		
 		head();
 		$cont = navigate(_ADD);
@@ -278,8 +279,8 @@ function add() {
 		."<tr><td>"._MSUBTITLE.":</td><td><input type=\"text\" name=\"subtitle\" value=\"".$subtitle."\" maxlength=\"100\" class=\"sl_field ".$conf['style']."\" placeholder=\""._MSUBTITLE."\"></td></tr>"
 		."<tr><td>"._CATEGORY.":</td><td>".getcat($conf['name'], $cid, "cid", $conf['style'], "<option value=\"\">"._HOMECAT."</option>")."</td></tr>"
 		."<tr><td>"._MYEAR.":</td><td><select name=\"year\" class=\"sl_field ".$conf['style']."\">";
-		$year = $date[year] - 100;
-		while($year <= ($date[year] + 1)) {
+		$year = $date['year'] - 100;
+		while($year <= ($date['year'] + 1)) {
 			$sel = ($year == $myear) ? " selected" : "";
 			$cont .= "<option value=\"".$year."\"".$sel.">".$year."</option>";
 			$year++;
@@ -320,8 +321,9 @@ function add() {
 		$i = 0;
 		while($i < $confm['links']) {
 			$a = $i + 1;
-			$display = ($i != 0 && $links[$i] == "") ? " sl_none" : "";
-			$cont .= "<table id=\"med".$i."\" class=\"sl_table_form".$display."\"><tr><td><a OnClick=\"HideShow('med".$a."', 'slide', 'up', 500);\" title=\""._ADD."\" class=\"sl_plus\">"._URL." - ".$a.":</a></td><td><input type=\"text\" name=\"links[]\" value=\"".text_filter($links[$i])."\" class=\"sl_field ".$conf['style']."\"></td></tr></table>";
+			$lnk_val = isset($links[$i]) ? $links[$i] : '';
+			$display = ($i != 0 && $lnk_val == "") ? " sl_none" : "";
+			$cont .= "<table id=\"med".$i."\" class=\"sl_table_form".$display."\"><tr><td><a OnClick=\"HideShow('med".$a."', 'slide', 'up', 500);\" title=\""._ADD."\" class=\"sl_plus\">"._URL." - ".$a.":</a></td><td><input type=\"text\" name=\"links[]\" value=\"".text_filter($lnk_val)."\" class=\"sl_field ".$conf['style']."\"></td></tr></table>";
 			$i++;
 		}
 		$cont .= "</td></tr>"
@@ -337,33 +339,34 @@ function add() {
 function send() {
 	global $db, $user, $conf, $confm, $stop;
 	if ((is_user() && $confm['add'] == 1) || (!is_user() && $confm['addquest'] == 1)) {
-		$postname = text_filter(substr($_POST['postname'], 0, 25));
-		$cid = intval($_POST['cid']);
-		$title = save_text($_POST['title'], 1);
-		$subtitle = save_text($_POST['subtitle'], 1);
-		$year = intval($_POST['year']);
-		$director = save_text($_POST['director']);
-		$roles = save_text($_POST['roles']);
-		$description = save_text($_POST['description']);
-		$createdby = save_text($_POST['createdby']);
-		$duration = save_text($_POST['duration']);
-		$lang = text_filter($_POST['lang']);
-		$note = save_text($_POST['note']);
-		$format = text_filter($_POST['format']);
-		$quality = text_filter($_POST['quality']);
-		$size = save_text($_POST['size']);
-		$released = save_text($_POST['released']);
-		$links = text_filter(implode(",", str_replace(",", ".", $_POST['links'])));
+		$postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
+		$cid = getVar('post', 'cid', 'num');
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$subtitle = save_text(getVar('post', 'subtitle', 'text'), 1);
+		$year = getVar('post', 'year', 'num');
+		$director = save_text(getVar('post', 'director', 'text'));
+		$roles = save_text(getVar('post', 'roles', 'text'));
+		$description = save_text(getVar('post', 'description', 'text'));
+		$createdby = save_text(getVar('post', 'createdby', 'text'));
+		$duration = save_text(getVar('post', 'duration', 'text'));
+		$lang = text_filter(getVar('post', 'lang', 'text'));
+		$note = save_text(getVar('post', 'note', 'text'));
+		$format = text_filter(getVar('post', 'format', 'text'));
+		$quality = text_filter(getVar('post', 'quality', 'text'));
+		$size = save_text(getVar('post', 'size', 'text'));
+		$released = save_text(getVar('post', 'released', 'text'));
+		$links_arr = getVar('post', 'links', 'array');
+		$links = ($links_arr) ? text_filter(implode(",", str_replace(",", ".", $links_arr))) : "";
 		$stop = array();
 		if (!$title) $stop[] = _CERROR;
 		if (!$description) $stop[] = _CERROR1;
 		if (!$postname && !is_user()) $stop[] = _CERROR3;
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-		if ($db->sql_numrows($db->sql_query("SELECT title, subtitle FROM ".PREFIX_DB."_media WHERE title = '".$title."' AND subtitle = '".$subtitle."'")) > 0) $stop[] = _MEDIAEXIST;
-		if (!$stop && $_POST['posttype'] == "save") {
+		if ($db->sql_numrows($db->sql_query('SELECT title, subtitle FROM '.PREFIX_DB.'_media WHERE title = :title AND subtitle = :subtitle', ['title' => $title, 'subtitle' => $subtitle])) > 0) $stop[] = _MEDIAEXIST;
+		if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 			$postid = (is_user()) ? intval($user[0]) : "";
 			$uname = (!is_user()) ? $postname : "";
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', '".$subtitle."', '".$year."', '".$director."', '".$roles."', '".$description."', '".$createdby."', '".$duration."', '".$lang."', '".$note."', '".$format."', '".$quality."', '".$size."', '".$released."', '".$links."', NOW(), '".getIp()."', '0')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
 			update_points(25);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confm['addmail'], $conf['name'], $puname, _MEDIA);
@@ -382,7 +385,7 @@ function broken() {
 	global $db, $conf, $confm;
 	$id = getVar('get', 'id', 'num');
 	if ($confm['broc'] == '1' && $id) {
-		$db->sql_query("UPDATE ".PREFIX_DB."_media SET status = '2' WHERE id = '".$id."' AND status != '0'");
+		$db->sql_query('UPDATE '.PREFIX_DB.'_media SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
 		head();
 		echo navigate(_BROCMEDIA).setTemplateWarning('warn', array('time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEM));
 		foot();

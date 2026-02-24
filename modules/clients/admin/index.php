@@ -48,18 +48,18 @@ function clients() {
 function clients_add() {
 	global $db, $admin_file, $stop;
 	if (isset($_REQUEST['id'])) {
-		$cid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT title, infotext, url, num, code, prod_id, status FROM ".PREFIX_DB."_clients_down WHERE id = '".$cid."'");
+		$cid = getVar('req', 'id', 'num');
+		$result = $db->sql_query('SELECT title, infotext, url, num, code, prod_id, status FROM '.PREFIX_DB.'_clients_down WHERE id = :cid', ['cid' => $cid]);
 		list($title, $infotext, $url, $num, $code, $prod_id, $status) = $db->sql_fetchrow($result);
 	} else {
-		$cid = $_POST['cid'];
-		$title = save_text($_POST['title'], 1);
-		$infotext = save_text($_POST['infotext']);
-		$url = $_POST['url'];
-		$num = $_POST['num'];
-		$code = $_POST['code'];
-		$prod_id =  $_POST['prod_id'];
-		$status = $_POST['status'];
+		$cid = getVar('post', 'cid', 'num');
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$infotext = save_text(getVar('post', 'infotext', 'text'));
+		$url = getVar('post', 'url', 'text');
+		$num = getVar('post', 'num', 'text');
+		$code = getVar('post', 'code', 'text');
+		$prod_id = getVar('post', 'prod_id', 'num');
+		$status = getVar('post', 'status', 'num');
 	}
 	head();
 	$cont = clients_navi(0, 1, 0, 0);
@@ -82,24 +82,25 @@ function clients_add() {
 
 function clients_save() {
 	global $db, $admin_file, $stop;
-	$cid = intval($_POST['cid']);
-	$title = save_text($_POST['title'], 1);
-	$infotext = save_text($_POST['infotext']);
-	$url = $_POST['url'];
-	$num = $_POST['num'];
-	$code = $_POST['code'];
-	$prod_id =  $_POST['prod_id'];
-	$status = $_POST['status'];
+	$cid = getVar('post', 'cid', 'num');
+	$title = save_text(getVar('post', 'title', 'text'), 1);
+	$infotext = save_text(getVar('post', 'infotext', 'text'));
+	$url = getVar('post', 'url', 'text');
+	$num = getVar('post', 'num', 'text');
+	$code = getVar('post', 'code', 'text');
+	$prod_id = getVar('post', 'prod_id', 'num');
+	$status = getVar('post', 'status', 'num');
 	if (!$title) $stop[] = _CERROR;
 	if (!$infotext) $stop[] = _CERROR1;
-	if (!$stop && $_POST['posttype'] == "save") {
+	$posttype = getVar('post', 'posttype', 'text');
+	if (!$stop && $posttype == "save") {
 		if ($cid) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_clients_down SET title = '".$title."', infotext = '".$infotext."', url = '".$url."', num = '".$num."', code = '".$code."', prod_id = '".$prod_id."', status = '".$status."' WHERE id = '".$cid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_clients_down SET title = :title, infotext = :infotext, url = :url, num = :num, code = :code, prod_id = :prod_id, status = :status WHERE id = :cid', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'prod_id' => $prod_id, 'status' => $status, 'cid' => $cid]);
 		} else {
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_clients_down VALUES (NULL, '".$title."', '".$infotext."', '".$url."', '".$num."', '".$code."', '0', '".$prod_id."', '".$status."')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_clients_down VALUES (NULL, :title, :infotext, :url, :num, :code, \'0\', :prod_id, :status)', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'prod_id' => $prod_id, 'status' => $status]);
 		}
 		header("Location: ".$admin_file.".php?op=clients");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif ($posttype == "delete") {
 		clients_delete($cid);
 	} else {
 		clients_add();
@@ -109,8 +110,8 @@ function clients_save() {
 function clients_delete() {
 	global $db, $admin_file, $id;
 	$arg = func_get_args();
-	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query("DELETE FROM ".PREFIX_DB."_clients_down WHERE id = '".$id."'");
+	$id = (!empty($arg[0])) ? $arg[0] : getVar('req', 'id', 'num');
+	if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
 	header("Location: ".$admin_file.".php?op=clients");
 }
 
@@ -134,7 +135,9 @@ switch($op) {
 	break;
 	
 	case "clients_active":
-	$db->sql_query("UPDATE ".PREFIX_DB."_clients_down SET status = '".$act."' WHERE id = '".$id."'");
+	$id = getVar('req', 'id', 'num');
+	$act = getVar('req', 'act', 'num');
+	$db->sql_query('UPDATE '.PREFIX_DB.'_clients_down SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
 	header("Location: ".$admin_file.".php?op=clients");
 	break;
 	

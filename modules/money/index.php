@@ -14,9 +14,10 @@ function money() {
 	global $conf, $confmo, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
-		$mail = (isset($_POST['mail'])) ? text_filter($_POST['mail']) : $userinfo['user_email'];
+		$mail_val = getVar('post', 'mail', 'text');
+		$mail = ($mail_val) ? text_filter($mail_val) : $userinfo['user_email'];
 	} else {
-		$mail = (isset($_POST['mail'])) ? text_filter($_POST['mail']) : "";
+		$mail = text_filter(getVar('post', 'mail', 'text'));
 	}
 	head();
 	$cont = setTemplateBasic('title', array('{%title%}' => _MONEY));
@@ -64,8 +65,8 @@ function money() {
 	."<form name=\"form\"><table class=\"sl_table_form\"><tr><td>"._MO_2.": <input type=\"number\" name=\"a\" style=\"width: 65px;\" class=\"sl_field ".$conf['style']."\"> EUR</td><td>"._MO_3." E: <input name=\"total\" style=\"width: 65px;\" class=\"sl_field ".$conf['style']."\"> EUR</td><td><input type=\"button\" value=\""._MO_4."\" class=\"sl_but_blue\" OnClick=Rechner2(this.form)></td></tr></table></form>";
 	$cont .= setTemplateBasic('close');
 	if ($confmo['an']) {
-		$sum = (isset($_POST['sum'])) ? intval($_POST['sum']) : "";
-		$info = $_POST['info'];
+		$sum = getVar('post', 'sum', 'num');
+		$info = getVar('post', 'info', 'array', []);
 		#$com = save_text($_POST['com'], 1);
 		$com = getVar('post', 'com', 'text');
 		#if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
@@ -94,9 +95,9 @@ function money() {
 function send() {
 	global $db, $conf, $confmo, $stop;
 	if ($confmo['an']) {
-		$sum = intval($_POST['sum']);
-		$mail = text_filter($_POST['mail']);
-		$info = $_POST['info'];
+		$sum = getVar('post', 'sum', 'num');
+		$mail = text_filter(getVar('post', 'mail', 'text'));
+		$info = getVar('post', 'info', 'array', []);
 		$stop = array();
 		$i = 0;
 		foreach ($info as $val) {
@@ -111,13 +112,13 @@ function send() {
 				$stop[] = _ERROR_ALL;
 			}
 		}
-		$com = save_text($_POST['com'], 1);
+		$com = save_text(getVar('post', 'com', 'text'), 1);
 		if (!$sum) $stop[] = _MO_SERROR;
 		checkemail($mail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			$status = ($confmo['pr']) ? "0" : "1";
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_money VALUES (NULL, '".$sum."', '".$mail."', '".$binfo."', '".$com."', '".getIp()."', '".getAgent()."', NOW(), '".$status."')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :binfo, :com, :ip, :agent, NOW(), :status)', ['sum' => $sum, 'mail' => $mail, 'binfo' => $binfo, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
 			if ($confmo['ad']) {
 				$form = explode(",", $confmo['form']);
 				$i = 0;

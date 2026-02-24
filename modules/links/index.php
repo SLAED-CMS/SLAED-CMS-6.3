@@ -152,9 +152,9 @@ function view() {
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'f.cid');
-	$result = $db->sql_query("SELECT f.cid, f.name, f.title, f.url, f.description, f.bodytext, f.date, f.email, f.counter, f.acomm, f.votes, f.totalvotes, f.hits, f.status, c.title, c.description, c.img, u.user_name FROM ".PREFIX_DB."_links AS f LEFT JOIN ".PREFIX_DB."_categories AS c ON (f.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE lid = '".$id."' AND date <= NOW() AND f.status != '0' ".$cwhere);
+	$result = $db->sql_query('SELECT f.cid, f.name, f.title, f.url, f.description, f.bodytext, f.date, f.email, f.counter, f.acomm, f.votes, f.totalvotes, f.hits, f.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_links AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE lid = :id AND date <= NOW() AND f.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query("UPDATE ".PREFIX_DB."_links SET counter = counter+1 WHERE lid = '".$id."'");
+		$db->sql_query('UPDATE '.PREFIX_DB.'_links SET counter = counter+1 WHERE lid = :id', ['id' => $id]);
 		list($cid, $uname, $title, $authorurl, $description, $bodytext, $date, $aemail, $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		head();
@@ -187,10 +187,10 @@ function view() {
 		$cont .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '', '{%size%}' => '', '{%version%}' => '', '{%download%}' => $download, '{%broken%}' => $broken, '{%email%}' => $email, '{%home%}' => $home));
 		if ($confl['link']) {
 			$limit = intval($confl['linknum']);
-			list($count) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".PREFIX_DB."_links WHERE cid = '".$cid."' AND lid != '".$id."' AND date <= NOW() AND status != '0'"));
+			list($count) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(lid) FROM '.PREFIX_DB.'_links WHERE cid = :cid AND lid != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->sql_query("SELECT lid, title, description, bodytext, date FROM ".PREFIX_DB."_links WHERE cid = '".$cid."' AND lid != '".$id."' AND date <= NOW() AND status != '0' ORDER BY date DESC LIMIT ".$random.", ".$limit);
+				$result = $db->sql_query('SELECT lid, title, description, bodytext, date FROM '.PREFIX_DB.'_links WHERE cid = :cid AND lid != :id AND date <= NOW() AND status != \'0\' ORDER BY date DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
 				$cont .= setTemplateBasic('assoc-open', array('{%title%}' => _CATASSOC));
 				while(list($aid, $title, $hometext, $bodytext, $time) = $db->sql_fetchrow($result)) {
 					$date = ($confl['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</span>' : '';
@@ -271,11 +271,11 @@ function send() {
 		if (!$authorurl) $stop[] = _CERROR4;
 		checkemail($authormail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-		if ($db->sql_numrows($db->sql_query("SELECT url FROM ".PREFIX_DB."_links WHERE url = '".$authorurl."'")) > 0) $stop[] = _LINKEXIST;
+		if ($db->sql_numrows($db->sql_query('SELECT url FROM '.PREFIX_DB.'_links WHERE url = :authorurl', ['authorurl' => $authorurl])) > 0) $stop[] = _LINKEXIST;
 		if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_links (lid, cid, uid, name, title, description, bodytext, url, date, email, ip_sender, status) VALUES (NULL, '".$cid."', '".$postid."', '".$uname."', '".$title."', '".$description."', '".$bodytext."', '".$authorurl."', NOW(), '".$authormail."', '".getIp()."', '0')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_links (lid, cid, uid, name, title, description, bodytext, url, date, email, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :description, :bodytext, :authorurl, NOW(), :authormail, :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'authorurl' => $authorurl, 'authormail' => $authormail, 'ip' => getIp()]);
 			update_points(21);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confl['addmail'], $conf['name'], $puname, _LINKS);
@@ -294,7 +294,7 @@ function broken() {
 	global $db, $conf, $confl;
 	$id = getVar('get', 'id', 'num');
 	if ($confl['broc'] == '1' && $id) {
-		$db->sql_query("UPDATE ".PREFIX_DB."_links SET status = '2' WHERE lid = '".$id."' AND status != '0'");
+		$db->sql_query('UPDATE '.PREFIX_DB.'_links SET status = \'2\' WHERE lid = :id AND status != \'0\'', ['id' => $id]);
 		head();
 		echo navigate(_BROCLINK).setTemplateWarning('warn', array('time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEL));
 		foot();
@@ -307,8 +307,8 @@ function loading() {
 	global $db, $conf, $confl;
 	$id = getVar('post', 'id', 'num');
 	if (($id && is_user()) || ($id && $confl['links'] == '1')) {
-		$db->sql_query("UPDATE ".PREFIX_DB."_links SET hits = hits+1 WHERE lid = '".$id."'");
-		list($title, $url) = $db->sql_fetchrow($db->sql_query("SELECT title, url FROM ".PREFIX_DB."_links WHERE lid = '".$id."'"));
+		$db->sql_query('UPDATE '.PREFIX_DB.'_links SET hits = hits+1 WHERE lid = :id', ['id' => $id]);
+		list($title, $url) = $db->sql_fetchrow($db->sql_query('SELECT title, url FROM '.PREFIX_DB.'_links WHERE lid = :id', ['id' => $id]));
 		update_points(23);
 		$info = sprintf(_NOTELINKLOAD, $title, domain($url));
 		head();

@@ -69,8 +69,10 @@ function newuser() {
             $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOREG));
         } else {
             $unkey = md5_salt($conf['sitekey']);
-            $user_name = (isset($_POST[$unkey])) ? text_filter(substr($_POST[$unkey], 0, 25)) : '';
-            $user_email = (isset($_POST['user_email'])) ? text_filter($_POST['user_email']) : '';
+            $user_name = getVar('post', $unkey, 'text');
+            $user_name = ($user_name) ? text_filter(substr($user_name, 0, 25)) : '';
+            $user_email = getVar('post', 'user_email', 'text');
+            $user_email = ($user_email) ? text_filter($user_email) : '';
             $captcha = ($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
             $cont .= setTemplateBasic('open');
             $cont .= '<form action="index.php?name='.$conf['name'].'" method="post">'
@@ -102,12 +104,12 @@ function finnewuser() {
         foot();
     } else {
         $unkey = md5_salt($conf['sitekey']);
-        $user_name = text_filter($_POST[$unkey], 1);
-        $user_email = text_filter($_POST['user_email'], 1);
+        $user_name = text_filter(getVar('post', $unkey, 'text'), 1);
+        $user_email = text_filter(getVar('post', 'user_email', 'text'), 1);
         $rules = getVar('post', 'rules', 'num');
         checkuser($user_name, $user_email, $rules);
-        $user_password = htmlspecialchars(substr($_POST['user_password'], 0, 40));
-        $user_password2 = htmlspecialchars(substr($_POST['user_password2'], 0, 40));
+        $user_password = htmlspecialchars(substr(getVar('post', 'user_password', 'text'), 0, 40));
+        $user_password2 = htmlspecialchars(substr(getVar('post', 'user_password2', 'text'), 0, 40));
         if (($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) && checkCaptcha(2)) $stop[] = _SECCODEINCOR;
         if ($user_password == '' && $user_password2 == '') {
             $user_password = getPass($confu['minpass']);
@@ -576,8 +578,9 @@ function passlost() {
 
 function passmail() {
     global $db, $conf, $confu, $stop;
-    $email = $_POST['email'];
-    $code = (isset($_POST['code'])) ? substr($_POST['code'], 0, 10) : false;
+    $email = getVar('post', 'email', 'text');
+    $code_post = getVar('post', 'code', 'text');
+    $code = ($code_post) ? substr($code_post, 0, 10) : false;
     checkemail($email);
     if (!$stop) {
         $result = $db->sql_query("SELECT user_name, user_email, user_password, user_network FROM ".PREFIX_DB."_users WHERE user_email = '".$email."'");
@@ -616,8 +619,8 @@ function passmail() {
 function login() {
     global $db, $conf, $stop;
     if (($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) && checkCaptcha(2)) $stop[] = _SECCODEINCOR;
-    $uname = htmlspecialchars(trim(substr($_POST['user_name'], 0, 25)));
-    $upass = htmlspecialchars(trim(substr($_POST['user_password'], 0, 25)));
+    $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));
+    $upass = htmlspecialchars(trim(substr(getVar('post', 'user_password', 'text'), 0, 25)));
     if (!$uname || !$upass) $stop[] = _LOGININCOR;
     $result = $db->sql_query("SELECT user_id, user_name, user_email, user_password, user_storynum, user_blockon, user_theme FROM ".PREFIX_DB."_users WHERE user_name = '".$uname."' AND user_password = '".md5_salt($upass)."' AND user_network = ''");
     if ($db->sql_numrows($result) != 1) $stop[] = _LOGININCOR;
@@ -750,7 +753,7 @@ function edithome() {
 
 function savehome() {
     global $db, $user, $conf, $stop;
-    $user_email = text_filter($_POST['user_email']);
+    $user_email = text_filter(getVar('post', 'user_email', 'text'));
     checkemail($user_email);
     if (!$stop) {
         $user_id = intval($user[0]);
@@ -758,23 +761,23 @@ function savehome() {
         $checkp = htmlspecialchars($user[2]);
         list($id, $name, $pass) = $db->sql_fetchrow($db->sql_query("SELECT user_id, user_name, user_password FROM ".PREFIX_DB."_users WHERE user_id = '".$user_id."'"));
         if ($id == $user_id && $name == $checkn && $pass == $checkp) {
-            $user_website = url_filter($_POST['user_website']);
-            $user_occ = text_filter($_POST['user_occ']);
-            $user_from = text_filter($_POST['user_from']);
-            $user_interests = text_filter($_POST['user_interests']);
-            $user_sig = save_text($_POST['user_sig']);
-            $user_viewemail = intval($_POST['user_viewemail']);
-            $user_storynum = intval($_POST['user_storynum']);
-            $user_blockon = intval($_POST['user_blockon']);
-            $user_block = save_text($_POST['user_block']);
-            $user_theme = text_filter($_POST['user_theme']);
-            $user_newsletter = intval($_POST['user_newsletter']);
-            $user_fsmail = intval($_POST['user_fsmail']);
-            $user_psmail = intval($_POST['user_psmail']);
+            $user_website = url_filter(getVar('post', 'user_website', 'text'));
+            $user_occ = text_filter(getVar('post', 'user_occ', 'text'));
+            $user_from = text_filter(getVar('post', 'user_from', 'text'));
+            $user_interests = text_filter(getVar('post', 'user_interests', 'text'));
+            $user_sig = save_text(getVar('post', 'user_sig', 'text'));
+            $user_viewemail = getVar('post', 'user_viewemail', 'num');
+            $user_storynum = getVar('post', 'user_storynum', 'num');
+            $user_blockon = getVar('post', 'user_blockon', 'num');
+            $user_block = save_text(getVar('post', 'user_block', 'text'));
+            $user_theme = text_filter(getVar('post', 'user_theme', 'text'));
+            $user_newsletter = getVar('post', 'user_newsletter', 'num');
+            $user_fsmail = getVar('post', 'user_fsmail', 'num');
+            $user_psmail = getVar('post', 'user_psmail', 'num');
             $user_birthday = save_datetime(2, "user_birthday");
-            $user_gender = intval($_POST['user_gender']);
-            $user_field = fields_save($_POST['field']);
-            $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_email = '".$user_email."', user_website = '".$user_website."', user_viewemail = '".$user_viewemail."', user_occ = '".$user_occ."', user_from = '".$user_from."', user_interests = '".$user_interests."', user_sig = '".$user_sig."', user_storynum = '".$user_storynum."', user_blockon = '".$user_blockon."', user_block = '".$user_block."', user_theme = '".$user_theme."', user_newsletter = '".$user_newsletter."', user_fsmail = '".$user_fsmail."', user_psmail = '".$user_psmail."', user_birthday = '".$user_birthday."', user_gender = '".$user_gender."', user_field = '".$user_field."' WHERE user_id = '".$user_id."'");
+            $user_gender = getVar('post', 'user_gender', 'num');
+            $user_field = fields_save(getVar('post', 'field', 'array'));
+            $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_email = :user_email, user_website = :user_website, user_viewemail = :user_viewemail, user_occ = :user_occ, user_from = :user_from, user_interests = :user_interests, user_sig = :user_sig, user_storynum = :user_storynum, user_blockon = :user_blockon, user_block = :user_block, user_theme = :user_theme, user_newsletter = :user_newsletter, user_fsmail = :user_fsmail, user_psmail = :user_psmail, user_birthday = :user_birthday, user_gender = :user_gender, user_field = :user_field WHERE user_id = :user_id', ['user_email' => $user_email, 'user_website' => $user_website, 'user_viewemail' => $user_viewemail, 'user_occ' => $user_occ, 'user_from' => $user_from, 'user_interests' => $user_interests, 'user_sig' => $user_sig, 'user_storynum' => $user_storynum, 'user_blockon' => $user_blockon, 'user_block' => $user_block, 'user_theme' => $user_theme, 'user_newsletter' => $user_newsletter, 'user_fsmail' => $user_fsmail, 'user_psmail' => $user_psmail, 'user_birthday' => $user_birthday, 'user_gender' => $user_gender, 'user_field' => $user_field, 'user_id' => $user_id]);
             $userinfo = getusrinfo();
             setCookies('account', time() + intval($conf['user_c_t']), array($userinfo['user_id'], $userinfo['user_name'], $userinfo['user_password'], $userinfo['user_storynum'], $userinfo['user_blockon'], $userinfo['user_theme']));
             header("Location: index.php?name=".$conf['name']."&op=edithome");
@@ -786,7 +789,9 @@ function savehome() {
 
 function saveavatar() {
     global $user, $db, $conf, $confu, $stop;
-    $avatar = (isset($_POST['avatar'])) ? $_POST['avatar'] : $_GET['avatar'];
+    $post_avatar = getVar('post', 'avatar', 'text');
+    $get_avatar = getVar('get', 'avatar', 'text');
+    $avatar = ($post_avatar) ? $post_avatar : $get_avatar;
     if (is_user()) {
         $user_id = intval($user[0]);
         if (!$avatar && $confu['aupload']) {
@@ -809,9 +814,9 @@ function saveavatar() {
 
 function savepass() {
     global $user, $db, $confu, $conf, $stop;
-    $newpass = (isset($_POST['newpass'])) ? $_POST['newpass'] : false;
-    $newpass2 = (isset($_POST['newpass2'])) ? $_POST['newpass2'] : false;
-    $oldpass = (isset($_POST['oldpass'])) ? $_POST['oldpass'] : false;
+    $newpass = getVar('post', 'newpass', 'text', false);
+    $newpass2 = getVar('post', 'newpass2', 'text', false);
+    $oldpass = getVar('post', 'oldpass', 'text', false);
     if (is_user() && $oldpass && $newpass && $newpass2) {
         if (strlen($newpass) >= $confu['minpass']) {
             $oldpass = md5_salt($oldpass);

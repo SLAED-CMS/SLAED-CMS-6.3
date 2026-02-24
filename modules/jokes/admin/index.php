@@ -18,10 +18,10 @@ function jokes_navi() {
 function jokes() {
 	global $db, $admin_file, $conf, $confj, $confu;
 	head();
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $confj['anum'];
 	$offset = intval($offset);
-	if ($_GET['status'] == 1) {
+	if (getVar('get', 'status', 'num') == 1) {
 		$status = "0";
 		$field = "op=jokes&amp;status=1&amp;";
 		$refer = "&amp;refer=1";
@@ -32,7 +32,7 @@ function jokes() {
 		$refer = "";
 		$cont = jokes_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.ip_sender, c.title, u.user_name FROM ".PREFIX_DB."_jokes AS j LEFT JOIN ".PREFIX_DB."_categories AS c ON (j.cat = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (j.uid = u.user_id) WHERE j.status = '".$status."' ORDER BY j.date DESC LIMIT ".$offset.", ".$confj['anum']);
+	$result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.status = :status ORDER BY j.date DESC LIMIT '.$offset.', '.$confj['anum'], ['status' => $status]);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -65,18 +65,17 @@ function jokes() {
 
 function jokes_add() {
 	global $db, $admin_file, $confu, $stop;
-	if (isset($_REQUEST['id'])) {
-		$jokeid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM ".PREFIX_DB."_jokes AS j LEFT JOIN ".PREFIX_DB."_users AS u ON (j.uid = u.user_id) WHERE jokeid = '".$jokeid."'");
+	if ($jokeid = getVar('req', 'id', 'num')) {
+		$result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE jokeid = :jokeid', ['jokeid' => $jokeid]);
 		list($jokeid, $uname, $date, $title, $cat, $joke, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
-		$jokeid = $_POST['jokeid'];
-		$postname = $_POST['postname'];
+		$jokeid = getVar('post', 'jokeid', 'num');
+		$postname = getVar('post', 'postname', 'name');
 		$date = save_datetime(1, "date");
-		$title = save_text($_POST['title'], 1);
-		$cat = $_POST['cat'];
-		$joke = save_text($_POST['joke']);
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$cat = getVar('post', 'cat', 'num');
+		$joke = save_text(getVar('post', 'joke', 'text'));
 	}
 	head();
 	$cont = jokes_navi(0, 1, 0, 0);
@@ -97,28 +96,28 @@ function jokes_add() {
 
 function jokes_save() {
 	global $db, $admin_file, $stop;
-	$jokeid = intval($_POST['jokeid']);
-	$postname = $_POST['postname'];
+	$jokeid = getVar('post', 'jokeid', 'num');
+	$postname = getVar('post', 'postname', 'name');
 	$date = save_datetime(1, "date");
-	$title = save_text($_POST['title'], 1);
-	$cat = $_POST['cat'];
-	$joke = save_text($_POST['joke']);
+	$title = save_text(getVar('post', 'title', 'text'), 1);
+	$cat = getVar('post', 'cat', 'num');
+	$joke = save_text(getVar('post', 'joke', 'text'));
 	$stop = array();
 	if (!$title) $stop[] = _CERROR;
 	if (!$joke) $stop[] = _CERROR1;
 	if (!$postname) $stop[] = _CERROR3;
-	if (!$jokeid && $db->sql_numrows($db->sql_query("SELECT title FROM ".PREFIX_DB."_jokes WHERE title = '".$title."'")) > 0) $stop[] = _JOKEEXIST;
-	if (!$stop && $_POST['posttype'] == "save") {
+	if (!$jokeid && $db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
+	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($jokeid) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_jokes SET uid = '".$postid."', name = '".$postname."', date = '".$date."', title = '".$title."', cat = '".$cat."', joke = '".$joke."', status = '1' WHERE jokeid = '".$jokeid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, date = :date, title = :title, cat = :cat, joke = :joke, status = \'1\' WHERE jokeid = :jokeid', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, '".$postid."', '".$postname."', '".$date."', '".$title."', '".$cat."', '".$joke."', '".$ip."', '1')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, :uid, :name, :date, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);
 		}
 		header("Location: ".$admin_file.".php?op=jokes");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif (getVar('post', 'posttype', 'text') == "delete") {
 		jokes_delete($jokeid);
 	} else {
 		jokes_add();
@@ -130,8 +129,8 @@ function jokes_delete() {
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'jokes'");
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_jokes WHERE jokeid = '".$id."'");
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$id.') AND modul = \'jokes\'');
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_jokes WHERE jokeid IN ('.$id.')');
 	}
 	referer($admin_file.".php?op=jokes");
 }
@@ -164,21 +163,22 @@ function jokes_conf() {
 
 function jokes_conf_save() {
 	global $admin_file;
-	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
+	$defis_val = getVar('post', 'defis', 'text');
+	$xdefis = ($defis_val) ? urlencode($defis_val) : "%3E";
 	$cont = [
 		'defis' => $xdefis,
-		'num' => $_POST['num'],
-		'anum' => $_POST['anum'],
-		'nump' => $_POST['nump'],
-		'anump' => $_POST['anump'],
-		'homcat' => $_POST['homcat'],
-		'catdesc' => $_POST['catdesc'],
-		'subcat' => $_POST['subcat'],
-		'addmail' => $_POST['addmail'],
-		'add' => $_POST['add'],
-		'addquest' => $_POST['addquest'],
-		'date' => $_POST['date'],
-		'rate' => $_POST['rate'],
+		'num' => getVar('post', 'num', 'num'),
+		'anum' => getVar('post', 'anum', 'num'),
+		'nump' => getVar('post', 'nump', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
+		'homcat' => getVar('post', 'homcat', 'num'),
+		'catdesc' => getVar('post', 'catdesc', 'num'),
+		'subcat' => getVar('post', 'subcat', 'num'),
+		'addmail' => getVar('post', 'addmail', 'num'),
+		'add' => getVar('post', 'add', 'num'),
+		'addquest' => getVar('post', 'addquest', 'num'),
+		'date' => getVar('post', 'date', 'num'),
+		'rate' => getVar('post', 'rate', 'num'),
 	];
 	setConfigFile('jokes.php', $cont);
 	header("Location: ".$admin_file.".php?op=jokes_conf");

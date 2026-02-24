@@ -13,10 +13,10 @@ $confrs = $conf['rss'] ?? [];
 
 function info() {
     global $db, $conf, $confrs;
-    $url = (isset($_POST['url'])) ? url_filter($_POST['url']) : "";
-    $mod = (isset($_POST['mod'])) ? analyze($_POST['mod']) : "news";
-    $cat = (isset($_POST['cat'])) ? intval($_POST['cat']) : "";
-    $num = (isset($_POST['num'])) ? intval($_POST['num']) : "";
+    $url = getVar('post', 'url', 'url');
+    $mod = getVar('post', 'mod', 'text', 'news');
+    $cat = getVar('post', 'cat', 'num');
+    $num = getVar('post', 'num', 'num');
     
     $rssmod = ($mod) ? "&amp;name=".$mod : "";
     $rsscat = ($cat) ? "&amp;cat=".$cat : "";

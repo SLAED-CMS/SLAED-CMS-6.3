@@ -160,7 +160,7 @@ function view() {
 	$cwhere = catmids($conf['name'], 's.catid');
 	$result = $db->sql_query("SELECT s.sid, s.pid, s.catid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.description, c.img, u.user_name FROM ".PREFIX_DB."_help AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.aid = u.user_id) WHERE (s.sid = '".$id."' OR s.pid = '".$id."') AND s.uid = '".$uid."' AND s.time <= NOW() ".$cwhere." ORDER BY s.time ASC");
 	if ($db->sql_numrows($result) > 0) {
-		$db->sql_query("UPDATE ".PREFIX_DB."_help SET counter = counter+1 WHERE sid = '".$id."'");
+		$db->sql_query('UPDATE '.PREFIX_DB.'_help SET counter = counter+1 WHERE sid = :id', ['id' => $id]);
 		head();
 		$cont = navigate(_HELPINFO);
 		$a = 0;
@@ -199,7 +199,7 @@ function view() {
 function add_view($id) {
 	global $db, $conf, $confh;
 	if ((is_user() && $confh['add'] == 1)) {
-		$result = $db->sql_query("SELECT catid, status FROM ".PREFIX_DB."_help WHERE sid = '".$id."'");
+		$result = $db->sql_query('SELECT catid, status FROM '.PREFIX_DB.'_help WHERE sid = :id', ['id' => $id]);
 		list($hcatid, $status) = $db->sql_fetchrow($result);
 		$cont = setTemplateBasic('open');
 		$cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
@@ -252,8 +252,8 @@ function send() {
 		if (!$hometext && !$pid) $stop[] = _CERROR1;
 		if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
 			$postid = intval($user[0]);
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_help (sid, pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (NULL, '".$pid."', '".$cid."', '".$postid."', '".$postid."', '".$title."', NOW(), '".$hometext."', '".$field."', '".getIp()."', '0')");
-			if ($pid) $db->sql_query("UPDATE ".PREFIX_DB."_help SET comments = comments+1, status = '".$status."' WHERE sid = '".$pid."'");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_help (sid, pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (NULL, :pid, :cid, :postid, :postid, :title, NOW(), :hometext, :field, :ip, \'0\')', ['pid' => $pid, 'cid' => $cid, 'postid' => $postid, 'title' => $title, 'hometext' => $hometext, 'field' => $field, 'ip' => getIp()]);
+			if ($pid) $db->sql_query('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE sid = :pid', ['status' => $status, 'pid' => $pid]);
 			$puname = (is_user()) ? $user[1] : '';
 			addmail($confh['addmail'], $conf['name'], $puname, _HELP);
 			head();

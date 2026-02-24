@@ -18,15 +18,16 @@ function files_navi() {
 function files() {
 	global $db, $admin_file, $conff, $confu;
 	head();
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $conff['anum'];
 	$offset = intval($offset);
-	if ($_GET['status'] == 1) {
+	$status_get = getVar('get', 'status', 'num');
+	if ($status_get == 1) {
 		$status = "0";
 		$field = "op=files&amp;status=1&amp;";
 		$refer = "&amp;refer=1";
 		$cont = files_navi(0, 2, 0, 0);
-	} elseif ($_GET['status'] == 2) {
+	} elseif ($status_get == 2) {
 		$status = "2";
 		$field = "op=files&amp;status=2&amp;";
 		$refer = "";
@@ -37,7 +38,7 @@ function files() {
 		$refer = "";
 		$cont = files_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT f.lid, f.cid, f.name, f.title, f.date, f.ip_sender, c.title, u.user_name FROM ".PREFIX_DB."_files AS f LEFT JOIN ".PREFIX_DB."_categories AS c ON (f.cid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.status = '".$status."' ORDER BY f.date DESC LIMIT ".$offset.", ".$conff['anum']);
+	$result = $db->sql_query('SELECT f.lid, f.cid, f.name, f.title, f.date, f.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.status = :status ORDER BY f.date DESC LIMIT '.$offset.', '.$conff['anum'], ['status' => $status]);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
@@ -72,26 +73,26 @@ function files() {
 function files_add() {
 	global $db, $admin_file, $conff, $confu, $stop;
 	if (isset($_REQUEST['id'])) {
-		$fid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.date, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.user_name FROM ".PREFIX_DB."_files AS f LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE lid = '".$fid."'");
+		$fid = getVar('req', 'id', 'num');
+		$result = $db->sql_query('SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.date, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE lid = :fid', ['fid' => $fid]);
 		list($cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $homepage, $ihome, $acomm, $user_name) = $db->sql_fetchrow($result);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
-		$fid = $_POST['fid'];
-		$cid = $_POST['cid'];
-		$title = save_text($_POST['title'], 1);
-		$description = save_text($_POST['description']);
-		$bodytext = save_text($_POST['bodytext']);
-		$url = $_POST['url'];
-		$path = text_filter($_POST['path']);
+		$fid = getVar('post', 'fid', 'num');
+		$cid = getVar('post', 'cid', 'num');
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$description = save_text(getVar('post', 'description', 'text'));
+		$bodytext = save_text(getVar('post', 'bodytext', 'text'));
+		$url = getVar('post', 'url', 'text');
+		$path = text_filter(getVar('post', 'path', 'text'));
 		$date = save_datetime(1, "date");
-		$ihome = $_POST['ihome'];
-		$acomm = $_POST['acomm'];
-		$filesize = $_POST['filesize'];
-		$version = $_POST['version'];
-		$postname = $_POST['postname'];
-		$email = $_POST['email'];
-		$homepage = (isset($_POST['homepage'])) ? $_POST['homepage'] : "http://";
+		$ihome = getVar('post', 'ihome', 'num');
+		$acomm = getVar('post', 'acomm', 'num');
+		$filesize = getVar('post', 'filesize', 'num');
+		$version = getVar('post', 'version', 'text');
+		$postname = getVar('post', 'postname', 'name');
+		$email = getVar('post', 'email', 'text');
+		$homepage = getVar('post', 'homepage', 'text', "http://");
 	}
 	head();
 	$cont = files_navi(0, 1, 0, 0);
@@ -133,35 +134,35 @@ function files_add() {
 
 function files_save() {
 	global $db, $admin_file, $stop, $conff;
-	$fid = intval($_POST['fid']);
-	$cid = intval($_POST['cid']);
-	$postname = $_POST['postname'];
-	$title = save_text($_POST['title'], 1);
-	$description = save_text($_POST['description']);
-	$bodytext = save_text($_POST['bodytext']);
-	$url = $_POST['url'];
-	$path = text_filter($_POST['path']);
+	$fid = getVar('post', 'fid', 'num');
+	$cid = getVar('post', 'cid', 'num');
+	$postname = getVar('post', 'postname', 'name');
+	$title = save_text(getVar('post', 'title', 'text'), 1);
+	$description = save_text(getVar('post', 'description', 'text'));
+	$bodytext = save_text(getVar('post', 'bodytext', 'text'));
+	$url = getVar('post', 'url', 'text');
+	$path = text_filter(getVar('post', 'path', 'text'));
 	$date = save_datetime(1, "date");
-	$ihome = $_POST['ihome'];
-	$acomm = $_POST['acomm'];
-	$filesize = intval($_POST['filesize']);
-	$version = text_filter($_POST['version']);
-	$email = text_filter($_POST['email']);
-	$homepage = url_filter($_POST['homepage']);
+	$ihome = getVar('post', 'ihome', 'num');
+	$acomm = getVar('post', 'acomm', 'num');
+	$filesize = getVar('post', 'filesize', 'num');
+	$version = text_filter(getVar('post', 'version', 'text'));
+	$email = text_filter(getVar('post', 'email', 'text'));
+	$homepage = url_filter(getVar('post', 'homepage', 'text'));
 	$stop = array();
 	if (!$title) $stop[] = _CERROR;
 	if (!$description) $stop[] = _CERROR1;
 	if (!$postname) $stop[] = _CERROR3;
-	if (!$fid && $db->sql_numrows($db->sql_query("SELECT title FROM ".PREFIX_DB."_files WHERE title = '".$title."'")) > 0) $stop[] = _MEDIAEXIST;
+	if (!$fid && $db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
 	$filename = upload(1, $conff['path'], $conff['typefile'], $conff['max_size'], "files", "1600", "1600", '1');
 	$url = ($filename) ? $conff['path']."/".$filename : $url;
 	$filesize = ($filename) ? filesize($url) : $filesize;
 	if ($stop) {
 		$stop = $stop;
-	} elseif (!$url && $_POST['posttype'] == "save") {
+	} elseif (!$url && getVar('post', 'posttype', 'text') == "save") {
 		$stop[] = _UPLOADEROR2;
 	}
-	if (!$stop && $_POST['posttype'] == "save") {
+	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($fid) {
@@ -173,13 +174,13 @@ function files_save() {
 					$url = $path."/".$filel[0];
 				}
 			}
-			$db->sql_query("UPDATE ".PREFIX_DB."_files SET cid = '".$cid."', uid = '".$postid."', name = '".$postname."', title = '".$title."', description = '".$description."', bodytext = '".$bodytext."', url = '".$url."', date = '".$date."', filesize = '".$filesize."', version = '".$version."', email = '".$email."', homepage = '".$homepage."', ihome = '".$ihome."', acomm = '".$acomm."', status = '1' WHERE lid = '".$fid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :postid, name = :postname, title = :title, description = :description, bodytext = :bodytext, url = :url, date = :date, filesize = :filesize, version = :version, email = :email, homepage = :homepage, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE lid = :fid', ['cid' => $cid, 'postid' => $postid, 'postname' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, ihome, acomm, status) VALUES (NULL, '".$cid."', '".$postid."', '".$postname."', '".$title."', '".$description."', '".$bodytext."', '".$url."', '".$date."', '".$filesize."', '".$version."', '".$email."', '".$homepage."', '".$ip."', '".$ihome."', '".$acomm."', '1')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, ihome, acomm, status) VALUES (NULL, :cid, :postid, :postname, :title, :description, :bodytext, :url, :date, :filesize, :version, :email, :homepage, :ip, :ihome, :acomm, \'1\')', ['cid' => $cid, 'postid' => $postid, 'postname' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm]);
 		}
 		header("Location: ".$admin_file.".php?op=files");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif (getVar('post', 'posttype', 'text') == "delete") {
 		files_delete($fid);
 	} else {
 		files_add();
@@ -191,11 +192,11 @@ function files_delete() {
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	if ($id) {
-		list($url) = $db->sql_fetchrow($db->sql_query("SELECT url FROM ".PREFIX_DB."_files WHERE lid = '".$id."'"));
+		list($url) = $db->sql_fetchrow($db->sql_query('SELECT url FROM '.PREFIX_DB.'_files WHERE lid = :id', ['id' => $id]));
 		if (file_exists($url)) unlink($url);
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND modul = 'files'");
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'files'");
-		$db->sql_query("DELETE FROM ".PREFIX_DB."_files WHERE lid = '".$id."'");
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'files\'', ['id' => $id]);
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'files\'', ['id' => $id]);
+		$db->sql_query('DELETE FROM '.PREFIX_DB.'_files WHERE lid = :id', ['id' => $id]);
 	}
 	referer($admin_file.".php?op=files");
 }
@@ -254,40 +255,43 @@ function files_conf() {
 
 function files_conf_save() {
 	global $admin_file;
-	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
+	$post_defis = getVar('post', 'defis', 'text');
+	$xdefis = ($post_defis) ? urlencode($post_defis) : "%3E";
 	$protect = array("\n" => "", "\t" => "", "\r" => "", " " => "");
-	$xmax_size = (!intval($_POST['max_size'])) ? 1048576 : $_POST['max_size'];
-	$xtypefile = (!$_POST['typefile']) ? "zip,gzip,7z,rar,tar" : strtolower(strtr($_POST['typefile'], $protect));
+	$max_size = getVar('post', 'max_size', 'num', 1048576);
+	$xmax_size = (!intval($max_size)) ? 1048576 : $max_size;
+	$typefile = getVar('post', 'typefile', 'text');
+	$xtypefile = (!$typefile) ? "zip,gzip,7z,rar,tar" : strtolower(strtr($typefile, $protect));
 	$cont = [
 		'defis' => $xdefis,
-		'temp' => $_POST['temp'],
-		'path' => $_POST['path'],
+		'temp' => getVar('post', 'temp', 'text'),
+		'path' => getVar('post', 'path', 'text'),
 		'max_size' => $xmax_size,
 		'typefile' => $xtypefile,
-		'linknum' => $_POST['linknum'],
-		'listnum' => $_POST['listnum'],
-		'num' => $_POST['num'],
-		'anum' => $_POST['anum'],
-		'nump' => $_POST['nump'],
-		'anump' => $_POST['anump'],
-		'stream' => $_POST['stream'],
-		'homcat' => $_POST['homcat'],
-		'viewcat' => $_POST['viewcat'],
-		'catdesc' => $_POST['catdesc'],
-		'subcat' => $_POST['subcat'],
-		'addmail' => $_POST['addmail'],
-		'add' => $_POST['add'],
-		'addquest' => $_POST['addquest'],
-		'broc' => $_POST['broc'],
-		'down' => $_POST['down'],
-		'upload' => $_POST['upload'],
-		'autor' => $_POST['autor'],
-		'date' => $_POST['date'],
-		'read' => $_POST['read'],
-		'hits' => $_POST['hits'],
-		'rate' => $_POST['rate'],
-		'letter' => $_POST['letter'],
-		'link' => $_POST['link'],
+		'linknum' => getVar('post', 'linknum', 'num'),
+		'listnum' => getVar('post', 'listnum', 'num'),
+		'num' => getVar('post', 'num', 'num'),
+		'anum' => getVar('post', 'anum', 'num'),
+		'nump' => getVar('post', 'nump', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
+		'stream' => getVar('post', 'stream', 'num'),
+		'homcat' => getVar('post', 'homcat', 'num'),
+		'viewcat' => getVar('post', 'viewcat', 'num'),
+		'catdesc' => getVar('post', 'catdesc', 'num'),
+		'subcat' => getVar('post', 'subcat', 'num'),
+		'addmail' => getVar('post', 'addmail', 'num'),
+		'add' => getVar('post', 'add', 'num'),
+		'addquest' => getVar('post', 'addquest', 'num'),
+		'broc' => getVar('post', 'broc', 'num'),
+		'down' => getVar('post', 'down', 'num'),
+		'upload' => getVar('post', 'upload', 'num'),
+		'autor' => getVar('post', 'autor', 'num'),
+		'date' => getVar('post', 'date', 'num'),
+		'read' => getVar('post', 'read', 'num'),
+		'hits' => getVar('post', 'hits', 'num'),
+		'rate' => getVar('post', 'rate', 'num'),
+		'letter' => getVar('post', 'letter', 'num'),
+		'link' => getVar('post', 'link', 'num'),
 	];
 	setConfigFile('files.php', $cont);
 	header("Location: ".$admin_file.".php?op=files_conf");
@@ -317,7 +321,8 @@ switch ($op) {
 	break;
 	
 	case "files_ignore":
-	$db->sql_query("UPDATE ".PREFIX_DB."_files SET status = '1' WHERE lid = '".$id."'");
+	$id = getVar('req', 'id', 'num');
+	$db->sql_query('UPDATE '.PREFIX_DB.'_files SET status = \'1\' WHERE lid = :id', ['id' => $id]);
 	header("Location: ".$admin_file.".php?op=files&status=2");
 	break;
 	

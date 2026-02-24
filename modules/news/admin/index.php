@@ -18,10 +18,10 @@ function news_navi() {
 function news() {
 	global $db, $admin_file, $confn, $confu;
 	head();
-	$num = isset($_GET['num']) ? intval($_GET['num']) : "1";
+	$num = getVar('get', 'num', 'num', 1);
 	$offset = ($num-1) * $confn['anum'];
 	$offset = intval($offset);
-	if (isset($_GET['status']) == 1) {
+	if (getVar('get', 'status', 'num') == 1) {
 		$status = "0";
 		$field = "op=news&amp;status=1&amp;";
 		$refer = "&amp;refer=1";
@@ -32,7 +32,7 @@ function news() {
 		$refer = "";
 		$cont = news_navi(0, 0, 0, 0);
 	}
-	$result = $db->sql_query("SELECT s.sid, s.catid, s.name, s.title, s.time, s.vote, s.ip_sender, c.title, u.user_name FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid = c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) WHERE s.status = '".$status."' ORDER BY s.fix DESC, s.time DESC LIMIT ".$offset.", ".$confn['anum']);
+	$result = $db->sql_query('SELECT s.sid, s.catid, s.name, s.title, s.time, s.vote, s.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$confn['anum'], ['status' => $status]);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= tpl_eval("open");
 		$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\">"
@@ -70,26 +70,25 @@ function news() {
 
 function news_add() {
 	global $db, $admin_file, $confu, $stop;
-	if (isset($_REQUEST['id'])) {
-		$sid = intval($_REQUEST['id']);
-		$result = $db->sql_query("SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.ihome, s.acomm, s.associated, s.fix, u.user_name FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid = u.user_id) WHERE sid = '".$sid."'");
+	if ($sid = getVar('req', 'id', 'num')) {
+		$result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.ihome, s.acomm, s.associated, s.fix, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE sid = :sid', ['sid' => $sid]);
 		list($cat, $uname, $subject, $time, $hometext, $bodytext, $field, $vote, $ihome, $acomm, $associated, $fix, $user_name) = $db->sql_fetchrow($result);
 		$associated = explode(",", $associated);
 		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
 	} else {
-		$sid = $_POST['sid'];
-		$postname = $_POST['postname'];
-		$subject = save_text($_POST['subject'], 1);
-		$associated = $_POST['associated'];
-		$cat = $_POST['cat'];
-		$hometext = save_text($_POST['hometext']);
-		$bodytext = save_text($_POST['bodytext']);
-		$field = fields_save($_POST['field']);
-		$vote = $_POST['vote'];
+		$sid = getVar('post', 'sid', 'num');
+		$postname = getVar('post', 'postname', 'name');
+		$subject = save_text(getVar('post', 'subject', 'text'), 1);
+		$associated = getVar('post', 'associated', 'array', []);
+		$cat = getVar('post', 'cat', 'num');
+		$hometext = save_text(getVar('post', 'hometext', 'text'));
+		$bodytext = save_text(getVar('post', 'bodytext', 'text'));
+		$field = fields_save(getVar('post', 'field', 'array'));
+		$vote = getVar('post', 'vote', 'num');
 		$time = save_datetime(1, "time");
-		$ihome = $_POST['ihome'];
-		$acomm = $_POST['acomm'];
-		$fix = $_POST['fix'];
+		$ihome = getVar('post', 'ihome', 'num');
+		$acomm = getVar('post', 'acomm', 'num');
+		$fix = getVar('post', 'fix', 'num');
 	}
 	head();
 	$cont = news_navi(0, 1, 0, 0);
@@ -133,34 +132,34 @@ function news_add() {
 
 function news_save() {
 	global $db, $admin_file, $stop;
-	$sid = intval($_POST['sid']);
-	$postname = $_POST['postname'];
-	$subject = save_text($_POST['subject'], 1);
-	$associated = (isset($_POST['associated'])) ? implode(",", $_POST['associated']) : "";
-	$cat = $_POST['cat'];
-	$hometext = save_text($_POST['hometext']);
-	$bodytext = save_text($_POST['bodytext']);
-	$field = fields_save($_POST['field']);
-	$vote = intval($_POST['vote']);
-	$ihome = $_POST['ihome'];
-	$acomm = $_POST['acomm'];
+	$sid = getVar('post', 'sid', 'num');
+	$postname = getVar('post', 'postname', 'name');
+	$subject = save_text(getVar('post', 'subject', 'text'), 1);
+	$associated = implode(",", getVar('post', 'associated', 'array', []));
+	$cat = getVar('post', 'cat', 'num');
+	$hometext = save_text(getVar('post', 'hometext', 'text'));
+	$bodytext = save_text(getVar('post', 'bodytext', 'text'));
+	$field = fields_save(getVar('post', 'field', 'array'));
+	$vote = getVar('post', 'vote', 'num');
+	$ihome = getVar('post', 'ihome', 'num');
+	$acomm = getVar('post', 'acomm', 'num');
 	$time = save_datetime(1, "time");
-	$fix = intval($_POST['fix']);
+	$fix = getVar('post', 'fix', 'num');
 	$stop = array();
 	if (!$subject) $stop[] = _CERROR;
 	if (!$hometext) $stop[] = _CERROR1;
 	if (!$postname) $stop[] = _CERROR3;
-	if (!$stop && $_POST['posttype'] == "save") {
+	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
 		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
 		if ($sid) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_news SET catid = '".$cat."', uid = '".$postid."', name = '".$postname."', title = '".$subject."', time = '".$time."', hometext = '".$hometext."', bodytext = '".$bodytext."', field = '".$field."', vote = '".$vote."', ihome = '".$ihome."', acomm = '".$acomm."', associated = '".$associated."', fix = '".$fix."', status = '1' WHERE sid = '".$sid."'");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_news SET catid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, field = :field, vote = :vote, ihome = :ihome, acomm = :acomm, associated = :associated, fix = :fix, status = \'1\' WHERE sid = :sid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'fix' => $fix, 'sid' => $sid]);
 		} else {
 			$ip = getip();
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_news (sid, catid, uid, name, title, time, hometext, bodytext, field, vote, comments, counter, ihome, acomm, score, ratings, associated, ip_sender, fix, status) VALUES (NULL, '".$cat."', '".$postid."', '".$postname."', '".$subject."', '".$time."', '".$hometext."', '".$bodytext."', '".$field."', '".$vote."', '0', '0', '".$ihome."', '".$acomm."', '0', '0', '".$associated."', '".$ip."', '".$fix."', '1')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_news (sid, catid, uid, name, title, time, hometext, bodytext, field, vote, comments, counter, ihome, acomm, score, ratings, associated, ip_sender, fix, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, :field, :vote, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :associated, :ip, :fix, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'ip' => $ip, 'fix' => $fix]);
 		}
 		header("Location: ".$admin_file.".php?op=news");
-	} elseif ($_POST['posttype'] == "delete") {
+	} elseif (getVar('post', 'posttype', 'text') == "delete") {
 		news_admin($sid, "d");
 	} else {
 		news_add();
@@ -172,25 +171,27 @@ function news_admin() {
 	$arg = func_get_args();
 	$id = ($arg[0]) ? $arg[0] : $id;
 	$id = (is_array($id)) ? implode(",", $id) : intval($id);
-	$vtyp = (isset($_POST['typ'])) ? analyze($_POST['typ']) : ((isset($_GET['typ'])) ? analyze($_GET['typ']) : $arg[1]);
+	$vtyp_p = getVar('post', 'typ', 'text');
+	$vtyp_g = getVar('get', 'typ', 'text');
+	$vtyp = ($vtyp_p) ? analyze($vtyp_p) : (($vtyp_g) ? analyze($vtyp_g) : $arg[1]);
 	$typ = (is_numeric($vtyp[0])) ? intval($vtyp) : intval(substr($vtyp, 1));
 	if ($id) {
 		if ($vtyp[0] == "a") {
-			$db->sql_query("UPDATE ".PREFIX_DB."_news SET status = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_news SET status = :typ WHERE sid IN ('.$id.')', ['typ' => $typ]);
 		} elseif ($vtyp[0] == "f") {
-			$db->sql_query("UPDATE ".PREFIX_DB."_news SET fix = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_news SET fix = :typ WHERE sid IN ('.$id.')', ['typ' => $typ]);
 		} elseif ($vtyp[0] == "h") {
-			$db->sql_query("UPDATE ".PREFIX_DB."_news SET ihome = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_news SET ihome = :typ WHERE sid IN ('.$id.')', ['typ' => $typ]);
 		} elseif ($vtyp[0] == "t") {
-			$db->sql_query("UPDATE ".PREFIX_DB."_news SET time = NOW() WHERE sid IN (".$id.")");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_news SET time = NOW() WHERE sid IN ('.$id.')');
 		} elseif ($vtyp[0] == "c") {
-			$db->sql_query("UPDATE ".PREFIX_DB."_news SET acomm = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_news SET acomm = :typ WHERE sid IN ('.$id.')', ['typ' => $typ]);
 		} elseif ($vtyp[0] == "d") {
-			$db->sql_query("DELETE FROM ".PREFIX_DB."_comment WHERE cid IN (".$id.") AND modul = 'news'");
-			$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE fid IN (".$id.") AND modul = 'news'");
-			$db->sql_query("DELETE FROM ".PREFIX_DB."_news WHERE sid IN (".$id.")");
+			$db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.$id.') AND modul = \'news\'');
+			$db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$id.') AND modul = \'news\'');
+			$db->sql_query('DELETE FROM '.PREFIX_DB.'_news WHERE sid IN ('.$id.')');
 		} elseif (is_numeric($vtyp[0])) {
-			$db->sql_query("UPDATE ".PREFIX_DB."_news SET catid = '".$typ."' WHERE sid IN (".$id.")");
+			$db->sql_query('UPDATE '.PREFIX_DB.'_news SET catid = :typ WHERE sid IN ('.$id.')', ['typ' => $typ]);
 		}
 	}
 	referer($admin_file.".php?op=news");
@@ -232,30 +233,32 @@ function news_conf() {
 
 function news_conf_save() {
 	global $admin_file;
-	$xdefis = ($_POST['defis']) ? urlencode($_POST['defis']) : "%3E";
-	$xbascol = (!intval($_POST['bascol'])) ? "1" : $_POST['bascol'];
+	$defis_val = getVar('post', 'defis', 'text');
+	$xdefis = ($defis_val) ? urlencode($defis_val) : "%3E";
+	$bascol_val = getVar('post', 'bascol', 'num');
+	$xbascol = (!$bascol_val) ? "1" : $bascol_val;
 	$cont = [
 		'defis' => $xdefis,
 		'bascol' => $xbascol,
-		'asocnum' => $_POST['asocnum'],
-		'listnum' => $_POST['listnum'],
-		'num' => $_POST['num'],
-		'anum' => $_POST['anum'],
-		'nump' => $_POST['nump'],
-		'anump' => $_POST['anump'],
-		'homcat' => $_POST['homcat'],
-		'viewcat' => $_POST['viewcat'],
-		'catdesc' => $_POST['catdesc'],
-		'subcat' => $_POST['subcat'],
-		'addmail' => $_POST['addmail'],
-		'add' => $_POST['add'],
-		'addquest' => $_POST['addquest'],
-		'autor' => $_POST['autor'],
-		'date' => $_POST['date'],
-		'read' => $_POST['read'],
-		'rate' => $_POST['rate'],
-		'letter' => $_POST['letter'],
-		'assoc' => $_POST['assoc'],
+		'asocnum' => getVar('post', 'asocnum', 'num'),
+		'listnum' => getVar('post', 'listnum', 'num'),
+		'num' => getVar('post', 'num', 'num'),
+		'anum' => getVar('post', 'anum', 'num'),
+		'nump' => getVar('post', 'nump', 'num'),
+		'anump' => getVar('post', 'anump', 'num'),
+		'homcat' => getVar('post', 'homcat', 'num'),
+		'viewcat' => getVar('post', 'viewcat', 'num'),
+		'catdesc' => getVar('post', 'catdesc', 'num'),
+		'subcat' => getVar('post', 'subcat', 'num'),
+		'addmail' => getVar('post', 'addmail', 'num'),
+		'add' => getVar('post', 'add', 'num'),
+		'addquest' => getVar('post', 'addquest', 'num'),
+		'autor' => getVar('post', 'autor', 'num'),
+		'date' => getVar('post', 'date', 'num'),
+		'read' => getVar('post', 'read', 'num'),
+		'rate' => getVar('post', 'rate', 'num'),
+		'letter' => getVar('post', 'letter', 'num'),
+		'assoc' => getVar('post', 'assoc', 'num'),
 	];
 	setConfigFile('news.php', $cont);
 	header("Location: ".$admin_file.".php?op=news_conf");

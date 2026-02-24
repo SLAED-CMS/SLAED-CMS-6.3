@@ -16,7 +16,7 @@ function voting() {
 	$offset = ($num - 1) * $confv['num'];
 	head();
 	$cont = setTemplateBasic('title', array('{%title%}' => _VOTING));
-	$result = $db->sql_query("SELECT id, title, questions, answer, date, enddate, comments, acomm, typ FROM ".PREFIX_DB."_voting WHERE ".$onum." ORDER BY id DESC LIMIT ".$offset.", ".$confv['num']);
+	$result = $db->sql_query('SELECT id, title, questions, answer, date, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$confv['num']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= setTemplateBasic('voting-home-open', array('{%id%}' => _ID, '{%title%}' => _TITLE, '{%comm%}' => cutstr(_COMMENTS, 4, 1), '{%votes%}' => cutstr(_VOTES, 3, 1)));
 		while (list($id, $stitle, $questions, $answer, $date, $enddate, $comm, $acomm, $typ) = $db->sql_fetchrow($result)) {
@@ -41,7 +41,7 @@ function view() {
 	global $db, $conf, $confv;
 	$id = getVar('get', 'id', 'num');
 	head();
-	$result = $db->sql_query("SELECT acomm FROM ".PREFIX_DB."_voting WHERE id = '".$id."' AND modul = '' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')");
+	$result = $db->sql_query('SELECT acomm FROM '.PREFIX_DB.'_voting WHERE id = :id AND modul = \'\' AND date <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
 	if ($db->sql_numrows($result) > 0) {
 		list($acomm) = $db->sql_fetchrow($result);
 		$cont = setTemplateBasic('title', array('{%title%}' => _VOTING)).setTemplateBasic('voting-basic', array('{%content%}' => '<div id="rep'.$conf['name'].'">'.getVoting($id, $conf['name']).'</div>'));

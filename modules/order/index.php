@@ -14,9 +14,9 @@ function order() {
 	global $conf, $confor, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
-		$mail = (isset($_POST['mail'])) ? text_filter($_POST['mail']) : $userinfo['user_email'];
+		$mail = getVar('post', 'mail', 'text', $userinfo['user_email']);
 	} else {
-		$mail = (isset($_POST['mail'])) ? text_filter($_POST['mail']) : "";
+		$mail = getVar('post', 'mail', 'text');
 	}
 	$field = getVar('post', 'field', 'field');
 	head();
@@ -44,7 +44,7 @@ function order() {
 function send() {
 	global $db, $conf, $confor, $stop;
 	if ($confor['an']) {
-		$mail = text_filter($_POST['mail']);
+		$mail = getVar('post', 'mail', 'text');
 		$info = getVar('post', 'field', 'field');
 		$com = getVar('post', 'com', 'text');
 		$stop = array();
@@ -52,7 +52,7 @@ function send() {
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			$status = ($confor['pr']) ? "0" : "1";
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_order VALUES (NULL, '".$mail."', '".$info."', '".$com."', '".getIp()."', '".getAgent()."', NOW(), '".$status."')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, NOW(), :status)', ['mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
 			if ($confor['ad']) {
 				$infos = fields_out($info, $conf['name']);
 				$amail = ($confor['mail']) ? $confor['mail'] : $conf['adminmail'];

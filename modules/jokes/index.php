@@ -101,10 +101,10 @@ function jokes() {
 function add() {
 	global $db, $user, $conf, $confu, $confj, $stop;
 	if ($confj['add'] == "1") {
-		$title = save_text($_POST['title'], 1);
-		$cid = intval($_POST['cid']);
-		$joke = save_text($_POST['joke']);
-		$postname = text_filter(substr($_POST['postname'], 0, 25));
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$cid = getVar('post', 'cid', 'num');
+		$joke = save_text(getVar('post', 'joke', 'text'));
+		$postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
 		
 		head();
 		$cont = navigate(_ADD);
@@ -134,20 +134,20 @@ function add() {
 function send() {
 	global $db, $user, $conf, $confj, $stop;
 	if ($confj['add'] == "1") {
-		$postname = text_filter(substr($_POST['postname'], 0, 25));
-		$title = save_text($_POST['title'], 1);
-		$cid = intval($_POST['cid']);
-		$joke = save_text($_POST['joke']);
+		$postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
+		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$cid = getVar('post', 'cid', 'num');
+		$joke = save_text(getVar('post', 'joke', 'text'));
 		$stop = array();
 		if (!$title) $stop[] = _CERROR;
 		if (!$joke) $stop[] = _CERROR1;
 		if (!$postname && !is_user()) $stop[] = _CERROR3;
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-		if ($db->sql_numrows($db->sql_query("SELECT title FROM ".PREFIX_DB."_jokes WHERE title = '".$title."'")) > 0) $stop[] = _JOKEEXIST;
-		if (!$stop && $_POST['posttype'] == "save") {
+		if ($db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
+		if (!$stop && getVar('post', 'posttype', 'text') == "save") {
 			$postid = (is_user()) ? intval($user[0]) : "";
 			$uname = (!is_user()) ? $postname : "";
-			$db->sql_query("INSERT INTO ".PREFIX_DB."_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, '".$postid."', '".$uname."', NOW(), '".$title."', '".$cid."', '".$joke."', '".getIp()."', '0')");
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
 			update_points(19);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confj['addmail'], $conf['name'], $puname, _JOKES);

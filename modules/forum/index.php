@@ -14,17 +14,22 @@ function forum() {
 	global $db, $user, $conf, $confu, $conffo, $locale;
 	$massiv = array();
 	$mod = ($conf['name']) ? analyze($conf['name']) : 0;
-	$id = (isset($_POST['cat'])) ? ((isset($_POST['cat'])) ? intval($_POST['cat']) : 0) : ((isset($_GET['cat'])) ? intval($_GET['cat']) : 0);
+	$id = getVar('req', 'cat', 'num');
+	$params = ['mod' => $mod];
 	if ($id) {
-		$where = "WHERE c.modul = '".$mod."' AND (c.parentid = '".$id."' OR c.id = '".$id."')";
-	} elseif ($id && $conf['multilingual']) {
-		$where = "WHERE c.modul = '".$mod."' AND (c.parentid = '".$id."' OR c.id = '".$id."') AND (c.language = '".$locale."' OR c.language = '')";
+		$where = 'WHERE c.modul = :mod AND (c.parentid = :id OR c.id = :id)';
+		$params['id'] = $id;
+		if ($conf['multilingual']) {
+			$where .= ' AND (c.language = :locale OR c.language = \'\')';
+			$params['locale'] = $locale;
+		}
 	} elseif ($conf['multilingual']) {
-		$where = "WHERE c.modul = '".$mod."' AND (c.language = '".$locale."' OR c.language = '')";
+		$where = 'WHERE c.modul = :mod AND (c.language = :locale OR c.language = \'\')';
+		$params['locale'] = $locale;
 	} else {
-		$where = "WHERE c.modul = '".$mod."'";
+		$where = 'WHERE c.modul = :mod';
 	}
-	$result = $db->sql_query("SELECT c.id, c.title, c.description, c.img, c.parentid, c.cstatus, c.ordern, c.topics, c.posts, c.lpost_id, c.auth_view, c.auth_read, c.auth_post, c.auth_reply, c.auth_edit, c.auth_delete, c.auth_mod, f.title, f.l_uid, f.l_name, f.l_id, f.l_time FROM ".PREFIX_DB."_categories AS c LEFT JOIN ".PREFIX_DB."_forum AS f ON (c.lpost_id = f.id) ".$where." ORDER BY c.ordern");
+	$result = $db->sql_query('SELECT c.id, c.title, c.description, c.img, c.parentid, c.cstatus, c.ordern, c.topics, c.posts, c.lpost_id, c.auth_view, c.auth_read, c.auth_post, c.auth_reply, c.auth_edit, c.auth_delete, c.auth_mod, f.title, f.l_uid, f.l_name, f.l_id, f.l_time FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost_id = f.id) '.$where.' ORDER BY c.ordern', $params);
 	while (list($cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpost_id, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod, $ftitle, $fuid, $fname, $flid, $fltime) = $db->sql_fetchrow($result)) {
 		$massiv[] = array($cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpost_id, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod, $ftitle, $fuid, $fname, $flid, $fltime);
 		unset($cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpost_id, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod, $ftitle, $fuid, $fname, $flid, $fltime);
@@ -394,36 +399,36 @@ function quickreply($id, $catid, $subject) {
 
 function move() {
 	global $db, $user, $conf, $conffo;
-	$catid = intval($_POST['cat']);
+	$catid = getVar('post', 'cat', 'num');
 	if ($conffo['add'] && $catid) {
-		list($auth_mod) = $db->sql_fetchrow($db->sql_query("SELECT auth_mod FROM ".PREFIX_DB."_categories WHERE id = '".$catid."'"));
+		list($auth_mod) = $db->sql_fetchrow($db->sql_query('SELECT auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
 		$ismod = is_acess($auth_mod);
-		$id = isset($_POST['id']) ? $_POST['id'] : "";
-		$vtmove = isset($_POST['tmove']) ? $_POST['tmove'] : "";
+		$id = getVar('post', 'id', 'array', []);
+		$vtmove = getVar('post', 'tmove', 'text');
 		$tmove = (is_numeric($vtmove[0])) ? intval($vtmove) : intval(substr($vtmove, 1));
 		if ($ismod && is_array($id) && $vtmove[0]) {
 			foreach ($id as $val) {
 				if (intval($val)) {
 					if ($vtmove[0] == "s") {
-						$db->sql_query("UPDATE ".PREFIX_DB."_forum SET status = '".$tmove."' WHERE id = '".$val."'");
+						$db->sql_query('UPDATE '.PREFIX_DB.'_forum SET status = :tmove WHERE id = :val', ['tmove' => $tmove, 'val' => $val]);
 					} elseif ($vtmove[0] == "d") {
 						delete($catid, $val);
 					} elseif (is_numeric($vtmove[0])) {
 						$rcatids = catids($conf['name'], $tmove);
-						$db->sql_query("UPDATE ".PREFIX_DB."_forum SET catid = '".$tmove."' WHERE id = '".$val."' OR pid = '".$val."'");
-						list($rnpost) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_forum WHERE pid = '".$val."'"));
+						$db->sql_query('UPDATE '.PREFIX_DB.'_forum SET catid = :tmove WHERE id = :val OR pid = :val', ['tmove' => $tmove, 'val' => $val]);
+						list($rnpost) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
 						$wrnpost = ($rnpost) ? ", posts=posts+".$rnpost : "";
-						$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics=topics+1".$wrnpost.", lpost_id = '".$val."' WHERE id IN (".$rcatids.")");
+						$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics=topics+1'.$wrnpost.', lpost_id = :val WHERE id IN ('.$rcatids.')', ['val' => $val]);
 			
 						$catids = catids($conf['name'], $catid);
-						list($l_id) = $db->sql_fetchrow($db->sql_query("SELECT lpost_id FROM ".PREFIX_DB."_categories WHERE id = '".$catid."'"));
-						list($npost) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_forum WHERE pid = '".$val."'"));
+						list($l_id) = $db->sql_fetchrow($db->sql_query('SELECT lpost_id FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+						list($npost) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
 						$wnpost = ($npost) ? ", posts=posts-".$npost : "";
 						if ($l_id == $val) {
-							list($lid) = $db->sql_fetchrow($db->sql_query("SELECT id FROM ".PREFIX_DB."_forum WHERE catid = '".$catid."' AND ((pid != '0' && status = '1') || (pid = '0' && status > '1')) ORDER BY id DESC LIMIT 1"));
-							$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics=topics-1".$wnpost.", lpost_id = '".$lid."' WHERE id IN (".$catids.")");
+							list($lid) = $db->sql_fetchrow($db->sql_query('SELECT id FROM '.PREFIX_DB.'_forum WHERE catid = :catid AND ((pid != \'0\' && status = \'1\') || (pid = \'0\' && status > \'1\')) ORDER BY id DESC LIMIT 1', ['catid' => $catid]));
+							$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics=topics-1'.$wnpost.', lpost_id = :lid WHERE id IN ('.$catids.')', ['lid' => $lid]);
 						} else {
-							$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics=topics-1".$wnpost." WHERE id IN (".$catids.")");
+							$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics=topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
 						}
 					}
 				}
@@ -436,36 +441,38 @@ function move() {
 
 function add() {
 	global $db, $user, $conf, $confu, $conffo, $stop;
-	$catid = (isset($_POST['cat'])) ? intval($_POST['cat']) : intval($_GET['cat']);
-	list($ctitle, $auth_post, $auth_reply, $auth_edit, $auth_mod) = $db->sql_fetchrow($db->sql_query("SELECT title, auth_post, auth_reply, auth_edit, auth_mod FROM ".PREFIX_DB."_categories WHERE id = '".$catid."'"));
+	$catid = getVar('req', 'cat', 'num');
+	list($ctitle, $auth_post, $auth_reply, $auth_edit, $auth_mod) = $db->sql_fetchrow($db->sql_query('SELECT title, auth_post, auth_reply, auth_edit, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
 	$istopic = is_acess($auth_post);
 	$isreply = is_acess($auth_reply);
 	$isedit = is_acess($auth_edit);
 	$ismod = is_acess($auth_mod);
 	
 	$form = false;
-	$id = (isset($_POST['id'])) ? intval($_POST['id']) : (isset($_GET['id']) ? intval($_GET['id']) : "");
-	$pid = (isset($_POST['pid'])) ? intval($_POST['pid']) : (isset($_GET['pid']) ? intval($_GET['pid']) : "");
+	$id = getVar('req', 'id', 'num');
+	$pid = getVar('req', 'pid', 'num');
 	
-	$where = (is_moder($conf['name'])) ? "WHERE id = '".$pid."'" : "WHERE id = '".$pid."' AND status != '0'";
-	list($fstatus) = $db->sql_fetchrow($db->sql_query("SELECT status FROM ".PREFIX_DB."_forum ".$where));
+	$where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
+	list($fstatus) = $db->sql_fetchrow($db->sql_query('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
 
 	# Редактируем сообщение или тему
 	if ($conffo['add'] && $id) {
 		$fid = $id;
-		list($qpid, $uid, $subject, $time, $hometext, $field, $status) = $db->sql_fetchrow($db->sql_query("SELECT pid, uid, title, time, hometext, field, status FROM ".PREFIX_DB."_forum WHERE id = '".$id."'"));
+		list($qpid, $uid, $subject, $time, $hometext, $field, $status) = $db->sql_fetchrow($db->sql_query('SELECT pid, uid, title, time, hometext, field, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
 		if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
 			$subh = ($qpid) ? 1 : 0;
 			$info = _EDITS.": ".$subject;
 			$pagetitle = $conf['defis']." "._FORUM." ".$conf['defis']." ".$ctitle." ".$conf['defis']." ".$info;
 			$form = true;
 		}
-		$subject = (isset($_POST['subject'])) ? save_text($_POST['subject'], 1) : $subject;
-		$hometext = (isset($_POST['hometext'])) ? save_text($_POST['hometext']) : $hometext;
+		$subject_post = getVar('post', 'subject', 'text');
+		$subject = ($subject_post) ? save_text($subject_post, 1) : $subject;
+		$hometext_post = getVar('post', 'hometext', 'text');
+		$hometext = ($hometext_post) ? save_text($hometext_post) : $hometext;
 
 	# Отвечаем и создаём
 	} elseif ($conffo['add'] && ($istopic || $isreply)) {
-		$fid = (isset($_POST['fid'])) ? intval($_POST['fid']) : "";
+		$fid = getVar('post', 'fid', 'num');
 
 		$qid = (isset($_GET['qid'])) ? intval($_GET['qid']) : "";
 		$subh = (!empty($pid) || !empty($qpid)) ? 1 : 0;
@@ -473,7 +480,7 @@ function add() {
 		# Отвечаем в существующей теме
 		if ($pid) {
 			$id = ($qid) ? $qid : $pid;
-			list($ftitle, $ftext, $status) = $db->sql_fetchrow($db->sql_query("SELECT title, hometext, status FROM ".PREFIX_DB."_forum WHERE id = '".$id."'"));
+			list($ftitle, $ftext, $status) = $db->sql_fetchrow($db->sql_query('SELECT title, hometext, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
 			$form = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
 		
 		# Создаём новую тему
@@ -481,11 +488,13 @@ function add() {
 			$form = true;
 		}
 
-		$postname = (isset($_POST['postname'])) ? $_POST['postname'] : "";
-		$subject = (!empty($ftitle)) ? $ftitle : (isset($_POST['subject']) ? save_text($_POST['subject'], 1) : "");
-		$hometext = ($qid && $ftext) ? "[quote]".$ftext."[/quote]" : (isset($_POST['hometext']) ? save_text($_POST['hometext']) : "");
-		$field = (isset($_POST['field'])) ? fields_save($_POST['field']) : "";
-		$status = (isset($_POST['status'])) ? intval($_POST['status']) : 3;
+		$postname = getVar('post', 'postname', 'name');
+		$subject_post = getVar('post', 'subject', 'text');
+		$subject = (!empty($ftitle)) ? $ftitle : ($subject_post ? save_text($subject_post, 1) : "");
+		$hometext_post = getVar('post', 'hometext', 'text');
+		$hometext = ($qid && $ftext) ? "[quote]".$ftext."[/quote]" : ($hometext_post ? save_text($hometext_post) : "");
+		$field = fields_save(getVar('post', 'field', 'array'));
+		$status = getVar('post', 'status', 'num', 3);
 		$time = save_datetime(1, "time");
 		$info = (!empty($ftext)) ? _PUBLICIN.": ".$ftitle : _PUBLICIN.": ".$ctitle;
 		$pagetitle = $conf['defis']." "._FORUM." ".$conf['defis']." ".$ctitle." ".$conf['defis']." ".$info;
@@ -548,27 +557,27 @@ function pmoder($status, $subh) {
 
 function send() {
 	global $db, $user, $conf, $conffo, $stop;
-	$catid = (isset($_POST['cat'])) ? intval($_POST['cat']) : intval($_GET['cat']);
+	$catid = getVar('req', 'cat', 'num');
 	if ($conffo['add'] && $catid) {
-		list($ctitle, $auth_post, $auth_reply, $auth_edit, $auth_mod) = $db->sql_fetchrow($db->sql_query("SELECT title, auth_post, auth_reply, auth_edit, auth_mod FROM ".PREFIX_DB."_categories WHERE id = '".$catid."'"));
+		list($ctitle, $auth_post, $auth_reply, $auth_edit, $auth_mod) = $db->sql_fetchrow($db->sql_query('SELECT title, auth_post, auth_reply, auth_edit, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
 		$istopic = is_acess($auth_post);
 		$isreply = is_acess($auth_reply);
 		$isedit = is_acess($auth_edit);
 		$ismod = is_acess($auth_mod);
 		
-		$id = (isset($_POST['fid'])) ? intval($_POST['fid']) : "";
-		$pid = (isset($_POST['pid'])) ? intval($_POST['pid']) : "";
-		$postname = (isset($_POST['postname'])) ? text_filter(substr($_POST['postname'], 0, 25)) : "";
-		$subject = (isset($_POST['subject'])) ? save_text($_POST['subject'], 1) : "";
-		$hometext = (isset($_POST['hometext'])) ? $_POST['hometext'] : "";
+		$id = getVar('post', 'fid', 'num');
+		$pid = getVar('post', 'pid', 'num');
+		$postname = text_filter(substr(getVar('post', 'postname', 'text'), 0, 25));
+		$subject = save_text(getVar('post', 'subject', 'text'), 1);
+		$hometext = getVar('post', 'hometext', 'text');
 
 		$checks = str_replace(array("\n", "\r", "\t"), " ", $hometext);
 		$e = explode(" ", $checks);
 		for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
 		$hometext = save_text($hometext);
-		$status = (isset($_POST['status'])) ? intval($_POST['status']) : 0;
+		$status = getVar('post', 'status', 'num', 0);
 		
-		$field = fields_save($_POST['field']);
+		$field = fields_save(getVar('post', 'field', 'array'));
 		$time = ($ismod) ? save_datetime(1, "time") : save_datetime(1);
 		$postid = (is_user()) ? intval($user[0]) : "";
 		$ip = getIp();
@@ -579,20 +588,20 @@ function send() {
 		if ($o > $conffo['letter']) $stop[] = _CERROR2;
 		if (!$postname && !is_user()) $stop[] = _CERROR3;
 
-		if (!$stop && $_POST['posttype'] == "save") {
-			$where = (is_moder($conf['name'])) ? "WHERE id = '".$pid."'" : "WHERE id = '".$pid."' AND status != '0'";
-			list($fstatus) = $db->sql_fetchrow($db->sql_query("SELECT status FROM ".PREFIX_DB."_forum ".$where));
+		if (!$stop && getVar('post', 'posttype', 'text') == "save") {
+			$where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
+			list($fstatus) = $db->sql_fetchrow($db->sql_query('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
 			
 			# Редактируем сообщение или тему
 			if ($id) {
-				list($fpid, $uid, $ftime) = $db->sql_fetchrow($db->sql_query("SELECT pid, uid, time FROM ".PREFIX_DB."_forum WHERE id = '".$id."'"));
+				list($fpid, $uid, $ftime) = $db->sql_fetchrow($db->sql_query('SELECT pid, uid, time FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
 				$fpid = ($fpid) ? $fpid : $id;
 				if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
 					$ftime = ($ismod) ? $time : $ftime;
 					if ($ismod) {
-						$db->sql_query("UPDATE ".PREFIX_DB."_forum SET title = '".$subject."', time = '".$ftime."', hometext = '".$hometext."', field = '".$field."', e_uid = '".$postid."', e_ip_send = '".$ip."', e_time = NOW(), status = '".$status."' WHERE id = '".$id."'");
+						$db->sql_query('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, hometext = :hometext, field = :field, e_uid = :postid, e_ip_send = :ip, e_time = NOW(), status = :status WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'hometext' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'status' => $status, 'id' => $id]);
 					} else {
-						$db->sql_query("UPDATE ".PREFIX_DB."_forum SET title = '".$subject."', time = '".$ftime."', hometext = '".$hometext."', field = '".$field."', e_uid = '".$postid."', e_ip_send = '".$ip."', e_time = NOW() WHERE id = '".$id."'");
+						$db->sql_query('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, hometext = :hometext, field = :field, e_uid = :postid, e_ip_send = :ip, e_time = NOW() WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'hometext' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]);
 					}
 				}
 			
@@ -624,12 +633,12 @@ function send() {
 				
 				if ($insert) {
 					$catids = catids($conf['name'], $catid);
-					$db->sql_query("INSERT INTO ".PREFIX_DB."_forum (id, pid, catid, uid, name, title, time, hometext, field, ip_send, l_uid, l_name, l_time, status) VALUES (NULL, '".$pid."', '".$catid."', '".$postid."', '".$postname."', '".$subject."', '".$time."', '".$hometext."', '".$field."', '".$ip."', '".$postid."', '".$postname."', '".$time."', '".$status."')");
-					list($lpost_id, $ltime) = $db->sql_fetchrow($db->sql_query("SELECT id, time FROM ".PREFIX_DB."_forum WHERE catid = '".$catid."' AND uid = '".$postid."' ORDER BY id DESC LIMIT 1"));
+					$db->sql_query('INSERT INTO '.PREFIX_DB.'_forum (id, pid, catid, uid, name, title, time, hometext, field, ip_send, l_uid, l_name, l_time, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :hometext, :field, :ip, :postid, :postname, :time, :status)', ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'ip' => $ip, 'status' => $status]);
+					list($lpost_id, $ltime) = $db->sql_fetchrow($db->sql_query('SELECT id, time FROM '.PREFIX_DB.'_forum WHERE catid = :catid AND uid = :postid ORDER BY id DESC LIMIT 1', ['catid' => $catid, 'postid' => $postid]));
 					if ($pid) {
-						$lname = ($uname) ? $uname : $postname;
-						$db->sql_query("UPDATE ".PREFIX_DB."_forum SET comments = comments+1, l_uid = '".$postid."', l_name = '".$lname."', l_id = '".$lpost_id."', l_time = '".$time."' WHERE id = '".$pid."'");
-						$db->sql_query("UPDATE ".PREFIX_DB."_categories SET posts = posts+1, lpost_id = '".$pid."' WHERE id IN (".$catids.")");
+						$lname = (isset($uname) && $uname) ? $uname : $postname;
+						$db->sql_query('UPDATE '.PREFIX_DB.'_forum SET comments = comments+1, l_uid = :postid, l_name = :lname, l_id = :lpost_id, l_time = :time WHERE id = :pid', ['postid' => $postid, 'lname' => $lname, 'lpost_id' => $lpost_id, 'time' => $time, 'pid' => $pid]);
+						$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET posts = posts+1, lpost_id = :pid WHERE id IN ('.$catids.')', ['pid' => $pid]);
 						if ($conffo['addmail']) {
 							list($muid) = $db->sql_fetchrow($db->sql_query("SELECT uid FROM ".PREFIX_DB."_forum WHERE id = '".$pid."'"));
 							if ($postid != $muid) {
@@ -668,14 +677,14 @@ function send() {
 function delete() {
 	global $db, $user, $conf, $conffo;
 	$arg = func_get_args();
-	$catid = ($arg[0]) ? $arg[0] : ((isset($_POST['cat'])) ? intval($_POST['cat']) : intval($_GET['cat']));
-	$id = ($arg[1]) ? $arg[1] : ((isset($_POST['id'])) ? intval($_POST['id']) : intval($_GET['id']));
+	$catid = ($arg[0]) ? $arg[0] : getVar('req', 'cat', 'num');
+	$id = (!empty($arg[1])) ? $arg[1] : getVar('req', 'id', 'num');
 	if ($conffo['add'] && $catid && $id) {
-		list($auth_delete, $auth_mod) = $db->sql_fetchrow($db->sql_query("SELECT auth_delete, auth_mod FROM ".PREFIX_DB."_categories WHERE id = '".$catid."'"));
+		list($auth_delete, $auth_mod) = $db->sql_fetchrow($db->sql_query('SELECT auth_delete, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
 		$isdelete = is_acess($auth_delete);
 		$ismod = is_acess($auth_mod);
 		
-		list($pid, $uid) = $db->sql_fetchrow($db->sql_query("SELECT pid, uid FROM ".PREFIX_DB."_forum WHERE id = '".$id."'"));
+		list($pid, $uid) = $db->sql_fetchrow($db->sql_query('SELECT pid, uid FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
 		if ($ismod || ($isdelete && $uid == intval($user[0]))) {
 			$recycle = intval($conffo['recycle']);
 			
