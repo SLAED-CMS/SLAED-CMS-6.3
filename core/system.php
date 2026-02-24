@@ -2185,16 +2185,30 @@ function rss_select() {
 function rss_read($url, $id) {
     if ($url) {
         require_once CONFIG_DIR.'/rss.php';
-        $url = str_replace(array("&#038;", "&amp;"), "&", $url);
-        $url = (!preg_match("#http\:\/\/#i", $url)) ? "http://".$url : $url;
-        $content = file_get_contents($url);
-        preg_match("#encoding=\"(.*)\"#i", $content, $val);
-        if (strtolower($val[1]) != "utf-8") $content = iconv($val[1], "utf-8", $content);
+        $url = trim(html_entity_decode(str_replace(array("&#038;", "&amp;"), "&", $url), ENT_QUOTES, 'UTF-8'));
+        $url = (!preg_match('#^https?://#i', $url)) ? 'http://'.$url : $url;
+        $context = stream_context_create(array(
+            'http' => array(
+                'timeout' => 10,
+                'follow_location' => 1,
+                'user_agent' => 'SLAED RSS Reader',
+            ),
+        ));
+        set_error_handler(static function (): bool { return true; });
+        $content = file_get_contents($url, false, $context);
+        restore_error_handler();
         if ($content) {
-            $title = parse_url($url);
-            $title = $title['host'];
+            if (preg_match('#encoding=["\']([^"\']+)#i', $content, $val) && !empty($val[1])) {
+                $encoding = strtolower($val[1]);
+                if ($encoding != 'utf-8') {
+                    $converted = iconv($val[1], 'utf-8//IGNORE', $content);
+                    if ($converted !== false) $content = $converted;
+                }
+            }
+            $title = parse_url($url, PHP_URL_HOST);
+            if (!$title) $title = $url;
             preg_match_all("#<item>(.*)</item>#Uism", $content, $items, PREG_PATTERN_ORDER);
-            if ($items[1]) {
+            if (!empty($items[1])) {
                 $number = ($confrs['max'] > count($items[1])) ? count($items[1]) : $confrs['max'];
                 $cont = "";
                 for ($i = 0; $i < $number; $i++) {
@@ -2203,10 +2217,15 @@ function rss_read($url, $id) {
                     preg_match("#<guid>(.*)</guid>(.*)#Uism", $items[1][$i], $rss_guid);
                     preg_match("#<description>(.*)</description>#Uism", $items[1][$i], $rss_desc);
                     $temp = $confrs['temp'];
-                    $temp = str_replace("[title]", $rss_title[1], $temp);
-                    $temp = str_replace("[date]", date(_DATESTRING, strtotime($rss_date[1])), $temp);
-                    $temp = str_replace("[guid]", $rss_guid[1], $temp);
-                    $temp = str_replace("[description]", text_filter(html_entity_decode(str_replace("]]>", "", $rss_desc[1]))), $temp);
+                    $rss_title = $rss_title[1] ?? '';
+                    $rss_date = $rss_date[1] ?? '';
+                    $rss_guid = $rss_guid[1] ?? '';
+                    $rss_desc = $rss_desc[1] ?? '';
+                    $rss_date = ($rss_date && strtotime($rss_date) !== false) ? date(_DATESTRING, strtotime($rss_date)) : '';
+                    $temp = str_replace("[title]", $rss_title, $temp);
+                    $temp = str_replace("[date]", $rss_date, $temp);
+                    $temp = str_replace("[guid]", $rss_guid, $temp);
+                    $temp = str_replace("[description]", text_filter(html_entity_decode(str_replace("]]>", "", $rss_desc))), $temp);
                     $cont .= $temp;
                 }
                 $cont = ($id) ? $cont : "<h2>"._RSS_FROM.": <a href=\"".htmlspecialchars($url)."\" target=\"_blank\" title=\""._RSS_FROM.": ".$title."\">".$title."</a></h2>".$cont;
