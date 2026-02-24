@@ -11,7 +11,7 @@ if (!defined('MODULE_FILE')) {
 get_lang($conf['name']);
 
 function forum() {
-	global $db, $user, $conf, $confu, $conffo, $locale;
+	global $db, $conf, $confu, $conffo, $locale;
 	$massiv = array();
 	$mod = ($conf['name']) ? analyze($conf['name']) : 0;
 	$id = getVar('req', 'cat', 'num');
@@ -223,7 +223,7 @@ function forum() {
 }
 
 function view() {
-	global $db, $admin_file, $user, $conf, $confu, $confpr, $conffo, $locale;
+	global $db, $user, $conf, $confu, $confpr, $conffo;
 	$cmassiv = array();
 	$where = array();
 	$umassiv = array();
