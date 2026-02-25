@@ -1,222 +1,203 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined("ADMIN_FILE") || !is_admin_modul("jokes")) die("Illegal file access");
+if (!defined('ADMIN_FILE') || !is_admin_modul('jokes')) die('Illegal file access');
 
-
-function jokes_navi() {
-	panel();
-	$narg = func_get_args();
-	$ops = array("jokes", "jokes_add", "jokes&amp;status=1", "jokes_conf", "jokes_info");
-	$lang = array(_HOME, _ADD, _NEW, _PREFERENCES, _INFO);
-	return navi_gen(_JOKES, "jokes.png", "", $ops, $lang, "", "", $narg[0], $narg[1], $narg[2], $narg[3]);
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=conf', 'name=jokes&amp;op=info'];
+    $lang = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    return getAdminTabs(_JOKES, 'jokes.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
-function jokes() {
-	global $db, $admin_file, $conf, $confj, $confu;
-	head();
-	$num = getVar('get', 'num', 'num', 1);
-	$offset = ($num-1) * $confj['anum'];
-	$offset = intval($offset);
-	if (getVar('get', 'status', 'num') == 1) {
-		$status = "0";
-		$field = "op=jokes&amp;status=1&amp;";
-		$refer = "&amp;refer=1";
-		$cont = jokes_navi(0, 2, 0, 0);
-	} else {
-		$status = "1";
-		$field = "op=jokes&amp;";
-		$refer = "";
-		$cont = jokes_navi(0, 0, 0, 0);
-	}
-	$result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.status = :status ORDER BY j.date DESC LIMIT '.$offset.', '.$confj['anum'], ['status' => $status]);
-	if ($db->sql_numrows($result) > 0) {
-		$cont .= tpl_eval("open");
-		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._POSTEDBY."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
-		while (list($jokeid, $uname, $date, $title, $cat, $ip_sender, $ctitle, $user_name) = $db->sql_fetchrow($result)) {
-			$ctitle = ($cat) ? $ctitle : _NO;
-			$ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
-			$post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
-			if ($status && time() >= strtotime($date)) {
-				$ad_view = "<a href=\"index.php?name=jokes&amp;cat=".$cat."#".$jokeid."\" title=\""._MVIEW."\">"._MVIEW."</a>||";
-				$active = "1";
-			} else {
-				$ad_view = "";
-				$active = "0";
-			}
-			$cont .= "<tr><td>".$jokeid."</td>"
-			."<td>".title_tip(_CATEGORY.": ".$ctitle."<br>"._DATE.": ".format_time($date, _TIMESTRING)."<br>"._IP.": ".$ip_sender)."<span title=\"".$title."\" class=\"sl_note\">".cutstr($title, 60)."</span></td>"
-			."<td>".$post."</td>"
-			."<td>".ad_status("", $active)."</td>"
-			."<td>".add_menu($ad_view."<a href=\"".$admin_file.".php?op=jokes_add&amp;id=".$jokeid."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=jokes_delete&amp;id=".$jokeid.$refer."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>")."</td></tr>";
-		}
-		$cont .= "</tbody></table>";
-		$cont .= setArticleNumbers("pagenum", "", $confj['anum'], $field, "jokeid", "_jokes", "", "status = '".$status."'", $confj['anump']);
-		$cont .= tpl_eval("close");
-	} else {
-		$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
-	}
-	echo $cont;
-	foot();
+function jokes(): void {
+    global $db, $afile, $conf, $confu;
+    $cfg = $conf['jokes'] ?? [];
+    head();
+    $num = getVar('get', 'num', 'num', 1);
+    $anum = $cfg['anum'] ?? 25;
+    $anump = $cfg['anump'] ?? 10;
+    $offset = (int)(($num - 1) * $anum);
+    if (getVar('get', 'status', 'num', 0) == 1) {
+        $status = '0';
+        $field = 'name=jokes&amp;status=1&amp;';
+        $refer = '&amp;refer=1';
+        $cont = navi(0, 2, 0, 0);
+    } else {
+        $status = '1';
+        $field = 'name=jokes&amp;';
+        $refer = '';
+        $cont = navi(0, 0, 0, 0);
+    }
+    $result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.status = :status ORDER BY j.date DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    if ($db->sql_numrows($result) > 0) {
+        $cont .= setTemplateBasic('open');
+        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        while ([$jokeid, $uname, $date, $title, $cat, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
+            $ctitle = ($cat) ? $ctitle : _NO;
+            $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
+            $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : ($confu['anonym'] ?? 'Anonym'));
+            if ($status && time() >= strtotime($date)) {
+                $ad_view = '<a href="index.php?name=jokes&amp;cat='.$cat.'#'.$jokeid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $active = '1';
+            } else {
+                $ad_view = '';
+                $active = '0';
+            }
+            $cont .= '<tr><td>'.$jokeid.'</td>'
+            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip_sender).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
+            .'<td>'.$post.'</td>'
+            .'<td>'.ad_status('', $active).'</td>'
+            .'<td>'.add_menu($ad_view.'<a href="'.$afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=jokes&amp;op=del&amp;id='.$jokeid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+        }
+        $cont .= '</tbody></table>';
+        $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'jokeid', '_jokes', '', 'status = \''.$status.'\'', $anump);
+        $cont .= setTemplateBasic('close');
+    } else {
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+    }
+    echo $cont;
+    foot();
 }
 
-function jokes_add() {
-	global $db, $admin_file, $confu, $stop;
-	if ($jokeid = getVar('req', 'id', 'num')) {
-		$result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE jokeid = :jokeid', ['jokeid' => $jokeid]);
-		list($jokeid, $uname, $date, $title, $cat, $joke, $user_name) = $db->sql_fetchrow($result);
-		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
-	} else {
-		$jokeid = getVar('post', 'jokeid', 'num');
-		$postname = getVar('post', 'postname', 'name');
-		$date = save_datetime(1, "date");
-		$title = save_text(getVar('post', 'title', 'text'), 1);
-		$cat = getVar('post', 'cat', 'num');
-		$joke = save_text(getVar('post', 'joke', 'text'));
-	}
-	head();
-	$cont = jokes_navi(0, 1, 0, 0);
-	if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
-	if ($joke) $cont .= preview($title, $joke, "", "", "all");
-	$cont .= tpl_eval("open");
-	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_form\">"
-	."<tr><td>"._POSTEDBY.":</td><td>".get_user_search("postname", $postname, "25", "sl_form", "1")."</td></tr>"
-	."<tr><td>"._TITLE.":</td><td><input type=\"text\" name=\"title\" value=\"".$title."\" maxlength=\"100\" class=\"sl_form\" placeholder=\""._TITLE."\" required></td></tr>"
-	."<tr><td>"._CATEGORY.":</td><td>".getcat("jokes", $cat, "cat", "sl_form", "<option value=\"\">"._HOMECAT."</option>")."</td></tr>"
-	."<tr><td>"._JOKE.":</td><td>".textarea("1", "joke", $joke, "jokes", "10", _JOKE, "1")."</td></tr>"
-	."<tr><td>"._CHNGSTORY.":</td><td>".datetime(1, "date", $date, 16, "sl_form")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\">".ad_save("jokeid", $jokeid, "jokes_save")."</td></tr></table></form>";
-	$cont .= tpl_eval("close");
-	echo $cont;
-	foot();
+function add(): void {
+    global $db, $afile, $confu, $stop;
+    $jokeid = getVar('req', 'id', 'num', 0);
+    if ($jokeid) {
+        $result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.jokeid = :jokeid', ['jokeid' => $jokeid]);
+        [$jokeid, $uname, $date, $title, $cat, $joke, $user_name] = $db->sql_fetchrow($result);
+        $postname = ($user_name) ? $user_name : (($uname) ? $uname : ($confu['anonym'] ?? 'Anonym'));
+    } else {
+        $jokeid = getVar('post', 'jokeid', 'num', 0);
+        $postname = getVar('post', 'postname', 'name', '');
+        $date = save_datetime(1, 'date');
+        $title = getVar('post', 'title', 'title', '');
+        $cat = getVar('post', 'cat', 'num', 0);
+        $joke = getVar('post', 'joke', 'text', '');
+    }
+    head();
+    $cont = navi(0, 1, 0, 0);
+    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if (!empty($joke)) $cont .= preview($title, $joke, '', '', 'all');
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
+    .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
+    .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
+    .'<tr><td>'._CATEGORY.':</td><td>'.getcat('jokes', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>'
+    .'<tr><td>'._JOKE.':</td><td>'.textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1').'</td></tr>'
+    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="jokes">'.ad_save('jokeid', $jokeid, 'save').'</td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-function jokes_save() {
-	global $db, $admin_file, $stop;
-	$jokeid = getVar('post', 'jokeid', 'num');
-	$postname = getVar('post', 'postname', 'name');
-	$date = save_datetime(1, "date");
-	$title = save_text(getVar('post', 'title', 'text'), 1);
-	$cat = getVar('post', 'cat', 'num');
-	$joke = save_text(getVar('post', 'joke', 'text'));
-	$stop = array();
-	if (!$title) $stop[] = _CERROR;
-	if (!$joke) $stop[] = _CERROR1;
-	if (!$postname) $stop[] = _CERROR3;
-	if (!$jokeid && $db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
-	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
-		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
-		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
-		if ($jokeid) {
-			$db->sql_query('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, date = :date, title = :title, cat = :cat, joke = :joke, status = \'1\' WHERE jokeid = :jokeid', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
-		} else {
-			$ip = getip();
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, :uid, :name, :date, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);
-		}
-		header("Location: ".$admin_file.".php?op=jokes");
-	} elseif (getVar('post', 'posttype', 'text') == "delete") {
-		jokes_delete($jokeid);
-	} else {
-		jokes_add();
-	}
+function save(): void {
+    global $db, $afile, $stop;
+    $jokeid = getVar('post', 'jokeid', 'num', 0);
+    $postname = getVar('post', 'postname', 'name', '');
+    $date = save_datetime(1, 'date');
+    $title = getVar('post', 'title', 'title', '');
+    $cat = getVar('post', 'cat', 'num', 0);
+    $joke = getVar('post', 'joke', 'text', '');
+    $stop = [];
+    if (!$title) $stop[] = _CERROR;
+    if (!$joke) $stop[] = _CERROR1;
+    if (!$postname) $stop[] = _CERROR3;
+    if (!$jokeid && $db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
+    $posttype = getVar('post', 'posttype', 'text', '');
+    if (!$stop && $posttype === 'save') {
+        $postid = is_user_id($postname) ?: 0;
+        $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
+        if ($jokeid) {
+            $db->sql_query('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, date = :date, title = :title, cat = :cat, joke = :joke, status = \'1\' WHERE jokeid = :jokeid', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
+        } else {
+            $ip = getip();
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_jokes (uid, name, date, title, cat, joke, ip_sender, status) VALUES (:uid, :name, :date, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);
+        }
+        header('Location: '.$afile.'.php?name=jokes');
+        exit;
+    } elseif ($posttype === 'delete') {
+        del($jokeid);
+    } else {
+        add();
+    }
 }
 
-function jokes_delete() {
-	global $db, $admin_file, $id;
-	$arg = func_get_args();
-	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) {
-		$db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$id.') AND modul = \'jokes\'');
-		$db->sql_query('DELETE FROM '.PREFIX_DB.'_jokes WHERE jokeid IN ('.$id.')');
-	}
-	referer($admin_file.".php?op=jokes");
+function del(int $fid = 0): void {
+    global $db, $afile;
+    $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
+    if ($id) {
+        $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'jokes\'', ['id' => $id]);
+        $db->sql_query('DELETE FROM '.PREFIX_DB.'_jokes WHERE jokeid = :id', ['id' => $id]);
+    }
+    header('Location: '.$afile.'.php?name=jokes');
+    exit;
 }
 
-function jokes_conf() {
-	global $admin_file, $confj;
-	head();
-	$cont = jokes_navi(0, 3, 0, 0);
-	$cont .= checkPerms('jokes.php');
-	$cont .= tpl_eval("open");
-	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
-	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($confj['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
-	."<tr><td>"._C_33.":</td><td><input type=\"number\" name=\"num\" value=\"".$confj['num']."\" class=\"sl_conf\" placeholder=\""._C_33."\" required></td></tr>"
-	."<tr><td>"._C_34.":</td><td><input type=\"number\" name=\"anum\" value=\"".$confj['anum']."\" class=\"sl_conf\" placeholder=\""._C_34."\" required></td></tr>"
-	."<tr><td>"._C_35.":</td><td><input type=\"number\" name=\"nump\" value=\"".$confj['nump']."\" class=\"sl_conf\" placeholder=\""._C_35."\" required></td></tr>"
-	."<tr><td>"._C_36.":</td><td><input type=\"number\" name=\"anump\" value=\"".$confj['anump']."\" class=\"sl_conf\" placeholder=\""._C_36."\" required></td></tr>"
-	."<tr><td>"._HOMCAT."</td><td>".radio_form($confj['homcat'], "homcat")."</td></tr>"
-	."<tr><td>"._C_32."</td><td>".radio_form($confj['catdesc'], "catdesc")."</td></tr>"
-	."<tr><td>"._C_15."</td><td>".radio_form($confj['subcat'], "subcat")."</td></tr>"
-	."<tr><td>"._ADDAMAIL."</td><td>".radio_form($confj['addmail'], "addmail")."</td></tr>"
-	."<tr><td>"._J_1."</td><td>".radio_form($confj['add'], "add")."</td></tr>"
-	."<tr><td>"._J_2."</td><td>".radio_form($confj['addquest'], "addquest")."</td></tr>"
-	."<tr><td>"._C_17."</td><td>".radio_form($confj['date'], "date")."</td></tr>"
-	."<tr><td>"._C_19."</td><td>".radio_form($confj['rate'], "rate")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"jokes_conf_save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
-	$cont .= tpl_eval("close");
-	echo $cont;
-	foot();
+function conf(): void {
+    global $afile, $conf;
+    $cfg = $conf['jokes'] ?? [];
+    head();
+    $cont = navi(0, 3, 0, 0);
+    $cont .= checkPerms('jokes.php');
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
+    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($cfg['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($cfg['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($cfg['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($cfg['homcat'] ?? 0, 'homcat').'</td></tr>'
+    .'<tr><td>'._C_32.'</td><td>'.radio_form($cfg['catdesc'] ?? 0, 'catdesc').'</td></tr>'
+    .'<tr><td>'._C_15.'</td><td>'.radio_form($cfg['subcat'] ?? 0, 'subcat').'</td></tr>'
+    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($cfg['addmail'] ?? 0, 'addmail').'</td></tr>'
+    .'<tr><td>'._J_1.'</td><td>'.radio_form($cfg['add'] ?? 0, 'add').'</td></tr>'
+    .'<tr><td>'._J_2.'</td><td>'.radio_form($cfg['addquest'] ?? 0, 'addquest').'</td></tr>'
+    .'<tr><td>'._C_17.'</td><td>'.radio_form($cfg['date'] ?? 0, 'date').'</td></tr>'
+    .'<tr><td>'._C_19.'</td><td>'.radio_form($cfg['rate'] ?? 0, 'rate').'</td></tr>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="jokes"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-function jokes_conf_save() {
-	global $admin_file;
-	$defis_val = getVar('post', 'defis', 'text');
-	$xdefis = ($defis_val) ? urlencode($defis_val) : "%3E";
-	$cont = [
-		'defis' => $xdefis,
-		'num' => getVar('post', 'num', 'num'),
-		'anum' => getVar('post', 'anum', 'num'),
-		'nump' => getVar('post', 'nump', 'num'),
-		'anump' => getVar('post', 'anump', 'num'),
-		'homcat' => getVar('post', 'homcat', 'num'),
-		'catdesc' => getVar('post', 'catdesc', 'num'),
-		'subcat' => getVar('post', 'subcat', 'num'),
-		'addmail' => getVar('post', 'addmail', 'num'),
-		'add' => getVar('post', 'add', 'num'),
-		'addquest' => getVar('post', 'addquest', 'num'),
-		'date' => getVar('post', 'date', 'num'),
-		'rate' => getVar('post', 'rate', 'num'),
-	];
-	setConfigFile('jokes.php', $cont);
-	header("Location: ".$admin_file.".php?op=jokes_conf");
+function confsave(): void {
+    global $afile;
+    $cont = [
+        'defis' => getVar('post', 'defis', 'defis', '%3E'),
+        'num' => getVar('post', 'num', 'num', 25),
+        'anum' => getVar('post', 'anum', 'num', 25),
+        'nump' => getVar('post', 'nump', 'num', 10),
+        'anump' => getVar('post', 'anump', 'num', 10),
+        'homcat' => getVar('post', 'homcat', 'num', 0),
+        'catdesc' => getVar('post', 'catdesc', 'num', 0),
+        'subcat' => getVar('post', 'subcat', 'num', 0),
+        'addmail' => getVar('post', 'addmail', 'num', 0),
+        'add' => getVar('post', 'add', 'num', 0),
+        'addquest' => getVar('post', 'addquest', 'num', 0),
+        'date' => getVar('post', 'date', 'num', 0),
+        'rate' => getVar('post', 'rate', 'num', 0),
+    ];
+    setConfigFile('jokes.php', $cont);
+    header('Location: '.$afile.'.php?name=jokes&op=conf');
+    exit;
 }
 
-function jokes_info() {
-	head();
-	echo jokes_navi(0, 4, 0, 0)."<div id=\"repadm_info\">".adm_info(1, "jokes", 0)."</div>";
-	foot();
+function info(): void {
+    head();
+    echo navi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 'jokes', 0).'</div>';
+    foot();
 }
 
 switch ($op) {
-	case "jokes":
-	jokes();
-	break;
-	
-	case "jokes_add":
-	jokes_add();
-	break;
-	
-	case "jokes_save":
-	jokes_save();
-	break;
-	
-	case "jokes_delete":
-	jokes_delete();
-	break;
-	
-	case "jokes_conf":
-	jokes_conf();
-	break;
-	
-	case "jokes_conf_save":
-	jokes_conf_save();
-	break;
-	
-	case "jokes_info":
-	jokes_info();
-	break;
+    default: jokes(); break;
+    case 'add': add(); break;
+    case 'save': save(); break;
+    case 'del': del(); break;
+    case 'conf': conf(); break;
+    case 'confsave': confsave(); break;
+    case 'info': info(); break;
 }
-?>
