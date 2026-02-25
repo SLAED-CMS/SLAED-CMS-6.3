@@ -1,219 +1,202 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined("ADMIN_FILE") || !is_admin_modul("whois")) die("Illegal file access");
+if (!defined('ADMIN_FILE') || !is_admin_modul('whois')) die('Illegal file access');
 
-
-function whois_navi() {
-	panel();
-	$narg = func_get_args();
-	$ops = array("whois", "whois_add", "whois&amp;status=1", "whois_conf", "whois_info");
-	$lang = array(_HOME, _ADD, _NEW, _PREFERENCES, _INFO);
-	return navi_gen(_WHOIS, "whois.png", "", $ops, $lang, "", "", $narg[0], $narg[1], $narg[2], $narg[3]);
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=conf', 'name=whois&amp;op=info'];
+    $lang = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
+    return getAdminTabs(_WHOIS, 'whois.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
-function whois() {
-	global $db, $admin_file, $confw, $confu;
-	head();
-	$num = getVar('get', 'num', 'num', 1);
-	$offset = ($num-1) * $confw['anum'];
-	$offset = intval($offset);
-	if (getVar('get', 'status', 'num') == 1) {
-		$status = "0";
-		$field = "op=whois&amp;status=1&amp;";
-		$refer = "&amp;refer=1";
-		$cont = whois_navi(0, 2, 0, 0);
-	} else {
-		$status = "1";
-		$field = "op=whois&amp;";
-		$refer = "&amp;refer=1";
-		$cont = whois_navi(0, 0, 0, 0);
-	}
-	$result = $db->sql_query('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.hometext, w.st_domain, w.st_host, w.st_dc, u.user_name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.user_id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$confw['anum'], ['status' => $status]);
-	if ($db->sql_numrows($result) > 0) {
-		$cont .= tpl_eval("open");
-		$cont .= "<table class=\"sl_table_list\"><thead><tr><th>"._ID."</th><th>"._POSTEDBY."</th><th colspan=\"2\">"._SITE."</th><th colspan=\"2\">"._HOST."</th><th colspan=\"2\">"._DC."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
-		while (list($id, $uname, $ip_sender, $time, $domain, $host, $dc, $hometext, $st_domain, $st_host, $st_dc, $user_name) = $db->sql_fetchrow($result)) {
-			$post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
-			$ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
-			$hometext = ($hometext) ? $hometext : _NO;
-			$host = ($host) ? domain($host) : _NO_INFO;
-			$dc = ($dc) ? domain($dc) : _NO_INFO;
-			$cont .= "<tr><td>".$id."</td>"
-			."<td>".title_tip(_DATE.": ".format_time($time, _TIMESTRING)."<br>"._IP.": ".$ip_sender."<br>"._COMMENT.": ".$hometext).$post."</td>"
-			."<td>".domain($domain)."</td><td>".ad_status("", $st_domain)."</td>"
-			."<td>".$host."</td><td>".ad_status("", $st_host)."</td>"
-			."<td>".$dc."</td><td>".ad_status("", $st_dc)."</td>"
-			."<td>".add_menu(ad_status($admin_file.".php?op=whois_act&amp;id=".$id."&amp;fid=1".$refer, $st_domain, "", _SITE)."||".ad_status($admin_file.".php?op=whois_act&amp;id=".$id."&amp;fid=2".$refer, $st_host, "", _HOST)."||".ad_status($admin_file.".php?op=whois_act&amp;id=".$id."&amp;fid=3".$refer, $st_dc, "", _DC)."||<a href=\"".$admin_file.".php?op=whois_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=whois_delete&amp;id=".$id.$refer."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$domain."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>")."</td></tr>";
-		}
-		$cont .= "</tbody></table>";
-		$cont .= setArticleNumbers("pagenum", "", $confw['anum'], $field, "id", "_whois", "", "status = '".$status."'", $confw['anump']);
-		$cont .= tpl_eval("close");
-	} else {
-		$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
-	}
-	echo $cont;
-	foot();
+function whois(): void {
+    global $db, $afile, $conf, $confu;
+    $cfg = $conf['whois'] ?? [];
+    $anum = $cfg['anum'] ?? 10;
+    $anump = $cfg['anump'] ?? 10;
+
+    head();
+    $num = getVar('get', 'num', 'num', 1);
+    $offset = intval(($num - 1) * $anum);
+    $show_new = getVar('get', 'status', 'num') == 1;
+    if ($show_new) {
+        $status = 0;
+        $field = 'name=whois&amp;status=1&amp;';
+        $cont = navi(0, 2, 0, 0);
+    } else {
+        $status = 1;
+        $field = 'name=whois&amp;';
+        $cont = navi(0, 0, 0, 0);
+    }
+
+    $result = $db->sql_query('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.hometext, w.st_domain, w.st_host, w.st_dc, u.user_name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.user_id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    if ($db->sql_numrows($result) > 0) {
+        $cont .= setTemplateBasic('open');
+        $cont .= '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._POSTEDBY.'</th><th colspan="2">'._SITE.'</th><th colspan="2">'._HOST.'</th><th colspan="2">'._DC.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        while ([$id, $uname, $ip_sender, $time, $domain, $host, $dc, $hometext, $st_domain, $st_host, $st_dc, $user_name] = $db->sql_fetchrow($result)) {
+            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
+            $ip_sender = $ip_sender ? user_geo_ip($ip_sender, 4) : _NO;
+            $hometext = $hometext ?: _NO;
+            $host = $host ? domain($host) : _NO_INFO;
+            $dc = $dc ? domain($dc) : _NO_INFO;
+            $actions = ad_status($afile.'.php?name=whois&amp;op=act&amp;id='.$id.'&amp;fid=1&amp;refer=1', $st_domain, '', _SITE)
+                .'||'.ad_status($afile.'.php?name=whois&amp;op=act&amp;id='.$id.'&amp;fid=2&amp;refer=1', $st_host, '', _HOST)
+                .'||'.ad_status($afile.'.php?name=whois&amp;op=act&amp;id='.$id.'&amp;fid=3&amp;refer=1', $st_dc, '', _DC)
+                .'||<a href="'.$afile.'.php?name=whois&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'
+                .'||<a href="'.$afile.'.php?name=whois&amp;op=del&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$domain.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>';
+            $cont .= '<tr><td>'.$id.'</td>'
+                .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip_sender.'<br>'._COMMENT.': '.$hometext).$post.'</td>'
+                .'<td>'.domain($domain).'</td><td>'.ad_status('', $st_domain).'</td>'
+                .'<td>'.$host.'</td><td>'.ad_status('', $st_host).'</td>'
+                .'<td>'.$dc.'</td><td>'.ad_status('', $st_dc).'</td>'
+                .'<td>'.add_menu($actions).'</td></tr>';
+        }
+        $cont .= '</tbody></table>';
+        $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_whois', '', "status = '".$status."'", $anump);
+        $cont .= setTemplateBasic('close');
+    } else {
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+    }
+    echo $cont;
+    foot();
 }
 
-function whois_act() {
-	global $db, $admin_file;
-	$id = getVar('get', 'id', 'num');
-	$fid = getVar('get', 'fid', 'num');
-	if ($fid == 1) {
-		$field = "st_domain";
-	} elseif ($fid == 2) {
-		$field = "st_host";
-	} elseif ($fid == 3) {
-		$field = "st_dc";
-	} else {
-		$field = "";
-	}
-	if ($id && $field) {
-		list($active) = $db->sql_fetchrow($db->sql_query('SELECT '.$field.' FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]));
-		$active = ($active) ? 0 : 1;
-		$db->sql_query('UPDATE '.PREFIX_DB.'_whois SET '.$field.' = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
-	}
-	referer($admin_file.".php?op=whois");
+function act(): void {
+    global $db, $afile;
+    $id = getVar('get', 'id', 'num');
+    $fid = getVar('get', 'fid', 'num');
+    $field = match ($fid) {
+        1 => 'st_domain',
+        2 => 'st_host',
+        3 => 'st_dc',
+        default => '',
+    };
+    if ($id && $field) {
+        [$active] = $db->sql_fetchrow($db->sql_query('SELECT '.$field.' FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]));
+        $active = $active ? 0 : 1;
+        $db->sql_query('UPDATE '.PREFIX_DB.'_whois SET '.$field.' = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
+    }
+    setRedirect($afile.'.php?name=whois', true);
 }
 
-function whois_add() {
-	global $db, $admin_file, $confu, $stop;
-	if ($wid = getVar('req', 'id', 'num')) {
-		$result = $db->sql_query('SELECT w.id, w.name, w.domain, w.host, w.dc, w.hometext, u.user_name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.user_id) WHERE w.id = :id', ['id' => $wid]);
-		list($id, $uname, $domain, $host, $dc, $hometext, $user_name) = $db->sql_fetchrow($result);
-		$postname = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
-	} else {
-		$wid = getVar('post', 'wid', 'num');
-		$postname = getVar('post', 'postname', 'name');
-		$domain = getVar('post', 'domain', 'url', 'http://');
-		$host = getVar('post', 'host', 'url', 'http://');
-		$dc = getVar('post', 'dc', 'url', 'http://');
-		$hometext = getVar('post', 'hometext', 'text');
-	}
-	head();
-	$cont = whois_navi(0, 1, 0, 0);
-	if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
-	$cont .= tpl_eval("open");
-	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_form\">"
-	."<tr><td>"._POSTEDBY.":</td><td>".get_user_search("postname", $postname, "25", "sl_form", "1")."</td></tr>"
-	."<tr><td>"._SITE.":</td><td><input type=\"url\" name=\"domain\" value=\"".$domain."\" maxlength=\"255\" class=\"sl_form\" placeholder=\""._SITE."\" required></td></tr>"
-	."<tr><td>"._HOST.":</td><td><input type=\"url\" name=\"host\" value=\"".$host."\" maxlength=\"255\" class=\"sl_form\" placeholder=\""._HOST."\"></td></tr>"
-	."<tr><td>"._DC.":</td><td><input type=\"url\" name=\"dc\" value=\"".$dc."\" maxlength=\"255\" class=\"sl_form\" placeholder=\""._DC."\"></td></tr>"
-	."<tr><td>"._COMMENT.":</td><td><textarea name=\"hometext\" cols=\"65\" rows=\"5\" class=\"sl_form\" placeholder=\""._COMMENT."\">".$hometext."</textarea></td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\">".ad_save("wid", $wid, "whois_save", 1)."</td></tr></table></form>";
-	$cont .= tpl_eval("close");
-	echo $cont;
-	foot();
+function add(): void {
+    global $db, $afile, $confu, $stop;
+    $stop = $stop ?? [];
+    $wid = getVar('req', 'id', 'num');
+    if ($wid) {
+        $result = $db->sql_query('SELECT w.id, w.name, w.domain, w.host, w.dc, w.hometext, u.user_name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.user_id) WHERE w.id = :id', ['id' => $wid]);
+        [$id, $uname, $domain, $host, $dc, $hometext, $user_name] = $db->sql_fetchrow($result);
+        $postname = $user_name ?: ($uname ?: $confu['anonym']);
+    } else {
+        $wid = getVar('post', 'wid', 'num');
+        $postname = getVar('post', 'postname', 'name', '');
+        $domain = getVar('post', 'domain', 'url', 'http://');
+        $host = getVar('post', 'host', 'url', 'http://');
+        $dc = getVar('post', 'dc', 'url', 'http://');
+        $hometext = getVar('post', 'hometext', 'text', '');
+    }
+    head();
+    $cont = navi(0, 1, 0, 0);
+    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
+        .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
+        .'<tr><td>'._SITE.':</td><td><input type="url" name="domain" value="'.$domain.'" maxlength="255" class="sl_form" placeholder="'._SITE.'" required></td></tr>'
+        .'<tr><td>'._HOST.':</td><td><input type="url" name="host" value="'.$host.'" maxlength="255" class="sl_form" placeholder="'._HOST.'"></td></tr>'
+        .'<tr><td>'._DC.':</td><td><input type="url" name="dc" value="'.$dc.'" maxlength="255" class="sl_form" placeholder="'._DC.'"></td></tr>'
+        .'<tr><td>'._COMMENT.':</td><td><textarea name="hometext" cols="65" rows="5" class="sl_form" placeholder="'._COMMENT.'">'.$hometext.'</textarea></td></tr>'
+        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="whois">'.ad_save('wid', $wid, 'save', 1).'</td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-function whois_save() {
-	global $db, $admin_file, $stop;
-	$wid = getVar('post', 'wid', 'num');
-	$postname = getVar('post', 'postname', 'name');
-	$domain = getVar('post', 'domain', 'url');
-	$host = getVar('post', 'host', 'url');
-	$dc = getVar('post', 'dc', 'url');
-	$hometext = getVar('post', 'hometext', 'text');
-	$stop = array();
-	if (!$postname) $stop[] = _CERROR3;
-	if (!$domain) $stop[] = _CERROR4;
-	if (!$stop  && getVar('post', 'posttype', 'text') == "save") {
-		$postid = (is_user_id($postname)) ? is_user_id($postname) : "";
-		$postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : "";
-		if ($wid) {
-			$db->sql_query('UPDATE '.PREFIX_DB.'_whois SET uid = :uid, name = :name, domain = :domain, host = :host, dc = :dc, hometext = :hometext, status = \'1\' WHERE id = :id', ['uid' => $postid, 'name' => $postname, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext, 'id' => $wid]);
-		} else {
-			$ip = getip();
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, now(), :domain, :host, :dc, :hometext, \'0\', \'0\', \'0\', \'1\')', ['uid' => $postid, 'name' => $postname, 'ip' => $ip, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
-		}
-		header("Location: ".$admin_file.".php?op=whois");
-	} elseif (getVar('post', 'posttype', 'text') == "delete") {
-		whois_delete($wid);
-	} else {
-		whois_add();
-	}
+function save(): void {
+    global $db, $afile, $stop;
+    $wid = getVar('post', 'wid', 'num');
+    $postname = getVar('post', 'postname', 'name', '');
+    $domain = getVar('post', 'domain', 'url', '');
+    $host = getVar('post', 'host', 'url', '');
+    $dc = getVar('post', 'dc', 'url', '');
+    $hometext = getVar('post', 'hometext', 'text', '');
+    $posttype = getVar('post', 'posttype', 'var', '');
+    $stop = [];
+    if (!$postname) $stop[] = _CERROR3;
+    if (!$domain) $stop[] = _CERROR4;
+
+    if (!$stop && $posttype == 'save') {
+        $postid = is_user_id($postname);
+        $uid = $postid ? $postid : '';
+        $name = $postid ? '' : text_filter(substr($postname, 0, 25));
+        if ($wid) {
+            $db->sql_query('UPDATE '.PREFIX_DB."_whois SET uid = :uid, name = :name, domain = :domain, host = :host, dc = :dc, hometext = :hometext, status = '1' WHERE id = :id", ['uid' => $uid, 'name' => $name, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext, 'id' => $wid]);
+        } else {
+            $ip = getIp();
+            $db->sql_query('INSERT INTO '.PREFIX_DB."_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, now(), :domain, :host, :dc, :hometext, '0', '0', '0', '1')", ['uid' => $uid, 'name' => $name, 'ip' => $ip, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
+        }
+        setRedirect($afile.'.php?name=whois');
+    } elseif ($posttype == 'delete') {
+        del($wid);
+    } else {
+        add();
+    }
 }
 
-function whois_delete() {
-	global $db, $admin_file, $id;
-	$arg = func_get_args();
-	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]);
-	referer($admin_file.".php?op=whois");
+function del(int $id = 0): void {
+    global $db, $afile;
+    if (!$id) $id = getVar('req', 'id', 'num');
+    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]);
+    setRedirect($afile.'.php?name=whois', true);
 }
 
-function whois_conf() {
-	global $admin_file, $confw;
-	head();
-	$cont = whois_navi(0, 3, 0, 0);
-	$cont .= checkPerms('whois.php');
-	$cont .= tpl_eval("open");
-	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
-	."<tr><td>"._C_34.":</td><td><input type=\"number\" name=\"anum\" value=\"".$confw['anum']."\" class=\"sl_conf\" placeholder=\""._C_34."\" required></td></tr>"
-	."<tr><td>"._C_36.":</td><td><input type=\"number\" name=\"anump\" value=\"".$confw['anump']."\" class=\"sl_conf\" placeholder=\""._C_36."\" required></td></tr>"
-	."<tr><td>"._ADDAMAIL."</td><td>".radio_form($confw['addmail'], "addmail")."</td></tr>"
-	."<tr><td>"._WHOISADD."</td><td>".radio_form($confw['add'], "add")."</td></tr>"
-	."<tr><td>"._WHOISADDG."</td><td>".radio_form($confw['addquest'], "addquest")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"whois_conf_save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
-	$cont .= tpl_eval("close");
-	echo $cont;
-	foot();
+function conf(): void {
+    global $afile, $conf;
+    $cfg = $conf['whois'] ?? [];
+    head();
+    $cont = navi(0, 3, 0, 0);
+    $cont .= checkPerms('whois.php');
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
+        .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 10).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+        .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($cfg['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+        .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($cfg['addmail'] ?? 0, 'addmail').'</td></tr>'
+        .'<tr><td>'._WHOISADD.'</td><td>'.radio_form($cfg['add'] ?? 0, 'add').'</td></tr>'
+        .'<tr><td>'._WHOISADDG.'</td><td>'.radio_form($cfg['addquest'] ?? 0, 'addquest').'</td></tr>'
+        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="whois"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-function whois_conf_save() {
-	global $admin_file;
-	$cont = [
-		'anum' => getVar('post', 'anum', 'num'),
-		'anump' => getVar('post', 'anump', 'num'),
-		'addmail' => getVar('post', 'addmail', 'num'),
-		'add' => getVar('post', 'add', 'num'),
-		'addquest' => getVar('post', 'addquest', 'num'),
-	];
-	setConfigFile('whois.php', $cont);
-	header("Location: ".$admin_file.".php?op=whois_conf");
+function confsave(): void {
+    global $afile;
+    $cont = [
+        'anum' => getVar('post', 'anum', 'num', 10),
+        'anump' => getVar('post', 'anump', 'num', 10),
+        'addmail' => getVar('post', 'addmail', 'num', 0),
+        'add' => getVar('post', 'add', 'num', 0),
+        'addquest' => getVar('post', 'addquest', 'num', 0),
+    ];
+    setConfigFile('whois.php', $cont);
+    setRedirect($afile.'.php?name=whois&op=conf');
 }
 
-function whois_info() {
-	head();
-	echo whois_navi(0, 4, 0, 0)."<div id=\"repadm_info\">".adm_info(1, "whois", 0)."</div>";
-	foot();
+function info(): void {
+    head();
+    echo navi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 'whois', 0).'</div>';
+    foot();
 }
 
-switch($op) {
-	case "whois":
-	whois();
-	break;
-	
-	case "whois_act":
-	whois_act();
-	break;
-	
-	case "whois_add":
-	whois_add();
-	break;
-	
-	case "whois_save":
-	whois_save();
-	break;
-	
-	case "whois_delete":
-	whois_delete();
-	break;
-	
-	case "whois_conf":
-	whois_conf();
-	break;
-	
-	case "whois_conf_save":
-	whois_conf_save();
-	break;
-	
-	case "whois_info":
-	whois_info();
-	break;
+switch ($op) {
+    default: whois(); break;
+    case 'act': act(); break;
+    case 'add': add(); break;
+    case 'save': save(); break;
+    case 'del': del(); break;
+    case 'conf': conf(); break;
+    case 'confsave': confsave(); break;
+    case 'info': info(); break;
 }
-?>
