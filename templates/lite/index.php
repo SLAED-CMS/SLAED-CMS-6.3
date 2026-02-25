@@ -44,7 +44,7 @@ function setTemplateMenu() {
                         <ul>
                             <li><a href="index.php?name=content&amp;op=view&amp;id=11" title="Услуги по изготовлению, модификации и оптимизации">Создание и модификация</a></li>
                             <li><a href="index.php?name=money" title="Банковский перевод денежных средств в WebMoney из Германии">Обмен WebMoney</a></li>
-                            <li><a href="http://www.slaed.in" target="_blank" title="Модификация и интеграция тем оформления">Темы и шаблоны</a></li>
+                            <li><a href="https://slaed.de" target="_blank" title="Модификация и интеграция тем оформления">Темы и шаблоны</a></li>
                             <li><a href="index.php?name=content&amp;op=view&amp;id=1" title="Размещение рекламы на проекте">Реклама на проекте</a></li>
                             <li><a href="index.php?name=whois" title="Проверка лицензии и доменного имени">Проверка домена</a></li>
                         </ul>
@@ -63,7 +63,7 @@ function setTemplateMenu() {
                             <li><a href="index.php?name=faq" title="Вопросы и ответы">Вопросы и ответы</a></li>
                             <li><a href="index.php?name=pages" title="Центр документации">Центр документации</a></li>
                             <li><a href="index.php?name=forum" title="Общий форум проекта">Общий форум проекта</a></li>
-                            <li><a href="http://www.slaed.info" target="_blank" title="Руководство по PHP">Руководство по PHP</a></li>
+                            <li><a href="https://slaed.info" target="_blank" title="Руководство по PHP">Руководство по PHP</a></li>
                             <li><a href="index.php?name=help" title="Техническая поддержка клиентов">Техническая поддержка</a></li>
                             <li><a href="index.php?name=contact" title="Обратная связь и контактная информация">Обратная связь</a></li>
                         </ul>
