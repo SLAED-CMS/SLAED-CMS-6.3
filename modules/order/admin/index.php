@@ -1,208 +1,193 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined("ADMIN_FILE") || !is_admin_modul("order")) die("Illegal file access");
+if (!defined('ADMIN_FILE') || !is_admin_modul('order')) die('Illegal file access');
 
-
-function order_navi() {
-	panel();
-	$narg = func_get_args();
-	$ops = array("order", "order_add", "order_conf", "order_info");
-	$lang = array(_HOME, _ADD, _PREFERENCES, _INFO);
-	return navi_gen(_ORDER, "order.png", "", $ops, $lang, "", "", $narg[0], $narg[1], $narg[2], $narg[3]);
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=conf', 'name=order&amp;op=info'];
+    $lang = [_HOME, _ADD, _PREFERENCES, _INFO];
+    return getAdminTabs(_ORDER, 'order.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
-function order() {
-	global $db, $admin_file, $conf, $confor;
-	head();
-	$cont = order_navi(0, 0, 0, 0);
-	if (getVar('get', 'send', 'num')) $cont .= tpl_warn("warn", _OR_8, "", "", "info");
-	$num = getVar('get', 'num', 'num', 1);
-	$offset = ($num-1) * $confor['anum'];
-	$offset = intval($offset);
-	$result = $db->sql_query("SELECT id, mail, info, com, ip, agent, date, status FROM ".PREFIX_DB."_order ORDER BY date DESC LIMIT ".$offset.", ".$confor['anum']);
-	if ($db->sql_numrows($result) > 0) {
-		$cont .= tpl_eval("open");
-		list($numstories) = $db->sql_fetchrow($db->sql_query("SELECT Count(id) FROM ".PREFIX_DB."_order"));
-		$r = $numstories;
-		if ($numstories > $offset) $r -= $offset;
-		$numpages = ceil($numstories / $confor['anum']);
-		$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._EMAIL."</th><th>"._IP."</th><th>"._DATE."</th><th class=\"{sorter: false}\">"._STATUS."</th><th class=\"{sorter: false}\">"._FUNCTIONS."</th></tr></thead><tbody>";
-		while (list($id, $mail, $info, $com, $ip, $agent, $date, $status) = $db->sql_fetchrow($result)) {
-			$act = ($status) ? 0 : 1;
-			$infos = fields_out($info, "order");
-			$cont .= "<tr><td>".$id."</td>"
-			."<td>".title_tip($infos."<br>"._COMMENT.": ".$com."<br><br>"._BROWSER.": ".$agent).anti_spam($mail)."</td>"
-			."<td>".user_geo_ip($ip, 4)."</td>"
-			."<td>".format_time($date, _TIMESTRING)."</td>"
-			."<td>".ad_status("", $status)."</td>"
-			."<td>".add_menu(ad_status($admin_file.".php?op=order_active&amp;id=".$id."&amp;act=".$act, $status)."||<a href=\"".$admin_file.".php?op=order_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=order_delete&amp;id=".$id."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;"._ID.": ".$id."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>")."</td></tr>";
-			$r--;
-		}
-		$cont .= "</tbody></table>";
-		$cont .= setPageNumbers("pagenum", "", $numstories, $numpages, $confor['anum'], "op=order&amp;", $confor['anump']);
-		$cont .= tpl_eval("close");
-	} else {
-		$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
-	}
-	echo $cont;
-	foot();
+function order(): void {
+    global $db, $afile, $conf;
+    $cfg = $conf['order'] ?? [];
+    head();
+    $cont = navi(0, 0, 0, 0);
+    if (getVar('get', 'send', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _OR_8]);
+    $num = getVar('get', 'num', 'num', 1);
+    $anum = $cfg['anum'] ?? 25;
+    $anump = $cfg['anump'] ?? 10;
+    $offset = (int)(($num - 1) * $anum);
+    $result = $db->sql_query('SELECT id, mail, info, com, ip, agent, date, status FROM '.PREFIX_DB.'_order ORDER BY date DESC LIMIT '.$offset.', '.$anum);
+    if ($db->sql_numrows($result) > 0) {
+        $cont .= setTemplateBasic('open');
+        [$numstories] = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_order'));
+        $r = $numstories;
+        if ($numstories > $offset) $r -= $offset;
+        $numpages = ceil($numstories / $anum);
+        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        while ([$id, $mail, $info, $com, $ip, $agent, $date, $status] = $db->sql_fetchrow($result)) {
+            $act = ($status) ? 0 : 1;
+            $infos = fields_out($info, 'order');
+            $cont .= '<tr><td>'.$id.'</td>'
+            .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$com.'<br><br>'._BROWSER.': '.$agent).anti_spam($mail).'</td>'
+            .'<td>'.user_geo_ip($ip, 4).'</td>'
+            .'<td>'.format_time($date, _TIMESTRING).'</td>'
+            .'<td>'.ad_status('', $status).'</td>'
+            .'<td>'.add_menu(ad_status($afile.'.php?name=order&amp;op=active&amp;id='.$id.'&amp;act='.$act, $status).'||<a href="'.$afile.'.php?name=order&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=order&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            $r--;
+        }
+        $cont .= '</tbody></table>';
+        $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=order&amp;', $anump);
+        $cont .= setTemplateBasic('close');
+    } else {
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+    }
+    echo $cont;
+    foot();
 }
 
-function order_add() {
-	global $db, $admin_file, $stop, $confor;
-	if ($mid = getVar('req', 'id', 'num')) {
-		$result = $db->sql_query('SELECT mail, info, com, date FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
-		list($mail, $info, $com, $date) = $db->sql_fetchrow($result);
-	} else {
-		$mid = getVar('post', 'mid', 'num');
-		$mail = getVar('post', 'mail', 'text');
-		$info = fields_save(getVar('post', 'field', 'array'));
-		$com = save_text(getVar('post', 'com', 'text'), 1);
-		$date = save_datetime(1, "date");
-	}
-	head();
-	$cont = order_navi(0, 1, 0, 0);
-	if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
-	if ($info) $cont .= preview($mail, $info, _COMMENT.": ".$com, "", "all");
-	$cont .= tpl_eval("open");
-	$cont .= "<form name=\"post\" action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_form\">"
-	."<tr><td>"._OR_9.":</td><td><input type=\"email\" name=\"mail\" value=\"".$mail."\" maxlength=\"255\" class=\"sl_form\" placeholder=\""._OR_9."\" required></td></tr>"
-	.fields_in($info, "order")
-	."<tr><td>"._OR_10.":</td><td><textarea name=\"com\" cols=\"65\" rows=\"5\" class=\"sl_form\" placeholder=\""._OR_10."\">".$com."</textarea></td></tr>"
-	."<tr><td>"._CHNGSTORY.":</td><td>".datetime(1, "date", $date, 16, "sl_form")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\">".ad_save("mid", $mid, "order_save")."</td></tr></table></form>";
-	$cont .= tpl_eval("close");
-	echo $cont;
-	foot();
+function add(): void {
+    global $db, $afile, $stop;
+    $mid = getVar('req', 'id', 'num', 0);
+    if ($mid) {
+        $result = $db->sql_query('SELECT mail, info, com, date FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
+        [$mail, $info, $com, $date] = $db->sql_fetchrow($result);
+    } else {
+        $mid = getVar('post', 'mid', 'num', 0);
+        $mail = getVar('post', 'mail', 'text', '');
+        $info = getVar('post', 'field', 'field');
+        $com = getVar('post', 'com', 'text', '');
+        $date = save_datetime(1, 'date');
+    }
+    head();
+    $cont = navi(0, 1, 0, 0);
+    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if ($info) $cont .= preview($mail, $info, _COMMENT.': '.$com, '', 'all');
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
+    .'<tr><td>'._OR_9.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_form" placeholder="'._OR_9.'" required></td></tr>'
+    .fields_in($info, 'order')
+    .'<tr><td>'._OR_10.':</td><td><textarea name="com" cols="65" rows="5" class="sl_form" placeholder="'._OR_10.'">'.$com.'</textarea></td></tr>'
+    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-function order_save() {
-	global $db, $admin_file, $stop;
-	$mid = getVar('post', 'mid', 'num');
-	$mail = text_filter(getVar('post', 'mail', 'text'));
-	$info = fields_save(getVar('post', 'field', 'array'));
-	$com = text_filter(getVar('post', 'com', 'text'));
-	$date = save_datetime(1, "date");
-	checkemail($mail);
-	if (!$stop && getVar('post', 'posttype', 'text') == "save") {
-		if ($mid) {
-			$db->sql_query('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['mail' => $mail, 'info' => $info, 'com' => $com, 'date' => $date, 'mid' => $mid]);
-		} else {
-			$ip = getip();
-			$agent = getagent();
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
-		}
-		header("Location: ".$admin_file.".php?op=order");
-	} elseif (getVar('post', 'posttype', 'text') == "delete") {
-		order_delete($mid);
-	} else {
-		order_add();
-	}
+function save(): void {
+    global $db, $afile, $stop;
+    $mid = getVar('post', 'mid', 'num', 0);
+    $mail = text_filter(getVar('post', 'mail', 'text', ''));
+    $info = getVar('post', 'field', 'field');
+    $com = text_filter(getVar('post', 'com', 'text', ''));
+    $date = save_datetime(1, 'date');
+    checkemail($mail);
+    $posttype = getVar('post', 'posttype', 'text', '');
+    if (!$stop && $posttype === 'save') {
+        if ($mid) {
+            $db->sql_query('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['mail' => $mail, 'info' => $info, 'com' => $com, 'date' => $date, 'mid' => $mid]);
+        } else {
+            $ip = getip();
+            $agent = getagent();
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
+        }
+        header('Location: '.$afile.'.php?name=order');
+        exit;
+    } elseif ($posttype === 'delete') {
+        del($mid);
+    } else {
+        add();
+    }
 }
 
-function order_delete() {
-	global $db, $admin_file, $id;
-	$arg = func_get_args();
-	$id = ($arg[0]) ? $arg[0] : $id;
-	if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
-	referer($admin_file.".php?op=order");
+function del(int $did = 0): void {
+    global $db, $afile;
+    $id = $did ? $did : getVar('req', 'id', 'num', 0);
+    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
+    header('Location: '.$afile.'.php?name=order');
+    exit;
 }
 
-function order_conf() {
-	global $admin_file, $confor;
-	head();
-	$cont = order_navi(0, 2, 0, 0);
-	$cont .= checkPerms('order.php');
-	$cont .= tpl_eval("open");
-	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
-	."<tr><td>"._OR_1.":</td><td><input type=\"email\" name=\"mail\" value=\"".$confor['mail']."\" maxlength=\"255\" class=\"sl_conf\" placeholder=\""._OR_1."\" required></td></tr>"
-	."<tr><td>"._C_34.":</td><td><input type=\"number\" name=\"anum\" value=\"".$confor['anum']."\" class=\"sl_conf\" placeholder=\""._C_34."\" required></td></tr>"
-	."<tr><td>"._C_36.":</td><td><input type=\"number\" name=\"anump\" value=\"".$confor['anump']."\" class=\"sl_conf\" placeholder=\""._C_36."\" required></td></tr>"
-	."<tr><td>"._OR_2."</td><td>".radio_form($confor['an'], "an")."</td></tr>"
-	."<tr><td>"._OR_3."</td><td>".radio_form($confor['pr'], "pr")."</td></tr>"
-	."<tr><td>"._OR_4."</td><td>".radio_form($confor['ad'], "ad")."</td></tr>"
-	."<tr><td>"._OR_5.":</td><td>".textarea("1", "text", $confor['text'], "all", "5", _OR_5, "1")."</td></tr>"
-	."<tr><td>"._OR_6.":</td><td>".textarea("2", "info", $confor['info'], "all", "5", _OR_6, "1")."</td></tr>"
-	."<tr><td>"._OR_7.":</td><td>".textarea("3", "sendinfo", $confor['sendinfo'], "all", "5", _OR_7, "1")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"order_conf_save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
-	$cont .= tpl_eval("close");
-	echo $cont;
-	foot();
-}
-function order_conf_save() {
-	global $admin_file;
-	$xtext= save_text(getVar('post', 'text', 'text'));
-	$xinfo = save_text(getVar('post', 'info', 'text'));
-	$xsendinfo = save_text(getVar('post', 'sendinfo', 'text'));
-	$cont = [
-		'mail' => getVar('post', 'mail', 'text'),
-		'anum' => getVar('post', 'anum', 'num'),
-		'anump' => getVar('post', 'anump', 'num'),
-		'an' => getVar('post', 'an', 'num'),
-		'pr' => getVar('post', 'pr', 'num'),
-		'ad' => getVar('post', 'ad', 'num'),
-		'text' => $xtext,
-		'info' => $xinfo,
-		'sendinfo' => $xsendinfo,
-	];
-	setConfigFile('order.php', $cont);
-	header("Location: ".$admin_file.".php?op=order_conf");
+function active(): void {
+    global $db, $afile, $conf;
+    $cfg = $conf['order'] ?? [];
+    $act = getVar('get', 'act', 'num', 0);
+    $id = getVar('get', 'id', 'num', 0);
+    $db->sql_query('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
+    if ($act) {
+        [$mail] = $db->sql_fetchrow($db->sql_query('SELECT mail FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
+        $amail = ($cfg['mail'] ?? '') ? $cfg['mail'] : ($conf['adminmail'] ?? '');
+        $subject = ($conf['sitename'] ?? '').' - '._ORDER;
+        $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
+        $msg .= bb_decode($cfg['sendinfo'] ?? '', 'all');
+        mail_send($mail, $amail, $subject, $msg, 0, 3);
+        header('Location: '.$afile.'.php?name=order&send=1');
+        exit;
+    }
+    header('Location: '.$afile.'.php?name=order');
+    exit;
 }
 
-function order_info() {
-	head();
-	echo order_navi(0, 3, 0, 0)."<div id=\"repadm_info\">".adm_info(1, "order", 0)."</div>";
-	foot();
+function conf(): void {
+    global $afile, $conf;
+    $cfg = $conf['order'] ?? [];
+    head();
+    $cont = navi(0, 2, 0, 0);
+    $cont .= checkPerms('order.php');
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
+    .'<tr><td>'._OR_1.':</td><td><input type="email" name="mail" value="'.($cfg['mail'] ?? '').'" maxlength="255" class="sl_conf" placeholder="'._OR_1.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 25).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($cfg['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._OR_2.'</td><td>'.radio_form($cfg['an'] ?? 0, 'an').'</td></tr>'
+    .'<tr><td>'._OR_3.'</td><td>'.radio_form($cfg['pr'] ?? 0, 'pr').'</td></tr>'
+    .'<tr><td>'._OR_4.'</td><td>'.radio_form($cfg['ad'] ?? 0, 'ad').'</td></tr>'
+    .'<tr><td>'._OR_5.':</td><td>'.textarea('1', 'text', $cfg['text'] ?? '', 'all', '5', _OR_5, '1').'</td></tr>'
+    .'<tr><td>'._OR_6.':</td><td>'.textarea('2', 'info', $cfg['info'] ?? '', 'all', '5', _OR_6, '1').'</td></tr>'
+    .'<tr><td>'._OR_7.':</td><td>'.textarea('3', 'sendinfo', $cfg['sendinfo'] ?? '', 'all', '5', _OR_7, '1').'</td></tr>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-switch($op) {
-	case "order":
-	order();
-	break;
-	
-	case "order_add":
-	order_add();
-	break;
-	
-	case "order_save":
-	order_save();
-	break;
-	
-	case "order_active":
-	$act = getVar('get', 'act', 'num');
-	$id = getVar('get', 'id', 'num');
-	$db->sql_query('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
-	if ($act) {
-		list($mail) = $db->sql_fetchrow($db->sql_query('SELECT mail FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
-		$amail = ($confor['mail']) ? $confor['mail'] : $conf['adminmail'];
-		$subject = $conf['sitename']." - "._ORDER;
-		$msg = $conf['sitename']." - "._ORDER."<br><br>";
-		$msg .= bb_decode($confor['sendinfo'], "all");
-		mail_send($mail, $amail, $subject, $msg, 0, 3);
-		header("Location: ".$admin_file.".php?op=order&send=1");
-	} else {
-		header("Location: ".$admin_file.".php?op=order");
-	}
-	break;
-	
-	case "order_delete":
-	order_delete();
-	break;
-	
-	case "order_conf":
-	order_conf();
-	break;
-	
-	case "order_conf_save":
-	order_conf_save();
-	break;
-	
-	case "order_info":
-	order_info();
-	break;
+function confsave(): void {
+    global $afile;
+    $cont = [
+        'mail' => getVar('post', 'mail', 'text', ''),
+        'anum' => getVar('post', 'anum', 'num', 25),
+        'anump' => getVar('post', 'anump', 'num', 10),
+        'an' => getVar('post', 'an', 'num', 0),
+        'pr' => getVar('post', 'pr', 'num', 0),
+        'ad' => getVar('post', 'ad', 'num', 0),
+        'text' => getVar('post', 'text', 'text', ''),
+        'info' => getVar('post', 'info', 'text', ''),
+        'sendinfo' => getVar('post', 'sendinfo', 'text', ''),
+    ];
+    setConfigFile('order.php', $cont);
+    header('Location: '.$afile.'.php?name=order&op=conf');
+    exit;
 }
-?>
+
+function info(): void {
+    head();
+    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 'order', 0).'</div>';
+    foot();
+}
+
+switch ($op) {
+    default: order(); break;
+    case 'add': add(); break;
+    case 'save': save(); break;
+    case 'active': active(); break;
+    case 'del': del(); break;
+    case 'conf': conf(); break;
+    case 'confsave': confsave(); break;
+    case 'info': info(); break;
+}
