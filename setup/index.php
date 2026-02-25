@@ -255,10 +255,10 @@ function language(): void {
     $a = 3;
     $i = 1;
     $tdwidth = intval(100/$a);
-    foreach ($langlist as $key => $val) {
-        $altlang = getLang($langlist[$key]);
+    foreach ($langlist as $val) {
+        $altlang = getLang($val);
         if (($i - 1) % $a == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$tdwidth.'%;" class="sl_center"><a href="setup.php?op=lang&amp;id='.$langlist[$key].'" title="'.$altlang.'"><img src="setup/templates/images/'.$langlist[$key].'.png" alt="'.$altlang.'"><br><b>'.$altlang.'</b></a></td>';
+        $cont .= '<td style="width: '.$tdwidth.'%;" class="sl_center"><a href="setup.php?op=lang&amp;id='.$val.'" title="'.$altlang.'"><img src="setup/templates/images/'.$val.'.png" alt="'.$altlang.'"><br><b>'.$altlang.'</b></a></td>';
         if ($i % $a == 0) $cont .= '</tr>'.PHP_EOL;
         $i++;
     }

@@ -526,7 +526,7 @@ CREATE TABLE `{prefix}_rating` (
   KEY `mid` (`mid`),
   KEY `modul` (`modul`),
   KEY `uid` (`uid`),
-  UNIQUE KEY `mid_modul_uid` (`mid`, `modul`, `uid`)
+  UNIQUE KEY `mid_modul_host` (`mid`, `modul`, `host`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
 CREATE TABLE `{prefix}_referer` (

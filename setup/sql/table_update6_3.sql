@@ -392,13 +392,21 @@ ALTER TABLE `{prefix}_products`
   ADD KEY `active` (`active`),
   ADD KEY `ihome` (`ihome`);
 
+DELETE r1
+FROM `{prefix}_rating` r1
+INNER JOIN `{prefix}_rating` r2
+  ON r1.mid = r2.mid
+ AND r1.modul = r2.modul
+ AND r1.host = r2.host
+ AND r1.id > r2.id;
+
 ALTER TABLE `{prefix}_rating`
   MODIFY `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `mid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `uid` INT UNSIGNED NOT NULL DEFAULT 0,
   MODIFY `host` VARCHAR(45) NOT NULL DEFAULT '',
   ADD KEY `uid` (`uid`),
-  ADD UNIQUE KEY `mid_modul_uid` (`mid`, `modul`, `uid`);
+  ADD UNIQUE KEY `mid_modul_host` (`mid`, `modul`, `host`);
 
 UPDATE `{prefix}_users` SET `user_points` = 0 WHERE `user_points` < 0;
 ALTER TABLE `{prefix}_users`
