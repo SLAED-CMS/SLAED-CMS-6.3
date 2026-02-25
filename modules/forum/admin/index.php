@@ -1,143 +1,134 @@
 <?php
-# Copyright © 2005 - 2015 SLAED
-# Website: http://www.slaed.net
+# Author: Eduard Laas
+# Copyright © 2005 - 2026 SLAED
+# License: GNU GPL 3
+# Website: slaed.net
 
-if (!defined("ADMIN_FILE") || !is_admin_modul("forum")) die("Illegal file access");
+if (!defined('ADMIN_FILE') || !is_admin_modul('forum')) die('Illegal file access');
 
-
-function forum_navi() {
-	panel();
-	$narg = func_get_args();
-	$ops = array("forum_synch", "forum_conf", "forum_info");
-	$lang = array(_SYNCH, _PREFERENCES, _INFO);
-	return navi_gen(_FORUM, "forum.png", "", $ops, $lang, "", "", $narg[0], $narg[1], $narg[2], $narg[3]);
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+    $ops = ['name=forum', 'name=forum&amp;op=conf', 'name=forum&amp;op=info'];
+    $lang = [_SYNCH, _PREFERENCES, _INFO];
+    return getAdminTabs(_FORUM, 'forum.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
-function forum_synch() {
-	global $db;
-	$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost_id = \'0\' WHERE modul = \'forum\'');
-	$result = $db->sql_query('SELECT id, parentid FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
-	while (list($id, $parentid) = $db->sql_fetchrow($result)) $massiv[$id] = array($parentid);
-	foreach ($massiv as $key => $val) {
-		list($topics) = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid = \'0\' AND catid = :key', ['key' => $key]));
-		list($posts) = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid != \'0\' AND catid = :key', ['key' => $key]));
-		list($id, $pid) = $db->sql_fetchrow($db->sql_query('SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE catid = :key AND ((pid != \'0\' && status = \'1\') || (pid = \'0\' && status > \'1\')) ORDER BY id DESC LIMIT 1', ['key' => $key]));
-		$lid = ($pid) ? $pid : $id;
-		$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost_id = :lid WHERE id = :key AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'key' => $key]);
-		$flag = $val[0];
-		while ($flag != 0) {
-			$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = topics+:topics, posts = posts+:posts, lpost_id = :lid WHERE id = :flag AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'flag' => $flag]);
-			$flag = intval($massiv[$flag][0]);
-		}
-	}
-	head();
-	$cont = forum_navi(0, 0, 0, 0);
-	$cont .= tpl_warn("warn", _SYNCHIN, "", "", "info");
-	$cont .= tpl_eval("open");
-	$cont .= "<table class=\"sl_table_list_sort\"><thead><tr><th>"._ID."</th><th>"._FORUM."</th><th>"._NEWTOPICS."</th><th>"._MESSAGES."</th><th class=\"{sorter: false}\">"._STATUS."</th></tr></thead><tbody>";
-	$result = $db->sql_query('SELECT id, title, description, cstatus, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
-	while (list($id, $title, $description, $cstatus, $topics, $posts) = $db->sql_fetchrow($result)) {
-		$descript = ($description) ? $description : _NO;
-		$ltitle = title_tip(_DESCRIPTION.": ".$descript)."<a href=\"index.php?name=forum&amp;cat=".$id."\" target=\"_blank\" title=\"".$title."\" class=\"sl_note\">".cutstr($title, 60)."</a>";
-		$cont .= "<tr><td>".$id."</td><td>".$ltitle."</td><td>".$topics."</td><td>".$posts."</td><td>".ad_status("", $cstatus)."</td></tr>";
-	}
-	$cont .= "</tbody></table>";
-	$cont .= tpl_eval("close");
-	echo $cont;
-	foot();
+function synch(): void {
+    global $db;
+    $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost_id = \'0\' WHERE modul = \'forum\'');
+    $result = $db->sql_query('SELECT id, parentid FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
+    $massiv = [];
+    while ([$id, $parentid] = $db->sql_fetchrow($result)) {
+        $massiv[$id] = [$parentid];
+    }
+    foreach ($massiv as $key => $val) {
+        [$topics] = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid = \'0\' AND catid = :key', ['key' => $key]));
+        [$posts] = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid != \'0\' AND catid = :key', ['key' => $key]));
+        [$id, $pid] = $db->sql_fetchrow($db->sql_query('SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE catid = :key AND ((pid != \'0\' AND status = \'1\') OR (pid = \'0\' AND status > \'1\')) ORDER BY id DESC LIMIT 1', ['key' => $key]));
+        $lid = ($pid) ? $pid : ($id ?? 0);
+        $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost_id = :lid WHERE id = :key AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'key' => $key]);
+        $flag = $val[0];
+        while ($flag != 0) {
+            $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = topics+:topics, posts = posts+:posts, lpost_id = :lid WHERE id = :flag AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'flag' => $flag]);
+            $flag = (int)($massiv[$flag][0] ?? 0);
+        }
+    }
+    head();
+    $cont = navi(0, 0, 0, 0);
+    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHIN]);
+    $cont .= setTemplateBasic('open');
+    $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._FORUM.'</th><th>'._NEWTOPICS.'</th><th>'._MESSAGES.'</th><th class="{sorter: false}">'._STATUS.'</th></tr></thead><tbody>';
+    $result = $db->sql_query('SELECT id, title, description, cstatus, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
+    while ([$id, $title, $description, $cstatus, $topics, $posts] = $db->sql_fetchrow($result)) {
+        $descript = ($description) ? $description : _NO;
+        $ltitle = title_tip(_DESCRIPTION.': '.$descript).'<a href="index.php?name=forum&amp;cat='.$id.'" target="_blank" title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</a>';
+        $cont .= '<tr><td>'.$id.'</td><td>'.$ltitle.'</td><td>'.$topics.'</td><td>'.$posts.'</td><td>'.ad_status('', $cstatus).'</td></tr>';
+    }
+    $cont .= '</tbody></table>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-function forum_conf() {
-	global $admin_file, $conffo;
-	head();
-	$cont = forum_navi(0, 1, 0, 0);
-	$cont .= tpl_warn("warn", _SYNCHINF, "", "", "info");
-	$cont .= checkPerms('forum.php');
-	$cont .= tpl_eval("open");
-	$cont .= "<form action=\"".$admin_file.".php\" method=\"post\"><table class=\"sl_table_conf\">"
-	."<tr><td>"._CDEFIS.":</td><td><input type=\"text\" name=\"defis\" value=\"".urldecode($conffo['defis'])."\" maxlength=\"25\" class=\"sl_conf\" placeholder=\""._CDEFIS."\" required></td></tr>"
-	."<tr><td>"._FO_1.":</td><td><input type=\"number\" name=\"listnum\" value=\"".$conffo['listnum']."\" class=\"sl_conf\" placeholder=\""._FO_1."\" required></td></tr>"
-	."<tr><td>"._FO_2.":</td><td><input type=\"number\" name=\"pop\" value=\"".$conffo['pop']."\" class=\"sl_conf\" placeholder=\""._FO_2."\" required></td></tr>"
-	."<tr><td>"._COMLETTER.":</td><td><input type=\"number\" name=\"letter\" value=\"".$conffo['letter']."\" class=\"sl_conf\" placeholder=\""._COMLETTER."\" required></td></tr>"
-	."<tr><td>"._C_33.":</td><td><input type=\"number\" name=\"num\" value=\"".$conffo['num']."\" class=\"sl_conf\" placeholder=\""._C_33."\" required></td></tr>"
-	."<tr><td>"._C_35.":</td><td><input type=\"number\" name=\"pnum\" value=\"".$conffo['pnum']."\" class=\"sl_conf\" placeholder=\""._C_35."\" required></td></tr>"
-	."<tr><td>"._FO_5.":</td><td>".getcat("forum", $conffo['recycle'], "recycle", "sl_conf", "<option value=\"0\">"._NO."</option>")."</td></tr>"
-	."<tr><td>"._SORT.":</td><td><select name=\"sort\" class=\"sl_conf\">"
-	."<option value=\"1\"";
-	if ($conffo['sort'] == "1") $cont .= " selected";
-	$cont .= ">"._ASC."</option>"
-	."<option value=\"0\"";
-	if ($conffo['sort'] == "0") $cont .= " selected";
-	$cont .= ">"._DESC."</option>"
-	."</select></td></tr>"
-	."<tr><td>"._ALLOWANONPOST."<div class=\"sl_small\">"._FO_6."</div></td><td><select name=\"anonpost\" class=\"sl_conf\">"
-	."<option value=\"0\"";
-	if ($conffo['anonpost'] == "0") $cont .= " selected";
-	$cont .= ">"._APOSTMOD."</option>"
-	."<option value=\"1\"";
-	if ($conffo['anonpost'] == "1") $cont .= " selected";
-	$cont .= ">"._APOSTNOMOD."</option>"
-	."</select></td></tr>"
-	."<tr><td>"._FO_7."</td><td>".radio_form($conffo['add'], "add")."</td></tr>"
-	."<tr><td>"._FO_8."</td><td>".radio_form($conffo['qreply'], "qreply")."</td></tr>"
-	."<tr><td>"._FO_9."</td><td>".radio_form($conffo['ledit'], "ledit")."</td></tr>"
-	."<tr><td>"._FO_10."</td><td>".radio_form($conffo['addmail'], "addmail")."</td></tr>"
-	."<tr><td>"._VPRIVAT."</td><td>".radio_form($conffo['privat'], "privat")."</td></tr>"
-	."<tr><td>"._VPROFIL."</td><td>".radio_form($conffo['profil'], "profil")."</td></tr>"
-	."<tr><td>"._VWEB."</td><td>".radio_form($conffo['web'], "web")."</td></tr>"
-	."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"forum_conf_save\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr></table></form>";
-	$cont .= tpl_eval("close");
-	echo $cont;
-	foot();
+function conf(): void {
+    global $afile, $conf;
+    $cfg = $conf['forum'] ?? [];
+    head();
+    $cont = navi(0, 1, 0, 0);
+    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHINF]);
+    $cont .= checkPerms('forum.php');
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
+    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
+    .'<tr><td>'._FO_1.':</td><td><input type="number" name="listnum" value="'.($cfg['listnum'] ?? 0).'" class="sl_conf" placeholder="'._FO_1.'" required></td></tr>'
+    .'<tr><td>'._FO_2.':</td><td><input type="number" name="pop" value="'.($cfg['pop'] ?? 0).'" class="sl_conf" placeholder="'._FO_2.'" required></td></tr>'
+    .'<tr><td>'._COMLETTER.':</td><td><input type="number" name="letter" value="'.($cfg['letter'] ?? 0).'" class="sl_conf" placeholder="'._COMLETTER.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($cfg['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="pnum" value="'.($cfg['pnum'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._FO_5.':</td><td>'.getcat('forum', $cfg['recycle'] ?? 0, 'recycle', 'sl_conf', '<option value="0">'._NO.'</option>').'</td></tr>'
+    .'<tr><td>'._SORT.':</td><td><select name="sort" class="sl_conf">'
+    .'<option value="1"';
+    if (($cfg['sort'] ?? null) == '1') $cont .= ' selected';
+    $cont .= '>'._ASC.'</option>'
+    .'<option value="0"';
+    if (($cfg['sort'] ?? null) == '0') $cont .= ' selected';
+    $cont .= '>'._DESC.'</option>'
+    .'</select></td></tr>'
+    .'<tr><td>'._ALLOWANONPOST.'<div class="sl_small">'._FO_6.'</div></td><td><select name="anonpost" class="sl_conf">'
+    .'<option value="0"';
+    if (($cfg['anonpost'] ?? null) == '0') $cont .= ' selected';
+    $cont .= '>'._APOSTMOD.'</option>'
+    .'<option value="1"';
+    if (($cfg['anonpost'] ?? null) == '1') $cont .= ' selected';
+    $cont .= '>'._APOSTNOMOD.'</option>'
+    .'</select></td></tr>'
+    .'<tr><td>'._FO_7.'</td><td>'.radio_form($cfg['add'] ?? 0, 'add').'</td></tr>'
+    .'<tr><td>'._FO_8.'</td><td>'.radio_form($cfg['qreply'] ?? 0, 'qreply').'</td></tr>'
+    .'<tr><td>'._FO_9.'</td><td>'.radio_form($cfg['ledit'] ?? 0, 'ledit').'</td></tr>'
+    .'<tr><td>'._FO_10.'</td><td>'.radio_form($cfg['addmail'] ?? 0, 'addmail').'</td></tr>'
+    .'<tr><td>'._VPRIVAT.'</td><td>'.radio_form($cfg['privat'] ?? 0, 'privat').'</td></tr>'
+    .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($cfg['profil'] ?? 0, 'profil').'</td></tr>'
+    .'<tr><td>'._VWEB.'</td><td>'.radio_form($cfg['web'] ?? 0, 'web').'</td></tr>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="forum"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    foot();
 }
 
-function forum_conf_save() {
-	global $admin_file;
-	$post_defis = getVar('post', 'defis', 'text');
-	$xdefis = ($post_defis) ? urlencode($post_defis) : "%3E";
-	$cont = [
-		'defis' => $xdefis,
-		'listnum' => getVar('post', 'listnum', 'num'),
-		'pop' => getVar('post', 'pop', 'num'),
-		'letter' => getVar('post', 'letter', 'num'),
-		'num' => getVar('post', 'num', 'num'),
-		'pnum' => getVar('post', 'pnum', 'num'),
-		'recycle' => getVar('post', 'recycle', 'num'),
-		'sort' => getVar('post', 'sort', 'num'),
-		'anonpost' => getVar('post', 'anonpost', 'num'),
-		'add' => getVar('post', 'add', 'num'),
-		'qreply' => getVar('post', 'qreply', 'num'),
-		'ledit' => getVar('post', 'ledit', 'num'),
-		'addmail' => getVar('post', 'addmail', 'num'),
-		'privat' => getVar('post', 'privat', 'num'),
-		'profil' => getVar('post', 'profil', 'num'),
-		'web' => getVar('post', 'web', 'num'),
-	];
-	setConfigFile('forum.php', $cont);
-	header("Location: ".$admin_file.".php?op=forum_conf");
+function confsave(): void {
+    global $afile;
+    $cont = [
+        'defis' => getVar('post', 'defis', 'defis', '%3E'),
+        'listnum' => getVar('post', 'listnum', 'num', 10),
+        'pop' => getVar('post', 'pop', 'num', 10),
+        'letter' => getVar('post', 'letter', 'num', 0),
+        'num' => getVar('post', 'num', 'num', 25),
+        'pnum' => getVar('post', 'pnum', 'num', 10),
+        'recycle' => getVar('post', 'recycle', 'num', 0),
+        'sort' => getVar('post', 'sort', 'num', 1),
+        'anonpost' => getVar('post', 'anonpost', 'num', 0),
+        'add' => getVar('post', 'add', 'num', 0),
+        'qreply' => getVar('post', 'qreply', 'num', 0),
+        'ledit' => getVar('post', 'ledit', 'num', 0),
+        'addmail' => getVar('post', 'addmail', 'num', 0),
+        'privat' => getVar('post', 'privat', 'num', 0),
+        'profil' => getVar('post', 'profil', 'num', 0),
+        'web' => getVar('post', 'web', 'num', 0),
+    ];
+    setConfigFile('forum.php', $cont);
+    header('Location: '.$afile.'.php?name=forum&op=conf');
+    exit;
 }
 
-function forum_info() {
-	head();
-	echo forum_navi(0, 2, 0, 0)."<div id=\"repadm_info\">".adm_info(1, "forum", 0)."</div>";
-	foot();
+function info(): void {
+    head();
+    echo navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 'forum', 0).'</div>';
+    foot();
 }
 
-switch($op) {
-	case "forum_synch":
-	forum_synch();
-	break;
-	
-	case "forum_conf":
-	forum_conf();
-	break;
-	
-	case "forum_conf_save":
-	forum_conf_save();
-	break;
-	
-	case "forum_info":
-	forum_info();
-	break;
+switch ($op) {
+    default: synch(); break;
+    case 'conf': conf(); break;
+    case 'confsave': confsave(); break;
+    case 'info': info(); break;
 }
-?>
+
