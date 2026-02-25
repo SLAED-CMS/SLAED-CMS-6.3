@@ -84,7 +84,7 @@ class InsertValidationTest extends TestCase
 
             $content = file_get_contents($path);
 
-            preg_match_all('/INSERT\s+INTO\s+["\'\s\.\$\w]*_(\w+)["\'\s]*\(([^)]+)\)\s*VALUES/i', $content, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+            preg_match_all('/INSERT\s+INTO\s+["\'\s\.\$\w]*(?<!\w)_(\w+)["\'\s]*\(([^)]+)\)\s*VALUES/i', $content, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 
             foreach ($matches as $match) {
                 $tableName = $match[1][0];
