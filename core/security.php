@@ -928,6 +928,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         'url'   => fn($v) => is_string($v) ? url_filter(trim($v)) : $v,
         'var'   => fn($v) => is_string($v) ? isVar($v) : $v,
         'bool'  => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),
+        'defis' => fn($v) => is_string($v) ? (($v = trim($v)) !== '' ? urlencode($v) : '') : $v,
         'raw'   => fn($v) => $v,
     ];
 
@@ -951,8 +952,9 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         if ($type) {
             $filtered = [];
             foreach ($value as $item) {
-                if (isset($filters[$type])) {
-                    $item = $filters[$type]($item);
+                $lt = strtolower($type);
+                if (isset($filters[$lt])) {
+                    $item = $filters[$lt]($item);
                 }
                 if ($item !== false && $item !== null && $item !== '') {
                     $filtered[] = $item;
@@ -986,12 +988,23 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         default => null,
     };
 
+    // Special handling: keep default untouched (already encoded),
+    // encode only real input values.
+    if (strtolower($type) === 'defis') {
+        if ($value === null || $value === '') {
+            return ($default !== '' && $default !== null) ? $default : false;
+        }
+        $value = $filters['defis']($value);
+        return ($value !== '' && $value !== null) ? $value : (($default !== '' && $default !== null) ? $default : false);
+    }
+
     // Falls Wert leer, Default nutzen
     $value = ($value !== null && $value !== '') ? $value : $default;
 
     // Typfilter anwenden
-    if ($type && isset($filters[$type])) {
-        $value = $filters[$type]($value);
+    $lt = strtolower($type);
+    if ($lt && isset($filters[$lt])) {
+        $value = $filters[$lt]($value);
     } else {
         // If no type, trim for strings
         if (is_string($value)) $value = trim($value);
