@@ -120,6 +120,32 @@ if (defined('MODULE_FILE')) {
 
 ### The beginning of new functions
 
+# Safe redirect with optional referer fallback
+function setRedirect(string $url, bool $refer = false, int $code = 302): never {
+    if (!in_array($code, [301, 302, 303, 307, 308], true)) $code = 302;
+    if ($code === 302 && strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? '')) === 'POST') $code = 303;
+    $target = trim(str_replace(["\r", "\n"], '', $url));
+    if ($refer && isset($_REQUEST['refer'])) {
+        $ref = trim(str_replace(["\r", "\n"], '', (string)($_SERVER['HTTP_REFERER'] ?? getenv('HTTP_REFERER') ?? '')));
+        $valid = $ref !== '' && !preg_match('#^unknown#i', $ref) && !preg_match('#^bookmark#i', $ref);
+        if ($valid) {
+            $is_rel = str_starts_with($ref, '/') && !str_starts_with($ref, '//');
+            if ($is_rel) {
+                $target = $ref;
+            } else {
+                $rschm = strtolower((string)(parse_url($ref, PHP_URL_SCHEME) ?? ''));
+                $rhost = (string)(parse_url($ref, PHP_URL_HOST) ?? '');
+                $chost = (string)preg_replace('/:\d+$/', '', (string)($_SERVER['HTTP_HOST'] ?? ''));
+                $is_same = in_array($rschm, ['http', 'https'], true) && $rhost !== '' && $chost !== '' && strcasecmp($rhost, $chost) === 0;
+                if ($is_same) $target = $ref;
+            }
+        }
+    }
+    if ($target === '') $target = '/';
+    header('Location: '.$target, true, $code);
+    exit;
+}
+
 # Highlights text terms inside HTML content
 function filterTextHighlight(string $sourse, string $word): string {
     $word = var_filter(urldecode($word));
@@ -1216,7 +1242,7 @@ function getVoting() {
                 }
             }
             list($vnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_voting WHERE ".$querylang));
-            $admin = (is_moder("voting") && $votid == "voting") ? add_menu("<a href=\"".$admin_file.".php?op=voting_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=voting_delete&amp;id=".$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
+            $admin = (is_moder("voting") && $votid == "voting") ? add_menu("<a href=\"".$admin_file.".php?name=voting&amp;op=add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?name=voting&amp;op=delete&amp;id=".$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
             $post = (!$rate) ? "<span OnClick=\"AjaxLoad('POST', '1', '".$votid."', 'go=1&amp;op=avoting_save&amp;id=".$id."&amp;votid=".$votid."', { 'questions%5B%5D':'"._SEROR1."' }); return false;\" title=\""._VOTE."\" class=\"sl_but_blue\">"._VOTE."</span>" : "";
             $polls = ($vnum > 1) ? "<a href=\"index.php?name=voting\" title=\""._POLLS."\" class=\"sl_but\">"._POLLS."</a>" : "";
             $votes = (!$modul && $votid != "voting") ? "<a href=\"index.php?name=voting&amp;op=view&amp;id=".$id."\" title=\""._VOTES."\" class=\"sl_votes\">"._VOTES.": ".$vote."</a>" : "<span class=\"sl_votes\">"._VOTES.": ".$vote."</span>";
@@ -2556,14 +2582,10 @@ function get_user_search() {
     return $cont;
 }
 
+# OLD DELETE
 # Redirect referer
-function referer($url) {
-    $referer = getenv('HTTP_REFERER');
-    if (isset($_REQUEST['refer']) && $referer != '' && !preg_match('#^unknown#i', $referer) && !preg_match('#^bookmark#i', $referer)) {
-        header('Location: '.$referer);
-    } else {
-        header('Location: '.$url);
-    }
+function referer(string $url): never {
+    setRedirect($url, true);
 }
 
 # Analyze name
@@ -4184,45 +4206,47 @@ function rating() {
         } elseif (!$cookies && !$num && $rate) {
             setcookie(substr($mod, 0, 2)."-".$id, $id, time() + intval($con[0]));
             $new = time();
-            $db->sql_query("INSERT INTO ".PREFIX_DB."_rating VALUES (NULL, '".$id."', '".$mod."', '".$new."', '".$uid."', '".$ip."')");
-             if ($mod == "account" || $mod == "members") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_votes=user_votes+1, user_totalvotes=user_totalvotes+".$rate." WHERE user_id = '".$id."'");
-                update_points(2);
-            } elseif ($mod == "faq") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_faq SET score=score+".$rate.", ratings=ratings+1 WHERE fid = '".$id."'");
-                update_points(8);
-            } elseif ($mod == "files") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_files SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
-                update_points(12);
-            } elseif ($mod == "forum") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_forum SET score=score+".$rate.", ratings=ratings+1 WHERE id = '".$id."'");
-                update_points(15);
-            } elseif ($mod == "help") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_help SET score=score+".$rate.", ratings=ratings+1 WHERE sid = '".$id."'");
-            } elseif ($mod == "gallery") {
-                #$db->sql_query("UPDATE ".PREFIX_DB."_gallery SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
-                update_points(18);
-            } elseif ($mod == "jokes") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_jokes SET rating=rating+".$rate.", ratingtot=ratingtot+1 WHERE jokeid = '".$id."'");
-                update_points(20);
-            } elseif ($mod == "links") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_links SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
-                update_points(24);
-            } elseif ($mod == "media") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_media SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
-                update_points(27);
-            } elseif ($mod == "multimedia") {
-                #$db->sql_query("UPDATE ".PREFIX_DB."_multimedia SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
-                update_points(30);
-            } elseif ($mod == "news") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_news SET score=score+".$rate.", ratings=ratings+1 WHERE sid = '".$id."'");
-                update_points(33);
-            } elseif ($mod == "pages") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_pages SET score=score+".$rate.", ratings=ratings+1 WHERE pid = '".$id."'");
-                update_points(37);
-            } elseif ($mod == "shop") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_products SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
-                update_points(41);
+            $inserted = $db->sql_query("INSERT INTO ".PREFIX_DB."_rating VALUES (NULL, '".$id."', '".$mod."', '".$new."', '".$uid."', '".$ip."')");
+            if ($inserted) {
+                if ($mod == "account" || $mod == "members") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_votes=user_votes+1, user_totalvotes=user_totalvotes+".$rate." WHERE user_id = '".$id."'");
+                    update_points(2);
+                } elseif ($mod == "faq") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_faq SET score=score+".$rate.", ratings=ratings+1 WHERE fid = '".$id."'");
+                    update_points(8);
+                } elseif ($mod == "files") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_files SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
+                    update_points(12);
+                } elseif ($mod == "forum") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_forum SET score=score+".$rate.", ratings=ratings+1 WHERE id = '".$id."'");
+                    update_points(15);
+                } elseif ($mod == "help") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_help SET score=score+".$rate.", ratings=ratings+1 WHERE sid = '".$id."'");
+                } elseif ($mod == "gallery") {
+                    #$db->sql_query("UPDATE ".PREFIX_DB."_gallery SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
+                    update_points(18);
+                } elseif ($mod == "jokes") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_jokes SET rating=rating+".$rate.", ratingtot=ratingtot+1 WHERE jokeid = '".$id."'");
+                    update_points(20);
+                } elseif ($mod == "links") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_links SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
+                    update_points(24);
+                } elseif ($mod == "media") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_media SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
+                    update_points(27);
+                } elseif ($mod == "multimedia") {
+                    #$db->sql_query("UPDATE ".PREFIX_DB."_multimedia SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
+                    update_points(30);
+                } elseif ($mod == "news") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_news SET score=score+".$rate.", ratings=ratings+1 WHERE sid = '".$id."'");
+                    update_points(33);
+                } elseif ($mod == "pages") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_pages SET score=score+".$rate.", ratings=ratings+1 WHERE pid = '".$id."'");
+                    update_points(37);
+                } elseif ($mod == "shop") {
+                    $db->sql_query("UPDATE ".PREFIX_DB."_products SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
+                    update_points(41);
+                }
             }
             list($votes, $totalvotes) = $db->sql_fetchrow($db->sql_query("SELECT ".$query));
             echo ajax_rating(2, "", "", $votes, $totalvotes, "", $stl);
@@ -5138,25 +5162,27 @@ function avoting_save() {
             } else {
                 setcookie(substr("voting", 0, 2)."-".$id, $id, time() + intval($confv['voting_t']));
                 $new = time();
-                $db->sql_query("INSERT INTO ".PREFIX_DB."_rating VALUES (NULL, '".$id."', 'voting', '".$new."', '".$uid."', '".$ip."')");
-                list($answer) = $db->sql_fetchrow($db->sql_query("SELECT answer FROM ".PREFIX_DB."_voting WHERE id = '".$id."'"));
-                $answer = explode("|", $answer);
-                for ($q = 0; $q < count($answer); $q++) {
-                    if ($answer[$q] != "") {
-                        foreach ($questions as $val) {
-                            if ($val != "" && $val == $q + 1) {
-                                $isansw = 1;
-                                break;
-                            } else {
-                                $isansw = 0;
+                $inserted = $db->sql_query("INSERT INTO ".PREFIX_DB."_rating VALUES (NULL, '".$id."', 'voting', '".$new."', '".$uid."', '".$ip."')");
+                if ($inserted) {
+                    list($answer) = $db->sql_fetchrow($db->sql_query("SELECT answer FROM ".PREFIX_DB."_voting WHERE id = '".$id."'"));
+                    $answer = explode("|", $answer);
+                    for ($q = 0; $q < count($answer); $q++) {
+                        if ($answer[$q] != "") {
+                            foreach ($questions as $val) {
+                                if ($val != "" && $val == $q + 1) {
+                                    $isansw = 1;
+                                    break;
+                                } else {
+                                    $isansw = 0;
+                                }
                             }
+                            $answ[] = ($isansw) ? $answer[$q] + 1 : $answer[$q];
                         }
-                        $answ[] = ($isansw) ? $answer[$q] + 1 : $answer[$q];
                     }
+                    $answ = implode("|", $answ);
+                    $db->sql_query("UPDATE ".PREFIX_DB."_voting SET answer = '".$answ."' WHERE id = '".$id."'");
+                    update_points(42);
                 }
-                $answ = implode("|", $answ);
-                $db->sql_query("UPDATE ".PREFIX_DB."_voting SET answer = '".$answ."' WHERE id = '".$id."'");
-                update_points(42);
                 $cont = getVoting($id);
             }
         }
