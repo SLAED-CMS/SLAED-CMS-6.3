@@ -134,22 +134,23 @@ function stats(): void {
 
 function add(): void {
     global $db, $afile, $stop;
+    $stop = $stop ?? [];
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->sql_query('SELECT id, sitename, description, link, mail, hits, outs FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]);
         [$a_id, $a_sitename, $a_description, $a_sitelink, $a_adminemail, $a_hits, $a_outs] = $db->sql_fetchrow($result);
     } else {
         $a_id = getVar('post', 'a_id', 'num');
-        $a_sitename = save_text(getVar('post', 'a_sitename', 'title', ''), 1);
+        $a_sitename = getVar('post', 'a_sitename', 'title', '');
         $a_adminemail = getVar('post', 'a_adminemail', 'var', '');
-        $a_description = save_text(getVar('post', 'a_description', 'text', ''));
+        $a_description = getVar('post', 'a_description', 'text', '');
         $a_sitelink = getVar('post', 'a_sitelink', 'url', 'https://');
         $a_hits = getVar('post', 'a_hits', 'num', 0);
         $a_outs = getVar('post', 'a_outs', 'num', 0);
     }
     head();
     $cont = navi(0, 1, 0, 0);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
     if ($a_description) $cont .= preview($a_sitename, $a_description, '', '', 'auto_links');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
@@ -168,8 +169,8 @@ function add(): void {
 function save(): void {
     global $db, $afile, $stop;
     $a_id = getVar('post', 'a_id', 'num');
-    $a_sitename = save_text(getVar('post', 'a_sitename', 'title', ''), 1);
-    $a_description = save_text(getVar('post', 'a_description', 'text', ''));
+    $a_sitename = getVar('post', 'a_sitename', 'title', '');
+    $a_description = getVar('post', 'a_description', 'text', '');
     $a_sitelink = url_filter(getVar('post', 'a_sitelink', 'url', 'https://'));
     $a_adminemail = getVar('post', 'a_adminemail', 'var', '');
     $a_hits = getVar('post', 'a_hits', 'num', 0);
@@ -185,8 +186,7 @@ function save(): void {
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_auto_links (sitename, description, link, mail, hits, outs, added) VALUES (:name, :desc, :link, :mail, :hits, :outs, now())', ['name' => $a_sitename, 'desc' => $a_description, 'link' => $a_sitelink, 'mail' => $a_adminemail, 'hits' => $a_hits, 'outs' => $a_outs]);
         }
-        header('Location: '.$afile.'.php?name=auto_links');
-        exit;
+        setRedirect($afile.'.php?name=auto_links');
     } elseif ($posttype === 'delete') {
         del($a_id);
     } else {
@@ -201,23 +201,20 @@ function del(int $id = 0): void {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]);
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = :id', ['id' => $id]);
     }
-    header('Location: '.$afile.'.php?name=auto_links');
-    exit;
+    setRedirect($afile.'.php?name=auto_links');
 }
 
 function nullhits(): void {
     global $db, $afile;
     $db->sql_query('UPDATE '.PREFIX_DB.'_auto_links SET hits = 0, outs = 0');
     $db->sql_query('DELETE FROM '.PREFIX_DB.'_referer WHERE lid != 0');
-    header('Location: '.$afile.'.php?name=auto_links');
-    exit;
+    setRedirect($afile.'.php?name=auto_links');
 }
 
 function noindel(): void {
     global $db, $afile;
     $db->sql_query('DELETE FROM '.PREFIX_DB.'_auto_links WHERE hits = 0');
-    header('Location: '.$afile.'.php?name=auto_links');
-    exit;
+    setRedirect($afile.'.php?name=auto_links');
 }
 
 function conf(): void {
@@ -255,9 +252,8 @@ function conf(): void {
 
 function confsave(): void {
     global $afile, $conf;
-    $ximg = str_replace('templates/'.$conf['theme'].'/images/banners/', '', getVar('post', 'img', 'var', ''));
-    $data = [
-        'img' => $ximg,
+    $cont = [
+        'img' => str_replace('templates/'.$conf['theme'].'/images/banners/', '', getVar('post', 'img', 'var', '')),
         'num' => getVar('post', 'num', 'num', 10),
         'anum' => getVar('post', 'anum', 'num', 10),
         'nump' => getVar('post', 'nump', 'num', 10),
@@ -266,9 +262,8 @@ function confsave(): void {
         'limit' => getVar('post', 'limit', 'num', 1),
         'addmail' => getVar('post', 'addmail', 'num', 0),
     ];
-    setConfigFile('auto_links.php', $data);
-    header('Location: '.$afile.'.php?name=auto_links&op=conf');
-    exit;
+    setConfigFile('auto_links.php', $cont);
+    setRedirect($afile.'.php?name=auto_links&op=conf');
 }
 
 function info(): void {
