@@ -1,100 +1,104 @@
-<?php
+﻿<?php
 # Author: Eduard Laas
 # Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
-$confma = $conf['sitemap'] ?? [];
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'];
     $lang = [_HOME, _TEMPLATE, _PREFERENCES, _INFO];
-    return getAdminTabs(_SITEMAP, 'sitemap.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs(_SITEMAP, 'sitemap.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function sitemap(): void {
-    global $aroute, $conf;
+    global $afile, $conf;
     head();
     $file = 'sitemap.xml';
     $cont = navi(0, 0, 0, 0);
     $cont .= checkPerms($file, 1);
-    $conts = file_get_contents($file);
+    $conts = is_readable($file) ? file_get_contents($file) : '';
     $f = $asize = 0;
     $acont = '';
-    foreach (glob('sitemap*.xml*') as $file) {
-        $cont .= checkPerms($file, 1);
-        $handle = fopen($file, 'rb');
+    foreach (glob('sitemap*.xml*') as $cfile) {
+        $cont .= checkPerms($cfile, 1);
+        $handle = @fopen($cfile, 'rb');
         $n = 0;
-        while (!feof($handle)) {
-            $bufer = fread($handle, 1048576);
-            $n += substr_count($bufer, '</loc>');
+        if ($handle) {
+            while (!feof($handle)) {
+                $bufer = fread($handle, 1048576);
+                $n += substr_count($bufer, '</loc>');
+            }
+            fclose($handle);
         }
-        fclose($handle);
-        $size = filesize($file);
-        $acont .= _FILE.': '.$file .'<br>'._DATE.': '.date(_TIMESTRING, filemtime($file)).'<br>'._SIZE.': '.files_size($size).'<br>'._URLS.': '.$n.'<br><br>';
+        $size = filesize($cfile);
+        $acont .= _FILE.': '.$cfile .'<br>'._DATE.': '.date(_TIMESTRING, filemtime($cfile)).'<br>'._SIZE.': '.files_size($size).'<br>'._URLS.': '.$n.'<br><br>';
         $f++;
         $asize += $size;
     }
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.files_size($asize)]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="op" value="add"><input type="submit" value="'._UPDATE.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)).'</td></tr>'
+    .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add"><input type="submit" value="'._UPDATE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
 function add(): void {
-    global $aroute;
+    global $afile;
     doSitemap();
-    header('Location: '.$aroute.'.php?name=sitemap');
+    header('Location: '.$afile.'.php?name=sitemap');
     exit;
 }
 
 function xsl(): void {
-    global $aroute;
+    global $afile;
     head();
-    $file = CONFIG_DIR.'/sitemap/sitemap.xsl';
+    $file = SITEMAP_DIR.'/sitemap.xsl';
     $cont = navi(0, 1, 0, 0);
     $cont .= checkPerms('sitemap/sitemap.xsl');
-    $conts = file_get_contents($file);
+    $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_XSL_INFO, $file)]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'application/xml', $conts).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="op" value="xslsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'application/xml', $conts).'</td></tr>'
+    .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="xslsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
 function xslsave(): void {
-    global $aroute;
-    $file = CONFIG_DIR.'/sitemap/sitemap.xsl';
-    $template = getVar('post', 'template', 'raw');
-    if ($template) file_put_contents($file, $template); 
-    header('Location: '.$aroute.'.php?name=sitemap&op=xsl');
+    global $afile;
+    $file = SITEMAP_DIR.'/sitemap.xsl';
+    $template = getVar('post', 'template', 'raw', '');
+    if ($template !== '') {
+        file_put_contents($file, $template); 
+    }
+    header('Location: '.$afile.'.php?name=sitemap&op=xsl');
     exit;
 }
 
 function conf(): void {
-    global $aroute, $confma;
+    global $afile, $conf;
+    $cfg = $conf['sitemap'] ?? [];
     head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms('sitemap.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._MODULES.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.modul('mod', 'sl_conf', $confma['mod'], 1).'</td></tr>';
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
+    .'<tr><td>'._MODULES.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.modul('mod', 'sl_conf', $cfg['mod'] ?? '', 1).'</td></tr>';
     $frs = ['0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY, 'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER];
     $cont_h = $cont_m = $cont_c = $cont_p = '';
     foreach ($frs as $key => $val) {
-        $sel_h = ($confma['fr_h'] == $key) ? ' selected' : '';
+        $sel_h = (($cfg['fr_h'] ?? '0') === (string)$key) ? ' selected' : '';
         $cont_h .= '<option value="'.$key.'"'.$sel_h.'>'.$val.'</option>';
-        $sel_m = ($confma['fr_m'] == $key) ? ' selected' : '';
+        $sel_m = (($cfg['fr_m'] ?? '0') === (string)$key) ? ' selected' : '';
         $cont_m .= '<option value="'.$key.'"'.$sel_m.'>'.$val.'</option>';
-        $sel_c = ($confma['fr_c'] == $key) ? ' selected' : '';
+        $sel_c = (($cfg['fr_c'] ?? '0') === (string)$key) ? ' selected' : '';
         $cont_c .= '<option value="'.$key.'"'.$sel_c.'>'.$val.'</option>';
-        $sel_p = ($confma['fr_p'] == $key) ? ' selected' : '';
+        $sel_p = (($cfg['fr_p'] ?? '0') === (string)$key) ? ' selected' : '';
         $cont_p .= '<option value="'.$key.'"'.$sel_p.'>'.$val.'</option>';
     }
     $cont .= '<tr><td>'._MAP_FR_H.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_h" class="sl_conf">'.$cont_h.'</select></td></tr>'
@@ -104,65 +108,65 @@ function conf(): void {
     $prs = ['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0'];
     $cont_h = $cont_m = $cont_c = $cont_p = '';
     foreach ($prs as $val) {
-        $sel_h = ($confma['pr_h'] == $val) ? ' selected' : '';
+        $sel_h = (($cfg['pr_h'] ?? '0') === (string)$val) ? ' selected' : '';
         $cont_h .= '<option value="'.$val.'"'.$sel_h.'>'.$val.'</option>';
-        $sel_m = ($confma['pr_m'] == $val) ? ' selected' : '';
+        $sel_m = (($cfg['pr_m'] ?? '0') === (string)$val) ? ' selected' : '';
         $cont_m .= '<option value="'.$val.'"'.$sel_m.'>'.$val.'</option>';
-        $sel_c = ($confma['pr_c'] == $val) ? ' selected' : '';
+        $sel_c = (($cfg['pr_c'] ?? '0') === (string)$val) ? ' selected' : '';
         $cont_c .= '<option value="'.$val.'"'.$sel_c.'>'.$val.'</option>';
-        $sel_p = ($confma['pr_p'] == $val) ? ' selected' : '';
+        $sel_p = (($cfg['pr_p'] ?? '0') === (string)$val) ? ' selected' : '';
         $cont_p .= '<option value="'.$val.'"'.$sel_p.'>'.$val.'</option>';
     }
     $cont .= '<tr><td>'._MAP_PR_H.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_h" class="sl_conf">'.$cont_h.'</select></td></tr>'
     .'<tr><td>'._MAP_PR_M.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_m" class="sl_conf">'.$cont_m.'</select></td></tr>'
     .'<tr><td>'._MAP_PR_C.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_c" class="sl_conf">'.$cont_c.'</select></td></tr>'
     .'<tr><td>'._MAP_PR_P.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_p" class="sl_conf">'.$cont_p.'</select></td></tr>'
-    .'<tr><td>'._MAP_AUTO_T.':</td><td><input type="number" name="auto_t" value="'.intval($confma['auto_t'] / 3600).'" class="sl_conf" placeholder="'._MAP_AUTO_T.'" required></td></tr>'
-    .'<tr><td>'._MAP_AUTO.'</td><td>'.radio_form($confma['auto'], 'auto').'</td></tr>'
-    .'<tr><td>'._MAP_DAT_H.'</td><td>'.radio_form($confma['dat_h'], 'dat_h').'</td></tr>'
-    .'<tr><td>'._MAP_DAT_M.'</td><td>'.radio_form($confma['dat_m'], 'dat_m').'</td></tr>'
-    .'<tr><td>'._MAP_DAT_C.'</td><td>'.radio_form($confma['dat_c'], 'dat_c').'</td></tr>'
-    .'<tr><td>'._MAP_DAT_P.'</td><td>'.radio_form($confma['dat_p'], 'dat_p').'</td></tr>'
-    .'<tr><td>'._MAP_GEN_H.'</td><td>'.radio_form($confma['gen_h'], 'gen_h').'</td></tr>'
-    .'<tr><td>'._MAP_GEN_M.'</td><td>'.radio_form($confma['gen_m'], 'gen_m').'</td></tr>'
-    .'<tr><td>'._MAP_GEN_C.'</td><td>'.radio_form($confma['gen_c'], 'gen_c').'</td></tr>'
-    .'<tr><td>'._MAP_GEN_P.'</td><td>'.radio_form($confma['gen_p'], 'gen_p').'</td></tr>'
-    .'<tr><td>'._MAP_XSL.'</td><td>'.radio_form($confma['xsl'], 'xsl').'</td></tr>'
-    .'<tr><td>'._MAP_SITE.'</td><td>'.radio_form($confma['txt'], 'txt').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td>'._MAP_AUTO_T.':</td><td><input type="number" name="auto_t" value="'.(int)(($cfg['auto_t'] ?? 0) / 3600).'" class="sl_conf" placeholder="'._MAP_AUTO_T.'" required></td></tr>'
+    .'<tr><td>'._MAP_AUTO.'</td><td>'.radio_form($cfg['auto'] ?? 0, 'auto').'</td></tr>'
+    .'<tr><td>'._MAP_DAT_H.'</td><td>'.radio_form($cfg['dat_h'] ?? 0, 'dat_h').'</td></tr>'
+    .'<tr><td>'._MAP_DAT_M.'</td><td>'.radio_form($cfg['dat_m'] ?? 0, 'dat_m').'</td></tr>'
+    .'<tr><td>'._MAP_DAT_C.'</td><td>'.radio_form($cfg['dat_c'] ?? 0, 'dat_c').'</td></tr>'
+    .'<tr><td>'._MAP_DAT_P.'</td><td>'.radio_form($cfg['dat_p'] ?? 0, 'dat_p').'</td></tr>'
+    .'<tr><td>'._MAP_GEN_H.'</td><td>'.radio_form($cfg['gen_h'] ?? 0, 'gen_h').'</td></tr>'
+    .'<tr><td>'._MAP_GEN_M.'</td><td>'.radio_form($cfg['gen_m'] ?? 0, 'gen_m').'</td></tr>'
+    .'<tr><td>'._MAP_GEN_C.'</td><td>'.radio_form($cfg['gen_c'] ?? 0, 'gen_c').'</td></tr>'
+    .'<tr><td>'._MAP_GEN_P.'</td><td>'.radio_form($cfg['gen_p'] ?? 0, 'gen_p').'</td></tr>'
+    .'<tr><td>'._MAP_XSL.'</td><td>'.radio_form($cfg['xsl'] ?? 0, 'xsl').'</td></tr>'
+    .'<tr><td>'._MAP_SITE.'</td><td>'.radio_form($cfg['txt'] ?? 0, 'txt').'</td></tr>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function save(): void {
-    global $aroute;
-    $mod = getVar('post', 'mod[]', 'num') ?: [];
+function confsave(): void {
+    global $afile;
+    $mod = getVar('post', 'mod[]', 'num', []);
     $cont = [
         'mod' => empty($mod[0]) ? '0' : implode(',', $mod),
-        'fr_h' => getVar('post', 'fr_h', 'var'),
-        'fr_m' => getVar('post', 'fr_m', 'var'),
-        'fr_c' => getVar('post', 'fr_c', 'var'),
-        'fr_p' => getVar('post', 'fr_p', 'var'),
-        'pr_h' => getVar('post', 'pr_h', 'var'),
-        'pr_m' => getVar('post', 'pr_m', 'var'),
-        'pr_c' => getVar('post', 'pr_c', 'var'),
-        'pr_p' => getVar('post', 'pr_p', 'var'),
+        'fr_h' => getVar('post', 'fr_h', 'var', '0'),
+        'fr_m' => getVar('post', 'fr_m', 'var', '0'),
+        'fr_c' => getVar('post', 'fr_c', 'var', '0'),
+        'fr_p' => getVar('post', 'fr_p', 'var', '0'),
+        'pr_h' => getVar('post', 'pr_h', 'var', '0'),
+        'pr_m' => getVar('post', 'pr_m', 'var', '0'),
+        'pr_c' => getVar('post', 'pr_c', 'var', '0'),
+        'pr_p' => getVar('post', 'pr_p', 'var', '0'),
         'auto_t' => getVar('post', 'auto_t', 'num', 1) * 3600,
-        'auto' => getVar('post', 'auto', 'num'),
-        'dat_h' => getVar('post', 'dat_h', 'num'),
-        'dat_m' => getVar('post', 'dat_m', 'num'),
-        'dat_c' => getVar('post', 'dat_c', 'num'),
-        'dat_p' => getVar('post', 'dat_p', 'num'),
-        'gen_h' => getVar('post', 'gen_h', 'num'),
-        'gen_m' => getVar('post', 'gen_m', 'num'),
-        'gen_c' => getVar('post', 'gen_c', 'num'),
-        'gen_p' => getVar('post', 'gen_p', 'num'),
-        'xsl' => getVar('post', 'xsl', 'num'),
-        'txt' => getVar('post', 'txt', 'num')
+        'auto' => getVar('post', 'auto', 'num', 0),
+        'dat_h' => getVar('post', 'dat_h', 'num', 0),
+        'dat_m' => getVar('post', 'dat_m', 'num', 0),
+        'dat_c' => getVar('post', 'dat_c', 'num', 0),
+        'dat_p' => getVar('post', 'dat_p', 'num', 0),
+        'gen_h' => getVar('post', 'gen_h', 'num', 0),
+        'gen_m' => getVar('post', 'gen_m', 'num', 0),
+        'gen_c' => getVar('post', 'gen_c', 'num', 0),
+        'gen_p' => getVar('post', 'gen_p', 'num', 0),
+        'xsl' => getVar('post', 'xsl', 'num', 0),
+        'txt' => getVar('post', 'txt', 'num', 0),
     ];
     setConfigFile('sitemap.php', $cont);
-    header('Location: '.$aroute.'.php?name=sitemap&op=conf');
+    header('Location: '.$afile.'.php?name=sitemap&op=conf');
     exit;
 }
 
@@ -178,6 +182,7 @@ switch ($op) {
     case 'xsl': xsl(); break;
     case 'xslsave': xslsave(); break;
     case 'conf': conf(); break;
-    case 'save': save(); break;
+    case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
+
