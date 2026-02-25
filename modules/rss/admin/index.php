@@ -92,7 +92,7 @@ function save(): void {
 
 function info(): void {
     head();
-    echo navi(1, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'rss').'</div>';
+    echo navi(1, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 'rss', 0).'</div>';
     foot();
 }
 
