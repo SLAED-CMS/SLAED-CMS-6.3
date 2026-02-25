@@ -39,7 +39,7 @@ function news(): void {
         while ([$sid, $catid, $uname, $title, $time, $vote, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
             $ctitle = ($catid) ? $ctitle : _NO;
             $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
-            $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : ($confu['anonym'] ?? 'Anonym'));
+            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
             if ($status && time() >= strtotime($time)) {
                 $ad_view = '<a href="index.php?name=news&amp;op=view&amp;id='.$sid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
@@ -47,7 +47,7 @@ function news(): void {
                 $ad_view = '';
                 $active = '0';
             }
-            $ad_vote = ($vote) ? '<a href="'.$afile.'.php?op=voting_add&amp;id='.$vote.'" title="'._EDITVOTE.'">'._EDITVOTE.'</a>||' : '';
+            $ad_vote = ($vote) ? '<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$vote.'" title="'._EDITVOTE.'">'._EDITVOTE.'</a>||' : '';
             $cont .= '<tr><td>'.$sid.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip_sender).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
@@ -74,7 +74,7 @@ function add(): void {
         $result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.ihome, s.acomm, s.associated, s.fix, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE sid = :sid', ['sid' => $sid]);
         [$cat, $uname, $subject, $time, $hometext, $bodytext, $field, $vote, $ihome, $acomm, $associated, $fix, $user_name] = $db->sql_fetchrow($result);
         $associated = explode(',', $associated);
-        $postname = ($user_name) ? $user_name : (($uname) ? $uname : ($confu['anonym'] ?? 'Anonym'));
+        $postname = $user_name ?: ($uname ?: $confu['anonym']);
     } else {
         $sid = getVar('post', 'sid', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');

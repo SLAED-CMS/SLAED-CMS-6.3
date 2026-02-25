@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -42,7 +42,7 @@ function links(): void {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._SITEURL.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $url, $date, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
-            $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : ($confu['anonym'] ?? 'Anonym'));
+            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
             $broc = ($status == 2) ? '<a href="'.$afile.'.php?name=links&amp;op=ignore&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
@@ -76,7 +76,7 @@ function add(): void {
     if ($fid) {
         $result = $db->sql_query('SELECT l.cid, l.name, l.title, l.description, l.bodytext, l.url, l.date, l.email, l.ihome, l.acomm, u.user_name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.user_id) WHERE l.lid = :fid', ['fid' => $fid]);
         [$cid, $uname, $title, $description, $bodytext, $url, $date, $email, $ihome, $acomm, $user_name] = $db->sql_fetchrow($result);
-        $postname = ($user_name) ? $user_name : (($uname) ? $uname : ($confu['anonym'] ?? 'Anonym'));
+        $postname = $user_name ?: ($uname ?: $confu['anonym']);
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
         $cid = getVar('post', 'cid', 'num', 0);

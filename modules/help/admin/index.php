@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -38,7 +38,7 @@ function help(): void {
         while ([$sid, $catid, $title, $time, $comments, $ip_sender, $stat, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
             $ctitle = ($catid) ? $ctitle : _NO;
             $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
-            $post = ($user_name) ? user_info($user_name) : ($confu['anonym'] ?? 'Anonym');
+            $post = $user_name ? user_info($user_name) : $confu['anonym'];
             $stat = ($stat) ? 0 : 1;
             $cont .= '<tr><td>'.$sid.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip_sender).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
@@ -70,7 +70,7 @@ function view(): void {
         $fields = fields_out($field, 'help');
         $fields = ($fields) ? '<br><br>'.$fields : '';
         $text = $hometext.$fields;
-        $post = ($user_name) ? user_info($user_name) : ($confu['anonym'] ?? 'Anonym');
+        $post = $user_name ? user_info($user_name) : $confu['anonym'];
         $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
         $date = '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time, _TIMESTRING).'</span>';
         $comm = ($a) ? '<a href="#'.$sid.'" title="'._MESSAGE.': '.$a.'" class="sl_pnum">'.$a.'</a>' : '';
@@ -114,7 +114,7 @@ function add(): void {
     if ($sid) {
         $result = $db->sql_query('SELECT s.pid, s.catid, s.title, s.time, s.hometext, s.field, s.status, u.user_name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) WHERE s.sid = :sid', ['sid' => $sid]);
         [$pid, $cat, $subject, $time, $hometext, $field, $status, $user_name] = $db->sql_fetchrow($result);
-        $postname = ($user_name) ? $user_name : ($confu['anonym'] ?? 'Anonym');
+        $postname = $user_name ?: $confu['anonym'];
     } else {
         $sid = getVar('post', 'sid', 'num', 0);
         $pid = getVar('post', 'pid', 'num', 0);

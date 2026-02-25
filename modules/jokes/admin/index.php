@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -38,7 +38,7 @@ function jokes(): void {
         while ([$jokeid, $uname, $date, $title, $cat, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
             $ctitle = ($cat) ? $ctitle : _NO;
             $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
-            $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : ($confu['anonym'] ?? 'Anonym'));
+            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
             if ($status && time() >= strtotime($date)) {
                 $ad_view = '<a href="index.php?name=jokes&amp;cat='.$cat.'#'.$jokeid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
@@ -68,7 +68,7 @@ function add(): void {
     if ($jokeid) {
         $result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.jokeid = :jokeid', ['jokeid' => $jokeid]);
         [$jokeid, $uname, $date, $title, $cat, $joke, $user_name] = $db->sql_fetchrow($result);
-        $postname = ($user_name) ? $user_name : (($uname) ? $uname : ($confu['anonym'] ?? 'Anonym'));
+        $postname = $user_name ?: ($uname ?: $confu['anonym']);
     } else {
         $jokeid = getVar('post', 'jokeid', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');

@@ -301,7 +301,7 @@ function products(): void {
                 $ad_view = '';
                 $active = '0';
             }
-            $ad_vote = ($pvote) ? '<a href="'.$afile.'.php?name=shop&op=voting_add&amp;id='.$pvote.'" title="'._EDITVOTE.'">'._EDITVOTE.'</a>||' : '';
+            $ad_vote = ($pvote) ? '<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$pvote.'" title="'._EDITVOTE.'">'._EDITVOTE.'</a>||' : '';
             $typ = ($pactive) ? '0' : '1';
             $cont .= '<tr><td>'.$pid.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime, _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span></td>'
