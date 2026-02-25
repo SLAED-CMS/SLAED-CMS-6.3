@@ -17,8 +17,9 @@ function forum() {
 	$id = getVar('req', 'cat', 'num');
 	$params = ['mod' => $mod];
 	if ($id) {
-		$where = 'WHERE c.modul = :mod AND (c.parentid = :id OR c.id = :id)';
-		$params['id'] = $id;
+		$where = 'WHERE c.modul = :mod AND (c.parentid = :parentid OR c.id = :cid)';
+		$params['parentid'] = $id;
+		$params['cid'] = $id;
 		if ($conf['multilingual']) {
 			$where .= ' AND (c.language = :locale OR c.language = \'\')';
 			$params['locale'] = $locale;
@@ -218,6 +219,9 @@ function forum() {
 		}
 		if ($teml) $cont .= tpl_eval("forum-cat-info", "<span title=\""._ISNEWPOST."\" class=\"sl_f_new\">"._ISNEWPOST."</span>", "<span title=\""._NONEWPOST."\" class=\"sl_f_old\">"._NONEWPOST."</span>", "<span title=\""._FCLOSED."\" class=\"sl_f_clos\">"._FCLOSED."</span>");
 		echo $cont;
+	} else {
+		head($conf['defis']." "._FORUM);
+		echo setTemplateWarning('warn', array('time' => '5', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _NO_INFO));
 	}
 	foot();
 }
@@ -415,7 +419,7 @@ function move() {
 						delete($catid, $val);
 					} elseif (is_numeric($vtmove[0])) {
 						$rcatids = catids($conf['name'], $tmove);
-						$db->sql_query('UPDATE '.PREFIX_DB.'_forum SET catid = :tmove WHERE id = :val OR pid = :val', ['tmove' => $tmove, 'val' => $val]);
+						$db->sql_query('UPDATE '.PREFIX_DB.'_forum SET catid = :tmove WHERE id = :id_val OR pid = :pid_val', ['tmove' => $tmove, 'id_val' => $val, 'pid_val' => $val]);
 						list($rnpost) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
 						$wrnpost = ($rnpost) ? ", posts=posts+".$rnpost : "";
 						$db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics=topics+1'.$wrnpost.', lpost_id = :val WHERE id IN ('.$rcatids.')', ['val' => $val]);
@@ -633,7 +637,7 @@ function send() {
 				
 				if ($insert) {
 					$catids = catids($conf['name'], $catid);
-					$db->sql_query('INSERT INTO '.PREFIX_DB.'_forum (id, pid, catid, uid, name, title, time, hometext, field, ip_send, l_uid, l_name, l_time, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :hometext, :field, :ip, :postid, :postname, :time, :status)', ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'ip' => $ip, 'status' => $status]);
+					$db->sql_query('INSERT INTO '.PREFIX_DB.'_forum (id, pid, catid, uid, name, title, time, hometext, field, ip_send, l_uid, l_name, l_time, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :hometext, :field, :ip, :l_uid, :l_name, :l_time, :status)', ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'ip' => $ip, 'l_uid' => $postid, 'l_name' => $postname, 'l_time' => $time, 'status' => $status]);
 					list($lpost_id, $ltime) = $db->sql_fetchrow($db->sql_query('SELECT id, time FROM '.PREFIX_DB.'_forum WHERE catid = :catid AND uid = :postid ORDER BY id DESC LIMIT 1', ['catid' => $catid, 'postid' => $postid]));
 					if ($pid) {
 						$lname = (isset($uname) && $uname) ? $uname : $postname;
