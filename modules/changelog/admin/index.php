@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !is_admin_modul('changelog')) die('Illegal file access');
 $conflog = $conf['changelog'] ?? [];
 
 // ============================================================================
@@ -48,19 +48,19 @@ function chgetcache(string $key): ?array {
     $file = CACHE_DIR.'/'.sha1($key).'.json';
     if (!file_exists($file)) return null;
 
-    $json = @file_get_contents($file);
+    $json = file_get_contents($file);
     if (!$json) return null;
 
     $cache = json_decode($json, true);
     if (!$cache || !isset($cache['meta'], $cache['data'])) {
-        @unlink($file);
+        unlink($file);
         return null;
     }
 
     // Check expiration
     $now = time();
     if ($now > $cache['meta']['expires_at']) {
-        @unlink($file);
+        unlink($file);
         return null;
     }
 
@@ -80,7 +80,7 @@ function chgetcache(string $key): ?array {
  * @param string $lastmod Last-Modified from response
  */
 function chsetcache(string $key, $data, string $url = '', string $etag = '', string $lastmod = ''): void {
-    if (!is_dir(CACHE_DIR)) @mkdir(CACHE_DIR, 0755, true);
+    if (!is_dir(CACHE_DIR) && !mkdir(CACHE_DIR, 0755, true) && !is_dir(CACHE_DIR)) return;
 
     $file = CACHE_DIR.'/'.sha1($key).'.json';
     $tmpfile = $file.'.tmp';
@@ -105,7 +105,7 @@ function chsetcache(string $key, $data, string $url = '', string $etag = '', str
     // Atomic write
     $json = json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (file_put_contents($tmpfile, $json, LOCK_EX) !== false) {
-        @rename($tmpfile, $file);
+        if (!rename($tmpfile, $file) && file_exists($tmpfile)) unlink($tmpfile);
     }
 }
 
@@ -433,7 +433,7 @@ function gitparse(array $lines): array {
 // ============================================================================
 
 function changelog(): void {
-    global $aroute, $conflog, $gherror, $giterror;
+    global $afile, $conflog, $gherror, $giterror;
 
     head();
     
@@ -530,7 +530,7 @@ function changelog(): void {
 
     // Render template
     $cont .= setTemplateBasic('basic-changelog', [
-        '{%aroute%}' => $aroute,
+        '{%aroute%}' => $afile,
         '{%search%}' => esc($search),
         '{%author%}' => esc($author),
         '{%file%}' => esc($file),
@@ -549,12 +549,12 @@ function changelog(): void {
 }
 
 function conf(): void {
-    global $aroute, $conflog;
+    global $afile, $conflog;
     head();
     $cont = navi(0, 1);
     $cont .= checkPerms('changelog.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.esc($aroute).'.php" method="post">';
+    $cont .= '<form action="'.esc($afile).'.php" method="post">';
     $cont .= '<table class="sl_table_conf">';
 
     $source = $conflog['source'] ?? 'local';
@@ -611,7 +611,7 @@ function conf(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
 
     $confdata = [
         'source' => getVar('post', 'source', 'var', 'local'),
@@ -628,8 +628,7 @@ function save(): void {
     ];
 
     setConfigFile('changelog.php', $confdata);
-    header('Location: '.$aroute.'.php?name=changelog&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=changelog&op=conf');
 }
 
 function export(): void {
@@ -684,11 +683,11 @@ function export(): void {
 
 function info(): void {
     head();
-    echo navi(0, 4, 0, 0, 'changelog').'<div id="repadm_info">'.adm_info(1, 'changelog', 0).'</div>';
+    echo navi(0, 4).'<div id="repadm_info">'.adm_info(1, 'changelog', 0).'</div>';
     foot();
 }
 
-function navi(int $opt, int $tab): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $conflog;
 
     $exporten = $conflog['exporten'] ?? true;
@@ -707,7 +706,7 @@ function navi(int $opt, int $tab): string {
         $lang = [_HOME, _PREFERENCES, _INFO];
     }
 
-    return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, 0);
+    return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
 // ============================================================================
@@ -805,7 +804,9 @@ function rencom(array $commits, array $conf): string {
     }
 
     return $html;
-}function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
+}
+
+function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
     $query = http_build_query(array_filter([
         'name' => 'changelog',
         'author' => $filters['author'],
@@ -833,5 +834,3 @@ switch ($op) {
     case 'export': export(); break;
     case 'info': info(); break;
 }
-
-

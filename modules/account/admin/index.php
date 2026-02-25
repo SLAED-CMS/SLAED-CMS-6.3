@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !is_admin_modul('account')) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     global $afile;
@@ -24,7 +24,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
     return getAdminTabs(_USERS, 'users.png', $search, $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
-function users(): void {
+function account(): void {
     global $db, $afile, $confu;
     $search = getVar('req', 'search', 'num');
     $chng = getVar('req', 'chng');
@@ -74,7 +74,7 @@ function users(): void {
     if ($db->sql_numrows($res) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._EMAIL.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while (list($user_id, $user_name, $user_email, $user_website, $user_regdate, $user_lastvisit, $user_points, $user_last_ip, $user_gender, $user_agent, $gname, $gcolor) = $db->sql_fetchrow($res)) {
+        while ([$user_id, $user_name, $user_email, $user_website, $user_regdate, $user_lastvisit, $user_points, $user_last_ip, $user_gender, $user_agent, $gname, $gcolor] = $db->sql_fetchrow($res)) {
             $sgroup = $gname ? '<span style="color: '.$gcolor.'">'.$gname.'</span>' : _NO;
             $web = $user_website ? domain($user_website, 40) : _NO;
             $cont .= '<tr><td>'.filterTextHighlight($user_id, $chng).'</td>'
@@ -86,7 +86,7 @@ function users(): void {
         $cont .= setArticleNumbers('pagenum', '', $confu['anum'], 'name=account'.$lsear.$lchg.'&amp;', 'user_id', '_users', '', $where, $confu['anump'], $cnt_params);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url'  => '', 'id'   => 'info', 'text' => _USERNOEXIST]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _USERNOEXIST]);
     }
     echo $cont;
     foot();
@@ -98,8 +98,8 @@ function add(): void {
     $id = getVar('req', 'id', 'num');
     if (is_numeric($id)) {
         $result = $db->sql_query('SELECT user_id, user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $id]);
-        list($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_occ, $user_from, $user_interests, $user_sig, $user_viewemail, $user_password, $user_storynum, $user_blockon, $user_block, $user_theme, $user_newsletter, $user_lang, $user_points, $user_warnings, $user_acess, $user_group, $user_birthday, $user_gender, $user_field) = $db->sql_fetchrow($result);
-        $user_warnings = ($user_warnings) ? explode('|', $user_warnings) : '';
+        [$user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_occ, $user_from, $user_interests, $user_sig, $user_viewemail, $user_password, $user_storynum, $user_blockon, $user_block, $user_theme, $user_newsletter, $user_lang, $user_points, $user_warnings, $user_acess, $user_group, $user_birthday, $user_gender, $user_field] = $db->sql_fetchrow($result);
+        $user_warnings = ($user_warnings) ? explode('|', $user_warnings) : [];
     } else {
         $user_id = getVar('post', 'user_id', 'num');
         $user_name = getVar('post', 'user_name', 'name');
@@ -187,14 +187,14 @@ function add(): void {
     .'<tr><td>'._SPEC_GROUP.':</td><td><select name="user_group" class="sl_form">'
     .'<option value="0">'._NO.'</option>';
     $result = $db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
-    while (list($grid, $grname) = $db->sql_fetchrow($result)) {
+    while ([$grid, $grname] = $db->sql_fetchrow($result)) {
         $sel = ($grid == $user_group) ? ' selected' : '';
         $cont .= '<option value="'.$grid.'"'.$sel.'>'.$grname.'</option>';
     }
     $cont .= '</select></td></tr>'
     .'<tr><td>'._BIRTHDAY.':</td><td>'.datetime(2, 'user_birthday', $user_birthday, 10, 'sl_form').'</td></tr>'
     .'<tr><td>'._GENDER.':</td><td>'.get_gender('user_gender', $user_gender, 'sl_form').'</td></tr>';
-    $check = ($_COOKIE['sl_close_9'] == '0') ? '' : ' checked';
+    $check = (getVar('cookie', 'sl_close_9', 'num') == 0) ? '' : ' checked';
     $cont .= fields_in($user_field, 'account')
     .'<tr><td>'._PASSWORD.':</td><td><input type="password" name="user_password" value="" maxlength="25" class="sl_form" placeholder="'._PASSWORD.'"></td></tr>'
     .'<tr><td>'._RETYPEPASSWORD.':</td><td><input type="password" name="user_password2" value="" maxlength="25" class="sl_form" placeholder="'._RETYPEPASSWORD.'"></td></tr>'
@@ -208,6 +208,8 @@ function add(): void {
 
 function addsave(): void {
     global $db, $afile, $conf, $stop;
+    $stop = [];
+    $send = '';
     $user_id = getVar('post', 'user_id', 'num');
     $user_name = getVar('post', 'user_name', 'name');
     $user_rank = getVar('post', 'user_rank');
@@ -239,11 +241,11 @@ function addsave(): void {
 
     if (!$user_id && (!$user_name || !$user_email || !$user_password || !$user_password2)) $stop[] = _ERROR_ALL;
     if ($user_name) {
-        list($uid, $uname) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $user_name]));
-        list($tuid, $tuname) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.PREFIX_DB.'_users_temp WHERE user_name = :name', ['name' => $user_name]));
+        [$uid, $uname] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $user_name]));
+        [$tuid, $tuname] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.PREFIX_DB.'_users_temp WHERE user_name = :name', ['name' => $user_name]));
         if (($user_id != $uid && $user_name == $uname) || ($user_id != $tuid && $user_name == $tuname)) $stop[] = _USEREXIST;
-        list($uid, $email) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.PREFIX_DB.'_users WHERE user_email = :email', ['email' => $user_email]));
-        list($tuid, $temail) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.PREFIX_DB.'_users_temp WHERE user_email = :email', ['email' => $user_email]));
+        [$uid, $email] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.PREFIX_DB.'_users WHERE user_email = :email', ['email' => $user_email]));
+        [$tuid, $temail] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.PREFIX_DB.'_users_temp WHERE user_email = :email', ['email' => $user_email]));
         if (($user_id != $uid && $user_email == $email) || ($user_id != $tuid && $user_email == $temail)) $stop[] = _ERROR_EMAIL;
     } else {
         $stop[] = _ERROR_ALL;
@@ -276,8 +278,7 @@ function addsave(): void {
             mail_send($user_email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
-        header('Location: '.$afile.'.php?name=account'.$send);
-        exit;
+        setRedirect($afile.'.php?name=account'.$send);
     } else {
         add();
     }
@@ -293,7 +294,7 @@ function newuser(): void {
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._EMAIL.'</th><th>'._PASSWORD.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while (list($user_id, $user_name, $user_email, $user_password, $user_regdate, $check_num) = $db->sql_fetchrow($result)) {
+        while ([$user_id, $user_name, $user_email, $user_password, $user_regdate, $check_num] = $db->sql_fetchrow($result)) {
             $cont .= '<tr><td>'.$user_id.'</td>'
             .'<td>'.$user_name.'</td>'
             .'<td>'.$user_email.'</td>'
@@ -337,15 +338,14 @@ function nullsave(): void {
     if ($votes == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_votes = :zero, user_totalvotes = :zero', ['zero' => '0']);
     if ($warnings == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_warnings = :zero', ['zero' => '0']);
     if ($sig == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_sig = :empty', ['empty' => '']);
-    header('Location: '.$afile.'.php?name=account');
-    exit;
+    setRedirect($afile.'.php?name=account');
 }
 
 function conf(): void {
     global $afile, $confu;
     head();
     $cont = navi(0, 4, 0, 0);
-    checkPerms('users.php');
+    $cont .= checkPerms('users.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._ANONYMOUSNAME.':</td><td><input type="text" name="anonym" value="'.$confu['anonym'].'" class="sl_conf" placeholder="'._ANONYMOUSNAME.'" required></td></tr>'
@@ -400,13 +400,13 @@ function save(): void {
     $cont = [
         'anonym' => getVar('post', 'anonym', 'title'),
         'adirectory' => getVar('post', 'adirectory', 'title'),
-        'atypefile' => strtolower(strtr(getVar('post', 'atypefile', 'title') ?: 'gif,jpg,jpeg,png', $protect)),
-        'amaxsize' => getVar('post', 'amaxsize', 'num') ?: 51200,
-        'awidth' => getVar('post', 'awidth', 'num') ?: 100,
-        'aheight' => getVar('post', 'aheight', 'num') ?: 100,
-        'user_t' => ($t = getVar('post', 'user_t', 'num')) ? intval($t * 86400) : 2592000,
-        'anum' => getVar('post', 'anum', 'num') ?: 50,
-        'anump' => getVar('post', 'anump', 'num') ?: 10,
+        'atypefile' => strtolower(strtr(getVar('post', 'atypefile', 'title', 'gif,jpg,jpeg,png'), $protect)),
+        'amaxsize' => getVar('post', 'amaxsize', 'num', 51200),
+        'awidth' => getVar('post', 'awidth', 'num', 100),
+        'aheight' => getVar('post', 'aheight', 'num', 100),
+        'user_t' => getVar('post', 'user_t', 'num', 30) * 86400,
+        'anum' => getVar('post', 'anum', 'num', 50),
+        'anump' => getVar('post', 'anump', 'num', 10),
         'minpass' => getVar('post', 'minpass', 'num'),
         'enter' => getVar('post', 'enter', 'num'),
         'point' => getVar('post', 'point', 'num'),
@@ -426,15 +426,14 @@ function save(): void {
         'points' => $confu['points']
     ];
     setConfigFile('users.php', $cont);
-    header('Location: '.$afile.'.php?name=account&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=account&op=conf');
 }
 
 function newdel(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_users_temp WHERE user_id = :id', ['id' => $id]);
-    referer($afile.'.php?name=account');
+    setRedirect($afile.'.php?name=account', true);
 }
 
 function del(): void {
@@ -445,7 +444,7 @@ function del(): void {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
         # $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE uid = :id', ['id' => $id]);
     }
-    referer($afile.'.php?name=account');
+    setRedirect($afile.'.php?name=account', true);
 }
 
 function info(): void {
@@ -455,7 +454,7 @@ function info(): void {
 }
 
 switch ($op) {
-    default: users(); break;
+    default: account(); break;
     case 'add': add(); break;
     case 'addsave': addsave(); break;
     case 'newuser': newuser(); break;

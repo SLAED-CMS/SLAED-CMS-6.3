@@ -1,10 +1,10 @@
-﻿<?php
+<?php
 # Author: Eduard Laas
 # Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !is_admin_modul('sitemap')) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'];
@@ -23,7 +23,7 @@ function sitemap(): void {
     $acont = '';
     foreach (glob('sitemap*.xml*') as $cfile) {
         $cont .= checkPerms($cfile, 1);
-        $handle = @fopen($cfile, 'rb');
+        $handle = fopen($cfile, 'rb');
         $n = 0;
         if ($handle) {
             while (!feof($handle)) {
