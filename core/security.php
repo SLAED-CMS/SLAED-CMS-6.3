@@ -251,13 +251,97 @@ if ($bcookie == 'block') {
 }
 
 $confs['error_log'] = 1;
-# Error reporting log
+# Error reporting log — NDJSON (one JSON object per line, AI-ready schema)
 if ($confs['error_log']) {
-    # HTTP error reporting log
+    # --- Inline helpers (closures only, no new named functions) ---
+
+    // Sanitize: strip log-injection chars (\r \n \0), trim, truncate
+    $ls = fn(string $s, int $max = 2048): string =>
+        substr(str_replace(["\r", "\n", "\0"], ' ', trim($s)), 0, $max);
+
+    // Redact keys matching sensitive patterns
+    $lredact = function(array $arr): array {
+        foreach (array_keys($arr) as $k) {
+            if (preg_match('/(pass|token|auth|secret|key|session|csrf)/i', (string)$k)) {
+                $arr[$k] = '[REDACTED]';
+            }
+        }
+        return $arr;
+    };
+
+    // Bound array: max 50 keys, string values max 1024 chars, then redact
+    $lbound = function(array $arr) use ($lredact): array {
+        if (count($arr) > 50) {
+            $arr = array_slice($arr, 0, 50, true);
+            $arr['*_truncated'] = true;
+        }
+        foreach ($arr as $k => $v) {
+            if (is_string($v) && strlen($v) > 1024) {
+                $arr[$k] = substr($v, 0, 1024) . '[...]';
+            } elseif (is_array($v)) {
+                $arr[$k] = '[array:' . count($v) . ']';
+            }
+        }
+        return $lredact($arr);
+    };
+
+    // Bounded request context (structured, no raw superglobal dumps)
+    $lctx = function() use ($lbound): array {
+        return [
+            'query' => $lbound($_GET ?? []),
+            'post' => $lbound($_POST ?? []),
+            'cookie_keys' => array_keys($_COOKIE ?? []),
+            'session_keys' => (session_status() === PHP_SESSION_ACTIVE) ? array_keys($_SESSION ?? []) : [],
+        ];
+    };
+
+    // Common request fields
+    $lreq = function() use ($ls): array {
+        $ua = $ls($_SERVER['HTTP_USER_AGENT'] ?? '', 512);
+        $url = $ls($_SERVER['REQUEST_URI'] ?? (string)getenv('REQUEST_URI'), 2048);
+        $ref = $ls(get_referer() ?: '', 2048);
+        return [
+            'req_id' => $_SERVER['HTTP_X_REQUEST_ID'] ?? $_SERVER['UNIQUE_ID'] ?? null,
+            'ip' => getIp(),
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
+            'url' => $url ?: null,
+            'referer' => $ref ?: null,
+            'ua' => $ua ?: null,
+        ];
+    };
+
+    // Memory metrics
+    $lmem = fn(): array => [
+        'mem_mb' => round(memory_get_usage(true) / 1048576, 2),
+        'mem_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 2),
+    ];
+
+    // Stable fingerprint: type|file|line|msg-normalized — no errno (unstable for exceptions)
+    $lfp = function(string $type, string $file, string $line, string $msg): string {
+        $norm = preg_replace(['/\d+/', '/\s+/'], ['#', ' '], substr($msg, 0, 200));
+        return substr(sha1($type . '|' . $file . '|' . $line . '|' . $norm), 0, 8);
+    };
+
+    // Rotation guard (prevents parallel-worker double-rotate) + atomic append
+    $lwrite = function(string $log, string $line) use ($conf): void {
+        $max = (int)($conf['security']['log_size'] ?? 10485760);
+        clearstatcache(true, $log);
+        $sz = @filesize($log);
+        if ($sz !== false && $sz >= $max) {
+            $guard = $log . '.rotating';
+            if (@file_put_contents($guard, '1', LOCK_EX) !== false) {
+                $safe = pathinfo($log, PATHINFO_FILENAME) . '_' . date('Y-m-d_H-i-s');
+                addCompress(dirname($log), $log, $safe, 'auto', true, true);
+                @unlink($guard);
+            }
+        }
+        file_put_contents($log, $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+    };
+
+    # HTTP error → error_site.log
     if (isset($_GET['error'])) {
         $error = intval($_GET['error']);
-        unset($error_log, $http);
-        static $http = array (
+        $http = [
             100 => 'HTTP/1.1 100 Continue',
             101 => 'HTTP/1.1 101 Switching Protocols',
             200 => 'HTTP/1.1 200 OK',
@@ -296,172 +380,153 @@ if ($confs['error_log']) {
             501 => 'HTTP/1.1 501 Not Implemented',
             502 => 'HTTP/1.1 502 Bad Gateway',
             503 => 'HTTP/1.1 503 Service Unavailable',
-            504 => 'HTTP/1.1 504 Gateway Time-out'
-        );
-        $error_log = $http[$error];
-        if ($error_log) {
-            $ip = getIp();
-            $agent = getAgent();
-            $url = text_filter(getenv('REQUEST_URI'));
-            $refer = get_referer();
-            $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-            $log = LOGS_DIR.'/error_site.log';
-            $max = $confs['log_size'] ?? 10485760;
-            $fhandle = fopen($log, 'ab');
-            if ($fhandle !== false) {
-                clearstatcache(true, $log);
-                if (filesize($log) >= $max) {
-                    fclose($fhandle);
-                    $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
-                    addCompress(dirname($log), $log, $safe, 'auto', true, true);
-                    $fhandle = fopen($log, 'ab');
-                }
-                if ($fhandle !== false) {
-                    fwrite($fhandle, getVariablesInfo()._ERROR.': '.$error_log.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
-                    fclose($fhandle);
-                }
-            }
+            504 => 'HTTP/1.1 504 Gateway Time-out',
+        ];
+        $http_msg = $http[$error] ?? null;
+        if ($http_msg) {
+            $log = LOGS_DIR . '/error_site.log';
+            $fp = $lfp('site', '', '', $http_msg);
+            $row = array_merge([
+                'ts' => date('c'),
+                'level' => 'error',
+                'type' => 'site',
+                'msg' => $http_msg,
+                'http_code' => $error,
+                'module' => isset($_GET['name']) ? $ls((string)$_GET['name'], 50) : null,
+                'op' => isset($_GET['op']) ? $ls((string)$_GET['op'], 50) : null,
+                'fingerprint' => $fp,
+            ], $lreq(), $lctx(), $lmem());
+            $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+            if ($line !== false) { $lwrite($log, $line); }
         }
-        unset($error_log, $http);
-        setExit('Error '.$error, 1);
+        unset($http, $http_msg);
+        setExit('Error ' . $error, 1);
     }
-    # PHP error reporting log
+
+    # PHP errors → error_php.log
     function error_reporting_log($error_num, $error_var, $error_file, $error_line) {
-        global $conf;
-        $error_write = false;
-        switch ($error_num) {
-            case 1:
-            $error_desc = 'ERROR';
-            $error_write = true;
-            break;
-            case 2:
-            $error_desc = 'WARNING';
-            $error_write = true;
-            break;
-            case 4:
-            $error_desc = 'PARSE';
-            $error_write = true;
-            break;
-            case 8:
-            $error_desc = 'NOTICE';
-            $error_write = false;
-            break;
-            case 2048:
-            $error_desc = 'STRICT';
-            $error_write = true;
-            break;
-            case 8192:
-            $error_desc = 'DEPRECATED';
-            $error_write = true;
-            break;
-            case 256:
-            $error_desc = 'USER_ERROR';
-            $error_write = true;
-            break;
-            case 512:
-            $error_desc = 'USER_WARNING';
-            $error_write = true;
-            break;
-            case 1024:
-            $error_desc = 'USER_NOTICE';
-            $error_write = false;
-            break;
-            case 4096:
-            $error_desc = 'RECOVERABLE_ERROR';
-            $error_write = true;
-            break;
-            case 16384:
-            $error_desc = 'USER_DEPRECATED';
-            $error_write = true;
-            break;
-        }
-        if ($error_write) {
-            $ip = getIp();
-            $agent = getAgent();
-            $url = text_filter(getenv('REQUEST_URI'));
-            $refer = get_referer();
-            $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-            $log = LOGS_DIR.'/error_php.log';
-            $cfg = $conf['security'] ?? [];
-            $max = $cfg['log_size'] ?? 10485760;
-            $fhandle = fopen($log, 'ab');
-            if ($fhandle !== false) {
-                clearstatcache(true, $log);
-                if (filesize($log) >= $max) {
-                    fclose($fhandle);
-                    $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
-                    addCompress(dirname($log), $log, $safe, 'auto', true, true);
-                    $fhandle = fopen($log, 'ab');
-                }
-                if ($fhandle !== false) {
-                    fwrite($fhandle, getVariablesInfo()._ERROR.': '.$error_desc.': '.$error_var.' Line: '.$error_line.' in file '.$error_file.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
-                    fclose($fhandle);
-                }
-            }
-        }
+        global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
+        // level: error|warning|notice  php_err: human label
+        $level_map = [
+            1 => ['error', 'ERROR'],
+            2 => ['warning', 'WARNING'],
+            4 => ['error', 'PARSE'],
+            8 => ['notice', 'NOTICE'],
+            16 => ['error', 'CORE_ERROR'],
+            32 => ['warning', 'CORE_WARNING'],
+            64 => ['error', 'COMPILE_ERROR'],
+            128 => ['warning', 'COMPILE_WARNING'],
+            256 => ['error', 'USER_ERROR'],
+            512 => ['warning', 'USER_WARNING'],
+            1024 => ['notice', 'USER_NOTICE'],
+            2048 => ['notice', 'STRICT'], // notice — not warning
+            4096 => ['error', 'RECOVERABLE_ERROR'],
+            8192 => ['notice', 'DEPRECATED'], // notice — not warning
+            16384 => ['notice', 'USER_DEPRECATED'], // notice — not warning
+        ];
+        [$level, $php_err] = $level_map[$error_num] ?? ['error', 'UNKNOWN'];
+        $log = LOGS_DIR . '/error_php.log';
+        $fp = $lfp('php', $error_file, (string)$error_line, (string)$error_var);
+        $row = array_merge([
+            'ts' => date('c'),
+            'level' => $level,
+            'type' => 'php',
+            'msg' => $ls((string)$error_var, 1024),
+            'php_errno' => $error_num,
+            'php_err' => $php_err,
+            'file' => $error_file,
+            'line' => (int)$error_line,
+            'fingerprint' => $fp,
+        ], $lreq(), $lctx(), $lmem());
+        $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($line !== false) { $lwrite($log, $line); }
+        return true; // suppress PHP's built-in handler (prevents double-logging via log_errors)
     }
     set_error_handler('error_reporting_log');
-    set_exception_handler(function(Throwable $e) use ($conf) {
-        $log = LOGS_DIR.'/error_php.log';
-        $cfg = $conf['security'] ?? [];
-        $max = $cfg['log_size'] ?? 10485760;
-        $ip = getIp();
-        $agent = getAgent();
-        $url = text_filter(getenv('REQUEST_URI'));
-        $fhandle = @fopen($log, 'ab');
-        if ($fhandle !== false) {
-            clearstatcache(true, $log);
-            if (filesize($log) >= $max) {
-                fclose($fhandle);
-                $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
-                addCompress(dirname($log), $log, $safe, 'auto', true, true);
-                $fhandle = @fopen($log, 'ab');
-            }
-            if ($fhandle !== false) {
-                fwrite($fhandle, 'ERROR: EXCEPTION: '.get_class($e).': '.$e->getMessage().' Line: '.$e->getLine().' in file '.$e->getFile().PHP_EOL.'IP: '.$ip.PHP_EOL.'URL: '.$url.PHP_EOL.'BROWSER: '.$agent.PHP_EOL.'DATE: '.date('Y-m-d H:i:s').PHP_EOL.'----'.PHP_EOL);
-                fclose($fhandle);
-            }
-        }
+
+    // Guard: exception handler sets this flag so shutdown handler skips the same event
+    $lexcepted = false;
+
+    set_exception_handler(function(Throwable $e) use ($ls, $lctx, $lreq, $lmem, $lwrite, $lfp, &$lexcepted) {
+        $log = LOGS_DIR . '/error_php.log';
+        $msg = get_class($e) . ': ' . $e->getMessage();
+        $fp = $lfp('php', $e->getFile(), (string)$e->getLine(), $msg);
+        $row = array_merge([
+            'ts' => date('c'),
+            'level' => 'error',
+            'type' => 'php',
+            'msg' => $ls($msg, 1024),
+            'php_errno' => $e->getCode(),
+            'php_err' => 'EXCEPTION',
+            'ex_class' => get_class($e),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'fingerprint' => $fp,
+        ], $lreq(), $lctx(), $lmem());
+        $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($line !== false) { $lwrite($log, $line); }
+        $lexcepted = true;
     });
-    register_shutdown_function(function() {
+
+    // Shutdown: real fatals only (E_ERROR etc.) — skip if exception handler already logged this event
+    register_shutdown_function(function() use ($ls, $lwrite, $lfp, &$lexcepted) {
+        if ($lexcepted) return;
         $e = error_get_last();
         if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
-            $log = LOGS_DIR.'/error_php.log';
-            $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-            $url = getenv('REQUEST_URI') ?: '';
-            $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
-            $fhandle = @fopen($log, 'ab');
-            if ($fhandle !== false) {
-                fwrite($fhandle, 'ERROR: FATAL: '.$e['message'].' Line: '.$e['line'].' in file '.$e['file'].PHP_EOL.'IP: '.$ip.PHP_EOL.'URL: '.$url.PHP_EOL.'BROWSER: '.$agent.PHP_EOL.'DATE: '.date('Y-m-d H:i:s').PHP_EOL.'----'.PHP_EOL);
-                fclose($fhandle);
-            }
+            $log = LOGS_DIR . '/error_php.log';
+            $ua = $ls($_SERVER['HTTP_USER_AGENT'] ?? '', 512);
+            $url = $ls((string)($_SERVER['REQUEST_URI'] ?? ''), 2048);
+            $fp = $lfp('php', $e['file'], (string)$e['line'], $e['message']);
+            $row = [
+                'ts' => date('c'),
+                'level' => 'error',
+                'type' => 'php',
+                'msg' => $ls($e['message'], 1024),
+                'php_errno' => $e['type'],
+                'php_err' => 'FATAL',
+                'file' => $e['file'],
+                'line' => $e['line'],
+                'fingerprint' => $fp,
+                'req_id' => $_SERVER['HTTP_X_REQUEST_ID'] ?? $_SERVER['UNIQUE_ID'] ?? null,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+                'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
+                'url' => $url ?: null,
+                'referer' => null,
+                'ua' => $ua ?: null,
+                'mem_mb' => round(memory_get_usage(true) / 1048576, 2),
+                'mem_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 2),
+            ];
+            $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+            if ($line !== false) { $lwrite($log, $line); }
         }
     });
-    # SQL error reporting log
+
+    # SQL errors → error_sql.log
     function error_sql_log($errno, $error, $sql) {
-        global $confs;
-        $ip = getIp();
-        $agent = getAgent();
-        $url = text_filter(getenv('REQUEST_URI'));
-        $refer = get_referer();
-        $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-        $sql = htmlspecialchars(trim($sql), ENT_QUOTES);
-        $log = LOGS_DIR.'/error_sql.log';
-        $max = $confs['log_size'] ?? 10485760;
-        $fhandle = fopen($log, 'ab');
-        if ($fhandle !== false) {
-            clearstatcache(true, $log);
-            if (filesize($log) >= $max) {
-                fclose($fhandle);
-                $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
-                addCompress(dirname($log), $log, $safe, 'auto', true, true);
-                $fhandle = fopen($log, 'ab');
-            }
-            if ($fhandle !== false) {
-                fwrite($fhandle, getVariablesInfo()._ERROR.': '.$errno.' - '.$error.PHP_EOL.'SQL: '.$sql.PHP_EOL._IP.': '.$ip.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
-                fclose($fhandle);
-            }
-        }
+        global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
+        $log = LOGS_DIR . '/error_sql.log';
+        $sql_orig = (string)$sql;
+        $sql_bytes = strlen($sql_orig);
+        $sql_hash = hash('sha256', $sql_orig);
+        // Redact quoted string literals, then truncate
+        $sql_safe = preg_replace("/'[^']{0,256}'/u", "'?'", $sql_orig);
+        $sql_safe = substr($sql_safe, 0, 2000) . (strlen($sql_safe) > 2000 ? ' [TRUNCATED]' : '');
+        $msg = 'SQL error ' . $errno . ': ' . $ls((string)$error, 256);
+        $fp = $lfp('sql', '', '', (string)$error);
+        $row = array_merge([
+            'ts' => date('c'),
+            'level' => 'error',
+            'type' => 'sql',
+            'msg' => $msg,
+            'sql_errno' => (int)$errno,
+            'sql_state' => null,
+            'sql' => $sql_safe,
+            'sql_hash' => $sql_hash,
+            'sql_bytes' => $sql_bytes,
+            'fingerprint' => $fp,
+        ], $lreq(), $lctx(), $lmem());
+        $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($line !== false) { $lwrite($log, $line); }
     }
 }
 
