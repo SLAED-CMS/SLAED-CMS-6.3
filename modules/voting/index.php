@@ -5,12 +5,12 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 
 function voting() {
-	global $db, $admin_file, $locale, $conf, $confv;
+	global $db, $afile, $locale, $conf, $confv;
 	$onum = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND modul = '' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $confv['num'];
@@ -25,7 +25,7 @@ function voting() {
 			$vote = array_sum(explode('|', $answer));
 			$type = ($typ == '1') ? _VOPEN : _VCLOSE;
 			$report = _CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type;
-			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($stitle, ENT_QUOTES).'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>', 1) : '';
+			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($stitle, ENT_QUOTES).'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>', 1) : '';
 			$cont .= setTemplateBasic('voting-home', array('{%id%}' => $id, '{%title%}' => $title, '{%comm%}' => $comm, '{%vote%}' => $vote, '{%info%}' => _INFO, '{%report%}' => $report, '{%admin%}' => $admin));
 		}
 		$cont .= setTemplateBasic('voting-home-close');

@@ -5,8 +5,8 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 get_lang($conf['name']);
 
@@ -18,7 +18,7 @@ function navigate($title, $cat='') {
 }
 
 function mwhois() {
-	global $db, $admin_file, $user, $conf, $confu, $confw, $home, $locale;
+	global $db, $afile, $user, $conf, $confu, $confw, $home, $locale;
 	global $domain_whois, $ext, $nomatch, $server, $domain_option;
 	$domain_licens = getVar('req', 'domain_licens', 'word');
 	
@@ -92,9 +92,9 @@ function mwhois() {
 		}
 		$cont .= "<fieldset class=\"sl_center\"><legend class=\"sl_blue\">"._WHOIS_SUCH."</legend>";
 		if ($wlicens) {
-			$cont .= "<span class=\"sl_green\">"._DOMAIN." «".$domain_licens."» "._WHOIS_ISL."!</span>";
+			$cont .= "<span class=\"sl_green\">"._DOMAIN." Â«".$domain_licens."Â» "._WHOIS_ISL."!</span>";
 		} else {
-			$cont .= "<span class=\"sl_red\">"._DOMAIN." «".$domain_licens."» "._WHOIS_NOL."!</span>";
+			$cont .= "<span class=\"sl_red\">"._DOMAIN." Â«".$domain_licens."Â» "._WHOIS_NOL."!</span>";
 			$cont .= ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) ? "<form method=\"post\" action=\"index.php?name=".$conf['name']."\"><input type=\"hidden\" name=\"op\" value=\"add\"><input type=\"hidden\" name=\"domain\" value=\"".$domain_licens."\"><input type=\"submit\" value=\""._WHOIS_LICENS_SEND."\" class=\"sl_but_blue\"></form>" : "";
 		}
 		$cont .= "</fieldset>";
@@ -155,7 +155,7 @@ function add() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -185,7 +185,7 @@ function send() {
 			add();
 		}
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -257,9 +257,9 @@ function print_results($layout, $id) {
 	if (!$id) $cont .= $domain_option;
 	$cont .= "<fieldset class=\"sl_center\"><legend class=\"sl_blue\">"._WHOIS_SUCH."</legend>";
 	if ($layout=="0") {
-		$cont .= "<span class=\"sl_green\">"._DOMAIN." «".$domain_whois.".".$ext."» "._WHOIS_FREI."!</span>";
+		$cont .= "<span class=\"sl_green\">"._DOMAIN." Â«".$domain_whois.".".$ext."Â» "._WHOIS_FREI."!</span>";
 	} elseif($layout=="1") {
-		$cont .= "<span class=\"sl_red\">"._DOMAIN." «".$domain_whois.".".$ext."» "._WHOIS_B."!</span>"
+		$cont .= "<span class=\"sl_red\">"._DOMAIN." Â«".$domain_whois.".".$ext."Â» "._WHOIS_B."!</span>"
 		."<form method=\"post\" action=\"index.php?name=".$conf['name']."\">"
 		."<input type=\"hidden\" name=\"option\" value=\"whois\">"
 		."<input type=\"hidden\" name=\"domain_whois\" value=\"".$domain_whois."\">"

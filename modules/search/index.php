@@ -11,7 +11,7 @@ if (!defined('MODULE_FILE')) {
 get_lang($conf['name']);
 
 function search_result() {
-    global $db, $admin_file, $conf, $confu;
+    global $db, $afile, $conf, $confu;
     $search = explode(",", $conf['search']);
     $word = getVar('req', 'word', 'word', 0);
     $mod = getVar('req', 'mod', 'var', '');
@@ -72,7 +72,7 @@ function search_result() {
                         $title = "<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."\" title=\"".$title."\">".search_color($title, $word)."</a> ".new_graphic($date);
                         $date = "<span title=\""._CHNGSTORY."\" class=\"sl_date\">".format_time($date)."</span>";
                         $modul = "<a href=\"index.php?name=".$val."\" title=\""._MODUL."\" class=\"sl_modul\">".deflmconst($val)."</a>";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=auto_links_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=auto_links_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, "", "", $edit);
                         $a++;
                     }
@@ -86,7 +86,7 @@ function search_result() {
                         $ctitle = ($ctitle) ? "<a href=\"index.php?name=".$val."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
                         $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
                         $post = "<span title=\""._POSTEDBY."\" class=\"sl_post\">".$post."</span>";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=faq_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=faq_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, $ctitle, $post, $edit);
                         $a++;
                     }
@@ -100,7 +100,7 @@ function search_result() {
                         $ctitle = ($ctitle) ? "<a href=\"index.php?name=".$val."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
                         $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
                         $post = "<span title=\""._POSTEDBY."\" class=\"sl_post\">".$post."</span>";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=files_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=files_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, $ctitle, $post, $edit);
                         $a++;
                     }
@@ -135,7 +135,7 @@ function search_result() {
                         $ctitle = ($ctitle) ? "<a href=\"index.php?name=".$val."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
                         $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
                         $post = "<span title=\""._POSTEDBY."\" class=\"sl_post\">".$post."</span>";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=jokes_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;cat=".$cid."&amp;word=".urlencode($word)."#".$id."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=jokes_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;cat=".$cid."&amp;word=".urlencode($word)."#".$id."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, $ctitle, $post, $edit);
                         $a++;
                     }
@@ -149,7 +149,7 @@ function search_result() {
                         $ctitle = ($ctitle) ? "<a href=\"index.php?name=".$val."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
                         $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
                         $post = "<span title=\""._POSTEDBY."\" class=\"sl_post\">".$post."</span>";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=links_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=links_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, $ctitle, $post, $edit);
                         $a++;
                     }
@@ -178,7 +178,7 @@ function search_result() {
                         $ctitle = ($ctitle) ? "<a href=\"index.php?name=".$val."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
                         $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
                         $post = "<span title=\""._POSTEDBY."\" class=\"sl_post\">".$post."</span>";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=media_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=media_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, $ctitle, $post, $edit);
                         $a++;
                     }
@@ -192,7 +192,7 @@ function search_result() {
                         $ctitle = ($ctitle) ? "<a href=\"index.php?name=".$val."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
                         $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
                         $post = "<span title=\""._POSTEDBY."\" class=\"sl_post\">".$post."</span>";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=news_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=news_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, $ctitle, $post, $edit);
                         $a++;
                     }
@@ -206,7 +206,7 @@ function search_result() {
                         $ctitle = ($ctitle) ? "<a href=\"index.php?name=".$val."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
                         $post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : $confu['anonym']);
                         $post = "<span title=\""._POSTEDBY."\" class=\"sl_post\">".$post."</span>";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=page_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=page_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, $ctitle, $post, $edit);
                         $a++;
                     }
@@ -218,7 +218,7 @@ function search_result() {
                         $modul = "<a href=\"index.php?name=".$val."\" title=\""._MODUL."\" class=\"sl_modul\">".deflmconst($val)."</a>";
                         $cdesc = ($cdesc) ? $cdesc : $ctitle;
                         $ctitle = ($ctitle) ? "<a href=\"index.php?name=".$val."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
-                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$admin_file.".php?op=shop_products_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
+                        $edit = (is_moder($val)) ? add_menu("<a href=\"".$afile.".php?op=shop_products_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"index.php?name=".$val."&amp;op=view&amp;id=".$id."&amp;word=".urlencode($word)."\" target=\"_blank\" title=\""._WINDOWNEW."\">"._WINDOWNEW."</a>") : "";
                         $conts[] = array($a, $id, $title, $date, $modul, $ctitle, "", $edit);
                         $a++;
                     }

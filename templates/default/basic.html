@@ -1,5 +1,9 @@
 <article id="{%id%}" class="post">
+	{%if is_view%}
+	<h1 class="title">{%favorites%} {%title%}</h1>
+	{%else%}
 	<h3 class="title">{%favorites%} {%title%}</h3>
+	{%endif%}
 	<div class="meta">
 		<ul class="pull-right">
 			<li>{%comm%}</li>

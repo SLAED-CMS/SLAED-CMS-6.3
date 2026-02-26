@@ -5,8 +5,8 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 get_lang($conf['name']);
 
@@ -23,7 +23,7 @@ function navigate($title, $cat='') {
 }
 
 function shop() {
-	global $db, $conf, $confso, $admin_file, $home, $user, $op;
+	global $db, $conf, $confso, $afile, $home, $user, $op;
 	$cwhere = catmids($conf['name'], 'p.cid');
 	$unum = user_news($user[3] ?? 0, $confso['num']);
 	$ncat = getVar('get', 'cat', 'num');
@@ -105,7 +105,7 @@ function shop() {
 			$reads = ($confso['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
 			$comm = ($acomm) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$pcom.'</a>' : '';
 			$rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
-			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?op=shop_products_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=shop_products_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
 			
 			#### In Bearbeitung
 			$prtitle = empty($opreis) ? _PREIS : _NPREIS;
@@ -173,7 +173,7 @@ function liste() {
 }
 
 function view() {
-	global $db, $conf, $confso, $admin_file;
+	global $db, $conf, $confso, $afile;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'p.cid');
@@ -204,7 +204,7 @@ function view() {
 		$date = ($confso['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</span>' : '';
 		$reads = ($confso['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
-		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?op=shop_products_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=shop_products_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
 		$favorites = favorview($id, $conf['name']);
 		$goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
 		$voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVoting($vote, $conf['name']).'</div><hr>' : '';
@@ -240,7 +240,7 @@ function view() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -360,7 +360,7 @@ function part() {
 	global $conf, $confso;
 	$id = getVar('get', 'id', 'num');
 	if ($id) setcookie('part', $id, time() + $confso['part_t']);
-	header('Location: index.php?name='.$conf['name']);
+	setRedirect('index.php?name='.$conf['name']);
 }
 
 function clients() {
@@ -393,8 +393,7 @@ function clients() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
-		exit;
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -430,8 +429,7 @@ function rech() {
 			echo $cont;
 		}
 	} else {
-		header('Location: index.php?name='.$conf['name']);
-		exit;
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -499,8 +497,7 @@ function partners() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
-		exit;
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -519,13 +516,12 @@ function partners_send() {
 		if (!$paname || !$paadres || !$paphone) $stop[] = _ERROR_ALL;
 		if (!$stop) {
 			$db->sql_query('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :paid_user, :paname, :paadres, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['paid_user' => $paid_user, 'paname' => $paname, 'paadres' => $paadres, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
-			header('Location: index.php?name='.$conf['name'].'&op=partners');
+			setRedirect('index.php?name='.$conf['name'].'&op=partners');
 		} else {
 			partners();
 		}
 	} else {
-		header('Location: index.php?name='.$conf['name']);
-		exit;
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 

@@ -1,12 +1,12 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2021 SLAED
+# Copyright Â© 2005 - 2021 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 get_lang($conf['name']);
 
