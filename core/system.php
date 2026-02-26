@@ -31,8 +31,9 @@ function getConfig(): array {
     $files = glob(CONFIG_DIR.'/*.php');
     if ($files === false) $files = [];
     sort($files);
+    $skip = ['local.php', 'system.php', 'header.php', 'chmod.php'];
     foreach ($files as $file) {
-        if (basename($file) === 'local.php') continue;
+        if (in_array(basename($file), $skip)) continue;
         $data = require $file;
         if (is_array($data)) {
             $conf = array_merge($conf, $data);
@@ -708,6 +709,8 @@ function checkFileChmod(string $dir, int $chm): string {
 
 # Saving configurations to a file
 function setConfigFile(string $fp, array $arr, array $act = []): void {
+    static $reserved = ['system.php', 'header.php', 'chmod.php', 'local.php'];
+    if (in_array($fp, $reserved)) return;
     $fp = CONFIG_DIR.'/'.$fp;
     if (!empty($act)) $arr = array_replace_recursive($act, $arr);
     ksort($arr);
@@ -955,10 +958,6 @@ function doSitemap() {
                     $buffer .= '</li>';
                 }
                 $buffer .= '</ol>';
-                if ($conf['rewrite']) {
-                    include('config/rewrite.php');
-                    $buffer = preg_replace($in, $out, $buffer);
-                }
                 file_put_contents('config/sitemap/sitemap.txt', $buffer);
             }
             if ($confma['gen_h']) {
@@ -984,9 +983,7 @@ function doSitemap() {
                     $cont .= ($confma['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
                     $cont .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$urls.'</urlset>';
                     if ($conf['rewrite']) {
-                        include('config/rewrite.php');
                         $cont = str_replace($conf['homeurl'].'/', '', $cont);
-                        $cont = preg_replace($in, $out, $cont);
                         $cont = preg_replace('#<loc>(.*?)</loc>#is','<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
                     }
                     $file = 'sitemap-'.$i.'.xml';
@@ -1009,9 +1006,7 @@ function doSitemap() {
             $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
             $cont .= ($confma['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n".$set : $set;
             if ($conf['rewrite']) {
-                include('config/rewrite.php');
                 $cont = str_replace($conf['homeurl'].'/', '', $cont);
-                $cont = preg_replace($in, $out, $cont);
                 $cont = preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
             }
             file_put_contents('sitemap.xml', $cont);
@@ -2964,7 +2959,6 @@ function setFoot(): void {
     $index = (!defined('ADMIN_FILE') && !empty($conf['script_b'])) ? str_replace('{%SCRIPT%}', doScript(), $index) : str_replace('{%SCRIPT%}', '', $index);
     echo setTemplateFoot($index);
     unset($index);
-    if (!defined('ADMIN_FILE') && $conf['rewrite']) rewrite();
     if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
         $dir = 'config/cache/';
         $url = str_replace('/', '', getenv('REQUEST_URI'));
@@ -3560,14 +3554,6 @@ function is_active($mod, $view='') {
     return isset($list[$vnum][$mod]) ? 1 : 0;
 }
 
-# Rewrite mod
-function rewrite() {
-    $contents = ob_get_clean();
-    include('config/rewrite.php');
-    $rewrite = preg_replace($in, $out, $contents);
-    echo $rewrite;
-}
-
 # Decode BB
 function bb_decode($sourse, $mod, $id="") {
     $mod = (empty($mod)) ? "all" : strtolower($mod);
@@ -3843,7 +3829,7 @@ function addmail() {
     $mod = analyze($arg[1]);
     if ($arg[0] && $mod) {
         $subject = (isset($arg[4]) == 1) ? $conf['sitename']." - ".$arg[3]." - "._COMMENT : $conf['sitename']." - ".$arg[3];
-        $puname = ($arg[2]) ? text_filter(substr($arg[2], 0, 25)) : $confu['anonym'];
+        $puname = ($arg[2]) ? text_filter(substr($arg[2], 0, 25)) : _ANONYM;
         $message = (isset($arg[4]) == 1) ? str_replace("[text]", sprintf(_ADDMAILC, $puname, $arg[3], $arg[5]), $conf['mtemp']) : str_replace("[text]", sprintf(_ADDMAIL, $puname, $arg[3]), $conf['mtemp']);
         $params = [];
         $where = ' WHERE smail = \'1\'';
@@ -4983,7 +4969,7 @@ function ashowcom() {
                     }
                 }
             }
-            $avname = (!empty($user_name)) ? $user_name : $com_name." (".$confu['anonym'].")";
+            $avname = (!empty($user_name)) ? $user_name : $com_name." ("._ANONYM.")";
             $date = "<span title=\""._PADD."\" class=\"sl_t_post\">".format_time($com_date, _TIMESTRING)."</span>";
             $ip = (is_moder($com_modul)) ? user_geo_ip($com_host, 4) : "";
             $amess = "<a href=\"#".$com_id."\" title=\""._COMMENT.": ".$a."\" class=\"sl_pnum\">".$a."</a>";
