@@ -104,10 +104,10 @@ support@slaed.net',
 	"dateModified": "[mtime]",
 	"image": "[img]",
 	"url": "[url]",
-	"headline": "0",
+	"headline": "[headline]",
 	"author": {
 		"@type": "Person",
-		"name": "[site]"
+		"name": "[author]"
 	},
 	"publisher": {
 		"@type": "Organization",

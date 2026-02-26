@@ -672,11 +672,9 @@ function setNaviLower($mod) {
 }
 
 # Load configuration file or directory and return chmod warning if needed
-function checkPerms(string $fp, int $id = 0): string {
-    $base = ($id === 0) ? CONFIG_DIR : BASE_DIR;
-    $path = $base.'/'.ltrim($fp, '/');
-    $perm = is_dir($path) ? 777 : 666;
-    $info = checkFileChmod($path, $perm);
+function checkPerms(string $fp): string {
+    $perm = is_dir($fp) ? 777 : 666;
+    $info = checkFileChmod($fp, $perm);
     return ($info !== '') ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $info]) : '';
 }
 
@@ -1390,15 +1388,18 @@ function getTextClean($text, $id) {
 }
 
 # Get the image from the text
-function getImgText($text, $type='') {
+function getImgText($text, $type='', $check=true) {
     global $conf;
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
         $img = (!$type) ? 'uploads/'.$conf['name'].'/thumb/'.trim($match[1]) : 'uploads/'.$conf['name'].'/'.trim($match[1]);
+    } elseif (preg_match('#\[img=[a-zA-Z]+\](.*?)\[/img\]#i', $text, $match)) {
+        $img = trim($match[1]);
+    } elseif (preg_match('#\[img\](.*?)\[/img\]#i', $text, $match)) {
+        $img = trim($match[1]);
     } else {
-        preg_match('#\[img=(.*?)\](.*)\[/img\]#i', $text, $match);
-        $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
+        $img = '';
     }
-    $img = empty($img) ? false : (file_exists($img) ? $img : false);
+    $img = empty($img) ? false : ($check ? (file_exists($img) ? $img : false) : $img);
     return $img;
 }
 
@@ -2318,7 +2319,7 @@ function fields_in($fieldb, $mod) {
     } else {
         $fieldb = fields_save($_POST['field']);
     }
-    $fieldb = explode('|', $fieldb);
+    $fieldb = explode('|', $fieldb ?? '');
     $fieldc = explode('||', $fieldc);
     $i = 0;
     $fields = '';
@@ -2642,7 +2643,7 @@ function check_user() {
 }
 
 # Format head
-function head() {
+function setHead(array $seo = []): void {
     global $db, $home, $index, $conf, $confs, $confr, $confrs, $confst, $user, $admin, $name, $theme, $op;
     $name = $name ?? '';
     $ctime = time();
@@ -2833,13 +2834,15 @@ function head() {
     $strlink = $stscript = '';
     $sep = urldecode($conf['defis']);
     if (!defined('ADMIN_FILE')) {
-        $atime = date('Y-m-d H:i:s');
-        $time = $atime;
-        $mtime = $atime;
-        $title = $conf['sitename'];
-        $desc = $conf['slogan'];
-        $img = $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'];
-        $ctitle = '';
+        $atime  = date('Y-m-d H:i:s');
+        $time   = $seo['time']   ?? $atime;
+        $mtime  = $time;
+        $title    = $seo['title']  ?? $conf['sitename'];
+        $headline = $title;
+        $desc   = $seo['desc']   ?? $conf['slogan'];
+        $img    = ($seo['img'] ?? '') ?: $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'];
+        $ctitle = $seo['ctitle'] ?? '';
+        $author = $seo['author'] ?? $conf['sitename'];
         $url = ($conf['rewrite']) ? urldecode(substr($request, 1)) : urldecode(str_replace('index.php?', '', substr($request, 1)));
         $purl = ($conf['rewrite']) ? $conf['homeurl'].'/'.htmlspecialchars($url) : (($home) ? $conf['homeurl'] : $conf['homeurl'].'/index.php?'.htmlspecialchars($url));
         $type = 'article';
@@ -2879,10 +2882,10 @@ function head() {
         .'<meta name="revisit-after" content="1 days">'."\n"
         .'<meta name="rating" content="general">'."\n"
         .'<meta name="generator" content="SLAED CMS">'."\n";
+        $seofrom = array('[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]', '[headline]', '[author]');
+        $seoto   = array($conf['homeurl'], $conf['sitename'], $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'], _LOCALE, date('c', strtotime($time)), date('c', strtotime($mtime)), $title, $desc, $img, $ctitle, $type, $purl, $headline, $author);
         if (!empty($conf['agraph']) && !empty($conf['graph'])) {
-            $from = array('[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]');
-            $to = array($conf['homeurl'], $conf['sitename'], $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'], _LOCALE, $time, $mtime, $title, $desc, $img, $ctitle, $type, $purl);
-            $strmeta .= str_replace($from, $to, $conf['graph']);
+            $strmeta .= str_replace($seofrom, $seoto, $conf['graph']);
         }
         $strlink .= '<link rel="shortcut icon" href="templates/'.$theme.'/favicon.png">'."\n";
         if (strpos($conf['homeurl'], get_host()) !== false) $strlink .= '<link rel="canonical" href="'.$purl.'">'."\n";
@@ -2901,9 +2904,7 @@ function head() {
     }
     $strlink .= doCss();
     if (!defined('ADMIN_FILE') && !empty($conf['aschema']) && !empty($conf['schema'])) {
-        $from = array('[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]');
-        $to = array($conf['homeurl'], $conf['sitename'], $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'], _LOCALE, $time, $mtime, $title, $desc, $img, $ctitle, $type, $purl);
-        $stscript = str_replace($from, $to, $conf['schema']);
+        $stscript = str_replace($seofrom, $seoto, $conf['schema']);
     }
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
     $head = str_replace(array('{%META%}', '{%LINK%}', '{%SCRIPT%}'), array($strmeta, $strlink, $script), addblocks($head));
@@ -2951,8 +2952,13 @@ function head() {
     if (!defined('ADMIN_FILE')) update_points(1);
 }
 
+# Backward-compatible wrapper
+function head(): void {
+    setHead();
+}
+
 # Format foot
-function foot() {
+function setFoot(): void {
     global $home, $name, $index, $conf, $confs, $do_gzip_compress;
     $index = addblocks($index);
     $index = (!defined('ADMIN_FILE') && !empty($conf['script_b'])) ? str_replace('{%SCRIPT%}', doScript(), $index) : str_replace('{%SCRIPT%}', '', $index);
@@ -3001,6 +3007,11 @@ function foot() {
     }
     while (ob_get_level() > 0) ob_end_flush();
     exit;
+}
+
+# Backward-compatible wrapper
+function foot(): void {
+    setFoot();
 }
 
 # Log files report

@@ -7,13 +7,12 @@
 if (!defined('ADMIN_FILE')) die('Illegal file access');
 
 # Format statistic image
-function getStatistic() {
+function getStatistic(): void {
     global $conf, $confst;
     require_once CONFIG_DIR.'/statistic.php';
-    $arg = func_get_args();
-    $report = ($arg[0]) ? intval($arg[0]) : ((isset($_GET['report'])) ? intval($_GET['report']) : 0);
-    $mday = ($arg[1]) ? intval($arg[1]) : ((isset($_GET['day'])) ? intval($_GET['day']) : '15');
-    $file = ($arg[2]) ? text_filter($arg[2]) : ((isset($_GET['file'])) ? text_filter($_GET['file']) : '');
+    $report = getVar('get', 'report', 'num', 0);
+    $mday   = getVar('get', 'day', 'num', 15);
+    $file   = getVar('get', 'file', 'text', '');
     $off = 1;
 
     if (!$report) header('Content-type: image/png');
@@ -56,8 +55,8 @@ function getStatistic() {
         $from = (!$file && date('d') <= 15) ? 0 : 15;
         if ($from < 0) $from = 0;
     }
-    $unique = $today = $engines = $sites = $homepage = $auditory = $max1 = $max2 = 0;
-    for($i = $from; $i < $to; $i++) {
+    $regusers = $unique = $today = $engines = $sites = $homepage = $auditory = $max1 = $max2 = 0;
+    for ($i = $from; $i < $to; $i++) {
         $day = explode('|', $f[$i]);
         if ($day[1] > $max1) $max1 = $day[1];
         if ($day[2] > $max2) $max2 = $day[2];
@@ -71,7 +70,7 @@ function getStatistic() {
         $regusers = $regusers + $day[7];
     }
     $i = 0;
-    for($z = $from; $z < $to; $z++) {
+    for ($z = $from; $z < $to; $z++) {
         $day = explode('|', $f[$z]);
         if ($day[2] != '') {
             $w = round((230 / $max2) * $day[2]);
@@ -291,7 +290,7 @@ function getAdminInfo(int $obj = 0, string $mod = '', string $file = ''): string
         $name = $fpre.$locale;
         $path = $mpp.'admin/info/'.$name.'.html';
         $tfile = is_file($path) ? file_get_contents($path) : _NO_INFO;
-        if ($ainfo) $cont .= checkPerms($path);
+        if ($ainfo) $cont .= checkPerms(BASE_DIR.'/'.$path);
         $mod = $mpp;
     }
     $cont .= setTemplateBasic('open');
@@ -1058,7 +1057,7 @@ function adm_info() {
         $dir = $mod."admin/info/".$name.".html";
         $thefile = (file_exists($dir)) ? file_get_contents($dir) : _NO_INFO;
         if ($conf['adminfo']) {
-            $cont .= checkPerms($dir, 1);
+            $cont .= checkPerms(BASE_DIR.'/'.$dir);
         }
     }
     $cont .= setTemplateBasic('open');
