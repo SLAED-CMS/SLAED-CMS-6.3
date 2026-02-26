@@ -41,7 +41,7 @@ AGENT.md
 .claude/
 .vscode/
 .idea/
-plans/
+docs/plans/
 *.sublime-*
 .DS_Store
 Thumbs.db
