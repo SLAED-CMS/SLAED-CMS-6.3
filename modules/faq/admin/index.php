@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -123,8 +123,7 @@ function save(): void {
             $ip = getip();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_faq (catid, uid, name, title, time, hometext, ihome, acomm, ip_sender, status) VALUES (:cat, :postid, :postname, :subject, :time, :hometext, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
         }
-        header('Location: '.$afile.'.php?name=faq');
-        exit;
+        setRedirect($afile.'.php?name=faq');
     } elseif ($posttype == 'delete') {
         del($fid);
     } else {
@@ -141,8 +140,7 @@ function del(int $fid = 0): void {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_faq WHERE fid = :id', ['id' => $id]);
     }
     $refer = getVar('get', 'refer', 'num', 0) ? '&status=1' : '';
-    header('Location: '.$afile.'.php?name=faq'.$refer);
-    exit;
+    setRedirect($afile.'.php?name=faq'.$refer);
 }
 
 function conf(): void {
@@ -150,7 +148,7 @@ function conf(): void {
     $cfg = $conf['faq'] ?? [];
     head();
     $cont = navi(0, 3, 0, 0);
-    $cont .= checkPerms('faq.php');
+    $cont .= checkPerms(CONFIG_DIR.'/faq.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -204,8 +202,7 @@ function confsave(): void {
         'link' => getVar('post', 'link', 'num', 0),
     ];
     setConfigFile('faq.php', $cont);
-    header('Location: '.$afile.'.php?name=faq&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=faq&op=conf');
 }
 
 function info(): void {

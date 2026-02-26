@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2017 SLAED
+# Copyright Â© 2005 - 2017 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -104,8 +104,7 @@ function save(): void {
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_clients_down (title, infotext, url, num, code, hits, prod_id, status) VALUES (:title, :infotext, :url, :num, :code, :hits, :prod_id, :status)', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'hits' => 0, 'prod_id' => $prod_id, 'status' => $status]);
         }
-        header('Location: '.$afile.'.php?name=clients');
-        exit;
+        setRedirect($afile.'.php?name=clients');
     } elseif ($posttype === 'delete') {
         del($cid);
     } else {
@@ -117,8 +116,7 @@ function del(int $id = 0): void {
     global $db, $afile;
     if (!$id) $id = getVar('req', 'id', 'num');
     if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
-    header('Location: '.$afile.'.php?name=clients');
-    exit;
+    setRedirect($afile.'.php?name=clients');
 }
 
 function status(): void {
@@ -126,8 +124,7 @@ function status(): void {
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num');
     if ($id) $db->sql_query('UPDATE '.PREFIX_DB.'_clients_down SET status = :status WHERE id = :id', ['status' => $act, 'id' => $id]);
-    header('Location: '.$afile.'.php?name=clients');
-    exit;
+    setRedirect($afile.'.php?name=clients');
 }
 
 function info(): void {

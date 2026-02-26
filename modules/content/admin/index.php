@@ -120,8 +120,7 @@ function save(): void {
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_content (title, text, field, url, time, refresh, counter) VALUES (:title, :text, :field, :url, :time, :refresh, \'0\')', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh]);
         }
-        header('Location: '.$afile.'.php?name=content');
-        exit;
+        setRedirect($afile.'.php?name=content');
     } elseif ($posttype == 'delete') {
         del($cid);
     } else {
@@ -133,8 +132,7 @@ function del(int $cid = 0): void {
     global $db, $afile;
     $id = $cid ? $cid : getVar('req', 'id', 'num', 0);
     if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
-    header('Location: '.$afile.'.php?name=content');
-    exit;
+    setRedirect($afile.'.php?name=content');
 }
 
 function conf(): void {
@@ -142,7 +140,7 @@ function conf(): void {
     $cfg = $conf['content'] ?? [];
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkPerms('content.php');
+    $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$cfg['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
@@ -164,8 +162,7 @@ function confsave(): void {
         'anump' => getVar('post', 'anump', 'num', 10),
     ];
     setConfigFile('content.php', $cont);
-    header('Location: '.$afile.'.php?name=content&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=content&op=conf');
 }
 
 function info(): void {

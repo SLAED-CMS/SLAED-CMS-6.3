@@ -165,8 +165,7 @@ function save(): void {
             $ip = getip();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_news (sid, catid, uid, name, title, time, hometext, bodytext, field, vote, comments, counter, ihome, acomm, score, ratings, associated, ip_sender, fix, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, :field, :vote, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :associated, :ip, :fix, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'ip' => $ip, 'fix' => $fix]);
         }
-        header('Location: '.$afile.'.php?name=news');
-        exit;
+        setRedirect($afile.'.php?name=news');
     } elseif ($posttype === 'delete') {
         admin($sid, 'd');
     } else {
@@ -212,8 +211,7 @@ function admin(int|array $ids = 0, string $vtyp = ''): void {
             $db->sql_query('UPDATE '.PREFIX_DB.'_news SET catid = :typ WHERE sid IN ('.$in.')', ['typ' => (int)$typ] + $id_params);
         }
     }
-    header('Location: '.$afile.'.php?name=news'.$refer);
-    exit;
+    setRedirect($afile.'.php?name=news'.$refer);
 }
 
 function conf(): void {
@@ -221,7 +219,7 @@ function conf(): void {
     $cfg = $conf['news'] ?? [];
     head();
     $cont = navi(0, 3, 0, 0);
-    $cont .= checkPerms('news.php');
+    $cont .= checkPerms(CONFIG_DIR.'/news.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -277,8 +275,7 @@ function confsave(): void {
         'assoc' => getVar('post', 'assoc', 'num', 0),
     ];
     setConfigFile('news.php', $cont);
-    header('Location: '.$afile.'.php?name=news&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=news&op=conf');
 }
 
 function info(): void {

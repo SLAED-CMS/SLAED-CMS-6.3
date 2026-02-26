@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -187,7 +187,7 @@ function conf(): void {
     global $afile, $confv;
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkPerms('voting.php');
+    $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="voting_t" value="'.intval($confv['voting_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'

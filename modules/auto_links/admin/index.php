@@ -221,7 +221,7 @@ function conf(): void {
     global $afile, $conf;
     head();
     $cont = navi(0, 4, 0, 0);
-    $cont .= checkPerms('auto_links.php');
+    $cont .= checkPerms(CONFIG_DIR.'/auto_links.php');
     $cont .= setTemplateBasic('open');
     $path = 'templates/'.$conf['theme'].'/images/banners/';
     $opts = '';

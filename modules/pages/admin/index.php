@@ -126,8 +126,7 @@ function save(): void {
             $ip = getip();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_pages (pid, catid, uid, name, title, time, hometext, bodytext, comments, counter, ihome, acomm, score, ratings, ip_sender, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :ip, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
         }
-        header('Location: '.$afile.'.php?name=pages');
-        exit;
+        setRedirect($afile.'.php?name=pages');
     } elseif ($posttype === 'delete') {
         del($pid);
     } else {
@@ -144,8 +143,7 @@ function del(int $did = 0): void {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_pages WHERE pid = :id', ['id' => $id]);
     }
     $refer = getVar('req', 'refer', 'num', 0) ? '&status=1' : '';
-    header('Location: '.$afile.'.php?name=pages'.$refer);
-    exit;
+    setRedirect($afile.'.php?name=pages'.$refer);
 }
 
 function conf(): void {
@@ -153,7 +151,7 @@ function conf(): void {
     $cfg = $conf['pages'] ?? [];
     head();
     $cont = navi(0, 3, 0, 0);
-    $cont .= checkPerms('pages.php');
+    $cont .= checkPerms(CONFIG_DIR.'/pages.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -207,8 +205,7 @@ function confsave(): void {
         'link' => getVar('post', 'link', 'num', 0),
     ];
     setConfigFile('pages.php', $cont);
-    header('Location: '.$afile.'.php?name=pages&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=pages&op=conf');
 }
 
 function info(): void {

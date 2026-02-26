@@ -345,7 +345,7 @@ function conf(): void {
     global $afile, $confu;
     head();
     $cont = navi(0, 4, 0, 0);
-    $cont .= checkPerms('users.php');
+    $cont .= checkPerms(CONFIG_DIR.'/users.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._ANONYMOUSNAME.':</td><td><input type="text" name="anonym" value="'.$confu['anonym'].'" class="sl_conf" placeholder="'._ANONYMOUSNAME.'" required></td></tr>'

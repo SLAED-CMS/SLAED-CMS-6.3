@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -182,8 +182,7 @@ function save(): void {
             $ip = getip();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :description, :bodytext, :url, :date, :filesize, :version, :email, :homepage, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
         }
-        header('Location: '.$afile.'.php?name=files');
-        exit;
+        setRedirect($afile.'.php?name=files');
     } elseif ($posttype === 'delete') {
         del($fid);
     } else {
@@ -202,8 +201,7 @@ function del(int $fid = 0): void {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_files WHERE lid = :id', ['id' => $id]);
     }
     $refer = getVar('get', 'refer', 'num', 0) ? '&status=1' : '';
-    header('Location: '.$afile.'.php?name=files'.$refer);
-    exit;
+    setRedirect($afile.'.php?name=files'.$refer);
 }
 
 function ignore(): void {
@@ -212,8 +210,7 @@ function ignore(): void {
     if ($id) {
         $db->sql_query('UPDATE '.PREFIX_DB.'_files SET status = :status WHERE lid = :id', ['status' => '1', 'id' => $id]);
     }
-    header('Location: '.$afile.'.php?name=files&status=2');
-    exit;
+    setRedirect($afile.'.php?name=files&status=2');
 }
 
 function conf(): void {
@@ -221,7 +218,7 @@ function conf(): void {
     $cfg = $conf['files'] ?? [];
     head();
     $cont = navi(0, 4, 0, 0);
-    $cont .= checkPerms('files.php');
+    $cont .= checkPerms(CONFIG_DIR.'/files.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -305,8 +302,7 @@ function confsave(): void {
         'link' => getVar('post', 'link', 'num', 0),
     ];
     setConfigFile('files.php', $cont);
-    header('Location: '.$afile.'.php?name=files&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=files&op=conf');
 }
 
 function info(): void {

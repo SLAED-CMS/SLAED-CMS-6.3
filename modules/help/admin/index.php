@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -167,8 +167,7 @@ function save(): void {
         if ($sid) {
             $db->sql_query('UPDATE '.PREFIX_DB.'_help SET catid = :cat, aid = :postid, title = :subject, time = :time, hometext = :hometext, field = :field WHERE sid = :sid', ['cat' => $cat, 'postid' => $postid, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'sid' => $sid]);
             $hid = ($pid) ? $pid : $sid;
-            header('Location: '.$afile.'.php?name=help&op=view&id='.$hid);
-            exit;
+            setRedirect($afile.'.php?name=help&op=view&id='.$hid);
         } else {
             $ip = getip();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_help (pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (:pid, :cat, :uid, :postid, :subject, now(), :hometext, \'\', :ip, \'0\')', ['pid' => $pid, 'cat' => $cat, 'uid' => $uid, 'postid' => $postid, 'subject' => $subject, 'hometext' => $hometext, 'ip' => $ip]);
@@ -184,8 +183,7 @@ function save(): void {
                     mail_send($user_email, $conf['adminmail'] ?? '', $subject_mail, $message, 0, 3);
                 }
             }
-            header('Location: '.$afile.'.php?name=help');
-            exit;
+            setRedirect($afile.'.php?name=help');
         }
     } elseif ($posttype === 'delete') {
         del($sid);
@@ -201,8 +199,7 @@ function del(int $fid = 0): void {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'help\'', ['id' => $id]);
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_help WHERE sid = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
     }
-    header('Location: '.$afile.'.php?name=help');
-    exit;
+    setRedirect($afile.'.php?name=help');
 }
 
 function conf(): void {
@@ -210,7 +207,7 @@ function conf(): void {
     $cfg = $conf['help'] ?? [];
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkPerms('help.php');
+    $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -250,8 +247,7 @@ function confsave(): void {
         'letter' => getVar('post', 'letter', 'num', 0),
     ];
     setConfigFile('help.php', $cont);
-    header('Location: '.$afile.'.php?name=help&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=help&op=conf');
 }
 
 function info(): void {

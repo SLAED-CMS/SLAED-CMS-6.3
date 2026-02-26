@@ -14,10 +14,10 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function rss(): void {
-    global $aroute, $confrs;
+    global $afile, $confrs;
     head();
     $cont = navi(0, 0, 0, 0, 'rss');
-    $cont .= checkPerms('rss.php');
+    $cont .= checkPerms(CONFIG_DIR.'/rss.php');
     $content = '';
     $fieldc = explode('||', $confrs['rss']);
     for ($c = 0; $c < 50; $c++) {
@@ -45,7 +45,7 @@ function rss(): void {
     }
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _RSSDESC]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php?name=rss" method="post">'
+    $cont .= '<form action="'.$afile.'.php?name=rss" method="post">'
     .'<input type="hidden" name="op" value="save">'
     .'<div id="tabc0" class="tabcont">'.$content.'</div>'
     .'<div id="tabc1" class="tabcont"><table class="sl_table_conf">'
@@ -68,7 +68,7 @@ function rss(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $cont = [
         'min' => getVar('post', 'min', 'num', 10),
         'max' => getVar('post', 'max', 'num', 100),
@@ -86,8 +86,7 @@ function save(): void {
     }
     $cont['rss'] = $rss;
     setConfigFile('rss.php', $cont);
-    header('Location: '.$aroute.'.php?name=rss');
-    exit;
+    setRedirect($afile.'.php?name=rss');
 }
 
 function info(): void {

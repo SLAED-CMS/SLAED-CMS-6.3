@@ -97,8 +97,7 @@ function save(): void {
             $agent = getagent();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
         }
-        header('Location: '.$afile.'.php?name=order');
-        exit;
+        setRedirect($afile.'.php?name=order');
     } elseif ($posttype === 'delete') {
         del($mid);
     } else {
@@ -110,8 +109,7 @@ function del(int $did = 0): void {
     global $db, $afile;
     $id = $did ? $did : getVar('req', 'id', 'num', 0);
     if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
-    header('Location: '.$afile.'.php?name=order');
-    exit;
+    setRedirect($afile.'.php?name=order');
 }
 
 function active(): void {
@@ -127,11 +125,9 @@ function active(): void {
         $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
         $msg .= bb_decode($cfg['sendinfo'] ?? '', 'all');
         mail_send($mail, $amail, $subject, $msg, 0, 3);
-        header('Location: '.$afile.'.php?name=order&send=1');
-        exit;
+        setRedirect($afile.'.php?name=order&send=1');
     }
-    header('Location: '.$afile.'.php?name=order');
-    exit;
+    setRedirect($afile.'.php?name=order');
 }
 
 function conf(): void {
@@ -139,7 +135,7 @@ function conf(): void {
     $cfg = $conf['order'] ?? [];
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkPerms('order.php');
+    $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._OR_1.':</td><td><input type="email" name="mail" value="'.($cfg['mail'] ?? '').'" maxlength="255" class="sl_conf" placeholder="'._OR_1.'" required></td></tr>'
@@ -171,8 +167,7 @@ function confsave(): void {
         'sendinfo' => getVar('post', 'sendinfo', 'text', ''),
     ];
     setConfigFile('order.php', $cont);
-    header('Location: '.$afile.'.php?name=order&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=order&op=conf');
 }
 
 function info(): void {

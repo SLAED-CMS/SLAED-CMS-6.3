@@ -157,7 +157,7 @@ function conf(): void {
     $cfg = $conf['whois'] ?? [];
     head();
     $cont = navi(0, 3, 0, 0);
-    $cont .= checkPerms('whois.php');
+    $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
         .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 10).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'

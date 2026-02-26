@@ -131,8 +131,7 @@ function save(): void {
             $agent = getagent();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['sum' => $sum, 'mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
         }
-        header('Location: '.$afile.'.php?name=money');
-        exit;
+        setRedirect($afile.'.php?name=money');
     } elseif ($posttype === 'delete') {
         del($mid);
     } else {
@@ -144,8 +143,7 @@ function del(int $did = 0): void {
     global $db, $afile;
     $id = $did ? $did : getVar('req', 'id', 'num', 0);
     if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]);
-    header('Location: '.$afile.'.php?name=money');
-    exit;
+    setRedirect($afile.'.php?name=money');
 }
 
 function billing(string $title, string $autor, string $infos, string $num, string $date, string $menge, string $kurs, string $sum): void {
@@ -207,11 +205,9 @@ function active(): void {
         $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
         $msg .= bb_decode($cfg['sendinfo'] ?? '', 'all');
         mail_send($mail, $amail, $subject, $msg, 0, 3);
-        header('Location: '.$afile.'.php?name=money&send=1');
-        exit;
+        setRedirect($afile.'.php?name=money&send=1');
     }
-    header('Location: '.$afile.'.php?name=money');
-    exit;
+    setRedirect($afile.'.php?name=money');
 }
 
 function conf(): void {
@@ -219,7 +215,7 @@ function conf(): void {
     $cfg = $conf['money'] ?? [];
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkPerms('money.php');
+    $cont .= checkPerms(CONFIG_DIR.'/money.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._MA_3.':</td><td><input type="text" name="proz" value="'.($cfg['proz'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_3.'" required></td></tr>'
@@ -266,8 +262,7 @@ function confsave(): void {
         'autor' => getVar('post', 'autor', 'text', ''),
     ];
     setConfigFile('money.php', $cont);
-    header('Location: '.$afile.'.php?name=money&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=money&op=conf');
 }
 
 function info(): void {

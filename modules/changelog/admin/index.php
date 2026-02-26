@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -439,7 +439,7 @@ function changelog(): void {
     
 
     $cont = navi(0, 0);
-    $cont .= checkPerms('changelog.php');
+    $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
 
     // Get filters
     $page = max(1, getVar('get', 'page', 'num', 1));
@@ -552,7 +552,7 @@ function conf(): void {
     global $afile, $conflog;
     head();
     $cont = navi(0, 1);
-    $cont .= checkPerms('changelog.php');
+    $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.esc($afile).'.php" method="post">';
     $cont .= '<table class="sl_table_conf">';

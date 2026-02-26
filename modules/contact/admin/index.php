@@ -17,7 +17,7 @@ function contact(): void {
     $cfg = $conf['contact'] ?? [];
     head();
     $cont = navi(0, 0, 0, 0);
-    $cont .= checkPerms('contact.php');
+    $cont .= checkPerms(CONFIG_DIR.'/contact.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._CONTACTINFO.':</td><td>'.textarea('1', 'info', $cfg['info'], 'all', '10', _CONTACTINFO, '0').'</td></tr>'
@@ -35,8 +35,7 @@ function save(): void {
         'admins' => getVar('post', 'admins', 'num', 0),
     ];
     setConfigFile('contact.php', $cont);
-    header('Location: '.$afile.'.php?name=contact');
-    exit;
+    setRedirect($afile.'.php?name=contact');
 }
 
 function info(): void {

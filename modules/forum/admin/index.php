@@ -55,7 +55,7 @@ function conf(): void {
     head();
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHINF]);
-    $cont .= checkPerms('forum.php');
+    $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -115,8 +115,7 @@ function confsave(): void {
         'web' => getVar('post', 'web', 'num', 0),
     ];
     setConfigFile('forum.php', $cont);
-    header('Location: '.$afile.'.php?name=forum&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=forum&op=conf');
 }
 
 function info(): void {
@@ -131,4 +130,3 @@ switch ($op) {
     case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
-

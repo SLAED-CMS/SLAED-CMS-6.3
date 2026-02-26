@@ -17,12 +17,12 @@ function sitemap(): void {
     head();
     $file = 'sitemap.xml';
     $cont = navi(0, 0, 0, 0);
-    $cont .= checkPerms($file, 1);
+    $cont .= checkPerms(BASE_DIR.'/'.$file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $f = $asize = 0;
     $acont = '';
     foreach (glob('sitemap*.xml*') as $cfile) {
-        $cont .= checkPerms($cfile, 1);
+        $cont .= checkPerms(BASE_DIR.'/'.$cfile);
         $handle = fopen($cfile, 'rb');
         $n = 0;
         if ($handle) {
@@ -49,8 +49,7 @@ function sitemap(): void {
 function add(): void {
     global $afile;
     doSitemap();
-    header('Location: '.$afile.'.php?name=sitemap');
-    exit;
+    setRedirect($afile.'.php?name=sitemap');
 }
 
 function xsl(): void {
@@ -58,7 +57,7 @@ function xsl(): void {
     head();
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkPerms('sitemap/sitemap.xsl');
+    $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_XSL_INFO, $file)]);
     $cont .= setTemplateBasic('open');
@@ -76,8 +75,7 @@ function xslsave(): void {
     if ($template !== '') {
         file_put_contents($file, $template); 
     }
-    header('Location: '.$afile.'.php?name=sitemap&op=xsl');
-    exit;
+    setRedirect($afile.'.php?name=sitemap&op=xsl');
 }
 
 function conf(): void {
@@ -85,7 +83,7 @@ function conf(): void {
     $cfg = $conf['sitemap'] ?? [];
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkPerms('sitemap.php');
+    $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._MODULES.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.modul('mod', 'sl_conf', $cfg['mod'] ?? '', 1).'</td></tr>';
@@ -166,8 +164,7 @@ function confsave(): void {
         'txt' => getVar('post', 'txt', 'num', 0),
     ];
     setConfigFile('sitemap.php', $cont);
-    header('Location: '.$afile.'.php?name=sitemap&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=sitemap&op=conf');
 }
 
 function info(): void {
@@ -185,4 +182,3 @@ switch ($op) {
     case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
-

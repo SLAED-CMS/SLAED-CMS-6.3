@@ -127,8 +127,7 @@ function clientsact(): void {
     [$active] = $db->sql_fetchrow($db->sql_query('SELECT active FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]));
     $active = ($active) ? 0 : 1;
     $db->sql_query('UPDATE '.PREFIX_DB.'_clients SET active = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
-    header('Location: '.$afile.'.php?name=shop&op=clients');
-    exit;
+    setRedirect($afile.'.php?name=shop&op=clients');
 }
 
 function clientsadd(): void {
@@ -252,8 +251,7 @@ function clientssave(): void {
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :cid_user, :cid_product, \'0\', \'0\', :cname, :cadres, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)', ['cid_user' => $cid_user, 'cid_product' => $cid_product, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive]);
         }
-        header('Location: '.$afile.'.php?name=shop&op=clients');
-        exit;
+        setRedirect($afile.'.php?name=shop&op=clients');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
         clientsdel($cid);
     } else {
@@ -265,8 +263,7 @@ function clientsdel(int $id = 0): void {
     global $db, $afile;
     $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
     if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]);
-    header('Location: '.$afile.'.php?name=shop&op=clients');
-    exit;
+    setRedirect($afile.'.php?name=shop&op=clients');
 }
 
 function products(): void {
@@ -407,8 +404,7 @@ function productssave(): void {
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_products VALUES (NULL, :pcid, :ptime, :ptitle, :ptext, :pbodytext, :ppreis, :vote, :associated, :ihome, :acomm, \'0\', \'0\', \'0\', \'0\', :fix, :pactive)', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'ppreis' => $ppreis, 'vote' => $vote, 'associated' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive]);
         }
-        header('Location: '.$afile.'.php?name=shop&op=products');
-        exit;
+        setRedirect($afile.'.php?name=shop&op=products');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
         productsadmin($pid, 'd');
     } else {
@@ -449,8 +445,7 @@ function productsadmin(int|array $id = 0, string $vtyp = ''): void {
             $db->sql_query('UPDATE '.PREFIX_DB.'_products SET cid = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
         }
     }
-    header('Location: '.$afile.'.php?name=shop&op=products');
-    exit;
+    setRedirect($afile.'.php?name=shop&op=products');
 }
 
 function partners(): void {
@@ -512,8 +507,7 @@ function partnersact(): void {
     [$active] = $db->sql_fetchrow($db->sql_query('SELECT active FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]));
     $active = ($active == 1) ? 0 : 1;
     $db->sql_query('UPDATE '.PREFIX_DB.'_partners SET active = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
-    header('Location: '.$afile.'.php?name=shop&op=partners');
-    exit;
+    setRedirect($afile.'.php?name=shop&op=partners');
 }
 
 function partnersadd(): void {
@@ -591,8 +585,7 @@ function partnerssave(): void {
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, \''.$paid_user.'\', \''.$paname.'\', \''.$paadres.'\', \''.$paphone.'\', \''.$paemail.'\', \''.$pawebsite.'\', \''.$pawebmoney.'\', \''.$papaypal.'\', \''.$paregdate.'\', \''.$parest.'\', \''.$pabek.'\', \''.$paactive.'\')');
         }
-        header('Location: '.$afile.'.php?name=shop&op=partners');
-        exit;
+        setRedirect($afile.'.php?name=shop&op=partners');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
         partnersdel($paid);
     } else {
@@ -604,8 +597,7 @@ function partnersdel(int $id = 0): void {
     global $db, $afile;
     $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
     if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]);
-    header('Location: '.$afile.'.php?name=shop&op=partners');
-    exit;
+    setRedirect($afile.'.php?name=shop&op=partners');
 }
 
 function partnersdetails(): void {
@@ -681,8 +673,7 @@ function exportdata(): void {
             fclose($fp);
             stream('uploads/shop/temp/'.$date.'_'.$bd.'.csv', $date.'_'.$bd.'.csv');
         } else {
-            header('Location: '.$afile.'.php?name=shop&op=export');
-            exit;
+            setRedirect($afile.'.php?name=shop&op=export');
         }
     } elseif ($id == 2 && $bd) {
         $handle = fopen ('uploads/shop/temp/'.$bd,'rb');
@@ -715,12 +706,11 @@ function exportdata(): void {
             }
         }
         fclose ($handle);
-        header('Location: '.$afile.'.php?name=shop&op='.$idb);
-        exit;
+        setRedirect($afile.'.php?name=shop&op='.$idb);
     } else {
         head();
         $cont = navi(3, 3, 1, 0, 'export');
-        $cont .= checkPerms('uploads/shop/temp', 1);
+        $cont .= checkPerms(BASE_DIR.'/uploads/shop/temp');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _S_NOTE]);
         [$pr_num] = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_products'));
         [$cl_num] = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_clients'));
@@ -773,7 +763,7 @@ function conf(): void {
     $cfg = $conf['shop'] ?? [];
     head();
     $cont = navi(0, 4, 0, 0);
-    $cont .= checkPerms('shop.php');
+    $cont .= checkPerms(CONFIG_DIR.'/shop.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis']).'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -873,8 +863,7 @@ function save(): void {
         'shopinfo' => $xshopinfo,
     ];
     setConfigFile('shop.php', $cont);
-    header('Location: '.$afile.'.php?name=shop&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=shop&op=conf');
 }
 
 function info(): void {

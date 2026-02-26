@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -117,8 +117,7 @@ function save(): void {
             $ip = getip();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_jokes (uid, name, date, title, cat, joke, ip_sender, status) VALUES (:uid, :name, :date, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);
         }
-        header('Location: '.$afile.'.php?name=jokes');
-        exit;
+        setRedirect($afile.'.php?name=jokes');
     } elseif ($posttype === 'delete') {
         del($jokeid);
     } else {
@@ -133,8 +132,7 @@ function del(int $fid = 0): void {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'jokes\'', ['id' => $id]);
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_jokes WHERE jokeid = :id', ['id' => $id]);
     }
-    header('Location: '.$afile.'.php?name=jokes');
-    exit;
+    setRedirect($afile.'.php?name=jokes');
 }
 
 function conf(): void {
@@ -142,7 +140,7 @@ function conf(): void {
     $cfg = $conf['jokes'] ?? [];
     head();
     $cont = navi(0, 3, 0, 0);
-    $cont .= checkPerms('jokes.php');
+    $cont .= checkPerms(CONFIG_DIR.'/jokes.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -182,8 +180,7 @@ function confsave(): void {
         'rate' => getVar('post', 'rate', 'num', 0),
     ];
     setConfigFile('jokes.php', $cont);
-    header('Location: '.$afile.'.php?name=jokes&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=jokes&op=conf');
 }
 
 function info(): void {

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Ã‚Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -213,8 +213,7 @@ function save(): void {
             $ip = getip();
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ihome, acomm, ip_sender, status) VALUES (NULL, :cid, :uid, :name, :title, :subtitle, :myears, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, :date, :ihome, :acomm, :ip, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'myears' => $myears, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'date' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
         }
-        header('Location: '.$afile.'.php?name=media');
-        exit;
+        setRedirect($afile.'.php?name=media');
     } elseif ($posttype === 'delete') {
         del($mid);
     } else {
@@ -230,16 +229,14 @@ function del(int $did = 0): void {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'media\'', ['id' => $id]);
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_media WHERE id = :id', ['id' => $id]);
     }
-    header('Location: '.$afile.'.php?name=media');
-    exit;
+    setRedirect($afile.'.php?name=media');
 }
 
 function ignore(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
     if ($id) $db->sql_query('UPDATE '.PREFIX_DB.'_media SET status = \'1\' WHERE id = :id', ['id' => $id]);
-	header('Location: '.$afile.'.php?name=media&status=2');
-    exit;
+	setRedirect($afile.'.php?name=media&status=2');
 }
 
 function conf(): void {
@@ -247,7 +244,7 @@ function conf(): void {
     $cfg = $conf['media'] ?? [];
     head();
     $cont = navi(0, 4, 0, 0);
-    $cont .= checkPerms('media.php');
+    $cont .= checkPerms(CONFIG_DIR.'/media.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
@@ -319,8 +316,7 @@ function confsave(): void {
         'link' => getVar('post', 'link', 'num', 0),
     ];
     setConfigFile('media.php', $cont);
-    header('Location: '.$afile.'.php?name=media&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=media&op=conf');
 }
 
 function info(): void {
