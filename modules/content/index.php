@@ -5,22 +5,22 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 
 function content() {
-	global $db, $admin_file, $conf, $confcn;
+	global $db, $afile, $conf, $confcn;
 	head();
-	$cont = setTemplateBasic('title', array('{%title%}' => _CONTENT));
+	$cont = setTemplateBasic('title', ['{%title%}' => _CONTENT]);
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $confcn['num'];
-	$result = $db->sql_query("SELECT id, title, text, time, counter FROM ".PREFIX_DB."_content WHERE time <= NOW() ORDER BY time DESC LIMIT ".$offset.", ".$confcn['num']);
+	$result = $db->sql_query('SELECT id, title, text, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$confcn['num']);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
 		while (list($id, $title, $text, $time, $counter)= $db->sql_fetchrow($result)) {
-			$moder = (is_moder($conf['name'])) ? '<a href="'.$admin_file.'.php?op=content_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>||' : '';
+			$moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=content_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>||' : '';
 			$edit = add_menu($moder.'<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._SHOW.'">'._SHOW.'</a>');
 			$cont .= '<tr id="'.$id.'">'
 			.'<td><a href="#'.$id.'" title="'.$id.'" class="sl_pnum">'.$id.'</a></td>'
@@ -31,35 +31,35 @@ function content() {
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $confcn['num'], '', 'id', '_content', '', '', $confcn['nump']);
 		$cont .= setTemplateBasic('close');
 	} else {
-		$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
 	echo $cont;
 	foot();
 }
 
 function view() {
-	global $db, $conf, $confn, $admin_file;
+	global $db, $conf, $confn, $afile;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
-	$result = $db->sql_query("SELECT id, title, text, field, url, time, refresh FROM ".PREFIX_DB."_content WHERE id = '".$id."' AND time <= NOW()");
+	$result = $db->sql_query('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = \''.$id.'\' AND time <= NOW()');
 	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query("UPDATE ".PREFIX_DB."_content SET counter = counter+1 WHERE id = '".$id."'");
+		$db->sql_query('UPDATE '.PREFIX_DB.'_content SET counter = counter+1 WHERE id = \''.$id.'\'');
 		list($id, $title, $text, $field, $url, $time, $refresh) = $db->sql_fetchrow($result);
 		if ($url) {
 			$past = time() - $refresh;
 			if (strtotime($time) < $past) {
-				$content = rss_read($url, 1);
-				$db->sql_query("UPDATE ".PREFIX_DB."_content SET text = '".$content."', time = NOW() WHERE id = '".$id."'");
+				$conf['content'] = rss_read($url, 1);
+				$db->sql_query('UPDATE '.PREFIX_DB.'_content SET text = \''.$conf['content'].'\', time = NOW() WHERE id = \''.$id.'\'');
 			}
 		}
 		$fields = fields_out($field, $conf['name']);
 		$fields = ($fields) ? '<br><br>'.$fields : '';
 		$hometext = $text.$fields;
 		head();
-		echo setTemplateBasic('title', array('{%title%}' => $title)).setTemplateBasic('open').search_color(bb_decode($hometext, $conf['name']), $word).setTemplateBasic('close');
+		echo setTemplateBasic('title', ['{%title%}' => $title]).setTemplateBasic('open').search_color(bb_decode($hometext, $conf['name']), $word).setTemplateBasic('close');
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 

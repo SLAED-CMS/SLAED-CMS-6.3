@@ -11,7 +11,7 @@ if (!defined('MODULE_FILE')) {
 get_lang($conf['name']);
 
 function contact() {
-	global $db, $conf, $confco, $locale, $stop;
+	global $db, $conf, $locale, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
 		$sname = getVar('post', 'sname', 'name', $userinfo['user_name']);
@@ -21,9 +21,9 @@ function contact() {
 		$semail = getVar('post', 'semail', 'text');
 	}
 	$message = getVar('post', 'message', 'text');
-	if ($confco['admins']) {
-		$wlang = ($conf['multilingual']) ? "AND (lang = '".$locale."' OR lang = '')" : '';
-		$result = $db->sql_query("SELECT id, name, title FROM ".PREFIX_DB."_admins WHERE smail = '1' ".$wlang." ORDER BY id");
+	if ($conf['contact']['admins']) {
+		$wlang = ($conf['multilingual']) ? 'AND (lang = \''.$locale.'\' OR lang = \'\')' : '';
+		$result = $db->sql_query('SELECT id, name, title FROM '.PREFIX_DB.'_admins WHERE smail = \'1\' '.$wlang.' ORDER BY id');
 		$asend = '';
 		if ($db->sql_numrows($result) > 0) {
 			while (list($id, $aname, $atitle) = $db->sql_fetchrow($result)) {
@@ -33,15 +33,15 @@ function contact() {
 			}
 		}
 	}
-	if ($confco['info']) {
+	if ($conf['contact']['info']) {
 		$title = _CONTACT;
-		$form = bb_decode($confco['info'], $conf['name']).'<hr>';
+		$form = bb_decode($conf['contact']['info'], $conf['name']).'<hr>';
 	} else {
 		$title = _FEEDBACK;
 		$form = '';
 	}
 	head();
-	$cont = setTemplateBasic('title', array('{%title%}' => $title));
+	$cont = setTemplateBasic('title', ['{%title%}' => $title]);
 	$form .= '<form action="index.php?name='.$conf['name'].'" method="post">'
 	.'<table class="sl_table_form">';
 	$form .= ($asend) ? '<tr><td>'._TO.':</td><td><select name="id" class="sl_field '.$conf['style'].'">'.$asend.'</select></td></tr>' : '';
@@ -54,14 +54,14 @@ function contact() {
 		$sname = getVar('post', 'sname', 'name');
 		$semail = getVar('post', 'semail', 'text');
 		$message = nl2br(getVar('post', 'message', 'text'), false);
-		$stop = array();
+		$stop = [];
 		if (!$sname) $stop[] = _CERROR3;
 		if (!$message) $stop[] = _CERROR1;
 		checkemail($semail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
-			if ($confco['admins'] && $id) {
-				list($adminmail) = $db->sql_fetchrow($db->sql_query("SELECT email FROM ".PREFIX_DB."_admins WHERE id = '".$id."' AND smail = '1'"));
+			if ($conf['contact']['admins'] && $id) {
+				list($adminmail) = $db->sql_fetchrow($db->sql_query('SELECT email FROM '.PREFIX_DB.'_admins WHERE id = \''.$id.'\' AND smail = \'1\''));
 				$to = $adminmail;
 			} else {
 				$to = $conf['adminmail'];
@@ -70,9 +70,9 @@ function contact() {
 			$msg = $conf['sitename'].' - '._FEEDBACK.'<br><br>'._SENDERNAME.': '.$sname.'<br>'._SENDEREMAIL.': '.$semail.'<br><br>'._MESSAGE.': '.$message;
 			mail_send($to, $semail, $subject, $msg, 1, 1);
 			update_points(5);
-			$cont .= setTemplateWarning('warn', array('time' => '5', 'url' => '', 'id' => 'info', 'text' => _FBMAILSENT));
+			$cont .= setTemplateWarning('warn', ['time' => '5', 'url' => '', 'id' => 'info', 'text' => _FBMAILSENT]);
 		} else {
-			$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop));
+			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 			$cont .= setTemplateBasic('open').$form.setTemplateBasic('close');
 		}
 	} else {
@@ -85,4 +85,3 @@ function contact() {
 switch($op) {
 	default: contact(); break;
 }
-?>

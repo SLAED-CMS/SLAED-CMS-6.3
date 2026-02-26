@@ -5,8 +5,8 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 get_lang($conf['name']);
 
@@ -24,7 +24,7 @@ function navigate($title, $cat='') {
 }
 
 function files() {
-	global $db, $admin_file, $user, $conf, $confu, $conff, $home, $op;
+	global $db, $afile, $user, $conf, $confu, $conff, $home, $op;
 	$cwhere = catmids($conf['name'], 'f.cid');
 	$unum = user_news($user[3] ?? 0, $conff['num']);
 	$ncat = getVar('get', 'cat', 'num');
@@ -96,7 +96,7 @@ function files() {
 			$hits = ($conff['hits']) ? '<span title="'._FILEHITS.'" class="sl_down">'.$hits.'</span>' : '';
 			$comm = ($acomm) ? '<a href="'.$thref.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
 			$rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
-			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?op=files_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=files_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=files_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=files_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
 			$cont .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($description, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => ''));
 		}
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'lid', '_files', 'cid', $onum, $conff['nump']);
@@ -148,7 +148,7 @@ function liste() {
 }
 
 function view() {
-	global $db, $admin_file, $conf, $confu, $conff;
+	global $db, $afile, $conf, $confu, $conff;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'f.cid');
@@ -172,7 +172,7 @@ function view() {
 		$reads = ($conff['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
 		$hits = ($conff['hits']) ? '<span title="'._FILEHITS.'" class="sl_down">'.$hits.'</span>' : '';
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
-		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$admin_file.'.php?op=files_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$admin_file.'.php?op=files_delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=files_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=files_delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
 		$favorites = favorview($id, $conf['name']);
 		$goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
 		$size = _SIZE.': '.files_size($fsize);
@@ -210,7 +210,7 @@ function view() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -264,7 +264,7 @@ function add() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -311,7 +311,7 @@ function send() {
 			add();
 		}
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -324,7 +324,7 @@ function broken() {
 		echo navigate(_BROCFILE).setTemplateWarning('warn', array('time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTE));
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -350,7 +350,7 @@ function loading() {
 			foot();
 		}
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
