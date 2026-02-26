@@ -4,4 +4,4 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-return null;
+if (!defined('FUNC_FILE')) die('Illegal file access');
