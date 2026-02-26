@@ -42,14 +42,14 @@ function autolink() {
     $offset = intval($offset);
     $a = ($num) ? $offset + 1 : 1;
     $result = $db->sql_query('SELECT id, sitename, description, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
-    head();
+    setHead();
     $cont = '';
     if (!$home) $cont .= navigate($ntitle);
     if ($db->sql_numrows($result) > 0) {
         while (list($id, $sitename, $description, $hits, $outs, $time) = $db->sql_fetchrow($result)) {
             $title = search_color($sitename, $word).' '.new_graphic($time);
             $read = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" target="_blank" title="'.$sitename.'" class="sl_but_read">'._DOWNLLINK.'</a>';
-            $date = '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</span>';
+            $date = '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>';
             $reads = '<span title="'._OUTS.'" class="sl_outs">'.$outs.'</span>';
             $hits = '<span title="'._HITS.'" class="sl_hits">'.$hits.'</span>';
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=auto_links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=auto_links_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$sitename.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
@@ -60,7 +60,7 @@ function autolink() {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function view() {
@@ -95,7 +95,7 @@ function add() {
     $post_description = getVar('post', 'description', 'text');
     $description = ($post_description) ? save_text($post_description) : '';
     
-    head();
+    setHead();
     $cont = navigate(_ADD);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($description) $cont .= preview($sitename, $description, '', '', $conf['name']);
@@ -109,7 +109,7 @@ function add() {
     .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function send() {
@@ -126,7 +126,7 @@ function send() {
     if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
     if ($db->sql_numrows($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE link = :sitelink', ['sitelink' => $sitelink])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
-        head();
+        setHead();
         $cont = navigate(_ADD);
         $db->sql_query('INSERT INTO '.PREFIX_DB.'_auto_links VALUES (NULL, :sitename, :description, :sitelink, :adminemail, 0, 0, NOW())', ['sitename' => $sitename, 'description' => $description, 'sitelink' => $sitelink, 'adminemail' => $adminemail]);
         $puname = (is_user()) ? $user[1] : '';
@@ -144,7 +144,7 @@ function send() {
         $cont .= '</table>';
         $cont .= setTemplateBasic('close');
         echo $cont;
-        foot();
+        setFoot();
     } else {
         add();
     }

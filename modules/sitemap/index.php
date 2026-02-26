@@ -12,15 +12,15 @@ if (!defined('MODULE_FILE')) {
 function sitemap(): void {
     global $conf;
     $path = SITEMAP_DIR.'/sitemap.txt';
-    head($conf['defis'].' '._SITEMAP);
-    $cont = setTemplateBasic('title', ['title' => _SITEMAP]);
+    setHead(['title' => _SITEMAP]);
+    $cont = setTemplateBasic('title', ['{%title%}' => _SITEMAP]);
     if (file_exists($path)) {
         $cont .= setTemplateBasic('open').file_get_contents($path).setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 switch ($op) {

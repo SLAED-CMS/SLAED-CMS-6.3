@@ -10,7 +10,7 @@ get_lang($conf['name']);
 
 function systems() {
 	global $db, $conf, $afile, $user, $stop, $info;
-	head($conf['defis'].' '._PRODUCTSINFO);
+	setHead(['title' => _PRODUCTSINFO]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _PRODUCTSINFO]);
 	$cont .= navi();
 	if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
@@ -44,7 +44,7 @@ function systems() {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
 	echo $cont;
-	foot();
+	setFoot();
 }
 
 function download() {
@@ -112,7 +112,7 @@ function generator($path='') {
 	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = \'1\' AND id_user = \''.$user_id.'\'');
 	if (is_user() && $db->sql_numrows($result) > 0) {
 		while (list($domain) = $db->sql_fetchrow($result)) $domains[] = $domain;
-		$domains = preg_replace('/http://|www./i', '', implode(',', $domains));
+		$domains = preg_replace('#https?://|www\.#i', '', implode(',', $domains));
 		$id = getVar('get', 'id', 'num');
 		list($pass) = $db->sql_fetchrow($db->sql_query('SELECT code FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\' AND id = \''.$id.'\''));
 		$massiv = explode(',', $domains);

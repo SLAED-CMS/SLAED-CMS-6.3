@@ -19,7 +19,7 @@ function navigate($title, $cat='') {
 	$pop = ($confso['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
 	$liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
 	$catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-	return setTemplateBasic('navi', array('{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => '', '{%catshow%}' => $catshow));
+	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => '', '{%catshow%}' => $catshow]);
 }
 
 function shop() {
@@ -27,6 +27,7 @@ function shop() {
 	$cwhere = catmids($conf['name'], 'p.cid');
 	$unum = user_news($user[3] ?? 0, $confso['num']);
 	$ncat = getVar('get', 'cat', 'num');
+	$params = [];
 	if (!$ncat && $op && $confso['rate']) {
 		$caton = 0;
 		$field = 'op='.$op.'&';
@@ -37,15 +38,16 @@ function shop() {
 			$orderby = '(p.count/(TO_DAYS(NOW()) - TO_DAYS(p.time))) DESC';
 			$ntitle = _POP;
 		}
-		$order = "WHERE p.time <= NOW() AND p.active != '0' ".$cwhere." ORDER BY ".$orderby;
+		$order = "WHERE p.time <= NOW() AND p.active != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$onum = "time <= NOW() AND active != '0'";
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
 		$orderby = ($op) ? (($op == 'best') ? '(p.totalvotes/p.votes) DESC' : '(p.count/(TO_DAYS(NOW()) - TO_DAYS(p.time))) DESC') : 'p.fix DESC, p.time DESC';
 		list($ctitle) = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
-		$order = "WHERE (p.cid = '".$ncat."' OR p.assoc REGEXP '[[:<:]]".$ncat."[[:>:]]' OR c.parentid = '".$ncat."') AND p.time <= NOW() AND p.active != '0' ".$cwhere." ORDER BY ".$orderby;
-		$catid = array();
+		$order = "WHERE (p.cid = :ncat1 OR p.assoc REGEXP :ncat_re OR c.parentid = :ncat2) AND p.time <= NOW() AND p.active != '0' ".$cwhere.' ORDER BY '.$orderby;
+		$params = ['ncat1' => $ncat, 'ncat_re' => '[[:<:]]'.$ncat.'[[:>:]]', 'ncat2' => $ncat];
+		$catid = [];
 		$result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
 		while (list($caid) = $db->sql_fetchrow($result)) $catid[] = $caid;
 		unset($result);
@@ -57,28 +59,28 @@ function shop() {
 			$caton = 0;
 			$wcid = "cid = '".$ncat."'";
 		}
-		$onum = "(".$wcid." OR assoc REGEXP '[[:<:]]".$ncat."[[:>:]]') AND time <= NOW() AND active != '0'";
+		$onum = '('.$wcid." OR assoc REGEXP '[[:<:]]".$ncat."[[:>:]]') AND time <= NOW() AND active != '0'";
 	} else {
 		$caton = 1;
 		$field = '';
-		$hwhere = ($home) ? "AND p.ihome = '1'" : "";
-		$hnwhere = ($home) ? "AND ihome = '1'" : "";
-		$order = "WHERE p.time <= NOW() AND p.active != '0' ".$hwhere." ".$cwhere." ORDER BY p.fix DESC, p.time DESC";
+		$hwhere = ($home) ? "AND p.ihome = '1'" : '';
+		$hnwhere = ($home) ? "AND ihome = '1'" : '';
+		$order = "WHERE p.time <= NOW() AND p.active != '0' ".$hwhere.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC';
 		$onum = "time <= NOW() AND active != '0' ".$hnwhere;
 		$ntitle = _SHOP;
 	}
-	head();
+	setHead();
 	$cont = '';
 	if (!$home || ($home && $confso['homcat'])) {
 		$defis = $confso['defis'] ?? ($conf['defis'] ?? '-');
 		$cont .= navigate($ntitle, $caton);
-		if ($ncat) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $ncat, $defis, _SHOP)));
+		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $defis, _SHOP)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $confso['subcat'], $confso['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
-	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.acomm, p.com, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum);
+	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.acomm, p.com, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
 		$width_tab = 100 / $confso['bascol'];
@@ -97,11 +99,11 @@ function shop() {
 			#### In Bearbeitung
 			$uname = $uname ?? '';
 			$user_name = $user_name ?? '';
-			$post = isset($confso['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : ($confu['anonym'] ?? ''))) : '';
+			$post = isset($confso['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
 			$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 			####
 			
-			$date = ($confso['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</span>' : '';
+			$date = ($confso['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
 			$reads = ($confso['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
 			$comm = ($acomm) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$pcom.'</a>' : '';
 			$rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
@@ -118,7 +120,7 @@ function shop() {
 			$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
 			if (($i - 1) % $confso['bascol'] == 0) $cont .= '<tr>';
 			$cont .= '<td style="width: '.$width_tab.'%;">';
-			$cont .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($text, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '', '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse));
+			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($text, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '', '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 			$cont .= '</td>';
 			if ($i % $confso['bascol'] == 0) $cont .= '</tr>';
 			$i++;
@@ -126,10 +128,10 @@ function shop() {
 		$cont .= '</table>';
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_products', 'cid', $onum, $confso['nump']);
 	} else {
-		$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
 	echo $cont;
-	foot();
+	setFoot();
 }
 
 function liste() {
@@ -137,9 +139,11 @@ function liste() {
 	$cwhere = catmids($conf['name'], 'p.cid');
 	$listnum = intval($confso['listnum']);
 	$let = getVar('get', 'let', 'let');
+	$params = [];
 	if ($let) {
 		$field = 'op=liste&let='.urlencode($let).'&';
-		$order = "WHERE UCASE(p.title) LIKE BINARY '".$let."%' AND p.time <= NOW() AND p.active != '0'";
+		$order = "WHERE UCASE(p.title) LIKE BINARY :let AND p.time <= NOW() AND p.active != '0'";
+		$params['let'] = $let.'%';
 	} else {
 		$field = 'op=liste&';
 		$order = "WHERE p.time <= NOW() AND p.active != '0'";
@@ -147,12 +151,12 @@ function liste() {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
-	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.preis, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum);
-	head();
+	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.preis, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
+	setHead();
 	$cont = navigate(_LIST);
 	if ($db->sql_numrows($result) > 0) {
 		$letter = ($confso['letter']) ? letter($conf['name']) : '';
-		$cont .= setTemplateBasic('liste-open', array('{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _PREIS, '{%date%}' => _DATE));
+		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _PREIS, '{%date%}' => _DATE]);
 		while (list($id, $cid, $time, $title, $preis, $ctitle, $cdesc) = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
@@ -160,16 +164,16 @@ function liste() {
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
 			$preis = $preis.' '.$confso['valute'];
-			$cont .= setTemplateBasic('liste-basic', array('{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $preis, '{%time%}' => format_time($time)));
+			$cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $preis, '{%time%}' => format_time($time)]);
 		}
 		$cont .= setTemplateBasic('liste-close');
 		$onum = ($let) ? "title LIKE BINARY '".$let."%' AND time <= NOW() AND active != '0'" : "time <= NOW() AND active != '0'";
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_products', 'cid', $onum, $confso['nump']);
 	} else {
-		$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
 	echo $cont;
-	foot();
+	setFoot();
 }
 
 function view() {
@@ -182,10 +186,24 @@ function view() {
 		$db->sql_query('UPDATE '.PREFIX_DB.'_products SET count = count+1 WHERE id = :id', ['id' => $id]);
 		list($cid, $time, $title, $text, $bodytext, $ppreis, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg) = $db->sql_fetchrow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-		head();
+		$seotitle = $title;
+		$seoctitle = $ctitle;
+		$seodesc = cutstr(trim(strip_tags(bb_decode($text, $conf['name']))), 160);
+		$seoimg = getImgText($text, '', false);
+		$seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
+		$seotime = $time;
+		$seoauthor = ($user_name ?? '') ?: (($uname ?? '') ?: $conf['sitename']);
+		setHead([
+			'title' => $seotitle,
+			'ctitle' => $seoctitle,
+			'desc' => $seodesc,
+			'img' => $seoimg,
+			'time' => $seotime,
+			'author' => $seoauthor,
+		]);
 		$cont = navigate(_SHOP, $confso['viewcat']);
 		$defis = $confso['defis'] ?? ($conf['defis'] ?? '-');
-		if ($cid) $cont .= setTemplateBasic('cat-navi', array('{%crumbs%}' => catlink($conf['name'], $cid, $defis, _SHOP)));
+		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $defis, _SHOP)]);
 		if ($confso['viewcat']) $cont .= setCategories($conf['name'], $confso['subcat'], $confso['catdesc'], 0);
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
 		$text = ($bodytext) ? $text.'<br><br>'.$bodytext : $text;
@@ -197,11 +215,11 @@ function view() {
 		#### In Bearbeitung
 		$uname = $uname ?? '';
 		$user_name = $user_name ?? '';
-		$post = isset($confso['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : ($confu['anonym'] ?? ''))) : '';
+		$post = isset($confso['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
 		$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 		####
 		
-		$date = ($confso['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</span>' : '';
+		$date = ($confso['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
 		$reads = ($confso['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=shop_products_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
@@ -218,27 +236,27 @@ function view() {
 		
 		$cart = '<a OnClick="AjaxLoad(\'GET\', \'0\', \'kasse\', \'go=2&amp;op=add_kasse&amp;id='.$id.'\', \'\'); AddBasket(\''.$id.'\'); return false;" title="'._SCART.'" class="sl_shop_add">'._SCART.'</a>';
 		$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
-		$cont .= setTemplateBasic('basic', array('{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting, '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse));
+		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting, '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 		if ($confso['assoc']) {
 			$limit = intval($confso['assocnum']);
 			list($count) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\'', ['id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
 				$result = $db->sql_query('SELECT id, time, title, text, bodytext FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
-				$cont .= setTemplateBasic('assoc-open', array('{%title%}' => _ASPROD));
+				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _ASPROD]);
 				while (list($aid, $time, $title, $hometext, $bodytext) = $db->sql_fetchrow($result)) {
-					$date = ($confso['date']) ? '<span title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</span>' : '';
+					$date = ($confso['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
 					$text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-					$cont .= setTemplateBasic('assoc-basic', array('{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img));
+					$cont .= setTemplateBasic('assoc-basic', ['{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img]);
 				}
 				$cont .= setTemplateBasic('assoc-close');
 			}
 		}
 		if ($acomm) $cont .= setComShow($id, $acomm);
 		echo $cont;
-		foot();
+		setFoot();
 	} else {
 		setRedirect('index.php?name='.$conf['name']);
 	}
@@ -254,7 +272,7 @@ function kasse() {
 		$sender_dom = getVar('post', 'sender_dom', 'url', $userinfo['user_website']);
 	} else {
 		$sender_id = 0;
-		$sender_login = $confu['anonym'];
+		$sender_login = _ANONYM;
 		$sender_email = getVar('post', 'sender_email', 'text');
 		$sender_dom = getVar('post', 'sender_dom', 'url', 'http://');
 	}
@@ -274,13 +292,13 @@ function kasse() {
 	.'<tr><td>'._SDOM.':</td><td><input type="url" name="sender_dom" value="'.$sender_dom.'" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
 	.'<tr><td>'._C_MESSAGE.':</td><td><textarea name="sender_message" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._C_MESSAGE.'">'.$sender_message.'</textarea></td></tr>'
 	.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="opi" value="1"><input type="hidden" name="op" value="kasse"><input type="submit" value="'._C_SEND.'" class="sl_but_blue"></td></tr></table></form>';
-	head();
+	setHead();
 	$cont = navigate(_C_TITLE);
 	if (!$opi && $cookies) {
 		$cont .= '<div id="repkasse">'.show_kasse().'</div>';
-		$cont .= setTemplateBasic('title', array('{%title%}' => _C_TITLE)).setTemplateBasic('open').$form.setTemplateBasic('close');
+		$cont .= setTemplateBasic('title', ['{%title%}' => _C_TITLE]).setTemplateBasic('open').$form.setTemplateBasic('close');
 	} elseif ($opi && $cookies) {
-		$stop = array();
+		$stop = [];
 		checkemail($sender_email);
 		if (!$sender_name || !$sender_adr || !$sender_tel || !$sender_email) {
 			$stop[] = _ERROR_ALL;
@@ -343,17 +361,17 @@ function kasse() {
 			setcookie('shop', false);
 			setcookie('part', false);
 			update_points(39);
-			$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => bb_decode($confso['sende'], $conf['name'])));
+			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => bb_decode($confso['sende'], $conf['name'])]);
 		} else {
-			$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop));
+			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 			$cont .= '<div id="repkasse">'.show_kasse().'</div>';
 			$cont .= setTemplateBasic('open').$form.setTemplateBasic('close');
 		}
 	} else {
-		$cont .= setTemplateWarning('warn', array('time' => '5', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => $stop));
+		$cont .= setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => $stop]);
 	}
 	echo $cont;
-	foot();
+	setFoot();
 }
 
 function part() {
@@ -367,7 +385,7 @@ function clients() {
 	global $db, $user, $conf, $confso;
 	if (is_user() && is_active('shop')) {
 		$user_id = intval($user[0]);
-		head();
+		setHead();
 		$cont = navigate(_CLIENTINFO);
 		$cont .= navi();
 		$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_user = :user_id ORDER BY c.id ASC', ['user_id' => $user_id]);
@@ -391,7 +409,7 @@ function clients() {
 		}
 		$cont .= setTemplateBasic('open').bb_decode($confso['userinfo'], $conf['name']).setTemplateBasic('close');
 		echo $cont;
-		foot();
+		setFoot();
 	} else {
 		setRedirect('index.php?name='.$conf['name']);
 	}
@@ -440,16 +458,16 @@ function partners() {
 		$user_id = intval($userinfo['user_id']);
 		$sender_email = $userinfo['user_email'];
 		$sender_dom = $userinfo['user_website'];
-		head();
+		setHead();
 		$cont = navigate(_PARTNERINFO);
 		$cont .= navi();
 		$result = $db->sql_query('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id_user = :user_id', ['user_id' => $user_id]);
 		if ($db->sql_numrows($result) > 0) {
 			list($paid, $paid_user, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive) = $db->sql_fetchrow($result);
 			if ($paactive == 2) {
-				$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _PARTNERADD_W));
+				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PARTNERADD_W]);
 			} elseif ($paactive == 0) {
-				$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _PARTNER_AUS));
+				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _PARTNER_AUS]);
 			} else {
 				$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_partner = :user_id AND c.active != 2 ORDER BY c.id ASC', ['user_id' => $user_id]);
 				$partsum = $partsumges = $a = 0;
@@ -475,13 +493,13 @@ function partners() {
 				.'<tr><td>'.$a.'</td><td>'.$pawebmoney.'</td><td>'.$papaypal.'</td>'
 				.'<td>'.$partsumges.' '.$confso['valute'].'</td><td>'.$parest.' '.$confso['valute'].'</td><td>'.$pabek.' '.$confso['valute'].'</td></tr></tbody></table>';
 				$cont .= setTemplateBasic('close');
-				$cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $user_id, $confso['partlink'])));
+				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $user_id, $confso['partlink'])]);
 				$cont .= setTemplateBasic('open').bb_decode(str_replace('[id]', $user_id, $confso['partinfo2']), $conf['name']).setTemplateBasic('close');
 			}
 		} else {
-			if ($stop) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop));
+			if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 			$cont .= setTemplateBasic('open').bb_decode($confso['partinfo'], $conf['name']).setTemplateBasic('close');
-			$cont .= setTemplateBasic('title', array('{%title%}' => _PARTNERADD));
+			$cont .= setTemplateBasic('title', ['{%title%}' => _PARTNERADD]);
 			$cont .= setTemplateBasic('open');
 			$cont .= '<form method="post" action="index.php?name='.$conf['name'].'"><table class="sl_table_form">'
 			.'<tr><td>'._C_PIN.':</td><td><input type="text" name="paname" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_PINB.'" required></td></tr>'
@@ -495,7 +513,7 @@ function partners() {
 			$cont .= setTemplateBasic('close');
 		}
 		echo $cont;
-		foot();
+		setFoot();
 	} else {
 		setRedirect('index.php?name='.$conf['name']);
 	}
@@ -536,4 +554,3 @@ switch($op) {
 	case 'partners': partners(); break;
 	case 'partners_send': partners_send(); break;
 }
-?>

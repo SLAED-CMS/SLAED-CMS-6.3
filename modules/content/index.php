@@ -11,11 +11,12 @@ if (!defined('MODULE_FILE')) {
 
 function content() {
 	global $db, $afile, $conf, $confcn;
-	head();
+	setHead(['title' => _CONTENT]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _CONTENT]);
 	$num = getVar('get', 'num', 'num', '1');
-	$offset = ($num - 1) * $confcn['num'];
-	$result = $db->sql_query('SELECT id, title, text, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$confcn['num']);
+	$limit = (int) $confcn['num'];
+	$offset = ($num - 1) * $limit;
+	$result = $db->sql_query('SELECT id, title, text, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
@@ -34,30 +35,39 @@ function content() {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
 	echo $cont;
-	foot();
+	setFoot();
 }
 
 function view() {
 	global $db, $conf, $confn, $afile;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
-	$result = $db->sql_query('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = \''.$id.'\' AND time <= NOW()');
+	$result = $db->sql_query('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query('UPDATE '.PREFIX_DB.'_content SET counter = counter+1 WHERE id = \''.$id.'\'');
+		$db->sql_query('UPDATE '.PREFIX_DB.'_content SET counter = counter+1 WHERE id = :id', ['id' => $id]);
 		list($id, $title, $text, $field, $url, $time, $refresh) = $db->sql_fetchrow($result);
 		if ($url) {
 			$past = time() - $refresh;
 			if (strtotime($time) < $past) {
 				$conf['content'] = rss_read($url, 1);
-				$db->sql_query('UPDATE '.PREFIX_DB.'_content SET text = \''.$conf['content'].'\', time = NOW() WHERE id = \''.$id.'\'');
+				$db->sql_query('UPDATE '.PREFIX_DB.'_content SET text = :text, time = NOW() WHERE id = :id', ['text' => $conf['content'], 'id' => $id]);
 			}
 		}
 		$fields = fields_out($field, $conf['name']);
 		$fields = ($fields) ? '<br><br>'.$fields : '';
 		$hometext = $text.$fields;
-		head();
+		$seodesc = cutstr(trim(strip_tags(bb_decode($hometext, $conf['name']))), 160);
+		$seoimg = getImgText($hometext, '', false);
+		$seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
+		setHead([
+			'title' => $title,
+			'desc' => $seodesc,
+			'img' => $seoimg,
+			'time' => $time,
+			'author' => $conf['sitename'],
+		]);
 		echo setTemplateBasic('title', ['{%title%}' => $title]).setTemplateBasic('open').search_color(bb_decode($hometext, $conf['name']), $word).setTemplateBasic('close');
-		foot();
+		setFoot();
 	} else {
 		setRedirect('index.php?name='.$conf['name']);
 	}

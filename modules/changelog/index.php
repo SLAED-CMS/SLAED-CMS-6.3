@@ -462,7 +462,7 @@ function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perp
 function changelog(): void {
     global $conf, $conflog;
 
-    head();
+    setHead();
 
     $page = max(1, getVar('get', 'page', 'num', 1));
     $author = trim(strip_tags(getVar('get', 'author', 'var', '')));
@@ -496,7 +496,7 @@ function changelog(): void {
 
         if ($ghowner === '' || $ghrepo === '') {
             echo setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _CHLOG_ERR_GH_CONF]);
-            foot();
+            setFoot();
             return;
         }
 
@@ -504,7 +504,7 @@ function changelog(): void {
         $commits = chlogGhFetch($ghowner, $ghrepo, $filters, $limit, $ghtoken, $error);
         if (empty($commits) && $error !== '') {
             echo setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $error]);
-            foot();
+            setFoot();
             return;
         }
     } else {
@@ -513,14 +513,14 @@ function changelog(): void {
         $totcount = count($commits);
         if (empty($commits) && $error !== '') {
             echo setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $error]);
-            foot();
+            setFoot();
             return;
         }
     }
 
     if (empty($commits)) {
         echo setTemplateWarning('info', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CHLOG_ERR_NO_COMMITS]);
-        foot();
+        setFoot();
         return;
     }
 
@@ -567,7 +567,7 @@ function changelog(): void {
     ]);
 
     echo $cont;
-    foot();
+    setFoot();
 }
 
 switch ($op) {

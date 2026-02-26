@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -17,8 +17,8 @@ function account() {
     } else{
         setHead();
         $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-        $cont = setTemplateBasic('title', array('{%title%}' => _USERREGLOGIN));
-        if ($stop) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop));
+        $cont = setTemplateBasic('title', ['{%title%}' => _USERREGLOGIN]);
+        if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         $cont .= setTemplateBasic('open');
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post">'
         .'<table class="sl_table_form">'
@@ -44,27 +44,27 @@ function checkuser($user_name, $user_email, $rules) {
     foreach ($name_b as $val) if ($val != '' && $val == strtolower($user_name)) $stop[] = _NAME_BLOCK;
     if (!$user_name || !analyze_name($user_name)) $stop[] = _ERRORINVNICK;
     if (strlen($user_name) > 25) $stop[] = _NICKLONG;
-    if ($db->sql_numrows($db->sql_query('SELECT user_name FROM '.PREFIX_DB.'_users WHERE user_name = :user_name', array('user_name' => $user_name))) > 0) $stop[] = _NICKTAKEN;
-    if ($db->sql_numrows($db->sql_query('SELECT user_name FROM '.PREFIX_DB.'_users_temp WHERE user_name = :user_name', array('user_name' => $user_name))) > 0) $stop[] = _NICKTAKEN;
-    if ($db->sql_numrows($db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_email = :user_email', array('user_email' => $user_email))) > 0) $stop[] = _ERROR_EMAIL;
-    if ($db->sql_numrows($db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users_temp WHERE user_email = :user_email', array('user_email' => $user_email))) > 0) $stop[] = _ERROR_EMAIL;
+    if ($db->sql_numrows($db->sql_query('SELECT user_name FROM '.PREFIX_DB.'_users WHERE user_name = :user_name', ['user_name' => $user_name])) > 0) $stop[] = _NICKTAKEN;
+    if ($db->sql_numrows($db->sql_query('SELECT user_name FROM '.PREFIX_DB.'_users_temp WHERE user_name = :user_name', ['user_name' => $user_name])) > 0) $stop[] = _NICKTAKEN;
+    if ($db->sql_numrows($db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_email = :user_email', ['user_email' => $user_email])) > 0) $stop[] = _ERROR_EMAIL;
+    if ($db->sql_numrows($db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users_temp WHERE user_email = :user_email', ['user_email' => $user_email])) > 0) $stop[] = _ERROR_EMAIL;
     return($stop);
 }
 
 function newuser() {
-    global $db, $conf, $stop;
+    global $conf, $stop;
     if (is_user()) {
         profil();
     } else {
         setHead();
         if ($stop) {
-            $cont = setTemplateBasic('title', array('{%title%}' => _NEWUSERERROR));
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop));
+            $cont = setTemplateBasic('title', ['{%title%}' => _NEWUSERERROR]);
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         } else {
-            $cont = setTemplateBasic('title', array('{%title%}' => _REGNEWUSER));
+            $cont = setTemplateBasic('title', ['{%title%}' => _REGNEWUSER]);
         }
         if (!$conf['users']['reg']) {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOREG));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOREG]);
         } else {
             $unkey = md5_salt($conf['sitekey']);
             $user_name = getVar('post', $unkey, 'text');
@@ -98,7 +98,7 @@ function finnewuser() {
     global $db, $conf, $stop;
     if (!$conf['users']['reg']) {
         setHead();
-        echo setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOREG));
+        echo setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOREG]);
         setFoot();
     } else {
         $unkey = md5_salt($conf['sitekey']);
@@ -124,12 +124,12 @@ function finnewuser() {
             $user_email = text_filter($user_email);
             $db->sql_query(
                 'INSERT INTO '.PREFIX_DB.'_users_temp (user_id, user_name, user_email, user_password, user_regdate, check_num, time) VALUES (NULL, :user_name, :user_email, :user_password, NOW(), :check_num, :time)',
-                array('user_name' => $user_name, 'user_email' => $user_email, 'user_password' => $user_password, 'check_num' => $check_num, 'time' => $time)
+                ['user_name' => $user_name, 'user_email' => $user_email, 'user_password' => $user_password, 'check_num' => $check_num, 'time' => $time]
             );
             setHead();
             if ($conf['users']['nomail'] == 1) {
-                $cont = setTemplateBasic('title', array('{%title%}' => _ACCOUNTCREATED));
-                $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _TOFINISHUSERN));
+                $cont = setTemplateBasic('title', ['{%title%}' => _ACCOUNTCREATED]);
+                $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TOFINISHUSERN]);
                 $cont .= setTemplateBasic('open');
                 $cont .= '<form action="index.php" method="get">'
                 .'<table class="sl_table_form">'
@@ -142,7 +142,7 @@ function finnewuser() {
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $user_email, $conf['sitename'], $link, $user_name, $user_password).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
                 mail_send($user_email, $conf['adminmail'], $subject, $message, 0, 3);
-                $cont = setTemplateBasic('title', array('{%title%}' => _ACCOUNTCREATED)).setTemplateWarning('warn', array('time' => '30', 'url' => '', 'id' => 'info', 'text' => _YOUAREREGISTERED.'<br><br>'._FINISHUSERCONF.'<br><br>'._THANKSUSER));
+                $cont = setTemplateBasic('title', ['{%title%}' => _ACCOUNTCREATED]).setTemplateWarning('warn', ['time' => '30', 'url' => '', 'id' => 'info', 'text' => _YOUAREREGISTERED.'<br><br>'._FINISHUSERCONF.'<br><br>'._THANKSUSER]);
             }
             echo $cont;
             setFoot();
@@ -157,13 +157,13 @@ function network() {
     $conf['users']['network'] = 1;
     $token = getVar('post', 'token', 'text');
     if ($conf['users']['network'] && $token) {
-        $s = file_get_contents('http://ulogin.ru/token.php?token='.$token.'&host='.$_SERVER['HTTP_HOST']); 
+        $s = file_get_contents('http://ulogin.ru/token.php?token='.$token.'&host='.$_SERVER['HTTP_HOST']);
         $ulog = json_decode($s, true);
         if (empty($ulog['error']) && isArray($ulog)) {
             $nickname = isset($ulog['nickname']) ? ucfirst(getTranslit($ulog['nickname'], 1)) : '';
             $first_name = isset($ulog['first_name']) ? ucfirst(getTranslit($ulog['first_name'], 1)) : '';
             $last_name = isset($ulog['last_name']) ? ucfirst(getTranslit($ulog['last_name'], 1)) : '';
-            $variants = array();
+            $variants = [];
             $variants[] = substr($first_name, 0, 25);
             if (!empty($nickname)) {
                 $variants[] = substr($nickname, 0, 25);
@@ -188,7 +188,7 @@ function network() {
             $result = $db->sql_query('SELECT user_id, user_name, user_password, user_storynum, user_blockon, user_theme FROM '.PREFIX_DB.'_users WHERE user_password = \''.$upass.'\'');
             list($user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme) = $db->sql_fetchrow($result);
             if ($db->sql_numrows($result) == 1) {
-                setCookies('account', time() + intval($conf['user_c_t']), array($user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme));
+                setCookies('account', time() + intval($conf['user_c_t']), [$user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme]);
                 $db->sql_query('DELETE FROM '.PREFIX_DB.'_session WHERE uname = \''.$uip.'\' AND guest = \'0\'');
                 $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_last_ip = \''.$uip.'\', user_lastvisit = NOW(), user_agent = \''.$uagent.'\' WHERE user_id = \''.$user_id.'\'');
                 login_report(0, 1, $user_name, '');
@@ -198,7 +198,7 @@ function network() {
                 $network = isset($ulog['profile']) ? $ulog['profile'] : $ulog['network'];
                 $db->sql_query('INSERT INTO '.PREFIX_DB.'_users (user_id, user_name, user_email, user_avatar, user_regdate, user_password, user_last_ip, user_agent, user_network, user_block, user_warnings, user_field) VALUES (NULL, \''.$uname.'\', \''.$uemail.'\', \'default/00.gif\', NOW(), \''.$upass.'\', \''.$uip.'\', \''.$uagent.'\', \''.$network.'\', \'\', \'\', \'\')');
                 list($user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme) = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name, user_password, user_storynum, user_blockon, user_theme FROM '.PREFIX_DB.'_users WHERE user_password = \''.$upass.'\''));
-                setCookies('account', time() + intval($conf['user_c_t']), array($user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme));
+                setCookies('account', time() + intval($conf['user_c_t']), [$user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme]);
                 $db->sql_query('DELETE FROM '.PREFIX_DB.'_session WHERE uname = \''.$uip.'\' AND guest = \'0\'');
                 $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_lastvisit = NOW() WHERE user_id = \''.$user_id.'\'');
                 $uphoto = isset($ulog['photo']) ? $ulog['photo'] : '';
@@ -217,7 +217,7 @@ function network() {
             }
         } else {
             setHead();
-            echo setTemplateBasic('title', array('{%title%}' => _ERRORINPUT)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ERRORSESS));
+            echo setTemplateBasic('title', ['{%title%}' => _ERRORINPUT]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ERRORSESS]);
             setFoot();
         }
     } else {
@@ -230,8 +230,8 @@ function activate(): void {
     $uname = getVar('get', 'user', 'name', '');
     $cnum  = getVar('get', 'num', 'text', '');
     $past = time() - 86400;
-    $db->sql_query('DELETE FROM '.PREFIX_DB.'_users_temp WHERE time < :past', array('past' => $past));
-    $result = $db->sql_query('SELECT user_name, user_email, user_password, user_regdate, check_num FROM '.PREFIX_DB.'_users_temp WHERE user_name = :uname AND check_num = :cnum', array('uname' => $uname, 'cnum' => $cnum));
+    $db->sql_query('DELETE FROM '.PREFIX_DB.'_users_temp WHERE time < :past', ['past' => $past]);
+    $result = $db->sql_query('SELECT user_name, user_email, user_password, user_regdate, check_num FROM '.PREFIX_DB.'_users_temp WHERE user_name = :uname AND check_num = :cnum', ['uname' => $uname, 'cnum' => $cnum]);
     setHead();
     if ($db->sql_numrows($result) === 1) {
         list($user_name, $user_email, $user_password, $user_regdate, $check_num) = $db->sql_fetchrow($result);
@@ -239,15 +239,15 @@ function activate(): void {
             $uip = getIp();
             $uagent = getAgent();
             $rank = '';
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_users (user_id, user_name, user_rank, user_email, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_agent, user_network, user_block, user_warnings, user_field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', array('uname'  => $user_name, 'rank'   => $rank, 'email'  => $user_email, 'avatar' => 'default/00.gif', 'regdate' => $user_regdate, 'pwd'    => md5_salt($user_password), 'lang'   => $locale, 'ip'     => $uip, 'agent'  => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => ''));
-            $db->sql_query('DELETE FROM '.PREFIX_DB.'_users_temp WHERE user_name = :uname AND check_num = :cnum', array('uname' => $user_name, 'cnum' => $check_num));
-            $db->sql_query('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', array('uname' => $uip));
-            echo setTemplateBasic('title', array('{%title%}' => _ACTIVATIONYES)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ACTMSG));
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_users (user_id, user_name, user_rank, user_email, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_agent, user_network, user_block, user_warnings, user_field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname'  => $user_name, 'rank'   => $rank, 'email'  => $user_email, 'avatar' => 'default/00.gif', 'regdate' => $user_regdate, 'pwd'    => md5_salt($user_password), 'lang'   => $locale, 'ip'     => $uip, 'agent'  => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
+            $db->sql_query('DELETE FROM '.PREFIX_DB.'_users_temp WHERE user_name = :uname AND check_num = :cnum', ['uname' => $user_name, 'cnum' => $check_num]);
+            $db->sql_query('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
+            echo setTemplateBasic('title', ['{%title%}' => _ACTIVATIONYES]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ACTMSG]);
         } else {
-            echo setTemplateBasic('title', array('{%title%}' => _ACTIVATIONERROR)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ACTERROR1));
+            echo setTemplateBasic('title', ['{%title%}' => _ACTIVATIONERROR]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ACTERROR1]);
         }
     } else {
-        echo setTemplateBasic('title', array('{%title%}' => _ACTIVATIONERROR)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ACTERROR2));
+        echo setTemplateBasic('title', ['{%title%}' => _ACTIVATIONERROR]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ACTERROR2]);
     }
     setFoot();
 }
@@ -256,7 +256,7 @@ function view() {
     global $db, $conf, $afile;
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || is_admin()) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
-        $params = array();
+        $params = [];
         if ($uname) {
             $where = 'BINARY u.user_name = :uname';
             $params['uname'] = $uname;
@@ -282,58 +282,58 @@ function view() {
                 'author' => $seoauthor,
             ]);
             if (is_admin()) {
-                $id = array(_ID, $user_id);
-                $regdate = array(_REG, format_time($user_regdate, _TIMESTRING));
-                $lastvisit = array(_LAST_VISIT, format_time($user_lastvisit, _TIMESTRING));
-                $ip = array(_IP, user_geo_ip($user_last_ip, 4));
-                $agent = array(_BROWSER, $user_agent);
+                $id = [_ID, $user_id];
+                $regdate = [_REG, format_time($user_regdate, _TIMESTRING)];
+                $lastvisit = [_LAST_VISIT, format_time($user_lastvisit, _TIMESTRING)];
+                $ip = [_IP, user_geo_ip($user_last_ip, 4)];
+                $agent = [_BROWSER, $user_agent];
             } else {
-                $id = array(_ID, _HIDE);
-                $regdate = array(_REG, format_time($user_regdate));
-                $lastvisit = array(_LAST_VISIT, format_time($user_lastvisit));
-                $ip = array(_COUNTRY, user_geo_ip($user_last_ip, 2));
-                $agent = array(_BROWSER, _HIDE);
+                $id = [_ID, _HIDE];
+                $regdate = [_REG, format_time($user_regdate)];
+                $lastvisit = [_LAST_VISIT, format_time($user_lastvisit)];
+                $ip = [_COUNTRY, user_geo_ip($user_last_ip, 2)];
+                $agent = [_BROWSER, _HIDE];
             }
-            $name = array(_NICKNAME, $user_name);
-            $urank = ($user_rank) ? array(_URANK, $user_rank) : array(_URANK, '');
-            $mail = ((is_admin() || $user_viewemail) && $user_email) ? array(_EMAIL, anti_spam($user_email)) : array(_EMAIL, _HIDE);
-            $site = ($user_website) ? ((is_admin() || is_user()) ? array(_SITEURL, domain($user_website)) : array(_SITEURL, _HIDE)) : array(_SITEURL, _NO_INFO);
+            $name = [_NICKNAME, $user_name];
+            $urank = ($user_rank) ? [_URANK, $user_rank] : [_URANK, ''];
+            $mail = ((is_admin() || $user_viewemail) && $user_email) ? [_EMAIL, anti_spam($user_email)] : [_EMAIL, _HIDE];
+            $site = ($user_website) ? ((is_admin() || is_user()) ? [_SITEURL, domain($user_website)] : [_SITEURL, _HIDE]) : [_SITEURL, _NO_INFO];
             $avatar = ($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif';
-            $occup = ($user_occ) ? array(_OCCUPATION, $user_occ) : array(_OCCUPATION, _NO_INFO);
-            $from = ($user_from) ? array(_LOCALITYLANG, $user_from) : array(_LOCALITYLANG, _NO_INFO);
-            $inter = ($user_interests) ? array(_INTERESTS, $user_interests) : array(_INTERESTS, _NO_INFO);
+            $occup = ($user_occ) ? [_OCCUPATION, $user_occ] : [_OCCUPATION, _NO_INFO];
+            $from = ($user_from) ? [_LOCALITYLANG, $user_from] : [_LOCALITYLANG, _NO_INFO];
+            $inter = ($user_interests) ? [_INTERESTS, $user_interests] : [_INTERESTS, _NO_INFO];
             $sign = ((is_admin() || is_user()) && $user_sig) ? '<hr>'.bb_decode($user_sig, $conf['name']) : '';
-            $lang = ($user_lang) ? array(_LANGUAGE, deflang($user_lang)) : array(_LANGUAGE, deflang($conf['language']));
-            $points = ($conf['users']['point'] && $user_points) ? array(_POINTS, $user_points) : array(_POINTS, _NO_INFO);
-            $warn = array(_UWARNS, warnings($user_warnings));
+            $lang = ($user_lang) ? [_LANGUAGE, deflang($user_lang)] : [_LANGUAGE, deflang($conf['language'])];
+            $points = ($conf['users']['point'] && $user_points) ? [_POINTS, $user_points] : [_POINTS, _NO_INFO];
+            $warn = [_UWARNS, warnings($user_warnings)];
             if ($user_birthday) {
                 preg_match('#([0-9]{4})-([0-9]{1,2})-([0-9]{1,2})#', $user_birthday, $datetime);
-                $birth = array(_BIRTHDAY, $datetime[3].'.'.$datetime[2].'.'.$datetime[1]);
+                $birth = [_BIRTHDAY, $datetime[3].'.'.$datetime[2].'.'.$datetime[1]];
             } else {
-                $birth = array(_BIRTHDAY, _NO_INFO);
+                $birth = [_BIRTHDAY, _NO_INFO];
             }
-            $gender = array(_GENDER, gender($user_gender));
-            $rating = array(_RATING, ajax_rating(1, $user_id, $conf['name'], $user_votes, $user_totalvotes, '', 1));
+            $gender = [_GENDER, gender($user_gender)];
+            $rating = [_RATING, ajax_rating(1, $user_id, $conf['name'], $user_votes, $user_totalvotes, '', 1)];
             $field = ($user_field) ? fields_out($user_field, $conf['name']) : '';
-            $sgroup = ($gname) ? array(_SPEC_GROUP, '<span style="color: '.$gcolor.'">'.$gname.'</span>') : array(_SPEC_GROUP, _NO);
-            $rgroup = array();
+            $sgroup = ($gname) ? [_SPEC_GROUP, '<span style="color: '.$gcolor.'">'.$gname.'</span>'] : [_SPEC_GROUP, _NO];
+            $rgroup = [];
             $uranks = '';
             if ($conf['users']['point'] && $user_points) {
                 $result = $db->sql_query('SELECT name, rank, color FROM '.PREFIX_DB."_groups WHERE points <= '".intval($user_points)."' AND extra != '1' ORDER BY points ASC");
-                $group = array();
+                $group = [];
                 while(list($guname, $gurank, $gcolor) = $db->sql_fetchrow($result)) {
                     $group[] = '<span style="color: '.$gcolor.'">'.$guname.'</span>';
                     $rgroup[] = $guname;
                     $uranks = $gurank;
                 }
                 $group = (is_array($group)) ? implode(', ', $group) : _NO_INFO;
-                $groups = array(_USER_GROUPS, $group);
+                $groups = [_USER_GROUPS, $group];
                 $grank = ($grank) ? $grank : $uranks;
             } else {
-                $groups = array(_USER_GROUPS, _NO);
+                $groups = [_USER_GROUPS, _NO];
             }
             $trank = ($gname) ? _GROUP.': '.$gname : ((is_array($rgroup)) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
-            $rank = ($grank && file_exists(img_find('ranks/'.$grank))) ? array(_RANK, '<img src="'.img_find('ranks/'.$grank).'" alt="'.$trank.'" title="'.$trank.'">') : array('', '');
+            $rank = ($grank && file_exists(img_find('ranks/'.$grank))) ? [_RANK, '<img src="'.img_find('ranks/'.$grank).'" alt="'.$trank.'" title="'.$trank.'">'] : ['', ''];
             $admin = (is_admin()) ? add_menu('<a href="'.$afile.'.php?op=users_add&amp;id='.$user_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?op=security_block&amp;new_ip='.$user_last_ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$user_last_ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?op=users_del&amp;id='.$user_id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$user_name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
             $privat = (($conf['privat']['act'] ?? 0) && $user_name) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($user_name)]).'" title="'._SENDMES.'" class="sl_but_green">'._MESSAGE.'</a>' : '';
             $profil = (is_user() && $uname == $user_name) ? '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._ACCOUNT.'" class="sl_but">'._ACCOUNT.'</a>' : '';
@@ -373,25 +373,25 @@ function view() {
                 $text[] = last($user_id, 'pages');
             }
             $tabs = getNaviTabs(0, 'tab', $title, $text);
-            echo setTemplateBasic('account-view', array('if_flag' => ['is_view' => true], '{%cid%}' => $id[0], '{%id%}' => $id[1], '{%cname%}' => $name[0], '{%name%}' => $name[1], '{%curank%}' => $urank[0], '{%urank%}' => $urank[1], '{%cmail%}' => $mail[0], '{%mail%}' => $mail[1], '{%csite%}' => $site[0], '{%site%}' => $site[1], '{%avatar%}' => $avatar, '{%cregdate%}' => $regdate[0], '{%regdate%}' => $regdate[1], '{%coccup%}' => $occup[0], '{%occup%}' => $occup[1], '{%cfrom%}' => $from[0], '{%from%}' => $from[1], '{%cinter%}' => $inter[0], '{%inter%}' => $inter[1], '{%sign%}' => $sign, '{%clastvisit%}' => $lastvisit[0], '{%lastvisit%}' => $lastvisit[1], '{%clang%}' => $lang[0], '{%lang%}' => $lang[1], '{%cpoints%}' => $points[0], '{%points%}' => $points[1], '{%cip%}' => $ip[0], '{%ip%}' => $ip[1], '{%cwarn%}' => $warn[0], '{%warn%}' => $warn[1], '{%cbirth%}' => $birth[0], '{%birth%}' => $birth[1], '{%cgender%}' => $gender[0], '{%gender%}' => $gender[1], '{%crating%}' => $rating[0], '{%rating%}' => $rating[1], '{%field%}' => $field, '{%cagent%}' => $agent[0], '{%agent%}' => $agent[1], '{%csgroup%}' => $sgroup[0], '{%sgroup%}' => $sgroup[1], '{%cgroups%}' => $groups[0], '{%groups%}' => $groups[1], '{%crank%}' => $rank[0], '{%rank%}' => $rank[1], '{%admin%}' => $admin, '{%privat%}' => $privat, '{%profil%}' => $profil, '{%goback%}' => $goback, '{%tabs%}' => $tabs, '{%info%}' => _PERSONALINFO));
+            echo setTemplateBasic('account-view', ['if_flag' => ['is_view' => true], '{%cid%}' => $id[0], '{%id%}' => $id[1], '{%cname%}' => $name[0], '{%name%}' => $name[1], '{%curank%}' => $urank[0], '{%urank%}' => $urank[1], '{%cmail%}' => $mail[0], '{%mail%}' => $mail[1], '{%csite%}' => $site[0], '{%site%}' => $site[1], '{%avatar%}' => $avatar, '{%cregdate%}' => $regdate[0], '{%regdate%}' => $regdate[1], '{%coccup%}' => $occup[0], '{%occup%}' => $occup[1], '{%cfrom%}' => $from[0], '{%from%}' => $from[1], '{%cinter%}' => $inter[0], '{%inter%}' => $inter[1], '{%sign%}' => $sign, '{%clastvisit%}' => $lastvisit[0], '{%lastvisit%}' => $lastvisit[1], '{%clang%}' => $lang[0], '{%lang%}' => $lang[1], '{%cpoints%}' => $points[0], '{%points%}' => $points[1], '{%cip%}' => $ip[0], '{%ip%}' => $ip[1], '{%cwarn%}' => $warn[0], '{%warn%}' => $warn[1], '{%cbirth%}' => $birth[0], '{%birth%}' => $birth[1], '{%cgender%}' => $gender[0], '{%gender%}' => $gender[1], '{%crating%}' => $rating[0], '{%rating%}' => $rating[1], '{%field%}' => $field, '{%cagent%}' => $agent[0], '{%agent%}' => $agent[1], '{%csgroup%}' => $sgroup[0], '{%sgroup%}' => $sgroup[1], '{%cgroups%}' => $groups[0], '{%groups%}' => $groups[1], '{%crank%}' => $rank[0], '{%rank%}' => $rank[1], '{%admin%}' => $admin, '{%privat%}' => $privat, '{%profil%}' => $profil, '{%goback%}' => $goback, '{%tabs%}' => $tabs, '{%info%}' => _PERSONALINFO]);
             setFoot();
         } else {
             setHead();
-            echo setTemplateWarning('warn', array('time' => '3', 'url' => '', 'id' => 'info', 'text' => _USERNOEXIST));
+            echo setTemplateWarning('warn', ['time' => '3', 'url' => '', 'id' => 'info', 'text' => _USERNOEXIST]);
             setFoot();
         }
     } else {
         setHead();
-        echo setTemplateWarning('warn', array('time' => '15', 'url' => '', 'id' => 'info', 'text' => _MODULEUSERS));
+        echo setTemplateWarning('warn', ['time' => '15', 'url' => '', 'id' => 'info', 'text' => _MODULEUSERS]);
         setFoot();
     }
 }
 
 function profil() {
-    global $user, $conf;
+    global $conf, $user;
     if (is_user()) {
         setHead();
-        $cont = setTemplateBasic('title', array('{%title%}' => _THISISYOURPAGE));
+        $cont = setTemplateBasic('title', ['{%title%}' => _THISISYOURPAGE]);
         $cont .= navi();
         $title[] = _COMMENTS;
         $text[] = last($user[0], 'comm');
@@ -444,7 +444,7 @@ function profil() {
 }
 
 function last($uid, $modul) {
-    global $db, $user, $conf;
+    global $db, $conf, $user;
     $user_id = intval($uid);
     $num = user_news($user[3] ?? 0, 25);
     $cont = '';
@@ -453,12 +453,12 @@ function last($uid, $modul) {
         if ($db->sql_numrows($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
             while(list($id, $cid, $modul, $date, $comment) = $db->sql_fetchrow($result)) {
-                $comment = cutstr(str_replace(array(_QUOTE, _CODE), '', text_filter(bb_decode($comment, $conf['name']))), 70);
+                $comment = cutstr(str_replace([_QUOTE, _CODE], '', text_filter(bb_decode($comment, $conf['name']))), 70);
                 $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.': '.format_time($date, _TIMESTRING).'" class="sl_date">'.format_time($date).'</time></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id.'" title="'.$comment.'" class="sl_last">'.$comment.'</a></td></tr>';
             }
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'faq') {
@@ -468,7 +468,7 @@ function last($uid, $modul) {
             while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'files') {
@@ -478,67 +478,67 @@ function last($uid, $modul) {
             while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'forum') {
         $result = $db->sql_query('SELECT id, title, time FROM '.PREFIX_DB."_forum WHERE uid = '".$user_id."' AND pid = '0' AND time <= NOW() AND status > '1' ORDER BY id DESC LIMIT 0,".$num);
         if ($db->sql_numrows($result) > 0) {
-            $cont .= "<table class=\"sl_table_amount\">";
-            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= "<tr><td style=\"width: 15%\"><time datetime=\"".date('c', strtotime($time))."\" title=\""._CHNGSTORY.': '.format_time($time, _TIMESTRING)."\" class=\"sl_date\">".format_time($time)."</time></td><td><a href=\"index.php?name=forum&amp;op=view&amp;id=".$id."\" title=\"".$title."\" class=\"sl_last\">".$title.'</a></td></tr>';
+            $cont .= '<table class="sl_table_amount">';
+            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=forum&amp;op=view&amp;id='.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'jokes') {
         $result = $db->sql_query('SELECT jokeid, title, date FROM '.PREFIX_DB."_jokes WHERE uid = '".$user_id."' AND date <= NOW() AND status != '0' ORDER BY jokeid DESC LIMIT 0,".$num);
         if ($db->sql_numrows($result) > 0) {
-            $cont .= "<table class=\"sl_table_amount\">";
-            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= "<tr><td style=\"width: 15%\"><time datetime=\"".date('c', strtotime($time))."\" title=\""._CHNGSTORY.': '.format_time($time, _TIMESTRING)."\" class=\"sl_date\">".format_time($time)."</time></td><td><a href=\"index.php?name=jokes#".$id."\" title=\"".$title."\" class=\"sl_last\">".$title.'</a></td></tr>';
+            $cont .= '<table class="sl_table_amount">';
+            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=jokes#'.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'links') {
         $result = $db->sql_query('SELECT lid, title, date FROM '.PREFIX_DB."_links WHERE uid = '".$user_id."' AND date <= NOW() AND status != '0' ORDER BY lid DESC LIMIT 0,".$num);
         if ($db->sql_numrows($result) > 0) {
-            $cont .= "<table class=\"sl_table_amount\">";
-            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= "<tr><td style=\"width: 15%\"><time datetime=\"".date('c', strtotime($time))."\" title=\""._CHNGSTORY.': '.format_time($time, _TIMESTRING)."\" class=\"sl_date\">".format_time($time)."</time></td><td><a href=\"index.php?name=links&amp;op=view&amp;id=".$id."\" title=\"".$title."\" class=\"sl_last\">".$title.'</a></td></tr>';
+            $cont .= '<table class="sl_table_amount">';
+            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=links&amp;op=view&amp;id='.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'media') {
         $result = $db->sql_query('SELECT id, title, date FROM '.PREFIX_DB."_media WHERE uid = '".$user_id."' AND date <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$num);
         if ($db->sql_numrows($result) > 0) {
-            $cont .= "<table class=\"sl_table_amount\">";
-            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= "<tr><td style=\"width: 15%\"><time datetime=\"".date('c', strtotime($time))."\" title=\""._CHNGSTORY.': '.format_time($time, _TIMESTRING)."\" class=\"sl_date\">".format_time($time)."</time></td><td><a href=\"index.php?name=media&amp;op=view&amp;id=".$id."\" title=\"".$title."\" class=\"sl_last\">".$title.'</a></td></tr>';
+            $cont .= '<table class="sl_table_amount">';
+            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=media&amp;op=view&amp;id='.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'news') {
         $result = $db->sql_query('SELECT sid, title, time FROM '.PREFIX_DB."_news WHERE uid = '".$user_id."' AND time <= NOW() AND status != '0' ORDER BY sid DESC LIMIT 0,".$num);
         if ($db->sql_numrows($result) > 0) {
-            $cont .= "<table class=\"sl_table_amount\">";
-            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= "<tr><td style=\"width: 15%\"><time datetime=\"".date('c', strtotime($time))."\" title=\""._CHNGSTORY.': '.format_time($time, _TIMESTRING)."\" class=\"sl_date\">".format_time($time)."</time></td><td><a href=\"index.php?name=news&amp;op=view&amp;id=".$id."\" title=\"".$title."\" class=\"sl_last\">".$title.'</a></td></tr>';
+            $cont .= '<table class="sl_table_amount">';
+            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=news&amp;op=view&amp;id='.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'pages') {
         $result = $db->sql_query('SELECT pid, title, time FROM '.PREFIX_DB."_pages WHERE uid = '".$user_id."' AND time <= NOW() AND status != '0' ORDER BY pid DESC LIMIT 0,".$num);
         if ($db->sql_numrows($result) > 0) {
-            $cont .= "<table class=\"sl_table_amount\">";
-            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= "<tr><td style=\"width: 15%\"><time datetime=\"".date('c', strtotime($time))."\" title=\""._CHNGSTORY.': '.format_time($time, _TIMESTRING)."\" class=\"sl_date\">".format_time($time)."</time></td><td><a href=\"index.php?name=pages&amp;op=view&amp;id=".$id."\" title=\"".$title."\" class=\"sl_last\">".$title.'</a></td></tr>';
+            $cont .= '<table class="sl_table_amount">';
+            while(list($id, $title, $time) = $db->sql_fetchrow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=pages&amp;op=view&amp;id='.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
             $cont .= '</table>';
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
     }
     return $cont;
@@ -551,8 +551,8 @@ function privat() {
         setHead([
             'title' => _PRIVAT,
         ]);
-        $title = array("<span OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;typ=1', ''); return false;\">"._PRIN.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;typ=2', ''); return false;\">"._PROUT.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;typ=3', ''); return false;\">"._PRSAVE.'</span>', _SEND);
-        $text = array("<div id=\"repprmessin\">".prmess(1, 0, 0, 1).'</div>', "<div id=\"repprmessou\">".prmess(1, 0, 0, 2).'</div>', "<div id=\"repprmesssa\">".prmess(1, 0, 0, 3).'</div>', "<div id=\"repprmessfo\">".prmess(1, 0, 0, 4).'</div>');
+        $title = ["<span OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;typ=1', ''); return false;\">"._PRIN.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;typ=2', ''); return false;\">"._PROUT.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;typ=3', ''); return false;\">"._PRSAVE.'</span>', _SEND];
+        $text = ['<div id="repprmessin">'.prmess(1, 0, 0, 1).'</div>', '<div id="repprmessou">'.prmess(1, 0, 0, 2).'</div>', '<div id="repprmesssa">'.prmess(1, 0, 0, 3).'</div>', '<div id="repprmessfo">'.prmess(1, 0, 0, 4).'</div>'];
         $cont = tpl_eval('title', _PRIVAT).navi().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
         setFoot();
@@ -567,7 +567,7 @@ function favorites() {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo tpl_eval('title', _FAVORITES).navi().setTemplateBasic('open')."<div id=\"repfavorliste\">".favorliste(1).'</div>'.setTemplateBasic('close');
+        echo tpl_eval('title', _FAVORITES).navi().setTemplateBasic('open').'<div id="repfavorliste">'.favorliste(1).'</div>'.setTemplateBasic('close');
         setFoot();
     } else {
         account();
@@ -590,12 +590,12 @@ function passlost() {
         if ($stop) $cont .= tpl_warn('warn', $stop, '', '', 'warn');
         $cont .= tpl_warn('warn', $info, '', '', 'info');
         $cont .= setTemplateBasic('open');
-        $cont .= "<form action=\"index.php?name=".$conf['name']."\" method=\"post\">"
-        ."<table class=\"sl_table_form\">"
-        .'<tr><td>'._EMAIL.":</td><td><input type=\"email\" name=\"email\" value=\"".$email."\" maxlength=\"255\" class=\"sl_field ".$conf['style']."\" placeholder=\""._EMAIL."\" required></td></tr>";
-        if ($email) $cont .= '<tr><td>'._CONFIRMATIONCODE.":</td><td><input type=\"text\" name=\"code\" value=\"".$code."\" maxlength=\"10\" class=\"sl_field ".$conf['style']."\" placeholder=\""._CONFIRMATIONCODE."\" required></td></tr>";
-        $cont .= "<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"passmail\"><input type=\"submit\" value=\"".$send."\" class=\"sl_but_blue\"></td></tr>"
-        ."<tr><td colspan=\"2\" class=\"sl_center\"><a href=\"index.php?name=".$conf['name']."\" title=\""._USERLOGIN."\" class=\"sl_but_foot\">"._USERLOGIN."</a><a href=\"index.php?name=".$conf['name']."&amp;op=newuser\" title=\""._REGNEWUSER."\" class=\"sl_but_foot\">"._REGNEWUSER.'</a></td></tr></table></form>';
+        $cont .= '<form action="index.php?name='.$conf['name'].'" method="post">'
+        .'<table class="sl_table_form">'
+        .'<tr><td>'._EMAIL.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._EMAIL.'" required></td></tr>';
+        if ($email) $cont .= '<tr><td>'._CONFIRMATIONCODE.':</td><td><input type="text" name="code" value="'.$code.'" maxlength="10" class="sl_field '.$conf['style'].'" placeholder="'._CONFIRMATIONCODE.'" required></td></tr>';
+        $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="passmail"><input type="submit" value="'.$send.'" class="sl_but_blue"></td></tr>'
+        .'<tr><td colspan="2" class="sl_center"><a href="index.php?name='.$conf['name'].'" title="'._USERLOGIN.'" class="sl_but_foot">'._USERLOGIN.'</a><a href="index.php?name='.$conf['name'].'&amp;op=newuser" title="'._REGNEWUSER.'" class="sl_but_foot">'._REGNEWUSER.'</a></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
         echo $cont;
         setFoot();
@@ -611,7 +611,7 @@ function passmail() {
     $code = ($code_post) ? substr($code_post, 0, 10) : false;
     checkemail($email);
     if (!$stop) {
-        $result = $db->sql_query('SELECT user_name, user_email, user_password, user_network FROM '.PREFIX_DB.'_users WHERE user_email = :email', array('email' => $email));
+        $result = $db->sql_query('SELECT user_name, user_email, user_password, user_network FROM '.PREFIX_DB.'_users WHERE user_email = :email', ['email' => $email]);
         if ($db->sql_numrows($result) == 0) {
             $stop = _NOUSERINFO;
         } else {
@@ -624,8 +624,8 @@ function passmail() {
         if ($code && $subpass == $code) {
             $newpass = getPass($conf['users']['minpass']);
             $cryptpass = md5_salt($newpass);
-            $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_password = :user_password WHERE user_email = :email', array('user_password' => $cryptpass, 'email' => $email));
-            $link = "<a href=\"".$conf['homeurl'].'/index.php?name='.$conf['name']."\">".$conf['homeurl'].'/index.php?name='.$conf['name'].'</a>';
+            $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_password = :user_password WHERE user_email = :email', ['user_password' => $cryptpass, 'email' => $email]);
+            $link = '<a href="'.$conf['homeurl'].'/index.php?name='.$conf['name'].'">'.$conf['homeurl'].'/index.php?name='.$conf['name'].'</a>';
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$user_name;
             $message = str_replace('[text]', sprintf(_PASSSEND, $user_name, $conf['sitename'], $user_name, $newpass, $link), $conf['mtemp']);
             mail_send($user_email, $conf['adminmail'], $subject, $message, 0, 3);
@@ -635,7 +635,7 @@ function passmail() {
             echo tpl_eval('title', _PASSWORDLOST).tpl_warn('warn', _USERPASSWORD.' '.$user_name.' '._MAILED, '?name='.$conf['name'], 10, 'info');
             setFoot();
         } else {
-            $link = "<a href=\"".$conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email."\">".$conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email.'</a>';
+            $link = '<a href="'.$conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email.'">'.$conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email.'</a>';
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$user_name;
             $message = str_replace('[text]', sprintf(_PASSCSEND, $user_name, $conf['sitename'], $subpass, $link).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
             mail_send($user_email, $conf['adminmail'], $subject, $message, 0, 3);
@@ -655,17 +655,17 @@ function login() {
     $upasshash = md5_salt($upass);
     $result = $db->sql_query(
         'SELECT user_id, user_name, user_email, user_password, user_storynum, user_blockon, user_theme FROM '.PREFIX_DB.'_users WHERE user_name = :uname AND user_password = :upass AND user_network = :network',
-        array('uname' => $uname, 'upass' => $upasshash, 'network' => '')
+        ['uname' => $uname, 'upass' => $upasshash, 'network' => '']
     );
     if ($db->sql_numrows($result) != 1) $stop[] = _LOGININCOR;
     list($user_id, $user_name, $user_email, $user_password, $user_storynum, $user_blockon, $user_theme) = $db->sql_fetchrow($result);
     if (!$user_id || $user_name != $uname || $user_password != $upasshash) $stop[] = _LOGININCOR;
     if (!$stop) {
-        setCookies('account', time() + intval($conf['user_c_t']), array($user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme));
+        setCookies('account', time() + intval($conf['user_c_t']), [$user_id, $user_name, $user_password, $user_storynum, $user_blockon, $user_theme]);
         $uip = getIp();
         $uagent = getAgent();
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', array('uname' => $uip, 'guest' => 0));
-        $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_last_ip = :user_last_ip, user_lastvisit = NOW(), user_agent = :user_agent WHERE user_id = :user_id', array('user_last_ip' => $uip, 'user_agent' => $uagent, 'user_id' => $user_id));
+        $db->sql_query('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
+        $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_last_ip = :user_last_ip, user_lastvisit = NOW(), user_agent = :user_agent WHERE user_id = :user_id', ['user_last_ip' => $uip, 'user_agent' => $uagent, 'user_id' => $user_id]);
         login_report(0, 1, $uname, '');
         setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
     } else {
@@ -675,10 +675,10 @@ function login() {
 }
 
 function logout() {
-    global $db, $conf, $user;
+    global $db, $user;
     $user_name = htmlspecialchars(substr($user[1], 0, 25));
     setCookiesDelete('account');
-    $db->sql_query('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', array('uname' => $user_name, 'guest' => 2));
+    $db->sql_query('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $user_name, 'guest' => 2]);
     unset($user);
     setRedirect('index.php', true);
 }
@@ -691,7 +691,7 @@ function edithome() {
         ]);
         $userinfo = getusrinfo();
         $userinfo['user_theme'] = (!$userinfo['user_theme']) ? $conf['theme'] : $userinfo['user_theme'];
-        $cont = ($stop) ? setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop)) : '';
+        $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]) : '';
         $change = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
         .'<tr><td>'._IP.':</td><td>'.$userinfo['user_last_ip'].'</td></tr>'
         .'<tr><td>'._REG.':</td><td>'.format_time($userinfo['user_regdate']).'</td></tr>';
@@ -699,15 +699,15 @@ function edithome() {
         $change .= '<tr><td>'._YOURNAME.':</td><td>'.$userinfo['user_name'].'</td></tr>'
         .'<tr><td>'._BIRTHDAY.':</td><td>'.datetime(2, 'user_birthday', $userinfo['user_birthday'], 10, $conf['style']).'</td></tr>'
         .'<tr><td>'._GENDER.':</td><td>'.get_gender('user_gender', $userinfo['user_gender'], $conf['style']).'</td></tr>'
-        .'<tr><td>'._YOUREMAIL.":</td><td><input type=\"email\" name=\"user_email\" value=\"".$userinfo['user_email']."\" maxlength=\"60\" class=\"sl_field ".$conf['style']."\" placeholder=\""._YOUREMAIL."\" required></td></tr>"
-        .'<tr><td>'._SITEURL.":</td><td><input type=\"url\" name=\"user_website\" value=\"".$userinfo['user_website']."\" maxlength=\"100\" class=\"sl_field ".$conf['style']."\" placeholder=\""._SITEURL."\"></td></tr>"
-        .'<tr><td>'._OCCUPATION.":</td><td><input type=\"text\" name=\"user_occ\" value=\"".$userinfo['user_occ']."\" maxlength=\"100\" class=\"sl_field ".$conf['style']."\" placeholder=\""._OCCUPATION."\"></td></tr>"
-        .'<tr><td>'._LOCALITYLANG.":</td><td><input type=\"text\" name=\"user_from\" value=\"".$userinfo['user_from']."\" maxlength=\"100\" class=\"sl_field ".$conf['style']."\" placeholder=\""._LOCALITYLANG."\"></td></tr>"
-        .'<tr><td>'._INTERESTS.":</td><td><input type=\"text\" name=\"user_interests\" value=\"".$userinfo['user_interests']."\" maxlength=\"150\" class=\"sl_field ".$conf['style']."\" placeholder=\""._INTERESTS."\"></td></tr>"
-        .'<tr><td>'._SIGNATURE.":<div class=\"sl_small\">"._SIGNATURE_TEXT.'</div></td><td>'.textarea('1', 'user_sig', $userinfo['user_sig'], $conf['name'], '5', _SIGNATURE, '0').'</td></tr>'
+        .'<tr><td>'._YOUREMAIL.':</td><td><input type="email" name="user_email" value="'.$userinfo['user_email'].'" maxlength="60" class="sl_field '.$conf['style'].'" placeholder="'._YOUREMAIL.'" required></td></tr>'
+        .'<tr><td>'._SITEURL.':</td><td><input type="url" name="user_website" value="'.$userinfo['user_website'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._SITEURL.'"></td></tr>'
+        .'<tr><td>'._OCCUPATION.':</td><td><input type="text" name="user_occ" value="'.$userinfo['user_occ'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._OCCUPATION.'"></td></tr>'
+        .'<tr><td>'._LOCALITYLANG.':</td><td><input type="text" name="user_from" value="'.$userinfo['user_from'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._LOCALITYLANG.'"></td></tr>'
+        .'<tr><td>'._INTERESTS.':</td><td><input type="text" name="user_interests" value="'.$userinfo['user_interests'].'" maxlength="150" class="sl_field '.$conf['style'].'" placeholder="'._INTERESTS.'"></td></tr>'
+        .'<tr><td>'._SIGNATURE.':<div class="sl_small">'._SIGNATURE_TEXT.'</div></td><td>'.textarea('1', 'user_sig', $userinfo['user_sig'], $conf['name'], '5', _SIGNATURE, '0').'</td></tr>'
         .fields_in($userinfo['user_field'], $conf['name']);
         if ($conf['users']['news'] == 1) {
-            $change .= '<tr><td>'._C_12.":</td><td><select name=\"user_storynum\" class=\"sl_field ".$conf['style']."\">";
+            $change .= '<tr><td>'._C_12.':</td><td><select name="user_storynum" class="sl_field '.$conf['style'].'">';
             $xusnum = 3;
             while ($xusnum <= 20) {
                 $sel = ($xusnum == $userinfo['user_storynum']) ? ' selected' : '';
@@ -723,7 +723,7 @@ function edithome() {
         if (($conf['privat']['act'] ?? 0)) $change .= '<tr><td>'._PSMAIL.'</td><td>'.radio_form($userinfo['user_psmail'], 'user_psmail').'</td></tr>';
         $change .= '<tr><td>'._ALLOWUSERS.'</td><td>'.radio_form($userinfo['user_viewemail'], 'user_viewemail').'</td></tr>'
         .'<tr><td>'._ACTIVATEPERSONAL.'</td><td>'.radio_form($userinfo['user_blockon'], 'user_blockon').'</td></tr>'
-        .'<tr><td>'._MENUCONF.":<div class=\"sl_small\">"._MENUINFO.'</div></td><td>'.textarea('2', 'user_block', $userinfo['user_block'], $conf['name'], '10', _MENUCONF, '0').'</td></tr>';
+        .'<tr><td>'._MENUCONF.':<div class="sl_small">'._MENUINFO.'</div></td><td>'.textarea('2', 'user_block', $userinfo['user_block'], $conf['name'], '10', _MENUCONF, '0').'</td></tr>';
         if ($conf['users']['theme']) {
             $tcategory = '';
             $tcount = 0;
@@ -731,23 +731,23 @@ function edithome() {
             while (($file = readdir($dh)) !== false) {
                 if (!preg_match("/\./", $file) && $file != 'admin') {
                     $sel = ($file == $userinfo['user_theme']) ? ' selected' : '';
-                    $tcategory .= "<option value=\"".$file."\"".$sel.'>'.$file.'</option>';
+                    $tcategory .= '<option value="'.$file.'"'.$sel.'>'.$file.'</option>';
                     $tcount++;
                 }
             }
             closedir($dh);
-            if ($tcount > 1) $change .= '<tr><td>'._THEME.":</td><td><select name=\"user_theme\" class=\"sl_field ".$conf['style']."\">".$tcategory.'</select></td></tr>';
+            if ($tcount > 1) $change .= '<tr><td>'._THEME.':</td><td><select name="user_theme" class="sl_field '.$conf['style'].'">'.$tcategory.'</select></td></tr>';
         }
-        $change .= "<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"user_name\" value=\"".$userinfo['user_name']."\">"
-        ."<input type=\"hidden\" name=\"op\" value=\"savehome\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr>"
+        $change .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="user_name" value="'.$userinfo['user_name'].'">'
+        .'<input type="hidden" name="op" value="savehome"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>'
         .'</table></form>';
-        $asetup = "<table class=\"sl_table_form\">";
+        $asetup = '<table class="sl_table_form">';
         $user_avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['user_avatar'])) ? $userinfo['user_avatar'] : 'default/00.gif';
-        $asetup .= '<tr><td>'._AVATAR.":<div class=\"sl_small\">".sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], files_size($conf['users']['amaxsize']))."</div></td><td><img src=\"".$conf['users']['adirectory'].'/'.$user_avatar."\" alt=\""._AVATAR."\" title=\""._AVATAR."\" class=\"sl_avatar\"></td></tr>";
+        $asetup .= '<tr><td>'._AVATAR.':<div class="sl_small">'.sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], files_size($conf['users']['amaxsize'])).'</div></td><td><img src="'.$conf['users']['adirectory'].'/'.$user_avatar.'" alt="'._AVATAR.'" title="'._AVATAR.'" class="sl_avatar"></td></tr>';
         $asetup .= '</table>';
         if ($conf['users']['aupload']) {
-            $asetup .= "<hr><form enctype=\"multipart/form-data\" action=\"index.php?name=".$conf['name']."\" method=\"post\"><table class=\"sl_table_form\">"
-            .'<tr><td>'._AVATAR_USER.":</td><td><input type=\"file\" name=\"userfile\" class=\"sl_field ".$conf['style']."\"></td><td><input type=\"hidden\" name=\"op\" value=\"saveavatar\"><input type=\"submit\" value=\""._UPLOAD."\" class=\"sl_but_blue\"></td></tr>"
+            $asetup .= '<hr><form enctype="multipart/form-data" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
+            .'<tr><td>'._AVATAR_USER.':</td><td><input type="file" name="userfile" class="sl_field '.$conf['style'].'"></td><td><input type="hidden" name="op" value="saveavatar"><input type="submit" value="'._UPLOAD.'" class="sl_but_blue"></td></tr>'
             .'</table></form>';
         }
         $a = 6;
@@ -758,29 +758,29 @@ function edithome() {
         $dh = opendir($adir);
         while (($file = readdir($dh)) !== false) {
             if (preg_match("#(\.gif|\.png|\.jpg|\.jpeg)$#is", $file) && !preg_match("#(\b0\.gif\b|\b00\.gif\b)$#i", $file)) {
-                $filename = str_replace('_', ' ', preg_replace("/^(.*)\..*$/", "\\1", $file));
+                $filename = str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
                 if (($i - 1) % $a == 0) $aset .= '<tr>';
-                $aset .= "<td style=\"width: ".$tdwidth."%;\"><a href=\"index.php?name=".$conf['name'].'&amp;op=saveavatar&amp;avatar='.$file."\"><img src=\"".$adir.'/'.$file."\" alt=\""._AVATARSAVE.' '._ID.' '.$filename."\" title=\""._AVATARSAVE.' '._ID.' '.$filename."\" class=\"sl_avatar\"></a></td>";
+                $aset .= '<td style="width: '.$tdwidth.'%;"><a href="index.php?name='.$conf['name'].'&amp;op=saveavatar&amp;avatar='.$file.'"><img src="'.$adir.'/'.$file.'" alt="'._AVATARSAVE.' '._ID.' '.$filename.'" title="'._AVATARSAVE.' '._ID.' '.$filename.'" class="sl_avatar"></a></td>';
                 if ($i % $a == 0) $aset .= '</tr>';
                 $i++;
             }
         }
         closedir($dh);
-        if ($i >= 1) $asetup .= '<hr>'.setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _AVATARSELECT))."<table class=\"sl_table_form\">".$aset.'</table>';
+        if ($i >= 1) $asetup .= '<hr>'.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _AVATARSELECT]).'<table class="sl_table_form">'.$aset.'</table>';
         $user_id = intval($user[0]);
         list($network) = $db->sql_fetchrow($db->sql_query('SELECT user_network FROM '.PREFIX_DB.'_users WHERE user_id = \''.$user_id.'\''));
         if (empty($network)) {
-            $psetup = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _PASSTEXT));
-            $psetup .= "<form action=\"index.php?name=".$conf['name']."\" method=\"post\"><table class=\"sl_table_form\">"
-            .'<tr><td>'._PASSNEW.":</td><td><input type=\"password\" name=\"newpass\" maxlength=\"25\" class=\"sl_field ".$conf['style']."\" placeholder=\""._PASSNEW."\" required></td></tr>"
-            .'<tr><td>'._PASSNEW2.":</td><td><input type=\"password\" name=\"newpass2\" maxlength=\"25\" class=\"sl_field ".$conf['style']."\" placeholder=\""._PASSNEW2."\" required></td></tr>"
-            .'<tr><td>'._PASSOLD.":</td><td><input type=\"password\" name=\"oldpass\" maxlength=\"25\" class=\"sl_field ".$conf['style']."\" placeholder=\""._PASSOLD."\" required></td></tr>"
-            ."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"hidden\" name=\"op\" value=\"savepass\"><input type=\"submit\" value=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr>"
+            $psetup = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PASSTEXT]);
+            $psetup .= '<form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
+            .'<tr><td>'._PASSNEW.':</td><td><input type="password" name="newpass" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._PASSNEW.'" required></td></tr>'
+            .'<tr><td>'._PASSNEW2.':</td><td><input type="password" name="newpass2" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._PASSNEW2.'" required></td></tr>'
+            .'<tr><td>'._PASSOLD.':</td><td><input type="password" name="oldpass" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._PASSOLD.'" required></td></tr>'
+            .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="savepass"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>'
             .'</table></form>';
         } else {
-            $psetup = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _NETWORKPASS));
+            $psetup = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NETWORKPASS]);
         }
-        echo setTemplateBasic('title', array('{%title%}' => _CHANGE)).navi().$cont.getNaviTabs(0, 'tab', array(_CHANGE, _AVATARSETUP, _PASSSETUP), array($change, $asetup, $psetup));
+        echo setTemplateBasic('title', ['{%title%}' => _CHANGE]).navi().$cont.getNaviTabs(0, 'tab', [_CHANGE, _AVATARSETUP, _PASSSETUP], [$change, $asetup, $psetup]);
         setFoot();
     } else {
         account();
@@ -815,7 +815,7 @@ function savehome() {
             $user_field = fields_save(getVar('post', 'field', 'array'));
             $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_email = :user_email, user_website = :user_website, user_viewemail = :user_viewemail, user_occ = :user_occ, user_from = :user_from, user_interests = :user_interests, user_sig = :user_sig, user_storynum = :user_storynum, user_blockon = :user_blockon, user_block = :user_block, user_theme = :user_theme, user_newsletter = :user_newsletter, user_fsmail = :user_fsmail, user_psmail = :user_psmail, user_birthday = :user_birthday, user_gender = :user_gender, user_field = :user_field WHERE user_id = :user_id', ['user_email' => $user_email, 'user_website' => $user_website, 'user_viewemail' => $user_viewemail, 'user_occ' => $user_occ, 'user_from' => $user_from, 'user_interests' => $user_interests, 'user_sig' => $user_sig, 'user_storynum' => $user_storynum, 'user_blockon' => $user_blockon, 'user_block' => $user_block, 'user_theme' => $user_theme, 'user_newsletter' => $user_newsletter, 'user_fsmail' => $user_fsmail, 'user_psmail' => $user_psmail, 'user_birthday' => $user_birthday, 'user_gender' => $user_gender, 'user_field' => $user_field, 'user_id' => $user_id]);
             $userinfo = getusrinfo();
-            setCookies('account', time() + intval($conf['user_c_t']), array($userinfo['user_id'], $userinfo['user_name'], $userinfo['user_password'], $userinfo['user_storynum'], $userinfo['user_blockon'], $userinfo['user_theme']));
+            setCookies('account', time() + intval($conf['user_c_t']), [$userinfo['user_id'], $userinfo['user_name'], $userinfo['user_password'], $userinfo['user_storynum'], $userinfo['user_blockon'], $userinfo['user_theme']]);
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
         }
     } else {
@@ -838,7 +838,7 @@ function saveavatar() {
         }
         if (!$stop && $avatar) {
             $avatar = text_filter($avatar);
-            $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_avatar = :user_avatar WHERE user_id = :user_id', array('user_avatar' => $avatar, 'user_id' => $user_id));
+            $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_avatar = :user_avatar WHERE user_id = :user_id', ['user_avatar' => $avatar, 'user_id' => $user_id]);
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
         } else {
             edithome();
@@ -857,7 +857,7 @@ function savepass() {
         if (strlen($newpass) >= $conf['users']['minpass']) {
             $oldpass = md5_salt($oldpass);
             $user_id = intval($user[0]);
-            list($pass) = $db->sql_fetchrow($db->sql_query('SELECT user_password FROM '.PREFIX_DB.'_users WHERE user_id = :user_id AND user_network = :network', array('user_id' => $user_id, 'network' => '')));
+            list($pass) = $db->sql_fetchrow($db->sql_query('SELECT user_password FROM '.PREFIX_DB.'_users WHERE user_id = :user_id AND user_network = :network', ['user_id' => $user_id, 'network' => '']));
             if (!empty($pass) && $pass == $oldpass) {
                 if ($newpass == $newpass2) {
                     $userinfo = getusrinfo();
@@ -868,7 +868,7 @@ function savepass() {
                     $message = str_replace('[text]', sprintf(_PASSESEND, $user_name, $conf['sitename'], $user_name, $newpass, $link), $conf['mtemp']);
                     mail_send($user_email, $conf['adminmail'], $subject, $message, 0, 3);
                     $newpass = md5_salt($newpass);
-                    $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_password = :user_password WHERE user_id = :user_id', array('user_password' => $newpass, 'user_id' => $user_id));
+                    $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_password = :user_password WHERE user_id = :user_id', ['user_password' => $newpass, 'user_id' => $user_id]);
                     setRedirect('index.php?name='.$conf['name']);
                 } else {
                     $stop[] = _ERROR_PASS;

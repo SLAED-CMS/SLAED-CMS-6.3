@@ -21,10 +21,15 @@ function contact() {
 		$semail = getVar('post', 'semail', 'text');
 	}
 	$message = getVar('post', 'message', 'text');
+	$asend = '';
 	if ($conf['contact']['admins']) {
-		$wlang = ($conf['multilingual']) ? 'AND (lang = \''.$locale.'\' OR lang = \'\')' : '';
-		$result = $db->sql_query('SELECT id, name, title FROM '.PREFIX_DB.'_admins WHERE smail = \'1\' '.$wlang.' ORDER BY id');
-		$asend = '';
+		$wlang = '';
+		$params = [];
+		if ($conf['multilingual']) {
+			$wlang = 'AND (lang = :locale OR lang = \'\')';
+			$params['locale'] = $locale;
+		}
+		$result = $db->sql_query('SELECT id, name, title FROM '.PREFIX_DB.'_admins WHERE smail = \'1\' '.$wlang.' ORDER BY id', $params);
 		if ($db->sql_numrows($result) > 0) {
 			while (list($id, $aname, $atitle) = $db->sql_fetchrow($result)) {
 				$aname = substr($aname, 0, 25);
@@ -40,7 +45,7 @@ function contact() {
 		$title = _FEEDBACK;
 		$form = '';
 	}
-	head();
+	setHead(['title' => $title]);
 	$cont = setTemplateBasic('title', ['{%title%}' => $title]);
 	$form .= '<form action="index.php?name='.$conf['name'].'" method="post">'
 	.'<table class="sl_table_form">';
@@ -61,7 +66,7 @@ function contact() {
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			if ($conf['contact']['admins'] && $id) {
-				list($adminmail) = $db->sql_fetchrow($db->sql_query('SELECT email FROM '.PREFIX_DB.'_admins WHERE id = \''.$id.'\' AND smail = \'1\''));
+				list($adminmail) = $db->sql_fetchrow($db->sql_query('SELECT email FROM '.PREFIX_DB.'_admins WHERE id = :id AND smail = \'1\'', ['id' => $id]));
 				$to = $adminmail;
 			} else {
 				$to = $conf['adminmail'];
@@ -79,7 +84,7 @@ function contact() {
 		$cont .= setTemplateBasic('open').$form.setTemplateBasic('close');
 	}
 	echo $cont;
-	foot();
+	setFoot();
 }
 
 switch($op) {
