@@ -547,4 +547,4 @@ define("_OGRAPH","Open Graph");
 define("_OGRAPHT","Open Graph Vorlage:");
 define("_SCHEMA","Schema.org");
 define("_SCHEMAT","Schema.org Vorlage:");
-define("_TPLVARS","<b>[site]</b> - Seitenname<br><b>[loc]</b> - Seiten-URL<br><b>[title]</b> - Titel<br><b>[desc]</b> - Beschreibung<br><b>[img]</b> - Bild<br><b>[type]</b> - Inhaltstyp<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Startseite<br><b>[logo]</b> - Logo<br><b>[time]</b> - Veröffentlichungsdatum<br><b>[mtime]</b> - Änderungsdatum<br><b>[ctitle]</b> - Kategorie");
+define("_TPLVARS","<b>[site]</b> - Seitenname<br><b>[loc]</b> - Seiten-URL<br><b>[title]</b> - SEO-Titel (Artikel + Kategorie + Modul + Site)<br><b>[desc]</b> - Beschreibung<br><b>[img]</b> - Bild<br><b>[type]</b> - Inhaltstyp<br><b>[url]</b> - URL<br><b>[homeurl]</b> - Startseite<br><b>[logo]</b> - Logo<br><b>[time]</b> - Veröffentlichungsdatum<br><b>[mtime]</b> - Änderungsdatum<br><b>[ctitle]</b> - Kategorie<br><b>[headline]</b> - Artikelüberschrift (nur Text, ohne Zusätze)<br><b>[author]</b> - Autor des Beitrags");
