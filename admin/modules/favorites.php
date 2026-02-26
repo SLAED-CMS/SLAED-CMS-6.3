@@ -19,12 +19,12 @@ function favorites(): void {
 }
 
 function conf(): void {
-    global $aroute, $conffav;
+    global $afile, $conffav;
     head();
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkPerms('favorites.php');
+    $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conffav['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
     .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conffav['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
     .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conffav['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
@@ -38,7 +38,7 @@ function conf(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $cont = [
         'num' => getVar('post', 'num', 'num', 15),
         'anum' => getVar('post', 'anum', 'num', 15),
@@ -48,8 +48,7 @@ function save(): void {
         'favact' => getVar('post', 'favact', 'num')
     ];
     setConfigFile('favorites.php', $cont);
-    header('Location: '.$aroute.'.php?name=favorites&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=favorites&op=conf');
 }
 
 function info(): void {

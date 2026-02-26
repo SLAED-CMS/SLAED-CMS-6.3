@@ -21,7 +21,7 @@ function getLangPath(string $mod = '', string $typ = ''): string {
 }
 
 function lang(): void {
-    global $confmd, $aroute;
+    global $confmd, $afile;
     $modbase = [];
     $who_view = [];
     foreach ($confmd as $ttl => $info) {
@@ -41,8 +41,8 @@ function lang(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
 
-    $sys_admin = '<a href="'.$aroute.'.php?name=lang&amp;op=editfile&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
-    $sys_modul = '<a href="'.$aroute.'.php?name=lang&amp;op=editfile" title="'._FULLEDIT.'">'._MODUL.'</a>';
+    $sys_admin = '<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
+    $sys_modul = '<a href="'.$afile.'.php?name=lang&amp;op=editfile" title="'._FULLEDIT.'">'._MODUL.'</a>';
     $cont .= '<tr><td>1</td><td>'._SYSTEM.'</td><td>'._ALL.'</td><td>'._MVALL.'</td><td>'.ad_status('', 1).'</td><td>'.add_menu($sys_admin.'||'.$sys_modul).'</td></tr>';
 
     $mod = [];
@@ -60,10 +60,10 @@ function lang(): void {
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $eadmin = '';
         $emodul = '';
-        if (is_dir($mod_path.'/admin/language')) $eadmin = '<a href="'.$aroute.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
+        if (is_dir($mod_path.'/admin/language')) $eadmin = '<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
         if (is_dir($mod_path.'/language')) {
             $sep = $eadmin ? '||' : '';
-            $emodul = $sep.'<a href="'.$aroute.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
+            $emodul = $sep.'<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
         }
         $cont .= '<td>'.add_menu($eadmin.$emodul).'</td></tr>';
     }
@@ -74,7 +74,7 @@ function lang(): void {
 }
 
 function editfile(): void {
-    global $aroute, $confla;
+    global $afile, $confla;
     head();
     $cont = navi(0, 0);
     $mod = getVar('get', 'mod', 'var', '');
@@ -120,7 +120,7 @@ function editfile(): void {
     $offset = ($page - 1) * $per_page;
 
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_form">';
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     $ci = min($per_page, $total - $offset);
     for ($i = 0; $i < $ci; $i++) {
         $idx = $offset + $i;
@@ -164,12 +164,12 @@ function editfile(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $mod = getVar('post', 'mod', 'var', '');
     $typ = getVar('post', 'typ', 'var', '');
-    $lng_cn = getVar('post', 'lcn[]', 'var') ?: [];
+    $lng_cn = getVar('post', 'lcn[]', 'var', []);
     $page = getVar('post', 'page', 'num', 1);
-    $cnst = getVar('post', 'cnst[]', 'var') ?: [];
+    $cnst = getVar('post', 'cnst[]', 'var', []);
     $translations = getVar('post', 'lng', 'var', []);
     $lang_path = getLangPath($mod, $typ);
     $cj = count($lng_cn);
@@ -201,7 +201,7 @@ function save(): void {
         }
 
         // Write all constants back (submitted + existing)
-        $lng_str = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
+        $lng_str = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Ã‚Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
         foreach ($existing as $cons => $cont) {
             $cons_esc = str_replace("'", "\\'", $cons);
             $cont_esc = str_replace("'", "\\'", $cont);
@@ -211,18 +211,17 @@ function save(): void {
         fwrite($handle, $lng_str);
         fclose($handle);
     }
-    $url = $aroute.'.php?name=lang&op=editfile&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
-    header('Location: '.$url);
-    exit;
+    $url = $afile.'.php?name=lang&op=editfile&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
+    setRedirect($url);
 }
 
 function conf(): void {
-    global $aroute, $confla;
+    global $afile, $confla;
     head();
-    checkPerms('lang.php');
+    checkPerms(CONFIG_DIR.'/lang.php');
     $cont = navi(1, 0);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._LANGKEY.':</td><td><input type="text" name="key" value="'.$confla['key'].'" class="sl_conf" placeholder="'._LANGKEY.'" required></td></tr>'
     .'<tr><td>'._LANGTR.':</td><td><select name="lang" class="sl_conf">'.language($confla['lang'], 1).'</select></td></tr>'
     .'<tr><td>'._LANGCOUNT.':</td><td><input type="number" name="count" value="'.$confla['count'].'" class="sl_conf" placeholder="'._LANGCOUNT.'" required></td></tr>'
@@ -234,7 +233,7 @@ function conf(): void {
 }
 
 function confsave(): void {
-    global $aroute, $confla;
+    global $afile, $confla;
     $cont = [
         'key' => getVar('post', 'key', 'text', ''),
         'lang' => getVar('post', 'lang', 'var', 'russian'),
@@ -242,8 +241,7 @@ function confsave(): void {
         'per_page' => getVar('post', 'per_page', 'num', 100)
     ];
     setConfigFile('lang.php', $cont, $confla);
-    header('Location: '.$aroute.'.php?name=lang&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=lang&op=conf');
 }
 
 function info(): void {

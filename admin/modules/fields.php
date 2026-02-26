@@ -14,10 +14,10 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function fields(): void {
-    global $aroute, $conffi;
+    global $afile, $conffi;
     head();
     $cont = navi(0, 0, 0, 0, 'fields');
-    $cont .= checkPerms('fields.php');
+    $cont .= checkPerms(CONFIG_DIR.'/fields.php');
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
     $content = '';
     $k = 0;
@@ -59,7 +59,7 @@ function fields(): void {
     }
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _FIELDINFO]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="fields"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
+    $cont .= '<form action="'.$afile.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="fields"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
        .'<script>
         var countries=new ddtabcontent("fields")
         countries.setpersist(true)
@@ -72,7 +72,7 @@ function fields(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $cont = [];
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
     $a = 0;
@@ -80,18 +80,17 @@ function save(): void {
         $fields = '';
         for ($i = 0; $i < 10; $i++) {
             $ident = ($i == 0) ? '' : '||';
-            $field1 = getVar('post', 'field1'.$a.'['.$i.']', 'var', '0') ?: 0;
-            $field2 = getVar('post', 'field2'.$a.'['.$i.']', 'var', '0') ?: 0;
-            $field3 = getVar('post', 'field3'.$a.'['.$i.']', 'var', '0') ?: 0;
-            $field4 = getVar('post', 'field4'.$a.'['.$i.']', 'var', '0') ?: 0;
+            $field1 = getVar('post', 'field1'.$a.'['.$i.']', 'var', 0);
+            $field2 = getVar('post', 'field2'.$a.'['.$i.']', 'var', 0);
+            $field3 = getVar('post', 'field3'.$a.'['.$i.']', 'var', 0);
+            $field4 = getVar('post', 'field4'.$a.'['.$i.']', 'var', 0);
             $fields .= $ident.$field1.'|'.$field2.'|'.$field3.'|'.$field4;
         }
         $a++;
         $cont[$val] = $fields;
     }
     setConfigFile('fields.php', $cont);
-    header('Location: '.$aroute.'.php?name=fields');
-    exit;
+    setRedirect($afile.'.php?name=fields');
 }
 
 function info(): void {

@@ -224,8 +224,7 @@ function edit(): void {
     global $confmd, $db, $afile;
     $mod = getVar('get', 'mod', 'var');
     if (!isset($confmd[$mod])) {
-        header('Location: '.$afile.'.php?name=modules');
-        exit;
+        setRedirect($afile.'.php?name=modules');
     }
     $lang = $confmd[$mod]['lang'] ?? '_'.strtoupper($mod);
     $img = $confmd[$mod]['img'] ?? $mod.'.png';
@@ -265,7 +264,7 @@ function edit(): void {
     if ($numrow > 0) {
         $cont .= '<tr><td>'._UGROUP.':</td><td><select name="group" class="sl_conf">';
         $result2 = $db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_groups');
-        while (list($gid, $gname) = $db->sql_fetchrow($result2)) {
+        while ([$gid, $gname] = $db->sql_fetchrow($result2)) {
             $gsel = ($gid == $group) ? ' selected' : '';
             if (empty($none)) {
                 $ggsel = ($group == 0) ? ' selected' : '';
@@ -308,8 +307,7 @@ function status(): void {
         $confmd[$mod]['active'] = $act;
         setConfigFile('modules.php', $confmd);
     }
-    header('Location: '.$afile.'.php?name=modules');
-    exit;
+    setRedirect($afile.'.php?name=modules');
 }
 
 function save(): void {
@@ -320,7 +318,7 @@ function save(): void {
         $img = str_replace('templates/admin/images/admin/', '', getVar('post', 'img', 'text'));
         $type = $confmd[$mod]['type'] ?? 1;
         $confmd[$mod] = [
-            'lang'   => getVar('post', 'lang', 'var') ?: '_'.strtoupper($mod),
+            'lang'   => getVar('post', 'lang', 'var', '_'.strtoupper($mod)),
             'img'    => $img ?: strtolower($mod).'.png',
             'active' => getVar('post', 'active', 'num'),
             'view'   => $view,
@@ -332,8 +330,7 @@ function save(): void {
         ];
         setConfigFile('modules.php', $confmd);
     }
-    header('Location: '.$afile.'.php?name=modules');
-    exit;
+    setRedirect($afile.'.php?name=modules');
 }
 
 function add(): void {

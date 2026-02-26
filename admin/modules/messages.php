@@ -13,14 +13,14 @@ function navi(int $tab = 0, int $subtab = 0): string {
 }
 
 function messages(): void {
-    global $db, $conf, $aroute;
+    global $db, $conf, $afile;
     head();
     $cont = navi(0, 0);
     $result = $db->sql_query('SELECT mid, title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message ORDER BY mid');
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._PURCHASED.'</th><th>'._VIEW.'</th><th>'._LANGUAGE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while (list($mid, $title, $content, $expire, $active, $view, $mlanguage) = $db->sql_fetchrow($result)) {
+        while ([$mid, $title, $content, $expire, $active, $view, $mlanguage] = $db->sql_fetchrow($result)) {
             if (($expire && $expire < time()) || (!$active && $expire)) $db->sql_query('UPDATE '.PREFIX_DB.'_message SET active = :active, expire = :expire WHERE mid = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
             $act = ($active) ? '0' : '1';
             if ($view == 1) {
@@ -40,7 +40,7 @@ function messages(): void {
                .'<td>'.$exp.'</td>'
                .'<td>'.$mview.'</td>'
                .'<td>'.deflang($mlanguage).'</td>'
-               .'<td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($aroute.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active).'||<a href="'.$aroute.'.php?name=messages&amp;op=add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$aroute.'.php?name=messages&amp;op=del&amp;id='.$mid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+               .'<td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active).'||<a href="'.$afile.'.php?name=messages&amp;op=add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=messages&amp;op=del&amp;id='.$mid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setTemplateBasic('close');
@@ -52,14 +52,14 @@ function messages(): void {
 }
 
 function add(): void {
-    global $db, $conf, $aroute, $stop;
+    global $db, $conf, $afile, $stop;
     $mid = getVar('req', 'id', 'num');
     if ($mid) {
-        list($title, $content, $expire, $active, $view, $mlanguage) = $db->sql_fetchrow($db->sql_query('SELECT title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $mid]));
+        [$title, $content, $expire, $active, $view, $mlanguage] = $db->sql_fetchrow($db->sql_query('SELECT title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $mid]));
     } else {
         $mid = getVar('post', 'mid', 'num');
-        $title = save_text(getVar('post', 'title', 'title'), 1);
-        $content = save_text(getVar('post', 'content', 'text'));
+        $title = getVar('post', 'title', 'title');
+        $content = getVar('post', 'content', 'text');
         $newexpire = getVar('post', 'newexpire', 'num');
         $expire_input = getVar('post', 'expire', 'num');
         $expire = ($newexpire == 1 && $expire_input) ? time() + ($expire_input * 86400) : $expire_input;
@@ -72,7 +72,7 @@ function add(): void {
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($content) $cont .= preview($title, $content, '', '', 'all');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
        .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
        .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'content', $content, 'all', '10', _TEXT, '1').'</td></tr>';
     if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="mlanguage" class="sl_form">'.language($mlanguage).'</select></td></tr>';
@@ -103,10 +103,10 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $aroute, $stop;
+    global $db, $afile, $stop;
     $mid = getVar('post', 'mid', 'num');
-    $title = save_text(getVar('post', 'title', 'title'), 1);
-    $content = save_text(getVar('post', 'content', 'text'));
+    $title = getVar('post', 'title', 'title');
+    $content = getVar('post', 'content', 'text');
     $newexpire = getVar('post', 'newexpire', 'num');
     $expire = getVar('post', 'expire', 'num');
     $active = getVar('post', 'active', 'num');
@@ -122,8 +122,7 @@ function save(): void {
         } else {
             $result = $db->sql_query('INSERT INTO '.PREFIX_DB.'_message (mid, title, content, expire, active, view, mlanguage) VALUES (NULL, :title, :content, :expire, :active, :view, :mlanguage)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage]);
         }
-        header('Location: '.$aroute.'.php?name=messages');
-        exit;
+        setRedirect($afile.'.php?name=messages');
     } elseif ($posttype == 'delete') {
         del($mid);
     } else {
@@ -132,20 +131,18 @@ function save(): void {
 }
 
 function status(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num');
     if ($id) $db->sql_query('UPDATE '.PREFIX_DB.'_message SET active = :active WHERE mid = :mid', ['active' => $act, 'mid' => $id]);
-    header('Location: '.$aroute.'.php?name=messages');
-    exit;
+    setRedirect($afile.'.php?name=messages');
 }
 
 function del(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $id = getVar('get', 'id', 'num');
     if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $id]);
-    header('Location: '.$aroute.'.php?name=messages');
-    exit;
+    setRedirect($afile.'.php?name=messages');
 }
 
 function info(): void {

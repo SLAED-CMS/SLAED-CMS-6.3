@@ -13,22 +13,22 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function groups(): void {
-    global $db, $aroute, $conf;
+    global $db, $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0);
     $result = $db->sql_query('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th class="{sorter: false}">'._RANK.'</th><th>'._GROUP.'</th><th>'._POINTS.'</th><th>'.cutstr(_USERSCOUNT, 5, 1).'</th><th>'.cutstr(_SPEC, 4, 1).'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while (list($grid, $grname, $description, $points, $extra, $rank, $color) = $db->sql_fetchrow($result)) {
+        while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->sql_fetchrow($result)) {
             if (intval($extra)) {
                 $extra = _YES;
-                list($users_num) = $db->sql_fetchrow($db->sql_query('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]));
-                $userlink = $aroute.'.php?op=users_show&amp;search=6&amp;chng_user='.$grid;
+                [$users_num] = $db->sql_fetchrow($db->sql_query('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]));
+                $userlink = $afile.'.php?op=users_show&amp;search=6&amp;chng_user='.$grid;
             } else {
                 $extra = _NO;
-                list($users_num) = $db->sql_fetchrow($db->sql_query('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]));
-                $userlink = $aroute.'.php?op=users_show&amp;search=7&amp;chng_user='.$points;
+                [$users_num] = $db->sql_fetchrow($db->sql_query('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]));
+                $userlink = $afile.'.php?op=users_show&amp;search=7&amp;chng_user='.$points;
             }
             $cont .= '<tr>'
                .'<td>'.$grid.'</td>'
@@ -37,7 +37,7 @@ function groups(): void {
                .'<td>'.$points.'</td>'
                .'<td>'.$users_num.'</td>'
                .'<td>'.$extra.'</td>'
-               .'<td>'.add_menu('<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$aroute.'.php?name=groups&amp;op=add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$aroute.'.php?name=groups&amp;op=del&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+               .'<td>'.add_menu('<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=groups&amp;op=add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=groups&amp;op=del&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setTemplateBasic('close');
@@ -49,11 +49,11 @@ function groups(): void {
 }
 
 function add(): void {
-    global $db, $aroute, $conf, $stop;
+    global $db, $afile, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->sql_query('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
-        list($gid, $grname, $description, $points, $extra, $rank, $color) = $db->sql_fetchrow($result);
+        [$gid, $grname, $description, $points, $extra, $rank, $color] = $db->sql_fetchrow($result);
         $check = ($extra) ? ' checked' : '';
     } else {
         $gid = getVar('post', 'gid', 'num');
@@ -72,7 +72,7 @@ function add(): void {
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _GROUPSI]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
        .'<tr><td>'._NAME.':</td><td><input type="text" name="grname" value="'.$grname.'" maxlength="255" class="sl_form" placeholder="'._NAME.'" required></td></tr>'
        .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'">'.$description.'</textarea></td></tr>'
        .'<tr><td>'._IMG.':</td><td><select name="rank" id="img_replace" class="sl_form">';
@@ -95,7 +95,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $aroute, $conf, $stop;
+    global $db, $afile, $conf, $stop;
     $id = getVar('post', 'gid', 'num');
     $grname = getVar('post', 'grname', 'title');
     $description = getVar('post', 'description', 'text');
@@ -113,19 +113,18 @@ function save(): void {
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_groups (name, description, points, extra, rank, color) VALUES (:name, :description, :points, :extra, :rank, :color)', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
         }
-        header('Location: '.$aroute.'.php?name=groups');
-        exit;
+        setRedirect($afile.'.php?name=groups');
     } else {
         add();
     }
 }
 
 function points(): void {
-    global $aroute, $confu;
+    global $afile, $confu;
     head();
     $cont = navi(0, 2, 0, 0);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post">'
+    $cont .= '<form action="'.$afile.'.php" method="post">'
        .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._DESCRIPTION.'</th><th class="{sorter: false}">'._POINTS.'</th></tr></thead><tbody>';
     $p = [_POINTS01, _POINTS02, _POINTS03, _POINTS04, _POINTS05, _POINTS06, _POINTS07, _POINTS08, _POINTS09, _POINTS10, _POINTS11, _POINTS12, _POINTS13, _POINTS14, _POINTS15, _POINTS16, _POINTS17, _POINTS18, _POINTS19, _POINTS20, _POINTS21, _POINTS22, _POINTS23, _POINTS24, _POINTS25, _POINTS26, _POINTS27, _POINTS28, _POINTS29, _POINTS30, _POINTS31, _POINTS32, _POINTS33, _POINTS34, _POINTS35, _POINTS36, _POINTS37, _POINTS38, _POINTS39, _POINTS40, _POINTS41, _POINTS42, _POINTS43, _POINTS44, _POINTS45];
     $d = [_DESC01, _DESC02, _DESC03, _DESC04, _DESC05, _DESC06, _DESC07, _DESC08, _DESC09, _DESC10, _DESC11, _DESC12, _DESC13, _DESC14, _DESC15, _DESC16, _DESC17, _DESC18, _DESC19, _DESC20, _DESC21, _DESC22, _DESC23, _DESC24, _DESC25, _DESC26, _DESC27, _DESC28, _DESC29, _DESC30, _DESC31, _DESC32, _DESC33, _DESC34, _DESC35, _DESC36, _DESC37, _DESC38, _DESC39, _DESC40, _DESC41, _DESC42, _DESC43, _DESC44, _DESC45];
@@ -142,19 +141,18 @@ function points(): void {
 }
 
 function pointssave(): void {
-    global $aroute, $confu;
+    global $afile, $confu;
     $spoints = getVar('post', 'spoints[]', 'num');
     if ($spoints) {
         $npoints = implode(',', $spoints);
         $cont = ['points' => $npoints];
         setConfigFile('users.php', $cont, $confu);
     }
-    header('Location: '.$aroute.'.php?name=groups&op=points');
-    exit;
+    setRedirect($afile.'.php?name=groups&op=points');
 }
 
 function del(): void {
-    global $db, $aroute, $confmd;
+    global $db, $afile, $confmd;
     $id = getVar('get', 'id', 'num');
     if ($id) {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
@@ -167,8 +165,7 @@ function del(): void {
         }
         if ($changed) setConfigFile('modules.php', $confmd);
     }
-    header('Location: '.$aroute.'.php?name=groups');
-    exit;
+    setRedirect($afile.'.php?name=groups');
 }
 
 function info(): void {
