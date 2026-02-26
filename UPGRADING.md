@@ -245,6 +245,31 @@ $id = $_POST['id'];
 $id = getVar('post', 'id', 'num');
 ```
 
+##### Removed: `config/rewrite.php`
+
+The `config/rewrite.php` file and the `rewrite()` function have been removed.
+URL rewriting behavior is controlled exclusively by `$conf['rewrite']` in `config/global.php`.
+
+##### Removed: `$confu['anonym']`
+
+The configurable anonymous user name has been replaced with a language constant:
+
+| Old (6.2.x) | New (6.3.x) |
+|-------------|-------------|
+| `$confu['anonym']` | `_ANONYM` |
+
+Define `_ANONYM` in all 6 `language/*.php` files. Do **not** add it to `admin/language/*.php`.
+
+##### Protected: `setConfigFile()` reserved files
+
+`setConfigFile()` now refuses to write to: `system.php`, `header.php`, `chmod.php`, `local.php`.
+Calls with these names are silently ignored.
+
+##### Changed: `getConfig()` skip list
+
+`getConfig()` explicitly skips: `system.php`, `header.php`, `chmod.php`, `local.php`.
+These files are loaded separately by the system and must not return config arrays.
+
 ---
 
 ## Migration Checklist
@@ -394,7 +419,7 @@ rm -rf storage/cache/*
 
 ### 6.3.0 (In Development - 2025/2026)
 
-**Status:** Active Development (~70% Complete as of February 2026)
+**Status:** Active Development (~75% Complete as of February 2026)
 
 **Major Changes:**
 - PHP 8.4 compatibility (8.1+ minimum)
@@ -405,6 +430,9 @@ rm -rf storage/cache/*
 - Template functions modernized (`setTemplateBasic()`, `setTemplateWarning()`)
 - Removed `core/classes/module.php` (centralized in core)
 - Config file naming: removed `config_` prefix
+- Language constant `_ANONYM` replaces configurable `$confu['anonym']`
+- `config/rewrite.php` removed (URL rewrite controlled by `$conf['rewrite']`)
+- Error log (`error_php.log`) uses NDJSON format (one JSON object per line)
 
 **Security Improvements:**
 - 2106+ SQL injection vulnerabilities fixed

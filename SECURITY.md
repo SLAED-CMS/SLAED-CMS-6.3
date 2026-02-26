@@ -207,6 +207,12 @@ location /storage {
 - [x] Unified `log_size` fallback to 10 MB across all log functions
 - [x] Unified `filesize() >= $max` comparison (previously inconsistent `>` vs `>=`)
 - [x] Unified log path variable `$log` and archive timestamp format `Y-m-d_H-i-s`
+- [x] Error log (`error_php.log`) uses **NDJSON format** — one JSON object per line, machine-readable
+
+**Config Write Protection:**
+
+- [x] `setConfigFile()` has a `$reserved` static guard — refuses to write to `system.php`, `header.php`, `chmod.php`, `local.php`
+- [x] `getConfig()` has an explicit `$skip` list — reserved files are never merged into `$conf`
 
 **Modules Secured:**
 

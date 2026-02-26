@@ -589,6 +589,50 @@ echo setTemplateBasic('test', []);
 
 ---
 
+## SEO Placeholder Variables
+
+The `setHead()` function substitutes placeholders in `$conf['graph']`
+(the Open Graph / structured data template stored in `config/global.php`).
+
+### Available Placeholders
+
+| Placeholder | Description |
+|-------------|-------------|
+| `[homeurl]` | Site home URL |
+| `[site]` | Site name (`$conf['sitename']`) |
+| `[logo]` | Absolute URL to theme logo |
+| `[loc]` | Locale code (`_LOCALE` constant) |
+| `[time]` | Publication time (ISO 8601) |
+| `[mtime]` | Modification time (ISO 8601) |
+| `[title]` | Full page title (after SEO title assembly) |
+| `[headline]` | Raw page title before long-title processing |
+| `[author]` | Author name (`$seo['author']` or `$conf['sitename']`) |
+| `[desc]` | Page description |
+| `[img]` | Page image URL (or theme logo as fallback) |
+| `[ctitle]` | Category title |
+| `[type]` | Content type (default: `article`) |
+| `[url]` | Canonical page URL |
+
+### PHP Usage
+
+Pass extra SEO data to `setHead()` from a module:
+
+```php
+setHead([
+    'title'  => 'Article Title',
+    'desc'   => 'Short description',
+    'author' => 'Eduard Laas',
+    'img'    => 'https://example.com/image.jpg',
+    'time'   => '2026-01-15 10:00:00',
+]);
+```
+
+> [!NOTE]
+> `[headline]` captures the title before the long-title assembly (`$conf['ltitle']`).
+> `[author]` falls back to `$conf['sitename']` when not provided.
+
+---
+
 ## Migration from Legacy Templates
 
 If upgrading from SLAED CMS 6.2.x, note these changes:

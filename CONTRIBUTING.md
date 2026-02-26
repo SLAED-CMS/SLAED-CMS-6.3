@@ -228,7 +228,31 @@ define('_USR_ACTIVE', 'User is active');
 - `_MOD_*` - Modules
 
 > [!IMPORTANT]
-> Every constant **must** be defined in all 6 languages: EN, FR, DE, PL, RU, UA
+> Every constant **must** be defined in all 6 languages: EN, FR, DE, PL, RU, UA.
+>
+> **Placement:**
+> - Constants used in public-facing modules → `language/*.php`
+> - Constants used only in the admin panel → `admin/language/*.php`
+>
+> Example: `_ANONYM` is used by front-end modules, so it belongs in `language/*.php`.
+
+### Config Files
+
+#### Reserved Config Files
+
+The following `config/` files are **reserved** and must not be used as module config files:
+
+| File | Purpose |
+|------|---------|
+| `config/system.php` | System-level settings (loaded separately) |
+| `config/header.php` | HTML head injection (loaded separately) |
+| `config/chmod.php` | Permission settings (loaded separately) |
+| `config/local.php` | Local overrides (loaded last, not merged) |
+
+- `getConfig()` skips these files during glob merge.
+- `setConfigFile()` refuses to write to them (silently ignored).
+
+Do **not** create module config files with these names.
 
 ### Admin Module Conventions
 
