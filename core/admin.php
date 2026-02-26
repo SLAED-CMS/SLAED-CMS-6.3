@@ -810,7 +810,7 @@ function fav_aliste() {
                 $fid = $val[1];
                 $modul = $val[2];
                 $title = $val[3];
-                $uname = ($val[4]) ? user_info($val[4]) : $confu['anonym'];
+                $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
                 $cont .= "<tr>"
                 ."<td>".$id."</td>"
                 ."<td><span title=\"".$title."\" class=\"sl_note\">".cutstr($title, 60)."</span></td>"
@@ -854,8 +854,8 @@ function ajax_privat() {
     if ($db->sql_numrows($result) > 0) {
         $cont = "<table class=\"sl_table_list\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._PRSE."</th><th>"._PRRE."</th><th>"._DATE."</th><th>"._STATUS."</th><th>"._FUNCTIONS."</th></tr></thead><tbody>";
         while (list($id, $uidin, $uidout, $title, $content, $date, $status, $user_re, $user_se) = $db->sql_fetchrow($result)) {
-            $unre = ($user_re) ? user_info($user_re) : $confu['anonym'];
-            $unse = ($user_se) ? user_info($user_se) : $confu['anonym'];
+            $unre = ($user_re) ? user_info($user_re) : _ANONYM;
+            $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
             $info = bb_decode($content, "privat");
             $cont .= "<tr>"

@@ -135,8 +135,7 @@ function log_report(): bool {
     if (is_array($user) && isset($user[1]) && $user[1] !== null) {
         $luser = substr((string)$user[1], 0, 25);
     } else {
-        $anon = $confu['anonym'] ?? 'Guest';
-        $luser = substr((string)$anon, 0, 25);
+        $luser = substr(_ANONYM, 0, 25);
     }
 
     $log = LOGS_DIR.'/log.log';
@@ -183,7 +182,7 @@ function log_report(): bool {
     $url = text_filter(getenv('REQUEST_URI'));
     $refer = get_referer();
     $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-    $luser = ($user) ? substr($user[1], 0, 25) : substr($confu['anonym'], 0, 25);
+    $luser = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
     $path = 'config/logs/log.txt';
     if ($fhandle = @fopen($path, 'ab')) {
         if (filesize($path) > $confs['log_size']) {
@@ -1328,7 +1327,7 @@ function doHackReport($msg) {
     $ip = getIp();
     $agent = getAgent();
     $date_time = date(_TIMESTRING);
-    $user = ($user) ? substr($user[1], 0, 25) : substr($confu['anonym'], 0, 25);
+    $user = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
     if ($confs['block']) {
         $btime = time() + 86400;
         $cont = array('blocker_ip' => $confs['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||');
@@ -1371,7 +1370,7 @@ function doWarnReport($msg) {
     $ip = getIp();
     $agent = getAgent();
     $date_time = date(_TIMESTRING);
-    $user = ($user) ? substr($user[1], 0, 25) : substr($confu['anonym'], 0, 25);
+    $user = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
     if ($confs['mail_w']) {
         $subject = $conf['sitename'].' - '._SECURITY;
         $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._WARN.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$user.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$date_time;

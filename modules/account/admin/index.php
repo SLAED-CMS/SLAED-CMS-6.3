@@ -348,7 +348,6 @@ function conf(): void {
     $cont .= checkPerms(CONFIG_DIR.'/users.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._ANONYMOUSNAME.':</td><td><input type="text" name="anonym" value="'.$confu['anonym'].'" class="sl_conf" placeholder="'._ANONYMOUSNAME.'" required></td></tr>'
     .'<tr><td>'._ADIR.':</td><td><input type="text" name="adirectory" value="'.$confu['adirectory'].'" class="sl_conf" placeholder="'._ADIR.'" required></td></tr>'
     .'<tr><td>'._ATYPE.':</td><td><input type="text" name="atypefile" value="'.$confu['atypefile'].'" class="sl_conf" placeholder="'._ATYPE.'" required></td></tr>'
     .'<tr><td>'._ASIZE.':</td><td><input type="number" name="amaxsize" value="'.$confu['amaxsize'].'" class="sl_conf" placeholder="'._ASIZE.'" required></td></tr>'
@@ -398,7 +397,6 @@ function save(): void {
     global $afile, $confu;
     $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
     $cont = [
-        'anonym' => getVar('post', 'anonym', 'title'),
         'adirectory' => getVar('post', 'adirectory', 'title'),
         'atypefile' => strtolower(strtr(getVar('post', 'atypefile', 'title', 'gif,jpg,jpeg,png'), $protect)),
         'amaxsize' => getVar('post', 'amaxsize', 'num', 51200),

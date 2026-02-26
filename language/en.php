@@ -26,6 +26,7 @@ define("_ALLINC","categories");
 define("_ALLOWUSERS","Allow other users to view my email address?");
 define("_ALPHABET","ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 define("_AND","and");
+define("_ANONYM","Guest");
 define("_ANSWER","Answer");
 define("_AQUERY_DB","Analyzer database queries");
 define("_AUEMAIL","E-Mail the author");

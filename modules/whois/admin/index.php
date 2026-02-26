@@ -37,7 +37,7 @@ function whois(): void {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._POSTEDBY.'</th><th colspan="2">'._SITE.'</th><th colspan="2">'._HOST.'</th><th colspan="2">'._DC.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $uname, $ip_sender, $time, $domain, $host, $dc, $hometext, $st_domain, $st_host, $st_dc, $user_name] = $db->sql_fetchrow($result)) {
-            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
+            $post = $user_name ? user_info($user_name) : ($uname ?: _ANONYM);
             $ip_sender = $ip_sender ? user_geo_ip($ip_sender, 4) : _NO;
             $hometext = $hometext ?: _NO;
             $host = $host ? domain($host) : _NO_INFO;
@@ -89,7 +89,7 @@ function add(): void {
     if ($wid) {
         $result = $db->sql_query('SELECT w.id, w.name, w.domain, w.host, w.dc, w.hometext, u.user_name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.user_id) WHERE w.id = :id', ['id' => $wid]);
         [$id, $uname, $domain, $host, $dc, $hometext, $user_name] = $db->sql_fetchrow($result);
-        $postname = $user_name ?: ($uname ?: $confu['anonym']);
+        $postname = $user_name ?: ($uname ?: _ANONYM);
     } else {
         $wid = getVar('post', 'wid', 'num');
         $postname = getVar('post', 'postname', 'name', '');

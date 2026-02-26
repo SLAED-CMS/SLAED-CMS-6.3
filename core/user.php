@@ -22,7 +22,7 @@ function setComShow() {
         if (is_user()) {
             $cont .= '<tr><td>'._YOURNAME.':</td><td>'.text_filter(substr($user[1], 0, 25)).'<input type="hidden" name="name" value=""></td></tr>';
         } else {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="name" value="'.$confu['anonym'].'" maxlength="25" class="sl_field '.$conf['style'].'"></td></tr>';
+            $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="name" value="'._ANONYM.'" maxlength="25" class="sl_field '.$conf['style'].'"></td></tr>';
         }
         $cont .= '<tr><td>'._COMMENT.':</td><td>'.textarea(1, 'text', '', $conf['name'], '5').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" OnClick="AjaxLoad(\'POST\', \'0\', \'csave\', \'go=1&amp;op=savecom&amp;id='.$arg[0].'&amp;cid='.$arg[1].'&amp;mod='.$conf['name'].'\', { \'text\':\''._CERROR1.'\' }); ClearForm(formcsave); return false;" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';
@@ -325,7 +325,7 @@ function prmess() {
                     $hidden = "";
                 }
                 $title = "<span title=\"".$ititle."\" class=\"sl_m_in".$hidden."\"></span><a OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=1&amp;typ=4&amp;mod=1', ''); return false;\" title=\"".$title."\">".cutstr($title, 35)."</a>";
-                $post = ($user_name) ? user_info($user_name) : $confu['anonym'];
+                $post = ($user_name) ? user_info($user_name) : _ANONYM;
                 $date = format_time($date, _TIMESTRING);
                 $func = add_menu("<a OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=1&amp;typ=4&amp;mod=1', ''); return false;\" title=\""._SHOW."\">"._SHOW."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmesssave&amp;id=".$id."', ''); return false;\" title=\""._SAVE."\">"._SAVE."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmessdel&amp;id=".$id."&amp;typ=1', ''); return false;\" title=\""._DELETE."\">"._DELETE."</a>");
                 $cont .= "<tr><td>".$title."</td><td>".$post."</td><td>".$date."</td><td>".$func."</td></tr>";
@@ -351,7 +351,7 @@ function prmess() {
                     $del = "||<a OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmessdel&amp;id=".$id."&amp;typ=2', ''); return false;\" title=\""._DELETE."\">"._DELETE."</a>";
                 }
                 $title = "<span title=\"".$ititle."\" class=\"sl_m_out".$hidden."\"></span><a OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=2&amp;typ=4&amp;mod=2', ''); return false;\" title=\"".$title."\">".cutstr($title, 35)."</a>";
-                $post = ($user_name) ? user_info($user_name) : $confu['anonym'];
+                $post = ($user_name) ? user_info($user_name) : _ANONYM;
                 $date = format_time($date, _TIMESTRING);
                 $func = add_menu("<a OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=2&amp;typ=4&amp;mod=2', ''); return false;\" title=\""._SHOW."\">"._SHOW."</a>".$del);
                 $cont .= "<tr><td>".$title."</td><td>".$post."</td><td>".$date."</td><td>".$func."</td></tr>";
@@ -380,7 +380,7 @@ function prmess() {
             $cont .= "<table class=\"sl_table_list\"><thead class=\"sl_table_list_head\"><tr><th>"._TITLE."</th><th>"._PRSE."</th><th>"._DATE."</th><th>"._FUNCTIONS."</th></tr></thead><tbody class=\"sl_table_list_body\">";
             while (list($id, $uidin, $uidout, $title, $date, $status, $user_name) = $db->sql_fetchrow($result)) {
             $title = "<span title=\""._PRMOVE."\" class=\"sl_m_save\"></span><a OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=1&amp;typ=4&amp;mod=3', ''); return false;\" title=\"".$title."\">".cutstr($title, 35)."</a>";
-                $post = ($user_name) ? user_info($user_name) : $confu['anonym'];
+                $post = ($user_name) ? user_info($user_name) : _ANONYM;
                 $date = format_time($date, _TIMESTRING);
                 $func = add_menu("<a OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=1&amp;typ=4&amp;mod=3', ''); return false;\" title=\""._SHOW."\">"._SHOW."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmessdel&amp;id=".$id."&amp;typ=3', ''); return false;\" title=\""._DELETE."\">"._DELETE."</a>");
                 $cont .= "<tr><td>".$title."</td><td>".$post."</td><td>".$date."</td><td>".$func."</td></tr>";
@@ -422,7 +422,7 @@ function prmess() {
 
                 $result = $db->sql_query("SELECT u.user_id, u.user_name, u.user_rank, u.user_email, u.user_website, u.user_avatar, u.user_regdate, u.user_from, u.user_sig, u.user_viewemail, u.user_points, u.user_warnings, u.user_gender, u.user_votes, u.user_totalvotes, g.name, g.rank, g.color FROM ".PREFIX_DB."_users AS u LEFT JOIN ".PREFIX_DB."_groups AS g ON ((g.extra=1 AND u.user_group=g.id) OR (g.extra!=1 AND u.user_points>=g.points)) WHERE u.user_id = '".$uidout."' ORDER BY g.extra DESC, g.points DESC");
                 list($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor) = $db->sql_fetchrow($result);
-                $avname = ($user_name) ? $user_name : $com_name." (".$confu['anonym'].")";
+                $avname = ($user_name) ? $user_name : $com_name." ("._ANONYM.")";
                 $date = "<span title=\""._PADD."\" class=\"sl_t_post\">".format_time($date, _TIMESTRING)."</span>";
                 $ip = (is_moder($conf['name'])) ? user_geo_ip($ip_sender, 4) : "";
                 $avatar = ($user_name) ? (($user_avatar && file_exists($confu['adirectory']."/".$user_avatar)) ? $confu['adirectory']."/".$user_avatar : $confu['adirectory']."/default/00.gif") : $confu['adirectory']."/default/0.gif";
@@ -753,7 +753,7 @@ function rss_channel() {
     ."<lastBuildDate>".date("D, j M Y H:m:s O")."</lastBuildDate>\n\n";
     if ($name && $name != "content" && $name != "shop" && $result) {
         while (list($rid, $uname, $rtitle, $rtime, $rhometext, $rctitle, $user_name) = $db->sql_fetchrow($result)) {
-            $rauthor = ($user_name) ? $user_name : (($uname) ? $uname : $confu['anonym']);
+            $rauthor = ($user_name) ? $user_name : (($uname) ? $uname : _ANONYM);
             $content .= "<item>\n"
             ."<title>".htmlspecialchars($rtitle)."</title>\n"
             ."<pubDate>".htmlspecialchars(date("D, j M Y H:m:s O", strtotime($rtime)))."</pubDate>\n"

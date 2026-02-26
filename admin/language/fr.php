@@ -37,7 +37,6 @@ define("_ALREADYOPTIMIZED","N'a pas besoin d'");
 define("_ALWAYS","Toujours");
 define("_ANEWSLETTER","Seulement signataires utilisateurs");
 define("_ANONIMP","Seulement les utilisateurs anonymes");
-define("_ANONYMOUSNAME","Standard nom d'utilisateur anonyme");
 define("_APOSTMOD","Avec le contrôle du modérateur");
 define("_APOSTNOMOD","Sans contrôle du modérateur");
 define("_ASC","Dans l'ordre croissant");

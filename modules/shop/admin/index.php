@@ -99,8 +99,8 @@ function clients(): void {
                 $del_name = $user_name;
                 $user_name = user_info(search_color($user_name, $csearch));
             } else {
-                $del_name = $confu['anonym'];
-                $user_name = $confu['anonym'];
+                $del_name = _ANONYM;
+                $user_name = _ANONYM;
             }
             $cont .= '<tr><td>'.$cid.'</td>'
             .'<td>'.title_tip(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.search_color($cname, $csearch).'<br>'._CLIENTADRES.': '.$cadres.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 40).'</span></td>'
@@ -174,7 +174,7 @@ function clientsadd(): void {
         } else {
             $cppi = 0;
         }
-        $user_name = ($user_name) ? user_info($user_name) : $confu['anonym'];
+        $user_name = ($user_name) ? user_info($user_name) : _ANONYM;
         $cont .= '<tr><td>'._PARTNER_NAME.':</td><td>'.$user_name.'</td></tr>'
         .'<tr><td>'._PARTNER_ID.':</td><td><input type="hidden" name="cid_partner" value="'.$cid_partner.'">'.$cid_partner.'</td></tr>'
         .'<tr><td>'._PERCENT.':</td><td>'.$cpartner_proz.' %</td></tr>';
@@ -480,8 +480,8 @@ function partners(): void {
                 $del_name = $user_name;
                 $user_name = user_info(search_color($user_name, ''));
             } else {
-                $del_name = $confu['anonym'];
-                $user_name = $confu['anonym'];
+                $del_name = _ANONYM;
+                $user_name = _ANONYM;
             }
             $cont .= '<tr><td>'.$paid.'</td>'
             .'<td>'.title_tip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paadres.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$user_name.'</td>'
@@ -537,7 +537,7 @@ function partnersadd(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     if ($paid) {
-        $user_name = ($user_name) ? user_info($user_name) : $confu['anonym'];
+        $user_name = ($user_name) ? user_info($user_name) : _ANONYM;
         $cont .= '<tr><td>'._NICKNAME.':</td><td>'.$user_name.'</td></tr>';
     }
     $cont .= '<tr><td>'._USER_ID.':</td><td>';

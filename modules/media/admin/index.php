@@ -43,7 +43,7 @@ function media(): void {
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $subtitle, $date, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
             $title = ($subtitle) ? $title.' / '.$subtitle : $title;
-            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
+            $post = $user_name ? user_info($user_name) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
             $broc = ($status == '2') ? '<a href="'.$afile.'.php?name=media&amp;op=ignore&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
@@ -78,7 +78,7 @@ function add(): void {
     if ($mid) {
         $result = $db->sql_query('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.ihome, m.acomm, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE id = :id', ['id' => $mid]);
         [$cid, $uname, $title, $subtitle, $myear, $director, $roles, $description, $createdby, $duration, $mlang, $note, $mformat, $mquality, $size, $released, $links, $mdate, $ihome, $acomm, $user_name] = $db->sql_fetchrow($result);
-        $postname = $user_name ?: ($uname ?: $confu['anonym']);
+        $postname = $user_name ?: ($uname ?: _ANONYM);
         $links = explode(',', $links);
     } else {
         $mid = getVar('post', 'mid', 'num', 0);

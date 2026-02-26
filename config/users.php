@@ -9,7 +9,6 @@ return [
         'adirectory' => 'uploads/avatars',
         'aheight'    => '100',
         'amaxsize'   => '51200',
-        'anonym'     => 'Guest',
         'anum'       => '50',
         'anump'      => '10',
         'atypefile'  => 'jpg,jpeg,gif,png',

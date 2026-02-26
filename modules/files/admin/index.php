@@ -42,7 +42,7 @@ function files(): void {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $date, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
-            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
+            $post = $user_name ? user_info($user_name) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
             $broc = ($st == '2') ? '<a href="'.$afile.'.php?name=files&amp;op=ignore&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
@@ -76,7 +76,7 @@ function add(): void {
     if ($fid) {
         $result = $db->sql_query('SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.date, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE lid = :id', ['id' => $fid]);
         [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $homepage, $ihome, $acomm, $user_name] = $db->sql_fetchrow($result);
-        $postname = $user_name ?: ($uname ?: $confu['anonym']);
+        $postname = $user_name ?: ($uname ?: _ANONYM);
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
         $cid = getVar('post', 'cid', 'num', 0);

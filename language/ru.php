@@ -26,6 +26,7 @@ define("_ALLINC","категориях");
 define("_ALLOWUSERS","Разрешить другим пользователям видеть E-Mail?");
 define("_ALPHABET","АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ");
 define("_AND","и");
+define("_ANONYM","Гость");
 define("_ANSWER","Ответ");
 define("_AQUERY_DB","Анализатор запросов в базу данных");
 define("_AUEMAIL","E-Mail автора");

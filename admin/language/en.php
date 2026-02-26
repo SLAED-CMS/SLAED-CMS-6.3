@@ -37,7 +37,6 @@ define("_ALREADYOPTIMIZED","Already optimized");
 define("_ALWAYS","Always");
 define("_ANEWSLETTER","A Newsletter to subscribed users only");
 define("_ANONIMP","Only anonymous users");
-define("_ANONYMOUSNAME","Anonymous Default Name");
 define("_APOSTMOD","With control of moderator");
 define("_APOSTNOMOD","Without control by moderator");
 define("_ASC","Ascending");

@@ -26,6 +26,7 @@ define("_ALLINC","Kategorien");
 define("_ALLOWUSERS","Anderen Benutzer E-Mail Adresse einsehen lassen?");
 define("_ALPHABET","AÄBCDEFGHIJKLMNOÖPQRSẞTUÜVWXYZ");
 define("_AND","und");
+define("_ANONYM","Gast");
 define("_ANSWER","Antwort");
 define("_AQUERY_DB","Analyzer Datenbank Abfragen");
 define("_AUEMAIL","E-Mail des Autors");

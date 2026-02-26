@@ -42,7 +42,7 @@ if (is_user()) {
 	</table>';
 } else {
 	$captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-	$content = '<span class="sl_pos_center"><a title="'.$confu['anonym'].'" class="sl_avatar" style="background-image: url('.$confu['adirectory'].'/default/0.gif);"></a><br><b>'._WELCOMETO.',<br>'.$confu['anonym'].'</b></span>
+	$content = '<span class="sl_pos_center"><a title="'._ANONYM.'" class="sl_avatar" style="background-image: url('.$confu['adirectory'].'/default/0.gif);"></a><br><b>'._WELCOMETO.',<br>'._ANONYM.'</b></span>
 	<hr>
 	<form action="index.php?name=account" method="post">
 	<table class="sl_table_block">

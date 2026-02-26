@@ -38,7 +38,7 @@ function faq(): void {
         while ([$fid, $catid, $uname, $title, $time, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
             $ctitle = ($catid) ? $ctitle : _NO;
             $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
-            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
+            $post = $user_name ? user_info($user_name) : ($uname ?: _ANONYM);
             if ($status == '1' && time() >= strtotime($time)) {
                 $ad_view = '<a href="index.php?name=faq&amp;op=view&amp;id='.$fid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
@@ -68,7 +68,7 @@ function add(): void {
     if ($fid) {
         $result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.ihome, s.acomm, u.user_name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE fid = :fid', ['fid' => $fid]);
         [$cat, $uname, $subject, $time, $hometext, $ihome, $acomm, $user_name] = $db->sql_fetchrow($result);
-        $postname = $user_name ?: ($uname ?: $confu['anonym']);
+        $postname = $user_name ?: ($uname ?: _ANONYM);
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');

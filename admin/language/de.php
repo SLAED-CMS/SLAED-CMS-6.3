@@ -37,7 +37,6 @@ define("_ALREADYOPTIMIZED","Bereits optimiert");
 define("_ALWAYS","Immer");
 define("_ANEWSLETTER","Ein Newsletter nur zu abbonierten Benutzern");
 define("_ANONIMP","Nur anonyme Benutzer");
-define("_ANONYMOUSNAME","Standard-Namen anonymen Benutzer");
 define("_APOSTMOD","Mit Kontrolle von Moderator");
 define("_APOSTNOMOD","Ohne Kontrolle von Moderator");
 define("_ASC","Aufsteigend");

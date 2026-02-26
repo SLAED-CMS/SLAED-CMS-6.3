@@ -37,7 +37,6 @@ define("_ALREADYOPTIMIZED","Не потребує");
 define("_ALWAYS","Завжди");
 define("_ANEWSLETTER","Тільки користувачі підписалися");
 define("_ANONIMP","Тільки анонімних користувачів");
-define("_ANONYMOUSNAME","Стандартне ім'я анонімного користувача");
 define("_APOSTMOD","З перевіркою модератора");
 define("_APOSTNOMOD","Без перевірки модератора");
 define("_ASC","У порядку зростання");

@@ -38,7 +38,7 @@ function pages(): void {
         while ([$pid, $catid, $uname, $title, $time, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
             $ctitle = ($catid) ? $ctitle : _NO;
             $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
-            $post = $user_name ? user_info($user_name) : ($uname ?: $confu['anonym']);
+            $post = $user_name ? user_info($user_name) : ($uname ?: _ANONYM);
             if ($status && time() >= strtotime($time)) {
                 $ad_view = '<a href="index.php?name=pages&amp;op=view&amp;id='.$pid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
@@ -68,7 +68,7 @@ function add(): void {
     if ($pid) {
         $result = $db->sql_query('SELECT p.catid, p.name, p.title, p.time, p.hometext, p.bodytext, p.ihome, p.acomm, u.user_name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.user_id) WHERE pid = :pid', ['pid' => $pid]);
         [$cat, $uname, $subject, $time, $hometext, $bodytext, $ihome, $acomm, $user_name] = $db->sql_fetchrow($result);
-        $postname = $user_name ?: ($uname ?: $confu['anonym']);
+        $postname = $user_name ?: ($uname ?: _ANONYM);
     } else {
         $pid = getVar('post', 'pid', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');
