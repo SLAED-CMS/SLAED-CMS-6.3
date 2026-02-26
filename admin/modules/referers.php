@@ -8,13 +8,13 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/referers.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $aroute;
+    global $afile;
     $ops = ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _DELETE, _INFO];
-    $search = '<form method="post" action="'.$aroute.'.php">'._SORTE.': <select name="sort">';
+    $search = '<form method="post" action="'.$afile.'.php">'._SORTE.': <select name="sort">';
     $priv = [_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF];
-    $psort = getVar('post', 'sort', 'num') ?: 0;
-    $porder = getVar('post', 'order', 'num') ?: 0;
+    $psort = getVar('post', 'sort', 'num', 0);
+    $porder = getVar('post', 'order', 'num', 0);
     foreach ($priv as $key => $value) {
         $sort = $key + 1;
         $sel = ($psort == $sort) ? ' selected' : '';
@@ -56,7 +56,7 @@ function referers(): void {
         $cont .= setTemplateBasic('open');
         $a = 0;
         $massiv = [];
-        while (list($hits, $uid, $name, $ip, $referer, $link, $date) = $db->sql_fetchrow($result)) {
+        while ([$hits, $uid, $name, $ip, $referer, $link, $date] = $db->sql_fetchrow($result)) {
             $massiv[] = [$hits, $uid, $name, $ip, $referer, $link, $date];
             $a++;
         }
@@ -85,12 +85,12 @@ function referers(): void {
 }
 
 function conf(): void {
-    global $aroute, $confr;
+    global $afile, $confr;
     head();
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkPerms('referers.php');
+    $cont .= checkPerms(CONFIG_DIR.'/referers.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
        .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confr['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
        .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$confr['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
        .'<tr><td>'._REFER_T.':</td><td><input type="number" name="refer_t" value="'.intval($confr['refer_t'] / 86400).'" class="sl_conf" placeholder="'._REFER_T.'" required></td></tr>'
@@ -103,7 +103,7 @@ function conf(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $content = [
         'anum' => getVar('post', 'anum', 'num', 50),
         'anump' => getVar('post', 'anump', 'num', 10),
@@ -112,15 +112,13 @@ function save(): void {
         'referb' => getVar('post', 'referb', 'num', 0),
     ];
     setConfigFile('referers.php', $content);
-    header('Location: '.$aroute.'.php?name=referers&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=referers&op=conf');
 }
 
 function del(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $db->sql_query('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = 0');
-    header('Location: '.$aroute.'.php?name=referers');
-    exit;
+    setRedirect($afile.'.php?name=referers');
 }
 
 function info(): void {

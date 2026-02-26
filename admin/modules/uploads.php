@@ -9,13 +9,13 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/uploads.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    global $aroute, $confup;
+    global $afile, $confup;
     $dir = getVar('post', 'dir', 'var', $confup['dir']);
     $ops = ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'];
     $lang = [_FILES, _TEMPLATES, _PREFERENCES, _INFO];
     $sops = ($opt == 1) ? ['', ''] : ['', '', ''];
     $slang = ($opt == 1) ? [_GENPREF, _MODULES] : [_EUPLOAD, '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f1\', \'go=5&amp;op=ashow_files&amp;id=1&amp;dir='.$dir.'\', \'\'); return false;">'._DGEN.'</span>', '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f2\', \'go=5&amp;op=ashow_files&amp;id=2&amp;dir='.$dir.'\', \'\'); return false;">'._DTHUMB.'</span>'];
-    $search = '<form method="post" action="'.$aroute.'.php">'._DIR.': <select name="dir" OnChange="submit()">';
+    $search = '<form method="post" action="'.$afile.'.php">'._DIR.': <select name="dir" OnChange="submit()">';
     $handle = opendir('uploads');
     if ($handle !== false) {
         while (($file = readdir($handle)) !== false) {
@@ -32,16 +32,17 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function uploads(): void {
-    global $aroute, $confup, $stop;
-    $dir = getVar('post', 'dir', 'var') ?: (getVar('get', 'dir', 'var') ?: $confup['dir']);
+    global $afile, $confup, $stop;
+    $dir = getVar('post', 'dir', 'var', '');
+    if ($dir === '') $dir = getVar('get', 'dir', 'var', $confup['dir']);
     head();
     $cont = navi(0, 0, 1, 0, 'uploads');
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-    $cont .= checkPerms('uploads/');
+    $cont .= checkPerms(BASE_DIR.'/uploads/');
     $cont .= '<div id="tabcs0" class="tabcont">';
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.deflmconst($dir).'<br>'._DIR.': uploads/'.$dir]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form enctype="multipart/form-data" action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form enctype="multipart/form-data" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_form"></td></tr>'
     .'<tr><td>'._FILE_SITE.':</td><td><input type="text" name="sitefile" class="sl_form" placeholder="'._FILE_SITE.'"></td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploadsave"><input type="hidden" name="dir" value="'.$dir.'"><input type="submit" value="'._EXECUTE.'" class="sl_but_blue"></td></tr></table></form>';
@@ -49,7 +50,7 @@ function uploads(): void {
     $cont .= '</div>'
     .'<div id="tabcs1" class="tabcont">';
     $fdir = 'uploads/'.$dir;
-    $cont .= checkPerms($fdir);
+    $cont .= checkPerms(BASE_DIR.'/'.$fdir);
     if (is_dir($fdir)) {
         $f = 0;
         $affilesize = 0;
@@ -72,7 +73,7 @@ function uploads(): void {
     $cont .= '</div>'
     .'<div id="tabcs2" class="tabcont">';
     $tdir = 'uploads/'.$dir.'/thumb';
-    $cont .= checkPerms($tdir);
+    $cont .= checkPerms(BASE_DIR.'/'.$tdir);
     if (is_dir($tdir)) {
         $t = 0;
         $atfilesize = 0;
@@ -104,51 +105,49 @@ function uploads(): void {
 }
 
 function uploadsave(): void {
-    global $aroute, $stop;
+    global $afile, $stop;
     $sdir = getVar('post', 'dir', 'var');
     upload(3, 'uploads/'.$sdir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $sdir, '1600', '1600', '1');
     if ($stop) {
         uploads();
     } else {
-        header('Location: '.$aroute.'.php?name=uploads&dir='.$sdir);
-        exit;
+        setRedirect($afile.'.php?name=uploads&dir='.$sdir);
     }
 }
 
 function templconf(): void {
-    global $aroute, $confup;
+    global $afile, $confup;
     require_once CONFIG_DIR.'/filetype.php';
     head();
     $cont = navi(0, 1, 0, 0, 'templconf');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TPINFO]);
-    $cont .= checkPerms('filetype.php');
+    $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
     $typm = explode(',', $confup['typ']);
     $conts = '';
     for ($i = 0; $i < count($typm); $i++) {
         $hr = ($i == 0) ? '' : '<hr>';
         $conts .= $hr.'<table class="sl_table_edit"><tr><td><h5>'._TPFOR.': '.$typm[$i].'</h5></td></tr><tr><td>'.textarea_code('code_'.$i.'', 'tmp[]', 'sl_form', 'text/html', $conftp[$typm[$i]]).'</td></tr></table>';
     }
-    $cont .= setTemplateBasic('open').'<form action="'.$aroute.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="templsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.setTemplateBasic('close');
+    $cont .= setTemplateBasic('open').'<form action="'.$afile.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="templsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
 function templsave(): void {
-    global $aroute, $confup;
+    global $afile, $confup;
     $cont = [];
     $typm = explode(',', $confup['typ']);
     $tmp = getVar('post', 'tmp', 'raw');
     for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i];
     setConfigFile('filetype.php', $cont);
-    header('Location: '.$aroute.'.php?name=uploads&op=templconf');
-    exit;
+    setRedirect($afile.'.php?name=uploads&op=templconf');
 }
 
 function conf(): void {
-    global $aroute, $confup;
+    global $afile, $confup;
     head();
     $cont = navi(1, 2, 1, 0, 'conf');
-    $cont .= checkPerms('uploads.php');
+    $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $handle = opendir('uploads');
     $directory = '';
     if ($handle !== false) {
@@ -160,7 +159,7 @@ function conf(): void {
         }
         closedir($handle);
     }
-    $conts = '<form action="'.$aroute.'.php" method="post">'
+    $conts = '<form action="'.$afile.'.php" method="post">'
     .'<div id="tabcs0" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._DIRDEF.':</td><td><select name="dir" class="sl_conf">'.$directory.'</select></td></tr>'
@@ -208,7 +207,7 @@ function conf(): void {
 }
 
 function confsave(): void {
-    global $aroute;
+    global $afile;
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $ttyp = getVar('post', 'ttyp', 'text');
     $xttyp = (!$ttyp) ? 'gif,jpg,jpeg,png,bmp' : strtolower(strtr($ttyp, $protect));
@@ -253,8 +252,7 @@ function confsave(): void {
         }
     }
     setConfigFile('uploads.php', $confup);
-    header('Location: '.$aroute.'.php?name=uploads&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=uploads&op=conf');
 }
 
 function info(): void {

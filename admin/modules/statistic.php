@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/statistic.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $aroute;
+    global $afile;
     $sfile = getVar('post', 'file', 'text');
     $ops = ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
@@ -19,7 +19,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
         closedir($handle);
     }
     rsort($files);
-    $search = '<form method="post" action="'.$aroute.'.php">'._STATFROM.': <select name="file"><option value="">'._NO_INFO.'</option>';
+    $search = '<form method="post" action="'.$afile.'.php">'._STATFROM.': <select name="file"><option value="">'._NO_INFO.'</option>';
     foreach ($files as $val) {
         if ($val != '' && preg_match('/^statistic\_(.+)\.log/', $val, $matches)) {
             $sel = ($sfile && $sfile == $val) ? ' selected' : '';
@@ -32,7 +32,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function statistic(): void {
-    global $aroute;
+    global $afile;
     $file = getVar('post', 'file', 'text');
     $pfile = $file ? '&amp;file='.$file : '';
     head();
@@ -40,7 +40,7 @@ function statistic(): void {
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
     $cont .= setTemplateBasic('open');
-    $cont .= '<img src="'.$aroute.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15" alt="'._STATGR.'" title="'._STATGR.'">';
+    $cont .= '<img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15" alt="'._STATGR.'" title="'._STATGR.'">';
     if ($file || date('d') > 15) {
         if ($file) {
             $temp = file(COUNTER_DIR.'/statistic/'.$file);
@@ -48,7 +48,7 @@ function statistic(): void {
         } else {
             $out = date('d');
         }
-        $cont .= '<hr><img src="'.$aroute.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out.'" alt="'._STATGR.'" title="'._STATGR.'">';
+        $cont .= '<hr><img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out.'" alt="'._STATGR.'" title="'._STATGR.'">';
     }
     $cont .= '<hr><table class="sl_table_list_sort"><thead><tr><th>'._DATE.'</th><th>'._UNIQUE.'</th><th>'._HITS.'</th><th>'._HOME.'</th><th>'._REFERERS.'</th><th>'._BOTSOPT.'</th><th>'._AUDIENCE.'</th><th class="{sorter: false}">'._USERS.'</th></tr></thead><tbody>';
     if ($file) {
@@ -89,12 +89,12 @@ function add(): void {
 }
 
 function conf(): void {
-    global $aroute, $confst;
+    global $afile, $confst;
     head();
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkPerms('statistic.php');
+    $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._STATBET.':</td><td><input type="number" name="bet" value="'.$confst['bet'].'" class="sl_conf" placeholder="'._STATBET.'" required></td></tr>'
     .'<tr><td>'._STATSHI.':</td><td><input type="number" name="shi" value="'.$confst['shi'].'" class="sl_conf" placeholder="'._STATSHI.'" required></td></tr>'
     .'<tr><td>'._STATACT.'</td><td>'.radio_form($confst['stat'], 'stat').'</td></tr>'
@@ -105,15 +105,14 @@ function conf(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $cont = [
         'bet' => getVar('post', 'bet', 'num', 42),
         'shi' => getVar('post', 'shi', 'num', 22),
         'stat' => getVar('post', 'stat', 'num')
     ];
     setConfigFile('statistic.php', $cont);
-    header('Location: '.$aroute.'.php?name=statistic&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=statistic&op=conf');
 }
 
 function info(): void {

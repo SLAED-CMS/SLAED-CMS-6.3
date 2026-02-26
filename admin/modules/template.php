@@ -7,11 +7,12 @@
 if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $aroute, $conf;
-    $templ = getVar('post', 'templ', 'var') ?: (getVar('get', 'templ', 'var') ?: $conf['theme']);
+    global $afile, $conf;
+    $templ = getVar('post', 'templ', 'var', '');
+    if ($templ === '') $templ = getVar('get', 'templ', 'var', $conf['theme']);
     $ops = ['name=template&amp;templ='.$templ, 'name=template&amp;op=style&amp;templ='.$templ, 'name=template&amp;op=info'];
     $lang = [_TEMPLATES, _STYLES, _INFO];
-    $search = '<form method="post" action="'.$aroute.'.php">'._THEME.': <select name="templ">';
+    $search = '<form method="post" action="'.$afile.'.php">'._THEME.': <select name="templ">';
     $handle = opendir('templates');
     if ($handle !== false) {
         while (($file = readdir($handle)) !== false) {
@@ -28,8 +29,9 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function template(): void {
-    global $aroute, $conf;
-    $templ = getVar('post', 'templ', 'var') ?: (getVar('get', 'templ', 'var') ?: $conf['theme']);
+    global $afile, $conf;
+    $templ = getVar('post', 'templ', 'var', '');
+    if ($templ === '') $templ = getVar('get', 'templ', 'var', $conf['theme']);
     head();
     $cont = navi(0, 0, 0, 0);
     $dir = 'templates/'.$templ;
@@ -42,11 +44,11 @@ function template(): void {
             while (($file = readdir($handle)) !== false) {
                 if (strpos($file, '.html')) {
                     $filelink = $dir.'/'.$file;
-                    $permtest = checkPerms($filelink, 1);
+                    $permtest = checkPerms(BASE_DIR.'/'.$filelink);
                     if ($permtest) $cont .= $permtest;
                     $comp = deflmconst(strtr($file, $langs));
                     $conts .= '<table class="sl_bodyline"><tr><th class="sl_right"><a OnClick="CloseOpen(\'sl_open_'.$i.'\', 0);" title="'._EDIT.'" class="sl_plus">'.$comp.' | '._FILE.': '.$file.' | '.date(_TIMESTRING, filemtime($filelink)).'</a></th></tr></table>'
-                    .'<div id="sl_open_'.$i.'"><form action="'.$aroute.'.php" method="post"><table class="sl_blockline"><tr><td>'.textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/html', file_get_contents($filelink)).'</td></tr>'
+                    .'<div id="sl_open_'.$i.'"><form action="'.$afile.'.php" method="post"><table class="sl_blockline"><tr><td>'.textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/html', file_get_contents($filelink)).'</td></tr>'
                     .'<tr><td class="sl_center"><input type="hidden" name="name" value="template"><input type="hidden" name="op" value="save"><input type="hidden" name="templ" value="'.$templ.'"><input type="hidden" name="filelink" value="'.$filelink.'"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form></div>';
                     $i++;
                 }
@@ -62,8 +64,8 @@ function template(): void {
 }
 
 function style(): void {
-    global $aroute, $conf;
-    $templ = getVar('get', 'templ', 'var') ?: $conf['theme'];
+    global $afile, $conf;
+    $templ = getVar('get', 'templ', 'var', $conf['theme']);
     head();
     $cont = navi(0, 1, 0, 0);
     $dir = is_dir('templates/'.$templ.'/css') ? 'templates/'.$templ.'/css' : 'templates/'.$templ;
@@ -76,11 +78,11 @@ function style(): void {
             while (($file = readdir($handle)) !== false) {
                 if (strpos($file, '.css')) {
                     $filelink = $dir.'/'.$file;
-                    $permtest = checkPerms($filelink, 1);
+                    $permtest = checkPerms(BASE_DIR.'/'.$filelink);
                     if ($permtest) $cont .= $permtest;
                     $comp = deflmconst(strtr($file, $langs));
                     $conts .= '<table class="sl_bodyline"><tr><th class="sl_right"><a OnClick="CloseOpen(\'sl_open_'.$i.'\', 0);" title="'._EDIT.'" class="sl_plus">'.$comp.' | '._FILE.': '.$file.' | '.date(_TIMESTRING, filemtime($filelink)).'</a></th></tr></table>'
-                    .'<div id="sl_open_'.$i.'"><form action="'.$aroute.'.php" method="post"><table class="sl_blockline"><tr><td>'.textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/css', file_get_contents($filelink)).'</td></tr>'
+                    .'<div id="sl_open_'.$i.'"><form action="'.$afile.'.php" method="post"><table class="sl_blockline"><tr><td>'.textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/css', file_get_contents($filelink)).'</td></tr>'
                     .'<tr><td class="sl_center"><input type="hidden" name="name" value="template"><input type="hidden" name="op" value="stylesave"><input type="hidden" name="templ" value="'.$templ.'"><input type="hidden" name="filelink" value="'.$filelink.'"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form></div>';
                     $i++;
                 }
@@ -96,7 +98,7 @@ function style(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $templ = getVar('post', 'templ', 'var');
     $filelink = getVar('post', 'filelink', 'text');
     $template = getVar('post', 'template', 'raw');
@@ -106,12 +108,11 @@ function save(): void {
         fclose($handle);
     }
     $templParam = $templ ? '&templ='.$templ : '';
-    header('Location: '.$aroute.'.php?name=template'.$templParam);
-    exit;
+    setRedirect($afile.'.php?name=template'.$templParam);
 }
 
 function stylesave(): void {
-    global $aroute;
+    global $afile;
     $templ = getVar('post', 'templ', 'var');
     $filelink = getVar('post', 'filelink', 'text');
     $template = getVar('post', 'template', 'raw');
@@ -121,8 +122,7 @@ function stylesave(): void {
         fclose($handle);
     }
     $templParam = $templ ? '&templ='.$templ : '';
-    header('Location: '.$aroute.'.php?name=template&op=style'.$templParam);
-    exit;
+    setRedirect($afile.'.php?name=template&op=style'.$templParam);
 }
 
 function info(): void {

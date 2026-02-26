@@ -14,11 +14,11 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function replace(): void {
-    global $aroute, $confre;
+    global $afile, $confre;
     head();
     $cont = navi(0, 0, 0, 0, 'replace');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _REPLACEINFO]);
-    $cont .= checkPerms('replace.php');
+    $cont .= checkPerms(CONFIG_DIR.'/replace.php');
     $mods = ['content', 'news'];
     $content = '';
     $k = 0;
@@ -43,7 +43,7 @@ function replace(): void {
         }
     }
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="replace"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
+    $cont .= '<form action="'.$afile.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="replace"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
     .'<script>
         var countries=new ddtabcontent("replace")
         countries.setpersist(true)
@@ -56,7 +56,7 @@ function replace(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $cont = [];
     $mods = ['content', 'news'];
     $a = 0;
@@ -72,8 +72,7 @@ function save(): void {
         $cont[$val] = $fields;
     }
     setConfigFile('replace.php', $cont);
-    header('Location: '.$aroute.'.php?name=replace');
-    exit;
+    setRedirect($afile.'.php?name=replace');
 }
 
 function info(): void {

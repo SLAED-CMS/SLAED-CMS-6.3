@@ -14,10 +14,10 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function ratings(): void {
-    global $aroute, $confra;
+    global $afile, $confra;
     head();
     $cont = navi(0, 0, 0, 0);
-    $cont .= checkPerms('ratings.php');
+    $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
     $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     $i = 0;
     $content = '';
@@ -32,27 +32,27 @@ function ratings(): void {
         $i++;
     }
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'.$content.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="ratings"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'.$content.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="ratings"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
 function save(): void {
-    global $aroute, $confra;
+    global $afile, $confra;
     $content = [];
     $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     $i = 0;
     foreach ($mods as $val) {
-        $time = (getVar('post', 'time['.$i.']', 'num') ?: 0) * 86400 ?: 2592000;
-        $in = getVar('post', $i.'in', 'num') ?: 0;
-        $view = getVar('post', $i.'view', 'num') ?: 0;
+        $time_days = getVar('post', 'time['.$i.']', 'num', 0);
+        $time = $time_days > 0 ? $time_days * 86400 : 2592000;
+        $in = getVar('post', $i.'in', 'num', 0);
+        $view = getVar('post', $i.'view', 'num', 0);
         $content[$val] = $time.'|'.$in.'|'.$view;
         $i++;
     }
     setConfigFile('ratings.php', $content);
-    header('Location: '.$aroute.'.php?name=ratings');
-    exit;
+    setRedirect($afile.'.php?name=ratings');
 }
 
 function info(): void {

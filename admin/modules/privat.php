@@ -19,12 +19,12 @@ function privat(): void {
 }
 
 function conf(): void {
-    global $aroute, $confpr;
+    global $afile, $confpr;
     head();
     $cont = navi(0, 1, 0, 0);
-    $cont .= checkPerms('privat.php');
+    $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$confpr['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
     .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confpr['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
     .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$confpr['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
@@ -45,7 +45,7 @@ function conf(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $cont = [
         'num' => getVar('post', 'num', 'num', 50),
         'anum' => getVar('post', 'anum', 'num', 50),
@@ -62,8 +62,7 @@ function save(): void {
         'act' => getVar('post', 'act', 'num')
     ];
     setConfigFile('privat.php', $cont);
-    header('Location: '.$aroute.'.php?name=privat&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=privat&op=conf');
 }
 
 function info(): void {

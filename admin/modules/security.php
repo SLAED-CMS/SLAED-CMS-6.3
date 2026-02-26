@@ -16,10 +16,10 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function security(): void {
-    global $aroute;
+    global $afile;
     head();
     $cont = navi(0, 0, 0, 0, 'security');
-    $cont .= checkPerms('security.php');
+    $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SIZE.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     
@@ -33,7 +33,7 @@ function security(): void {
             $cont .= '<tr><td>'.title_tip(_FILE.': config/logs/'.$file).$title.'</td>'
             .'<td>'.files_size($filesize).'</td>'
             .'<td>'.date(_TIMESTRING, filemtime('config/logs/'.$file)).'</td>'
-            .'<td>'.add_menu('<a href="'.$aroute.'.php?name=security&amp;op=file&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>||<a href="'.$aroute.'.php?name=security&amp;op=down&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>||<a href="'.$aroute.'.php?name=security&amp;op=del&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=file&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>||<a href="'.$afile.'.php?name=security&amp;op=down&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>||<a href="'.$afile.'.php?name=security&amp;op=del&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
     }
     $cont .= '</tbody></table>';
@@ -43,7 +43,7 @@ function security(): void {
 }
 
 function fileview(): void {
-    global $aroute;
+    global $afile;
     head();
     $cont = navi(0, 0, 0, 0, 'security');
     $fname = getVar('get', 'file', 'var');
@@ -52,7 +52,7 @@ function fileview(): void {
         $title = strtr($fname, $langs);
         $file = 'config/logs/'.$fname.'.txt';
         $content = file_get_contents($file);
-        $cont .= checkPerms('config/logs/'.$fname.'.txt');
+        $cont .= checkPerms(CONFIG_DIR.'/logs/'.$fname.'.txt');
         $cont .= setTemplateBasic('open').'<table class="sl_table_edit"><tr><td><h5>'.$title.'</h5></td></tr><tr><td>'.textarea_code('code', '', 'sl_form', 'message/http', $content).'</td></tr></table>'.setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -62,7 +62,7 @@ function fileview(): void {
 }
 
 function block(): void {
-    global $conf, $confs, $aroute;
+    global $conf, $confs, $afile;
     $time = getVar('req', 'time', 'num');
     $info = getVar('req', 'info', 'text');
     $hash = getVar('req', 'hash', 'text');
@@ -70,7 +70,7 @@ function block(): void {
     
     head();
     $cont = navi(0, 1, 1, 0, 'security');
-    $cont .= checkPerms('security.php');
+    $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<div id="tabcs0" class="tabcont">';
@@ -85,13 +85,13 @@ function block(): void {
                 .'<td>'.$mask.'</td>'
                 .'<td>'.$binfo[2].'</td>'
                 .'<td>'.rest_time($binfo[3]).'</td>'
-                .'<td>'.add_menu('<a href="'.$aroute.'.php?name=security&amp;op=blocksave&amp;ip='.$binfo[0].'&amp;ip_mask='.$binfo[1].'&amp;hash='.$binfo[2].'&amp;time='.$binfo[3].'&amp;id=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+                .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=blocksave&amp;ip='.$binfo[0].'&amp;ip_mask='.$binfo[1].'&amp;hash='.$binfo[2].'&amp;time='.$binfo[3].'&amp;id=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             }
         }
         $cont .= '</tbody></table><hr>';
     }
     $ip = getVar('get', 'new_ip', 'text');
-    $cont .= '<form action="'.$aroute.'.php?name=security" method="post"><table class="sl_table_form">'
+    $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
     .'<tr><td>'._IP.':</td><td><input type="text" name="ip" value="'.$ip.'" maxlength="255" class="sl_form" placeholder="'._IP.'" required></td></tr>'
     .'<tr><td>'._IP_MASK.':</td><td><select name="ip_mask" class="sl_form">'
     . '<option value="4"'.(($ip_mask == 4) ? ' selected' : '').'>255.255.255.255</option>'
@@ -114,7 +114,7 @@ function block(): void {
                 $cont .= '<tr><td>'.user_info($binfo[0]).'</td>'
                 .'<td>'.$binfo[2].'</td>'
                 .'<td>'.rest_time($binfo[1]).'</td>'
-                .'<td>'.add_menu('<a href="'.$aroute.'.php?name=security&amp;op=blocksave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+                .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=blocksave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             }
         }
         $cont .= '</tbody></table><hr>';
@@ -122,7 +122,7 @@ function block(): void {
     $name = getVar('get', 'name', 'name');
     $cookie = $conf['user_c'].'-close-security';
     $check = (getCookies('close-security') == '0') ? '' : ' checked';
-    $cont .= '<form action="'.$aroute.'.php?name=security" method="post"><table class="sl_table_form">'
+    $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
     .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('name', $name, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TIME.':</td><td><input type="number" name="time" value="'.$time.'" class="sl_form" placeholder="'._TIME.'" required></td></tr>'
     .'<tr><td>'._BANN_REAS.':</td><td><textarea name="info" cols="65" rows="5" class="sl_form" placeholder="'._BANN_REAS.'" required>'.$info.'</textarea></td></tr>'
@@ -142,7 +142,7 @@ function block(): void {
 }
 
 function blocksave(): void {
-    global $db, $conf, $confs, $aroute;
+    global $db, $conf, $confs, $afile;
     $send = '';
     $id = getVar('req', 'id', 'num');
     $ip = getVar('req', 'ip', 'text');
@@ -170,7 +170,7 @@ function blocksave(): void {
         $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
         $cont['blocker_user'] = $confs['blocker_user'].$name.'|'.$time.'|'.$info.'||';
         if ($mail) {
-            list($mail_addr) = $db->sql_fetchrow($db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
+            [$mail_addr] = $db->sql_fetchrow($db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
             $subject = $conf['sitename'].' - '._SECURITY;
             $msg = nl2br(bb_decode(str_replace('[time]', rest_time($time), str_replace('[info]', $info, $mailtext)), 'all'), false);
             mail_send($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);
@@ -178,18 +178,17 @@ function blocksave(): void {
         }
     }
     setConfigFile('security.php', $cont);
-    header('Location: '.$aroute.'.php?name=security&op=block'.$send);
-    exit;
+    setRedirect($afile.'.php?name=security&op=block'.$send);
 }
 
 function pass(): void {
-    global $confs, $aroute;
+    global $confs, $afile;
     head();
     $cont = navi(0, 2, 0, 0, 'security');
-    $cont .= checkPerms('security.php');
+    $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$confs['login'] || !$confs['password']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEC_AUTH_INFO]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEC_AUTH_OK]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php?name=security" method="post"><table class="sl_table_conf">'
+    $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._SEC_ADMIN_MASK.':</td><td><select name="admin_mask" class="sl_conf">';
     $cont .= '<option value="4"'.(($confs['admin_mask'] == 4) ? ' selected' : '').'>255.255.255.255</option>'
     .'<option value="3"'.(($confs['admin_mask'] == 3) ? ' selected' : '').'>255.255.255.***</option>'
@@ -209,7 +208,7 @@ function pass(): void {
 }
 
 function passsave(): void {
-    global $confs, $aroute;
+    global $confs, $afile;
     $protect = [PHP_EOL => '', ' ' => ''];
     $admin_ip = getVar('post', 'admin_ip', 'text');
     $login = getVar('post', 'login', 'text');
@@ -227,18 +226,17 @@ function passsave(): void {
     $cont['password'] = $xpassword;
     
     setConfigFile('security.php', $cont);
-    header('Location: '.$aroute.'.php?name=security&op=pass');
-    exit;
+    setRedirect($afile.'.php?name=security&op=pass');
 }
 
 function conf(): void {
-    global $confs, $aroute;
+    global $confs, $afile;
     head();
     $cont = navi(0, 3, 0, 0, 'security');
-    $cont .= checkPerms('security.php');
+    $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php?name=security" method="post"><table class="sl_table_conf">'
+    $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._SFLOOD.':</td><td><select name="flood" class="sl_conf">'
     . '<option value="0"'.(($confs['flood'] == 0) ? ' selected' : '').'>'._NO.'</option>'
     .'<option value="1"'.(($confs['flood'] == 1) ? ' selected' : '').'>'._SFLOOD_1.'</option>'
@@ -279,7 +277,7 @@ function conf(): void {
 }
 
 function confsave(): void {
-    global $confs, $aroute;
+    global $confs, $afile;
     
     $flood_t = getVar('post', 'flood_t', 'num', '1');
     $afile = getVar('post', 'afile', 'text');
@@ -330,8 +328,7 @@ function confsave(): void {
     $cont['password'] = $confs['password'];
     
     setConfigFile('security.php', $cont);
-    header('Location: '.$aroute.'.php?name=security&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=security&op=conf');
 }
 
 function info(): void {
@@ -341,22 +338,20 @@ function info(): void {
 }
 
 function down(): void {
-    global $aroute;
+    global $afile;
     $fname = getVar('get', 'file', 'var');
     if ($fname) {
         stream('config/logs/'.$fname.'.txt', date('d.m.Y').'_'.$fname.'.txt');
     } else {
-        header('Location: '.$aroute.'.php?name=security');
-        exit;
+        setRedirect($afile.'.php?name=security');
     }
 }
 
 function del(): void {
-    global $aroute;
+    global $afile;
     $fname = getVar('get', 'file', 'var');
     if ($fname) unlink('config/logs/'.$fname.'.txt');
-    header('Location: '.$aroute.'.php?name=security');
-    exit;
+    setRedirect($afile.'.php?name=security');
 }
 
 switch ($op) {
