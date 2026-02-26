@@ -5,8 +5,8 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 get_lang($conf['name']);
 
@@ -356,7 +356,7 @@ function view() {
 				$profil = ($conffo['profil'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
 				$web = ($conffo['web'] && !empty($user_website)) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
 				
-				# Будущие функции
+				# Ð‘ÑƒÐ´ÑƒÑ‰Ð¸Ðµ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸
 				#$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
 				#$thank = "<a href=\"javascript: scroll(0, 0);\" title=\""._THANK."\">"._THANK."</a>";
 				$warn = "";
@@ -384,7 +384,7 @@ function view() {
 		echo $cont;
 		foot();
 	} else {
-		header("Location: index.php?name=".$conf['name']);
+		setRedirect("index.php?name=".$conf['name']);
 	}
 }
 
@@ -440,7 +440,7 @@ function move() {
 		}
 	}
 	$link = ($catid) ? "&cat=".$catid : "";
-	header("Location: index.php?name=".$conf['name'].$link);
+	setRedirect("index.php?name=".$conf['name'].$link);
 }
 
 function add() {
@@ -459,7 +459,7 @@ function add() {
 	$where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
 	list($fstatus) = $db->sql_fetchrow($db->sql_query('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
 
-	# Редактируем сообщение или тему
+	# Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€ÑƒÐµÐ¼ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ Ð¸Ð»Ð¸ Ñ‚ÐµÐ¼Ñƒ
 	if ($conffo['add'] && $id) {
 		$fid = $id;
 		list($qpid, $uid, $subject, $time, $hometext, $field, $status) = $db->sql_fetchrow($db->sql_query('SELECT pid, uid, title, time, hometext, field, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
@@ -474,20 +474,20 @@ function add() {
 		$hometext_post = getVar('post', 'hometext', 'text');
 		$hometext = ($hometext_post) ? save_text($hometext_post) : $hometext;
 
-	# Отвечаем и создаём
+	# ÐžÑ‚Ð²ÐµÑ‡Ð°ÐµÐ¼ Ð¸ ÑÐ¾Ð·Ð´Ð°Ñ‘Ð¼
 	} elseif ($conffo['add'] && ($istopic || $isreply)) {
 		$fid = getVar('post', 'fid', 'num');
 
 		$qid = (isset($_GET['qid'])) ? intval($_GET['qid']) : "";
 		$subh = (!empty($pid) || !empty($qpid)) ? 1 : 0;
 
-		# Отвечаем в существующей теме
+		# ÐžÑ‚Ð²ÐµÑ‡Ð°ÐµÐ¼ Ð² ÑÑƒÑ‰ÐµÑÑ‚Ð²ÑƒÑŽÑ‰ÐµÐ¹ Ñ‚ÐµÐ¼Ðµ
 		if ($pid) {
 			$id = ($qid) ? $qid : $pid;
 			list($ftitle, $ftext, $status) = $db->sql_fetchrow($db->sql_query('SELECT title, hometext, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
 			$form = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
 		
-		# Создаём новую тему
+		# Ð¡Ð¾Ð·Ð´Ð°Ñ‘Ð¼ Ð½Ð¾Ð²ÑƒÑŽ Ñ‚ÐµÐ¼Ñƒ
 		} else {
 			$form = true;
 		}
@@ -596,7 +596,7 @@ function send() {
 			$where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
 			list($fstatus) = $db->sql_fetchrow($db->sql_query('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
 			
-			# Редактируем сообщение или тему
+			# Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€ÑƒÐµÐ¼ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ Ð¸Ð»Ð¸ Ñ‚ÐµÐ¼Ñƒ
 			if ($id) {
 				list($fpid, $uid, $ftime) = $db->sql_fetchrow($db->sql_query('SELECT pid, uid, time FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
 				$fpid = ($fpid) ? $fpid : $id;
@@ -609,7 +609,7 @@ function send() {
 					}
 				}
 			
-			# Отвечаем и создаём
+			# ÐžÑ‚Ð²ÐµÑ‡Ð°ÐµÐ¼ Ð¸ ÑÐ¾Ð·Ð´Ð°Ñ‘Ð¼
 			} else {
 				if ($ismod) {
 					$userinfo = getusrinfo();
@@ -626,11 +626,11 @@ function send() {
 				}
 				$insert = false;
 
-				# Отвечаем в существующей теме
+				# ÐžÑ‚Ð²ÐµÑ‡Ð°ÐµÐ¼ Ð² ÑÑƒÑ‰ÐµÑÑ‚Ð²ÑƒÑŽÑ‰ÐµÐ¹ Ñ‚ÐµÐ¼Ðµ
 				if ($pid && $isreply) {
 					$insert = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
 					
-				# Создаём новую тему
+				# Ð¡Ð¾Ð·Ð´Ð°Ñ‘Ð¼ Ð½Ð¾Ð²ÑƒÑŽ Ñ‚ÐµÐ¼Ñƒ
 				} elseif ($istopic) {
 					$insert = true;
 				}
@@ -669,12 +669,12 @@ function send() {
 			}
 			$lid = ($fpid) ? $fpid : (($pid) ? $pid."&last#".$lpost_id : "");
 			$link = ($lid) ? "&op=view&id=".$lid : "&cat=".$catid;
-			header("Location: index.php?name=".$conf['name'].$link);
+			setRedirect("index.php?name=".$conf['name'].$link);
 		} else {
 			add();
 		}
 	} else {
-		header("Location: index.php?name=".$conf['name']);
+		setRedirect("index.php?name=".$conf['name']);
 	}
 }
 
@@ -692,15 +692,15 @@ function delete() {
 		if ($ismod || ($isdelete && $uid == intval($user[0]))) {
 			$recycle = intval($conffo['recycle']);
 			
-			# Перенос в форум, используемый в качестве корзины
+			# ÐŸÐµÑ€ÐµÐ½Ð¾Ñ Ð² Ñ„Ð¾Ñ€ÑƒÐ¼, Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÐ¼Ñ‹Ð¹ Ð² ÐºÐ°Ñ‡ÐµÑÑ‚Ð²Ðµ ÐºÐ¾Ñ€Ð·Ð¸Ð½Ñ‹
 			
 			if ($recycle && $recycle != $catid) {
 				$rcatids = catids($conf['name'], $recycle);
-				# Сообщение
+				# Ð¡Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ
 				if ($pid) {
 					$db->sql_query("UPDATE ".PREFIX_DB."_forum SET pid = '0', catid = '".$recycle."' WHERE id = '".$id."'");
 					$db->sql_query("UPDATE ".PREFIX_DB."_categories SET topics = topics+1, lpost_id = '".$id."' WHERE id IN (".$rcatids.")");
-				# Тема
+				# Ð¢ÐµÐ¼Ð°
 				} else {
 					$db->sql_query("UPDATE ".PREFIX_DB."_forum SET catid = '".$recycle."' WHERE id = '".$id."' OR pid = '".$id."'");
 					list($rnpost) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_forum WHERE pid = '".$id."'"));
@@ -709,9 +709,9 @@ function delete() {
 				}
 			}
 			
-			# Синхронизация форумов и тем
+			# Ð¡Ð¸Ð½Ñ…Ñ€Ð¾Ð½Ð¸Ð·Ð°Ñ†Ð¸Ñ Ñ„Ð¾Ñ€ÑƒÐ¼Ð¾Ð² Ð¸ Ñ‚ÐµÐ¼
 			
-			# Сообщение
+			# Ð¡Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ
 			$catids = catids($conf['name'], $catid);
 
 			if ($pid) {
@@ -724,7 +724,7 @@ function delete() {
 				}
 				$db->sql_query("UPDATE ".PREFIX_DB."_categories SET posts = posts-1 WHERE id IN (".$catids.")");
 
-			# Тема
+			# Ð¢ÐµÐ¼Ð°
 			} else {
 				list($l_id) = $db->sql_fetchrow($db->sql_query("SELECT lpost_id FROM ".PREFIX_DB."_categories WHERE id = '".$catid."'"));
 				list($npost) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_forum WHERE pid = '".$id."'"));
@@ -737,27 +737,27 @@ function delete() {
 				}
 			}
 			
-			# Удаление тем и сообщений
+			# Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ‚ÐµÐ¼ Ð¸ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ð¹
 			
 			if (!$recycle || $recycle == $catid) {
 			
-				# Удаление пунктов пользователей за тему или сообщение
+				# Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð¿ÑƒÐ½ÐºÑ‚Ð¾Ð² Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ¹ Ð·Ð° Ñ‚ÐµÐ¼Ñƒ Ð¸Ð»Ð¸ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ
 				if ($uid) {
-					# Сообщение
+					# Ð¡Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ
 					if ($pid) {
 						update_points(14, $uid, 1);
-					# Тема
+					# Ð¢ÐµÐ¼Ð°
 					} else {
 						update_points(13, $uid, 1);
 					}
 				}
-				# Проверка, добавлена ли тема в фавориты, если да, удаление фаворитов и пунктов за них
+				# ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ°, Ð´Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð° Ð»Ð¸ Ñ‚ÐµÐ¼Ð° Ð² Ñ„Ð°Ð²Ð¾Ñ€Ð¸Ñ‚Ñ‹, ÐµÑÐ»Ð¸ Ð´Ð°, ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ„Ð°Ð²Ð¾Ñ€Ð¸Ñ‚Ð¾Ð² Ð¸ Ð¿ÑƒÐ½ÐºÑ‚Ð¾Ð² Ð·Ð° Ð½Ð¸Ñ…
 				list($fid, $fuid) = $db->sql_fetchrow($db->sql_query("SELECT id, uid FROM ".PREFIX_DB."_favorites WHERE fid = '".$id."' AND modul = 'forum'"));
 				if ($fid) {
 					if ($fuid) update_points(44, $fuid, 1);
 					$db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE id = '".$fid."'");
 				}
-				# Удаление темы и сообщений
+				# Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ‚ÐµÐ¼Ñ‹ Ð¸ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ð¹
 				$db->sql_query("DELETE FROM ".PREFIX_DB."_forum WHERE id = '".$id."' OR pid = '".$id."'");
 			}
 			
@@ -765,9 +765,9 @@ function delete() {
 		
 		$lid = ($pid) ? $pid."&last#".$lid : "";
 		$link = ($lid) ? "&op=view&id=".$lid : "&cat=".$catid;
-		if (!$arg[0] && !$arg[1]) header("Location: index.php?name=".$conf['name'].$link);
+		if (!$arg[0] && !$arg[1]) setRedirect("index.php?name=".$conf['name'].$link);
 	} else {
-		header("Location: index.php?name=".$conf['name']);
+		setRedirect("index.php?name=".$conf['name']);
 	}
 }
 

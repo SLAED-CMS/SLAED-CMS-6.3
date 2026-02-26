@@ -5,8 +5,8 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 get_lang($conf['name']);
 
@@ -23,7 +23,7 @@ function navigate($title, $cat='') {
 }
 
 function jokes() {
-	global $db, $admin_file, $user, $conf, $confu, $confj, $home, $op;
+	global $db, $afile, $user, $conf, $confu, $confj, $home, $op;
 	$cwhere = catmids($conf['name'], 'j.cat');
 	$word = getVar('get', 'word', 'word');
 	$unum = user_news($user[3] ?? 0, $confj['num']);
@@ -87,7 +87,7 @@ function jokes() {
 			$ctitle = ($ctitle) ? "<a href=\"index.php?name=".$conf['name']."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_cat\">".cutstr($ctitle, 15)."</a>" : "";
 			$cimg = ($cimg) ? "<a href=\"index.php?name=".$conf['name']."&amp;cat=".$cid."\" title=\"".$cdesc."\" class=\"sl_icat\"><img src=\"".img_find("categories/".$cimg)."\" alt=\"".$cdesc."\" title=\"".$cdesc."\"></a>" : "";
 			$rating = ajax_rating(1, $id, $conf['name'], $ratingtot, $rating, "");
-			$admin = (is_moder($conf['name'])) ? add_menu("<a href=\"".$admin_file.".php?op=jokes_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=jokes_delete&amp;id=".$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$jtitle."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
+			$admin = (is_moder($conf['name'])) ? add_menu("<a href=\"".$afile.".php?op=jokes_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$afile.".php?op=jokes_delete&amp;id=".$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$jtitle."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
 			$cont .= tpl_func("basic", $cid, $cimg, $ctitle, $id, $title, search_color(bb_decode($joke, $conf['name']), $word), "", $post, $date, "", "", "", $rating, $admin, '', '', '');
 		}
 		$cont .= setArticleNumbers("pagenum", $conf['name'], $unum, $field, "jokeid", "_jokes", "cat", $onum, $confj['nump']);
@@ -108,9 +108,9 @@ function add() {
 		
 		head();
 		$cont = navigate(_ADD);
-		if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
+		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		if ($joke) $cont .= preview($title, $joke, "", "", "all");
-		$cont .= tpl_warn("warn", _ADD_JNOTE, "", "", "info");
+		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADD_JNOTE]);
 		$cont .= setTemplateBasic('open');
 		$cont .= "<form name=\"post\" action=\"index.php?name=".$conf['name']."\" method=\"post\"><table class=\"sl_table_form\">";
 		if (is_user()) {
@@ -127,7 +127,7 @@ function add() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -152,13 +152,13 @@ function send() {
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confj['addmail'], $conf['name'], $puname, _JOKES);
 			head($conf['defis']." "._JOKES." ".$conf['defis']." "._ADD, _UPLOADFINISHJ);
-			echo navigate(_ADD).tpl_warn("warn", _UPLOADFINISHJ, "?name=".$conf['name'], 10, "info");
+			echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHJ]);
 			foot();
 		} else {
 			add();
 		}
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 

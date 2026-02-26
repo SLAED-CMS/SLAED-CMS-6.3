@@ -5,8 +5,8 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 get_lang($conf['name']);
 
@@ -24,7 +24,7 @@ function navigate($title, $cat='') {
 }
 
 function media() {
-	global $db, $admin_file, $user, $conf, $confu, $confm, $home, $op;
+	global $db, $afile, $user, $conf, $confu, $confm, $home, $op;
 	$cwhere = catmids($conf['name'], 'm.cid');
 	$unum = user_news($user[3] ?? 0, $confm['num']);
 	$ncat = getVar('get', 'cat', 'num');
@@ -94,7 +94,7 @@ function media() {
 			$links = (url_types($links)) ? "<span title=\""._MDOWN.": ".url_types($links)."\" class=\"sl_down\">".url_types($links)."</span>" : "";
 			$comm = ($acomm) ? "<a href=\"index.php?name=".$conf['name']."&amp;op=view&amp;id=".$id."#comm\" title=\""._COMMENTS."\" class=\"sl_coms\">".$comm."</a>" : "";
 			$rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, "");
-			$admin = (is_moder($conf['name'])) ? add_menu("<a href=\"".$admin_file.".php?op=media_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=media_delete&amp;id=".$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$mtitle."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
+			$admin = (is_moder($conf['name'])) ? add_menu("<a href=\"".$afile.".php?op=media_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$afile.".php?op=media_delete&amp;id=".$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$mtitle."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
 			$cont .= tpl_func("basic", $cid, $cimg, $ctitle, $id, $title, cutstr(bb_decode($description, $conf['name']), 800), $read, $post, $date, $reads, $links, $comm, $rating, $admin, "", "", "");
 		}
 		$cont .= setArticleNumbers("pagenum", $conf['name'], $unum, $field, "id", "_media", "cid", $onum, $confm['nump']);
@@ -144,7 +144,7 @@ function liste() {
 }
 
 function view() {
-	global $db, $admin_file, $conf, $confu, $confm;
+	global $db, $afile, $conf, $confu, $confm;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'text');
 	$cwhere = catmids($conf['name'], "m.cid");
@@ -165,7 +165,7 @@ function view() {
 		$date = ($confm['date']) ? "<span title=\""._CHNGSTORY."\" class=\"sl_date\">".format_time($date)."</span>" : "";
 		$reads = ($confm['read']) ? "<span title=\""._READS."\" class=\"sl_views\">".$hits."</span>" : "";
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, "");
-		$admin = (is_moder($conf['name'])) ? add_menu("<a href=\"".$admin_file.".php?op=media_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=media_delete&amp;id=".$id."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$ptitle."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
+		$admin = (is_moder($conf['name'])) ? add_menu("<a href=\"".$afile.".php?op=media_add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$afile.".php?op=media_delete&amp;id=".$id."\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$ptitle."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
 		$favorites = favorview($id, $conf['name']);
 		$goback = "<span OnClick=\"javascript:window.history.go(-1);\" title=\""._BACK."\" class=\"sl_but_back\">"._BACK."</span>";
 		$broc = ($confm['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCMEDIA.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
@@ -203,7 +203,7 @@ function view() {
 					}
 				}
 			} else {
-				$mlinks = tpl_warn("warn", _HIDETEXT, "", "", "info");
+				$mlinks = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _HIDETEXT]);
 			}
 		}
 		$cont .= tpl_eval("basic", $cid, $cimg, $ctitle, $id, search_color($ptitle, $word), search_color(bb_decode($description, $conf['name']), $word), "", $post, $date, $reads, "", "", $rating, $admin, $favorites, $goback, "", "", "", "", $broc, "", "", $year, $director, $roles, $createdby, $duration, $lang, $format, $quality, $size, $released, $note, _MURLS, $mlinks);
@@ -234,7 +234,7 @@ function view() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -264,9 +264,9 @@ function add() {
 		
 		head();
 		$cont = navigate(_ADD);
-		if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
+		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		if ($description) $cont .= preview($mtitle, $description, $note, "", $conf['name']);
-		$cont .= tpl_warn("warn", _ADDNOTEM, "", "", "info");
+		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADDNOTEM]);
 		$cont .= setTemplateBasic('open');
 		$cont .= "<form name=\"post\" action=\"index.php?name=".$conf['name']."\" method=\"post\"><table class=\"sl_table_form\">";
 		if (is_user()) {
@@ -332,7 +332,7 @@ function add() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -371,13 +371,13 @@ function send() {
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($confm['addmail'], $conf['name'], $puname, _MEDIA);
 			head($conf['defis']." "._MEDIA." ".$conf['defis']." "._ADD, _UPLOADFINISHM);
-			echo navigate(_ADD).tpl_warn("warn", _UPLOADFINISHM, "?name=".$conf['name'], 10, "info");
+			echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHM]);
 			foot();
 		} else {
 			add();
 		}
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -390,7 +390,7 @@ function broken() {
 		echo navigate(_BROCMEDIA).setTemplateWarning('warn', array('time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEM));
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 

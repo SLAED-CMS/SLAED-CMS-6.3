@@ -5,8 +5,8 @@
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
-	header('Location: ../../index.php');
-	exit;
+    header('Location: ../../index.php');
+    exit;
 }
 get_lang($conf['name']);
 
@@ -24,7 +24,7 @@ function navigate($title, $cat='') {
 }
 
 function help() {
-	global $db, $admin_file, $user, $conf, $confu, $confh, $home, $op;
+	global $db, $afile, $user, $conf, $confu, $confh, $home, $op;
 	$cwhere = catmids($conf['name'], 's.catid');
 	$uid = intval($user[0]);
 	$unum = user_news($user[3] ?? 0, $confh['num']);
@@ -153,7 +153,7 @@ function liste() {
 }
 
 function view() {
-	global $db, $admin_file, $user, $conf, $confu, $confh;
+	global $db, $afile, $user, $conf, $confu, $confh;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$uid = intval($user[0]);
@@ -192,7 +192,7 @@ function view() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -234,7 +234,7 @@ function add() {
 		echo $cont;
 		foot();
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
@@ -263,7 +263,7 @@ function send() {
 			add();
 		}
 	} else {
-		header('Location: index.php?name='.$conf['name']);
+		setRedirect('index.php?name='.$conf['name']);
 	}
 }
 
