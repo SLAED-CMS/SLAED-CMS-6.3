@@ -13,16 +13,16 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function editor(): void {
-    global $aroute;
+    global $afile;
+    $file = CONFIG_DIR.'/system.php';
+    $conts = is_readable($file) ? trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file))) : '';
     head();
     $cont = navi(0, 0, 0, 0);
-    $file = CONFIG_DIR.'/system.php';
-    $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EFUNC.': '.$file.' '._EINFO]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="editor"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -30,16 +30,16 @@ function editor(): void {
 }
 
 function editheader(): void {
-    global $aroute;
+    global $afile;
+    $file = CONFIG_DIR.'/header.php';
+    $conts = is_readable($file) ? trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file))) : '';
     head();
     $cont = navi(0, 1, 0, 0);
-    $file = CONFIG_DIR.'/header.php';
-    $conts = trim(str_replace(['<?php', 'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');', '?>'], '', file_get_contents($file)));
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EHEAD.': '.$file.' '._EINFO2]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="editheader"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -47,15 +47,15 @@ function editheader(): void {
 }
 
 function htaccess(): void {
-    global $aroute;
+    global $afile;
+    $file = BASE_DIR.'/.htaccess';
+    $conts = is_readable($file) ? file_get_contents($file) : '';
     head();
     $cont = navi(0, 2, 0, 0);
-    $file = BASE_DIR.'/.htaccess';
-    $conts = file_get_contents($file);
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EHT.': '.$file.' '._EINFO4]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/x-php', $conts).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="htaccess"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -63,15 +63,15 @@ function htaccess(): void {
 }
 
 function robots(): void {
-    global $aroute;
+    global $afile;
+    $file = BASE_DIR.'/robots.txt';
+    $conts = is_readable($file) ? file_get_contents($file) : '';
     head();
     $cont = navi(0, 3, 0, 0);
-    $file = BASE_DIR.'/robots.txt';
-    $conts = file_get_contents($file);
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _EROB.': '.$file.' '._EINFO5]);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/plain', $conts).'</td></tr>'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'text/plain', $conts).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="robots"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -85,15 +85,14 @@ function info(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $editor = getVar('post', 'editor', 'var');
     $file = getVar('post', 'file');
     $template = filter_input(INPUT_POST, 'template', FILTER_UNSAFE_RAW);
     $type = ['.htaccess', 'robots.txt'];
     $template = (in_array($file, $type)) ? $template : '<?php'.PHP_EOL.'if (!defined(\'FUNC_FILE\')) die(\'Illegal file access\');'.PHP_EOL.$template.PHP_EOL;
     if ($file && $template) file_put_contents($file, $template, LOCK_EX);
-    header('Location: '.$aroute.'.php?name=editor&op='.$editor);
-    exit;
+    setRedirect($afile.'.php?name=editor&op='.$editor);
 }
 
 switch ($op) {

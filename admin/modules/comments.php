@@ -20,14 +20,14 @@ function comments(): void {
 }
 
 function edit(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $id = getVar('get', 'id', 'num');
     head();
     $cont = navi(0, 0, 0, 0);
     $result = $db->sql_query('SELECT id, modul, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
-    list($id, $modul, $com_text) = $db->sql_fetchrow($result);
+    [$id, $modul, $com_text] = $db->sql_fetchrow($result);
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$aroute.'.php" method="post"><table class="sl_table_form">'
+    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._COMMENT.':</td><td>'.textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="editsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
@@ -36,21 +36,20 @@ function edit(): void {
 }
 
 function editsave(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $id = getVar('post', 'id', 'num');
-    $com_text = save_text($_POST['comment']);
+    $com_text = getVar('post', 'comment', 'text', '');
     $db->sql_query('UPDATE '.PREFIX_DB.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
-    header('Location: '.$aroute.'.php?name=comments');
-    exit;
+    setRedirect($afile.'.php?name=comments');
 }
 
 function conf(): void {
-    global $aroute, $confc;
+    global $afile, $confc;
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkPerms('comments.php');
+    $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$aroute.'.php" method="post"><table class="sl_table_conf">'
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$confc['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
     .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confc['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
     .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$confc['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
@@ -100,7 +99,7 @@ function conf(): void {
 }
 
 function save(): void {
-    global $aroute;
+    global $afile;
     $cont = [
         'num' => getVar('post', 'num', 'num', 15),
         'anum' => getVar('post', 'anum', 'num', 15),
@@ -119,18 +118,18 @@ function save(): void {
         'web' => getVar('post', 'web', 'num'),
     ];
     setConfigFile('comments.php', $cont);
-    header('Location: '.$aroute.'.php?name=comments&op=conf');
-    exit;
+    setRedirect($afile.'.php?name=comments&op=conf');
 }
 
 function act(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $get_id = getVar('get', 'id', 'num');
-    $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
+    $id = getVar('post', 'id[]', 'num', []);
+    if (!$id && $get_id) $id = [$get_id];
     if (is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
-                list($cid, $mod, $uid, $status) = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
+                [$cid, $mod, $uid, $status] = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
                 if (!$status && $cid && $mod) {
                     $db->sql_query('UPDATE '.PREFIX_DB.'_comment SET status = \'1\' WHERE id = :id', ['id' => $val]);
                     numcom($cid, $mod, 0, $uid);
@@ -138,17 +137,18 @@ function act(): void {
             }
         }
     }
-    referer($aroute.'.php?name=comments');
+    setRedirect($afile.'.php?name=comments', true);
 }
 
 function del(): void {
-    global $db, $aroute;
+    global $db, $afile;
     $get_id = getVar('get', 'id', 'num');
-    $id = getVar('post', 'id[]', 'num') ?: ($get_id ? [$get_id] : []);
+    $id = getVar('post', 'id[]', 'num', []);
+    if (!$id && $get_id) $id = [$get_id];
     if (is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
-                list($cid, $mod, $uid, $status) = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
+                [$cid, $mod, $uid, $status] = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
                 if ($cid && $mod) {
                     $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]);
                     if ($status) numcom($cid, $mod, 1, $uid);
@@ -156,7 +156,7 @@ function del(): void {
             }
         }
     }
-    referer($aroute.'.php?name=comments');
+    setRedirect($afile.'.php?name=comments', true);
 }
 
 function info(): void {

@@ -13,7 +13,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function database(): void {
-    global $db, $confdb, $aroute;
+    global $db, $confdb, $afile;
 
     $type     = getVar('get', 'type', 'var'); // '', 'optimize', 'repair'
     $ftitleth = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
@@ -104,11 +104,11 @@ function database(): void {
         } else {
             // Standardansicht mit Aktionen
             $ftitletd = add_menu(
-                '<a href="'.$aroute.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=1" '
+                '<a href="'.$afile.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=1" '
                 .'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._CLEAN.'">'._CLEAN.'</a>'
                 .'||'
-                .'<a href="'.$aroute.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=2" '
+                .'<a href="'.$afile.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=2" '
                 .'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._ONDELETE.'">'._ONDELETE.'</a>'
             );
@@ -216,7 +216,7 @@ function database(): void {
 }
 
 function dump(): void {
-    global $db, $confdb, $admin_file;
+    global $db, $confdb, $afile;
     $type = getVar('post', 'type', 'var', '');
     $pstring = filter_input(INPUT_POST, 'string', FILTER_UNSAFE_RAW) ?? '';
     head();
@@ -249,7 +249,7 @@ function dump(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _DBWARN]);
     }
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$admin_file.'.php" method="post">
+    $cont .= '<form action="'.$afile.'.php" method="post">
         <table class="sl_table_edit">
             <tr>
                 <td>'.textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($pstring)).'</td>
@@ -276,7 +276,7 @@ function info(): void {
 }
 
 function del(): void {
-    global $db, $admin_file;
+    global $db, $afile;
     $tb = getVar('get', 'tb', 'var');
     $delid = getVar('get', 'id', 'num');
     if ($tb && $delid == 1) {
@@ -284,8 +284,7 @@ function del(): void {
     } elseif ($tb && $delid == 2) {
         $db->sql_query('DROP TABLE `'.$tb.'`');
     }
-    header('Location: '.$admin_file.'.php?name=database');
-    exit;
+    setRedirect($afile.'.php?name=database');
 }
 
 switch ($op) {

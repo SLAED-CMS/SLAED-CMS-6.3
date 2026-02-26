@@ -102,7 +102,7 @@ function fileadd(): void {
     global $afile;
     head();
     $cont = navi(0, 2, 0, 0);
-    $cont .= checkPerms('blocks/', 1);
+    $cont .= checkPerms(BASE_DIR.'/blocks/');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILENAME.':</td><td><input type="text" name="bf" maxlength="200" class="sl_form" placeholder="'._FILENAME.'" required></td></tr>'
@@ -139,13 +139,12 @@ function fix(): void {
     foreach ($pos as $val) {
         $result = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE bposition = :val ORDER BY weight ASC', ['val' => $val]);
         $weight = 0;
-        while (list($bid) = $db->sql_fetchrow($result)) {
+        while ([$bid] = $db->sql_fetchrow($result)) {
             $weight++;
             $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $bid]);
         }
     }
-    header('Location: '.$afile.'.php?name=blocks');
-    exit;
+    setRedirect($afile.'.php?name=blocks');
 }
 
 function addsave(): void {
@@ -163,8 +162,8 @@ function addsave(): void {
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
     $url = ($headline) ? $headline : $url;
-    $blockwhere = getVar('post', 'blockwhere[]', 'var') ?: [];
-    list($weight) = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC', ['bposition' => $bposition]));
+    $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
+    [$weight] = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC', ['bposition' => $bposition]));
     $weight++;
     $bkey = '';
     $btime = '';
@@ -195,8 +194,7 @@ function addsave(): void {
         $db->sql_query('INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bposition, :weight, :active, :refresh, :btime, :blanguage, :blockfile, :view, :expire, :action, :which)', [
             'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
         ]);
-        header('Location: '.$afile.'.php?name=blocks');
-        exit;
+        setRedirect($afile.'.php?name=blocks');
     }
 }
 
@@ -223,10 +221,10 @@ function filecode(): void {
         }
         head();
         $cont = navi(0, 3, 0, 0);
-        $cont .= checkPerms('blocks/', 1);
+        $cont .= checkPerms(BASE_DIR.'/blocks/');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _BLOCK.': '.$bf]);
         if (file_exists('blocks/'.$bf)) {
-            $cont .= checkPerms('blocks/'.$bf, 1);
+            $cont .= checkPerms(BASE_DIR.'/blocks/'.$bf);
             $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _B_FEDIT]);
         }
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
@@ -242,8 +240,7 @@ function filecode(): void {
         echo $cont;
         foot();
     } else {
-        header('Location: '.$afile.'.php?name=blocks&op=file');
-        exit;
+        setRedirect($afile.'.php?name=blocks&op=file');
     }
 }
 
@@ -260,10 +257,9 @@ function filecodesave(): void {
                 $html_b = "\$content = <<<BLOCKHTML\r\n";
                 $html_e = "\r\nBLOCKHTML;\r\n";
             }
-            fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
+            fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
             fclose($handle);
-            header('Location: '.$afile.'.php?name=blocks');
-            exit;
+            setRedirect($afile.'.php?name=blocks');
         }
     }
 }
@@ -273,7 +269,7 @@ function edit(): void {
     head();
     $cont = navi(0, 1, 0, 0);
     $bid = getVar('get', 'bid', 'num');
-    list($bkey, $title, $content, $url, $bposition, $weight, $active, $refresh, $blanguage, $blockfile, $view, $expire, $action, $which) = $db->sql_fetchrow($db->sql_query('SELECT bkey, title, content, url, bposition, weight, active, refresh, blanguage, blockfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]));
+    [$bkey, $title, $content, $url, $bposition, $weight, $active, $refresh, $blanguage, $blockfile, $view, $expire, $action, $which] = $db->sql_fetchrow($db->sql_query('SELECT bkey, title, content, url, bposition, weight, active, refresh, blanguage, blockfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]));
     if ($url != '') {
         $type = '('._BLOCKRSS.')';
     } elseif ($blockfile != '') {
@@ -334,7 +330,7 @@ function edit(): void {
     .'<option value="f"'.$sel6.'>'._BANNERDOWN.'</option>'
     .'</select></td></tr>';
     $cont .= '<tr><td>'._BLOCK_VIEW.':</td><td><table>';
-    $where_mas = explode(',', $which);
+    $where_mas = explode(',', $which ?? '');
     $a = 2;
     $i = 1;
     $modules = getBlockModules();
@@ -414,7 +410,7 @@ function editsave(): void {
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
-    $blockwhere = getVar('post', 'blockwhere[]', 'var') ?: [];
+    $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
     if (isset($blockwhere)) {
         $which = '';
         if (in_array('all', $blockwhere)) $which = 'all';
@@ -447,16 +443,16 @@ function editsave(): void {
             $result = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
             $fweight = $weight;
             $oweight = $weight;
-            while (list($nbid) = $db->sql_fetchrow($result)) {
+            while ([$nbid] = $db->sql_fetchrow($result)) {
                 $weight++;
                 $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $nbid]);
             }
             $result2 = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bposition = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldposition]);
-            while (list($obid) = $db->sql_fetchrow($result2)) {
+            while ([$obid] = $db->sql_fetchrow($result2)) {
                 $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE bid = :bid', ['oweight' => $oweight, 'bid' => $obid]);
                 $oweight++;
             }
-            list($lastw) = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC LIMIT 0,1', ['bposition' => $bposition]));
+            [$lastw] = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC LIMIT 0,1', ['bposition' => $bposition]));
             if ($lastw <= $fweight) {
                 $lastw++;
                 $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bposition = :bposition, weight = :weight, active = :active, refresh = :refresh, blanguage = :blanguage, blockfile = :blockfile, view = :view WHERE bid = :bid', [
@@ -472,23 +468,22 @@ function editsave(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
             ]);
         }
-        header('Location: '.$afile.'.php?name=blocks');
-        exit;
+        setRedirect($afile.'.php?name=blocks');
     } else {
         if ($oldposition != $bposition) {
             $result = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
             $fweight = $weight;
             $oweight = $weight;
-            while (list($nbid) = $db->sql_fetchrow($result)) {
+            while ([$nbid] = $db->sql_fetchrow($result)) {
                 $weight++;
                 $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $nbid]);
             }
             $result2 = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bposition = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldposition]);
-            while (list($obid) = $db->sql_fetchrow($result2)) {
+            while ([$obid] = $db->sql_fetchrow($result2)) {
                 $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE bid = :bid', ['oweight' => $oweight, 'bid' => $obid]);
                 $oweight++;
             }
-            list($lastw) = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC LIMIT 0,1', ['bposition' => $bposition]));
+            [$lastw] = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC LIMIT 0,1', ['bposition' => $bposition]));
             if ($lastw <= $fweight) {
                 $lastw++;
                 $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bposition = :bposition, weight = :weight, active = :active, refresh = :refresh, blanguage = :blanguage, blockfile = :blockfile, view = :view WHERE bid = :bid', [
@@ -506,8 +501,7 @@ function editsave(): void {
                 'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
             ]);
         }
-        header('Location: '.$afile.'.php?name=blocks');
-        exit;
+        setRedirect($afile.'.php?name=blocks');
     }
 }
 
@@ -517,22 +511,20 @@ function change(): void {
     $act = getVar('get', 'act', 'num', 0);
     $active = ($act) ? 0 : 1;
     $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET active = :active WHERE bid = :id', ['active' => $active, 'id' => $id]);
-    header('Location: '.$afile.'.php?name=blocks');
-    exit;
+    setRedirect($afile.'.php?name=blocks');
 }
 
 function del(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    list($bposition, $weight) = $db->sql_fetchrow($db->sql_query('SELECT bposition, weight FROM '.PREFIX_DB.'_blocks WHERE bid = :id', ['id' => $id]));
+    [$bposition, $weight] = $db->sql_fetchrow($db->sql_query('SELECT bposition, weight FROM '.PREFIX_DB.'_blocks WHERE bid = :id', ['id' => $id]));
     $result = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight > :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
-    while (list($nbid) = $db->sql_fetchrow($result)) {
+    while ([$nbid] = $db->sql_fetchrow($result)) {
         $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $nbid]);
         $weight++;
     }
     $db->sql_query('DELETE FROM '.PREFIX_DB.'_blocks WHERE bid = :id', ['id' => $id]);
-    header('Location: '.$afile.'.php?name=blocks');
-    exit;
+    setRedirect($afile.'.php?name=blocks');
 }
 
 function info(): void {

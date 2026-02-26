@@ -20,7 +20,7 @@ function admins(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._URL.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE.'</th><th>'._IP.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     $result = $db->sql_query('SELECT id, name, title, url, email, lang, ip, regdate, lastvisit FROM '.PREFIX_DB.'_admins ORDER BY id');
-    while (list($id, $name, $title, $url, $email, $lang, $ip, $regdate, $lastvisit) = $db->sql_fetchrow($result)) {
+    while ([$id, $name, $title, $url, $email, $lang, $ip, $regdate, $lastvisit] = $db->sql_fetchrow($result)) {
         $lang = (!$lang) ? _ALL : $lang;
         $cont .= '<tr><td>'.title_tip(_REG.': '.format_time($regdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($lastvisit, _TIMESTRING)).$name.'</td><td>'.$title.'</td><td>'.domain($url).'</td><td>'.mailto($email).'</td><td>'.deflang($lang).'</td><td>'.user_geo_ip($ip, 4).'</td>'
         .'<td>'.add_menu('<a href="'.$afile.'.php?name=admins&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=admins&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
@@ -36,7 +36,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->sql_query('SELECT id, name, title, url, email, super, editor, smail, modules, lang FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
-        list($aid, $name, $title, $url, $email, $super, $editor, $smail, $modules, $lang) = $db->sql_fetchrow($result);
+        [$aid, $name, $title, $url, $email, $super, $editor, $smail, $modules, $lang] = $db->sql_fetchrow($result);
         $modules = $modules ?? '';
         $names = getAdminModuleNames($modules);
         $new_modules = implode(',', $names);
@@ -50,7 +50,7 @@ function add(): void {
         $title = getVar('post', 'title', 'title', '');
         $email = getVar('post', 'email', '', '');
         $url = getVar('post', 'url', 'url', 'https://');
-        $amodules = getVar('post', 'amodules[]', 'var') ?: [];
+        $amodules = getVar('post', 'amodules[]', 'var', []);
         $modules = $amodules ? implode(',', $amodules) : '';
         $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
         $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
@@ -60,7 +60,7 @@ function add(): void {
     head();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-    $check = (empty($_COOKIE['sl_close_9'])) ? '' : ' checked';
+    $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php?name=admins" method="post">'
     .'<input type="hidden" name="op" value="save">'
@@ -117,19 +117,19 @@ function save(): void {
     $pwd = getVar('post', 'pwd', '', 0);
     $pwd2 = getVar('post', 'pwd2', '', 0);
     $lang = getVar('post', 'lang');
-    $amodules = getVar('post', 'amodules[]', 'var') ?: [];
+    $amodules = getVar('post', 'amodules[]', 'var', []);
     $modules = $amodules ? implode(',', $amodules) : '';
     $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
     $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
     $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
     $mail = getVar('post', 'mail');
-    $stop = array();
+    $stop = [];
     $send = '';
     if (!$aid && !$pwd && !$pwd2) $stop[] = _NOPASS;
     if ($name) {
-        list($adid, $adname) = $db->sql_fetchrow($db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name]));
+        [$adid, $adname] = $db->sql_fetchrow($db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name]));
         if ($aid != $adid && $name == $adname) $stop[] = _USEREXIST;
-        list($adid, $ademail) = $db->sql_fetchrow($db->sql_query('SELECT id, email FROM '.PREFIX_DB.'_admins WHERE email = :email', ['email' => $email]));
+        [$adid, $ademail] = $db->sql_fetchrow($db->sql_query('SELECT id, email FROM '.PREFIX_DB.'_admins WHERE email = :email', ['email' => $email]));
         if ($aid != $adid && $email == $ademail) $stop[] = _ERROR_EMAIL;
     } else {
         $stop[] = _ERROR_ALL;
@@ -162,8 +162,7 @@ function save(): void {
             mail_send($email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
-        header('Location: '.$afile.'.php?name=admins'.$send);
-        exit;
+        setRedirect($afile.'.php?name=admins'.$send);
     } else {
         add();
     }
@@ -171,10 +170,11 @@ function save(): void {
 
 function del(): void {
     global $db, $afile;
-    $id = getVar('get', 'id', 'num');
-    $db->sql_query('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
-    header('Location: '.$afile.'.php?name=admins');
-    exit;
+    $id = getVar('get', 'id', 'num', 0);
+    if ($id) {
+        $db->sql_query('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
+    }
+    setRedirect($afile.'.php?name=admins');
 }
 
 function info(): void {

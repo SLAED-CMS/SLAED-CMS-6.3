@@ -17,7 +17,7 @@ function config(): void {
     global $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0, 'config');
-    $cont .= checkPerms('global.php');
+    $cont .= checkPerms(CONFIG_DIR.'/global.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post">'
     .'<div id="tabc0" class="tabcont">'
@@ -305,8 +305,8 @@ function save(): void {
     for ($i = 0; $i < 9; $i++) $xvariables[] = in_array((string)$i, $xvar, true) ? '1' : '0';
     $xvariables = implode(',', $xvariables);
 
-    $xcensor_r = strtolower(strtr(getVar('post', 'censor_r', 'text') ?: '', $protect));
-    $xcensor_l = strtolower(strtr(getVar('post', 'censor_l', 'text') ?: '', $protect));
+    $xcensor_r = strtolower(strtr(getVar('post', 'censor_r', 'text', ''), $protect));
+    $xcensor_l = strtolower(strtr(getVar('post', 'censor_l', 'text', ''), $protect));
     $xcensor = (!$xcensor_r || !$xcensor_l) ? 0 : getVar('post', 'censor', 'num');
     $xsearch = getVar('post', 'search[]', 'var');
     $xsearch = $xsearch ? implode(',', $xsearch) : '0';
@@ -345,12 +345,12 @@ function save(): void {
         'sblock' => getVar('post', 'sblock', 'num'),
         'adminfo' => getVar('post', 'adminfo', 'num'),
         'close' => getVar('post', 'close', 'num'),
-        'defis' => urlencode(getVar('post', 'defis', 'let') ?: '|'),
+        'defis' => urlencode(getVar('post', 'defis', 'let', '|')),
         'dletter' => getVar('post', 'dletter', 'num', 160),
         'ltitle' => getVar('post', 'ltitle', 'num'),
         'adesc' => getVar('post', 'adesc', 'num'),
-        'sep' => urlencode(getVar('post', 'sep', 'let') ?: '-'),
-        'tsep' => urlencode(getVar('post', 'tsep', 'let') ?: '-'),
+        'sep' => urlencode(getVar('post', 'sep', 'let', '-')),
+        'tsep' => urlencode(getVar('post', 'tsep', 'let', '-')),
         'rewrite' => getVar('post', 'rewrite', 'num'),
         'title' => getVar('post', 'title', 'num'),
         'ctitle' => getVar('post', 'ctitle', 'num'),
@@ -372,8 +372,8 @@ function save(): void {
         'snum' => getVar('post', 'snum', 'num'),
         'snump' => getVar('post', 'snump', 'num'),
         'asearch' => getVar('post', 'asearch', 'num'),
-        'bots' => strtr(getVar('post', 'bots', 'text') ?: '', $kprotect),
-        'fbots' => strtr(getVar('post', 'fbots', 'text') ?: '', $kprotect),
+        'bots' => strtr(getVar('post', 'bots', 'text', ''), $kprotect),
+        'fbots' => strtr(getVar('post', 'fbots', 'text', ''), $kprotect),
         'botsact' => getVar('post', 'botsact', 'num'),
         'cache' => getVar('post', 'cache', 'num'),
         'cache_t' => getVar('post', 'cache_t', 'num', 60),
@@ -381,12 +381,12 @@ function save(): void {
         'cache_c' => getVar('post', 'cache_c', 'num'),
         'cache_b' => getVar('post', 'cache_b', 'num'),
         'cache_css' => getVar('post', 'cache_css', 'num'),
-        'css_f' => strtr(getVar('post', 'css_f', 'text') ?: 'templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/', $kprotect),
+        'css_f' => strtr(getVar('post', 'css_f', 'text', 'templates/[theme]/,plugins/jquery/ui/,plugins/fancybox/,plugins/uploadify/,plugins/syntaxhighlighter/styles/'), $kprotect),
         'css_h' => getVar('post', 'css_h', 'num'),
         'css_c' => getVar('post', 'css_c', 'num'),
         'css_e' => getVar('post', 'css_e', 'num'),
         'cache_script' => getVar('post', 'cache_script', 'num'),
-        'script_f' => strtr(getVar('post', 'script_f', 'text') ?: 'plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js', $kprotect),
+        'script_f' => strtr(getVar('post', 'script_f', 'text', 'plugins/system/global-func.js,plugins/jquery/jquery.js,plugins/jquery/ui/jquery-ui.js,plugins/jquery/jquery.tablesorter.js,plugins/jquery/jquery.cookie.js,plugins/fancybox/jquery.mousewheel.js,plugins/fancybox/jquery.fancybox.js,plugins/jquery/jquery.slaed.js'), $kprotect),
         'script_h' => getVar('post', 'script_h', 'num'),
         'script_c' => getVar('post', 'script_c', 'num'),
         'script_a' => getVar('post', 'script_a', 'num'),
@@ -400,8 +400,7 @@ function save(): void {
         'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='
     ];
     setConfigFile('global.php', $cont);
-    header('Location: '.$afile.'.php?name=config');
-    exit;
+    setRedirect($afile.'.php?name=config');
 }
 
 function info(): void {
