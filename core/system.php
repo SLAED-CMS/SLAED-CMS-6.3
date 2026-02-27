@@ -112,6 +112,7 @@ function setConfigFingerprint(string $local_file, string $fingerprint): void {
 # System file include
 require_once BASE_DIR.'/core/security.php';
 require_once BASE_DIR.'/core/legacy.php';
+require_once BASE_DIR.'/core/template.php';
 
 if (defined('MODULE_FILE')) {
     require_once BASE_DIR.'/core/user.php';
@@ -1456,7 +1457,6 @@ function setThemeInclude(): void {
     $theme = $theme ?: getTheme();
     $idx = BASE_DIR.'/templates/'.$theme.'/index.php';
     if (is_file($idx)) require_once $idx;
-    require_once BASE_DIR.'/core/template.php';
 }
 
 # Format theme
