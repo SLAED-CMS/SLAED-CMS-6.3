@@ -49,6 +49,10 @@ function getCommandOutput(string $command): array {
     if (!function_exists('exec')) {
         return [];
     }
+    // Defense-in-depth: this helper must execute only static internal commands.
+    if (preg_match('/[;&|`><\r\n]/', $command)) {
+        return [];
+    }
     $output = [];
     exec($command, $output);
     return $output;
@@ -191,29 +195,18 @@ function getMonitor(): void {
     $diskpct = ($disk_total > 0) ? round(($disk_used / $disk_total) * 100, 1) : 0;
     $net = getNetworkStats();
 
-    $uptime = 'N/A';
-    if (!isWindows()) {
-        $upt = isProcReadable('/proc/uptime') ? file_get_contents('/proc/uptime') : false;
-        if ($upt) {
-            $upt = explode(' ', $upt)[0];
-            $days = floor($upt / 86400);
-            $hours = floor(($upt % 86400) / 3600);
-            $mins = floor(($upt % 3600) / 60);
-            $uptime = "$days d, $hours:$mins";
-        }
-    } else {
-        $uptime = 'Windows';
-    }
-
     $userson = $db->sql_numrows($db->sql_query('SELECT id FROM '.PREFIX_DB.'_session'));
 
     // DB Stats
     $dbsize = 0;
     $dbtabs = 0;
-    $db_result = $db->sql_query('SHOW TABLE STATUS FROM '.$confdb['name']);
-    while ($row = $db->sql_fetchrow($db_result)) {
-        $dbsize += $row['Data_length'] + $row['Index_length'];
-        $dbtabs++;
+    $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($confdb['name'] ?? ''));
+    if ($dbname !== '') {
+        $db_result = $db->sql_query('SHOW TABLE STATUS FROM `'.$dbname.'`');
+        while ($row = $db->sql_fetchrow($db_result)) {
+            $dbsize += $row['Data_length'] + $row['Index_length'];
+            $dbtabs++;
+        }
     }
 
     $servsw = getServerSoftware();

@@ -52,7 +52,7 @@ if (&#036;userip == &#036;userlang) { <br>
 echo &#039;&lt;meta http-equiv=&quot;refresh&quot; content=&quot;0; url=&#039;.&#036;metlink.&#039;&quot;&gt;&#039;; <br>
 }[/php]<br>
 [justify]&#036;userlang – responsible for the name of the country from which the visitor came.<br>
-The country name must not be arbitrary and must comply with the standards for using the class. The correct spelling of a country can be checked in the &#036;COUNTRY_NAMES variable of the file: core/geo_ip.php<br>
+The country name must not be arbitrary and must comply with the standards for using the class. Use user_geo_ip() output as the valid country value reference.<br>
 &#036;metlink – responsible for the page to which the visitor will be redirected.<br>
 Instead of: news.html specify the required page or website.<br>
 <br>

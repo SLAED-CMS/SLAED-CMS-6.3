@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -27,7 +27,7 @@ function getAdminMenu(string $url, string $title, string $image, string $class =
 }
 
 function getAdminPanelBlocks(): string {
-    global $confmd, $panel, $locale, $aroute;
+    global $confmd, $panel, $locale, $afile;
     if (!$panel) {
         $cont = '';
         if (is_admin_god()) {
@@ -35,7 +35,7 @@ function getAdminPanelBlocks(): string {
                 if (($mod['type'] ?? 1) == 0) {
                     $class = (!$mod['active']) ? ' sl_hidden' : '';
                     $cont .= getAdminMenu(
-                        $aroute.'.php?name='.$name,
+                        $afile.'.php?name='.$name,
                         (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
                         $mod['img'],
                         $class,
@@ -52,7 +52,7 @@ function getAdminPanelBlocks(): string {
                     if (file_exists($path.'/index.php')) {
                         $class = (!$mod['active']) ? ' sl_hidden' : '';
                         $cont .= getAdminMenu(
-                            $aroute.'.php?name='.$name,
+                            $afile.'.php?name='.$name,
                             (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
                             $mod['img'],
                             $class,
@@ -69,7 +69,7 @@ function getAdminPanelBlocks(): string {
 }
 
 function getAdminPanel(): void {
-    global $confmd, $conf, $panel, $count, $aroute, $locale, $class;
+    global $confmd, $conf, $panel, $count, $afile, $locale, $class;
     head();
     $content = '';
     $minver = '8.1.0';
@@ -85,7 +85,7 @@ function getAdminPanel(): void {
                 if (($mod['type'] ?? 1) == 0) {
                     $class = (!$mod['active']) ? ' sl_hidden' : '';
                     $cont .= getAdminMenu(
-                        $aroute.'.php?name='.$name,
+                        $afile.'.php?name='.$name,
                         (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
                         $mod['img'],
                         $class,
@@ -103,7 +103,7 @@ function getAdminPanel(): void {
                     if (file_exists($path.'/index.php')) {
                         $class = (!$mod['active']) ? ' sl_hidden' : '';
                         $cont .= getAdminMenu(
-                            $aroute.'.php?name='.$name,
+                            $afile.'.php?name='.$name,
                             (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']),
                             $mod['img'],
                             $class,
@@ -121,7 +121,7 @@ function getAdminPanel(): void {
 
 # OLD FUNCTIONS - REFAKTORING NEEDED
 function add_admin() {
-    global $db, $aroute, $conf, $stop;
+    global $db, $afile, $conf, $stop;
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $aname = $_POST['aname'];
         $aurl = url_filter($_POST['aurl']);
@@ -144,17 +144,17 @@ function add_admin() {
                 if ($user_exist) $db->sql_query('DELETE FROM '.PREFIX_DB."_users WHERE user_name='".$aname."'");
                 $db->sql_query('INSERT INTO '.PREFIX_DB."_users (user_id, user_name, user_email, user_website, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_block, user_warnings, user_field) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."', '', '', '')");
             }
-            header('Location: '.$aroute.'.php');
+            header('Location: '.$afile.'.php');
         } else {
             login();
         }
     } else {
-        header('Location: '.$aroute.'.php');
+        header('Location: '.$afile.'.php');
     }
 }
 
 function check_admin() {
-    global $db, $aroute, $conf, $stop;
+    global $db, $afile, $conf, $stop;
     if (($conf['gfx_chk'] == 1 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) && checkCaptcha(2)) $stop = _SECCODEINCOR;
     $name = htmlspecialchars(trim(substr($_POST['name'], 0, 25)));
     $pwd = htmlspecialchars(trim(substr($_POST['pwd'], 0, 25)));
@@ -171,7 +171,7 @@ function check_admin() {
         $db->sql_query('DELETE FROM '.PREFIX_DB."_session WHERE uname = '".$ip."'");
         $db->sql_query('UPDATE '.PREFIX_DB."_admins SET ip = '".$ip."', lastvisit = now() WHERE id = '".$aid."'");
         login_report(1, 1, $name, '');
-        header('Location: '.$aroute.'.php');
+        header('Location: '.$afile.'.php');
     } else {
         login_report(1, 0, $name, $pwd);
         login();
@@ -179,22 +179,22 @@ function check_admin() {
 }
 
 function login() {
-    global $db, $aroute, $conf, $stop;
+    global $db, $afile, $conf, $stop;
     head();
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
-        $cont .= tpl_eval('registration', $aroute, _NICKNAME, $_POST['aname'], _HOMEPAGE, get_host(), _EMAIL, $_POST['aemail'], _PASSWORD, _RETYPEPASSWORD, _CREATEUSERDATA, _YES, _NO, _SEND);
+        $cont .= setTemplateBasic('registration', ['{%route%}' => $afile, '{%nickname%}' => _NICKNAME, '{%aname%}' => $_POST['aname'], '{%homepage%}' => _HOMEPAGE, '{%host%}' => get_host(), '{%email%}' => _EMAIL, '{%aemail%}' => $_POST['aemail'], '{%password%}' => _PASSWORD, '{%retype%}' => _RETYPEPASSWORD, '{%createuserdata%}' => _CREATEUSERDATA, '{%yes%}' => _YES, '{%no%}' => _NO, '{%send%}' => _SEND]);
     } else {
         $captcha = ($conf['gfx_chk'] == 1 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
-        $cont .= tpl_eval('login', $aroute, _NICKNAME, _PASSWORD, $captcha, _LOGIN);
+        $cont .= setTemplateBasic('login', ['{%route%}' => $afile, '{%nickname%}' => _NICKNAME, '{%password%}' => _PASSWORD, '{%captcha%}' => $captcha, '{%login%}' => _LOGIN]);
     }
     echo $cont;
     foot();
 }
 
 function changeeditor() {
-    global $db, $admin, $aroute, $conf;
+    global $db, $admin, $afile, $conf;
     $editor = (isset($_POST['editor'])) ? intval($_POST['editor']) : intval($conf['redaktor']);
     $aid = intval(substr($admin[0], 0, 11));
     $info = base64_decode($_SESSION[$conf['admin_c']]);
@@ -202,15 +202,15 @@ function changeeditor() {
     unset($_SESSION[$conf['admin_c']]);
     $_SESSION[$conf['admin_c']] = $sinfo;
     $db->sql_query('UPDATE '.PREFIX_DB."_admins SET editor = '".$editor."' WHERE id = '".$aid."'");
-    referer($aroute.'.php');
+    setRedirect($afile.'.php', true);
 }
 
 function logout() {
-    global $db, $admin, $aroute, $conf;
+    global $db, $admin, $afile, $conf;
     $aname = text_filter(substr($admin[1], 0, 25), 1);
     $db->sql_query('DELETE FROM '.PREFIX_DB."_session WHERE uname = '".$aname."' AND guest = '3'");
     unset($_SESSION[$conf['admin_c']], $admin);
-    header('Location: '.$aroute.'.php');
+    header('Location: '.$afile.'.php');
 }
 
 if (is_admin()) {
@@ -250,3 +250,4 @@ if (is_admin()) {
         case 'check_admin'; check_admin(); break;
     }
 }
+

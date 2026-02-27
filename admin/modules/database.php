@@ -18,8 +18,16 @@ function database(): void {
     $type     = getVar('get', 'type', 'var'); // '', 'optimize', 'repair'
     $ftitleth = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
 
+    $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($confdb['name'] ?? ''));
+    if ($dbname === '') {
+        head();
+        echo navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _ERROR]);
+        foot();
+        return;
+    }
+
     // Tabelleninfos einmal einlesen
-    $result = $db->sql_query('SHOW TABLE STATUS FROM `'.$confdb['name'].'`');
+    $result = $db->sql_query('SHOW TABLE STATUS FROM `'.$dbname.'`');
     $tables = [];
     while ($info = $db->sql_fetchrow($result)) {
         $tables[] = $info;
@@ -52,11 +60,11 @@ function database(): void {
         // --- Exakte Zeilenzahl per COUNT(*) (MyISAM & InnoDB) ---
         $rows = (int) $info['Rows']; // Fallback
 
-        $rowResult = $db->sql_query(
+        $res = $db->sql_query(
             'SELECT COUNT(*) AS cnt FROM `'.$confdb['name'].'`.`'.$name.'`'
         );
-        if ($rowResult && $rowData = $db->sql_fetchrow($rowResult)) {
-            $rows = (int) $rowData['cnt'];
+        if ($res && $row = $db->sql_fetchrow($res)) {
+            $rows = (int) $row['cnt'];
         }
         $total_rows += $rows;
 
@@ -77,9 +85,12 @@ function database(): void {
         }
 
         // --- Status / Actions depending on mode ---
+        if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
+            continue;
+        }
         if ($type === 'optimize') {
-            $db->sql_query('ANALYZE TABLE `'.$confdb['name'].'`.`'.$name.'`');
-            $oresult = $db->sql_query('OPTIMIZE TABLE `'.$confdb['name'].'`.`'.$name.'`');
+            $db->sql_query('ANALYZE TABLE `'.$dbname.'`.`'.$name.'`');
+            $oresult = $db->sql_query('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
 
             if (!$oresult) {
                 $ftitletd = '<div class="sl_red">'._ERROR.'</div>';
@@ -95,7 +106,7 @@ function database(): void {
             if ($tabeng === 'InnoDB') {
                 $ftitletd = '<div class="sl_hidden">'._NO.'</div>';
             } else {
-                $rresult  = $db->sql_query('REPAIR TABLE `'.$confdb['name'].'`.`'.$name.'`');
+                $rresult  = $db->sql_query('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
                 $ftitletd = $rresult
                     ? '<div class="sl_green">'._OK.'</div>'
                     : '<div class="sl_red">'._ERROR.'</div>';
@@ -146,7 +157,7 @@ function database(): void {
 
     // After OPTIMIZE: Totals to recalculate info box
     if ($type === 'optimize') {
-        $result    = $db->sql_query('SHOW TABLE STATUS FROM `'.$confdb['name'].'`');
+        $result    = $db->sql_query('SHOW TABLE STATUS FROM `'.$dbname.'`');
         $total     = 0;
         $totalfree = 0;
 
@@ -181,7 +192,7 @@ function database(): void {
         $db->sql_query('FLUSH TABLES');
         $cont = navi(0, 1, 0, 0);
 
-        $infoText = _OPTIMIZE.': '.$confdb['name']
+        $info = _OPTIMIZE.': '.$confdb['name']
                   . '<br>'._TOTALSPACE.': '.files_size($total)
                   . '<br>'._TOTALFREE.': '.files_size($totalfree);
 
@@ -189,13 +200,13 @@ function database(): void {
             'time' => '',
             'url'  => '',
             'id'   => 'info',
-            'text' => $infoText
+            'text' => $info
         ]);
 
     } elseif ($type === 'repair') {
         $cont = navi(0, 2, 0, 0);
 
-        $infoText = _REPAIR.': '.$confdb['name']
+        $info = _REPAIR.': '.$confdb['name']
                   . '<br>'._TOTALSPACE.': '.files_size($total)
                   . '<br>'._TOTALFREE.': '.files_size($totalfree);
 
@@ -203,7 +214,7 @@ function database(): void {
             'time' => '',
             'url'  => '',
             'id'   => 'info',
-            'text' => $infoText
+            'text' => $info
         ]);
     }
 
@@ -279,6 +290,7 @@ function del(): void {
     global $db, $afile;
     $tb = getVar('get', 'tb', 'var');
     $delid = getVar('get', 'id', 'num');
+    $tb = preg_match('#^[a-zA-Z0-9_]+$#', (string)$tb) ? $tb : '';
     if ($tb && $delid == 1) {
         $db->sql_query('TRUNCATE TABLE `'.$tb.'`');
     } elseif ($tb && $delid == 2) {

@@ -437,7 +437,6 @@ function editsave(): void {
     }
     if ($url) {
         $bkey = '';
-        $btime = time();
         $content = rss_read($url, 1);
         if ($oldposition != $bposition) {
             $result = $db->sql_query('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);

@@ -118,9 +118,9 @@ function save(): void {
     if (!$content) $stop[] = _CERROR1;
     if (!$stop && $posttype == 'save') {
         if ($mid) {
-            $result = $db->sql_query('UPDATE '.PREFIX_DB.'_message SET title = :title, content = :content, expire = :expire, active = :active, view = :view, mlanguage = :mlanguage WHERE mid = :mid', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage, 'mid' => $mid]);
+            $db->sql_query('UPDATE '.PREFIX_DB.'_message SET title = :title, content = :content, expire = :expire, active = :active, view = :view, mlanguage = :mlanguage WHERE mid = :mid', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage, 'mid' => $mid]);
         } else {
-            $result = $db->sql_query('INSERT INTO '.PREFIX_DB.'_message (mid, title, content, expire, active, view, mlanguage) VALUES (NULL, :title, :content, :expire, :active, :view, :mlanguage)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage]);
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_message (mid, title, content, expire, active, view, mlanguage) VALUES (NULL, :title, :content, :expire, :active, :view, :mlanguage)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage]);
         }
         setRedirect($afile.'.php?name=messages');
     } elseif ($posttype == 'delete') {
