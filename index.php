@@ -97,7 +97,7 @@ if (empty($go)) {
                 exit;
             } else {
                 head();
-                echo tpl_warn('warn', _HOMEPROBLEMUSER, '', '', 'warn');
+                echo setTemplateWarning('warn', ['text' => _HOMEPROBLEMUSER, 'url' => '', 'time' => 0, 'id' => 'warn']);
                 foot();
                 exit;
             }
@@ -107,7 +107,6 @@ if (empty($go)) {
     $fdsize = isset($_FILES['file']['size']) ? $_FILES['file']['size'] : '';
     if (!intval($fdsize) && !stristr(getenv('HTTP_REFERER'), get_host())) die('Illegal file access');
     if ($go == 1) {
-        setThemeInclude();
         setCache('0');
         switch($op) {
             case 'rating': rating(); break;
@@ -131,7 +130,6 @@ if (empty($go)) {
         }
     } elseif ($go == 2) {
         get_lang('shop');
-        setThemeInclude();
         setCache('0');
         require_once CONFIG_DIR.'/shop.php';
         switch($op) {
@@ -166,7 +164,6 @@ if (empty($go)) {
         if (is_admin_god()) {
             define('ADMIN_FILE', true);
             get_lang('admin');
-            setThemeInclude();
             setCache('0');
             require_once BASE_DIR.'/core/admin.php';
             switch($op) {

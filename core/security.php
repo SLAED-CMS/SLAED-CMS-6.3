@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -33,8 +33,6 @@ define('PREFIX_DB', $conf['db']['prefix']);
 
 # Security and routing aliases
 $afile = $conf['security']['afile'];
-$aroute = $conf['security']['afile'];
-$admin_file = $conf['security']['afile'];
 
 # Transition aliases - existing code references these globals; remove after full migration to $conf
 $confdb  = $conf['db']         ?? [];
@@ -250,7 +248,7 @@ if ($bcookie == 'block') {
 }
 
 $confs['error_log'] = 1;
-# Error reporting log — NDJSON (one JSON object per line, AI-ready schema)
+# Error reporting log â€” NDJSON (one JSON object per line, AI-ready schema)
 if ($confs['error_log']) {
     # --- Inline helpers (closures only, no new named functions) ---
 
@@ -323,7 +321,7 @@ if ($confs['error_log']) {
         'mem_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 2),
     ];
 
-    // Stable fingerprint: type|file|line|msg-normalized — no errno (unstable for exceptions)
+    // Stable fingerprint: type|file|line|msg-normalized â€” no errno (unstable for exceptions)
     $lfp = function(string $type, string $file, string $line, string $msg): string {
         $norm = preg_replace(['/\d+/', '/\s+/'], ['#', ' '], substr($msg, 0, 200));
         return substr(sha1($type . '|' . $file . '|' . $line . '|' . $norm), 0, 8);
@@ -345,7 +343,7 @@ if ($confs['error_log']) {
         file_put_contents($log, $line . PHP_EOL, FILE_APPEND | LOCK_EX);
     };
 
-    # HTTP error → error_site.log
+    # HTTP error â†’ error_site.log
     if (isset($_GET['error'])) {
         $error = intval($_GET['error']);
         $http = [
@@ -410,7 +408,7 @@ if ($confs['error_log']) {
         setExit('Error ' . $error, 1);
     }
 
-    # PHP errors → error_php.log
+    # PHP errors â†’ error_php.log
     function error_reporting_log($errno, $errmsg, $errfile, $errline) {
         global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
         // level: error|warning|notice  php_err: human label
@@ -426,10 +424,10 @@ if ($confs['error_log']) {
             256 => ['error', 'USER_ERROR'],
             512 => ['warning', 'USER_WARNING'],
             1024 => ['notice', 'USER_NOTICE'],
-            2048 => ['notice', 'STRICT'], // notice — not warning
+            2048 => ['notice', 'STRICT'], // notice â€” not warning
             4096 => ['error', 'RECOVERABLE_ERROR'],
-            8192 => ['notice', 'DEPRECATED'], // notice — not warning
-            16384 => ['notice', 'USER_DEPRECATED'], // notice — not warning
+            8192 => ['notice', 'DEPRECATED'], // notice â€” not warning
+            16384 => ['notice', 'USER_DEPRECATED'], // notice â€” not warning
         ];
         [$level, $phperr] = $levelmap[$errno] ?? ['error', 'UNKNOWN'];
         $log = LOGS_DIR . '/error_php.log';
@@ -475,7 +473,7 @@ if ($confs['error_log']) {
         $lexcepted = true;
     });
 
-    // Shutdown: real fatals only (E_ERROR etc.) — skip if exception handler already logged this event
+    // Shutdown: real fatals only (E_ERROR etc.) â€” skip if exception handler already logged this event
     register_shutdown_function(function() use ($ls, $lwrite, $lfp, &$lexcepted) {
         if ($lexcepted) return;
         $e = error_get_last();
@@ -508,7 +506,7 @@ if ($confs['error_log']) {
         }
     });
 
-    # SQL errors → error_sql.log
+    # SQL errors â†’ error_sql.log
     function error_sql_log($errno, $error, $sql) {
         global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
         $log = LOGS_DIR . '/error_sql.log';
@@ -696,7 +694,7 @@ function is_admin_god() {
             $pwd = htmlspecialchars(substr($admin[2], 0, 40));
             $ip = getIp();
             if ($id && $name && $pwd && $ip) {
-                list($aname, $apwd, $aip) = $db->sql_fetchrow($db->sql_query("SELECT name, pwd, ip FROM ".PREFIX_DB."_admins WHERE id = '".$id."' AND super = '1'"));
+                list($aname, $apwd, $aip) = $db->sql_fetchrow($db->sql_query("SELECT name, pwd, ip FROM ".PREFIX_DB."_admins WHERE id = :id AND super = '1'", ['id' => $id]));
                 if ($aname == $name && $aname != '' && $apwd == $pwd && $apwd != '' && $aip == $ip && $aip != '') {
                     $godtrue = 1;
                     return $godtrue;
@@ -971,7 +969,7 @@ function zip_compress($src, $dst) {
  *
  * @param string $var     'post', 'get' oder 'req'
  * @param string $key     Name des Parameters (Bracket-Notation: field[0], field[])
- * @param string $type    Typ für Filterung: num, let, word, name, title, text, field, url, var, bool, raw
+ * @param string $type    Typ fÃ¼r Filterung: num, let, word, name, title, text, field, url, var, bool, raw
  * @param mixed  $default Standardwert, falls Parameter fehlt
  * @return mixed Gefilterter Wert oder Default / false
  */
@@ -983,9 +981,9 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
     if (preg_match('/^([^\[]+)\[(\d*)\]$/', $key, $matches)) {
         $key = $matches[1];  // field
         if ($matches[2] === '') {
-            $is_array_all = true;  // field[] → ganzes Array
+            $is_array_all = true;  // field[] â†’ ganzes Array
         } else {
-            $array_index = (int)$matches[2];  // field[0] → Index
+            $array_index = (int)$matches[2];  // field[0] â†’ Index
         }
     }
 
@@ -1083,7 +1081,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         if (is_string($value)) $value = trim($value);
     }
 
-    // Leere Werte → false
+    // Leere Werte â†’ false
     return ($value !== '' && $value !== null) ? $value : false;
 }
 
@@ -1229,7 +1227,7 @@ function text_filter($message, $type='') {
 
 # Length center filter
 function cutstrc($linkstrip, $strip) {
-    if (strlen($linkstrip) > $strip) $linkstrip = substr($linkstrip, 0, $strip - 19).'…'.substr($linkstrip, -16);
+    if (strlen($linkstrip) > $strip) $linkstrip = substr($linkstrip, 0, $strip - 19).'â€¦'.substr($linkstrip, -16);
     return $linkstrip;
 }
 
@@ -1405,3 +1403,4 @@ function doWarnReport($msg) {
     }
     setExit(_WARN.'!', 1);
 }
+
