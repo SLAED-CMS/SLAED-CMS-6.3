@@ -7,15 +7,14 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Show comments and form
-function setComShow() {
+function setComShow(int $id = 0, int $cid = 0): string {
     global $conf, $confu, $confc, $user;
-    $arg = func_get_args();
-    $cont = '<a id="comm"></a><div id="repcsave">'.ashowcom($arg[0], $conf['name']).'</div>';
+    $cont = '<a id="comm"></a><div id="repcsave">'.ashowcom($id, $conf['name']).'</div>';
     if (!is_user() && $confc['anonpost'] == 0) {
         $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOANONCOMMENTS));
     } else {
         $userinfo = getusrinfo();
-        if ($arg[1] == 1 || $userinfo['user_acess'] || (!is_user() && $confc['anonpost'] == 1)) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE));
+        if ($cid == 1 || $userinfo['user_acess'] || (!is_user() && $confc['anonpost'] == 1)) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE));
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" id="formcsave" method="post">'
         .'<table class="sl_table_form">';
@@ -25,7 +24,7 @@ function setComShow() {
             $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="name" value="'._ANONYM.'" maxlength="25" class="sl_field '.$conf['style'].'"></td></tr>';
         }
         $cont .= '<tr><td>'._COMMENT.':</td><td>'.textarea(1, 'text', '', $conf['name'], '5').'</td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" OnClick="AjaxLoad(\'POST\', \'0\', \'csave\', \'go=1&amp;op=savecom&amp;id='.$arg[0].'&amp;cid='.$arg[1].'&amp;mod='.$conf['name'].'\', { \'text\':\''._CERROR1.'\' }); ClearForm(formcsave); return false;" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';
+        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" OnClick="AjaxLoad(\'POST\', \'0\', \'csave\', \'go=1&amp;op=savecom&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'\', { \'text\':\''._CERROR1.'\' }); ClearForm(formcsave); return false;" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
     }
     return $cont;
@@ -35,12 +34,16 @@ function setComShow() {
 function setMessageShow() {
     global $db, $afile, $conf, $currentlang;
     if ($conf['message'] == 1) {
-        $querylang = ($conf['multilingual'] == 1) ? "AND (mlanguage = '".$currentlang."' OR mlanguage = '')" : '';
-        $result = $db->sql_query("SELECT mid, title, content, expire, view FROM ".PREFIX_DB."_message WHERE active = '1' ".$querylang);
+        $params = [];
+        $querylang = ($conf['multilingual'] == 1) ? 'AND (mlanguage = :lang OR mlanguage = \'\')' : '';
+        if ($conf['multilingual'] == 1) {
+            $params['lang'] = $currentlang;
+        }
+        $result = $db->sql_query('SELECT mid, title, content, expire, view FROM '.PREFIX_DB.'_message WHERE active = 1 '.$querylang, $params);
         if ($db->sql_numrows($result) > 0) {
             while (list($mid, $title, $content, $expire, $view) = $db->sql_fetchrow($result)) {
                 $mid = intval($mid);
-                if ($expire && $expire < time()) $db->sql_query("UPDATE ".PREFIX_DB."_message SET active = '0', expire = '0' WHERE mid = '".$mid."'");
+                if ($expire && $expire < time()) $db->sql_query('UPDATE '.PREFIX_DB.'_message SET active = 0, expire = 0 WHERE mid = :mid', ['mid' => $mid]);
                 $content = bb_decode($content, 'all');
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? display_time($exp) : _UNLIMITED;
@@ -134,7 +137,7 @@ function navi() {
     foreach ($title as $key => $val) {
         $cont .= '<div class="sl_catflex-box"><a href="'.$link[$key].'" title="'.$ititle[$key].'"><img src="'.img_find($img[$key]).'" alt="'.$ititle[$key].'" title="'.$ititle[$key].'"><br>'.$title[$key].'</a></div>';
     }
-    return tpl_eval('open').'<div class="sl_catflex-cont">'.$cont.'</div>'.tpl_eval('close');
+    return setTemplateBasic('open', []).'<div class="sl_catflex-cont">'.$cont.'</div>'.setTemplateBasic('close', []);
 }
 
 # Check group
@@ -168,7 +171,7 @@ function getusrinfo() {
     global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     if (is_user() && $uid) {
-        $info = $db->sql_fetchrow($db->sql_query("SELECT * FROM ".PREFIX_DB."_users WHERE user_id = '".$uid."'"));
+        $info = $db->sql_fetchrow($db->sql_query('SELECT * FROM '.PREFIX_DB.'_users WHERE user_id = :uid', ['uid' => $uid]));
         return $info;
     }
 }
@@ -179,7 +182,7 @@ function userblock() {
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
-        list($userblock) = $db->sql_fetchrow($db->sql_query("SELECT user_block FROM ".PREFIX_DB."_users WHERE user_id = '".$uid."'"));
+        list($userblock) = $db->sql_fetchrow($db->sql_query('SELECT user_block FROM '.PREFIX_DB.'_users WHERE user_id = :uid', ['uid' => $uid]));
         $userblock = bb_decode($userblock, 'account');
         return setTemplateBlock('', array('{%title%}' => _MENUFOR, '{%content%}' => $userblock));
     }
@@ -188,13 +191,13 @@ function userblock() {
 # Save comments
 function savecom() {
     global $db, $user, $conf, $confc;
-    $id = (isset($_POST['id'])) ? intval($_POST['id']) : 0;
-    $cid = (isset($_POST['cid'])) ? intval($_POST['cid']) : 0;
-    $mod = (isset($_POST['mod'])) ? analyze($_POST['mod']) : "";
-    $postname = (isset($_POST['name'])) ? text_filter(substr($_POST['name'], 0, 25)) : "";
-    $ip = getip();
-    $comment = trim($_POST['text']);
-    list($date) = $db->sql_fetchrow($db->sql_query("SELECT date FROM ".PREFIX_DB."_comment WHERE host_name = '".$ip."' ORDER BY id DESC LIMIT 1"));
+    $id       = getVar('post', 'id',   'num',  0);
+    $cid      = getVar('post', 'cid',  'num',  0);
+    $mod      = analyze(getVar('post', 'mod',  'text', ''));
+    $postname = text_filter(substr(getVar('post', 'name', 'raw', ''), 0, 25));
+    $ip       = getip();
+    $comment  = trim(getVar('post', 'text', 'raw', ''));
+    list($date) = $db->sql_fetchrow($db->sql_query('SELECT date FROM '.PREFIX_DB.'_comment WHERE host_name = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
     $stime = strtotime($date) + $confc['send'];
     $checks = str_replace(array("\n", "\r", "\t"), " ", $comment);
     $e = explode(" ", $checks);
@@ -219,16 +222,19 @@ function savecom() {
             $postname = $postname;
             $status = (!is_moder($mod) && ($cid == 1 || $confc['anonpost'] == 1)) ? 0 : 1;
         }
-        $db->sql_query("INSERT INTO ".PREFIX_DB."_comment VALUES (NULL, '".$id."', '".$mod."', NOW(), '".$postid."', '".$postname."', '".$ip."', '".$comment."', '".$status."')");
+        $db->sql_query(
+            'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :host_name, :comment, :status)',
+            ['cid' => $id, 'modul' => $mod, 'uid' => $postid, 'name' => $postname, 'host_name' => $ip, 'comment' => $comment, 'status' => $status]
+        );
         if ($status) numcom($id, $mod, 0, $postid);
-        list($lcom_id) = $db->sql_fetchrow($db->sql_query("SELECT id FROM ".PREFIX_DB."_comment WHERE cid = '".$id."' AND uid = '".$postid."' ORDER BY id DESC LIMIT 1"));
+        list($lcom_id) = $db->sql_fetchrow($db->sql_query('SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1', ['cid' => $id, 'uid' => $postid]));
         $finishlink = $conf['homeurl']."/index.php?name=".$mod."&amp;op=view&amp;id=".$id."#".$lcom_id;
         $clink = "<a href=\"".$finishlink."\">".$finishlink."</a>";
         addmail($confc['addmail'], $mod, $postname, deflmconst($mod), 1, $clink);
         echo ashowcom($id, $mod);
     } else {
         $stop = ($stop) ? $stop : _ERROR;
-        echo tpl_warn("warn", $stop, "", "", "warn");
+        echo setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
     }
 }
 
@@ -236,19 +242,22 @@ function savecom() {
 function editpost() {
     global $db, $user, $conf;
     $conffo = $conf['forum'] ?? [];
-    $id = (isset($_POST['id'])) ? ((isset($_POST['id'])) ? intval($_POST['id']) : "") : ((isset($_GET['id'])) ? intval($_GET['id']) : "");
-    $catid = (isset($_POST['cid'])) ? ((isset($_POST['cid'])) ? intval($_POST['cid']) : "") : ((isset($_GET['cid'])) ? intval($_GET['cid']) : "");
-    $typ = (isset($_POST['typ'])) ? ((isset($_POST['typ'])) ? intval($_POST['typ']) : "") : ((isset($_GET['typ'])) ? intval($_GET['typ']) : "");
-    $mod = (isset($_POST['mod'])) ? ((isset($_POST['mod'])) ? analyze($_POST['mod']) : "") : ((isset($_GET['mod'])) ? analyze($_GET['mod']) : "");
-    $text = (isset($_POST['text'])) ? trim($_POST['text']) : "";
+    $id    = getVar('post', 'id',  'num',  0)  ?: getVar('get', 'id',  'num',  0);
+    $catid = getVar('post', 'cid', 'num',  0)  ?: getVar('get', 'cid', 'num',  0);
+    $typ   = getVar('post', 'typ', 'num',  0)  ?: getVar('get', 'typ', 'num',  0);
+    $mod   = analyze(getVar('post', 'mod', 'text', '') ?: getVar('get', 'mod', 'text', ''));
+    $text  = trim(getVar('post', 'text', 'raw', ''));
     if ($conffo['add'] && $id && $catid) {
-        list($auth_edit, $auth_mod) = $db->sql_fetchrow($db->sql_query("SELECT auth_edit, auth_mod FROM ".PREFIX_DB."_categories WHERE id = '".$catid."'"));
+        list($auth_edit, $auth_mod) = $db->sql_fetchrow($db->sql_query('SELECT auth_edit, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $isedit = is_acess($auth_edit);
         $ismod = is_acess($auth_mod);
-        list($pid, $uid, $hometext, $fstatus) = $db->sql_fetchrow($db->sql_query("SELECT pid, uid, hometext, status FROM ".PREFIX_DB."_forum WHERE id = '".$id."'"));
+        list($pid, $uid, $hometext, $fstatus) = $db->sql_fetchrow($db->sql_query('SELECT pid, uid, hometext, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
         if ($pid) {
-            $where = (is_moder(isset($conf['name']))) ? "WHERE id = '".$pid."'" : "WHERE id = '".$pid."' AND status != '0'";
-            list($fstatus) = $db->sql_fetchrow($db->sql_query("SELECT status FROM ".PREFIX_DB."_forum ".$where));
+            if (is_moder(isset($conf['name']))) {
+                list($fstatus) = $db->sql_fetchrow($db->sql_query('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
+            } else {
+                list($fstatus) = $db->sql_fetchrow($db->sql_query('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :pid AND status != 0', ['pid' => $pid]));
+            }
         }
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             if (!$text) {
@@ -265,39 +274,37 @@ function editpost() {
                 if ($o > $conffo['letter']) $stop[] = _CERROR2;
                 if (!$stop) {
                     $htext = save_text($text);
-                    $db->sql_query("UPDATE ".PREFIX_DB."_forum SET hometext = '".$htext."', e_uid = '".$postid."', e_ip_send = '".$ip."', e_time = NOW() WHERE id = '".$id."'");
+                    $db->sql_query(
+                        'UPDATE '.PREFIX_DB.'_forum SET hometext = :hometext, e_uid = :e_uid, e_ip_send = :e_ip_send, e_time = NOW() WHERE id = :id',
+                        ['hometext' => $htext, 'e_uid' => $postid, 'e_ip_send' => $ip, 'id' => $id]
+                    );
                     echo bb_decode($htext, $mod);
                 } else {
-                    return tpl_warn("warn", $stop, "", "", "warn");
+                    return setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
                 }
             }
         } else {
-            return tpl_warn("warn", _ERROR, "", "", "warn");
+            return setTemplateWarning('warn', ['text' => _ERROR, 'url' => '', 'time' => 0, 'id' => 'warn']);
         }
     } else {
-        return tpl_warn("warn", _ERROR, "", "", "warn");
+        return setTemplateWarning('warn', ['text' => _ERROR, 'url' => '', 'time' => 0, 'id' => 'warn']);
     }
 }
 
 # Private messages input view
-function prmess() {
+function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0): string {
     global $db, $user, $conf, $confu, $confpr;
-    $arg = func_get_args();
-    $obj = analyze($arg[0]);
-    $stop = $arg[1];
-    $info = $arg[2];
-    $typ = ($arg[3]) ? $arg[3] : intval($_GET['typ']);
+    $typ = $typ ?: getVar('get', 'typ', 'num', 0);
     $uid = intval($user[0]);
     $newlistnum = intval($confpr['num']);
-    $num = isset($_GET['cid']) ? intval($_GET['cid']) : 1;
+    $num = getVar('get', 'cid', 'num', 1);
     $offset = ($num-1) * $newlistnum;
     $offset = intval($offset);
     $conf['name'] = "account";
     $conf['style'] = ($conf['style']) ? $conf['style'] : "sl_account";
-    setThemeInclude();
     $cont = "";
     if ($typ == 1) {
-        list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin = '".$uid."' AND status <= '1'"));
+        list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status <= 1', ['uid' => $uid]));
         $fstatus = '';
         if ($pr_num >= $confpr['messin']) {
             $messinfo = sprintf(_PRINEXIT, $confpr['messin']);
@@ -307,13 +314,13 @@ function prmess() {
             $messinfo = sprintf(_PRINMAX, $confpr['messin'], $pr_num, $acmess);
             $fstatus = "info";
         }
-        if ($fstatus) $cont .= tpl_warn("warn", $messinfo, "", "", $fstatus);
+        if ($fstatus) $cont .= setTemplateWarning('warn', ['text' => $messinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
         if ($stop) {
-            $cont .= tpl_warn("warn", $stop, "", "", "warn");
+            $cont .= setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
         } elseif ($info) {
-            $cont .= tpl_warn("warn", $info, "", "", "info");
+            $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'info']);
         }
-        $result = $db->sql_query("SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM ".PREFIX_DB."_privat AS p LEFT JOIN ".PREFIX_DB."_users AS u ON (p.uidout = u.user_id) WHERE p.uidin = '".$uid."' AND p.status <= '1' ORDER BY p.date DESC LIMIT ".$offset.", ".$newlistnum);
+        $result = $db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.user_id) WHERE p.uidin = :uid AND p.status <= 1 ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->sql_numrows($result) > 0) {
             $cont .= "<table class=\"sl_table_list\"><thead class=\"sl_table_list_head\"><tr><th>"._TITLE."</th><th>"._PRSE."</th><th>"._DATE."</th><th>"._FUNCTIONS."</th></tr></thead><tbody class=\"sl_table_list_body\">";
             while (list($id, $uidin, $uidout, $title, $date, $status, $user_name) = $db->sql_fetchrow($result)) {
@@ -337,7 +344,7 @@ function prmess() {
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $confpr['nump'], $num, "0", "1", "prmess", "prmessin", "", "1", "");
     } elseif ($typ == 2) {
-        $result = $db->sql_query("SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM ".PREFIX_DB."_privat AS p LEFT JOIN ".PREFIX_DB."_users AS u ON (p.uidin = u.user_id) WHERE p.uidout = '".$uid."' AND p.status <= '1' ORDER BY p.date DESC LIMIT ".$offset.", ".$newlistnum);
+        $result = $db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.user_id) WHERE p.uidout = :uid AND p.status <= 1 ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->sql_numrows($result) > 0) {
             $cont .= "<table class=\"sl_table_list\"><thead class=\"sl_table_list_head\"><tr><th>"._TITLE."</th><th>"._PRRE."</th><th>"._DATE."</th><th>"._FUNCTIONS."</th></tr></thead><tbody class=\"sl_table_list_body\">";
             while (list($id, $uidin, $uidout, $title, $date, $status, $user_name) = $db->sql_fetchrow($result)) {
@@ -360,11 +367,11 @@ function prmess() {
         } else {
             $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
         }
-        list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidout = '".$uid."' AND status <= '1'"));
+        list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidout = :uid AND status <= 1', ['uid' => $uid]));
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $confpr['nump'], $num, "0", "1", "prmess", "prmessou", "", "2", "");
     } elseif ($typ == 3) {
-        list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin = '".$uid."' AND status = '2'"));
+        list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status = 2', ['uid' => $uid]));
         $fstatus = '';
         if ($pr_num >= $confpr['messsav']) {
             $messinfo = sprintf(_PRSAVEEXIT, $confpr['messsav']);
@@ -374,8 +381,8 @@ function prmess() {
             $messinfo = sprintf(_PRSAVEMAX, $confpr['messsav'], $pr_num, $acmess);
             $fstatus = "info";
         }
-        if ($fstatus) $cont .= tpl_warn("warn", $messinfo, "", "", $fstatus);
-        $result = $db->sql_query("SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM ".PREFIX_DB."_privat AS p LEFT JOIN ".PREFIX_DB."_users AS u ON (p.uidout=u.user_id) WHERE p.uidin = '".$uid."' AND p.status = '2' ORDER BY p.date DESC LIMIT ".$offset.", ".$newlistnum);
+        if ($fstatus) $cont .= setTemplateWarning('warn', ['text' => $messinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
+        $result = $db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout=u.user_id) WHERE p.uidin = :uid AND p.status = 2 ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->sql_numrows($result) > 0) {
             $cont .= "<table class=\"sl_table_list\"><thead class=\"sl_table_list_head\"><tr><th>"._TITLE."</th><th>"._PRSE."</th><th>"._DATE."</th><th>"._FUNCTIONS."</th></tr></thead><tbody class=\"sl_table_list_body\">";
             while (list($id, $uidin, $uidout, $title, $date, $status, $user_name) = $db->sql_fetchrow($result)) {
@@ -393,13 +400,13 @@ function prmess() {
         $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $confpr['nump'], $num, "0", "1", "prmess", "prmesssa", "", "3", "");
     } elseif ($typ == 4) {
         if ($stop) {
-            $cont .= tpl_warn("warn", $stop, "", "", "warn");
+            $cont .= setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
         } elseif ($info) {
-            $cont .= tpl_warn("warn", $info, "", "", "info");
+            $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'info']);
         }
-        $id = (isset($_GET['id'])) ? intval($_GET['id']) : 0;
-        $qid = (isset($_GET['cid'])) ? intval($_GET['cid']) : 0;
-        $mod = (isset($_GET['mod'])) ? intval($_GET['mod']) : 0;
+        $id  = getVar('get', 'id',  'num', 0);
+        $qid = getVar('get', 'cid', 'num', 0);
+        $mod = getVar('get', 'mod', 'num', 0);
         if ($mod == 1) {
             $prmid = "prmessin";
         } elseif ($mod == 2) {
@@ -411,16 +418,16 @@ function prmess() {
         }
         if ($id) {
             if ($qid == "2") {
-                list($idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name) = $db->sql_fetchrow($db->sql_query("SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.ip_sender, p.status, u.user_name FROM ".PREFIX_DB."_privat AS p LEFT JOIN ".PREFIX_DB."_users AS u ON (p.uidin = u.user_id) WHERE p.id = '".$id."' AND p.uidout = '".$uid."' LIMIT 1"));
+                list($idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name) = $db->sql_fetchrow($db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.ip_sender, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.user_id) WHERE p.id = :id AND p.uidout = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
             } else {
-                list($idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name) = $db->sql_fetchrow($db->sql_query("SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.ip_sender, p.status, u.user_name FROM ".PREFIX_DB."_privat AS p LEFT JOIN ".PREFIX_DB."_users AS u ON (p.uidout = u.user_id) WHERE p.id = '".$id."' AND p.uidin = '".$uid."' LIMIT 1"));
-                if (!$status) $db->sql_query("UPDATE ".PREFIX_DB."_privat SET status = '1' WHERE id = '".$id."' AND uidin = '".$uid."' AND status != '2'");
+                list($idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name) = $db->sql_fetchrow($db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.ip_sender, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.user_id) WHERE p.id = :id AND p.uidin = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
+                if (!$status) $db->sql_query('UPDATE '.PREFIX_DB.'_privat SET status = 1 WHERE id = :id AND uidin = :uid AND status != 2', ['id' => $id, 'uid' => $uid]);
             }
             if ($idp) {
                 # UNBEKANTE VARIABLEN INITIALISIERUNG VERHINDERN
                 $com_name = $com_id = "";
 
-                $result = $db->sql_query("SELECT u.user_id, u.user_name, u.user_rank, u.user_email, u.user_website, u.user_avatar, u.user_regdate, u.user_from, u.user_sig, u.user_viewemail, u.user_points, u.user_warnings, u.user_gender, u.user_votes, u.user_totalvotes, g.name, g.rank, g.color FROM ".PREFIX_DB."_users AS u LEFT JOIN ".PREFIX_DB."_groups AS g ON ((g.extra=1 AND u.user_group=g.id) OR (g.extra!=1 AND u.user_points>=g.points)) WHERE u.user_id = '".$uidout."' ORDER BY g.extra DESC, g.points DESC");
+                $result = $db->sql_query('SELECT u.user_id, u.user_name, u.user_rank, u.user_email, u.user_website, u.user_avatar, u.user_regdate, u.user_from, u.user_sig, u.user_viewemail, u.user_points, u.user_warnings, u.user_gender, u.user_votes, u.user_totalvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.user_group=g.id) OR (g.extra!=1 AND u.user_points>=g.points)) WHERE u.user_id = :uidout ORDER BY g.extra DESC, g.points DESC', ['uidout' => $uidout]);
                 list($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor) = $db->sql_fetchrow($result);
                 $avname = ($user_name) ? $user_name : $com_name." ("._ANONYM.")";
                 $date = "<span title=\""._PADD."\" class=\"sl_t_post\">".format_time($date, _TIMESTRING)."</span>";
@@ -437,27 +444,23 @@ function prmess() {
                 $gender = ($user_gender) ? _GENDER.": ".gender($user_gender) : "";
                 $from = ($user_from) ? _FROM.": ".$user_from : "";
                 $sig = ($user_sig) ? "<hr>".$user_sig : "";
-                $personal = (!$qid || $qid == "1") ? "<a href=\"javascript: InsertCode('name', '".$avname."', '', '', '1');\" title=\""._PERSONAL."\" class=\"sl_but_blue\">"._PERS."</a>" : "";
                 $profil = ($confpr['profil'] && $user_name) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
                 $web = ($confpr['web'] && $user_website) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
                 
-                # Будущие функции
-                #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
-                #$thank = "<a href=\"javascript: scroll(0, 0);\" title=\""._THANK."\">"._THANK."</a>";
-                $warn = "";
-                $thank = "";
+
                 
                 $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? add_menu("<a OnClick=\"AjaxLoad('GET', '0', '".$prmid."', 'go=1&amp;op=prmessdel&amp;id=".$idp."&amp;typ=".$mod."', ''); return false;\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
-                $cont .= tpl_eval("privat-message", $avname, $date, $ip, cutstr($title, 35), $avatar, $rank, $rlink, $rate, $rwarn, $group, $point, $regdate, $gender, $from, bb_decode($content, $conf['name']), bb_decode($sig, $conf['name']), $personal, $profil, $web, $warn, $thank, $edit);
+                $cont .= setTemplateBasic("privat-message", ['{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%title%}' => cutstr($title, 35), '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => bb_decode($content, $conf['name']), '{%sig%}' => bb_decode($sig, $conf['name']), '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_edit%}' => $edit]);
             }
         }
         if (!$info && (!$qid || $qid == "1")) {
-            $sendname = (isset($_POST['name'])) ? ((isset($_POST['name'])) ? text_filter(substr($_POST['name'], 0, 25)) : "") : ((isset($_GET['uname'])) ? text_filter(substr(urldecode($_GET['uname']), 0, 25)) : "");
-            $sеndtitle = (isset($_POST['title'])) ? text_filter(trim($_POST['title'])) : "";
-            $sеndcontent = (isset($_POST['text'])) ? text_filter(trim($_POST['text'])) : "";
-            $rpost = ($sendname) ? $sendname : (($user_name ?? '') ? $user_name : "");
-            $rtitle = ($sеndtitle) ? $sеndtitle : (($title ?? '') ? _PRREP.": ".$title : "");
-            $rcontent = ($sеndcontent) ? $sеndcontent : (($content ?? '') ? "[quote]".$content."[/quote]" : "");
+            $raw = getVar('post', 'name', 'raw', '') ?: urldecode(getVar('get', 'uname', 'raw', ''));
+            $sname = text_filter(substr($raw, 0, 25));
+            $stitle = text_filter(trim(getVar('post', 'title', 'raw', '')));
+            $stext = text_filter(trim(getVar('post', 'text', 'raw', '')));
+            $rpost = ($sname) ? $sname : (($user_name ?? '') ? $user_name : "");
+            $rtitle = ($stitle) ? $stitle : (($title ?? '') ? _PRREP.": ".$title : "");
+            $rcontent = ($stext) ? $stext : (($content ?? '') ? "[quote]".$content."[/quote]" : "");
             
             $idp = ($id) ? "2" : "1";
             $cont .= "<form name=\"post\" id=\"form".$prmid."\" method=\"post\">"
@@ -468,21 +471,23 @@ function prmess() {
             ."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"submit\" OnClick=\"AjaxLoad('POST', '0', '".$prmid."', 'go=1&amp;op=prmesssend', { 'name':'"._CERROR6."' }); return false;\" value=\""._SEND."\" title=\""._SEND."\" class=\"sl_but_blue\"></td></tr></table></form>";
         }
     }
-    if ($obj) { return $cont; } else { echo $cont; }
+    if ($obj) { return $cont; }
+    echo $cont;
+    return '';
 }
 
 # Private message send and save
 function prmesssend() {
     global $db, $user, $conf, $confpr;
-    $postname = (isset($_POST['name'])) ? text_filter(substr($_POST['name'], 0, 25)) : "";
-    $title = trim($_POST['title']);
-    $text = trim($_POST['text']);
+    $postname = text_filter(substr(getVar('post', 'name',  'raw', ''), 0, 25));
+    $title    = trim(getVar('post', 'title', 'raw', ''));
+    $text     = trim(getVar('post', 'text',  'raw', ''));
     $ip = getip();
 
     $uidin = (is_user_id($postname)) ? is_user_id($postname) : "";
     $uidout = (is_user()) ? intval($user[0]) : "";
     
-    list($date) = $db->sql_fetchrow($db->sql_query("SELECT date FROM ".PREFIX_DB."_privat WHERE uidout = '".$uidout."' ORDER BY id DESC LIMIT 1"));
+    list($date) = $db->sql_fetchrow($db->sql_query('SELECT date FROM '.PREFIX_DB.'_privat WHERE uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidout' => $uidout]));
     $stime = strtotime($date) + $confpr['send'];
     $checks = str_replace(array("\n", "\r", "\t"), " ", $text);
     $e = explode(" ", $checks);
@@ -501,18 +506,18 @@ function prmesssend() {
     if (!$uidout) $stop[] = _CERROR3;
     if ($stime > time()) $stop[] = sprintf(_CERROR5, $confpr['send']);
 
-    list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin = '".$uidin."' AND status <= '1'"));
+    list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uidin AND status <= 1', ['uidin' => $uidin]));
     if ($pr_num >= $confpr['messin']) $stop[] = sprintf(_PRSENDOVER, $postname);
     
     if (!$stop && $confpr['act'] && is_user()) {
         $title = save_text($title, 1);
         $text = save_text($text);
-        $db->sql_query("INSERT INTO ".PREFIX_DB."_privat VALUES (NULL, '".$uidin."', '".$uidout."', '".$title."', '".$text."', NOW(), '".$ip."', '0')");
+        $db->sql_query('INSERT INTO '.PREFIX_DB.'_privat VALUES (NULL, :uidin, :uidout, :title, :content, NOW(), :ip_sender, 0)', ['uidin' => $uidin, 'uidout' => $uidout, 'title' => $title, 'content' => $text, 'ip_sender' => $ip]);
         update_points(45);
         if ($confpr['newmail']) {
-            list($user_email, $user_psmail) = $db->sql_fetchrow($db->sql_query("SELECT user_email, user_psmail FROM ".PREFIX_DB."_users WHERE user_id = '".$uidin."'"));
+            list($user_email, $user_psmail) = $db->sql_fetchrow($db->sql_query('SELECT user_email, user_psmail FROM '.PREFIX_DB.'_users WHERE user_id = :uidin', ['uidin' => $uidin]));
             if ($user_email && $user_psmail) {
-                list($id) = $db->sql_fetchrow($db->sql_query("SELECT id FROM ".PREFIX_DB."_privat WHERE uidin = '".$uidin."' AND uidout = '".$uidout."' ORDER BY id DESC LIMIT 1"));
+                list($id) = $db->sql_fetchrow($db->sql_query('SELECT id FROM '.PREFIX_DB.'_privat WHERE uidin = :uidin AND uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidin' => $uidin, 'uidout' => $uidout]));
                 $uname = text_filter(substr($user[1], 0, 25));
                 $finishlink = $conf['homeurl']."/index.php?name=account&amp;op=privat&amp;id=".$id."#prmess";
                 $link = "<a href=\"".$finishlink."\">".$finishlink."</a>";
@@ -533,8 +538,8 @@ function prmesssend() {
 function prmesssave() {
     global $db, $user, $confpr;
     $uid = (is_user()) ? intval($user[0]) : 0;
-    $id = (isset($_GET['id'])) ? intval($_GET['id']) : 0;
-    list($pr_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin = '".$uid."' AND status = '2'"));
+    $id = getVar('get', 'id', 'num', 0);
+    list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status = 2', ['uid' => $uid]));
     $pr_numi = $pr_num + 1;
     if ($pr_num >= $confpr['messsav']) {
         $stop = sprintf(_PRSAVEEXIT, $confpr['messsav']);
@@ -544,7 +549,7 @@ function prmesssave() {
         $stop = 0;
         $info = sprintf(_PRSAVEMAX, $confpr['messsav'], $pr_numi, $acmess);
     }
-    if (!$stop && $confpr['act'] && $uid && $id) $db->sql_query("UPDATE ".PREFIX_DB."_privat SET status = '2' WHERE id = '".$id."' AND uidin = '".$uid."'");
+    if (!$stop && $confpr['act'] && $uid && $id) $db->sql_query('UPDATE '.PREFIX_DB.'_privat SET status = 2 WHERE id = :id AND uidin = :uid', ['id' => $id, 'uid' => $uid]);
     return prmess(0, $stop, $info, 1);
 }
 
@@ -552,9 +557,9 @@ function prmesssave() {
 function prmessdel() {
     global $db, $user, $confpr;
     $uid = (is_user()) ? intval($user[0]) : 0;
-    $id = (isset($_GET['id'])) ? intval($_GET['id']) : 0;
-    $typ = (isset($_GET['typ'])) ? intval($_GET['typ']) : 1;
-    if ($confpr['act'] && $uid && $id) $db->sql_query("DELETE FROM ".PREFIX_DB."_privat WHERE (id = '".$id."' AND uidin = '".$uid."') OR (id = '".$id."' AND uidout = '".$uid."' AND status = '0')");
+    $id  = getVar('get', 'id',  'num', 0);
+    $typ = getVar('get', 'typ', 'num', 1);
+    if ($confpr['act'] && $uid && $id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_privat WHERE (id = :id_in AND uidin = :uid_in) OR (id = :id_out AND uidout = :uid_out AND status = 0)', ['id_in' => $id, 'uid_in' => $uid, 'id_out' => $id, 'uid_out' => $uid]);
     return prmess(0, 0, 0, $typ);
 }
 
@@ -563,11 +568,11 @@ function favorview($fid, $mod) {
     global $db, $user, $conffav;
     $uid = (is_user()) ? intval($user[0]) : 0;
     if ($conffav['favact'] && $uid) {
-        list($fav) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_favorites WHERE uid = '".$uid."' AND fid = '".$fid."' AND modul = '".$mod."'"));
+        list($fav) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]));
         if ($fav) {
             $content = "<span title=\""._FAVOR."\" class=\"sl_favor sl_favor_on\"></span>";
         } else {
-            list($fav_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_favorites WHERE uid = '".$uid."'"));
+            list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
             if ($fav_num >= $conffav['favorites']) {
                 $fav_exit = sprintf(_FAVOR_EXIT, $conffav['favorites']);
                 $content = "<span title=\"".$fav_exit."\" class=\"sl_favor sl_favor_off\"></span>";
@@ -582,15 +587,15 @@ function favorview($fid, $mod) {
 # Favorites add
 function favoradd() {
     global $db, $user, $conffav;
-    $fid = (isset($_GET['id'])) ? intval($_GET['id']) : "";
-    $mod = (isset($_GET['mod'])) ? analyze($_GET['mod']) : "";
+    $fid = getVar('get', 'id',  'num',  0);
+    $mod = analyze(getVar('get', 'mod', 'text', ''));
     $uid = (is_user()) ? intval($user[0]) : 0;
     if ($conffav['favact'] && $uid && $fid && $mod) {
-        list($fav) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_favorites WHERE uid = '".$uid."' AND fid = '".$fid."' AND modul = '".$mod."'"));
+        list($fav) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]));
         if ($fav) {
             echo favorview($fid, $mod);
         } else {
-            $db->sql_query("INSERT INTO ".PREFIX_DB."_favorites VALUES (NULL, '".$uid."', '".$fid."', '".$mod."')");
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul)', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]);
             update_points(44);
         }
     }
@@ -598,19 +603,16 @@ function favoradd() {
 }
 
 # Favorites liste view
-function favorliste() {
+function favorliste(int $obj = 0): string {
     global $db, $user, $conffav, $conf;
-    $arg = func_get_args();
-    $obj = analyze($arg[0]);
     $uid = intval($user[0]);
-    
     $newlistnum = intval($conffav['num']);
-    $num = isset($_GET['cid']) ? intval($_GET['cid']) : 1;
+    $num = getVar('get', 'cid', 'num', 1);
     $offset = ($num-1) * $newlistnum;
     $offset = intval($offset);
     $a = ($num) ? $offset+1 : 1;
     
-    list($fav_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_favorites WHERE uid = '".$uid."'"));
+    list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
     if ($fav_num >= $conffav['favorites']) {
         $favinfo = sprintf(_FAVOR_EXIT, $conffav['favorites']);
         $fstatus = "warn";
@@ -620,48 +622,57 @@ function favorliste() {
         $fstatus = "info";
     }
     
-    $result = $db->sql_query("SELECT fid, modul FROM ".PREFIX_DB."_favorites WHERE uid = '".$uid."' ORDER BY id DESC LIMIT ".$offset.", ".$newlistnum);
+    $result = $db->sql_query('SELECT fid, modul FROM '.PREFIX_DB.'_favorites WHERE uid = :uid ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
     while (list($fid, $modul) = $db->sql_fetchrow($result)) $fmassiv[$modul][] = $fid;
     
     if (is_array($fmassiv)) {
         foreach ($fmassiv as $key => $val) {
-            $fid = implode(",", $val);
+            $ids = array_values(array_filter(array_map('intval', $val), static fn($v) => $v > 0));
+            if (!$ids) continue;
+            $pp = [];
+            $pm = ['uid' => $uid];
+            foreach ($ids as $k => $v) {
+                $ph = 'f'.$k;
+                $pp[] = ':'.$ph;
+                $pm[$ph] = $v;
+            }
+            $in = implode(', ', $pp);
             $numl = count($val);
             if ($key == "faq") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_faq AS n ON (f.fid=n.fid) WHERE f.uid = '".$uid."' AND n.fid IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_faq AS n ON (f.fid=n.fid) WHERE f.uid = :uid AND n.fid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "files") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_files AS n ON (f.fid=n.lid) WHERE f.uid = '".$uid."' AND n.lid IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_files AS n ON (f.fid=n.lid) WHERE f.uid = :uid AND n.lid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "forum") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_forum AS n ON (f.fid=n.id) WHERE f.uid = '".$uid."' AND n.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "help") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_help AS n ON (f.fid=n.sid) WHERE f.uid = '".$uid."' AND n.sid IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_help AS n ON (f.fid=n.sid) WHERE f.uid = :uid AND n.sid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "links") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_links AS n ON (f.fid=n.lid) WHERE f.uid = '".$uid."' AND n.lid IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid=n.lid) WHERE f.uid = :uid AND n.lid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "media") {
                 $confm = $conf['media'] ?? [];
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, n.subtitle FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_media AS n ON (f.fid=n.id) WHERE f.uid = '".$uid."' AND n.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, n.subtitle FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_media AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $subtitle) = $db->sql_fetchrow($result)) {
                     $title = ($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;
                     $ffmassiv[] = array($id, $fid, $modul, $title);
                 }
             } elseif ($key == "news") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_news AS n ON (f.fid=n.sid) WHERE f.uid = '".$uid."' AND n.sid IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_news AS n ON (f.fid=n.sid) WHERE f.uid = :uid AND n.sid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "pages") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_pages AS n ON (f.fid=n.pid) WHERE f.uid = '".$uid."' AND n.pid IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_pages AS n ON (f.fid=n.pid) WHERE f.uid = :uid AND n.pid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "shop") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_products AS n ON (f.fid=n.id) WHERE f.uid = '".$uid."' AND n.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl);
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             }
         }
     }
-    $cont = tpl_warn("warn", $favinfo, "", "", $fstatus);
+    $cont = setTemplateWarning('warn', ['text' => $favinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
     if ($ffmassiv) {
         $cont .= "<table class=\"sl_table_list\"><thead class=\"sl_table_list_head\"><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._FUNCTIONS."</th></tr></thead><tbody class=\"sl_table_list_body\">";
         foreach ($ffmassiv as $key => $val) {
@@ -682,15 +693,17 @@ function favorliste() {
     } else {
         $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
     }
-    if ($obj) { return $cont; } else { echo $cont; }
+    if ($obj) { return $cont; }
+    echo $cont;
+    return '';
 }
 
 # Favorites delete
 function favordel() {
     global $db, $user, $conffav;
     $uid = (is_user()) ? intval($user[0]) : 0;
-    $id = (isset($_GET['id'])) ? intval($_GET['id']) : 0;
-    if ($conffav['favact'] && $uid && $id) $db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE id = '".$id."' AND uid = '".$uid."'");
+    $id = getVar('get', 'id', 'num', 0);
+    if ($conffav['favact'] && $uid && $id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id AND uid = :uid', ['id' => $id, 'uid' => $uid]);
     return favorliste(0);
 }
 
@@ -702,39 +715,53 @@ function rss_channel() {
     header("Content-Type: application/rss+xml; charset="._CHARSET);
     header("Content-Encoding: none");
 
-    $name = analyze($_POST['name'] ?? $_GET['name'] ?? '');
+    $name = analyze(getVar('post', 'name', 'text', '') ?: getVar('get', 'name', 'text', ''));
     $hmodul = explode(",", $conf['module']);
     $hi = mt_rand(0, count($hmodul) - 1);
     $cname = $hmodul[$hi];
     $name = ($name) ? $name : $cname;
-    $cat = intval($_POST['cat'] ?? $_GET['cat'] ?? 0);
-    $num = intval($_POST['num'] ?? $_GET['num'] ?? 0);
+    $cat  = getVar('post', 'cat', 'num', 0) ?: getVar('get', 'cat', 'num', 0);
+    $num  = getVar('post', 'num', 'num', 0) ?: getVar('get', 'num', 'num', 0);
     $num = ($num) ? (($num <= $confrs['max']) ? $num : $confrs['max']) : $confrs['min'];
-    $id = intval($_POST['id'] ?? $_GET['id'] ?? 0);
+    $id   = getVar('post', 'id',  'num', 0) ?: getVar('get', 'id',  'num', 0);
 
     if (($name == "content") && $id) {
-        $result = $db->sql_query("SELECT id, title, text, time FROM ".PREFIX_DB."_content WHERE id = '".$id."' AND time <= NOW()");
+        $result = $db->sql_query('SELECT id, title, text, time FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
     } elseif ($name == "faq") {
-        $where = ($cat) ? "WHERE s.catid = '".$cat."' AND s.time <= NOW() AND s.status != '0'" : "WHERE s.time <= NOW() AND s.status != '0'";
-        $result = $db->sql_query("SELECT s.fid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM ".PREFIX_DB."_faq AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid=c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid=u.user_id) ".$where." ORDER BY s.time DESC LIMIT ".$num);
+        $params = [];
+        $where = $cat ? 'WHERE s.catid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
+        if ($cat) $params['cat'] = $cat;
+        $result = $db->sql_query('SELECT s.fid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == "files") {
-        $where = ($cat) ? "WHERE s.cid = '".$cat."' AND s.date <= NOW() AND s.status != '0'" : "WHERE s.date <= NOW() AND s.status != '0'";
-        $result = $db->sql_query("SELECT s.lid, s.name, s.title, s.date, s.description, c.title, u.user_name FROM ".PREFIX_DB."_files AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.cid=c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid=u.user_id) ".$where." ORDER BY s.date DESC LIMIT ".$num);
+        $params = [];
+        $where = $cat ? 'WHERE s.cid = :cat AND s.date <= NOW() AND s.status != 0' : 'WHERE s.date <= NOW() AND s.status != 0';
+        if ($cat) $params['cat'] = $cat;
+        $result = $db->sql_query('SELECT s.lid, s.name, s.title, s.date, s.description, c.title, u.user_name FROM '.PREFIX_DB.'_files AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.date DESC LIMIT '.intval($num), $params);
     } elseif ($name == "links") {
-        $where = ($cat) ? "WHERE s.cid = '".$cat."' AND s.date <= NOW() AND s.status != '0'" : "WHERE s.date <= NOW() AND s.status != '0'";
-        $result = $db->sql_query("SELECT s.lid, s.name, s.title, s.date, s.description, c.title, u.user_name FROM ".PREFIX_DB."_links AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.cid=c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid=u.user_id) ".$where." ORDER BY s.date DESC LIMIT ".$num);
+        $params = [];
+        $where = $cat ? 'WHERE s.cid = :cat AND s.date <= NOW() AND s.status != 0' : 'WHERE s.date <= NOW() AND s.status != 0';
+        if ($cat) $params['cat'] = $cat;
+        $result = $db->sql_query('SELECT s.lid, s.name, s.title, s.date, s.description, c.title, u.user_name FROM '.PREFIX_DB.'_links AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.date DESC LIMIT '.intval($num), $params);
     } elseif ($name == "media") {
-        $where = ($cat) ? "WHERE s.cid = '".$cat."' AND s.date <= NOW() AND s.status != '0'" : "WHERE s.date <= NOW() AND s.status != '0'";
-        $result = $db->sql_query("SELECT s.id, s.name, s.title, s.date, s.description, c.title, u.user_name FROM ".PREFIX_DB."_media AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.cid=c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid=u.user_id) ".$where." ORDER BY s.date DESC LIMIT ".$num);
+        $params = [];
+        $where = $cat ? 'WHERE s.cid = :cat AND s.date <= NOW() AND s.status != 0' : 'WHERE s.date <= NOW() AND s.status != 0';
+        if ($cat) $params['cat'] = $cat;
+        $result = $db->sql_query('SELECT s.id, s.name, s.title, s.date, s.description, c.title, u.user_name FROM '.PREFIX_DB.'_media AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.date DESC LIMIT '.intval($num), $params);
     } elseif ($name == "pages") {
-        $where = ($cat) ? "WHERE s.catid = '".$cat."' AND s.time <= NOW() AND s.status != '0'" : "WHERE s.time <= NOW() AND s.status != '0'";
-        $result = $db->sql_query("SELECT s.pid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM ".PREFIX_DB."_pages AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid=c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid=u.user_id) ".$where." ORDER BY s.time DESC LIMIT ".$num);
+        $params = [];
+        $where = $cat ? 'WHERE s.catid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
+        if ($cat) $params['cat'] = $cat;
+        $result = $db->sql_query('SELECT s.pid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == "shop") {
-        $where = ($cat) ? "WHERE s.cid = '".$cat."' AND s.time <= NOW() AND s.active = '1'" : "WHERE s.time <= NOW() AND s.active = '1'";
-        $result = $db->sql_query("SELECT s.id, s.title, s.time, s.text, c.title FROM ".PREFIX_DB."_products AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.cid=c.id) ".$where." ORDER BY s.time DESC LIMIT ".$num);
+        $params = [];
+        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.active = 1' : 'WHERE s.time <= NOW() AND s.active = 1';
+        if ($cat) $params['cat'] = $cat;
+        $result = $db->sql_query('SELECT s.id, s.title, s.time, s.text, c.title FROM '.PREFIX_DB.'_products AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == "news") {
-        $where = ($cat) ? "WHERE s.catid = '".$cat."' AND s.time <= NOW() AND s.status != '0'" : "WHERE s.time <= NOW() AND s.status != '0'";
-        $result = $db->sql_query("SELECT s.sid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid=c.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (s.uid=u.user_id) ".$where." ORDER BY s.time DESC LIMIT ".$num);
+        $params = [];
+        $where = $cat ? 'WHERE s.catid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
+        if ($cat) $params['cat'] = $cat;
+        $result = $db->sql_query('SELECT s.sid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
         $name = "news";
     } else {
         $result = "";
@@ -827,9 +854,9 @@ function open_xsl() {
 }
 
 # Show statistic
-switch(isset($_GET['stat'])) {
-    case '1':
-    $img = (intval($_GET['img'])) ? '_'.$_GET['img'] : '';
+switch(getVar('get', 'stat', 'num', 0)) {
+    case 1:
+    $img = getVar('get', 'img', 'num', 0) ? '_'.getVar('get', 'img', 'num', 0) : '';
     $sdate = file(CONFIG_DIR.'/statistic.log');
     $con = explode('|', trim($sdate[0]));
     $image = imagecreatefrompng(img_find('banners/stat'.$img.'.png'));
@@ -839,3 +866,5 @@ switch(isset($_GET['stat'])) {
     imagepng($image);
     exit;
 }
+
+
