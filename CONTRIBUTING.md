@@ -119,6 +119,8 @@ function fetchUser() {}     // Use getUser()
 
 - Short names: 4-8 characters preferred
 - No camelCase for variables
+- Prefer short, single-purpose names like `$filter` or `$color`
+- Avoid compound names like `$filter_color` unless disambiguation is required
 - Common abbreviations: `$id`, `$db`, `$cfg`, `$tmp`, `$arr`, `$list`, `$rows`
 
 ```php
@@ -206,11 +208,16 @@ $text = getVar('post', 'content', 'text', '');
 
 **Available types:**
 - `'num'` - Integer only
+- `'let'` - First letter only (1 char, UTF-8)
+- `'word'` - Word/slug characters only (`var_filter`)
 - `'name'` - Username (max 25 chars, safe characters)
+- `'title'` - Title with `save_text` (linkify disabled)
+- `'text'` - Text with full `save_text` processing (HTML filtering)
+- `'field'` - Custom field data (`fields_save`)
 - `'url'` - Valid URL
-- `'text'` - Text with HTML filtering
+- `'var'` - Alphanumeric/underscore/dash only (`[a-zA-Z0-9_\-]`)
 - `'bool'` - Boolean value
-- `'var'` - Raw variable (use carefully)
+- `'raw'` - No filtering — returns raw value (use carefully)
 
 ### Constants
 
@@ -284,16 +291,30 @@ header('Location: '.$admin_file.'.php?name=modules');
 
 #### Header Redirects
 
-Always add `exit;` after header redirects and use simplified URLs:
+Use `setRedirect()` for all redirects. It handles the correct HTTP status code automatically (302 → 303 on POST) and sanitizes the URL:
 
 ```php
-// ✅ Correct
+// ✅ Correct — use setRedirect()
+setRedirect($afile.'.php?name=modules');
+
+// ✅ With referer fallback (for "Back" buttons)
+setRedirect($afile.'.php?name=modules', true);
+
+// ❌ Wrong — manual header/exit pattern (legacy, do not use)
 header('Location: '.$afile.'.php?name=modules');
 exit;
 
-// ❌ Wrong - unnecessary &op=show
-header('Location: '.$afile.'.php?name=modules&op=show');
+// ❌ Wrong — unnecessary &op=show
+setRedirect($afile.'.php?name=modules&op=show');
 ```
+
+**`setRedirect()` signature:**
+```php
+setRedirect(string $url, bool $refer = false, int $code = 302): never
+```
+- `$url` — redirect target URL
+- `$refer` — when `true` and a `refer` GET/POST parameter is present, redirect to the HTTP Referer instead (same-origin only)
+- `$code` — HTTP status code (301, 302, 303, 307, 308); defaults to 302; auto-upgrades to 303 on POST
 
 #### Switch-Case Structure
 
@@ -317,18 +338,18 @@ switch ($op) {
 
 ### Template Functions
 
-Use the modernized template functions:
+Use the modernized template functions. `tpl_eval()`, `tpl_func()`, and `tpl_warn()` have been **removed** from 6.3.x:
 
 ```php
-// ✅ New (6.3.x)
+// ✅ Correct (6.3.x)
 $cont .= setTemplateBasic('open');
 $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $text]);
 $cont .= setTemplateBasic('close');
 
-// ❌ Old (deprecated)
+// ❌ Removed — will cause a fatal error
 $cont .= tpl_eval('open');
 $cont .= tpl_warn('warn', $text, '', '', 'info');
-$cont .= tpl_eval('close');
+$cont .= tpl_func('open');
 ```
 
 ### File Structure

@@ -199,10 +199,13 @@ return [
 
 ##### Template Functions
 
-| Old (6.2.x) | New (6.3.x) |
-|-------------|-------------|
+`tpl_eval()`, `tpl_func()`, and `tpl_warn()` have been **fully removed**. Any existing calls will cause a fatal error:
+
+| Removed (6.2.x) | Replacement (6.3.x) |
+|-----------------|---------------------|
 | `tpl_eval('open')` | `setTemplateBasic('open')` |
 | `tpl_eval('close')` | `setTemplateBasic('close')` |
+| `tpl_func('name')` | `setTemplateBasic('name')` |
 | `tpl_warn('warn', $text)` | `setTemplateWarning('warn', ['text' => $text])` |
 
 ##### Admin Variables
@@ -211,15 +214,37 @@ return [
 |-------------|-------------|
 | `$admin_file` | `$afile` |
 
+##### Admin Redirects
+
+Inline `header() + exit;` patterns have been replaced by `setRedirect()`:
+
 ```php
-// Old
+// Old (6.2.x)
 global $admin_file;
 header('Location: '.$admin_file.'.php?name=modules');
+exit;
 
-// New
+// New (6.3.x)
 global $afile;
-header('Location: '.$afile.'.php?name=modules');
+setRedirect($afile.'.php?name=modules');
 ```
+
+`setRedirect(string $url, bool $refer = false, int $code = 302): never` — automatically sanitizes the URL, selects the correct HTTP status code (upgrades 302 → 303 on POST), and terminates the script.
+
+##### Admin Help Files
+
+Per-module info files have been moved to per-module subdirectories:
+
+| Old path | New path |
+|----------|----------|
+| `modules/news/admin/info/en.html` | `modules/news/admin/info/english.html` |
+| `modules/news/admin/info/de.html` | `modules/news/admin/info/german.html` |
+| `modules/news/admin/info/fr.html` | `modules/news/admin/info/french.html` |
+| `modules/news/admin/info/pl.html` | `modules/news/admin/info/polish.html` |
+| `modules/news/admin/info/ru.html` | `modules/news/admin/info/russian.html` |
+| `modules/news/admin/info/uk.html` | `modules/news/admin/info/ukrainian.html` |
+
+The same rename pattern applies to all modules under `modules/*/admin/info/`.
 
 #### SQL Query Changes
 
@@ -281,6 +306,7 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 - [ ] Update copyright year: `© 2005 - 2026 SLAED`
 - [ ] Change all `"..."` to `'...'` (single quotes)
 - [ ] Change all `array(...)` to `[...]`
+- [ ] Prefer short, single-purpose variable names (`$filter`, `$color`) over compound names (`$filter_color`) unless disambiguation is required
 - [ ] Check indentation: 4 spaces (no tabs)
 - [ ] Check line length: max 120 characters
 - [ ] Remove closing PHP tag `?>`
@@ -302,8 +328,8 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 
 ### Modernization
 
-- [ ] Rename template functions: `tpl_eval()` → `setTemplateBasic()`
-- [ ] Rename template functions: `tpl_warn()` → `setTemplateWarning()`
+- [ ] Replace `tpl_eval()` / `tpl_func()` calls with `setTemplateBasic()`
+- [ ] Replace `tpl_warn()` calls with `setTemplateWarning()`
 - [ ] Change `http://` defaults to `https://`
 - [ ] Update config includes: `include('config/config_X.php')` → `require_once CONFIG_DIR.'/X.php'`
 - [ ] Use `checkPerms()` instead of `end_chmod()` for config permissions
@@ -313,9 +339,10 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 
 - [ ] Rename navigation function to `navi()`
 - [ ] Replace `$admin_file` with `$afile`
-- [ ] Add `exit;` after all `header()` redirects
+- [ ] Replace `header('Location: ...') + exit;` with `setRedirect(...)`
 - [ ] Remove `&op=show` from navigation URLs
 - [ ] Extract inline switch-cases into separate functions
+- [ ] Rename admin info files: `en.html` → `english.html`, `de.html` → `german.html`, etc.
 
 > [!TIP]
 > Refer to `.rules/refactoring-rules.md` for detailed migration patterns and examples.
@@ -419,15 +446,21 @@ rm -rf storage/cache/*
 
 ### 6.3.0 (In Development - 2025/2026)
 
-**Status:** Active Development (~75% Complete as of February 2026)
+**Status:** Active Development (~80% Complete as of February 2026)
 
 **Major Changes:**
 - PHP 8.4 compatibility (8.1+ minimum)
 - All SQL queries converted to prepared statements
-- Input validation with `getVar()`
-- Type declarations for all functions
+- Input validation with `getVar()` — raw `$_GET`/`$_POST` eliminated from `core/`
+- `func_get_args()` removed from all functions — typed parameters enforced throughout
+- Type declarations for all functions (parameters + return types)
 - Module configuration moved to `config/modules.php`
 - Template functions modernized (`setTemplateBasic()`, `setTemplateWarning()`)
+- `tpl_eval()`, `tpl_func()`, `tpl_warn()` **removed** (used `eval()` internally)
+- `setRedirect()` introduced — replaces inline `header() + exit;` in admin modules
+- `filterMarkdown()` added — safe Markdown→HTML parser with user/admin modes
+- `setHead()` enhanced — new `[headline]` and `[author]` SEO placeholders
+- Admin help files renamed: 2-letter locale codes → full language names (`en.html` → `english.html`)
 - Removed `core/classes/module.php` (centralized in core)
 - Config file naming: removed `config_` prefix
 - Language constant `_ANONYM` replaces configurable `$confu['anonym']`

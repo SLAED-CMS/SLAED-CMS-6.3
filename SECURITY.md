@@ -72,6 +72,7 @@ $db->sql_query(
 **Statistics:**
 - 2106+ SQL queries converted to prepared statements
 - Named placeholders (`:id`, `:name`) for all parameters
+- In security patches, keep variable names short and single-purpose (`$id`, `$name`, `$filter`); use compound names only when disambiguation is required.
 
 ### Input Validation
 
@@ -191,6 +192,11 @@ location /storage {
 
 - [x] All SQL queries converted to prepared statements (2106+ queries)
 - [x] Input validation with `getVar()` for all user inputs (269+ points)
+- [x] All raw `$_GET`/`$_POST` access eliminated from `core/system.php` and `core/user.php`
+- [x] `func_get_args()` removed from all core functions — typed PHP 8.x parameters enforced
+- [x] `tpl_eval()`, `tpl_func()`, `tpl_warn()` removed — used `eval()` internally
+- [x] `filterMarkdown()` added — Markdown→HTML parser with safe mode (user) and admin mode
+- [x] `setRedirect()` added — sanitized HTTP redirect replacing raw `header() + exit;`
 - [x] Type declarations for all functions
 - [x] Updated to PHP 8.4 security features
 - [x] Deprecated insecure functions removed (99 functions)
@@ -226,14 +232,17 @@ location /storage {
 | File Uploads | ✅ Secured | MIME validation, size limits |
 | Categories | ✅ Secured | Access control improved |
 
-**Deprecated and Removed:**
+**Removed:**
 
-| Old (Insecure) | New (Secure) |
-|----------------|--------------|
-| `tpl_eval()` with `eval()` | `setTemplateBasic()` |
-| `tpl_warn()` with `eval()` | `setTemplateWarning()` |
+| Removed (Insecure) | Replacement |
+|--------------------|-------------|
+| `tpl_eval()` (used `eval()`) | `setTemplateBasic()` |
+| `tpl_func()` (used `eval()`) | `setTemplateBasic()` |
+| `tpl_warn()` (used `eval()`) | `setTemplateWarning()` |
 | Direct `$_GET`/`$_POST` | `getVar()` validation |
 | String concatenation in SQL | Prepared statements |
+| `func_get_args()` in functions | Explicit typed parameters |
+| Inline `header() + exit;` in admin | `setRedirect()` |
 
 ### Version 6.2.x (End of Life - 2017)
 

@@ -583,6 +583,7 @@ echo setTemplateBasic('test', []);
 3. **Escape user data** - Always use `htmlspecialchars()` for untrusted input
 4. **Avoid deep nesting** - Maximum 2-3 levels of nested conditions
 5. **Use global variables** - Leverage `getTemplateVars()` for common values
+6. **Keep PHP variable names concise** - Prefer short, single-purpose names (`$filter`, `$color`) over compound names (`$filter_color`) unless disambiguation is required
 
 > [!IMPORTANT]
 > Templates are designed for presentation logic only. Complex business logic, database queries, and calculations must always be handled in PHP code.
@@ -637,15 +638,15 @@ setHead([
 
 If upgrading from SLAED CMS 6.2.x, note these changes:
 
-| Old (6.2.x) | New (6.3.x) |
-|-------------|-------------|
+| Removed (6.2.x) | Replacement (6.3.x) |
+|-----------------|---------------------|
 | `tpl_eval('name')` | `setTemplateBasic('name')` |
-| `tpl_warn('warn', $text, ...)` | `setTemplateWarning('warn', ['text' => $text])` |
 | `tpl_func('name')` | `setTemplateBasic('name')` |
+| `tpl_warn('warn', $text, ...)` | `setTemplateWarning('warn', ['text' => $text])` |
 | Direct variable substitution | Use `{%var%}` placeholders |
 
-> [!WARNING]
-> The old `tpl_eval()` and `tpl_func()` functions used `eval()` and are deprecated for security reasons. They will be removed in a future version.
+> [!CAUTION]
+> `tpl_eval()`, `tpl_func()`, and `tpl_warn()` have been **removed** in 6.3.x. They used `eval()` internally and posed a code execution risk. Any remaining calls will cause a fatal error.
 
 ---
 

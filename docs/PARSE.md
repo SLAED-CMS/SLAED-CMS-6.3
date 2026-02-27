@@ -1,8 +1,10 @@
 # filterMarkdown() — SLAED Markdown Parser
 
-**Zieldatei:** `core/system.php` (direkt nach `bb_decode()`)
+**Status:** Implementiert — `core/system.php` (direkt nach `bb_decode()`)
+**Signatur:** `function filterMarkdown(string $src, bool $safe = true, string $mod = ''): string`
 **Zweck:** Markdown → HTML, analog zu `bb_decode()` für BB-Code
 **Standard:** SLAED Refactoring Standards §5 — `verbNoun()`, verb = `filter`
+**Variablen-Naming:** kurze, eindeutige Namen bevorzugen (`$filter`, `$color`); zusammengesetzte Namen (`$filter_color`) nur bei notwendiger Disambiguierung.
 
 ---
 

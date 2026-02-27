@@ -24,6 +24,7 @@ Examples of behavior that contributes to a positive environment:
 - Showing empathy towards other community members
 - Providing helpful feedback on code and documentation
 - Acknowledging and learning from mistakes
+- Following documented project conventions in contributions (including concise, clear variable naming in examples and patches)
 
 ### Unacceptable Behavior
 

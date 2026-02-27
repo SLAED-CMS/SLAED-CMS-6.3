@@ -5,7 +5,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
-![Migration](https://img.shields.io/badge/Migration-75%25%20Complete-purple.svg)
+![Migration](https://img.shields.io/badge/Migration-80%25%20Complete-purple.svg)
 
 **Modern, Secure, High-Performance Content Management System**
 
@@ -104,7 +104,7 @@ Tests must be run after about 100 changed lines and before merging into `master`
 - **Database:** PDO with prepared statements (SQL injection prevention)
 - **Frontend:** jQuery 3.x + jQuery UI
 - **Editors:** CKEditor 4, TinyMCE, CodeMirror
-- **Security:** XSS filtering, CSRF tokens, prepared statements
+- **Security:** XSS filtering, CSRF tokens, prepared statements, `filterMarkdown()` (safe Markdown parser)
 - **Caching:** Multi-level (pages, blocks, CSS, JS)
 - **Languages:** 6 languages out-of-the-box (EN, FR, DE, PL, RU, UA)
 
@@ -192,7 +192,7 @@ slaed-cms/
 
 > [!NOTE]
 > SLAED CMS 6.3 is undergoing a major modernization to PHP 8.4 standards.
-> **Progress: ~70% Complete** (as of February 2026)
+> **Progress: ~80% Complete** (as of February 2026)
 
 ### ✅ Completed
 
@@ -203,10 +203,14 @@ slaed-cms/
 
 **Code Modernization:**
 - Type declarations added (parameters & return types)
+- `func_get_args()` eliminated — all functions use typed parameters
 - Modern array syntax (`[]` instead of `array()`)
-- Input validation with `getVar()` helper
+- Input validation with `getVar()` — all raw `$_GET`/`$_POST` replaced in `core/`
 - Quote consistency (single quotes throughout)
 - Template functions modernized (`setTemplateBasic()`, `setTemplateWarning()`)
+- `tpl_eval()` and `tpl_func()` removed (used `eval()`, security risk)
+- `setRedirect()` replaces inline `header() + exit;` in admin modules
+- `filterMarkdown()` — self-contained Markdown→HTML parser added to `core/system.php`
 
 **Modernized Admin Modules (23/23 - 100%):**
 - `admins.php` - Administrator management
@@ -278,6 +282,8 @@ function filterInput(string $data): string {}
 - `filter` - sanitization
 
 **Variable Naming:**
+- Prefer short, single-purpose names like `$filter` or `$color`.
+- Avoid compound names like `$filter_color` unless disambiguation is required.
 ```php
 // ✅ Correct
 $id = 123;
@@ -410,7 +416,8 @@ Upgrading from a previous version? See [UPGRADING.md](UPGRADING.md) for migratio
 
 | Document | Description |
 |----------|-------------|
-| [TEMPLATES.md](docs/TEMPLATES.md) | Template system guide (variables, conditionals, examples) |
+| [TEMPLATES.md](docs/TEMPLATES.md) | Template system guide (variables, conditionals, SEO, examples) |
+| [TESTS.md](docs/TESTS.md) | Testing guide — PHPUnit, PHPStan, PHP-CS-Fixer commands |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Coding standards and contribution guidelines |
 | [UPGRADING.md](UPGRADING.md) | Migration guide from previous versions |
 | [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |

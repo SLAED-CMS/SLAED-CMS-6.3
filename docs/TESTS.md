@@ -42,6 +42,7 @@ Binary: `vendor/bin/phpstan`
 Used for code style checks and formatting.
 Config file: `.php-cs-fixer.dist.php`
 This config follows SLAED rules (single quotes, short arrays, no spaces around `.`).
+Use the same naming convention in patches: prefer short, single-purpose variables (`$filter`, `$color`) over compound names (`$filter_color`) unless disambiguation is required.
 Legacy file excluded by config: `plugins/filemanager/uploader/jupload.php`
 Binary: `vendor/bin/php-cs-fixer`
 
