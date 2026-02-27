@@ -260,7 +260,7 @@ function getAdminTabs(
 
     $cnt .= ($scnt !== '') ? '</ul>'.$scnt : '</ul>';
 
-    return tpl_eval('title', $ttl, $ico, $sub, $cnt);
+    return setTemplateBasic('title', ['{%title%}' => $ttl, '{%icon%}' => $ico, '{%subtitle%}' => $sub, '{%content%}' => $cnt]);
 }
 
 # Handle view/edit of admin info pages
@@ -978,7 +978,7 @@ function navi_gen() {
         }
     }
     $cont .= (!empty($scont)) ? "</ul>".$scont : "</ul>";
-    return tpl_eval("title", $narg[0], $narg[1], $narg[2], $cont);
+    return setTemplateBasic('title', ['{%title%}' => $narg[0], '{%icon%}' => $narg[1], '{%subtitle%}' => $narg[2], '{%content%}' => $cont]);
 }
 */
 

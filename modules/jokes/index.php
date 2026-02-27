@@ -72,7 +72,7 @@ function jokes() {
 	$cont = '';
 	if (!$home || ($home && $confj['homcat'])) {
 		$cont .= navigate($ntitle, $caton);
-		if ($ncat) $cont .= tpl_eval('cat-navi', catlink($conf['name'], $ncat, $confj['defis'], _JOKES));
+		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $confj['defis'], _JOKES)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $confj['subcat'], $confj['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');

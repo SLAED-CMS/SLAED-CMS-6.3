@@ -74,7 +74,7 @@ function media() {
 	$cont = '';
 	if (!$home || ($home && $confm['homcat'])) {
 		$cont = navigate($ntitle, $caton);
-		if ($ncat) $cont .= tpl_eval('cat-navi', catlink($conf['name'], $ncat, $confm['defis'], _MEDIA));
+		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $confm['defis'], _MEDIA)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $confm['subcat'], $confm['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
@@ -173,7 +173,7 @@ function view() {
 			'author' => $seoauthor,
 		]);
 		$cont = navigate(_MEDIA, $confm['viewcat']);
-		if ($cid) $cont .= tpl_eval('cat-navi', catlink($conf['name'], $cid, $confm['defis'], _MEDIA));
+		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $confm['defis'], _MEDIA)]);
 		if ($confm['viewcat']) $cont .= setCategories($conf['name'], $confm['subcat'], $confm['catdesc'], 0);
 		$cdesc = ($cdesc) ? $cdesc : $ctitle;
 		$ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
@@ -231,7 +231,7 @@ function view() {
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
 				$result = $db->sql_query('SELECT id, title, subtitle, description, date FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\' ORDER BY date DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
-				$cont .= tpl_eval('assoc-open', _CATASSOC);
+				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
 				while(list($aid, $title, $subtitle, $hometext, $time) = $db->sql_fetchrow($result)) {
 					$title = ($subtitle) ? $title.' '.urldecode($confm['mdefis']).' '.$subtitle : $title;
 					$adate = ($confm['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
@@ -243,9 +243,9 @@ function view() {
 						$img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
 					}
 					$img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
-					$cont .= tpl_func('assoc-basic', 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$aid, $title, $adate, $atext, $img);
+					$cont .= setTemplateBasic('assoc-basic', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$aid, '{%title%}' => $title, '{%date%}' => $adate, '{%text%}' => $atext, '{%img%}' => $img]);
 				}
-				$cont .= tpl_eval('assoc-close');
+				$cont .= setTemplateBasic('assoc-close', []);
 			}
 		}
 		if ($acomm) $cont .= setComShow($id, $acomm);

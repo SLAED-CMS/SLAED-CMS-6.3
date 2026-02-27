@@ -553,7 +553,7 @@ function privat() {
         ]);
         $title = ["<span OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;typ=1', ''); return false;\">"._PRIN.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;typ=2', ''); return false;\">"._PROUT.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;typ=3', ''); return false;\">"._PRSAVE.'</span>', _SEND];
         $text = ['<div id="repprmessin">'.prmess(1, 0, 0, 1).'</div>', '<div id="repprmessou">'.prmess(1, 0, 0, 2).'</div>', '<div id="repprmesssa">'.prmess(1, 0, 0, 3).'</div>', '<div id="repprmessfo">'.prmess(1, 0, 0, 4).'</div>'];
-        $cont = tpl_eval('title', _PRIVAT).navi().getNaviTabs(0, 'tab', $title, $text);
+        $cont = setTemplateBasic('title', ['{%title%}' => _PRIVAT]).navi().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
         setFoot();
     } else {
@@ -567,7 +567,7 @@ function favorites() {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo tpl_eval('title', _FAVORITES).navi().setTemplateBasic('open').'<div id="repfavorliste">'.favorliste(1).'</div>'.setTemplateBasic('close');
+        echo setTemplateBasic('title', ['{%title%}' => _FAVORITES]).navi().setTemplateBasic('open').'<div id="repfavorliste">'.favorliste(1).'</div>'.setTemplateBasic('close');
         setFoot();
     } else {
         account();
@@ -584,7 +584,7 @@ function passlost() {
         setHead([
             'title' => _PASSWORDLOST,
         ]);
-        $cont = tpl_eval('title', _PASSWORDLOST);
+        $cont = setTemplateBasic('title', ['{%title%}' => _PASSWORDLOST]);
         $info = ($email) ? _PASSLOSP : _PASSLOSC;
         $send = ($email) ? _SENDPASSWORD : _SEND;
         if ($stop) $cont .= tpl_warn('warn', $stop, '', '', 'warn');
@@ -632,7 +632,7 @@ function passmail() {
             setHead([
                 'title' => _PASSWORDLOST,
             ]);
-            echo tpl_eval('title', _PASSWORDLOST).tpl_warn('warn', _USERPASSWORD.' '.$user_name.' '._MAILED, '?name='.$conf['name'], 10, 'info');
+            echo setTemplateBasic('title', ['{%title%}' => _PASSWORDLOST]).tpl_warn('warn', _USERPASSWORD.' '.$user_name.' '._MAILED, '?name='.$conf['name'], 10, 'info');
             setFoot();
         } else {
             $link = '<a href="'.$conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email.'">'.$conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email.'</a>';

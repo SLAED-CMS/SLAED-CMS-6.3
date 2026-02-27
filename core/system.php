@@ -112,7 +112,6 @@ function setConfigFingerprint(string $local_file, string $fingerprint): void {
 # System file include
 require_once BASE_DIR.'/core/security.php';
 require_once BASE_DIR.'/core/legacy.php';
-require_once BASE_DIR.'/core/template.php';
 
 if (defined('MODULE_FILE')) {
     require_once BASE_DIR.'/core/user.php';
@@ -630,7 +629,7 @@ function setPageNumbers() {
         } else {
             $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
         }
-        return tpl_eval($arg[0], _OVERALL, $arg[2], _BY, $arg[3], _PAGE_S, $arg[4], _PERPAGE, $cont, $cprev, $cnext);
+        return setTemplateBasic($arg[0], ['{%overall%}' => _OVERALL, '{%count%}' => $arg[2], '{%by%}' => _BY, '{%pages%}' => $arg[3], '{%page_s%}' => _PAGE_S, '{%page%}' => $arg[4], '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
     }
     return '';
 }
@@ -1214,7 +1213,7 @@ function getVoting() {
             $answer = explode("|", $answer);
             $vote = array_sum($answer);
             $form = (!$rate) ? "<form name=\"voting\" id=\"form".$votid."\" method=\"post\">" : "";
-            $cont = tpl_eval("voting-open", $form, $title);
+            $cont = setTemplateBasic("voting-open", ['{%form%}' => $form, '{%title%}' => $title]);
             $pn = 0;
             for ($i = 0; $i < count($questions); $i++) {
                 $pn++;
@@ -1230,9 +1229,9 @@ function getVoting() {
                 }
                 if (!$rate) {
                     $itype = ($multi) ? "checkbox" : "radio";
-                    $cont .= tpl_func("voting-post", $id, $n, $itype, "questions[]", $questions[$i]);
+                    $cont .= setTemplateBasic("voting-post", ['{%id%}' => $id, '{%n%}' => $n, '{%itype%}' => $itype, '{%name%}' => 'questions[]', '{%text%}' => $questions[$i]]);
                 } else {
-                    $cont .= tpl_func("voting-view", $questions[$i], text_filter($questions[$i]), $n, $pn, $procent, _VOTES, $answer[$i]);
+                    $cont .= setTemplateBasic("voting-view", ['{%text%}' => $questions[$i], '{%text_safe%}' => text_filter($questions[$i]), '{%n%}' => $n, '{%pn%}' => $pn, '{%percent%}' => $procent, '{%votes_label%}' => _VOTES, '{%votes%}' => $answer[$i]]);
                 }
             }
             list($vnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_voting WHERE ".$querylang));
@@ -1242,7 +1241,7 @@ function getVoting() {
             $votes = (!$modul && $votid != "voting") ? "<a href=\"index.php?name=voting&amp;op=view&amp;id=".$id."\" title=\""._VOTES."\" class=\"sl_votes\">"._VOTES.": ".$vote."</a>" : "<span class=\"sl_votes\">"._VOTES.": ".$vote."</span>";
             $comm = (!$modul && $acomm) ? "<a href=\"index.php?name=voting&amp;op=view&amp;id=".$id."#".$id."\" title=\""._COMMENTS."\" class=\"sl_coms\">"._COMMENTS.": ".$comments."</a>" : "";
             $formend = (!$rate) ? "</form>" : "";
-            $cont .= tpl_eval("voting-close", $admin, $post, $polls, $votes, $comm, $formend);
+            $cont .= setTemplateBasic("voting-close", ['{%admin%}' => $admin, '{%post%}' => $post, '{%polls%}' => $polls, '{%votes%}' => $votes, '{%comm%}' => $comm, '{%formend%}' => $formend]);
         } else {
             $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _VCLINFO));
         }
@@ -1457,6 +1456,7 @@ function setThemeInclude(): void {
     $theme = $theme ?: getTheme();
     $idx = BASE_DIR.'/templates/'.$theme.'/index.php';
     if (is_file($idx)) require_once $idx;
+    require_once BASE_DIR.'/core/template.php';
 }
 
 # Format theme
@@ -1878,11 +1878,11 @@ function show_kasse($info="") {
             $mtitle = ($i > 1) ? _PMINUS : _DELETE;
             $plus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=add_kasse&amp;id=".$id."', ''); return false;\" title=\""._PPLUS."\" class=\"sl_shop_plus\"></a>";
             $minus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=del_kasse&amp;id=".$id."', ''); return false;\" title=\"".$mtitle."\" class=\"sl_shop_minus\"></a>";
-            $cont .= tpl_func("kasse-basic", $id, $ptitle, $i, $preis." ".$confso['valute'], $plus, $minus);
+            $cont .= setTemplateBasic("kasse-basic", ['{%id%}' => $id, '{%title%}' => $ptitle, '{%qty%}' => $i, '{%price%}' => $preis." ".$confso['valute'], '{%plus%}' => $plus, '{%minus%}' => $minus]);
         }
         $cart = "<a href=\"index.php?name=shop&amp;op=kasse\" title=\""._SCACH."\" class=\"sl_shop_kasse\">"._SCACH."</a>";
         $total = "<span title=\""._PARTNERGES."\" class=\"sl_shop_total\">"._PARTNERGES.": ".$preistotal." ".$confso['valute']."</span>";
-        return tpl_eval("kasse-open", _PBASKET, _ID, _PRODUCT, cutstr(_QUANTITY, 3, 1), _PREIS, _FUNCTIONS).$cont.tpl_eval("kasse-close", $cart, $total);
+        return setTemplateBasic("kasse-open", ['{%title%}' => _PBASKET, '{%col_id%}' => _ID, '{%col_product%}' => _PRODUCT, '{%col_qty%}' => cutstr(_QUANTITY, 3, 1), '{%col_price%}' => _PREIS, '{%col_fn%}' => _FUNCTIONS]).$cont.setTemplateBasic("kasse-close", ['{%cart%}' => $cart, '{%total%}' => $total]);
     }
 }
 
@@ -2282,7 +2282,7 @@ function preview() {
     $fields1 = ($arg[1]) ? (($fields) ? "<br><br>".bb_decode($arg[1], $arg[4]) : bb_decode($arg[1], $arg[4])) : "";
     $fields2 = ($arg[2]) ? "<br><br>".bb_decode($arg[2], $arg[4]) : "";
     $fields3 = ($arg[3]) ? "<br><br>".fields_out(bb_decode($arg[3], $arg[4]), $arg[4]) : "";
-    return tpl_eval("preview", _PREVIEW, $fields, $fields1, $fields2, $fields3);
+    return setTemplateBasic('preview', ['{%title%}' => _PREVIEW, '{%fields%}' => $fields, '{%fields1%}' => $fields1, '{%fields2%}' => $fields2, '{%fields3%}' => $fields3]);
 }
 
 # Defined constant
@@ -3648,18 +3648,18 @@ function encode_tabs($text) {
 
 # Format quote
 function encode_quote($text) {
-    return tpl_eval("quote", _QUOTE, $text[1]);
+    return setTemplateBasic('quote', ['{%title%}' => _QUOTE, '{%text%}' => $text[1]]);
 }
 
 # Format hide
 function encode_hide($text) {
-    $text = (defined("ADMIN_FILE") || is_user()) ? tpl_eval("hide", _HIDE, $text[1]) : tpl_eval("hide", _HIDE, _HIDETEXT);
+    $text = (defined("ADMIN_FILE") || is_user()) ? setTemplateBasic('hide', ['{%title%}' => _HIDE, '{%text%}' => $text[1]]) : setTemplateBasic('hide', ['{%title%}' => _HIDE, '{%text%}' => _HIDETEXT]);
     return $text;
 }
 
 # Format code
 function encode_code($text) {
-    return tpl_eval("code", _CODE, str_replace("?", "&#063;", $text[1]));
+    return setTemplateBasic('code', ['{%title%}' => _CODE, '{%content%}' => str_replace("?", "&#063;", $text[1])]);
 }
 
 # Format PHP code
@@ -3717,7 +3717,7 @@ function encode_php($text) {
         }
         $format = $scripts."<pre class=\"brush: ".$ucname.";\">".$replace."</pre>";
     }
-    return tpl_eval("code", $cname." - "._CODE, $format);
+    return setTemplateBasic('code', ['{%title%}' => $cname.' - '._CODE, '{%content%}' => $format]);
 }
 
 # Format use HTML
@@ -4639,7 +4639,7 @@ function num_ajax() {
         } else {
             $cnext = "<span class=\"sl_num\" title=\""._NEXT."\">"._NEXT."</span>";
         }
-        return tpl_eval($arg[0], _OVERALL, $arg[1], _BY, $arg[2], _PAGE_S, $arg[3], _PERPAGE, $cont, $cprev, $cnext);
+        return setTemplateBasic($arg[0], ['{%overall%}' => _OVERALL, '{%count%}' => $arg[1], '{%by%}' => _BY, '{%pages%}' => $arg[2], '{%page_s%}' => _PAGE_S, '{%page%}' => $arg[3], '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
     }
 }
 
@@ -5021,7 +5021,7 @@ function ashowcom() {
             $selms = _CHECKOP.": <select name=\"op\"><option value=\"comm_act\">"._ACTIVATE."</option><option value=\"comm_del\">"._DELETE."</option></select> <input type=\"hidden\" name=\"refer\" value=\"1\"><input type=\"submit\" value=\""._OK."\" class=\"sl_but_blue\">";
             $pag = (isset($_GET['status']) == 1) ? "op=comm_show&amp;status=1" : "op=comm_show";
             $numpt = setPageNumbers("pagenum", $com_modul, $numstories, $numpages, $ccnum, $pag."&amp;", $plnum, '', 'com');
-            $cont .= tpl_eval("list-bottom", $numpt, $selms);
+            $cont .= setTemplateBasic('list-bottom', ['{%pager%}' => $numpt, '{%select%}' => $selms]);
             $out = tpl_func("open").$cont.tpl_func("close", "</form>");
         } else {
             $num = getVar('get', 'num', 'num');
