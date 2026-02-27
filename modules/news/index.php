@@ -10,26 +10,26 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function navigate($title, $cat='') {
-    global $conf, $confn;
+function navigate(string $title, string|int $cat=''): string {
+    global $conf;
     $ncat = getVar('get', 'cat', 'num');
     $cpar = $ncat ? ['cat' => $ncat] : [];
     $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._NEWS.'" class="sl_but_navi">'._HOME.'</a>';
-    $best = ($confn['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-    $pop = ($confn['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
+    $best = ($conf['news']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
+    $pop = ($conf['news']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
     $liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-    $add = ((is_user() && $confn['add'] == 1) || (!is_user() && $confn['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
+    $add = ((is_user() && $conf['news']['add'] == 1) || (!is_user() && $conf['news']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
     $catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
     return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow]);
 }
 
-function news() {
-    global $db, $afile, $conf, $confu, $confn, $home, $op;
+function news(): void {
+    global $db, $afile, $conf, $home, $op;
     $cwhere = catmids($conf['name'], 's.catid');
-    $unum = getUserNews($confn['num']);
+    $unum = getUserNews($conf['news']['num']);
     $ncat = getVar('get', 'cat', 'num');
     $params = [];
-    if (!$ncat && $op && $confn['rate']) {
+    if (!$ncat && $op && $conf['news']['rate']) {
         $caton = 0;
         $field = 'op='.$op.'&';
         if ($op == 'best') {
@@ -44,13 +44,13 @@ function news() {
     } elseif ($ncat) {
         $field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
         $orderby = ($op) ? (($op == 'best') ? '(s.score/s.ratings) DESC' : '(s.counter/(TO_DAYS(NOW()) - TO_DAYS(s.time))) DESC') : 's.fix DESC, s.time DESC';
-        list($ctitle) = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+        [$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
         $order = "WHERE (s.catid = :ncat1 OR s.associated REGEXP :ncat_re OR c.parentid = :ncat2) AND s.time <= NOW() AND s.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat_re' => '[[:<:]]'.$ncat.'[[:>:]]', 'ncat2' => $ncat];
         $catid = [];
         $result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-        while (list($caid) = $db->sql_fetchrow($result)) $catid[] = $caid;
+        while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
         unset($result);
         if (isArray($catid)) {
             $caton = 1;
@@ -70,28 +70,28 @@ function news() {
         $onum = "time <= NOW() AND status != '0' ".$hnwhere;
         $ntitle = _NEWS;
     }
-    setHead();
+    setHead(['title' => $ntitle]);
     $cont = '';
-    if (!$home || ($home && $confn['homcat'])) {
+    if (!$home || ($home && $conf['news']['homcat'])) {
         $cont .= navigate($ntitle, $caton);
-        if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $confn['defis'], _NEWS)]);
-        if ($caton == 1) $cont .= setCategories($conf['name'], $confn['subcat'], $confn['catdesc'], $ncat);
+        if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
+        if ($caton == 1) $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
     $result = $db->sql_query('SELECT s.sid, s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->sql_numrows($result) > 0) {
-        $width_tab = 100 / $confn['bascol'];
+        $width_tab = 100 / $conf['news']['bascol'];
         $i = 1;
         $cont .= '<table>';
-        while(list($id, $cid, $uname, $stitle, $time, $hometext, $bodytext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
+        while([$id, $cid, $uname, $stitle, $time, $hometext, $bodytext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result)) {
             
             $thref = getSeoUrl([
-    'name'   => $conf['name'],
-    'op'     => 'view',
-    'id'     => $id,
-    'title'  => $stitle,
+    'name' => $conf['name'],
+    'op' => 'view',
+    'id' => $id,
+    'title' => $stitle,
     'ctitle' => $ctitle
 ]);
 
@@ -102,22 +102,22 @@ function news() {
             $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
             $title = '<a href="'.$thref.'" title="'.$stitle.'">'.$stitle.'</a> '.new_graphic($time);
             $read = '<a href="'.$thref.'" title="'.$stitle.'" class="sl_but_read">'._READMORE.'</a>';
-            $post = ($confn['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
+            $post = ($conf['news']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
             $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-            $date = ($confn['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-            $reads = ($confn['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
+            $date = ($conf['news']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
+            $reads = ($conf['news']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
             $comm = ($acomm) ? '<a href="'.$thref.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
             $rating = ajax_rating(0, $id, $conf['name'], $ratings, $score, '');
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=news_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            if (($i - 1) % $confn['bascol'] == 0) $cont .= '<tr>';
+            if (($i - 1) % $conf['news']['bascol'] == 0) $cont .= '<tr>';
             $cont .= '<td style="width: '.$width_tab.'%;">';
             $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($hometext, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
             $cont .= '</td>';
-            if ($i % $confn['bascol'] == 0) $cont .= '</tr>';
+            if ($i % $conf['news']['bascol'] == 0) $cont .= '</tr>';
             $i++;
         }
         $cont .= '</table>';
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'sid', '_news', 'catid', $onum, $confn['nump']);
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'sid', '_news', 'catid', $onum, $conf['news']['nump']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -125,10 +125,10 @@ function news() {
     setFoot();
 }
 
-function liste() {
-    global $db, $conf, $confu, $confn;
+function liste(): void {
+    global $db, $conf;
     $cwhere = catmids($conf['name'], 's.catid');
-    $listnum = intval($confn['listnum']);
+    $listnum = intval($conf['news']['listnum']);
     $let = getVar('get', 'let', 'let');
     $params = [];
     if ($let) {
@@ -143,12 +143,12 @@ function liste() {
     $offset = ($num - 1) * $listnum;
     $offset = intval($offset);
     $result = $db->sql_query('SELECT s.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) '.$order.' '.$cwhere.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$listnum, $params);
-    setHead();
+    setHead(['title' => _LIST]);
     $cont = navigate(_LIST);
     if ($db->sql_numrows($result) > 0) {
-        $letter = ($confn['letter']) ? letter($conf['name']) : '';
+        $letter = ($conf['news']['letter']) ? letter($conf['name']) : '';
         $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
-        while (list($id, $cid, $uname, $title, $time, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
+        while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
@@ -159,7 +159,7 @@ function liste() {
         }
         $cont .= setTemplateBasic('liste-close');
         $onum = ($let) ? "title LIKE BINARY '".addslashes($let)."%' AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'sid', '_news', 'catid', $onum, $confn['nump']);
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'sid', '_news', 'catid', $onum, $conf['news']['nump']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -167,8 +167,8 @@ function liste() {
     setFoot();
 }
 
-function view() {
-    global $db, $afile, $conf, $confu, $confn;
+function view(): void {
+    global $db, $afile, $conf;
     $id = getVar('get', 'id', 'num');
     $pag = getVar('get', 'num', 'num', '1');
     $word = getVar('get', 'word', 'word');
@@ -176,7 +176,7 @@ function view() {
     $result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.counter, s.acomm, s.score, s.ratings, s.associated, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.sid = :id AND s.time <= NOW() AND s.status != \'0\' '.$cwhere, ['id' => $id]);
     if ($db->sql_numrows($result) == 1) {
         $db->sql_query('UPDATE '.PREFIX_DB.'_news SET counter = counter+1 WHERE sid = :id', ['id' => $id]);
-        list($cid, $uname, $title, $time, $hometext, $bodytext, $field, $vote, $counter, $acomm, $score, $ratings, $associated, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
+        [$cid, $uname, $title, $time, $hometext, $bodytext, $field, $vote, $counter, $acomm, $score, $ratings, $associated, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result);
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
         $seotitle  = $title;
         $seoctitle = $ctitle;
@@ -186,16 +186,16 @@ function view() {
         $seotime   = $time;
         $seoauthor = $user_name ?: ($uname ?: $conf['sitename']);
         setHead([
-            'title'  => $seotitle,
+            'title' => $seotitle,
             'ctitle' => $seoctitle,
-            'desc'   => $seodesc,
-            'img'    => $seoimg,
-            'time'   => $seotime,
+            'desc' => $seodesc,
+            'img' => $seoimg,
+            'time' => $seotime,
             'author' => $seoauthor,
         ]);
-        $cont = navigate(_NEWS, $confn['viewcat']);
-        if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $confn['defis'], _NEWS)]);
-        if ($confn['viewcat']) $cont .= setCategories($conf['name'], $confn['subcat'], $confn['catdesc'], 0);
+        $cont = navigate(_NEWS, $conf['news']['viewcat']);
+        if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
+        if ($conf['news']['viewcat']) $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
         $fields = fields_out($field, $conf['name']);
         $fields = ($fields) ? '<br><br>'.$fields : '';
         $text = (!$bodytext) ? $hometext.$fields : $hometext.'<br><br>'.$bodytext.$fields;
@@ -208,26 +208,26 @@ function view() {
         $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
         $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
         $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-        $post = ($confn['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
+        $post = ($conf['news']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
         $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-        $date = ($confn['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-        $reads = ($confn['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
+        $date = ($conf['news']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
+        $reads = ($conf['news']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
         $rating = ajax_rating(1, $id, $conf['name'], $ratings, $score, '');
         $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=news_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
         $favorites = favorview($id, $conf['name']);
         $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
         $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVoting($vote, $conf['name']).'</div><hr>' : '';
         $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($conpag[$arrayelement], $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting]);
-        $cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $confn['nump'], '', '#'.$id, '');
-        if ($confn['assoc']) {
-            $limit = intval($confn['asocnum']);
-            list($count) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(sid) FROM '.PREFIX_DB.'_news WHERE catid IN ('.$associated.') AND sid != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
+        $cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['news']['nump'], (int)$pag, '#'.$id);
+        if ($conf['news']['assoc']) {
+            $limit = intval($conf['news']['asocnum']);
+            [$count] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(sid) FROM '.PREFIX_DB.'_news WHERE catid IN ('.$associated.') AND sid != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
                 $result = $db->sql_query('SELECT sid, title, time, hometext, bodytext FROM '.PREFIX_DB.'_news WHERE catid IN ('.$associated.') AND sid != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
                 $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _ASSTORY]);
-                while (list($aid, $title, $time, $hometext, $bodytext) = $db->sql_fetchrow($result)) {
-                    $date = ($confn['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
+                while ([$aid, $title, $time, $hometext, $bodytext] = $db->sql_fetchrow($result)) {
+                    $date = ($conf['news']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
                     $text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
@@ -244,16 +244,16 @@ function view() {
     }
 }
 
-function add() {
-    global $conf, $user, $confn, $stop;
-    if ((is_user() && $confn['add'] == 1) || (!is_user() && $confn['addquest'] == 1)) {
+function add(): void {
+    global $conf, $user, $stop;
+    if ((is_user() && $conf['news']['add'] == 1) || (!is_user() && $conf['news']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'catid', 'num');
         $hometext = getVar('post', 'hometext', 'text');
         $bodytext = getVar('post', 'bodytext', 'text');
         $field = getVar('post', 'field', 'field');
         $postname = getVar('post', 'postname', 'name');
-        setHead();
+        setHead(['title' => _ADD]);
         $cont = navigate(_ADD);
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         if ($hometext) $cont .= preview($title, $hometext, $bodytext, $field, $conf['name']);
@@ -280,9 +280,9 @@ function add() {
     }
 }
 
-function send() {
-    global $db, $conf, $user, $confn, $stop;
-    if ((is_user() && $confn['add'] == 1) || (!is_user() && $confn['addquest'] == 1)) {
+function send(): void {
+    global $db, $conf, $user, $stop;
+    if ((is_user() && $conf['news']['add'] == 1) || (!is_user() && $conf['news']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'catid', 'num');
         $hometext = getVar('post', 'hometext', 'text');
@@ -300,8 +300,8 @@ function send() {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_news (sid, catid, uid, name, title, time, hometext, bodytext, field, associated, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :hometext, :bodytext, :field, \'\', :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'ip' => getIp()]);
             update_points(31);
             $puname = (is_user()) ? $user[1] : $postname;
-            addmail($confn['addmail'], $conf['name'], $puname, _NEWS);
-            setHead();
+            addmail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);
+            setHead(['title' => _ADD]);
             echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT]);
             setFoot();
         } else {

@@ -10,8 +10,8 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function search_result() {
-    global $db, $afile, $conf, $confu;
+function search_result(): void {
+    global $db, $afile, $conf;
     $search = explode(',', $conf['search']);
     $word = getVar('req', 'word', 'word', 0);
     $mod = getVar('req', 'mod', 'var', '');
@@ -26,7 +26,7 @@ function search_result() {
         }
     }
     $stop = ($word && strlen($word) < $conf['slet']) ? _SEARCHLETMIN.': '.$conf['slet'] : '';
-    setHead();
+    setHead(['title' => _SEARCH]);
     $cont = setTemplateBasic('title', ['{%title%}' => _SEARCH]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
@@ -68,7 +68,7 @@ function search_result() {
             if (($mod === '' || $mod === $val) && is_active($val) && $val !== '') {
                 if ($val == 'auto_links') {
                     $result = $db->sql_query('SELECT id, sitename, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (sitename LIKE :word1 OR description LIKE :word2 OR link LIKE :word3) ORDER BY added DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%']);
-                    while (list($id, $title, $date) = $db->sql_fetchrow($result)) {
+                    while ([$id, $title, $date] = $db->sql_fetchrow($result)) {
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -78,7 +78,7 @@ function search_result() {
                     }
                 } elseif ($val == 'faq') {
                     $result = $db->sql_query('SELECT f.fid, f.name, f.title, f.time, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.hometext LIKE :word2) ORDER BY f.time DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%']);
-                    while (list($id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
+                    while ([$id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word).'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -92,7 +92,7 @@ function search_result() {
                     }
                 } elseif ($val == 'files') {
                     $result = $db->sql_query('SELECT f.lid, f.name, f.title, f.date, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.date <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.description LIKE :word2 OR f.bodytext LIKE :word3) ORDER BY f.date DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%']);
-                    while (list($id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
+                    while ([$id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word).'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -108,11 +108,10 @@ function search_result() {
                     if (is_moder('forum')) {
                         $frecycle = '';
                     } else {
-                        $conffo = $conf['forum'] ?? [];
-                        $frecycle = "f.catid != '".($conffo['recycle'] ?? '0')."' AND";
+                        $frecycle = "f.catid != '".($conf['forum']['recycle'] ?? '0')."' AND";
                     }
                     $result = $db->sql_query('SELECT f.id, f.pid, f.name, f.title, f.time, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE '.$frecycle.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.hometext LIKE :word2) ORDER BY f.time DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%']);
-                    while (list($id, $pid, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
+                    while ([$id, $pid, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
                         $id = (!$pid) ? $id : $pid;
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word).'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
@@ -127,7 +126,7 @@ function search_result() {
                     }
                 } elseif ($val == 'jokes') {
                     $result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.date <= NOW() AND j.status != \'0\' AND (j.title LIKE :word1 OR j.joke LIKE :word2) ORDER BY j.date DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%']);
-                    while (list($id, $uname, $date, $title, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
+                    while ([$id, $uname, $date, $title, $cid, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
                         $title = '<a href="index.php?name='.$val.'&amp;cat='.$cid.'&amp;word='.urlencode($word).'#'.$id.'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -141,7 +140,7 @@ function search_result() {
                     }
                 } elseif ($val == 'links') {
                     $result = $db->sql_query('SELECT l.lid, l.name, l.title, l.date, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.user_id) WHERE l.date <= NOW() AND l.status != \'0\' AND (l.title LIKE :word1 OR l.description LIKE :word2 OR l.bodytext LIKE :word3 OR l.url LIKE :word4) ORDER BY l.date DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'word4' => '%'.$word.'%']);
-                    while (list($id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
+                    while ([$id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word).'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -154,7 +153,6 @@ function search_result() {
                         $a++;
                     }
                 } elseif ($val == 'media') {
-                    $confm = $conf['media'] ?? [];
                     if ($typ == 1 && $word) {
                         $sqlstring = '(m.title LIKE :word1 OR m.subtitle LIKE :word2) ORDER BY m.title ASC';
                     } elseif ($typ == 2 && $word) {
@@ -169,8 +167,8 @@ function search_result() {
                         $sqlstring = '(m.title LIKE :word1 OR m.subtitle LIKE :word2 OR m.description LIKE :word3) ORDER BY m.date DESC';
                     }
                     $result = $db->sql_query('SELECT m.id, m.name, m.title, m.subtitle, m.date, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.date <= NOW() AND m.status != \'0\' AND '.$sqlstring, ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%']);
-                    while (list($id, $uname, $title, $subtitle, $date, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
-                        $title = ($subtitle) ? $title.' '.urldecode($confm['mdefis']).' '.$subtitle : $title;
+                    while ([$id, $uname, $title, $subtitle, $date, $cid, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
+                        $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word).'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -184,7 +182,7 @@ function search_result() {
                     }
                 } elseif ($val == 'news') {
                     $result = $db->sql_query('SELECT s.sid, s.name, s.title, s.time, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.time <= NOW() AND s.status != \'0\' AND (s.title LIKE :word1 OR s.hometext LIKE :word2 OR s.bodytext LIKE :word3) ORDER BY s.time DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%']);
-                    while (list($id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
+                    while ([$id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word).'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -198,7 +196,7 @@ function search_result() {
                     }
                 } elseif ($val == 'pages') {
                     $result = $db->sql_query('SELECT p.pid, p.name, p.title, p.time, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.user_id) WHERE p.time <= NOW() AND p.status != \'0\' AND (p.title LIKE :word1 OR p.hometext LIKE :word2 OR p.bodytext LIKE :word3) ORDER BY p.time DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%']);
-                    while (list($id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name) = $db->sql_fetchrow($result)) {
+                    while ([$id, $uname, $title, $date, $cid, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word).'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -212,7 +210,7 @@ function search_result() {
                     }
                 } elseif ($val == 'shop') {
                     $result = $db->sql_query('SELECT p.id, p.time, p.title, c.id, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE time <= NOW() AND active = \'1\' AND (p.title LIKE :word1 OR p.text LIKE :word2 OR p.bodytext LIKE :word3) ORDER BY time DESC', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%']);
-                    while (list($id, $date, $title, $cid, $ctitle, $cdesc) = $db->sql_fetchrow($result)) {
+                    while ([$id, $date, $title, $cid, $ctitle, $cdesc] = $db->sql_fetchrow($result)) {
                         $title = '<a href="index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word).'" title="'.$title.'">'.search_color($title, $word).'</a> '.new_graphic($date);
                         $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
                         $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.deflmconst($val).'</a>';
@@ -229,7 +227,7 @@ function search_result() {
         $set = ($num - 1) * $conf['snum'];
         $tnum = ($set) ? $conf['snum'] + $set : $conf['snum'];
         for ($i = $set; $i < $tnum; $i++) {
-            if (isset($conts[$i]) && $conts[$i] != '') $cont .= tpl_func('basic', $conts[$i][0], $conts[$i][1], $conts[$i][2], $conts[$i][3], $conts[$i][4], $conts[$i][5], $conts[$i][6], $conts[$i][7]);
+            if (isset($conts[$i]) && $conts[$i] != '') $cont .= setTemplateBasic('basic-search', ['{%n%}' => $conts[$i][0], '{%title%}' => $conts[$i][2], '{%date%}' => $conts[$i][3], '{%modul%}' => $conts[$i][4], '{%ctitle%}' => $conts[$i][5], '{%post%}' => $conts[$i][6], '{%admin%}' => $conts[$i][7]]);
         }
         if (!$anum) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOMATCHES]);
         $pnum = ceil($anum / $conf['snum']);

@@ -10,15 +10,15 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function navigate($title, $cat='') {
-	global $conf, $confw;
+function navigate(string $title, string|int $cat=''): string {
+	global $conf;
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._WHOIS_LIC.'" class="sl_but_navi">'._HOME.'</a>';
-	$add = ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
+	$add = ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
 	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => '', '{%pop%}' => '', '{%liste%}' => '', '{%add%}' => $add, '{%catshow%}' => '']);
 }
 
-function mwhois() {
-	global $db, $afile, $user, $conf, $confu, $confw, $home, $locale;
+function mwhois(): void {
+	global $db, $afile, $user, $conf, $home, $locale;
 	global $domain_whois, $ext, $nomatch, $server, $domain_option;
 	$domain_licens = getVar('req', 'domain_licens', 'word');
 	
@@ -48,39 +48,39 @@ function mwhois() {
 	.'</fieldset>';
 
 	$serverdefs = [
-	'ru'		=> ['whois.tcinet.ru','No entries found'],
-	'com'	=> ['whois.verisign-grs.com','No match for'],
-	'net'	=> ['whois.verisign-grs.com','No match for'],
-	'org'	=> ['whois.publicinterestregistry.org','NOT FOUND'],
-	'biz'	=> ['whois.nic.biz','Not found'],
-	'info'	=> ['whois.nic.info','NOT FOUND'],
-	'name'	=> ['whois.nic.name','No match'],
-	'us'		=> ['whois.nic.us','Not found:'],
-	'de'	=> ['whois.denic.de','Status: free'],
-	'in'		=> ['whois.nixiregistry.in','NOT FOUND'],
-	'co.in'	=> ['whois.nixiregistry.in','NOT FOUND'],
-	'firm.in'	=> ['whois.nixiregistry.in','NOT FOUND'],
-	'gen.in'	=> ['whois.nixiregistry.in','NOT FOUND'],
-	'ind.in'	=> ['whois.nixiregistry.in','NOT FOUND'],
-	'net.in'	=> ['whois.nixiregistry.in','NOT FOUND'],
-	'org.in'	=> ['whois.nixiregistry.in','NOT FOUND'],
-	'com.ru'	=> ['whois.ripn.net','No entries found'],
-	'net.ru'	=> ['whois.ripn.net','No entries found'],
-	'org.ru'	=> ['whois.ripn.net','No entries found'],
-	'pp.ru'	=> ['whois.ripn.net','No entries found'],
-	'spb.ru'	=> ['whois.ripn.net','No entries found'],
-	'msk.ru'	=> ['whois.ripn.net','No entries found'],
-	'ws'	=> ['whois.nic.ws','No match for'],
-	'cn'		=> ['whois.cnnic.net.cn','No entries']];
+	'ru' => ['whois.tcinet.ru','No entries found'],
+	'com' => ['whois.verisign-grs.com','No match for'],
+	'net' => ['whois.verisign-grs.com','No match for'],
+	'org' => ['whois.publicinterestregistry.org','NOT FOUND'],
+	'biz' => ['whois.nic.biz','Not found'],
+	'info' => ['whois.nic.info','NOT FOUND'],
+	'name' => ['whois.nic.name','No match'],
+	'us' => ['whois.nic.us','Not found:'],
+	'de' => ['whois.denic.de','Status: free'],
+	'in' => ['whois.nixiregistry.in','NOT FOUND'],
+	'co.in' => ['whois.nixiregistry.in','NOT FOUND'],
+	'firm.in' => ['whois.nixiregistry.in','NOT FOUND'],
+	'gen.in' => ['whois.nixiregistry.in','NOT FOUND'],
+	'ind.in' => ['whois.nixiregistry.in','NOT FOUND'],
+	'net.in' => ['whois.nixiregistry.in','NOT FOUND'],
+	'org.in' => ['whois.nixiregistry.in','NOT FOUND'],
+	'com.ru' => ['whois.ripn.net','No entries found'],
+	'net.ru' => ['whois.ripn.net','No entries found'],
+	'org.ru' => ['whois.ripn.net','No entries found'],
+	'pp.ru' => ['whois.ripn.net','No entries found'],
+	'spb.ru' => ['whois.ripn.net','No entries found'],
+	'msk.ru' => ['whois.ripn.net','No entries found'],
+	'ws' => ['whois.nic.ws','No match for'],
+	'cn' => ['whois.cnnic.net.cn','No entries']];
 	
 	$option = getVar('req', 'option', 'var');
-	setHead();
+	setHead(['title' => _WHOIS_LIC]);
 	$cont = navigate(_WHOIS_LIC);
 	$cont .= setTemplateBasic('open');
 	$cont .= $licens_option;
 	if ($option == 'licens' && !namecheck($domain_licens)) {
 		$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active != \'2\'');
-		while (list($website) = $db->sql_fetchrow($result)) $cwebsite[] = $website;
+		while ([$website] = $db->sql_fetchrow($result)) $cwebsite[] = $website;
 		$cwebsite = implode(',', $cwebsite);
 		$cmassiv = explode(',', $cwebsite);
 		$wlicens = false;
@@ -95,7 +95,7 @@ function mwhois() {
 			$cont .= '<span class="sl_green">'._DOMAIN.' Â«'.$domain_licens.'Â» '._WHOIS_ISL.'!</span>';
 		} else {
 			$cont .= '<span class="sl_red">'._DOMAIN.' Â«'.$domain_licens.'Â» '._WHOIS_NOL.'!</span>';
-			$cont .= ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) ? '<form method="post" action="index.php?name='.$conf['name'].'"><input type="hidden" name="op" value="add"><input type="hidden" name="domain" value="'.$domain_licens.'"><input type="submit" value="'._WHOIS_LICENS_SEND.'" class="sl_but_blue"></form>' : '';
+			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? '<form method="post" action="index.php?name='.$conf['name'].'"><input type="hidden" name="op" value="add"><input type="hidden" name="domain" value="'.$domain_licens.'"><input type="submit" value="'._WHOIS_LICENS_SEND.'" class="sl_but_blue"></form>' : '';
 		}
 		$cont .= '</fieldset>';
 	} elseif ($option == 'licens') {
@@ -125,10 +125,10 @@ function mwhois() {
 	setFoot();
 }
 
-function add() {
-	global $db, $user, $conf, $confw, $confu, $stop;
-	if ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) {
-		setHead();
+function add(): void {
+	global $db, $user, $conf, $stop;
+	if ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) {
+		setHead(['title' => _WHOIS_LICENS_SEND]);
 		$cont = navigate(_WHOIS_LICENS_SEND);
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ABMIT]);
@@ -159,9 +159,9 @@ function add() {
 	}
 }
 
-function send() {
-	global $db, $user, $conf, $confw, $stop;
-	if ((is_user() && $confw['add'] == 1) || (!is_user() && $confw['addquest'] == 1)) {
+function send(): void {
+	global $db, $user, $conf, $stop;
+	if ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) {
 		$postname = getVar('post', 'postname', 'name');
 		$domain = getVar('post', 'domain', 'url');
 		$host = getVar('post', 'host', 'url');
@@ -177,8 +177,8 @@ function send() {
 			$uname = (!is_user()) ? $postname : '';
 			$db->sql_query('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :hometext, \'0\', \'0\', \'0\', \'0\')', ['uid' => $postid, 'name' => $uname, 'ip' => getIp(), 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
 			$puname = (is_user()) ? $user[1] : $postname;
-			addmail($confw['addmail'], $conf['name'], $puname, _WHOIS);
-			setHead();
+			addmail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
+			setHead(['title' => _WHOIS_LICENS_SEND]);
 			echo navigate(_WHOIS_LICENS_SEND).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ABTEXT]);
 			setFoot();
 		} else {
@@ -189,7 +189,7 @@ function send() {
 	}
 }
 
-function check_domain($domain_whois, $ext) {
+function check_domain(string $domain_whois, string $ext): int {
 	global $nomatch, $server;
 	$output = '';
 	set_error_handler(function() { return true; }, E_WARNING);
@@ -210,7 +210,7 @@ function check_domain($domain_whois, $ext) {
 	}
 }
 
-function whois($domain_whois, $ext) {
+function whois(string $domain_whois, string $ext): string {
 	global $server;
 	$cont = '';
 	set_error_handler(function() { return true; }, E_WARNING);
@@ -251,7 +251,7 @@ function whois($domain_whois, $ext) {
 	return $cont;
 }
 
-function print_results($layout, $id) {
+function print_results(int|string|null $layout, int $id): string {
 	global $domain_whois, $ext, $server, $domain_option, $conf;
 	$cont = '';
 	if (!$id) $cont .= $domain_option;
@@ -275,7 +275,7 @@ function print_results($layout, $id) {
 	return $cont;
 }
 
-function print_whois($output) {
+function print_whois(string|array $output): string {
 	global $domain_whois, $ext, $domain_option;
 	$cont = '<table><tr><td>'
 	.$domain_option
@@ -290,12 +290,13 @@ function print_whois($output) {
 	return $cont;
 }
 
-function namecheck($domain_whois) {
+function namecheck(string $domain_whois): string|null {
 	if ($domain_whois == '') return _WHOIS_FEL.'!';
 	if (strlen($domain_whois) < 3) return _WHOIS_FEL1.'!';
 	if (strlen($domain_whois) > 57) return _WHOIS_FEL2.'!';
 	if (preg_match('#^-|-$#', $domain_whois)) return _WHOIS_FEL3.'!';
 	if (preg_match('#[^a-zA-Z0-9._-]#', $domain_whois)) return _WHOIS_FEL4.'!';
+	return null;
 }
 
 switch($op) {

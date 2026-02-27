@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function navigate($title, $cat='') {
+function navigate(string $title, string $cat = ''): string {
     global $conf;
     $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._A_LINKS.'" class="sl_but_navi">'._HOME.'</a>';
     $new = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'new']).'" title="'._NEW.'" class="sl_but_navi">'._NEW.'</a>';
@@ -19,9 +19,10 @@ function navigate($title, $cat='') {
     return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $new, '{%pop%}' => $pop, '{%liste%}' => '', '{%add%}' => $add, '{%catshow%}' => '']);
 }
 
-function autolink() {
+function autolink(): void {
     global $db, $afile, $user, $conf, $home, $op;
-    $unum = user_news($user[3] ?? 0, $conf['auto_links']['num']);
+    $unum = intval(user_news($user[3] ?? 0, $conf['auto_links']['num']));
+    if ($unum < 1) $unum = 1;
     $word = getVar('get', 'word', 'word');
     if ($op) {
         $field = 'op='.$op.'&';
@@ -37,23 +38,23 @@ function autolink() {
         $order = 'hits';
         $ntitle = _A_LINKS;
     }
+    $order = in_array($order, ['added', 'outs', 'hits'], true) ? $order : 'hits';
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $a = ($num) ? $offset + 1 : 1;
     $result = $db->sql_query('SELECT id, sitename, description, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
-    setHead();
+    setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home) $cont .= navigate($ntitle);
     if ($db->sql_numrows($result) > 0) {
-        while (list($id, $sitename, $description, $hits, $outs, $time) = $db->sql_fetchrow($result)) {
+        while ([$id, $sitename, $description, $hits, $outs, $time] = $db->sql_fetchrow($result)) {
             $title = search_color($sitename, $word).' '.new_graphic($time);
             $read = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" target="_blank" title="'.$sitename.'" class="sl_but_read">'._DOWNLLINK.'</a>';
             $date = '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>';
             $reads = '<span title="'._OUTS.'" class="sl_outs">'.$outs.'</span>';
             $hits = '<span title="'._HITS.'" class="sl_hits">'.$hits.'</span>';
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=auto_links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=auto_links_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$sitename.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= tpl_func('basic', '', '', '', $id, $title, search_color(bb_decode($description, $conf['name']), $word), $read, '', $date, $reads, $hits, '', '', $admin, '', '', '');
+            $cont .= setTemplateBasic('basic', ['{%cid%}' => '', '{%cimg%}' => '', '{%ctitle%}' => '', '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => search_color(bb_decode($description, $conf['name']), $word), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => '', '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_auto_links', '', 'hits != \'0\'', $conf['auto_links']['nump']);
     } else {
@@ -63,11 +64,11 @@ function autolink() {
     setFoot();
 }
 
-function view() {
+function view(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num');
     if ($id) {
-        list($link)= $db->sql_fetchrow($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
+        [$link]= $db->sql_fetchrow($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
         $db->sql_query('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
         update_points(4);
         setRedirect($link);
@@ -76,7 +77,7 @@ function view() {
     }
 }
 
-function add() {
+function add(): void {
     global $stop, $conf;
     if (is_user()) {
         $userinfo = getusrinfo();
@@ -95,7 +96,7 @@ function add() {
     $post_description = getVar('post', 'description', 'text');
     $description = ($post_description) ? save_text($post_description) : '';
     
-    setHead();
+    setHead(['title' => _ADD]);
     $cont = navigate(_ADD);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($description) $cont .= preview($sitename, $description, '', '', $conf['name']);
@@ -112,10 +113,10 @@ function add() {
     setFoot();
 }
 
-function send() {
+function send(): void {
     global $db, $user, $stop, $conf;
-    $sitename = save_text(getVar('post', 'sitename', 'text'), 1);
-    $description = save_text(getVar('post', 'description', 'text'));
+    $sitename = getVar('post', 'sitename', 'text');
+    $description = getVar('post', 'description', 'text');
     $sitelink = url_filter(getVar('post', 'sitelink', 'text'));
     $adminemail = text_filter(getVar('post', 'adminemail', 'text'));
     $stop = [];
@@ -126,7 +127,7 @@ function send() {
     if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
     if ($db->sql_numrows($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE link = :sitelink', ['sitelink' => $sitelink])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
-        setHead();
+        setHead(['title' => _ADD]);
         $cont = navigate(_ADD);
         $db->sql_query('INSERT INTO '.PREFIX_DB.'_auto_links VALUES (NULL, :sitename, :description, :sitelink, :adminemail, 0, 0, NOW())', ['sitename' => $sitename, 'description' => $description, 'sitelink' => $sitelink, 'adminemail' => $adminemail]);
         $puname = (is_user()) ? $user[1] : '';
@@ -137,7 +138,7 @@ function send() {
         $cont .= '<table class="sl_table_form">'
         .'<tr><td>'._A_LINKS_M.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$my_link.'</textarea></td></tr>';
         if ($conf['auto_links']['img']) {
-            list($imgwidth, $imgheight) = getimagesize($conf['homeurl'].'/'.img_find('banners/'.$conf['auto_links']['img']));
+            [$imgwidth, $imgheight] = getimagesize($conf['homeurl'].'/'.img_find('banners/'.$conf['auto_links']['img']));
             $my_img_link = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['sitename'].' - '.$conf['slogan'].'&quot;><img src=&quot;'.$conf['homeurl'].'/'.img_find('banners/'.$conf['auto_links']['img']).'&quot; alt=&quot;'.$conf['sitename'].' - '.$conf['slogan'].'&quot; style=&quot;border: 0; width: '.$imgwidth.'; height: '.$imgheight.';&quot;></a>';
             $cont .= '<tr><td>'._A_LINKS_IMG.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$my_img_link.'</textarea></td></tr>';
         }

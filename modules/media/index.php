@@ -10,26 +10,26 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function navigate($title, $cat='') {
-	global $conf, $confm;
+function navigate(string $title, string|int $cat=''): string {
+	global $conf;
 	$ncat = getVar('get', 'cat', 'num');
 	$cpar = $ncat ? ['cat' => $ncat] : [];
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._MEDIA.'" class="sl_but_navi">'._HOME.'</a>';
-	$best = ($confm['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-	$pop = ($confm['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
+	$best = ($conf['media']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
+	$pop = ($conf['media']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
 	$liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-	$add = ((is_user() && $confm['add'] == 1) || (!is_user() && $confm['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
+	$add = ((is_user() && $conf['media']['add'] == 1) || (!is_user() && $conf['media']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
 	$catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
 	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow]);
 }
 
-function media() {
-	global $db, $afile, $user, $conf, $confu, $confm, $home, $op;
+function media(): void {
+	global $db, $afile, $user, $conf, $home, $op;
 	$cwhere = catmids($conf['name'], 'm.cid');
-	$unum = user_news($user[3] ?? 0, $confm['num']);
+	$unum = user_news($user[3] ?? 0, $conf['media']['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	$params = [];
-	if (!$ncat && $op && $confm['rate']) {
+	if (!$ncat && $op && $conf['media']['rate']) {
 		$caton = 0;
 		$field = 'op='.$op.'&';
 		if ($op == 'best') {
@@ -44,13 +44,13 @@ function media() {
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
 		$orderby = ($op) ? (($op == 'best') ? '(m.totalvotes/m.votes) DESC' : '(m.hits/(TO_DAYS(NOW()) - TO_DAYS(m.date))) DESC') : 'm.date DESC';
-		list($ctitle) = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (m.cid = :ncat1 OR c.parentid = :ncat2) AND m.date <= NOW() AND m.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$params = ['ncat1' => $ncat, 'ncat2' => $ncat];
 		$catid = [];
 		$result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-		while (list($caid) = $db->sql_fetchrow($result)) $catid[] = $caid;
+		while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
 		unset($result);
 		if (isArray($catid)) {
 			$caton = 1;
@@ -70,36 +70,36 @@ function media() {
 		$onum = "date <= NOW() AND status != '0' ".$hnwhere;
 		$ntitle = _MEDIA;
 	}
-	setHead();
+	setHead(['title' => $ntitle]);
 	$cont = '';
-	if (!$home || ($home && $confm['homcat'])) {
+	if (!$home || ($home && $conf['media']['homcat'])) {
 		$cont = navigate($ntitle, $caton);
-		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $confm['defis'], _MEDIA)]);
-		if ($caton == 1) $cont .= setCategories($conf['name'], $confm['subcat'], $confm['catdesc'], $ncat);
+		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
+		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.description, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.totalcom, m.hits, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
-		while(list($id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
+		while([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result)) {
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
 			$cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-			$mtitle = ($subtitle) ? $title.' '.urldecode($confm['mdefis']).' '.$subtitle : $title;
+			$mtitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
 			$title = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" title="'.$mtitle.'">'.$mtitle.'</a> '.new_graphic($time);
 			$read = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" title="'.$mtitle.'" class="sl_but_read">'._READMORE.'</a>';
-			$post = ($confm['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
+			$post = ($conf['media']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
 			$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-			$date = ($confm['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-			$reads = ($confm['read']) ? '<span title="'._READS.'" class="sl_views">'.$hits.'</span>' : '';
+			$date = ($conf['media']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
+			$reads = ($conf['media']['read']) ? '<span title="'._READS.'" class="sl_views">'.$hits.'</span>' : '';
 			$links = (url_types($links)) ? '<span title="'._MDOWN.': '.url_types($links).'" class="sl_down">'.url_types($links).'</span>' : '';
 			$comm = ($acomm) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
 			$rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
 			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=media_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=media_delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$mtitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-			$cont .= tpl_func('basic', $cid, $cimg, $ctitle, $id, $title, cutstr(bb_decode($description, $conf['name']), 800), $read, $post, $date, $reads, $links, $comm, $rating, $admin, '', '', '');
+			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => cutstr(bb_decode($description, $conf['name']), 800), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $links, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
 		}
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $confm['nump']);
+		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
@@ -107,10 +107,10 @@ function media() {
 	setFoot();
 }
 
-function liste() {
-	global $db, $conf, $confu, $confm;
+function liste(): void {
+	global $db, $conf;
 	$cwhere = catmids($conf['name'], 'm.cid');
-	$listnum = intval($confm['listnum']);
+	$listnum = intval($conf['media']['listnum']);
 	$let = getVar('get', 'let', 'let');
 	$params = [];
 	if ($let) {
@@ -125,21 +125,21 @@ function liste() {
 	$offset = ($num-1) * $listnum;
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, c.title, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid=u.user_id) '.$order.' '.$cwhere.' ORDER BY date DESC LIMIT '.$offset.', '.$listnum, $params);
-	setHead();
+	setHead(['title' => _LIST]);
 	$cont = navigate(_LIST);
 	if ($db->sql_numrows($result) > 0) {
-		$letter = ($confm['letter']) ? letter($conf['name']) : '';
-		$cont .= tpl_eval('liste-open', $letter, _ID, _TITLE, _CATEGORY, _POSTER, _DATE);
-		while(list($id, $cid, $uname, $title, $subtitle, $time, $ctitle, $user_name) = $db->sql_fetchrow($result)) {
-			$stitle = ($subtitle) ? $title.' '.urldecode($confm['mdefis']).' '.$subtitle : $title;
+		$letter = ($conf['media']['letter']) ? letter($conf['name']) : '';
+		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
+		while([$id, $cid, $uname, $title, $subtitle, $time, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
+			$stitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
 			$title = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" title="'.$stitle.'">'.cutstr($stitle, 40).'</a> '.new_graphic($time);
 			$ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$ctitle.'">'.cutstr($ctitle, 15).'</a>' : _NO;
 			$post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM);
-			$cont .= tpl_func('liste-basic', $id, $title, $ctitle, $post, format_time($time));
+			$cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $post, '{%time%}' => format_time($time)]);
 		}
-		$cont .= tpl_eval('liste-close');
+		$cont .= setTemplateBasic('liste-close', []);
 		$onum = ($let) ? "title LIKE BINARY '".$let."%' AND date <= NOW() AND status != '0'" : "date <= NOW() AND status != '0'";
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_media', 'cid', $onum, $confm['nump']);
+		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
@@ -147,16 +147,16 @@ function liste() {
 	setFoot();
 }
 
-function view() {
-	global $db, $afile, $conf, $confu, $confm;
+function view(): void {
+	global $db, $afile, $conf;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'text');
 	$cwhere = catmids($conf['name'], 'm.cid');
 	$result = $db->sql_query('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.hits, m.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.id = :id AND m.date <= NOW() AND m.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
 		$db->sql_query('UPDATE '.PREFIX_DB.'_media SET hits = hits+1 WHERE id = :id', ['id' => $id]);
-		list($cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $date, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result);
-		$ptitle = ($subtitle) ? $title.' '.urldecode($confm['mdefis']).' '.$subtitle : $title;
+		[$cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $date, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result);
+		$ptitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
 		$seotitle = $ptitle;
 		$seoctitle = $ctitle;
 		$seodesc = cutstr(trim(strip_tags(bb_decode($description, $conf['name']))), 160);
@@ -172,21 +172,21 @@ function view() {
 			'time' => $seotime,
 			'author' => $seoauthor,
 		]);
-		$cont = navigate(_MEDIA, $confm['viewcat']);
-		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $confm['defis'], _MEDIA)]);
-		if ($confm['viewcat']) $cont .= setCategories($conf['name'], $confm['subcat'], $confm['catdesc'], 0);
+		$cont = navigate(_MEDIA, $conf['media']['viewcat']);
+		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
+		if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
 		$cdesc = ($cdesc) ? $cdesc : $ctitle;
 		$ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
 		$cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-		$post = ($confm['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
+		$post = ($conf['media']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
 		$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-		$date = ($confm['date']) ? '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>' : '';
-		$reads = ($confm['read']) ? '<span title="'._READS.'" class="sl_views">'.$hits.'</span>' : '';
+		$date = ($conf['media']['date']) ? '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>' : '';
+		$reads = ($conf['media']['read']) ? '<span title="'._READS.'" class="sl_views">'.$hits.'</span>' : '';
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=media_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=media_delete&amp;id='.$id."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$ptitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
 		$favorites = favorview($id, $conf['name']);
 		$goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
-		$broc = ($confm['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCMEDIA.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
+		$broc = ($conf['media']['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCMEDIA.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
 		
 		$year = ($year) ? _MYEAR.': '.$year : '';
 		$director = ($director) ? _MDIRECTOR.': '.$director : '';
@@ -200,7 +200,7 @@ function view() {
 		$released = ($released) ? _MRELEASED.': '.$released : '';
 		$note = ($note) ? bb_decode($note, $conf['name']) : '';
 		if ($links) {
-			if ((is_user() && $confm['hide'] == '0') || $confm['hide'] == '1') {
+			if ((is_user() && $conf['media']['hide'] == '0') || $conf['media']['hide'] == '1') {
 				$links = explode(',', $links);
 				$e = 1;
 				$i = 0;
@@ -224,17 +224,17 @@ function view() {
 				$mlinks = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _HIDETEXT]);
 			}
 		}
-		$cont .= tpl_eval('basic', $cid, $cimg, $ctitle, $id, search_color($ptitle, $word), search_color(bb_decode($description, $conf['name']), $word), '', $post, $date, $reads, '', '', $rating, $admin, $favorites, $goback, '', '', '', '', $broc, '', '', $year, $director, $roles, $createdby, $duration, $lang, $format, $quality, $size, $released, $note, _MURLS, $mlinks);
-		if ($confm['link']) {
-			$limit = intval($confm['linknum']);
-			list($count) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
+		$cont .= setTemplateBasic('basic-media-view', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => search_color($ptitle, $word), '{%hits%}' => '', '{%reads%}' => $reads, '{%post%}' => $post, '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%cimg%}' => $cimg, '{%text%}' => search_color(bb_decode($description, $conf['name']), $word), '{%year%}' => $year, '{%director%}' => $director, '{%roles%}' => $roles, '{%createdby%}' => $createdby, '{%duration%}' => $duration, '{%lang%}' => $lang, '{%format%}' => $format, '{%quality%}' => $quality, '{%size%}' => $size, '{%released%}' => $released, '{%note%}' => $note, '{%links_label%}' => ($mlinks ?? '') ? _MURLS : '', '{%mlinks%}' => $mlinks ?? '', '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%download%}' => '', '{%broken%}' => $broc]);
+		if ($conf['media']['link']) {
+			$limit = intval($conf['media']['linknum']);
+			[$count] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
 				$result = $db->sql_query('SELECT id, title, subtitle, description, date FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\' ORDER BY date DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
 				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
-				while(list($aid, $title, $subtitle, $hometext, $time) = $db->sql_fetchrow($result)) {
-					$title = ($subtitle) ? $title.' '.urldecode($confm['mdefis']).' '.$subtitle : $title;
-					$adate = ($confm['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
+				while([$aid, $title, $subtitle, $hometext, $time] = $db->sql_fetchrow($result)) {
+					$title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
+					$adate = ($conf['media']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
 					$atext = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
 					if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
 						$img = 'uploads/'.$conf['name'].'/thumb/'.trim($match[1]);
@@ -256,31 +256,31 @@ function view() {
 	}
 }
 
-function add() {
-	global $db, $user, $conf, $confu, $confm, $stop;
-	if ((is_user() && $confm['add'] == 1) || (!is_user() && $confm['addquest'] == 1)) {
+function add(): void {
+	global $db, $user, $conf, $stop;
+	if ((is_user() && $conf['media']['add'] == 1) || (!is_user() && $conf['media']['addquest'] == 1)) {
 		$date = getdate();
-		$title = save_text(getVar('post', 'title', 'text'), 1);
-		$subtitle = save_text(getVar('post', 'subtitle', 'text'), 1);
-		$mtitle = isset($subtitle) ? $title.' '.urldecode($confm['mdefis']).' '.$subtitle : $title;
+		$title = getVar('post', 'title', 'text');
+		$subtitle = getVar('post', 'subtitle', 'text');
+		$mtitle = isset($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
 		$cid = getVar('post', 'cid', 'num');
 		$myear =  getVar('post', 'year', 'num', $date['year']);
-		$director = save_text(getVar('post', 'director', 'text'));
-		$roles = save_text(getVar('post', 'roles', 'text'));
-		$description = save_text(getVar('post', 'description', 'text'));
-		$createdby = save_text(getVar('post', 'createdby', 'text'));
-		$duration = save_text(getVar('post', 'duration', 'text'));
+		$director = getVar('post', 'director', 'text');
+		$roles = getVar('post', 'roles', 'text');
+		$description = getVar('post', 'description', 'text');
+		$createdby = getVar('post', 'createdby', 'text');
+		$duration = getVar('post', 'duration', 'text');
 		$mlang = text_filter(getVar('post', 'lang', 'text'));
-		$note = save_text(getVar('post', 'note', 'text'));
+		$note = getVar('post', 'note', 'text');
 		$mformat = text_filter(getVar('post', 'format', 'text'));
 		$mquality = text_filter(getVar('post', 'quality', 'text'));
-		$size = save_text(getVar('post', 'size', 'text'));
-		$released = save_text(getVar('post', 'released', 'text'));
+		$size = getVar('post', 'size', 'text');
+		$released = getVar('post', 'released', 'text');
 		$links = getVar('post', 'links', 'array');
 		if (!$links || !is_array($links)) $links = [];
 		$postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
 		
-		setHead();
+		setHead(['title' => _ADD]);
 		$cont = navigate(_ADD);
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		if ($description) $cont .= preview($mtitle, $description, $note, '', $conf['name']);
@@ -310,7 +310,7 @@ function add() {
 		.'<tr><td>'._MCREATEDBY.':</td><td><input type="text" name="createdby" value="'.$createdby.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MCREATEDBY.'"></td></tr>'
 		.'<tr><td>'._MDURATION.':</td><td><input type="text" name="duration" value="'.$duration.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MDURATION.'"></td></tr>'
 		.'<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_field '.$conf['style'].'">';
-		$lang = explode(',', $confm['lang']);
+		$lang = explode(',', $conf['media']['lang']);
 		foreach($lang as $val) {
 			$sel = ($val == $mlang && $val != '') ? ' selected' : '';
 			$cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
@@ -319,7 +319,7 @@ function add() {
 		.'<tr><td>'._NOTE.':</td><td>'.textarea('2', 'note', $note, $conf['name'], '5', _NOTE, '0').'</td></tr>'
 		.'<tr><td>'._MFORMAT.':</td><td><select name="format" class="sl_field '.$conf['style'].'">'
 		.'<option value="">'._NO_INFO.'</option>';
-		$format = explode(',', $confm['format']);
+		$format = explode(',', $conf['media']['format']);
 		foreach($format as $val) {
 			$sel = ($val == $mformat && $val != '') ? ' selected' : '';
 			$cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
@@ -327,7 +327,7 @@ function add() {
 		$cont .= '</select></td></tr>'
 		.'<tr><td>'._MQUALITY.':</td><td><select name="quality" class="sl_field '.$conf['style'].'">'
 		.'<option value="">'._NO_INFO.'</option>';
-		$quality = explode(',', $confm['quality']);
+		$quality = explode(',', $conf['media']['quality']);
 		foreach($quality as $val) {
 			$sel = ($val == $mquality && $val != '') ? ' selected' : '';
 			$cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
@@ -337,7 +337,7 @@ function add() {
 		.'<tr><td>'._MRELEASED.':</td><td><input type="text" name="released" value="'.$released.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MRELEASED.'"></td></tr>'
 		.'<tr><td colspan="2">';
 		$i = 0;
-		while($i < $confm['links']) {
+		while($i < $conf['media']['links']) {
 			$a = $i + 1;
 			$lnk_val = isset($links[$i]) ? $links[$i] : '';
 			$display = ($i != 0 && $lnk_val == '') ? ' sl_none' : '';
@@ -354,25 +354,25 @@ function add() {
 	}
 }
 
-function send() {
-	global $db, $user, $conf, $confm, $stop;
-	if ((is_user() && $confm['add'] == 1) || (!is_user() && $confm['addquest'] == 1)) {
+function send(): void {
+	global $db, $user, $conf, $stop;
+	if ((is_user() && $conf['media']['add'] == 1) || (!is_user() && $conf['media']['addquest'] == 1)) {
 		$postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
 		$cid = getVar('post', 'cid', 'num');
-		$title = save_text(getVar('post', 'title', 'text'), 1);
-		$subtitle = save_text(getVar('post', 'subtitle', 'text'), 1);
+		$title = getVar('post', 'title', 'text');
+		$subtitle = getVar('post', 'subtitle', 'text');
 		$year = getVar('post', 'year', 'num');
-		$director = save_text(getVar('post', 'director', 'text'));
-		$roles = save_text(getVar('post', 'roles', 'text'));
-		$description = save_text(getVar('post', 'description', 'text'));
-		$createdby = save_text(getVar('post', 'createdby', 'text'));
-		$duration = save_text(getVar('post', 'duration', 'text'));
+		$director = getVar('post', 'director', 'text');
+		$roles = getVar('post', 'roles', 'text');
+		$description = getVar('post', 'description', 'text');
+		$createdby = getVar('post', 'createdby', 'text');
+		$duration = getVar('post', 'duration', 'text');
 		$lang = text_filter(getVar('post', 'lang', 'text'));
-		$note = save_text(getVar('post', 'note', 'text'));
+		$note = getVar('post', 'note', 'text');
 		$format = text_filter(getVar('post', 'format', 'text'));
 		$quality = text_filter(getVar('post', 'quality', 'text'));
-		$size = save_text(getVar('post', 'size', 'text'));
-		$released = save_text(getVar('post', 'released', 'text'));
+		$size = getVar('post', 'size', 'text');
+		$released = getVar('post', 'released', 'text');
 		$links_arr = getVar('post', 'links', 'array');
 		$links = ($links_arr) ? text_filter(implode(',', str_replace(',', '.', $links_arr))) : '';
 		$stop = [];
@@ -387,7 +387,7 @@ function send() {
 			$db->sql_query('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
 			update_points(25);
 			$puname = (is_user()) ? $user[1] : $postname;
-			addmail($confm['addmail'], $conf['name'], $puname, _MEDIA);
+			addmail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
 			setHead(['title' => _MEDIA.' '._ADD, 'desc' => _UPLOADFINISHM]);
 			echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHM]);
 			setFoot();
@@ -399,12 +399,12 @@ function send() {
 	}
 }
 
-function broken() {
-	global $db, $conf, $confm;
+function broken(): void {
+	global $db, $conf;
 	$id = getVar('get', 'id', 'num');
-	if ($confm['broc'] == '1' && $id) {
+	if ($conf['media']['broc'] == '1' && $id) {
 		$db->sql_query('UPDATE '.PREFIX_DB.'_media SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
-		setHead();
+		setHead(['title' => _BROCMEDIA]);
 		echo navigate(_BROCMEDIA).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEM]);
 		setFoot();
 	} else {

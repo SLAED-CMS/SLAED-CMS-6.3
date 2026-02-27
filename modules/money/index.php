@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function money() {
+function money(): void {
 	global $conf, $confmo, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
@@ -19,9 +19,8 @@ function money() {
 	} else {
 		$mail = text_filter(getVar('post', 'mail', 'text'));
 	}
-	setHead();
+	setHead(['title' => _MONEY]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _MONEY]);
-	#$cont .= ($confmo['an']) ? tpl_warn("warn", _MO_5.": ".$confmo['bal']." EUR", "", "", "info") : tpl_warn("warn", _MO_11, "", "", "warn");
 
 
 	$cont .= ($confmo['an']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MO_5.': '.$confmo['bal'].' EUR']) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MO_11]);
@@ -69,7 +68,6 @@ function money() {
 		$info = getVar('post', 'info', 'array', []);
 		#$com = save_text($_POST['com'], 1);
 		$com = getVar('post', 'com', 'text');
-		#if ($stop) $cont .= tpl_warn("warn", $stop, "", "", "warn");
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		$cont .= setTemplateBasic('open');
 		$cont .= '<h2>'._MO_6.'</h2><form action="index.php?name='.$conf['name'].'" method="post">'
@@ -92,7 +90,7 @@ function money() {
 	setFoot();
 }
 
-function send() {
+function send(): void {
 	global $db, $conf, $confmo, $stop;
 	if ($confmo['an']) {
 		$sum = getVar('post', 'sum', 'num');
@@ -112,7 +110,7 @@ function send() {
 				$stop[] = _ERROR_ALL;
 			}
 		}
-		$com = save_text(getVar('post', 'com', 'text'), 1);
+		$com = getVar('post', 'com', 'text');
 		if (!$sum) $stop[] = _MO_SERROR;
 		checkemail($mail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
@@ -145,8 +143,7 @@ function send() {
 				$msg .= bb_decode($confmo['sendinfo'], 'all');
 				mail_send($mail, $amail, $subject, $msg, 0, 3);
 			}
-			setHead();
-			#echo setTemplateBasic('title', ['{%title%}' => _MONEY]).tpl_warn('warn', bb_decode($confmo['info'], 'all'), '?name='.$conf['name'], 30, 'info');
+			setHead(['title' => _MONEY]);
 			echo setTemplateBasic('title', ['{%title%}' => _MONEY]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => bb_decode($confmo['info'], 'all')]);
 			setFoot();
 		} else {

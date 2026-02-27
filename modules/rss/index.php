@@ -11,8 +11,8 @@ if (!defined('MODULE_FILE')) {
 get_lang($conf['name']);
 $confrs = $conf['rss'] ?? [];
 
-function info() {
-    global $db, $conf, $confrs;
+function info(): void {
+    global $db, $conf;
     $url = getVar('post', 'url', 'url');
     $mod = getVar('post', 'mod', 'text', 'news');
     $cat = getVar('post', 'cat', 'num');
@@ -40,8 +40,8 @@ function info() {
     .'<tr><td>'._RSS_INFO_MENG.':</td><td>'
     .'<select name="num" class="sl_field '.$conf['style'].'">';
     $lim = 1;
-    while ($lim <= $confrs['max']) {
-        $rsslim = ($num) ? $num : $confrs['min'];
+    while ($lim <= $conf['rss']['max']) {
+        $rsslim = ($num) ? $num : $conf['rss']['min'];
         $sel = ($lim == $rsslim) ? ' selected' : '';
         $content .= '<option value="'.$lim.'"'.$sel.'>'._RSS_INFO_MENG.' - '.$lim.'</option>';
         $lim++;
@@ -52,7 +52,7 @@ function info() {
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);
     $cont = setTemplateBasic('title', ['{%title%}' => _RSS]);
     $cont .= setTemplateBasic('open').$content.setTemplateBasic('close');
-    if ($confrs['use'] == 1) {
+    if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';
         $content = '<hr><form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form"><tr><td>'._SELECTASITE.':</td><td><select name="url" class="sl_field '.$conf['style'].'">'.rss_select().'</select></td><td><input type="submit" value="'._OK.'" class="sl_but_blue"></td></tr></table></form>'
         .'<form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form"><tr><td>'._ORTYPEURL.':</td><td><input type="url" name="url" value="'.$link.'" maxlength="200" class="sl_field '.$conf['style'].'" placeholder="'._ORTYPEURL.'"></td><td><input type="submit" value="'._OK.'" class="sl_but_blue"></td></tr></table></form>';

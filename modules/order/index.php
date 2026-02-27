@@ -10,8 +10,8 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function order() {
-	global $conf, $confor, $stop;
+function order(): void {
+	global $conf, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
 		$mail = getVar('post', 'mail', 'text', $userinfo['user_email']);
@@ -19,12 +19,12 @@ function order() {
 		$mail = getVar('post', 'mail', 'text');
 	}
 	$field = getVar('post', 'field', 'field');
-	setHead();
+	setHead(['title' => _ORDER]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _ORDER]);
 	$cont .= setTemplateBasic('open');
-	$cont .= bb_decode($confor['text'], 'all');
+	$cont .= bb_decode($conf['order']['text'], 'all');
 	$cont .= setTemplateBasic('close');
-	if ($confor['an']) {
+	if ($conf['order']['an']) {
 		$com = getVar('post', 'com', 'text');
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		$cont .= setTemplateBasic('open');
@@ -41,9 +41,9 @@ function order() {
 	setFoot();
 }
 
-function send() {
-	global $db, $conf, $confor, $stop;
-	if ($confor['an']) {
+function send(): void {
+	global $db, $conf, $stop;
+	if ($conf['order']['an']) {
 		$mail = getVar('post', 'mail', 'text');
 		$info = getVar('post', 'field', 'field');
 		$com = getVar('post', 'com', 'text');
@@ -51,25 +51,25 @@ function send() {
 		checkemail($mail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
-			$status = ($confor['pr']) ? '0' : '1';
+			$status = ($conf['order']['pr']) ? '0' : '1';
 			$db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, NOW(), :status)', ['mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
-			if ($confor['ad']) {
+			if ($conf['order']['ad']) {
 				$infos = fields_out($info, $conf['name']);
-				$amail = ($confor['mail']) ? $confor['mail'] : $conf['adminmail'];
+				$amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._ORDER;
 				$msg = $conf['sitename'].' - '._ORDER.'<br><br><b>'._PERSONALINFO.'</b><br><br>'._OR_2.': '.$mail.'<br>'.$infos.'<br>'._OR_3.': '.$com;
 				mail_send($amail, $mail, $subject, $msg, 1, 1);
 			}
-			if (!$confor['pr']) {
-				$amail = ($confor['mail']) ? $confor['mail'] : $conf['adminmail'];
+			if (!$conf['order']['pr']) {
+				$amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._ORDER;
 				$msg = $conf['sitename'].' - '._ORDER.'<br><br>';
-				$msg .= bb_decode($confor['sendinfo'], 'all');
+				$msg .= bb_decode($conf['order']['sendinfo'], 'all');
 				mail_send($mail, $amail, $subject, $msg, 0, 3);
 			}
 			update_points(34);
-			setHead();
-			echo setTemplateBasic('title', ['{%title%}' => _ORDER]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => bb_decode($confor['info'], 'all')]);
+			setHead(['title' => _ORDER]);
+			echo setTemplateBasic('title', ['{%title%}' => _ORDER]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => bb_decode($conf['order']['info'], 'all')]);
 			setFoot();
 		} else {
 			order();

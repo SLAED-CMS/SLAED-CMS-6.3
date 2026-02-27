@@ -49,7 +49,7 @@ function synch(): void {
     foot();
 }
 
-function conf(): void {
+function forum(): void {
     global $afile, $conf;
     $cfg = $conf['forum'] ?? [];
     head();
@@ -126,7 +126,7 @@ function info(): void {
 
 switch ($op) {
     default: synch(); break;
-    case 'conf': conf(); break;
+    case 'conf': forum(); break;
     case 'confsave': confsave(); break;
     case 'info': info(); break;
 }

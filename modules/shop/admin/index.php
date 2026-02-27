@@ -321,7 +321,6 @@ function products(): void {
 
 function productsadd(): void {
     global $db, $afile, $conf, $stop;
-    $cfg = $conf['shop'] ?? [];
     if (getVar('req', 'id', 'num', 0)) {
         $id = getVar('req', 'id', 'num');
         $result = $db->sql_query('SELECT id, cid, time, title, text, bodytext, preis, vote, assoc, ihome, acomm, count, fix, active FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $id]);

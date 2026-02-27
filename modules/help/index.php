@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function navigate($title, $cat='') {
+function navigate(string $title, string|int $cat=''): string {
 	global $conf, $confh;
 	$ncat = getVar('get', 'cat', 'num');
 	$cpar = $ncat ? ['cat' => $ncat] : [];
@@ -23,8 +23,8 @@ function navigate($title, $cat='') {
 	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $closed, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow]);
 }
 
-function help() {
-	global $db, $afile, $user, $conf, $confu, $confh, $home, $op;
+function help(): void {
+	global $db, $afile, $user, $conf, $confh, $home, $op;
 	$cwhere = catmids($conf['name'], 's.catid');
 	$uid = intval($user[0]);
 	$unum = user_news($user[3] ?? 0, $confh['num']);
@@ -44,10 +44,10 @@ function help() {
 		}
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-		list($ctitle) = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$catid = [];
 		$result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-		while (list($caid) = $db->sql_fetchrow($result)) $catid[] = $caid;
+		while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
 		unset($result);
 		$params = ['uid' => $uid, 'ncat1' => $ncat, 'ncat2' => $ncat];
 		if (isArray($catid)) {
@@ -79,7 +79,7 @@ function help() {
 		$onum = "pid = '0' AND uid = '".$uid."' AND time <= NOW()";
 		$ntitle = _HELPINFO;
 	}
-	setHead();
+	setHead(['title' => $ntitle]);
 	$cont = '';
 	if (!$home) {
 		$cont .= navigate($ntitle, $caton);
@@ -91,7 +91,7 @@ function help() {
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT s.sid, s.catid, s.title, s.time, s.hometext, s.comments, s.counter, c.title, c.description, c.img FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
-		while (list($id, $cid, $stitle, $time, $hometext, $comm, $counter, $ctitle, $cdesc, $cimg) = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $stitle, $time, $hometext, $comm, $counter, $ctitle, $cdesc, $cimg] = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -113,8 +113,8 @@ function help() {
 	setFoot();
 }
 
-function liste() {
-	global $db, $conf, $confu, $confh, $user;
+function liste(): void {
+	global $db, $conf, $confh, $user;
 	$cwhere = catmids($conf['name'], 's.catid');
 	$uid = intval($user[0]);
 	$listnum = intval($confh['listnum']);
@@ -132,12 +132,12 @@ function liste() {
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT s.sid, s.catid, s.title, s.time, s.status, c.title, c.description FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) '.$order.' '.$cwhere.' ORDER BY s.time DESC LIMIT '.$offset.', '.$listnum, $params);
-	setHead();
+	setHead(['title' => _LIST]);
 	$cont = navigate(_LIST);
 	if ($db->sql_numrows($result) > 0) {
 		$letter = ($confh['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _STATUS, '{%date%}' => _DATE]);
-		while (list($id, $cid, $title, $time, $status, $ctitle, $cdesc) = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $title, $time, $status, $ctitle, $cdesc] = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
@@ -156,8 +156,8 @@ function liste() {
 	setFoot();
 }
 
-function view() {
-	global $db, $afile, $user, $conf, $confu, $confh;
+function view(): void {
+	global $db, $afile, $user, $conf, $confh;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$uid = intval($user[0]);
@@ -165,7 +165,7 @@ function view() {
 	$result = $db->sql_query('SELECT s.sid, s.pid, s.catid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) WHERE (s.sid = :id1 OR s.pid = :id2) AND s.uid = :uid AND s.time <= NOW() '.$cwhere.' ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id, 'uid' => $uid]);
 	if ($db->sql_numrows($result) > 0) {
 		$db->sql_query('UPDATE '.PREFIX_DB.'_help SET counter = counter+1 WHERE sid = :id', ['id' => $id]);
-		list($seotitle, $seohometext, $seotime, $seoctitle, $seoauthor_name) = $db->sql_fetchrow($db->sql_query(
+		[$seotitle, $seohometext, $seotime, $seoctitle, $seoauthor_name] = $db->sql_fetchrow($db->sql_query(
 			'SELECT s.title, s.hometext, s.time, c.title, u.user_name FROM '.PREFIX_DB.'_help AS s '.
 			'LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) '.
 			'LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) '.
@@ -176,16 +176,16 @@ function view() {
 		$seoimg    = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
 		$seoauthor = $seoauthor_name ?: $conf['sitename'];
 		setHead([
-			'title'  => $seotitle,
+			'title' => $seotitle,
 			'ctitle' => $seoctitle,
-			'desc'   => $seodesc,
-			'img'    => $seoimg,
-			'time'   => $seotime,
+			'desc' => $seodesc,
+			'img' => $seoimg,
+			'time' => $seotime,
 			'author' => $seoauthor,
 		]);
 		$cont = navigate(_HELPINFO);
 		$a = 0;
-		while (list($hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
+		while ([$hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result)) {
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = ($title) ? search_color($title, $word) : _MESSAGE.': '.$a;
 			$fields = fields_out($field, $conf['name']);
@@ -217,11 +217,11 @@ function view() {
 	}
 }
 
-function add_view($id) {
+function add_view(int|string $id): string {
 	global $db, $conf, $confh;
 	if ((is_user() && $confh['add'] == 1)) {
 		$result = $db->sql_query('SELECT catid, status FROM '.PREFIX_DB.'_help WHERE sid = :id', ['id' => $id]);
-		list($hcatid, $status) = $db->sql_fetchrow($result);
+		[$hcatid, $status] = $db->sql_fetchrow($result);
 		$cont = setTemplateBasic('open');
 		$cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
 		.'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1').'</td></tr>'
@@ -230,16 +230,17 @@ function add_view($id) {
 		$cont .= setTemplateBasic('close');
 		return $cont;
 	}
+	return '';
 }
 
-function add() {
-	global $db, $conf, $confh, $confu, $stop;
+function add(): void {
+	global $db, $conf, $confh, $stop;
 	if ((is_user() && $confh['add'] == 1)) {
 		$title = getVar('post', 'title', 'title');
 		$cid = getVar('post', 'catid', 'num');
 		$hometext = getVar('post', 'hometext', 'text');
 		$field = getVar('post', 'field', 'field');
-		setHead();
+		setHead(['title' => _ADD]);
 		$cont = navigate(_ADD);
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		if ($hometext) $cont .= preview($title, $hometext, '', $field, $conf['name']);
@@ -259,7 +260,7 @@ function add() {
 	}
 }
 
-function send() {
+function send(): void {
 	global $db, $user, $conf, $confh, $stop;
 	if ((is_user() && $confh['add'] == 1)) {
 		$title = getVar('post', 'title', 'title');
@@ -277,7 +278,7 @@ function send() {
 			if ($pid) $db->sql_query('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE sid = :pid', ['status' => $status, 'pid' => $pid]);
 			$puname = (is_user()) ? $user[1] : '';
 			addmail($confh['addmail'], $conf['name'], $puname, _HELP);
-			setHead();
+			setHead(['title' => _ADD]);
 			echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _HSUBTEXT]);
 			setFoot();
 		} else {

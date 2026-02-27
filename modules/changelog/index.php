@@ -194,7 +194,6 @@ function chlogGhPage(string $owner, string $repo, array $filters, int $perpage, 
         return [];
     }
 
-    $header = substr($response, 0, $headerz);
     $body = substr($response, $headerz);
 
     if ($httpcode !== 200) {
@@ -276,7 +275,7 @@ function chlogGitFetch(string $gitdir, array $filters, int $limit, string &$erro
     $cmd = escapeshellarg($gitexe).' log --pretty="format:'.$format.'" --date="format:'.$dateformat.'" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
 
     $gitlog = [];
-    exec($cmd, $gitlog, $retcode);
+    chlogExecGit($cmd, $gitlog, $retcode);
     chdir($olddir);
 
     if ($retcode !== 0) {
@@ -287,6 +286,16 @@ function chlogGitFetch(string $gitdir, array $filters, int $limit, string &$erro
     $commits = chlogGitParse($gitlog);
     chlogSetCache($cachekey, $commits, 'git:'.$gitdir);
     return $commits;
+}
+
+function chlogExecGit(string $cmd, array &$out, int &$code): void {
+    $out = [];
+    $code = 1;
+    if (!function_exists('exec')) return;
+    // Allow only single-line git log commands built by this module.
+    if (preg_match('/[\x00\r\n]/', $cmd)) return;
+    if (!preg_match('#(?:^git|[\'"][^\'"]*git(?:\.exe)?[\'"])\s+log\s+#i', $cmd)) return;
+    exec($cmd, $out, $code);
 }
 
 function chlogGitParse(array $lines): array {

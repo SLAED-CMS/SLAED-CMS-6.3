@@ -8,7 +8,7 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function systems() {
+function systems(): void {
 	global $db, $conf, $afile, $user, $stop, $info;
 	setHead(['title' => _PRODUCTSINFO]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _PRODUCTSINFO]);
@@ -22,7 +22,7 @@ function systems() {
 		$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CLOADS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
 		$i = 0;
 		$a = 1;
-		while (list($id, $title, $infotext, $url, $num, $hits, $prod_id, $status) = $db->sql_fetchrow($result)) {
+		while ([$id, $title, $infotext, $url, $num, $hits, $prod_id, $status] = $db->sql_fetchrow($result)) {
 			$tpath = 'uploads/clients/thumb/'.$id.'_'.$user_id.'.zip';
 			$dtitle = (file_exists($tpath)) ? _CDOWN : _GZIPGEN;
 			$moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=clients_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
@@ -47,14 +47,13 @@ function systems() {
 	setFoot();
 }
 
-function download() {
+function download(): void {
 	global $db, $user, $conf, $stop, $info;
-	$prod_id = getVar('get', 'prod_id', 'num');
 	$user_id = intval($user['0']);
-	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = \'1\' AND id_user = \''.$user_id.'\'');
+	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $user_id]);
 	if (is_user() && $db->sql_numrows($result) > 0) {
 		$id = getVar('get', 'id', 'num');
-		list($pid, $url, $num) = $db->sql_fetchrow($db->sql_query('SELECT id, url, num FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\' AND id = \''.$id.'\''));
+		[$pid, $url, $num] = $db->sql_fetchrow($db->sql_query('SELECT id, url, num FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
 		$tpath = 'uploads/clients/thumb/'.$pid.'_'.$user_id.'.zip';
 		if (!file_exists($tpath)) {
 			$ipath = 'uploads/clients/images';
@@ -84,7 +83,7 @@ function download() {
 				systems();
 			}
 		} else {
-			$db->sql_query('UPDATE '.PREFIX_DB.'_clients_down SET hits = hits+1 WHERE id = \''.$id.'\'');
+			$db->sql_query('UPDATE '.PREFIX_DB.'_clients_down SET hits = hits+1 WHERE id = :id', ['id' => $id]);
 			stream($tpath, date('d.m.Y').'_'.str_replace(' ', '_', $num).'.zip');
 		}
 	} else {
@@ -93,7 +92,7 @@ function download() {
 	}
 }
 
-function save_hidden($path, $ipath, $code) {
+function save_hidden(string $path, string $ipath, string $code): void {
 	# Ð§Ð¸Ñ‚Ð°ÐµÐ¼ Ð¸ Ð¿ÐµÑ€ÐµÐ·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ Ñ„Ð°Ð¹Ð»
 	$content = file_get_contents($ipath);
 	$code = $content.$code;
@@ -105,16 +104,15 @@ function save_hidden($path, $ipath, $code) {
 	touch($path, $atime, $atime);
 }
 
-function generator($path='') {
+function generator(string $path = ''): void {
 	global $db, $user, $conf, $stop;
-	$prod_id = getVar('get', 'prod_id', 'num');
 	$user_id = intval($user['0']);
-	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = \'1\' AND id_user = \''.$user_id.'\'');
+	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $user_id]);
 	if (is_user() && $db->sql_numrows($result) > 0) {
-		while (list($domain) = $db->sql_fetchrow($result)) $domains[] = $domain;
+		while ([$domain] = $db->sql_fetchrow($result)) $domains[] = $domain;
 		$domains = preg_replace('#https?://|www\.#i', '', implode(',', $domains));
 		$id = getVar('get', 'id', 'num');
-		list($pass) = $db->sql_fetchrow($db->sql_query('SELECT code FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\' AND id = \''.$id.'\''));
+		[$pass] = $db->sql_fetchrow($db->sql_query('SELECT code FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
 		$massiv = explode(',', $domains);
 		foreach ($massiv as $val) {
 			if ($val != '') {

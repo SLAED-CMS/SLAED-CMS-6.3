@@ -14,12 +14,12 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function rss(): void {
-    global $afile, $confrs;
+    global $afile;
     head();
     $cont = navi(0, 0, 0, 0, 'rss');
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
     $content = '';
-    $fieldc = explode('||', $confrs['rss']);
+    $fieldc = explode('||', $conf['rss']['rss']);
     for ($c = 0; $c < 50; $c++) {
         preg_match('#(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
         $field = '<select name="field3[]" class="sl_conf">';
@@ -49,11 +49,11 @@ function rss(): void {
     .'<input type="hidden" name="op" value="save">'
     .'<div id="tabc0" class="tabcont">'.$content.'</div>'
     .'<div id="tabc1" class="tabcont"><table class="sl_table_conf">'
-    .'<tr><td>'._RSSMIN.':</td><td><input type="number" name="min" value="'.$confrs['min'].'" class="sl_conf" placeholder="'._RSSMIN.'" required></td></tr>'
-    .'<tr><td>'._RSSMAX.':</td><td><input type="number" name="max" value="'.$confrs['max'].'" class="sl_conf" placeholder="'._RSSMAX.'" required></td></tr>'
-    .'<tr><td>'._RSSTEMP.':<div class="sl_small">'._RSSTEMPINFO.'</div></td><td><textarea name="temp" cols="65" rows="5" class="sl_conf" placeholder="'._RSSTEMP.'" required>'.$confrs['temp'].'</textarea></td></tr>'
-    .'<tr><td>'._RSSACT.':</td><td>'.radio_form($confrs['act'], 'act').'</td></tr>'
-    .'<tr><td>'._RSSUSE.'</td><td>'.radio_form($confrs['use'], 'use').'</td></tr>'
+    .'<tr><td>'._RSSMIN.':</td><td><input type="number" name="min" value="'.$conf['rss']['min'].'" class="sl_conf" placeholder="'._RSSMIN.'" required></td></tr>'
+    .'<tr><td>'._RSSMAX.':</td><td><input type="number" name="max" value="'.$conf['rss']['max'].'" class="sl_conf" placeholder="'._RSSMAX.'" required></td></tr>'
+    .'<tr><td>'._RSSTEMP.':<div class="sl_small">'._RSSTEMPINFO.'</div></td><td><textarea name="temp" cols="65" rows="5" class="sl_conf" placeholder="'._RSSTEMP.'" required>'.$conf['rss']['temp'].'</textarea></td></tr>'
+    .'<tr><td>'._RSSACT.':</td><td>'.radio_form($conf['rss']['act'], 'act').'</td></tr>'
+    .'<tr><td>'._RSSUSE.'</td><td>'.radio_form($conf['rss']['use'], 'use').'</td></tr>'
     .'</table></div>'
     .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
     .'<script>

@@ -10,26 +10,26 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function navigate($title, $cat='') {
-	global $conf, $confj;
+function navigate(string $title, string|int $cat=''): string {
+	global $conf;
 	$ncat = getVar('get', 'cat', 'num');
 	$cpar = $ncat ? ['cat' => $ncat] : [];
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._JOKES.'" class="sl_but_navi">'._HOME.'</a>';
-	$best = ($confj['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-	$pop = ($confj['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-	$add = ((is_user() && $confj['add'] == 1) || (!is_user() && $confj['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
+	$best = ($conf['jokes']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
+	$pop = ($conf['jokes']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
+	$add = ((is_user() && $conf['jokes']['add'] == 1) || (!is_user() && $conf['jokes']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
 	$catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
 	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => '', '{%add%}' => $add, '{%catshow%}' => $catshow]);
 }
 
-function jokes() {
-	global $db, $afile, $user, $conf, $confu, $confj, $home, $op;
+function jokes(): void {
+	global $db, $afile, $user, $conf, $home, $op;
 	$cwhere = catmids($conf['name'], 'j.cat');
 	$word = getVar('get', 'word', 'word');
-	$unum = user_news($user[3] ?? 0, $confj['num']);
+	$unum = user_news($user[3] ?? 0, $conf['jokes']['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	$params = [];
-	if (!$ncat && $op && $confj['rate']) {
+	if (!$ncat && $op && $conf['jokes']['rate']) {
 		$caton = 0;
 		$field = 'op='.$op.'&';
 		if ($op == 'best') {
@@ -44,13 +44,13 @@ function jokes() {
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
 		$orderby = ($op) ? (($op == 'best') ? '(j.rating/j.ratingtot) DESC' : '(j.ratingtot/(TO_DAYS(NOW()) - TO_DAYS(j.date))) DESC') : 'j.date DESC';
-		list($ctitle) = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (j.cat = :ncat1 OR c.parentid = :ncat2) AND j.date <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$params = ['ncat1' => $ncat, 'ncat2' => $ncat];
 		$catid = [];
 		$result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-		while (list($caid) = $db->sql_fetchrow($result)) $catid[] = $caid;
+		while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
 		unset($result);
 		if (isArray($catid)) {
 			$caton = 1;
@@ -68,31 +68,31 @@ function jokes() {
 		$onum = "date <= NOW() AND status != '0'";
 		$ntitle = _JOKES;
 	}
-	setHead();
+	setHead(['title' => $ntitle]);
 	$cont = '';
-	if (!$home || ($home && $confj['homcat'])) {
+	if (!$home || ($home && $conf['jokes']['homcat'])) {
 		$cont .= navigate($ntitle, $caton);
-		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $confj['defis'], _JOKES)]);
-		if ($caton == 1) $cont .= setCategories($conf['name'], $confj['subcat'], $confj['catdesc'], $ncat);
+		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
+		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['jokes']['subcat'], $conf['jokes']['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, j.rating, j.ratingtot, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
-		while (list($id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
+		while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result)) {
 			$title = '<a href="#'.$id.'" title="'.$jtitle.'">'.search_color($jtitle, $word).'</a> '.new_graphic($time);
 			$post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM);
 			$post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
-			$date = ($confj['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
+			$date = ($conf['jokes']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
 			$cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
 			$rating = ajax_rating(1, $id, $conf['name'], $ratingtot, $rating, '');
 			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=jokes_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=jokes_delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$jtitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-			$cont .= tpl_func('basic', $cid, $cimg, $ctitle, $id, $title, search_color(bb_decode($joke, $conf['name']), $word), '', $post, $date, '', '', '', $rating, $admin, '', '', '');
+			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => search_color(bb_decode($joke, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => '', '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
 		}
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'jokeid', '_jokes', 'cat', $onum, $confj['nump']);
+		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'jokeid', '_jokes', 'cat', $onum, $conf['jokes']['nump']);
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
@@ -100,15 +100,15 @@ function jokes() {
 	setFoot();
 }
 
-function add() {
-	global $db, $user, $conf, $confu, $confj, $stop;
-	if ($confj['add'] == '1') {
-		$title = save_text(getVar('post', 'title', 'text'), 1);
+function add(): void {
+	global $db, $user, $conf, $stop;
+	if ($conf['jokes']['add'] == '1') {
+		$title = getVar('post', 'title', 'text');
 		$cid = getVar('post', 'cid', 'num');
-		$joke = save_text(getVar('post', 'joke', 'text'));
+		$joke = getVar('post', 'joke', 'text');
 		$postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
 		
-		setHead();
+		setHead(['title' => _ADD]);
 		$cont = navigate(_ADD);
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		if ($joke) $cont .= preview($title, $joke, '', '', 'all');
@@ -133,13 +133,13 @@ function add() {
 	}
 }
 
-function send() {
-	global $db, $user, $conf, $confj, $stop;
-	if ($confj['add'] == '1') {
+function send(): void {
+	global $db, $user, $conf, $stop;
+	if ($conf['jokes']['add'] == '1') {
 		$postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
-		$title = save_text(getVar('post', 'title', 'text'), 1);
+		$title = getVar('post', 'title', 'text');
 		$cid = getVar('post', 'cid', 'num');
-		$joke = save_text(getVar('post', 'joke', 'text'));
+		$joke = getVar('post', 'joke', 'text');
 		$stop = [];
 		if (!$title) $stop[] = _CERROR;
 		if (!$joke) $stop[] = _CERROR1;
@@ -152,7 +152,7 @@ function send() {
 			$db->sql_query('INSERT INTO '.PREFIX_DB.'_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
 			update_points(19);
 			$puname = (is_user()) ? $user[1] : $postname;
-			addmail($confj['addmail'], $conf['name'], $puname, _JOKES);
+			addmail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
 			setHead(['title' => _JOKES.' '._ADD, 'desc' => _UPLOADFINISHJ]);
 			echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHJ]);
 			setFoot();

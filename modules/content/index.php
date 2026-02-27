@@ -9,7 +9,9 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function content() {
+get_lang($conf['name']);
+
+function content(): void {
 	global $db, $afile, $conf, $confcn;
 	setHead(['title' => _CONTENT]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _CONTENT]);
@@ -20,7 +22,7 @@ function content() {
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
-		while (list($id, $title, $text, $time, $counter)= $db->sql_fetchrow($result)) {
+		while ([$id, $title, $text, $time, $counter]= $db->sql_fetchrow($result)) {
 			$moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=content_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>||' : '';
 			$edit = add_menu($moder.'<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._SHOW.'">'._SHOW.'</a>');
 			$cont .= '<tr id="'.$id.'">'
@@ -38,14 +40,14 @@ function content() {
 	setFoot();
 }
 
-function view() {
-	global $db, $conf, $confn, $afile;
+function view(): void {
+	global $db, $conf, $afile;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$result = $db->sql_query('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
 		$db->sql_query('UPDATE '.PREFIX_DB.'_content SET counter = counter+1 WHERE id = :id', ['id' => $id]);
-		list($id, $title, $text, $field, $url, $time, $refresh) = $db->sql_fetchrow($result);
+		[$id, $title, $text, $field, $url, $time, $refresh] = $db->sql_fetchrow($result);
 		if ($url) {
 			$past = time() - $refresh;
 			if (strtotime($time) < $past) {
@@ -66,7 +68,7 @@ function view() {
 			'time' => $time,
 			'author' => $conf['sitename'],
 		]);
-		echo setTemplateBasic('title', ['{%title%}' => $title]).setTemplateBasic('open').search_color(bb_decode($hometext, $conf['name']), $word).setTemplateBasic('close');
+		echo setTemplateBasic('title', ['if_flag' => ['is_view' => true], '{%title%}' => $title]).setTemplateBasic('open').search_color(bb_decode($hometext, $conf['name']), $word).setTemplateBasic('close');
 		setFoot();
 	} else {
 		setRedirect('index.php?name='.$conf['name']);

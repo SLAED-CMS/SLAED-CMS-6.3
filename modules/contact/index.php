@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function contact() {
+function contact(): void {
 	global $db, $conf, $locale, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
@@ -31,7 +31,7 @@ function contact() {
 		}
 		$result = $db->sql_query('SELECT id, name, title FROM '.PREFIX_DB.'_admins WHERE smail = \'1\' '.$wlang.' ORDER BY id', $params);
 		if ($db->sql_numrows($result) > 0) {
-			while (list($id, $aname, $atitle) = $db->sql_fetchrow($result)) {
+			while ([$id, $aname, $atitle] = $db->sql_fetchrow($result)) {
 				$aname = substr($aname, 0, 25);
 				$atitle = substr($atitle, 0, 50);
 				$asend .= '<option value="'.$id.'">'.$aname.' - '.$atitle.'</option>';
@@ -66,7 +66,7 @@ function contact() {
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			if ($conf['contact']['admins'] && $id) {
-				list($adminmail) = $db->sql_fetchrow($db->sql_query('SELECT email FROM '.PREFIX_DB.'_admins WHERE id = :id AND smail = \'1\'', ['id' => $id]));
+				[$adminmail] = $db->sql_fetchrow($db->sql_query('SELECT email FROM '.PREFIX_DB.'_admins WHERE id = :id AND smail = \'1\'', ['id' => $id]));
 				$to = $adminmail;
 			} else {
 				$to = $conf['adminmail'];

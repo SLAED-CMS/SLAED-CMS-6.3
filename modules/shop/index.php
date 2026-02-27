@@ -10,25 +10,25 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function navigate($title, $cat='') {
-	global $conf, $confso;
+function navigate(string $title, string|int $cat=''): string {
+	global $conf;
 	$ncat = getVar('get', 'cat', 'num');
 	$cpar = $ncat ? ['cat' => $ncat] : [];
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._SHOP.'" class="sl_but_navi">'._HOME.'</a>';
-	$best = ($confso['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-	$pop = ($confso['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
+	$best = ($conf['shop']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
+	$pop = ($conf['shop']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
 	$liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
 	$catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
 	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => '', '{%catshow%}' => $catshow]);
 }
 
-function shop() {
-	global $db, $conf, $confso, $afile, $home, $user, $op;
+function shop(): void {
+	global $db, $conf, $afile, $home, $user, $op;
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$unum = user_news($user[3] ?? 0, $confso['num']);
+	$unum = user_news($user[3] ?? 0, $conf['shop']['num']);
 	$ncat = getVar('get', 'cat', 'num');
 	$params = [];
-	if (!$ncat && $op && $confso['rate']) {
+	if (!$ncat && $op && $conf['shop']['rate']) {
 		$caton = 0;
 		$field = 'op='.$op.'&';
 		if ($op == 'best') {
@@ -43,13 +43,13 @@ function shop() {
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
 		$orderby = ($op) ? (($op == 'best') ? '(p.totalvotes/p.votes) DESC' : '(p.count/(TO_DAYS(NOW()) - TO_DAYS(p.time))) DESC') : 'p.fix DESC, p.time DESC';
-		list($ctitle) = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (p.cid = :ncat1 OR p.assoc REGEXP :ncat_re OR c.parentid = :ncat2) AND p.time <= NOW() AND p.active != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$params = ['ncat1' => $ncat, 'ncat_re' => '[[:<:]]'.$ncat.'[[:>:]]', 'ncat2' => $ncat];
 		$catid = [];
 		$result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-		while (list($caid) = $db->sql_fetchrow($result)) $catid[] = $caid;
+		while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
 		unset($result);
 		if (isArray($catid)) {
 			$caton = 1;
@@ -69,13 +69,13 @@ function shop() {
 		$onum = "time <= NOW() AND active != '0' ".$hnwhere;
 		$ntitle = _SHOP;
 	}
-	setHead();
+	setHead(['title' => $ntitle]);
 	$cont = '';
-	if (!$home || ($home && $confso['homcat'])) {
-		$defis = $confso['defis'] ?? ($conf['defis'] ?? '-');
+	if (!$home || ($home && $conf['shop']['homcat'])) {
+		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		$cont .= navigate($ntitle, $caton);
 		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $defis, _SHOP)]);
-		if ($caton == 1) $cont .= setCategories($conf['name'], $confso['subcat'], $confso['catdesc'], $ncat);
+		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
@@ -83,10 +83,10 @@ function shop() {
 	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.acomm, p.com, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
-		$width_tab = 100 / $confso['bascol'];
+		$width_tab = 100 / $conf['shop']['bascol'];
 		$i = 1;
 		$cont .= '<table>';
-		while (list($id, $cid, $time, $stitle, $text, $bodytext, $ppreis, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg) = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $time, $stitle, $text, $bodytext, $ppreis, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -99,34 +99,34 @@ function shop() {
 			#### In Bearbeitung
 			$uname = $uname ?? '';
 			$user_name = $user_name ?? '';
-			$post = isset($confso['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
+			$post = isset($conf['shop']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
 			$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 			####
 			
-			$date = ($confso['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-			$reads = ($confso['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
+			$date = ($conf['shop']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
+			$reads = ($conf['shop']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
 			$comm = ($acomm) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$pcom.'</a>' : '';
 			$rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
 			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=shop_products_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
 			
 			#### In Bearbeitung
 			$prtitle = empty($opreis) ? _PREIS : _NPREIS;
-			$preis = '<span title="'.$prtitle.'" class="sl_shop_price">'.$prtitle.': '.$ppreis.' '.$confso['valute'].'</span>';
-			$opreis = empty($opreis) ? '' : '<span title="'._OPREIS.'" class="sl_shop_oprice">'._OPREIS.': '.$ppreis.' '.$confso['valute'].'</span>';
-			$discount = empty($discount) ? '' : '<span title="'._DISCOUNT.'" class="sl_shop_discount">'._DISCOUNT.': '.$ppreis.' '.$confso['valute'].'</span>';
+			$preis = '<span title="'.$prtitle.'" class="sl_shop_price">'.$prtitle.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
+			$opreis = empty($opreis) ? '' : '<span title="'._OPREIS.'" class="sl_shop_oprice">'._OPREIS.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
+			$discount = empty($discount) ? '' : '<span title="'._DISCOUNT.'" class="sl_shop_discount">'._DISCOUNT.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
 			####
 			
 			$cart = '<a OnClick="AjaxLoad(\'GET\', \'0\', \'kasse\', \'go=2&amp;op=add_kasse&amp;id='.$id.'\', \'\'); AddBasket(\''.$id.'\'); return false;" title="'._SCART.'" class="sl_shop_add">'._SCART.'</a>';
 			$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
-			if (($i - 1) % $confso['bascol'] == 0) $cont .= '<tr>';
+			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= '<tr>';
 			$cont .= '<td style="width: '.$width_tab.'%;">';
 			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($text, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '', '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 			$cont .= '</td>';
-			if ($i % $confso['bascol'] == 0) $cont .= '</tr>';
+			if ($i % $conf['shop']['bascol'] == 0) $cont .= '</tr>';
 			$i++;
 		}
 		$cont .= '</table>';
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_products', 'cid', $onum, $confso['nump']);
+		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump']);
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
@@ -134,10 +134,10 @@ function shop() {
 	setFoot();
 }
 
-function liste() {
-	global $db, $conf, $confu, $confso;
+function liste(): void {
+	global $db, $conf;
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$listnum = intval($confso['listnum']);
+	$listnum = intval($conf['shop']['listnum']);
 	$let = getVar('get', 'let', 'let');
 	$params = [];
 	if ($let) {
@@ -152,23 +152,23 @@ function liste() {
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.preis, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
-	setHead();
+	setHead(['title' => _LIST]);
 	$cont = navigate(_LIST);
 	if ($db->sql_numrows($result) > 0) {
-		$letter = ($confso['letter']) ? letter($conf['name']) : '';
+		$letter = ($conf['shop']['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _PREIS, '{%date%}' => _DATE]);
-		while (list($id, $cid, $time, $title, $preis, $ctitle, $cdesc) = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $time, $title, $preis, $ctitle, $cdesc] = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
-			$preis = $preis.' '.$confso['valute'];
+			$preis = $preis.' '.$conf['shop']['valute'];
 			$cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $preis, '{%time%}' => format_time($time)]);
 		}
 		$cont .= setTemplateBasic('liste-close');
 		$onum = ($let) ? "title LIKE BINARY '".$let."%' AND time <= NOW() AND active != '0'" : "time <= NOW() AND active != '0'";
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_products', 'cid', $onum, $confso['nump']);
+		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump']);
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
 	}
@@ -176,15 +176,15 @@ function liste() {
 	setFoot();
 }
 
-function view() {
-	global $db, $conf, $confso, $afile;
+function view(): void {
+	global $db, $conf, $afile;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'p.cid');
 	$result = $db->sql_query('SELECT p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.vote, p.assoc, p.acomm, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.active != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
 		$db->sql_query('UPDATE '.PREFIX_DB.'_products SET count = count+1 WHERE id = :id', ['id' => $id]);
-		list($cid, $time, $title, $text, $bodytext, $ppreis, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg) = $db->sql_fetchrow($result);
+		[$cid, $time, $title, $text, $bodytext, $ppreis, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->sql_fetchrow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
@@ -201,10 +201,10 @@ function view() {
 			'time' => $seotime,
 			'author' => $seoauthor,
 		]);
-		$cont = navigate(_SHOP, $confso['viewcat']);
-		$defis = $confso['defis'] ?? ($conf['defis'] ?? '-');
+		$cont = navigate(_SHOP, $conf['shop']['viewcat']);
+		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $defis, _SHOP)]);
-		if ($confso['viewcat']) $cont .= setCategories($conf['name'], $confso['subcat'], $confso['catdesc'], 0);
+		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
 		$text = ($bodytext) ? $text.'<br><br>'.$bodytext : $text;
 		$cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -215,12 +215,12 @@ function view() {
 		#### In Bearbeitung
 		$uname = $uname ?? '';
 		$user_name = $user_name ?? '';
-		$post = isset($confso['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
+		$post = isset($conf['shop']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
 		$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 		####
 		
-		$date = ($confso['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-		$reads = ($confso['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
+		$date = ($conf['shop']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
+		$reads = ($conf['shop']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=shop_products_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
 		$favorites = favorview($id, $conf['name']);
@@ -229,23 +229,23 @@ function view() {
 		
 		#### In Bearbeitung
 		$prtitle = empty($opreis) ? _PREIS : _NPREIS;
-		$preis = '<span title="'.$prtitle.'" class="sl_shop_price">'.$prtitle.': '.$ppreis.' '.$confso['valute'].'</span>';
-		$opreis = empty($opreis) ? '' : '<span title="'._OPREIS.'" class="sl_shop_oprice">'._OPREIS.': '.$ppreis.' '.$confso['valute'].'</span>';
-		$discount = empty($discount) ? '' : '<span title="'._DISCOUNT.'" class="sl_shop_discount">'._DISCOUNT.': '.$ppreis.' '.$confso['valute'].'</span>';
+		$preis = '<span title="'.$prtitle.'" class="sl_shop_price">'.$prtitle.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
+		$opreis = empty($opreis) ? '' : '<span title="'._OPREIS.'" class="sl_shop_oprice">'._OPREIS.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
+		$discount = empty($discount) ? '' : '<span title="'._DISCOUNT.'" class="sl_shop_discount">'._DISCOUNT.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
 		####
 		
 		$cart = '<a OnClick="AjaxLoad(\'GET\', \'0\', \'kasse\', \'go=2&amp;op=add_kasse&amp;id='.$id.'\', \'\'); AddBasket(\''.$id.'\'); return false;" title="'._SCART.'" class="sl_shop_add">'._SCART.'</a>';
 		$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
 		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting, '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
-		if ($confso['assoc']) {
-			$limit = intval($confso['assocnum']);
-			list($count) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\'', ['id' => $id]));
+		if ($conf['shop']['assoc']) {
+			$limit = intval($conf['shop']['assocnum']);
+			[$count] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\'', ['id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
 				$result = $db->sql_query('SELECT id, time, title, text, bodytext FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
 				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _ASPROD]);
-				while (list($aid, $time, $title, $hometext, $bodytext) = $db->sql_fetchrow($result)) {
-					$date = ($confso['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
+				while ([$aid, $time, $title, $hometext, $bodytext] = $db->sql_fetchrow($result)) {
+					$date = ($conf['shop']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
 					$text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
@@ -262,8 +262,8 @@ function view() {
 	}
 }
 
-function kasse() {
-	global $db, $conf, $confu, $confso, $stop;
+function kasse(): void {
+	global $db, $conf, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
 		$sender_id = $userinfo['user_id'];
@@ -292,7 +292,7 @@ function kasse() {
 	.'<tr><td>'._SDOM.':</td><td><input type="url" name="sender_dom" value="'.$sender_dom.'" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
 	.'<tr><td>'._C_MESSAGE.':</td><td><textarea name="sender_message" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._C_MESSAGE.'">'.$sender_message.'</textarea></td></tr>'
 	.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="opi" value="1"><input type="hidden" name="op" value="kasse"><input type="submit" value="'._C_SEND.'" class="sl_but_blue"></td></tr></table></form>';
-	setHead();
+	setHead(['title' => _C_TITLE]);
 	$cont = navigate(_C_TITLE);
 	if (!$opi && $cookies) {
 		$cont .= '<div id="repkasse">'.show_kasse().'</div>';
@@ -309,7 +309,7 @@ function kasse() {
 			$preistotal = 0;
 			$content = '';
 			$result = $db->sql_query('SELECT id, title, preis FROM '.PREFIX_DB.'_products WHERE id IN ('.$cookies.')');
-			while(list($id, $title, $preis) = $db->sql_fetchrow($result)) {
+			while([$id, $title, $preis] = $db->sql_fetchrow($result)) {
 				$massiv = explode(',', $cookies);
 				$i = 0;
 				foreach ($massiv as $val) {
@@ -317,11 +317,11 @@ function kasse() {
 				}
 				$preis = $preis * $i;
 				$preistotal += $preis;
-				$content .= '<tr><td>'.$id.'</td><td>'.$i.'</td><td>'.$title.'</td><td>'.$preis.' '.$confso['valute'].'</td></td></tr>';
+				$content .= '<tr><td>'.$id.'</td><td>'.$i.'</td><td>'.$title.'</td><td>'.$preis.' '.$conf['shop']['valute'].'</td></td></tr>';
 			}
-			$pinfo = '<table style="width: 100%;"><tr><th>'._ID.'</th><th>'._QUANTITY.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th></tr>'.$content.'<tr><td colspan="5"><br><b>'._PARTNERGES.': '.$preistotal.' '.$confso['valute'].'</b></td></tr></table>';
-			if ($confso['mailsend']) {
-				$amail = ($confso['mail']) ? $confso['mail'] : $conf['adminmail'];
+			$pinfo = '<table style="width: 100%;"><tr><th>'._ID.'</th><th>'._QUANTITY.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th></tr>'.$content.'<tr><td colspan="5"><br><b>'._PARTNERGES.': '.$preistotal.' '.$conf['shop']['valute'].'</b></td></tr></table>';
+			if ($conf['shop']['mailsend']) {
+				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
 				$msg = $conf['sitename'].' - '._C_TITLE.'<br><br>';
 				$msg .= $pinfo.'<br><br>';
@@ -335,11 +335,11 @@ function kasse() {
 				$msg .= _C_MESSAGE.': '.$sender_message;
 				mail_send($amail, $sender_email, $subject, $msg, 1, 1);
 			}
-			if ($confso['mailuser']) {
-				$amail = ($confso['mail']) ? $confso['mail'] : $conf['adminmail'];
+			if ($conf['shop']['mailuser']) {
+				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
 				$msg = $conf['sitename'].' - '._C_TITLE.'<br><br>';
-				$msg .= bb_decode($confso['sende'], $conf['name']).'<br><br>';
+				$msg .= bb_decode($conf['shop']['sende'], $conf['name']).'<br><br>';
 				$msg .= $pinfo.'<br><br>';
 				$msg .= '<b>'._PERSONALINFO.'</b><br><br>';
 				$msg .= _NICKNAME.': '.$sender_login.'<br>';
@@ -361,7 +361,7 @@ function kasse() {
 			setcookie('shop', false);
 			setcookie('part', false);
 			update_points(39);
-			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => bb_decode($confso['sende'], $conf['name'])]);
+			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => bb_decode($conf['shop']['sende'], $conf['name'])]);
 		} else {
 			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 			$cont .= '<div id="repkasse">'.show_kasse().'</div>';
@@ -374,32 +374,32 @@ function kasse() {
 	setFoot();
 }
 
-function part() {
-	global $conf, $confso;
+function part(): void {
+	global $conf;
 	$id = getVar('get', 'id', 'num');
-	if ($id) setcookie('part', $id, time() + $confso['part_t']);
+	if ($id) setcookie('part', $id, time() + $conf['shop']['part_t']);
 	setRedirect('index.php?name='.$conf['name']);
 }
 
-function clients() {
-	global $db, $user, $conf, $confso;
+function clients(): void {
+	global $db, $user, $conf;
 	if (is_user() && is_active('shop')) {
 		$user_id = intval($user[0]);
-		setHead();
+		setHead(['title' => _CLIENTINFO]);
 		$cont = navigate(_CLIENTINFO);
 		$cont .= navi();
 		$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_user = :user_id ORDER BY c.id ASC', ['user_id' => $user_id]);
 		if ($db->sql_numrows($result) > 0) {
 			$cont .= setTemplateBasic('open');
 			$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._L_DATE.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
-			while(list($cid, $cid_user, $cid_product, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $user_id, $user_name, $pid, $stitle, $ppreis) = $db->sql_fetchrow($result)) {
+			while([$cid, $cid_user, $cid_product, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $user_id, $user_name, $pid, $stitle, $ppreis] = $db->sql_fetchrow($result)) {
 				$website = ($cwebsite) ? '<br>'._SITE.': '.$cwebsite : '';
 				$note = ($cinfo) ? '<br>'._NOTE.' : '.$cinfo : '';
 				$cenddate = ($cenddate != '0') ? rest_time($cenddate) : _NO;
 				$rechn = add_menu('<a href="index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid.'" target="_blank" title="'._RECHN_B.'">'._RECHN_B.'</a>');
 				$cont .= '<tr id="'.$cid.'">'
 				.'<td><a href="#'.$cid.'" title="'.$cid.'" class="sl_pnum">'.$cid.'</a></td>'
-				.'<td>'.title_tip(_PREIS.': '.$ppreis.' '.$confso['valute'].$website.$note).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
+				.'<td>'.title_tip(_PREIS.': '.$ppreis.' '.$conf['shop']['valute'].$website.$note).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
 				.'<td>'.$cenddate.'</td>'
 				.'<td>'.ad_status('', $cactive).'</td>'
 				.'<td>'.$rechn.'</td></tr>';
@@ -407,7 +407,7 @@ function clients() {
 			$cont .= '</tbody></table>';
 			$cont .= setTemplateBasic('close');
 		}
-		$cont .= setTemplateBasic('open').bb_decode($confso['userinfo'], $conf['name']).setTemplateBasic('close');
+		$cont .= setTemplateBasic('open').bb_decode($conf['shop']['userinfo'], $conf['name']).setTemplateBasic('close');
 		echo $cont;
 		setFoot();
 	} else {
@@ -415,14 +415,14 @@ function clients() {
 	}
 }
 
-function rech() {
-	global $db, $conf, $confso, $theme;
+function rech(): void {
+	global $db, $conf, $theme;
 	if (is_user() && is_active('shop')) {
 		$defis = urldecode($conf['defis']);
 		$id = getVar('get', 'id', 'num');
 		$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.text, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
 		if ($db->sql_numrows($result) > 0) {
-			list($cid, $cid_user, $cid_product, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $ppreis) = $db->sql_fetchrow($result);
+			[$cid, $cid_user, $cid_product, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $ppreis] = $db->sql_fetchrow($result);
 			$cont = '<!doctype html>'."\n";
 			$cont .= '<html>'."\n";
 			$cont .= '<head>'."\n";
@@ -431,7 +431,7 @@ function rech() {
 				$cont .= '<link rel="stylesheet" href="templates/'.$theme.'/theme.css">'."\n";
 			}
 			$cont .= '<title>'.$conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN.'</title></head>'
-			.'<body><table style="width: 640px; margin: 5%;"><tr><td colspan="2"><hr></td></tr><tr><td style="width: 40%;"><img src="'.img_find('logos/'.$conf['site_logo']).'" alt="'.$conf['sitename'].'"></td><td style="text-align: right;">'.bb_decode($confso['shopinfo'], $conf['name']).'</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2"><br><p>'._C_PIN.': '.$cname.'<br>'._C_PIP.': '.$cadres.'<br>'._C_TEL.': '.$cphone.'<br>'._C_MAIL.': '.$cemail.'</p></td></tr><tr><td colspan="2"><hr></td></tr><tr><td><b>'._C_NAIM.'</b></td><td style="text-align: right;"><b>'._K_DATE.': '.date(_TIMESTRING, $cregdate).'</b></td></tr><tr><td colspan="2"><hr></td></tr>';
+			.'<body><table style="width: 640px; margin: 5%;"><tr><td colspan="2"><hr></td></tr><tr><td style="width: 40%;"><img src="'.img_find('logos/'.$conf['site_logo']).'" alt="'.$conf['sitename'].'"></td><td style="text-align: right;">'.bb_decode($conf['shop']['shopinfo'], $conf['name']).'</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2"><br><p>'._C_PIN.': '.$cname.'<br>'._C_PIP.': '.$cadres.'<br>'._C_TEL.': '.$cphone.'<br>'._C_MAIL.': '.$cemail.'</p></td></tr><tr><td colspan="2"><hr></td></tr><tr><td><b>'._C_NAIM.'</b></td><td style="text-align: right;"><b>'._K_DATE.': '.date(_TIMESTRING, $cregdate).'</b></td></tr><tr><td colspan="2"><hr></td></tr>';
 			$cenddate = ($cenddate != '0') ? date(_TIMESTRING, $cenddate) : _UNLIMITED;
 			$cont .= '<tr><td>'._PRODUCT.':</td><td style="text-align: right;">'.$stitle.'</td></tr>'
 			.'<tr><td>'._SDOM.':</td><td style="text-align: right;">'.$cwebsite.'</td></tr>'
@@ -442,7 +442,7 @@ function rech() {
 			.'<tr><td colspan="2"><hr></td></tr>'
 			.'<tr><td colspan="2">'.bb_decode($text, $conf['name']).'</td></tr>'
 			.'<tr><td colspan="2"><hr></td></tr>'
-			.'<tr><td colspan="2" style="text-align: right;"><b>'._PREIS_TEXT.': '.$ppreis.' '.$confso['valute'].'</b></td></tr>'
+			.'<tr><td colspan="2" style="text-align: right;"><b>'._PREIS_TEXT.': '.$ppreis.' '.$conf['shop']['valute'].'</b></td></tr>'
 			.'</table></body></html>';
 			echo $cont;
 		}
@@ -451,19 +451,19 @@ function rech() {
 	}
 }
 
-function partners() {
-	global $db, $conf, $confso, $stop;
+function partners(): void {
+	global $db, $conf, $stop;
 	if (is_user() && is_active('shop')) {
 		$userinfo = getusrinfo();
 		$user_id = intval($userinfo['user_id']);
 		$sender_email = $userinfo['user_email'];
 		$sender_dom = $userinfo['user_website'];
-		setHead();
+		setHead(['title' => _PARTNERINFO]);
 		$cont = navigate(_PARTNERINFO);
 		$cont .= navi();
 		$result = $db->sql_query('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id_user = :user_id', ['user_id' => $user_id]);
 		if ($db->sql_numrows($result) > 0) {
-			list($paid, $paid_user, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive) = $db->sql_fetchrow($result);
+			[$paid, $paid_user, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->sql_fetchrow($result);
 			if ($paactive == 2) {
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PARTNERADD_W]);
 			} elseif ($paactive == 0) {
@@ -473,15 +473,15 @@ function partners() {
 				$partsum = $partsumges = $a = 0;
 				if ($db->sql_numrows($result) > 0) {
 					$content = '';
-					while(list($cid, $cid_user, $cid_product, $cid_partner, $cpartner_proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuser_id, $user_name, $pid, $stitle, $ppreis) = $db->sql_fetchrow($result)) {
+					while([$cid, $cid_user, $cid_product, $cid_partner, $cpartner_proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuser_id, $user_name, $pid, $stitle, $ppreis] = $db->sql_fetchrow($result)) {
 						$partsum = $ppreis / 100 * $cpartner_proz;
 						$partsumges += $partsum;
 						$content .= '<tr id="'.$cid.'">'
 						.'<td><a href="#'.$cid.'" title="'.$cid.'" class="sl_pnum">'.$cid.'</a></td>'
 						.'<td>'.user_info($user_name).'</td>'
-						.'<td>'.title_tip(_PREIS.': '.$ppreis.' '.$confso['valute'].'<br>'._DATE.' : '.date(_TIMESTRING, $cregdate)).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
+						.'<td>'.title_tip(_PREIS.': '.$ppreis.' '.$conf['shop']['valute'].'<br>'._DATE.' : '.date(_TIMESTRING, $cregdate)).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
 						.'<td>'.$cpartner_proz.' %</td>'
-						.'<td>'.$partsum.' '.$confso['valute'].'</td></tr>';
+						.'<td>'.$partsum.' '.$conf['shop']['valute'].'</td></tr>';
 						$a++;
 					}
 					$cont .= setTemplateBasic('open');
@@ -491,14 +491,14 @@ function partners() {
 				$cont .= setTemplateBasic('open');
 				$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._CLIENTEN.'</th><th>'._WEBMONEY.'</th><th>'._PAYPAL.'</th><th>'._PARTNERGES.'</th><th>'._PARTNERREST.'</th><th>'._PARTNERBEK.'</th></tr></thead><tbody class="sl_table_list_body">'
 				.'<tr><td>'.$a.'</td><td>'.$pawebmoney.'</td><td>'.$papaypal.'</td>'
-				.'<td>'.$partsumges.' '.$confso['valute'].'</td><td>'.$parest.' '.$confso['valute'].'</td><td>'.$pabek.' '.$confso['valute'].'</td></tr></tbody></table>';
+				.'<td>'.$partsumges.' '.$conf['shop']['valute'].'</td><td>'.$parest.' '.$conf['shop']['valute'].'</td><td>'.$pabek.' '.$conf['shop']['valute'].'</td></tr></tbody></table>';
 				$cont .= setTemplateBasic('close');
-				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $user_id, $confso['partlink'])]);
-				$cont .= setTemplateBasic('open').bb_decode(str_replace('[id]', $user_id, $confso['partinfo2']), $conf['name']).setTemplateBasic('close');
+				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $user_id, $conf['shop']['partlink'])]);
+				$cont .= setTemplateBasic('open').bb_decode(str_replace('[id]', $user_id, $conf['shop']['partinfo2']), $conf['name']).setTemplateBasic('close');
 			}
 		} else {
 			if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-			$cont .= setTemplateBasic('open').bb_decode($confso['partinfo'], $conf['name']).setTemplateBasic('close');
+			$cont .= setTemplateBasic('open').bb_decode($conf['shop']['partinfo'], $conf['name']).setTemplateBasic('close');
 			$cont .= setTemplateBasic('title', ['{%title%}' => _PARTNERADD]);
 			$cont .= setTemplateBasic('open');
 			$cont .= '<form method="post" action="index.php?name='.$conf['name'].'"><table class="sl_table_form">'
@@ -519,7 +519,7 @@ function partners() {
 	}
 }
 
-function partners_send() {
+function partners_send(): void {
 	global $db, $user, $conf, $stop;
 	if (is_user() && is_active('shop')) {
 		$paid_user = getVar('post', 'paid_user', 'num');

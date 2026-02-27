@@ -54,8 +54,8 @@ function add(): void {
         [$cid, $title, $infotext, $url, $num, $code, $prod_id, $status] = $db->sql_fetchrow($result);
     } else {
         $cid = getVar('post', 'cid', 'num');
-        $title = save_text(getVar('post', 'title', 'title', ''), 1);
-        $infotext = save_text(getVar('post', 'infotext', 'text', ''));
+        $title = getVar('post', 'title', 'title', '');
+        $infotext = getVar('post', 'infotext', 'text', '');
         $url = getVar('post', 'url', 'text', '');
         $num = getVar('post', 'num', 'text', '');
         $code = getVar('post', 'code', 'text', '');
@@ -87,8 +87,8 @@ function add(): void {
 function save(): void {
     global $db, $afile, $stop;
     $cid = getVar('post', 'cid', 'num', 0);
-    $title = save_text(getVar('post', 'title', 'title', ''), 1);
-    $infotext = save_text(getVar('post', 'infotext', 'text', ''));
+    $title = getVar('post', 'title', 'title', '');
+    $infotext = getVar('post', 'infotext', 'text', '');
     $url = getVar('post', 'url', 'text', '');
     $num = getVar('post', 'num', 'text', '');
     $code = getVar('post', 'code', 'text', '');

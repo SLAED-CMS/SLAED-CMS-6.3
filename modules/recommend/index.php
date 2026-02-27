@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function recommend() {
+function recommend(): void {
 	global $conf, $stop;
 	$unkey = md5_salt($conf['sitekey']);
 	if (is_user()) {
@@ -23,7 +23,7 @@ function recommend() {
 	}
 	$fname = getVar('post', 'fname', 'name');
 	$femail = getVar('post', 'femail', 'text');
-	setHead();
+	setHead(['title' => _RECOMMTITLE]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]);
 	if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 	$cont .= setTemplateBasic('open');
@@ -38,7 +38,7 @@ function recommend() {
 	setFoot();
 }
 
-function send() {
+function send(): void {
 	global $conf, $stop;
 	$unkey = md5_salt($conf['sitekey']);
 	$sname = getVar('post', $unkey, 'name');
@@ -55,7 +55,7 @@ function send() {
 		$message = _HELLO.' '.$fname.'!<br><br>'._YOURFRIEND.' '.$sname.' '._OURSITE.' '.$conf['sitename'].' '._INTSENT.'<br><br>'._SITENAME.': '.$conf['sitename'].' '.urldecode($conf['defis']).' '.$conf['slogan'].'<br>'._SITEURL.': <a href="'.$conf['homeurl'].'" target="_blank" title="'.$conf['sitename'].'">'.$conf['homeurl'].'</a>';
 		mail_send($femail, $semail, $subject, $message, 0, 3);
 		update_points(38);
-		setHead();
+		setHead(['title' => _RECOMMTITLE]);
 		echo setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _FREFERENCE.' '.$fname.'.<br>'._THANKSREC]);
 		setFoot();
 	} else {
