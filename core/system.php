@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -81,11 +81,6 @@ function getConfigFingerprint(array $files): string {
     return sha1($hash);
 }
 
-# Return true if current fingerprint matches the stored value
-function checkConfigFingerprint(array $files, string $stored): bool {
-    return getConfigFingerprint($files) === $stored;
-}
-
 # Read local.php as array, update only _meta.base_fingerprint, write atomically
 function setConfigFingerprint(string $local_file, string $fingerprint): void {
     $data = [];
@@ -119,6 +114,10 @@ if (defined('MODULE_FILE')) {
     require_once BASE_DIR.'/core/admin.php';
 }
 
+$theme = getTheme();
+if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
+require_once BASE_DIR.'/core/template.php';
+
 ### The beginning of new functions
 
 # Safe redirect with optional referer fallback
@@ -126,7 +125,7 @@ function setRedirect(string $url, bool $refer = false, int $code = 302): never {
     if (!in_array($code, [301, 302, 303, 307, 308], true)) $code = 302;
     if ($code === 302 && strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? '')) === 'POST') $code = 303;
     $target = trim(str_replace(["\r", "\n"], '', $url));
-    if ($refer && isset($_REQUEST['refer'])) {
+    if ($refer && (isset($_GET['refer']) || isset($_POST['refer']))) {
         $ref = trim(str_replace(["\r", "\n"], '', (string)($_SERVER['HTTP_REFERER'] ?? getenv('HTTP_REFERER') ?? '')));
         $valid = $ref !== '' && !preg_match('#^unknown#i', $ref) && !preg_match('#^bookmark#i', $ref);
         if ($valid) {
@@ -472,32 +471,25 @@ function isInt($num) {
     return ($inum == $num && is_int($inum) && $num > 0) ? true : false;
 }
 
-# Conformity check
-function isCompare($a, $b) {
-    return (($a && $b == '0') || (isDate($a) && isDate($b) && $a > $b)) ? 1 : 0;
-}
 
-# Checking validity of date format
-function isDate($str) {
-    return is_numeric(strtotime($str));
-}
 
 # Generating categories for modules
 function setCategories($mod, $sub, $desc, $id='') {
     global $db, $user, $conf, $locale;
     if (analyze($mod)) {
         $id = (intval($id)) ? $id : 0;
+        $params = ['mod' => $mod];
         if ($id) {
-            $where = "WHERE modul = '".$mod."' AND parentid = '".$id."'";
-        } elseif ($id && $conf['multilingual']) {
-            $where = "WHERE modul = '".$mod."' AND parentid = '".$id."' AND (language = '".$locale."' OR language = '')";
+            $where = "WHERE modul = :mod AND parentid = :pid";
+            $params['pid'] = $id;
         } elseif ($conf['multilingual']) {
-            $where = "WHERE modul = '".$mod."' AND (language = '".$locale."' OR language = '')";
+            $where = "WHERE modul = :mod AND (language = :loc OR language = '')";
+            $params['loc'] = $locale;
         } else {
-            $where = "WHERE modul = '".$mod."'";
+            $where = "WHERE modul = :mod";
         }
         $cnum = 0;
-        $result = $db->sql_query("SELECT id, title, description, img, parentid, auth_view, auth_read FROM ".PREFIX_DB."_categories ".$where." ORDER BY ordern, title");
+        $result = $db->sql_query("SELECT id, title, description, img, parentid, auth_view, auth_read FROM ".PREFIX_DB."_categories ".$where." ORDER BY ordern, title", $params);
         while (list($cid, $title, $description, $img, $parentid, $auth_view, $auth_read) = $db->sql_fetchrow($result)) {
             $massiv[] = array($cid, $title, $description, $img, $parentid, $auth_view, $auth_read);
             unset($cid, $title, $description, $img, $parentid, $auth_view, $auth_read);
@@ -539,34 +531,44 @@ function setCategories($mod, $sub, $desc, $id='') {
             }
         }
         if ($cont) {
-            $catid = implode(', ', $catid);
+            $cat_ids = array_values(array_unique(array_map('intval', $catid)));
+            $cat_ids = array_values(array_filter($cat_ids, static fn($v) => $v > 0));
+            if (!$cat_ids) return '';
+            $pp = [];
+            $pm = [];
+            foreach ($cat_ids as $k => $v) {
+                $ph = 'c'.$k;
+                $pp[] = ':'.$ph;
+                $pm[$ph] = $v;
+            }
+            $cin = implode(', ', $pp);
             if ($mod == 'faq') {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(fid) FROM ".PREFIX_DB."_faq WHERE catid IN (".$catid.") AND time <= NOW() AND status != '0'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(fid) FROM ".PREFIX_DB."_faq WHERE catid IN (".$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INFA;
             } elseif ($mod == 'files') {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".PREFIX_DB."_files WHERE cid IN (".$catid.") AND date <= NOW() AND status != '0'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".PREFIX_DB."_files WHERE cid IN (".$cin.") AND date <= NOW() AND status != '0'", $pm));
                 $in = _INF;
             } elseif ($mod == 'help') {
                 $uid = intval($user[0]);
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".PREFIX_DB."_help WHERE catid IN (".$catid.") AND time <= NOW() AND pid = '0' AND uid = '".$uid."'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".PREFIX_DB."_help WHERE catid IN (".$cin.") AND time <= NOW() AND pid = '0' AND uid = :uid", array_merge($pm, ['uid' => $uid])));
                 $in = _INH;
             } elseif ($mod == 'jokes') {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(jokeid) FROM ".PREFIX_DB."_jokes WHERE cat IN (".$catid.") AND date <= NOW() AND status != '0'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(jokeid) FROM ".PREFIX_DB."_jokes WHERE cat IN (".$cin.") AND date <= NOW() AND status != '0'", $pm));
                 $in = _INJ;
             } elseif ($mod == 'links') {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".PREFIX_DB."_links WHERE cid IN (".$catid.") AND date <= NOW() AND status != '0'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".PREFIX_DB."_links WHERE cid IN (".$cin.") AND date <= NOW() AND status != '0'", $pm));
                 $in = _INL;
             } elseif ($mod == 'media') {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_media WHERE cid IN (".$catid.") AND date <= NOW() AND status != '0'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_media WHERE cid IN (".$cin.") AND date <= NOW() AND status != '0'", $pm));
                 $in = _INM;
             } elseif ($mod == 'news') {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".PREFIX_DB."_news WHERE catid IN (".$catid.") AND time <= NOW() AND status != '0'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".PREFIX_DB."_news WHERE catid IN (".$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INN;
             } elseif ($mod == 'pages') {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(pid) FROM ".PREFIX_DB."_pages WHERE catid IN (".$catid.") AND time <= NOW() AND status != '0'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(pid) FROM ".PREFIX_DB."_pages WHERE catid IN (".$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INP;
             } elseif ($mod == 'shop') {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_products WHERE cid IN (".$catid.") AND time <= NOW() AND active != '0'"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_products WHERE cid IN (".$cin.") AND time <= NOW() AND active != '0'", $pm));
                 $in = _INS;
             }
             return setTemplateBasic('categories', array('{%categories%}' => _CATEGORIES, '{%content%}' => $cont, '{%total%}' => _ALLIN, '{%pages%}' => $pnum, '{%in%}' => $in, '{%cat%}' => $cnum, '{%category%}' => _ALLINC, '{%mod%}' => $mod));
@@ -578,8 +580,14 @@ function setCategories($mod, $sub, $desc, $id='') {
 function setArticleNumbers(string $name, string $mod, int $limit, string $url, string $cntfld, string $tbl, string $catfld = '', string $where = '', int $maxpg = 10, array $params = []): string {
     global $db, $conf, $locale;
     if (!defined('ADMIN_FILE') && $catfld && $where) {
-        $lng_where = $conf['multilingual'] ? 'WHERE modul=\''.$mod.'\' AND (language=\''.$locale.'\' OR language=\'\')' : 'WHERE modul=\''.$mod.'\'';
-        $res = $db->sql_query('SELECT id, auth_read FROM '.PREFIX_DB.'_categories '.$lng_where.' ORDER BY id');
+        if ($conf['multilingual']) {
+            $lng_where = 'WHERE modul = :mod AND (language = :loc OR language = \'\')';
+            $lng_params = ['mod' => $mod, 'loc' => $locale];
+        } else {
+            $lng_where = 'WHERE modul = :mod';
+            $lng_params = ['mod' => $mod];
+        }
+        $res = $db->sql_query('SELECT id, auth_read FROM '.PREFIX_DB.'_categories '.$lng_where.' ORDER BY id', $lng_params);
         $catid = [];
         while (list($cid, $auth) = $db->sql_fetchrow($res)) {
             if (is_acess($auth)) $catid[] = (int)$cid;
@@ -591,45 +599,41 @@ function setArticleNumbers(string $name, string $mod, int $limit, string $url, s
     $sql = 'SELECT COUNT('.$cntfld.') FROM '.PREFIX_DB.$tbl.$where;
     list($cnt) = $db->sql_fetchrow($db->sql_query($sql,$params));
     $pages = $cnt > 0 ? (int)ceil($cnt / $limit) : 1;
-    return setPageNumbers($name,$mod,$cnt,$pages,$limit,$url,$maxpg,'','','');
+    return setPageNumbers($name, $mod, $cnt, $pages, $limit, $url, $maxpg);
 }
 
 # Generation of page numbers
-function setPageNumbers() {
-    global $admin_file;
-    $arg = func_get_args();
-    $n = !empty($arg[9]) ? $arg[9] : 'num';
-    $num = !empty($arg[7]) ? intval($arg[7]) : getVar('get', $n, 'num', '1');
-    $mnum = isset($arg[6]) ? $arg[6] : 8;
-    $nnum = $mnum + 1;
-    $anchor = isset($arg[8]) ? $arg[8] : '';
-    if ($arg[3] > 1) {
+function setPageNumbers(string $tpl, string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
+    global $afile;
+    $num  = $num ?: getVar('get', $n, 'num', 1);
+    $nnum = $maxpg + 1;
+    if ($pages > 1) {
         $cont = '';
         if ($num > 1) {
-            $prev = $num - 1;
-            $cprev = (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $arg[1], $arg[5].$n => $prev]).$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$prev.$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>';
+            $prev  = $num - 1;
+            $cprev = (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $mod, $url.$n => $prev]).$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>' : '<a href="'.$afile.'.php?'.$url.$n.'='.$prev.$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>';
         } else {
             $cprev = '<span class="sl_num" title="'._BACK.'">'._BACK.'</span>';
         }
-        for ($i = 1; $i < $arg[3]+1; $i++) {
+        for ($i = 1; $i < $pages+1; $i++) {
             if ($i == $num) {
                 $cont .= '<span title="'.$i.'">'.$i.'</span>';
             } else {
-                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $arg[3]) || ($i == 1)) $cont .= (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $arg[1], $arg[5].$n => $i]).$anchor.'" title="'.$i.'">'.$i.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$i.$anchor.'" title="'.$i.'">'.$i.'</a>';
+                if ((($i > ($num - $maxpg)) && ($i < ($num + $maxpg))) || ($i == $pages) || ($i == 1)) $cont .= (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $mod, $url.$n => $i]).$anchor.'" title="'.$i.'">'.$i.'</a>' : '<a href="'.$afile.'.php?'.$url.$n.'='.$i.$anchor.'" title="'.$i.'">'.$i.'</a>';
             }
-            if ($i < $arg[3]) {
-                if (($i > ($num - $nnum)) && ($i < ($num + $mnum))) $cont .= ' ';
+            if ($i < $pages) {
+                if (($i > ($num - $nnum)) && ($i < ($num + $maxpg))) $cont .= ' ';
                 if (($num > $nnum) && ($i == 1)) $cont .= '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
-                if (($num < ($arg[3] - $mnum)) && ($i == ($arg[3] - 1))) $cont .= '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
+                if (($num < ($pages - $maxpg)) && ($i == ($pages - 1))) $cont .= '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
             }
         }
-        if ($num < $arg[3]) {
-            $next = $num + 1;
-            $cnext = (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $arg[1], $arg[5].$n => $next]).$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>' : '<a href="'.$admin_file.'.php?'.$arg[5].$n.'='.$next.$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>';
+        if ($num < $pages) {
+            $next  = $num + 1;
+            $cnext = (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $mod, $url.$n => $next]).$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>' : '<a href="'.$afile.'.php?'.$url.$n.'='.$next.$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>';
         } else {
             $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
         }
-        return setTemplateBasic($arg[0], ['{%overall%}' => _OVERALL, '{%count%}' => $arg[2], '{%by%}' => _BY, '{%pages%}' => $arg[3], '{%page_s%}' => _PAGE_S, '{%page%}' => $arg[4], '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
+        return setTemplateBasic($tpl, ['{%overall%}' => _OVERALL, '{%count%}' => $count, '{%by%}' => _BY, '{%pages%}' => $pages, '{%page_s%}' => _PAGE_S, '{%page%}' => $limit, '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
     }
     return '';
 }
@@ -737,7 +741,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     };
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
-    .'# Copyright Â© 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# Copyright Ã‚Â© 2005 - '.date('Y').' SLAED'.PHP_EOL
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
     .'return '.$exp($data).';'.PHP_EOL;
@@ -751,7 +755,7 @@ function doConfig($fp, $name, $array, $actual='', $type='') {
         ksort($array);
         array_walk($array, function (&$v) { $v = is_bool($v) ? strval(intval($v)) : strval($v); });
         $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
-        $cont = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL.'$'.$name.' = '.var_export($array, true).';';
+        $cont = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Ã‚Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL.'$'.$name.' = '.var_export($array, true).';';
         file_put_contents($fp, $cont, LOCK_EX);
     }
 }
@@ -923,7 +927,7 @@ function doSitemap() {
                         }
                         $htm[$key][$info[$key][$key2][1]][] = array($info[$key][$key2][0],$info[$key][$key2][2]);
                     }
-                    $result = $db->sql_query("SELECT id, modul, title, parentid FROM ".PREFIX_DB."_categories WHERE modul = '".$key."'");
+                    $result = $db->sql_query("SELECT id, modul, title, parentid FROM ".PREFIX_DB."_categories WHERE modul = :mod", ['mod' => $key]);
                     while (list($cid, $cmodul, $title, $parentid) = $db->sql_fetchrow($result)) {
                         $cd[$cid] = array($cid, $parentid, $title, $cmodul);
                         if ($confma['gen_c']) {
@@ -1039,7 +1043,7 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
 
 # Transliteration
 function getTranslit($st, $lo='') {
-    $st = strtr($st, array('Ð°' => 'a', 'Ð±' => 'b', 'Ð²' => 'v', 'Ð³' => 'g', 'Ð´' => 'd', 'Ðµ' => 'e', 'Ð¶' => 'g', 'Ð·' => 'z', 'Ð¸' => 'i', 'Ð¹' => 'y', 'Ðº' => 'k', 'Ð»' => 'l', 'Ð¼' => 'm', 'Ð½' => 'n', 'Ð¾' => 'o', 'Ð¿' => 'p', 'Ñ€' => 'r', 'Ñ' => 's', 'Ñ‚' => 't', 'Ñƒ' => 'u', 'Ñ„' => 'f', 'Ñ‹' => 'i', 'Ñ' => 'e', 'Ð' => 'A', 'Ð‘' => 'B', 'Ð’' => 'V', 'Ð“' => 'G', 'Ð”' => 'D', 'Ð•' => 'E', 'Ð–' => 'G', 'Ð—' => 'Z', 'Ð˜' => 'I', 'Ð™' => 'Y', 'Ðš' => 'K', 'Ð›' => 'L', 'Ðœ' => 'M', 'Ð' => 'N', 'Ðž' => 'O', 'ÐŸ' => 'P', 'Ð ' => 'R', 'Ð¡' => 'S', 'Ð¢' => 'T', 'Ð£' => 'U', 'Ð¤' => 'F', 'Ð«' => 'I', 'Ð­' => 'E', 'Ñ‘' => 'yo', 'Ñ…' => 'h', 'Ñ†' => 'ts', 'Ñ‡' => 'ch', 'Ñˆ' => 'sh', 'Ñ‰' => 'shch', 'ÑŠ' => '', 'ÑŒ' => '', 'ÑŽ' => 'yu', 'Ñ' => 'ya', 'Ð' => 'Yo', 'Ð¥' => 'H', 'Ð¦' => 'Ts', 'Ð§' => 'Ch', 'Ð¨' => 'Sh', 'Ð©' => 'Shch', 'Ðª' => '', 'Ð¬' => '', 'Ð®' => 'Yu', 'Ð¯' => 'Ya'));
+    $st = strtr($st, array('ÃÂ°' => 'a', 'ÃÂ±' => 'b', 'ÃÂ²' => 'v', 'ÃÂ³' => 'g', 'ÃÂ´' => 'd', 'ÃÂµ' => 'e', 'ÃÂ¶' => 'g', 'ÃÂ·' => 'z', 'ÃÂ¸' => 'i', 'ÃÂ¹' => 'y', 'ÃÂº' => 'k', 'ÃÂ»' => 'l', 'ÃÂ¼' => 'm', 'ÃÂ½' => 'n', 'ÃÂ¾' => 'o', 'ÃÂ¿' => 'p', 'Ã‘â‚¬' => 'r', 'Ã‘Â' => 's', 'Ã‘â€š' => 't', 'Ã‘Æ’' => 'u', 'Ã‘â€ž' => 'f', 'Ã‘â€¹' => 'i', 'Ã‘Â' => 'e', 'ÃÂ' => 'A', 'Ãâ€˜' => 'B', 'Ãâ€™' => 'V', 'Ãâ€œ' => 'G', 'Ãâ€' => 'D', 'Ãâ€¢' => 'E', 'Ãâ€“' => 'G', 'Ãâ€”' => 'Z', 'ÃËœ' => 'I', 'Ãâ„¢' => 'Y', 'ÃÅ¡' => 'K', 'Ãâ€º' => 'L', 'ÃÅ“' => 'M', 'ÃÂ' => 'N', 'ÃÅ¾' => 'O', 'ÃÅ¸' => 'P', 'ÃÂ ' => 'R', 'ÃÂ¡' => 'S', 'ÃÂ¢' => 'T', 'ÃÂ£' => 'U', 'ÃÂ¤' => 'F', 'ÃÂ«' => 'I', 'ÃÂ­' => 'E', 'Ã‘â€˜' => 'yo', 'Ã‘â€¦' => 'h', 'Ã‘â€ ' => 'ts', 'Ã‘â€¡' => 'ch', 'Ã‘Ë†' => 'sh', 'Ã‘â€°' => 'shch', 'Ã‘Å ' => '', 'Ã‘Å’' => '', 'Ã‘Å½' => 'yu', 'Ã‘Â' => 'ya', 'ÃÂ' => 'Yo', 'ÃÂ¥' => 'H', 'ÃÂ¦' => 'Ts', 'ÃÂ§' => 'Ch', 'ÃÂ¨' => 'Sh', 'ÃÂ©' => 'Shch', 'ÃÂª' => '', 'ÃÂ¬' => '', 'ÃÂ®' => 'Yu', 'ÃÂ¯' => 'Ya'));
     $st = empty($lo) ? $st : mb_strtolower($st);
     $st = preg_replace('#[^a-zA-Z0-9]#', '', $st);
     $st = trim($st);
@@ -1161,7 +1165,7 @@ function getCompressCode($code) {
 function getCompressHtml($html) {
     preg_match_all('#(<(?:code|pre|textarea|script|style)[^>]+>.*?</(?:code|pre|textarea|script|style)>)#si', $html, $pre);
     $html = preg_replace('#<(?:code|pre|textarea|script|style)[^>]+>.*?</(?:code|pre|textarea|script|style)>#si', '%pre%', $html);
-    $html = preg_replace('#<!â€“[^\[].+â€“>#', '', $html);
+    $html = preg_replace('#<!Ã¢â‚¬â€œ[^\[].+Ã¢â‚¬â€œ>#', '', $html);
     $html = preg_replace('#[\r\n\t]+#', ' ', $html);
     $html = preg_replace('#>[\s]+<#', '><', $html);
     $html = preg_replace('#[\s]+#', ' ', $html);
@@ -1173,39 +1177,27 @@ function getCompressHtml($html) {
     return $html;
 }
 
-# DELETE
-function getCompressCodeOld($cont) {
-    # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð¿Ñ€Ð¾Ð±ÐµÐ»Ð¾Ð² Ð¼ÐµÐ¶Ð´Ñƒ HTML Ñ‚ÐµÐ³Ð¾Ð²
-    $cont = preg_replace('#(?:(?<=\>)|(?<=\/\>))\s+(?=\<\/?)#', '', $cont);
-    # Ð˜ÑÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ <pre>
-    if (false === strpos($cont, '<pre')) $cont = preg_replace('#\s+#', ' ', $cont);
-    # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð½Ð¾Ð²Ñ‹Ñ… ÑÑ‚Ñ€Ð¾Ðº, Ð·Ð° ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¼Ð¸ Ð¿Ñ€Ð¾Ð±ÐµÐ»Ñ‹
-    $cont = preg_replace("#[\t\r]\s+#", ' ', $cont);
-    # Ð¡Ð¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ðµ ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸ÐµÐ² Ð´Ð»Ñ IE
-    $cont = preg_replace('#<!(--)([^\[|\|])^(<!-->.*<!--.*-->)#', '', $cont);
-    # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸ÐµÐ¹ ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸ÐµÐ² CSS
-    $cont = preg_replace('#\/\*.*?\*\/#', '', $cont);
-        # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ‚Ð°Ð±ÑƒÐ»ÑÑ‚Ð¾Ñ€Ð¾Ð², Ð·Ð°Ð¼ÐµÐ½Ð° Ð´Ð²Ð¾Ð¹Ð½Ñ‹Ñ… Ð¿Ñ€Ð¾Ð±ÐµÐ»Ð¾Ð² Ð¾Ð´Ð¸Ð½Ð°Ñ€Ð½Ñ‹Ð¼
-    $cont = str_replace(array("  ", "\s\s", "\n", "\r", "\t"), ' ', $cont);
-    return $cont;
-}
-
 # Voting view
-function getVoting() {
-    global $db, $admin_file, $user, $locale, $conf, $confv;
-    $querylang = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
-    $arg = func_get_args();
-    $id = (isset($arg[0])) ? intval($arg[0]) : intval($_GET['id']);
-    $votid = (isset($arg[1])) ? ((isset($arg[1])) ? analyze($arg[1]) : "voting") : ((isset($_POST['votid'])) ? analyze($_POST['votid']) : "voting");
-    $result = $db->sql_query("SELECT modul, title, questions, answer, enddate, multi, comments, acomm, typ, status FROM ".PREFIX_DB."_voting WHERE id = '".$id."' AND ".$querylang);
+function getVoting(int $id = 0, string $votid = ''): string {
+    global $db, $afile, $user, $locale, $conf, $confv;
+    if ($conf['multilingual'] == 1) {
+        $querylang = "(language = :locale OR language = '') AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $qlang_params = ['locale' => $locale];
+    } else {
+        $querylang = "date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $qlang_params = [];
+    }
+    if (!$id)    $id    = getVar('get', 'id', 'num', 0);
+    if (!$votid) $votid = analyze(getVar('post', 'votid', 'text', 'voting')) ?: 'voting';
+    $result = $db->sql_query("SELECT modul, title, questions, answer, enddate, multi, comments, acomm, typ, status FROM ".PREFIX_DB."_voting WHERE id = :id AND ".$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->sql_numrows($result) > 0) {
         $ip = getIp();
         $past = time() - intval($confv['voting_t']);
         $cmod = substr("voting", 0, 2)."-".$id;
         $cookies = (isset($_COOKIE[$cmod])) ? intval($_COOKIE[$cmod]) : "";
         $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
-        $db->sql_query("DELETE FROM ".PREFIX_DB."_rating WHERE time < '".$past."' AND modul = 'voting'");
-        list($num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_rating WHERE (mid = '".$id."' AND modul = 'voting' AND host = '".$ip."') OR (mid = '".$id."' AND modul = 'voting' AND uid = '".$uid."' AND uid != '0')"));
+        $db->sql_query("DELETE FROM ".PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
+        list($num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND host = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
         list($modul, $title, $questions, $answer, $enddate, $multi, $comments, $acomm, $typ, $status) = $db->sql_fetchrow($result);
         $rate = ($cookies == $id || $num > 0 || strtotime($enddate) <= time()) ? 1 : 0;
         if ($typ || !$typ && !$rate) {
@@ -1221,11 +1213,9 @@ function getVoting() {
                 $n = $i + 1;
                 if ($vote > 0) {
                     $proc = 100 * $answer[$i] / $vote;
-                    $im_w = (int)$proc - 10;
                     $procent = number_format($proc, 2);
                 } else {
                     $procent = "0.00";
-                    $im_w = 1;
                 }
                 if (!$rate) {
                     $itype = ($multi) ? "checkbox" : "radio";
@@ -1234,8 +1224,8 @@ function getVoting() {
                     $cont .= setTemplateBasic("voting-view", ['{%text%}' => $questions[$i], '{%text_safe%}' => text_filter($questions[$i]), '{%n%}' => $n, '{%pn%}' => $pn, '{%percent%}' => $procent, '{%votes_label%}' => _VOTES, '{%votes%}' => $answer[$i]]);
                 }
             }
-            list($vnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_voting WHERE ".$querylang));
-            $admin = (is_moder("voting") && $votid == "voting") ? add_menu("<a href=\"".$admin_file.".php?name=voting&amp;op=add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?name=voting&amp;op=delete&amp;id=".$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
+            list($vnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_voting WHERE ".$querylang, $qlang_params));
+            $admin = (is_moder("voting") && $votid == "voting") ? add_menu("<a href=\"".$afile.".php?name=voting&amp;op=add&amp;id=".$id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$afile.".php?name=voting&amp;op=delete&amp;id=".$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".$title."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>") : "";
             $post = (!$rate) ? "<span OnClick=\"AjaxLoad('POST', '1', '".$votid."', 'go=1&amp;op=avoting_save&amp;id=".$id."&amp;votid=".$votid."', { 'questions%5B%5D':'"._SEROR1."' }); return false;\" title=\""._VOTE."\" class=\"sl_but_blue\">"._VOTE."</span>" : "";
             $polls = ($vnum > 1) ? "<a href=\"index.php?name=voting\" title=\""._POLLS."\" class=\"sl_but\">"._POLLS."</a>" : "";
             $votes = (!$modul && $votid != "voting") ? "<a href=\"index.php?name=voting&amp;op=view&amp;id=".$id."\" title=\""._VOTES."\" class=\"sl_votes\">"._VOTES.": ".$vote."</a>" : "<span class=\"sl_votes\">"._VOTES.": ".$vote."</span>";
@@ -1259,7 +1249,7 @@ function getCpuLoad($tcache = 2) {
     if (stristr(PHP_OS, 'WIN')) {
         $out = [];
         $cmd = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Measure-Object -Property LoadPercentage -Average).Average"';
-        @exec($cmd, $out);
+        if (function_exists('exec')) exec($cmd, $out);
         if (!empty($out)) {
             $val = str_replace(',', '.', trim($out[0]));
             if (is_numeric($val)) $percent = (float)$val;
@@ -1267,7 +1257,7 @@ function getCpuLoad($tcache = 2) {
         if ($percent === null) {
             $out = [];
             $cmd = 'wmic cpu get loadpercentage /all';
-            @exec($cmd, $out);
+            if (function_exists('exec')) exec($cmd, $out);
             if ($out) {
                 foreach ($out as $line) {
                     if ($line && preg_match('#^[0-9]+$#', $line)) {
@@ -1373,20 +1363,12 @@ function user_news($unum, $mnum) {
     return $num;
 }
 
-# Ð¡Ð¾Ñ…Ñ€Ð°Ð½ÐµÐ½Ð¸Ðµ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¹ Ð² Ñ„Ð°Ð¹Ð» DELETE
-# Clear text from HTML and BB code
-function getTextClean($text, $id) {
-    $text = htmlspecialchars(strip_tags(htmlspecialchars_decode($text)), ENT_QUOTES);
-    $text = ($id == '1') ? preg_replace(array('#\[attach=(.*?)\s(.*?)\]#si', '#\[img=(.*?)\](.*)\[/img\]#si', '#\[.+\]#iUs', '#\s+#s'), array('', '', '', ' '), $text) : preg_replace(array('#\[.+\]#iUs', '#[^\pL0-9]#siu', '#\s+#s'), array('', ' ', ','), $text);
-    $text = trim($text);
-    return $text;
-}
-
 # Get the image from the text
-function getImgText($text, $type='', $check=true) {
+function getImgText(string $text, string $type = '', bool $check = true): string|false {
     global $conf;
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
-        $img = (!$type) ? 'uploads/'.$conf['name'].'/thumb/'.trim($match[1]) : 'uploads/'.$conf['name'].'/'.trim($match[1]);
+        $fname = basename(trim($match[1]));
+        $img = (!$type) ? 'uploads/'.$conf['name'].'/thumb/'.$fname : 'uploads/'.$conf['name'].'/'.$fname;
     } elseif (preg_match('#\[img=[a-zA-Z]+\](.*?)\[/img\]#i', $text, $match)) {
         $img = trim($match[1]);
     } elseif (preg_match('#\[img\](.*?)\[/img\]#i', $text, $match)) {
@@ -1404,7 +1386,6 @@ function getSeoUrl(array $params): string {
     $sep   = $conf['sep'] ?? '-';
     $tsep  = $conf['tsep'] ?? '-';
     $slugs = ['title', 'ctitle'];
-
     $segments = [];
     $query = [];
     foreach ($params as $key => $val) {
@@ -1412,51 +1393,35 @@ function getSeoUrl(array $params): string {
         $segments[] = $val;
         $query[] = $key.'='.$val;
     }
-
     if ($conf['rewrite'] ?? false) {
         foreach ($slugs as $key) {
             if (!empty($conf[$key]) && !empty($params[$key])) {
-                $segments[] = slugify($params[$key], $tsep);
+                $segments[] = filterSlug($params[$key], $tsep);
             }
         }
         return implode($sep, $segments);
     }
-
     return 'index.php?'.implode('&amp;', $query);
 }
 
-function slugify(string $text, string $sep = '-'): string {
+function filterSlug(string $text, string $sep = '-'): string {
     $text = trim($text);
-
-    // Russische Buchstaben transliterieren
-    $rus = [
+    static $rus = [
         'Ð'=>'A','Ð‘'=>'B','Ð’'=>'V','Ð“'=>'G','Ð”'=>'D','Ð•'=>'E','Ð'=>'E','Ð–'=>'Zh',
         'Ð—'=>'Z','Ð˜'=>'I','Ð™'=>'I','Ðš'=>'K','Ð›'=>'L','Ðœ'=>'M','Ð'=>'N','Ðž'=>'O',
         'ÐŸ'=>'P','Ð '=>'R','Ð¡'=>'S','Ð¢'=>'T','Ð£'=>'U','Ð¤'=>'F','Ð¥'=>'Kh','Ð¦'=>'Ts',
         'Ð§'=>'Ch','Ð¨'=>'Sh','Ð©'=>'Shch','Ð«'=>'Y','Ð­'=>'E','Ð®'=>'Yu','Ð¯'=>'Ya',
-        'Ð¬'=>'','Ðª'=>'',
+        'Ðª'=>'','Ð¬'=>'',
         'Ð°'=>'a','Ð±'=>'b','Ð²'=>'v','Ð³'=>'g','Ð´'=>'d','Ðµ'=>'e','Ñ‘'=>'e','Ð¶'=>'zh',
         'Ð·'=>'z','Ð¸'=>'i','Ð¹'=>'i','Ðº'=>'k','Ð»'=>'l','Ð¼'=>'m','Ð½'=>'n','Ð¾'=>'o',
         'Ð¿'=>'p','Ñ€'=>'r','Ñ'=>'s','Ñ‚'=>'t','Ñƒ'=>'u','Ñ„'=>'f','Ñ…'=>'kh','Ñ†'=>'ts',
         'Ñ‡'=>'ch','Ñˆ'=>'sh','Ñ‰'=>'shch','Ñ‹'=>'y','Ñ'=>'e','ÑŽ'=>'yu','Ñ'=>'ya',
+        'ÑŠ'=>'','ÑŒ'=>'',
     ];
     $text = strtr($text, $rus);
-
-    // Sonderzeichen ersetzen
     $text = preg_replace('~[^a-zA-Z0-9]+~', $sep, $text);
     $text = trim($text, $sep);
-
     return strtolower($text);
-}
-
-
-# Theme include
-function setThemeInclude(): void {
-    global $theme;
-    $theme = $theme ?: getTheme();
-    $idx = BASE_DIR.'/templates/'.$theme.'/index.php';
-    if (is_file($idx)) require_once $idx;
-    require_once BASE_DIR.'/core/template.php';
 }
 
 # Format theme
@@ -1476,14 +1441,18 @@ function getTheme(): string {
 function getThemeFile(string $name): string|false {
     global $home, $conf, $op;
     static $cache = [];
-    $theme = getTheme();
-    $cat = isset($_GET['cat']) ? (int)$_GET['cat'] : 0;
+    static $files = null;
+    static $dir = null;
+    if ($files === null) {
+        $dir = BASE_DIR.'/templates/'.getTheme().'/';
+        $files = array_flip(scandir($dir, SCANDIR_SORT_NONE) ?: []);
+    }
     $tpl = $conf['template'] ?? '';
     $mod = $conf['name'] ?? '';
     $opv = $op ?? '';
-    $key = $theme.'|'.$name.'|'.(int)$home.'|'.$tpl.'|'.$mod.'|'.$opv.'|'.$cat;
+    $cat = getVar('get', 'cat', 'num', 0);
+    $key = $name.'|'.(int)$home.'|'.$tpl.'|'.$mod.'|'.$opv.'|'.$cat;
     if (array_key_exists($key, $cache)) return $cache[$key];
-    $dir = BASE_DIR.'/templates/'.$theme.'/';
     $candidates = [];
     if ($home) {
         $candidates[] = $name.'-home';
@@ -1500,8 +1469,8 @@ function getThemeFile(string $name): string|false {
     }
     $candidates[] = $name;
     foreach ($candidates as $fname) {
-        $path = $dir.$fname.'.html';
-        if (is_file($path)) return $cache[$key] = $path;
+        $file = $fname.'.html';
+        if (isset($files[$file])) return $cache[$key] = $dir.$file;
     }
     return $cache[$key] = false;
 }
@@ -1511,49 +1480,10 @@ function getThemeLoad(string $tpl): ?string {
     $path = getThemeFile($tpl);
     if (!$path) return null;
     static $cache = [];
-    $mtime = filemtime($path) ?: 0;
-    if (!isset($cache[$path]) || $cache[$path]['mtime'] !== $mtime) {
-        $raw = file_get_contents($path);
-        if ($raw === false) return $cache[$path] = null;
-        $cache[$path] = ['mtime' => $mtime, 'raw' => $raw];
-    }
-    return $cache[$path]['raw'] ?? null;
+    if (array_key_exists($path, $cache)) return $cache[$path];
+    $raw = file_get_contents($path);
+    return $cache[$path] = $raw !== false ? $raw : null;
 }
-
-# OLD DELETE
-/* function getThemeFile($name) {
-    global $home, $conf, $op;
-    static $theme;
-    $theme = (!isset($theme)) ? getTheme() : $theme;
-    $cat = (isset($_GET['cat'])) ? intval($_GET['cat']) : '';
-    if ($home) {
-        $fname = (file_exists('templates/'.$theme.'/'.$name.'-home.html')) ? $name.'-home' : $name;
-    } elseif (isset($conf['template'])) {
-        $fname = (file_exists('templates/'.$theme.'/'.$name.'-'.$conf['template'].'.html')) ? $name.'-'.$conf['template'] : $name;
-    } elseif (isset($conf['name']) && $op) {
-        if (file_exists('templates/'.$theme.'/'.$name.'-'.$conf['name'].'-'.$op.'.html')) {
-            $fname = $name.'-'.$conf['name'].'-'.$op;
-        } elseif (file_exists('templates/'.$theme.'/'.$name.'-'.$conf['name'].'.html')) {
-            $fname = $name.'-'.$conf['name'];
-        } else {
-            $fname = $name;
-        }
-    } elseif (isset($conf['name']) && $cat) {
-        if (file_exists('templates/'.$theme.'/'.$name.'-'.$conf['name'].'-cat-'.$cat.'.html')) {
-            $fname = $name.'-'.$conf['name'].'-cat-'.$cat;
-        } elseif (file_exists('templates/'.$theme.'/'.$name.'-'.$conf['name'].'.html')) {
-            $fname = $name.'-'.$conf['name'];
-        } else {
-            $fname = $name;
-        }
-    } elseif (isset($conf['name'])) {
-        $fname = (file_exists('templates/'.$theme.'/'.$name.'-'.$conf['name'].'.html')) ? $name.'-'.$conf['name'] : $name;
-    } else {
-        $fname = $name;
-    }
-    $index = (file_exists('templates/'.$theme.'/'.$fname.'.html')) ? 'templates/'.$theme.'/'.$fname.'.html' : 0;
-    return $index;
-} */
 
 # Determining the load time
 function getTimeLoads() {
@@ -1594,7 +1524,7 @@ function datetime($id, $name, $time, $max, $class) {
 # Save date and time for Data Base
 function save_datetime($id, $name="") {
     if ($name) {
-        $date = (isset($_POST[$name])) ? $_POST[$name] : ((isset($_GET[$name])) ? $_GET[$name] : "");
+        $date = getVar('post', $name, 'raw', '') ?: getVar('get', $name, 'raw', '');
         if ($id == 1) {
             $cont = (date("Y-m-d H:i", strtotime($date)) == $date) ? $date.":00" : date("Y-m-d H:i:s");
         } else {
@@ -1705,23 +1635,22 @@ function replace_break($text) {
     }
 }
 
+# DELETE OR MODIFY
 # User country information
-function user_geo_ip($ip, $id) {
+function user_geo_ip($ip, $id = 4) {
     global $conf;
     if ((PHP_VERSION >= "5") && $conf['geo_ip'] && preg_match("#([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})#", $ip)) {
-        include_once("core/geo_ip.php");
-        $geoip = geo_ip::getInstance("core/geo_ip.dat");
         if ($id == 1) {
-            $cont = $geoip->lookupCountryCode($ip);
+            $cont = $ip;
         } elseif ($id == 2) {
-            $cont = $geoip->lookupCountryName($ip);
+            $cont = $ip;
         } elseif ($id == 3) {
-            $name = $geoip->lookupCountryName($ip);
+            $name = $ip;
             $img = str_replace(" ", "_", strtolower($name));
             $imgl = (file_exists(img_find("language/".$img.".png"))) ? img_find("language/".$img.".png") : (($img == "?") ? img_find("language/white.png") : img_find("language/white.png"));
             $cont = "<img src=\"".$imgl."\" alt=\"".$name."\" title=\"".$name."\" class=\"sl_flag\">";
         } elseif ($id == 4) {
-            $name = $geoip->lookupCountryName($ip);
+            $name = $ip;
             $img = str_replace(" ", "_", strtolower($name));
             $imgl = (file_exists(img_find("language/".$img.".png"))) ? img_find("language/".$img.".png") : (($img == "?") ? img_find("language/white.png") : img_find("language/white.png"));
             $cont = "<img src=\"".$imgl."\" alt=\"".$name."\" title=\"".$name."\" class=\"sl_flag\"><a href=\"".$conf['ip_link'].$ip."\" target=\"_blank\" title=\""._IP.": ".$ip."\">".$ip."</a>";
@@ -1809,10 +1738,10 @@ function user_sainfo($id="") {
 
 # Format admin block
 function adminblock() {
-    global $db, $admin_file;
+    global $db, $afile;
     if (is_admin()) {
-        $cont = '<table class="sl_table_block"><tr><td><a href="'.$admin_file.'.php" title="'._ADMINMENU.'">'._ADMINMENU.'</a></td></tr>'
-        .'<tr><td><a href="'.$admin_file.'.php?op=logout" title="'._LOGOUT.'">'._LOGOUT.'</a></td></tr></table>';
+        $cont = '<table class="sl_table_block"><tr><td><a href="'.$afile.'.php" title="'._ADMINMENU.'">'._ADMINMENU.'</a></td></tr>'
+        .'<tr><td><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'">'._LOGOUT.'</a></td></tr></table>';
         if (is_admin_god()) {
             list($title, $content) = $db->sql_fetchrow($db->sql_query("SELECT title, content FROM ".PREFIX_DB."_blocks WHERE bkey = 'admin'"));
             $cont .= '<hr>'.$content;
@@ -1834,7 +1763,7 @@ function updateNewsletter(): void {
             $mails = explode(",", $mails);
             $outmail = array_slice($mails, 0, $ncount);
             $inmail = implode(",", array_slice($mails, $ncount));
-            $db->sql_query("UPDATE ".PREFIX_DB."_newsletter SET mails = '".$inmail."', send = send+".$ncount.", endtime = NOW() WHERE id = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id", ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
             foreach ($outmail as $val) if ($val != "") mail_send($val, $conf['adminmail'], $title, bb_decode($content, "all"), 0, 3);
             if (!$inmail) {
                 $cont = array('newsletter' => '0');
@@ -1863,8 +1792,17 @@ function show_kasse($info="") {
     $cookies = (preg_match("#[^0-9,]#", $info)) ? "" : $info;
     if ($cookies) {
         $massiv = explode(",", $cookies);
-        $mid= implode(",", array_unique($massiv));
-        $result = $db->sql_query("SELECT id, time, title, preis FROM ".PREFIX_DB."_products WHERE id IN (".$mid.")");
+        $ids = array_values(array_unique(array_map('intval', $massiv)));
+        $ids = array_values(array_filter($ids, static fn($v) => $v > 0));
+        if (!$ids) return "";
+        $pp = [];
+        $pm = [];
+        foreach ($ids as $k => $pid) {
+            $ph = 'id'.$k;
+            $pp[] = ':'.$ph;
+            $pm[$ph] = $pid;
+        }
+        $result = $db->sql_query("SELECT id, time, title, preis FROM ".PREFIX_DB."_products WHERE id IN (".implode(', ', $pp).")", $pm);
         $cont = "";
         $preistotal = 0;
         while (list($id, $time, $title, $preis) = $db->sql_fetchrow($result)) {
@@ -1889,7 +1827,7 @@ function show_kasse($info="") {
 # Add kasse
 function add_kasse() {
     global $confso;
-    $id = (isset($_GET['id'])) ? intval($_GET['id']) : "";
+    $id = getVar('get', 'id', 'num', 0);
     $cookies = (preg_match("#[^0-9,]#", base64_decode($_COOKIE['shop']))) ? "" : base64_decode($_COOKIE['shop']);
     if ($id) {
         setcookie("shop", false);
@@ -1907,7 +1845,7 @@ function add_kasse() {
 # Delete kasse
 function del_kasse() {
     global $confso;
-    $id = (isset($_GET['id'])) ? intval($_GET['id']) : "";
+    $id = getVar('get', 'id', 'num', 0);
     $cookies = (preg_match("#[^0-9,]#", base64_decode($_COOKIE['shop']))) ? "" : base64_decode($_COOKIE['shop']);
     if ($id && $cookies) {
         $massiv = explode(",", $cookies);
@@ -1994,13 +1932,13 @@ function show_files() {
     global $conf, $user;
     $uploads_data = include('config/uploads.php');
     $confup = $uploads_data['uploads'] ?? [];
-    $id = (isset($_GET['id'])) ? analyze($_GET['id']) : 0;
-    $dir = (isset($_GET['dir'])) ? strtolower($_GET['dir']) : "";
-    $gzip = (isset($_GET['cid'])) ? intval($_GET['cid']) : 0;
+    $id   = analyze(getVar('get', 'id',   'text', '')) ?: 0;
+    $dir  = strtolower(getVar('get', 'dir',  'text', ''));
+    $gzip = getVar('get', 'cid', 'num', 0);
     $con = explode("|", (string)($confup[$dir] ?? ''));
     $connum = (isset($con[7]) && intval($con[7])) ? $con[7] : "50";
     $eallf = (is_moder()) ? intval($con[8] ?? 0) : intval($con[9] ?? 0);
-    $file = (isset($_GET['file'])) ? text_filter($_GET['file']) : "";
+    $file = text_filter(getVar('get', 'file', 'raw', ''));
     $num = ($gzip) ? $gzip : "1";
     $uname = (is_user()) ? intval($user[0]) : 0;
     $path = "uploads/".$dir."/";
@@ -2093,7 +2031,7 @@ function letter($mod) {
         $result = $db->sql_query("SELECT title FROM ".PREFIX_DB."_files WHERE date <= NOW() AND status != '0'");
     } elseif ($mod == "help") {
         $uid = intval($user[0]);
-        $result = $db->sql_query("SELECT title FROM ".PREFIX_DB."_help WHERE time <= NOW() AND pid = '0' AND uid = '".$uid."'");
+        $result = $db->sql_query("SELECT title FROM ".PREFIX_DB."_help WHERE time <= NOW() AND pid = '0' AND uid = :uid", ['uid' => $uid]);
     } elseif ($mod == "links") {
         $result = $db->sql_query("SELECT title FROM ".PREFIX_DB."_links WHERE date <= NOW() AND status != '0'");
     } elseif ($mod == "media") {
@@ -2163,15 +2101,13 @@ function mailto($mail) {
 }
 
 # Add save button
-function ad_save() {
-    global $conf;
-    $arg = func_get_args();
+function ad_save(string $name = '', string $val = '', string $op = '', string $noPreview = ''): string {
     $cont = "<select name=\"posttype\" class=\"sl_field\">";
-    if (empty($arg[3])) $cont .= "<option value=\"preview\">"._PREVIEW."</option>";
+    if (!$noPreview) $cont .= "<option value=\"preview\">"._PREVIEW."</option>";
     $cont .= "<option value=\"save\">"._SEND."</option>";
-    $cont .= ($arg[1]) ? "<option value=\"delete\">"._DELETE."</option></select>" : "</select>";
-    $cont .= ($arg[0] && $arg[1]) ? "<input type=\"hidden\" name=\"".$arg[0]."\" value=\"".$arg[1]."\">" : "";
-    $cont .= "<input type=\"hidden\" name=\"op\" value=\"".$arg[2]."\">"
+    $cont .= ($val) ? "<option value=\"delete\">"._DELETE."</option></select>" : "</select>";
+    $cont .= ($name && $val) ? "<input type=\"hidden\" name=\"".$name."\" value=\"".$val."\">" : "";
+    $cont .= "<input type=\"hidden\" name=\"op\" value=\"".$op."\">"
     ." <input type=\"submit\" value=\""._OK."\" class=\"sl_but_blue\">";
     return $cont;
 }
@@ -2188,7 +2124,7 @@ function rss_select() {
     global $conf, $confrs;
     require_once CONFIG_DIR.'/rss.php';
     $fieldc = explode("||", $confrs['rss']);
-    $url = (isset($_POST['url'])) ? url_filter($_POST['url']) : "";
+    $url = url_filter(getVar('post', 'url', 'text', ''));
     $cont = "";
     foreach ($fieldc as $val) {
         if ($val != "") {
@@ -2252,10 +2188,10 @@ function rss_read($url, $id) {
                 }
                 $cont = ($id) ? $cont : "<h2>"._RSS_FROM.": <a href=\"".htmlspecialchars($url)."\" target=\"_blank\" title=\""._RSS_FROM.": ".$title."\">".$title."</a></h2>".$cont;
             } else {
-                $cont = ($id) ? "" : tpl_warn("warn", _RSS_PROBLEM, "", "", "warn");
+                $cont = ($id) ? "" : setTemplateWarning('warn', ['text' => _RSS_PROBLEM, 'url' => '', 'time' => 0, 'id' => 'warn']);
             }
         } else {
-            $cont = ($id) ? "" : tpl_warn("warn", _RSS_PROBLEM, "", "", "warn");
+            $cont = ($id) ? "" : setTemplateWarning('warn', ['text' => _RSS_PROBLEM, 'url' => '', 'time' => 0, 'id' => 'warn']);
         }
         return $cont;
     }
@@ -2265,23 +2201,22 @@ function rss_read($url, $id) {
 function rss_load($bid) {
     global $db;
     $bid = intval($bid);
-    list($title, $content, $url, $refresh, $otime) = $db->sql_fetchrow($db->sql_query("SELECT title, content, url, refresh, time FROM ".PREFIX_DB."_blocks WHERE bid = '".$bid."'"));
+    list($title, $content, $url, $refresh, $otime) = $db->sql_fetchrow($db->sql_query("SELECT title, content, url, refresh, time FROM ".PREFIX_DB."_blocks WHERE bid = :bid", ['bid' => $bid]));
     $past = time() - $refresh;
     if ($otime < $past) {
         $btime = time();
         $content = rss_read($url, 1);
-        $db->sql_query("UPDATE ".PREFIX_DB."_blocks SET content = '".$content."', time = '".$btime."' WHERE bid = '".$bid."'");
+        $db->sql_query("UPDATE ".PREFIX_DB."_blocks SET content = :content, time = :time WHERE bid = :bid", ['content' => $content, 'time' => $btime, 'bid' => $bid]);
     }
     echo setTemplateBlock('', array('{%title%}' => $title, '{%content%}' => $content));
 }
 
 # Preview
-function preview() {
-    $arg = func_get_args();
-    $fields = ($arg[0]) ? "<b>".$arg[0]."</b>" : "";
-    $fields1 = ($arg[1]) ? (($fields) ? "<br><br>".bb_decode($arg[1], $arg[4]) : bb_decode($arg[1], $arg[4])) : "";
-    $fields2 = ($arg[2]) ? "<br><br>".bb_decode($arg[2], $arg[4]) : "";
-    $fields3 = ($arg[3]) ? "<br><br>".fields_out(bb_decode($arg[3], $arg[4]), $arg[4]) : "";
+function preview(string $title = '', string $text1 = '', string $text2 = '', string $text3 = '', string $mod = ''): string {
+    $fields  = $title ? "<b>".$title."</b>" : "";
+    $fields1 = $text1 ? (($fields) ? "<br><br>".bb_decode($text1, $mod) : bb_decode($text1, $mod)) : "";
+    $fields2 = $text2 ? "<br><br>".bb_decode($text2, $mod) : "";
+    $fields3 = $text3 ? "<br><br>".fields_out(bb_decode($text3, $mod), $mod) : "";
     return setTemplateBasic('preview', ['{%title%}' => _PREVIEW, '{%fields%}' => $fields, '{%fields1%}' => $fields1, '{%fields2%}' => $fields2, '{%fields3%}' => $fields3]);
 }
 
@@ -2309,10 +2244,9 @@ function fields_in($fieldb, $mod) {
     $mod = strtolower($mod);
     $style = (defined('ADMIN_FILE')) ? 'sl_field sl_form' : 'sl_field '.$conf['style'];
     $fieldc = $conffi[$mod];
-    if (!isset($_POST['field'])) {
-        $fieldb = $fieldb;
-    } else {
-        $fieldb = fields_save($_POST['field']);
+    $fieldPost = getVar('post', 'field', 'raw', '');
+    if ($fieldPost !== '') {
+        $fieldb = fields_save($fieldPost);
     }
     $fieldb = explode('|', $fieldb ?? '');
     $fieldc = explode('||', $fieldc);
@@ -2454,13 +2388,13 @@ function is_user($usr="") {
         $ip = getIp();
         if ($uid != "" && $pwd != "") {
             if ($confu['check'] == "0") {
-                list($pass) = $db->sql_fetchrow($db->sql_query("SELECT user_password FROM ".PREFIX_DB."_users WHERE user_id = '".$uid."' AND user_name = '".$una."'"));
+                list($pass) = $db->sql_fetchrow($db->sql_query("SELECT user_password FROM ".PREFIX_DB."_users WHERE user_id = :uid AND user_name = :name", ['uid' => $uid, 'name' => $una]));
                 if ($pass == $pwd && $pass != "") {
                     $usertrue = 1;
                     return 1;
                 }
             } else {
-                list($pass, $last_ip) = $db->sql_fetchrow($db->sql_query("SELECT user_password, user_last_ip FROM ".PREFIX_DB."_users WHERE user_id = '".$uid."' AND user_name = '".$una."'"));
+                list($pass, $last_ip) = $db->sql_fetchrow($db->sql_query("SELECT user_password, user_last_ip FROM ".PREFIX_DB."_users WHERE user_id = :uid AND user_name = :name", ['uid' => $uid, 'name' => $una]));
                 if ($pass == $pwd && $pass != "" && $last_ip == $ip && $last_ip != "") {
                     $usertrue = 1;
                     return 1;
@@ -2552,7 +2486,7 @@ function is_moder($modul="") {
 # Search user name
 function get_user() {
     global $db;
-    $let = analyze_name($_GET['term']);
+    $let = analyze_name(getVar('get', 'term', 'text', ''));
     if ($let) {
         $result = $db->sql_query('SELECT user_name FROM '.PREFIX_DB.'_users WHERE user_name LIKE :name ORDER BY user_name ASC', ['name' => $let.'%']);
         while(list($user_name) = $db->sql_fetchrow($result)) $name[]= "\"".$user_name."\"";
@@ -2561,27 +2495,20 @@ function get_user() {
 }
 
 # Autocomplete user name
-function get_user_search() {
+function get_user_search(string $id, string $val, int $maxlength, string $extraClass = '', string $required = ''): string {
     global $conf;
-    $arg = func_get_args();
-    $class = empty($arg[3]) ? "sl_field" : "sl_field ".$arg[3];
-    $req = empty($arg[4]) ? "" : " required";
+    $class = $extraClass ? "sl_field ".$extraClass : "sl_field";
+    $req   = $required ? " required" : "";
     $cont = "<script>
     $(function() {
-        $(\"#".$arg[0]."\").autocomplete({
+        $(\"#".$id."\").autocomplete({
             source: \"index.php?go=1&op=get_user\",
             minLength: ".$conf['slet']."
         });
     });
     </script>"
-    ."<input type=\"text\" id=\"".$arg[0]."\" name=\"".$arg[0]."\" value=\"".$arg[1]."\" maxlength=\"".$arg[2]."\" class=\"".$class."\" placeholder=\""._NICKNAME."\"".$req.">";
+    ."<input type=\"text\" id=\"".$id."\" name=\"".$id."\" value=\"".$val."\" maxlength=\"".$maxlength."\" class=\"".$class."\" placeholder=\""._NICKNAME."\"".$req.">";
     return $cont;
-}
-
-# OLD DELETE
-# Redirect referer
-function referer(string $url): never {
-    setRedirect($url, true);
 }
 
 # Analyze name
@@ -2591,23 +2518,19 @@ function analyze_name($name) {
 }
 
 # URL types
-function url_types() {
-    $arg = func_get_args();
-    $url = explode(",", $arg['0']);
-    $con = array();
-    if (is_array($url)) {
-        foreach($url as $v) {
-            $var = parse_url($v);
-            $scheme = (!empty($var['scheme'])) ? $var['scheme'] : "";
-            if ($scheme == "ed2k") {
-                $con[] = "eMule";
-            } elseif ($scheme == "http") {
-                $con[] = ucfirst(current(explode(".", str_replace("www.", "", $var['host']))));
-            }
+function url_types(string $urls): string {
+    $url = explode(",", $urls);
+    $con = [];
+    foreach ($url as $v) {
+        $var    = parse_url($v);
+        $scheme = !empty($var['scheme']) ? $var['scheme'] : "";
+        if ($scheme == "ed2k") {
+            $con[] = "eMule";
+        } elseif ($scheme == "http") {
+            $con[] = ucfirst(current(explode(".", str_replace("www.", "", $var['host']))));
         }
-        $types = is_array($con) ? implode(", ", array_unique($con)) : "";
-        return $types;
     }
+    return $con ? implode(", ", array_unique($con)) : "";
 }
 
 # Check user
@@ -2667,7 +2590,7 @@ function setHead(array $seo = []): void {
         $sess_t = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
         $past = $ctime - intval($conf['sess_t']);
         if ($sess_t < $past) {
-            $db->sql_query("DELETE FROM ".PREFIX_DB."_session WHERE time < '".$past."'");
+            $db->sql_query("DELETE FROM ".PREFIX_DB."_session WHERE time < :past", ['past' => $past]);
             if (file_exists($sess_f)) unlink($sess_f);
             $fp = fopen($sess_f, "wb");
             fwrite($fp, $ctime);
@@ -2677,13 +2600,13 @@ function setHead(array $seo = []): void {
             if (!defined("ADMIN_FILE") && is_user()) {
                 $uagent = getAgent();
                 $uid= intval($user[0]);
-                $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_last_ip = '".$ip."', user_lastvisit = NOW(), user_agent = '".$uagent."' WHERE user_id = '".$uid."'");
+                $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_last_ip = :ip, user_lastvisit = NOW(), user_agent = :agent WHERE user_id = :uid", ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
             }
-            $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_session WHERE uname = '".$uname."'"));
+            $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_session WHERE uname = :uname", ['uname' => $uname]));
             if ($num >= 1) {
                 $db->sql_query('UPDATE '.PREFIX_DB.'_session SET time = :time, host_addr = :ip, guest = :guest, module = :module, url = :url WHERE uname = :uname', [':time' => $ctime, ':ip' => $ip, ':guest' => $guest, ':module' => $name, ':url' => $url, ':uname' => $uname]);
             } else {
-                $db->sql_query("INSERT INTO ".PREFIX_DB."_session (uname, time, host_addr, guest, module, url) VALUES ('".$uname."', '".$ctime."', '".$ip."', '".$guest."', '".$name."', '".$url."')");
+                $db->sql_query("INSERT INTO ".PREFIX_DB."_session (uname, time, host_addr, guest, module, url) VALUES (:uname, :time, :ip, :guest, :module, :url)", ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'module' => $name, 'url' => $url]);
             }
         }
     }
@@ -2694,7 +2617,7 @@ function setHead(array $seo = []): void {
             $refer_t = (file_exists($refer_f) && filesize($refer_f) != 0) ? file_get_contents($refer_f) : 0;
             $past = $ctime - intval($confr['refer_t']);
             if ($refer_t < $past) {
-                $db->sql_query("DELETE FROM ".PREFIX_DB."_referer WHERE lid = '0'");
+                $db->sql_query("DELETE FROM ".PREFIX_DB."_referer WHERE lid = :lid", ['lid' => 0]);
                 unlink($refer_f);
                 $fp = fopen($refer_f, "wb");
                 fwrite($fp, $ctime);
@@ -2704,9 +2627,9 @@ function setHead(array $seo = []): void {
             $uid = is_user() ? intval($user[0]) : 0;
             $link = text_filter($request);
             if (is_active('auto_links')) {
-                list($exist) = $db->sql_fetchrow($db->sql_query("SELECT ip FROM ".PREFIX_DB."_referer WHERE ip = '".$ip."' AND lid != '0'"));
+                list($exist) = $db->sql_fetchrow($db->sql_query("SELECT ip FROM ".PREFIX_DB."_referer WHERE ip = :ip AND lid != :lid", ['ip' => $ip, 'lid' => 0]));
                 if ($exist) {
-                    if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer VALUES (NULL, '".$uid."', '".$uname."', '".$ip."', '".$referer."', '".$link."', NOW(), '0')");
+                    if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
                 } else {
                     $result = $db->sql_query("SELECT link FROM ".PREFIX_DB."_auto_links");
                     while(list($slink) = $db->sql_fetchrow($result)) {
@@ -2718,15 +2641,15 @@ function setHead(array $seo = []): void {
                         }
                     }
                     if ($islink) {
-                        $db->sql_query("UPDATE ".PREFIX_DB."_auto_links SET hits = hits+1 WHERE link = '".$slink."'");
-                        list($lid) = $db->sql_fetchrow($db->sql_query("SELECT id FROM ".PREFIX_DB."_auto_links WHERE link = '".$slink."'"));
-                        $db->sql_query("INSERT INTO ".PREFIX_DB."_referer VALUES (NULL, '".$uid."', '".$uname."', '".$ip."', '".$referer."', '".$link."', NOW(), '".$lid."')");
+                        $db->sql_query("UPDATE ".PREFIX_DB."_auto_links SET hits = hits + 1 WHERE link = :link", ['link' => $slink]);
+                        list($lid) = $db->sql_fetchrow($db->sql_query("SELECT id FROM ".PREFIX_DB."_auto_links WHERE link = :link", ['link' => $slink]));
+                        $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => $lid]);
                     } else {
-                        if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer VALUES (NULL, '".$uid."', '".$uname."', '".$ip."', '".$referer."', '".$link."', NOW(), '0')");
+                        if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
                     }
                 }
             } else {
-                if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer VALUES (NULL, '".$uid."', '".$uname."', '".$ip."', '".$referer."', '".$link."', NOW(), '0')");
+                if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
             }
         }
     }
@@ -2816,7 +2739,6 @@ function setHead(array $seo = []): void {
             }
         }
     }
-    setThemeInclude();
     $index = file_get_contents(getThemeFile('index'));
     if (defined('ADMIN_FILE') && ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==' || !preg_match('#{%LICENSE%}#', $index))) setExit(_NO_LICENSE);
     $licens = base64_decode($conf['lic_h']).date("Y").base64_decode($conf['lic_f']);
@@ -3155,42 +3077,43 @@ function addBackupDb(): bool {
     }
 
     // Timestamp-Datei aktualisieren
-    if (file_exists($sess_f)) @unlink($sess_f);
-    $fp_time = @fopen($sess_f, "wb");
+    if (file_exists($sess_f)) unlink($sess_f);
+    $fp_time = fopen($sess_f, "wb");
     if ($fp_time) {
         fwrite($fp_time, time());
         fclose($fp_time);
     }
 
     // FIX: Memory-Management
-    @ini_set('memory_limit', '512M');
+    ini_set('memory_limit', '512M');
 
     // safe_mode ist entfernt; defensiv behandeln
     $safe = 0;
     if (function_exists('ini_get')) {
-        $sm = @ini_get('safe_mode');
+        $sm = ini_get('safe_mode');
         $safe = ($sm && $sm != '0') ? 1 : 0;
     }
-    if (!$safe && function_exists("set_time_limit")) @set_time_limit(600);
+    if (!$safe && function_exists("set_time_limit")) set_time_limit(600);
 
-    # ÐšÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÐ° ÑÐ¾ÐµÐ´Ð¸Ð½ÐµÐ½Ð¸Ñ Ñ MySQL
-    # auto - Ð°Ð²Ñ‚Ð¾Ð¼Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ð¹ Ð²Ñ‹Ð±Ð¾Ñ€ (ÑƒÑÑ‚Ð°Ð½Ð°Ð²Ð»Ð¸Ð²Ð°ÐµÑ‚ÑÑ ÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÐ° Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹), latin1, cp1251, utf8 Ð¸ Ñ‚.Ð¿.
+    # ÃÅ¡ÃÂ¾ÃÂ´ÃÂ¸Ã‘â‚¬ÃÂ¾ÃÂ²ÃÂºÃÂ° Ã‘ÂÃÂ¾ÃÂµÃÂ´ÃÂ¸ÃÂ½ÃÂµÃÂ½ÃÂ¸Ã‘Â Ã‘Â MySQL
+    # auto - ÃÂ°ÃÂ²Ã‘â€šÃÂ¾ÃÂ¼ÃÂ°Ã‘â€šÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃÂºÃÂ¸ÃÂ¹ ÃÂ²Ã‘â€¹ÃÂ±ÃÂ¾Ã‘â‚¬ (Ã‘Æ’Ã‘ÂÃ‘â€šÃÂ°ÃÂ½ÃÂ°ÃÂ²ÃÂ»ÃÂ¸ÃÂ²ÃÂ°ÃÂµÃ‘â€šÃ‘ÂÃ‘Â ÃÂºÃÂ¾ÃÂ´ÃÂ¸Ã‘â‚¬ÃÂ¾ÃÂ²ÃÂºÃÂ° Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹), latin1, cp1251, utf8 ÃÂ¸ Ã‘â€š.ÃÂ¿.
     $ccharset = "auto";
+    $charset = preg_replace('#[^a-zA-Z0-9_\\-]#', '', (string)$ccharset);
 
-    # Ð¢Ð¸Ð¿Ñ‹ Ñ‚Ð°Ð±Ð»Ð¸Ñ† Ñƒ ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ñ… ÑÐ¾Ñ…Ñ€Ð°Ð½ÑÐµÑ‚ÑÑ Ñ‚Ð¾Ð»ÑŒÐºÐ¾ ÑÑ‚Ñ€ÑƒÐºÑ‚ÑƒÑ€Ð°, Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð½Ñ‹Ðµ Ð·Ð°Ð¿ÑÑ‚Ð¾Ð¹
+    # ÃÂ¢ÃÂ¸ÃÂ¿Ã‘â€¹ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€  Ã‘Æ’ ÃÂºÃÂ¾Ã‘â€šÃÂ¾Ã‘â‚¬Ã‘â€¹Ã‘â€¦ Ã‘ÂÃÂ¾Ã‘â€¦Ã‘â‚¬ÃÂ°ÃÂ½Ã‘ÂÃÂµÃ‘â€šÃ‘ÂÃ‘Â Ã‘â€šÃÂ¾ÃÂ»Ã‘Å’ÃÂºÃÂ¾ Ã‘ÂÃ‘â€šÃ‘â‚¬Ã‘Æ’ÃÂºÃ‘â€šÃ‘Æ’Ã‘â‚¬ÃÂ°, Ã‘â‚¬ÃÂ°ÃÂ·ÃÂ´ÃÂµÃÂ»ÃÂµÃÂ½ÃÂ½Ã‘â€¹ÃÂµ ÃÂ·ÃÂ°ÃÂ¿Ã‘ÂÃ‘â€šÃÂ¾ÃÂ¹
     $conlycreate = "MRG_MyISAM,MERGE,HEAP,MEMORY";
 
-    # Ð’ Ñ„Ð¸Ð»ÑŒÑ‚Ñ€Ðµ Ñ‚Ð°Ð±Ð»Ð¸Ñ† ÑƒÐºÐ°Ð·Ñ‹Ð²Ð°ÑŽÑ‚ÑÑ ÑÐ¿ÐµÑ†Ð¸Ð°Ð»ÑŒÐ½Ñ‹Ðµ ÑˆÐ°Ð±Ð»Ð¾Ð½Ñ‹ Ð¿Ð¾ ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¼ Ð¾Ñ‚Ð±Ð¸Ñ€Ð°ÑŽÑ‚ÑÑ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹. Ð’ ÑˆÐ°Ð±Ð»Ð¾Ð½Ð°Ñ… Ð¼Ð¾Ð¶Ð½Ð¾ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰Ð¸Ðµ ÑÐ¿ÐµÑ†Ð¸Ð°Ð»ÑŒÐ½Ñ‹Ðµ ÑÐ¸Ð¼Ð²Ð¾Ð»Ñ‹:
-    # ÑÐ¸Ð¼Ð²Ð¾Ð» * â€” Ð¾Ð·Ð½Ð°Ñ‡Ð°ÐµÑ‚ Ð»ÑŽÐ±Ð¾Ðµ ÐºÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ ÑÐ¸Ð¼Ð²Ð¾Ð»Ð¾Ð²;
-    # ÑÐ¸Ð¼Ð²Ð¾Ð» ? â€” Ð¾Ð·Ð½Ð°Ñ‡Ð°ÐµÑ‚ Ð¾Ð´Ð¸Ð½ Ð»ÑŽÐ±Ð¾Ð¹ ÑÐ¸Ð¼Ð²Ð¾Ð»;
-    # ÑÐ¸Ð¼Ð²Ð¾Ð» ^ â€” Ð¾Ð·Ð½Ð°Ñ‡Ð°ÐµÑ‚ Ð¸ÑÐºÐ»ÑŽÑ‡ÐµÐ½Ð¸Ðµ Ð¸Ð· ÑÐ¿Ð¸ÑÐºÐ° Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð¸Ð»Ð¸ Ñ‚Ð°Ð±Ð»Ð¸Ñ†.
+    # Ãâ€™ Ã‘â€žÃÂ¸ÃÂ»Ã‘Å’Ã‘â€šÃ‘â‚¬ÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€  Ã‘Æ’ÃÂºÃÂ°ÃÂ·Ã‘â€¹ÃÂ²ÃÂ°Ã‘Å½Ã‘â€šÃ‘ÂÃ‘Â Ã‘ÂÃÂ¿ÃÂµÃ‘â€ ÃÂ¸ÃÂ°ÃÂ»Ã‘Å’ÃÂ½Ã‘â€¹ÃÂµ Ã‘Ë†ÃÂ°ÃÂ±ÃÂ»ÃÂ¾ÃÂ½Ã‘â€¹ ÃÂ¿ÃÂ¾ ÃÂºÃÂ¾Ã‘â€šÃÂ¾Ã‘â‚¬Ã‘â€¹ÃÂ¼ ÃÂ¾Ã‘â€šÃÂ±ÃÂ¸Ã‘â‚¬ÃÂ°Ã‘Å½Ã‘â€šÃ‘ÂÃ‘Â Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹. Ãâ€™ Ã‘Ë†ÃÂ°ÃÂ±ÃÂ»ÃÂ¾ÃÂ½ÃÂ°Ã‘â€¦ ÃÂ¼ÃÂ¾ÃÂ¶ÃÂ½ÃÂ¾ ÃÂ¸Ã‘ÂÃÂ¿ÃÂ¾ÃÂ»Ã‘Å’ÃÂ·ÃÂ¾ÃÂ²ÃÂ°Ã‘â€šÃ‘Å’ Ã‘ÂÃÂ»ÃÂµÃÂ´Ã‘Æ’Ã‘Å½Ã‘â€°ÃÂ¸ÃÂµ Ã‘ÂÃÂ¿ÃÂµÃ‘â€ ÃÂ¸ÃÂ°ÃÂ»Ã‘Å’ÃÂ½Ã‘â€¹ÃÂµ Ã‘ÂÃÂ¸ÃÂ¼ÃÂ²ÃÂ¾ÃÂ»Ã‘â€¹:
+    # Ã‘ÂÃÂ¸ÃÂ¼ÃÂ²ÃÂ¾ÃÂ» * Ã¢â‚¬â€ ÃÂ¾ÃÂ·ÃÂ½ÃÂ°Ã‘â€¡ÃÂ°ÃÂµÃ‘â€š ÃÂ»Ã‘Å½ÃÂ±ÃÂ¾ÃÂµ ÃÂºÃÂ¾ÃÂ»ÃÂ¸Ã‘â€¡ÃÂµÃ‘ÂÃ‘â€šÃÂ²ÃÂ¾ Ã‘ÂÃÂ¸ÃÂ¼ÃÂ²ÃÂ¾ÃÂ»ÃÂ¾ÃÂ²;
+    # Ã‘ÂÃÂ¸ÃÂ¼ÃÂ²ÃÂ¾ÃÂ» ? Ã¢â‚¬â€ ÃÂ¾ÃÂ·ÃÂ½ÃÂ°Ã‘â€¡ÃÂ°ÃÂµÃ‘â€š ÃÂ¾ÃÂ´ÃÂ¸ÃÂ½ ÃÂ»Ã‘Å½ÃÂ±ÃÂ¾ÃÂ¹ Ã‘ÂÃÂ¸ÃÂ¼ÃÂ²ÃÂ¾ÃÂ»;
+    # Ã‘ÂÃÂ¸ÃÂ¼ÃÂ²ÃÂ¾ÃÂ» ^ Ã¢â‚¬â€ ÃÂ¾ÃÂ·ÃÂ½ÃÂ°Ã‘â€¡ÃÂ°ÃÂµÃ‘â€š ÃÂ¸Ã‘ÂÃÂºÃÂ»Ã‘Å½Ã‘â€¡ÃÂµÃÂ½ÃÂ¸ÃÂµ ÃÂ¸ÃÂ· Ã‘ÂÃÂ¿ÃÂ¸Ã‘ÂÃÂºÃÂ° Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹ ÃÂ¸ÃÂ»ÃÂ¸ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ .
 
-    # ÐŸÑ€Ð¸Ð¼ÐµÑ€Ñ‹:
-    # slaed_* Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‰Ð¸ÐµÑÑ Ñ "slaed_" (Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ñ„Ð¾Ñ€ÑƒÐ¼Ð° invision board)
-    # slaed_*, ^slaed_session Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‰Ð¸ÐµÑÑ Ñ "slaed_", ÐºÑ€Ð¾Ð¼Ðµ "slaed_session"
-    # slaed_s*s, ^slaed_session Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‰Ð¸ÐµÑÑ Ñ "slaed_s" Ð¸ Ð·Ð°ÐºÐ°Ð½Ñ‡Ð¸Ð²Ð°ÑŽÑ‰Ð¸ÐµÑÑ Ð±ÑƒÐºÐ²Ð¾Ð¹ "s", ÐºÑ€Ð¾Ð¼Ðµ "slaed_session"
-    # ^*s Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹, ÐºÑ€Ð¾Ð¼Ðµ Ñ‚Ð°Ð±Ð»Ð¸Ñ† Ð·Ð°ÐºÐ°Ð½Ñ‡Ð¸Ð²Ð°ÑŽÑ‰Ð¸Ñ…ÑÑ Ð±ÑƒÐºÐ²Ð¾Ð¹ "s"
-    # ^slaed_???? Ð²ÑÐµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹, ÐºÑ€Ð¾Ð¼Ðµ Ñ‚Ð°Ð±Ð»Ð¸Ñ†, ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ðµ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÑŽÑ‚ÑÑ Ñ "slaed_" und ÑÐ¾Ð´ÐµÑ€Ð¶Ð°Ñ‚ 4 ÑÐ¸Ð¼Ð²Ð¾Ð»Ð° Ð¿Ð¾ÑÐ»Ðµ Ð·Ð½Ð°ÐºÐ° Ð¿Ð¾Ð´Ñ‡ÐµÑ€ÐºÐ¸Ð²Ð°Ð½Ð¸Ñ
+    # ÃÅ¸Ã‘â‚¬ÃÂ¸ÃÂ¼ÃÂµÃ‘â‚¬Ã‘â€¹:
+    # slaed_* ÃÂ²Ã‘ÂÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹ ÃÂ½ÃÂ°Ã‘â€¡ÃÂ¸ÃÂ½ÃÂ°Ã‘Å½Ã‘â€°ÃÂ¸ÃÂµÃ‘ÂÃ‘Â Ã‘Â "slaed_" (ÃÂ²Ã‘ÂÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹ Ã‘â€žÃÂ¾Ã‘â‚¬Ã‘Æ’ÃÂ¼ÃÂ° invision board)
+    # slaed_*, ^slaed_session ÃÂ²Ã‘ÂÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹ ÃÂ½ÃÂ°Ã‘â€¡ÃÂ¸ÃÂ½ÃÂ°Ã‘Å½Ã‘â€°ÃÂ¸ÃÂµÃ‘ÂÃ‘Â Ã‘Â "slaed_", ÃÂºÃ‘â‚¬ÃÂ¾ÃÂ¼ÃÂµ "slaed_session"
+    # slaed_s*s, ^slaed_session ÃÂ²Ã‘ÂÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹ ÃÂ½ÃÂ°Ã‘â€¡ÃÂ¸ÃÂ½ÃÂ°Ã‘Å½Ã‘â€°ÃÂ¸ÃÂµÃ‘ÂÃ‘Â Ã‘Â "slaed_s" ÃÂ¸ ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ½Ã‘â€¡ÃÂ¸ÃÂ²ÃÂ°Ã‘Å½Ã‘â€°ÃÂ¸ÃÂµÃ‘ÂÃ‘Â ÃÂ±Ã‘Æ’ÃÂºÃÂ²ÃÂ¾ÃÂ¹ "s", ÃÂºÃ‘â‚¬ÃÂ¾ÃÂ¼ÃÂµ "slaed_session"
+    # ^*s ÃÂ²Ã‘ÂÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹, ÃÂºÃ‘â‚¬ÃÂ¾ÃÂ¼ÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€  ÃÂ·ÃÂ°ÃÂºÃÂ°ÃÂ½Ã‘â€¡ÃÂ¸ÃÂ²ÃÂ°Ã‘Å½Ã‘â€°ÃÂ¸Ã‘â€¦Ã‘ÂÃ‘Â ÃÂ±Ã‘Æ’ÃÂºÃÂ²ÃÂ¾ÃÂ¹ "s"
+    # ^slaed_???? ÃÂ²Ã‘ÂÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ Ã‘â€¹, ÃÂºÃ‘â‚¬ÃÂ¾ÃÂ¼ÃÂµ Ã‘â€šÃÂ°ÃÂ±ÃÂ»ÃÂ¸Ã‘â€ , ÃÂºÃÂ¾Ã‘â€šÃÂ¾Ã‘â‚¬Ã‘â€¹ÃÂµ ÃÂ½ÃÂ°Ã‘â€¡ÃÂ¸ÃÂ½ÃÂ°Ã‘Å½Ã‘â€šÃ‘ÂÃ‘Â Ã‘Â "slaed_" und Ã‘ÂÃÂ¾ÃÂ´ÃÂµÃ‘â‚¬ÃÂ¶ÃÂ°Ã‘â€š 4 Ã‘ÂÃÂ¸ÃÂ¼ÃÂ²ÃÂ¾ÃÂ»ÃÂ° ÃÂ¿ÃÂ¾Ã‘ÂÃÂ»ÃÂµ ÃÂ·ÃÂ½ÃÂ°ÃÂºÃÂ° ÃÂ¿ÃÂ¾ÃÂ´Ã‘â€¡ÃÂµÃ‘â‚¬ÃÂºÃÂ¸ÃÂ²ÃÂ°ÃÂ½ÃÂ¸Ã‘Â
     $ctables = "^ipb_*";
 
     $bsize = 0;
@@ -3224,9 +3147,9 @@ function addBackupDb(): bool {
     }
 
     // Zeichenkodierung setzen, wenn nicht auto
-    if ($bmysql_ver > 40101 && $ccharset != 'auto') {
-        $db->sql_query("SET NAMES '".$ccharset."'");
-        $last_charset = $ccharset;
+    if ($bmysql_ver > 40101 && $charset !== '' && $charset != 'auto') {
+        $db->sql_query("SET NAMES '".$charset."'");
+        $last_charset = $charset;
     } else {
         $last_charset = "";
     }
@@ -3333,18 +3256,24 @@ function addBackupDb(): bool {
     $db->sql_query("SET SQL_QUOTE_SHOW_CREATE = 1");
 
     foreach ($tables as $table) {
+        if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$table)) {
+            continue;
+        }
         // FIX: Charset isset() Check
         if ($bmysql_ver > 40101 && isset($tab_charset[$table]) && $tab_charset[$table] != $last_charset) {
             if ($ccharset == "auto" && !empty($tab_charset[$table])) {
-                $db->sql_query("SET NAMES '".$tab_charset[$table]."'");
-                $last_charset = $tab_charset[$table];
+                $tcharset = preg_replace('#[^a-zA-Z0-9_\\-]#', '', (string)$tab_charset[$table]);
+                if ($tcharset !== '') {
+                    $db->sql_query("SET NAMES '".$tcharset."'");
+                    $last_charset = $tcharset;
+                }
             }
         }
 
         $res = $db->sql_query("SHOW CREATE TABLE `{$table}`");
         $tab = $res->fetch(PDO::FETCH_NUM);
 
-        // Ð”Ð»Ñ MariaDB 10+ ÐÐ• Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÐ¼ ÑƒÑÐ»Ð¾Ð²Ð½Ñ‹Ðµ ÐºÐ¾Ð¼Ð¼ÐµÐ½Ñ‚Ð°Ñ€Ð¸Ð¸
+        // Ãâ€ÃÂ»Ã‘Â MariaDB 10+ ÃÂÃâ€¢ ÃÂ¸Ã‘ÂÃÂ¿ÃÂ¾ÃÂ»Ã‘Å’ÃÂ·Ã‘Æ’ÃÂµÃÂ¼ Ã‘Æ’Ã‘ÂÃÂ»ÃÂ¾ÃÂ²ÃÂ½Ã‘â€¹ÃÂµ ÃÂºÃÂ¾ÃÂ¼ÃÂ¼ÃÂµÃÂ½Ã‘â€šÃÂ°Ã‘â‚¬ÃÂ¸ÃÂ¸
         if (isset($tab[1])) {
             fwrite($fp, "DROP TABLE IF EXISTS `{$table}`;\n{$tab[1]};\n\n");
         }
@@ -3366,16 +3295,16 @@ function addBackupDb(): bool {
             $i = 0;
             fwrite($fp, "INSERT INTO `{$table}` VALUES");
 
-            while ($res = $db->sql_query("SELECT * FROM `{$table}` LIMIT {$from}, {$limit}")) {
-                $countThisBatch = 0;
+            while ($res = $db->sql_query("SELECT * FROM `{$table}` LIMIT ".intval($from).", ".intval($limit))) {
+                $batch = 0;
 
                 while ($row = $res->fetch(PDO::FETCH_NUM)) {
-                    $countThisBatch++;
+                    $batch++;
                     $i++;
 
-                    // âœ… ÐšÐ Ð˜Ð¢Ð˜Ð§Ð•Ð¡ÐšÐžÐ• Ð˜Ð¡ÐŸÐ ÐÐ’Ð›Ð•ÐÐ˜Ð•: ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð¸Ðµ ÐŸÐ•Ð Ð•Ð” Ð·Ð°Ð¿Ð¸ÑÑŒÑŽ ÑÑ‚Ñ€Ð¾ÐºÐ¸
+                    // Ã¢Å“â€¦ ÃÅ¡ÃÂ ÃËœÃÂ¢ÃËœÃÂ§Ãâ€¢ÃÂ¡ÃÅ¡ÃÅ¾Ãâ€¢ ÃËœÃÂ¡ÃÅ¸ÃÂ ÃÂÃâ€™Ãâ€ºÃâ€¢ÃÂÃËœÃâ€¢: ÃÅ¸Ã‘â‚¬ÃÂ¾ÃÂ²ÃÂµÃ‘â‚¬Ã‘ÂÃÂµÃÂ¼ Ã‘â‚¬ÃÂ°ÃÂ·ÃÂ´ÃÂµÃÂ»ÃÂµÃÂ½ÃÂ¸ÃÂµ ÃÅ¸Ãâ€¢ÃÂ Ãâ€¢Ãâ€ ÃÂ·ÃÂ°ÃÂ¿ÃÂ¸Ã‘ÂÃ‘Å’Ã‘Å½ Ã‘ÂÃ‘â€šÃ‘â‚¬ÃÂ¾ÃÂºÃÂ¸
                     if ($i > 1 && ($i - 1) % 10000 == 0) {
-                        // Ð—Ð°ÐºÑ€Ñ‹Ð²Ð°ÐµÐ¼ Ð¿Ñ€ÐµÐ´Ñ‹Ð´ÑƒÑ‰Ð¸Ð¹ INSERT Ð¸ Ð½Ð°Ñ‡Ð¸Ð½Ð°ÐµÐ¼ Ð½Ð¾Ð²Ñ‹Ð¹
+                        // Ãâ€”ÃÂ°ÃÂºÃ‘â‚¬Ã‘â€¹ÃÂ²ÃÂ°ÃÂµÃÂ¼ ÃÂ¿Ã‘â‚¬ÃÂµÃÂ´Ã‘â€¹ÃÂ´Ã‘Æ’Ã‘â€°ÃÂ¸ÃÂ¹ INSERT ÃÂ¸ ÃÂ½ÃÂ°Ã‘â€¡ÃÂ¸ÃÂ½ÃÂ°ÃÂµÃÂ¼ ÃÂ½ÃÂ¾ÃÂ²Ã‘â€¹ÃÂ¹
                         fwrite($fp, ";\n\nINSERT INTO `{$table}` VALUES");
                     }
 
@@ -3387,12 +3316,12 @@ function addBackupDb(): bool {
                         }
                     }
 
-                    // Ð”Ð¾Ð±Ð°Ð²Ð»ÑÐµÐ¼ Ð·Ð°Ð¿ÑÑ‚ÑƒÑŽ ÐŸÐ•Ð Ð•Ð” ÑÑ‚Ñ€Ð¾ÐºÐ¾Ð¹ (ÐºÑ€Ð¾Ð¼Ðµ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð¸ Ð¿Ð¾ÑÐ»Ðµ Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð¸Ñ)
+                    // Ãâ€ÃÂ¾ÃÂ±ÃÂ°ÃÂ²ÃÂ»Ã‘ÂÃÂµÃÂ¼ ÃÂ·ÃÂ°ÃÂ¿Ã‘ÂÃ‘â€šÃ‘Æ’Ã‘Å½ ÃÅ¸Ãâ€¢ÃÂ Ãâ€¢Ãâ€ Ã‘ÂÃ‘â€šÃ‘â‚¬ÃÂ¾ÃÂºÃÂ¾ÃÂ¹ (ÃÂºÃ‘â‚¬ÃÂ¾ÃÂ¼ÃÂµ ÃÂ¿ÃÂµÃ‘â‚¬ÃÂ²ÃÂ¾ÃÂ¹ ÃÂ¸ ÃÂ¿ÃÂ¾Ã‘ÂÃÂ»ÃÂµ Ã‘â‚¬ÃÂ°ÃÂ·ÃÂ´ÃÂµÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â)
                     $is_first_in_block = ($i == 1) || (($i - 1) % 10000 == 0);
                     fwrite($fp, ($is_first_in_block ? "\n" : ",\n")."(".implode(",", $row).")");
                 }
 
-                if ($countThisBatch < $limit) break;
+                if ($batch < $limit) break;
                 $from += $limit;
             }
 
@@ -3418,10 +3347,20 @@ function is_acess($ids) {
             $isa = true;
         } elseif (is_user() && $id[1]) {
             $uid = intval($user[0]);
-            $mid = explode(",", $id[1]);
-            foreach ($mid as $val) if ($val) $dmid[] = "g.id=".$val;
-            $dmid = implode(" OR ", $dmid);
-            list($uid) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(u.user_id) FROM ".PREFIX_DB."_users AS u LEFT JOIN ".PREFIX_DB."_groups AS g ON ((g.extra = 1 AND u.user_group = g.id) OR (g.extra != 1 AND u.user_points >= g.points)) WHERE u.user_id = '".$uid."' AND (".$dmid.")"));
+            $mid = array_values(array_filter(array_map('intval', explode(",", (string)$id[1])), static fn($v) => $v > 0));
+            if ($mid) {
+                $pp = [];
+                $pm = ['uid' => $uid];
+                foreach ($mid as $k => $gid) {
+                    $ph = 'g'.$k;
+                    $pp[] = ':'.$ph;
+                    $pm[$ph] = $gid;
+                }
+                $sql = "SELECT COUNT(u.user_id) FROM ".PREFIX_DB."_users AS u LEFT JOIN ".PREFIX_DB."_groups AS g ON ((g.extra = 1 AND u.user_group = g.id) OR (g.extra != 1 AND u.user_points >= g.points)) WHERE u.user_id = :uid AND g.id IN (".implode(', ', $pp).")";
+                list($uid) = $db->sql_fetchrow($db->sql_query($sql, $pm));
+            } else {
+                $uid = 0;
+            }
             $isa = ($uid) ? true : false;
         } elseif (is_user() && !$id[1]) {
             $isa = (1 >= $id[0]) ? true : false;
@@ -3435,18 +3374,22 @@ function is_acess($ids) {
 }
 
 # Format categories select
-function getcat() {
+function getcat(string $modul = '', int $id = 0, string $selectName = '', string $extraClass = '', string $emptyOption = '', string $noSelect = ''): string {
     global $db, $conf;
-    $arg = func_get_args();
-    $mod = analyze($arg[0]);
-    $conf['name'] = isset($conf['name']) ? $conf['name'] : $mod;
-    $id = intval($arg[1]);
-    $class = ($arg[3]) ? "sl_field ".$arg[3] : "sl_field";
-    $where = ($mod) ? "WHERE modul = '".$mod."' ORDER BY ordern" : "ORDER BY ordern";
-    $result = $db->sql_query("SELECT id, title, parentid, auth_view FROM ".PREFIX_DB."_categories ".$where);
+    $modul = analyze($modul);
+    $conf['name'] = $conf['name'] ?? $modul;
+    $class  = $extraClass ? "sl_field ".$extraClass : "sl_field";
+    if ($modul) {
+        $where  = 'WHERE modul = :modul ORDER BY ordern';
+        $params = ['modul' => $modul];
+    } else {
+        $where  = 'ORDER BY ordern';
+        $params = [];
+    }
+    $result = $db->sql_query('SELECT id, title, parentid, auth_view FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->sql_numrows($result) > 0) {
-        $content = (empty($arg[5])) ? "<select name=\"".$arg[2]."\" title=\""._CATEGORIES."\" class=\"".$class."\">" : "";
-        while (list($cid, $title, $parentid, $auth_view) = $db->sql_fetchrow($result)) if (is_acess($auth_view)) $massiv[$cid] = array(defconst($title), $parentid);
+        $content = (!$noSelect) ? "<select name=\"".$selectName."\" title=\""._CATEGORIES."\" class=\"".$class."\">" : "";
+        while (list($cid, $title, $parentid, $auth_view) = $db->sql_fetchrow($result)) if (is_acess($auth_view)) $massiv[$cid] = [defconst($title), $parentid];
         foreach ($massiv as $key => $val) {
             $cont[$key] = $val[0];
             $flag = $val[1];
@@ -3454,28 +3397,32 @@ function getcat() {
                 $cont[$key] = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;".$cont[$key];
                 $flag = intval($massiv[$flag][1]);
             }
-            $sel = ($id == $key) ? " selected" : "";
+            $sel     = ($id == $key) ? " selected" : "";
             $content .= "<option value=\"".$key."\"".$sel.">".$cont[$key]."</option>";
         }
-        $rcont = (empty($arg[5])) ? $content."</select>" : $content;
-        return $rcont;
-    } elseif ($arg[4]) {
-        return "<select name=\"".$arg[2]."\" title=\""._CATEGORIES."\" class=\"".$class."\">".$arg[4]."</select>";
+        return (!$noSelect) ? $content."</select>" : $content;
+    } elseif ($emptyOption) {
+        return "<select name=\"".$selectName."\" title=\""._CATEGORIES."\" class=\"".$class."\">".$emptyOption."</select>";
     }
+    return '';
 }
 
 # Format categories links
-function catlink() {
+function catlink(string $mod = '', int $id = 0, string $sep = '', string $home = ''): string {
     global $db, $conf;
-    $arg = func_get_args();
-    $mod = analyze($arg[0]);
-    $id = intval($arg[1]);
-    $sep = ($arg[2]) ? " ".urldecode($arg[2])." " : " ".urldecode($conf['defis'])." ";
-    $content = ($arg[3]) ? "<a href=\"index.php?name=".$conf['name']."\" title=\"".$arg[3]."\">".$arg[3]."</a>".$sep : "";
-    $where = ($mod) ? "WHERE modul = '".$mod."'" : "";
-    $result = $db->sql_query("SELECT id, title, parentid FROM ".PREFIX_DB."_categories ".$where);
+    $mod     = analyze($mod);
+    $sep     = $sep ? " ".urldecode($sep)." " : " ".urldecode($conf['defis'])." ";
+    $content = $home ? "<a href=\"index.php?name=".$conf['name']."\" title=\"".$home."\">".$home."</a>".$sep : "";
+    if ($mod) {
+        $where  = 'WHERE modul = :modul';
+        $params = ['modul' => $mod];
+    } else {
+        $where  = '';
+        $params = [];
+    }
+    $result = $db->sql_query('SELECT id, title, parentid FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->sql_numrows($result) > 0) {
-        while (list($cid, $title, $parentid) = $db->sql_fetchrow($result)) $massiv[$cid] = array(defconst($title), $parentid);
+        while (list($cid, $title, $parentid) = $db->sql_fetchrow($result)) $massiv[$cid] = [defconst($title), $parentid];
         foreach ($massiv as $key => $val) {
             $flag = $val[1];
             $cont[$key] = ($flag != 0) ? $val[0] : "<a href=\"index.php?name=".$conf['name']."&amp;cat=".$key."\" title=\"".$val[0]."\">".$val[0]."</a>";
@@ -3487,19 +3434,24 @@ function catlink() {
         }
         return $content;
     }
+    return '';
 }
 
 # Format categories IDs
-function catids() {
+function catids(string $mod = '', int $id = 0): string {
     global $db;
-    $arg = func_get_args();
-    $mod = analyze($arg[0]);
-    $id = intval($arg[1]);
-    $content = "";
-    $where = ($mod) ? "WHERE modul = '".$mod."'" : "";
-    $result = $db->sql_query("SELECT id, parentid FROM ".PREFIX_DB."_categories ".$where);
+    $mod     = analyze($mod);
+    $content = '';
+    if ($mod) {
+        $where  = 'WHERE modul = :modul';
+        $params = ['modul' => $mod];
+    } else {
+        $where  = '';
+        $params = [];
+    }
+    $result = $db->sql_query('SELECT id, parentid FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->sql_numrows($result) > 0) {
-        while (list($cid, $parentid) = $db->sql_fetchrow($result)) $massiv[$cid] = array($parentid);
+        while (list($cid, $parentid) = $db->sql_fetchrow($result)) $massiv[$cid] = [$parentid];
         foreach ($massiv as $key => $val) {
             $cont[$key] = $key;
             $flag = $val[0];
@@ -3511,17 +3463,22 @@ function catids() {
         }
         return $content;
     }
+    return '';
 }
 
 # Format categories IDs from module
-function catmids() {
+function catmids(string $modul, string $field): string {
     global $db, $conf, $locale;
-    $arg = func_get_args();
-    $where = ($conf['multilingual']) ? "WHERE modul = '".$arg[0]."' AND (language = '".$locale."' OR language = '')" : "WHERE modul = '".$arg[0]."'";
-    $result = $db->sql_query("SELECT id, auth_read FROM ".PREFIX_DB."_categories ".$where." ORDER BY id");
+    if ($conf['multilingual']) {
+        $where  = 'WHERE modul = :modul AND (language = :locale OR language = \'\')';
+        $params = ['modul' => $modul, 'locale' => $locale];
+    } else {
+        $where  = 'WHERE modul = :modul';
+        $params = ['modul' => $modul];
+    }
+    $result = $db->sql_query('SELECT id, auth_read FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY id', $params);
     while (list($cid, $auth_read) = $db->sql_fetchrow($result)) if (is_acess($auth_read)) $catid[] = $cid;
-    $where = ($catid) ? "AND ".$arg[1]." IN (".implode(", ", $catid).")" : "";
-    return $where;
+    return isset($catid) ? 'AND '.$field.' IN ('.implode(', ', $catid).')' : '';
 }
 
 # Length end filter
@@ -3554,112 +3511,701 @@ function is_active($mod, $view='') {
     return isset($list[$vnum][$mod]) ? 1 : 0;
 }
 
-# Decode BB
-function bb_decode($sourse, $mod, $id="") {
-    $mod = (empty($mod)) ? "all" : strtolower($mod);
-    $bb = array();
-    $html = array();
-    $bb[] = "#\[img\]([^?](?:[^\[]+|\[(?!url))*?)\[/img\]#i";
-    $html[] = "<img src=\"\\1\" alt=\"\\1\" title=\"\\1\" class=\"sl_img\">";
-    $bb[] = "#\[img=([a-zA-Z]+)\]([^?](?:[^\[]+|\[(?!url))*?)\[/img\]#si";
-    $html[] = "<img src=\"\\2\" style=\"float: \\1;\" alt=\"\\2\" title=\"\\2\" class=\"sl_img\">";
-    $bb[] = "#\[img\ alt=([\pL0-9\_\-\.\"\s]+)\]([^?](?:[^\[]+|\[(?!url))*?)\[/img\]#siu";
-    $html[] = "<img src=\"\\2\" style=\"float: \\1;\" alt=\"\\1\" title=\"\\1\" class=\"sl_img\">";
-    $bb[] = "#\[img=([a-zA-Z]+) alt=([\pL0-9\_\-\.\"\s]+)\]([^?](?:[^\[]+|\[(?!url))*?)\[/img\]#siu";
-    $html[] = "<img src=\"\\3\" style=\"float: \\1;\" alt=\"\\2\" title=\"\\2\" class=\"sl_img\">";
-    $bb[] = "#\[url\](ed2k://\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?/?)\[/url\]#si";
-    $html[] = "eMule/eDonkey: <a href=\"\\1\" target=\"_blank\" title=\"\\2\">\\2</a>";
-    $bb[] = "#\[url=(ed2k://\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?/?)\](.*?)\[/url\]#si";
-    $html[] = "<a href=\"\\1\" target=\"_blank\" title=\"\\2\">\\4</a>";
-    $bb[] = "#\[url\](ed2k://\|server\|([\d\.]+?)\|(\d+?)\|/?)\[/url\]#si";
-    $html[] = "ed2k Server: <a href=\"\\1\" target=\"_blank\" title=\"\\2\">\\2</a> - Port: \\3";
-    $bb[] = "#\[url=(ed2k://\|server\|[\d\.]+\|\d+\|/?)\](.*?)\[/url\]#si";
-    $html[] = "<a href=\"\\1\" target=\"_blank\" title=\"\\2\">\\2</a>";
-    $bb[] = "#\[url\](ed2k://\|friend\|(.*?)\|[\d\.]+\|\d+\|/?)\[/url\]#si";
-    $html[] = "Friend: <a href=\"\\1\" target=\"_blank\" title=\"\\2\">\\2</a>";
-    $bb[] = "#\[url=(ed2k://\|friend\|(.*?)\|[\d\.]+\|\d+\|/?)\](.*?)\[/url\]#si";
-    $html[] = "<a href=\"\\1\" target=\"_blank\" title=\"\\3\">\\3</a>";
-    $bb[] = "#\[url\]([\w]+?://([\w\#$%&~/.\-;:=,?@\]+]+|\[(?!url=))*?)\[/url\]#si";
-    $html[] = "<a href=\"\\1\" target=\"_blank\" title=\"\\1\">\\1</a>";
-    $bb[] = "#\[url\]((www|ftp)\.([\w\#$%&~/.\-;:=,?@\]+]+|\[(?!url=))*?)\[/url\]#si";
-    $html[] = "<a href=\"http://\\1\" target=\"_blank\" title=\"\\1\">\\1</a>";
-    $bb[] = "#\[url=([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*?)\]([^?\n\r\t].*?)\[/url\]#si";
-    $html[] = "<a href=\"\\1\" target=\"_blank\" title=\"\\1\">\\2</a>";
-    $bb[] = "#\[url=((www|ftp)\.[\w\#$%&~/.\-;:=,?@\[\]+]*?)\]([^?\n\r\t].*?)\[/url\]#si";
-    $html[] = "<a href=\"http://\\1\" target=\"_blank\" title=\"\\1\">\\3</a>";
-    $bb[] = "#\[mail\](\S+?)\[/mail\]#i";
-    $html[] = "<a href=\"mailto:\\1\">\\1</a>";
-    $bb[] = "#\[mail\s*=\s*([\.\w\-]+\@[\.\w\-]+\.[\w\-]+)\s*\](.*?)\[\/mail\]#i";
-    $html[] = "<a href=\"mailto:\\1\">\\2</a>";
-    $bb[] = "#\[color=(\#[0-9A-F]{6}|[a-z]+)\](.*?)\[/color\]#si";
-    $html[] = "<span style=\"color: \\1\">\\2</span>";
-    $bb[] = "#\[family=([A-Za-z ]+)\](.*?)\[/family\]#si";
-    $html[] = "<span style=\"font-family: \\1\">\\2</span>";
-    $bb[] = "#\[size=([0-9]{1,2}+)\](.*?)\[/size\]#si";
-    $html[] = "<span style=\"font-size: \\1px\">\\2</span>";
-    $bb[] = "#\[(left|right|center|justify)\](.*?)\[/\\1\]#si";
-    $html[] = "<div style=\"text-align: \\1;\">\\2</div>";
-    $bb[] = "#\[b\](.*?)\[/b\]#si";
-    $html[] = "<b>\\1</b>";
-    $bb[] = "#\[i\](.*?)\[/i\]#si";
-    $html[] = "<i>\\1</i>";
-    $bb[] = "#\[u\](.*?)\[/u\]#si";
-    $html[] = "<u>\\1</u>";
-    $bb[] = "#\[s\](.*?)\[/s\]#si";
-    $html[] = "<s>\\1</s>";
-    $bb[] = "#\[li\]#si";
-    $html[] = "&bull; ";
-    $bb[] = "#\[hr\]#si";
-    $html[] = "<hr>";
-    $bb[] = "#\*(\d{2})#";
-    $html[] = "<img src=\"".img_find("smilies/\\1.gif")."\" alt=\""._SMILIE." - \\1\" title=\""._SMILIE." - \\1\">";
+# Convert Markdown+BB source to safe HTML.
+# Safe mode (true): escapes HTML, URL allowlist â€” for user content.
+# Safe mode (false): allows raw HTML blocks + admin BB tags.
+function filterMarkdown(string $src, bool $safe = true, string $mod = ''): string {
+    static $md = null;
+    $md ??= new class {
 
-    $sourse = str_replace(array("&#034;", "&#039;"), array("\"", "'"), preg_replace($bb, $html, (string)($sourse ?? '')) ?? '');
-    # $sourse = preg_replace($bb, $html, $sourse);
+        private array  $stash = [];
+        private string $salt  = '';
+        private array  $hids  = [];
+        private string $mod   = 'all';
 
-    while (preg_match("#\[quote\](.*?)\[/quote\]#si", $sourse)) $sourse = preg_replace_callback("#\[quote\](.*?)\[/quote\]#si", "encode_quote", $sourse);
-    while (preg_match("#\[hide\](.*?)\[/hide\]#si", $sourse)) $sourse = preg_replace_callback("#\[hide\](.*?)\[/hide\]#si", "encode_hide", $sourse);
-    if (empty($id)) {
-        while (preg_match("#\[code=(.*?)\](.*?)\[/code\]#si", $sourse)) $sourse = preg_replace_callback("#\[code=(.*?)\](.*?)\[/code\]#si", "encode_php", $sourse);
-        while (preg_match("#\[code\](.*?)\[/code\]#si", $sourse)) $sourse = preg_replace_callback("#\[code\](.*?)\[/code\]#si", "encode_code", $sourse);
-        while (preg_match("#\[php\](.*?)\[/php\]#si", $sourse)) $sourse = preg_replace_callback("#\[php\](.*?)\[/php\]#si", "encode_php", $sourse);
-    }
-    while (preg_match("#\[usehtml\](.*?)\[/usehtml\]#si", $sourse)) $sourse = preg_replace_callback("#\[usehtml\](.*?)\[/usehtml\]#si", "use_html", $sourse);
-    while (preg_match("#\[usephp\](.*?)\[/usephp\]#si", $sourse)) $sourse = preg_replace_callback("#\[usephp\](.*?)\[/usephp\]#si", "use_php", $sourse);
-    while (preg_match("#\[tabs=(.*?)\](.*?)\[/tabs\]#si", $sourse)) $sourse = preg_replace_callback("#\[tabs=(.*?)\](.*?)\[/tabs\]#si", "encode_tabs", $sourse);
-    if (stripos($sourse, "[attach=") !== false) $sourse = encode_attach($sourse, $mod);
+        public function filterHtml(string $src, bool $safe, string $mod): string {
+            $this->stash = [];
+            $this->hids  = [];
+            $this->salt  = bin2hex(random_bytes(4));
+            $this->mod   = $mod !== '' ? strtolower($mod) : 'all';
+            return trim(strtr($this->filterMain($src, $safe), $this->stash));
+        }
 
-    $sourse = search_replace($sourse, $mod);
-    return $sourse;
+        // Same pipeline, but WITHOUT resetting stash/salt (used for nested [quote]/[hide])
+        private function filterNest(string $src, bool $safe): string {
+            return $this->filterMain($src, $safe);
+        }
+
+        private function filterMain(string $src, bool $safe): string {
+            $src = str_replace(["\r\n", "\r"], "\n", $src);
+            $src = $this->filterBbBlocks($src, $safe);
+            $src = $this->filterFencedCode($src);
+            $src = $this->filterIndentedCode($src);
+            $src = $this->filterInlineCode($src);
+            $src = $this->filterBlocks($src, $safe);
+            return $src;
+        }
+
+        // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+        private function addStash(string $html): string {
+            $key = "\x02{$this->salt}:".count($this->stash)."\x03";
+            $this->stash[$key] = $html;
+            return $key;
+        }
+
+        private function filterEsc(string $s): string {
+            return htmlspecialchars($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+
+        private function filterDec(string $s): string {
+            return html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }
+
+        private function filterText(string $s): string {
+            $pat   = '/(\x02'.preg_quote($this->salt, '/').':\d+\x03)/';
+            $parts = preg_split($pat, $s, -1, PREG_SPLIT_DELIM_CAPTURE) ?? [$s];
+            return implode('', array_map(fn($p) => preg_match($pat, $p) ? $p : $this->filterEsc($p), $parts));
+        }
+
+        private function filterInline(string $txt, bool $safe): string {
+            return $this->filterInlines($safe ? $this->filterText($txt) : $txt, $safe);
+        }
+
+        private function filterUrl(string $url): string {
+            $url = trim($url);
+            return preg_match('/^(?:https?:\/\/|mailto:|[\/\.#?])/i', $url) ? $url : '#';
+        }
+
+        // â”€â”€ BB blocks (stash before Markdown parsing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+        private function filterBbBlocks(string $src, bool $safe): string {
+            // [hr] (legacy)
+            $src = preg_replace('/\[hr\]/si', $this->addStash('<hr>'), $src) ?? $src;
+
+            // [li] (legacy bullet)
+            $src = preg_replace('/\[li\]/si', $this->addStash('&bull; '), $src) ?? $src;
+
+            // *01 smilies
+            if (preg_match('/\*(\d{2})/', $src)) {
+                $src = preg_replace_callback(
+                    '/\*(\d{2})/',
+                    function(array $m): string {
+                        $num = $this->filterEsc($m[1]);
+                        $img = img_find('smilies/'.$num.'.gif');
+                        return $this->addStash('<img src="'.$this->filterEsc($img).'" alt="'._SMILIE.' - '.$num.'" title="'._SMILIE.' - '.$num.'">');
+                    },
+                    $src
+                ) ?? $src;
+            }
+
+            // [usehtml]...[/usehtml] (admin only)
+            $src = preg_replace_callback(
+                '/\[usehtml\](.*?)\[\/usehtml\]/si',
+                function(array $m) use ($safe): string {
+                    if ($safe) return $m[0];
+                    $html = htmlspecialchars_decode(replace_break($m[1]), ENT_QUOTES);
+                    return $this->addStash($html);
+                },
+                $src
+            ) ?? $src;
+
+            // [usephp]...[/usephp] (admin only)
+            $src = preg_replace_callback(
+                '/\[usephp\](.*?)\[\/usephp\]/si',
+                function(array $m) use ($safe): string {
+                    if ($safe) return $m[0];
+                    $rep = str_replace(['&#036;', '&#092;'], ['$', '\\'], $m[1]);
+                    ob_start();
+                    try {
+                        eval(htmlspecialchars_decode(replace_break($rep), ENT_QUOTES));
+                        $out = ob_get_clean();
+                    } catch (Throwable $ex) {
+                        ob_end_clean();
+                        $out = '';
+                    }
+                    return $this->addStash((string)$out);
+                },
+                $src
+            ) ?? $src;
+
+            // [tabs=n]...[tab=title]...[/tab]...[/tabs]
+            $src = preg_replace_callback(
+                '/\[tabs=(.*?)\](.*?)\[\/tabs\]/si',
+                function(array $m) use ($safe): string {
+                    $num = (int)trim($m[1]);
+                    $rep = (string)$m[2];
+                    $cnt = preg_match_all('/\[tab=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/tab\]/siu', $rep, $mm);
+                    if (!$cnt) return $m[0];
+                    $ttl = [];
+                    $txt = [];
+                    for ($i = 0; $i < $cnt; $i++) {
+                        $ttl[] = $mm[1][$i];
+                        $txt[] = $this->filterNest($mm[2][$i], $safe);
+                    }
+                    return $this->addStash((string)getNaviTabs($num, 'tab', $ttl, $txt));
+                },
+                $src
+            ) ?? $src;
+
+            // [code]...[/code]
+            $src = preg_replace_callback(
+                '/\[code\](.*?)\[\/code\]/si',
+                function(array $m): string {
+                    $txt  = str_replace('?', '&#063;', (string)$m[1]);
+                    $html = setTemplateBasic('code', ['{%title%}' => _CODE, '{%content%}' => $this->filterEsc($txt)]);
+                    return $this->addStash((string)$html);
+                },
+                $src
+            ) ?? $src;
+
+            // [code=lang]...[/code]
+            $src = preg_replace_callback(
+                '/\[code=(.*?)\](.*?)\[\/code\]/si',
+                function(array $m): string {
+                    return $this->addStash((string)encode_php([0 => $m[0], 1 => $m[1], 2 => $m[2]]));
+                },
+                $src
+            ) ?? $src;
+
+            // [php]...[/php]
+            $src = preg_replace_callback(
+                '/\[php\](.*?)\[\/php\]/si',
+                function(array $m): string {
+                    return $this->addStash((string)encode_php([0 => $m[0], 1 => $m[1]]));
+                },
+                $src
+            ) ?? $src;
+
+            // [quote]...[/quote] (nested, innermost first)
+            while (preg_match('/\[quote\](.*?)\[\/quote\]/si', $src)) {
+                $src = preg_replace_callback(
+                    '/\[quote\](.*?)\[\/quote\]/si',
+                    function(array $m) use ($safe): string {
+                        $txt  = $this->filterNest($m[1], $safe);
+                        $html = setTemplateBasic('quote', ['{%title%}' => _QUOTE, '{%text%}' => $txt]);
+                        return $this->addStash((string)$html);
+                    },
+                    $src
+                ) ?? $src;
+            }
+
+            // [hide]...[/hide] (nested, innermost first)
+            while (preg_match('/\[hide\](.*?)\[\/hide\]/si', $src)) {
+                $src = preg_replace_callback(
+                    '/\[hide\](.*?)\[\/hide\]/si',
+                    function(array $m) use ($safe): string {
+                        $show = (defined('ADMIN_FILE') || is_user());
+                        $txt  = $show ? $this->filterNest($m[1], $safe) : (string)_HIDETEXT;
+                        $html = setTemplateBasic('hide', ['{%title%}' => _HIDE, '{%text%}' => $txt]);
+                        return $this->addStash((string)$html);
+                    },
+                    $src
+                ) ?? $src;
+            }
+
+            // [attach=...]
+            if (stripos($src, '[attach=') !== false) {
+                $src = $this->filterAttach($src);
+            }
+
+            return $src;
+        }
+
+        private function filterAttach(string $src): string {
+            $mod = $this->mod !== '' ? $this->mod : 'all';
+            $up  = include 'config/uploads.php';
+            $cfg = is_array($up) ? ($up['uploads'] ?? []) : [];
+            $ft  = include 'config/filetype.php';
+            $tpl = is_array($ft) ? ($ft['filetype'] ?? []) : [];
+
+            if (stripos($src, 'rel=') !== false && stripos($src, 'width=') !== false) {
+                $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+) rel=([a-zA-Z0-9_\-]+)\]/siu';
+            } elseif (stripos($src, 'width=') !== false) {
+                $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+)\]/siu';
+            } else {
+                $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+)\]/siu';
+            }
+
+            if (!preg_match_all($re, $src, $mm, PREG_SET_ORDER)) return $src;
+
+            $con = explode('|', (string)($cfg[$mod] ?? ''));
+            $twd = $con[6] ?? ($cfg['width'] ?? '250');
+            $img = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
+
+            foreach ($mm as $m) {
+                $fn   = (string)$m[1];
+                $al   = (string)$m[2];
+                $tl   = (string)$m[3];
+                $wd   = $m[4] ?? '';
+                $hg   = $m[5] ?? '';
+                $rl   = $m[6] ?? '';
+                $ext  = strtolower((string)substr((string)strrchr($fn, '.'), 1));
+                $file = 'uploads/'.$mod.'/'.$fn;
+                $timg = $file;
+
+                if (in_array($ext, $img, true)) {
+                    $tfile = 'uploads/'.$mod.'/thumb/'.$fn;
+                    $tdir  = 'uploads/'.$mod.'/thumb';
+                    if ($mod !== '' && file_exists($file) && !file_exists($tfile)) {
+                        if (!file_exists($tdir)) mkdir($tdir);
+                        $ok   = create_img_gd($file, $tfile, $twd);
+                        $timg = $ok ? $tfile : $file;
+                    } else {
+                        $timg = $tfile;
+                    }
+                    if (file_exists($file)) [$wd, $hg] = getimagesize($file);
+                }
+
+                $tmp = $tpl[$ext] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
+                $tmp = str_replace('[src]',    $file, $tmp);
+                $tmp = str_replace('[tsrc]',   (string)$timg, $tmp);
+                $tmp = (!empty($wd) && (int)$wd)
+                     ? str_replace('[width]',  (string)$wd, $tmp)
+                     : str_replace('[width]',  (string)($cfg['width'] ?? '500'), $tmp);
+                $tmp = str_replace('[twidth]', (string)$twd, $tmp);
+                $tmp = (!empty($hg) && (int)$hg)
+                     ? str_replace('[height]', (string)$hg, $tmp)
+                     : str_replace('[height]', (string)($cfg['height'] ?? '500'), $tmp);
+                $tmp = str_replace('[align]',  $al, $tmp);
+                $tmp = str_replace('[title]',  $tl, $tmp);
+                $tmp = str_replace('[quot]',   '&quot;', $tmp);
+                $tmp = str_replace('[rel]',    $rl !== '' ? $rl : 'alternate', $tmp);
+
+                $src = str_replace($m[0], $this->addStash($tmp), $src);
+            }
+
+            return $src;
+        }
+
+        // â”€â”€ Code protection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+        private function filterFencedCode(string $src): string {
+            return preg_replace_callback(
+                '/(^(`{3,}|~{3,})[ \t]*([\w\-]*)[^\n]*\n(.*?)\n^\2[ \t]*$)/ms',
+                function($m) {
+                    $cls = $m[3] ? ' class="language-'.$this->filterEsc($m[3]).'"' : '';
+                    return $this->addStash('<pre><code'.$cls.'>'.$this->filterEsc($m[4]).'</code></pre>');
+                },
+                $src
+            ) ?? $src;
+        }
+
+        private function filterIndentedCode(string $src): string {
+            return preg_replace_callback(
+                '/(?:^(?:    |\t).+\n?)+/m',
+                fn($m) => $this->addStash(
+                    '<pre><code>'.$this->filterEsc(preg_replace('/^(?:    |\t)/m', '', rtrim($m[0]))).'</code></pre>'
+                )."\n",
+                $src
+            ) ?? $src;
+        }
+
+        private function filterInlineCode(string $src): string {
+            return preg_replace_callback(
+                '/``(.+?)``|`([^`\n]+)`/s',
+                function($m) {
+                    $txt = ($m[1] ?? '') !== '' ? $m[1] : ($m[2] ?? '');
+                    return $this->addStash('<code>'.$this->filterEsc($txt).'</code>');
+                },
+                $src
+            ) ?? $src;
+        }
+
+        // â”€â”€ Blocks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+        private function filterBlocks(string $src, bool $safe): string {
+            $lines = explode("\n", $src);
+            $n     = count($lines);
+            $pat   = '/^\x02'.preg_quote($this->salt, '/').':\d+\x03$/';
+            $out   = '';
+            $i     = 0;
+
+            while ($i < $n) {
+                $line = $lines[$i];
+                $trim = ltrim($line);
+
+                if (preg_match($pat, trim($line))) { $out .= $line."\n"; $i++; continue; }
+                if ($trim === '') { $out .= "\n"; $i++; continue; }
+
+                if (preg_match('/^(#{1,6})\s+(.*?)(?:\s+#+)?$/', $trim, $m)) {
+                    $lvl = strlen($m[1]);
+                    $id  = $this->getHeadingId($m[2], $lvl);
+                    $out .= '<h'.$lvl.' id="'.$id.'">'.$this->filterInline($m[2], $safe).'</h'.$lvl.'>'."\n";
+                    $i++; continue;
+                }
+
+                if (preg_match('/^(?:\*{3,}|-{3,}|_{3,})\s*$/', $trim)) {
+                    $out .= "<hr>\n"; $i++; continue;
+                }
+
+                if (str_starts_with($trim, '>')) {
+                    [$bq, $i] = $this->getBlockquote($lines, $i, $n);
+                    $out .= "<blockquote>\n".$this->filterBlocks(implode("\n", $bq), $safe)."</blockquote>\n";
+                    continue;
+                }
+
+                if (preg_match('/^([ \t]*)([*+\-]|\d+\.)\s+/', $line, $m)) {
+                    [$html, $i] = $this->filterList($lines, $i, strlen($m[1]), $safe);
+                    $out .= $html; continue;
+                }
+
+                if (isset($lines[$i + 1]) && str_contains($trim, '|')
+                    && preg_match('/^\|?[ \t]*:?-{2,}:?[ \t]*(?:\|[ \t]*:?-{2,}:?[ \t]*)+\|?$/', $lines[$i + 1])
+                ) {
+                    [$html, $i] = $this->filterTable($lines, $i, $safe);
+                    $out .= $html; continue;
+                }
+
+                if (isset($lines[$i + 1]) && $trim !== '') {
+                    if (preg_match('/^=+\s*$/', $lines[$i + 1])) {
+                        $id = $this->getHeadingId($trim, 1);
+                        $out .= '<h1 id="'.$id.'">'.$this->filterInline($trim, $safe)."</h1>\n";
+                        $i += 2; continue;
+                    }
+                    if (preg_match('/^-+\s*$/', $lines[$i + 1]) && !preg_match('/^[*+\-]\s/', $trim)) {
+                        $id = $this->getHeadingId($trim, 2);
+                        $out .= '<h2 id="'.$id.'">'.$this->filterInline($trim, $safe)."</h2>\n";
+                        $i += 2; continue;
+                    }
+                }
+
+                if (!$safe && preg_match('/^<\/?(?:div|section|article|aside|nav|header|footer|main|pre|ul|ol|table|figure)[\s>\/]/i', $trim)) {
+                    $raw = '';
+                    while ($i < $n && trim($lines[$i]) !== '') { $raw .= $lines[$i++]."\n"; }
+                    $out .= $this->addStash($raw);
+                    continue;
+                }
+
+                $para = [];
+                while ($i < $n && trim($lines[$i]) !== ''
+                    && !preg_match('/^#{1,6}\s|^(?:\*{3,}|-{3,}|_{3,})\s*$/', ltrim($lines[$i]))
+                ) {
+                    $para[] = $lines[$i++];
+                }
+                $out .= '<p>'.$this->filterInline(implode("\n", $para), $safe)."</p>\n";
+            }
+
+            return $out;
+        }
+
+        private function getBlockquote(array $lines, int $i, int $n): array {
+            $bq = [];
+            while ($i < $n) {
+                $t = ltrim($lines[$i]);
+                if (str_starts_with($t, '>')) {
+                    $bq[] = preg_replace('/^[ \t]*>[ \t]?/', '', $lines[$i++]);
+                } elseif (trim($lines[$i]) === '') {
+                    $j = $i + 1;
+                    while ($j < $n && trim($lines[$j]) === '') $j++;
+                    if ($j < $n && str_starts_with(ltrim($lines[$j]), '>')) { $bq[] = ''; $i++; }
+                    else break;
+                } else break;
+            }
+            return [$bq, $i];
+        }
+
+        private function getHeadingId(string $raw, int $lvl): string {
+            $txt  = preg_replace('/\x02'.preg_quote($this->salt, '/').':\d+\x03/', '', $raw);
+            $id   = strtolower(trim(preg_replace('/[^a-z0-9]+/', '-', strip_tags($txt)), '-'));
+            if ($id === '') $id = 'h'.$lvl;
+            $base = $id;
+            if (isset($this->hids[$base])) $id = $base.'-'.(++$this->hids[$base]);
+            else $this->hids[$base] = 0;
+            return $id;
+        }
+
+        private function filterList(array $lines, int $i, int $ind, bool $safe): array {
+            $n   = count($lines);
+            $ord = (bool)preg_match('/^\s*\d+\./', $lines[$i]);
+            $tag = $ord ? 'ol' : 'ul';
+            $it  = [];
+            $cur = null;
+
+            while ($i < $n) {
+                $line = $lines[$i];
+                if (trim($line) === '') { if ($cur !== null) $cur .= "\n"; $i++; continue; }
+                $sp = strlen($line) - strlen(ltrim($line));
+                if ($sp === $ind && preg_match('/^[ \t]*(?:[*+\-]|\d+\.)\s+(.*)$/', $line, $m)) {
+                    if ($cur !== null) $it[] = $cur;
+                    $cur = $m[1]; $i++;
+                } elseif ($sp > $ind) {
+                    $cur .= "\n".$line; $i++;
+                } else break;
+            }
+            if ($cur !== null) $it[] = $cur;
+
+            $html = '<'.$tag.">\n";
+            foreach ($it as $item) {
+                $item = trim($item);
+                if (preg_match('/^\[(x| )\]\s+(.*)/si', $item, $tm)) {
+                    $chk = $tm[1] === 'x' ? ' checked' : '';
+                    $lbl = trim($tm[2]);
+                    $lbl = str_contains($lbl, "\n") ? $this->filterBlocks($lbl, $safe) : $this->filterInline($lbl, $safe);
+                    $html .= '<li><input type="checkbox" disabled'.$chk.'> '.$lbl."</li>\n";
+                } elseif (str_contains($item, "\n")) {
+                    $html .= '<li>'.$this->filterBlocks($item, $safe)."</li>\n";
+                } else {
+                    $html .= '<li>'.$this->filterInline($item, $safe)."</li>\n";
+                }
+            }
+            return [$html.'</'.$tag.">\n", $i];
+        }
+
+        private function filterTable(array $lines, int $i, bool $safe): array {
+            $heads = array_map('trim', explode('|', trim($lines[$i],   " |\t")));
+            $seps  = array_map('trim', explode('|', trim($lines[$i+1], " |\t")));
+            $cols  = max(count($heads), count($seps));
+            $al    = array_map(fn($a) =>
+                preg_match('/^:-+:$/', $a) ? ' style="text-align:center"' :
+               (preg_match('/^-+:$/', $a)  ? ' style="text-align:right"'  :
+               (preg_match('/^:-+$/', $a)  ? ' style="text-align:left"'   : '')),
+                $seps
+            );
+            $i += 2;
+            $html = "<table>\n<thead>\n<tr>";
+            foreach (array_pad($heads, $cols, '') as $j => $h) {
+                $html .= '<th'.($al[$j] ?? '').'>'.$this->filterInline($h, $safe).'</th>';
+            }
+            $html .= "</tr>\n</thead>\n<tbody>\n";
+            while (isset($lines[$i]) && str_contains($lines[$i], '|') && trim($lines[$i]) !== '') {
+                $cells = array_map('trim', explode('|', trim($lines[$i], " |\t")));
+                $html .= '<tr>';
+                foreach (array_pad($cells, $cols, '') as $j => $c) {
+                    $html .= '<td'.($al[$j] ?? '').'>'.$this->filterInline($c, $safe).'</td>';
+                }
+                $html .= "</tr>\n"; $i++;
+            }
+            return [$html."</tbody>\n</table>\n", $i];
+        }
+
+        // â”€â”€ Inlines: Markdown + BB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+        private function filterInlines(string $src, bool $safe): string {
+
+            // â”€â”€ BB inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+            // ed2k links â€” must come BEFORE generic [url] patterns
+            $src = preg_replace_callback(
+                '/\[url\](ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\[\/url\]/si',
+                function(array $m): string {
+                    $url = $this->filterEsc($this->filterDec($m[1]));
+                    $ttl = $this->filterEsc($this->filterDec($m[2]));
+                    return $this->addStash('eMule/eDonkey: <a href="'.$url.'" target="_blank" title="'.$ttl.'">'.$ttl.'</a>');
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[url=(ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\](.*?)\[\/url\]/si',
+                function(array $m): string {
+                    $url = $this->filterEsc($this->filterDec($m[1]));
+                    $ttl = $this->filterEsc($this->filterDec($m[2]));
+                    return $this->addStash('<a href="'.$url.'" target="_blank" title="'.$ttl.'">'.(string)$m[4].'</a>');
+                },
+                $src
+            ) ?? $src;
+
+            for ($i = 0; $i < 3; $i++) {
+                $src = preg_replace('/\[b\](.*?)\[\/b\]/si', '<strong>$1</strong>', $src) ?? $src;
+                $src = preg_replace('/\[i\](.*?)\[\/i\]/si', '<em>$1</em>', $src) ?? $src;
+                $src = preg_replace('/\[u\](.*?)\[\/u\]/si', '<u>$1</u>', $src) ?? $src;
+                $src = preg_replace('/\[s\](.*?)\[\/s\]/si', '<del>$1</del>', $src) ?? $src;
+            }
+
+            $src = preg_replace_callback(
+                '/\[color=([^\]]+)\](.*?)\[\/color\]/si',
+                function(array $m): string {
+                    $color = strtolower(trim($m[1]));
+                    if (!preg_match('/^#[0-9a-f]{6}$/', $color) && !preg_match('/^[a-z]+$/', $color)) return $m[2];
+                    return '<span style="color:'.$this->filterEsc($color).'">'.$m[2].'</span>';
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[family=([A-Za-z ]+)\](.*?)\[\/family\]/si',
+                function(array $m): string {
+                    return '<span style="font-family:'.$this->filterEsc(trim($m[1])).'">'.$m[2].'</span>';
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[size=([0-9]{1,2})\](.*?)\[\/size\]/si',
+                function(array $m): string {
+                    $size = max(8, min(48, (int)$m[1]));
+                    return '<span style="font-size:'.$size.'px">'.$m[2].'</span>';
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[(left|right|center|justify)\](.*?)\[\/\1\]/si',
+                function(array $m): string {
+                    $align = strtolower(trim($m[1]));
+                    if (!in_array($align, ['left', 'right', 'center', 'justify'], true)) return $m[2];
+                    return '<div style="text-align:'.$align.';">'.$m[2].'</div>';
+                },
+                $src
+            ) ?? $src;
+
+            // [mail] / [mail=]
+            $src = preg_replace_callback(
+                '/\[mail\](.*?)\[\/mail\]/si',
+                function(array $m): string {
+                    $mail = trim($this->filterDec($m[1]));
+                    if (!preg_match('/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i', $mail)) return $m[1];
+                    $mail = $this->filterEsc($mail);
+                    return $this->addStash('<a href="mailto:'.$mail.'">'.$mail.'</a>');
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[mail\s*=\s*([^\]]+)\](.*?)\[\/mail\]/si',
+                function(array $m): string {
+                    $mail = trim($this->filterDec($m[1]));
+                    if (!preg_match('/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i', $mail)) return $m[2];
+                    $mail = $this->filterEsc($mail);
+                    return $this->addStash('<a href="mailto:'.$mail.'">'.$m[2].'</a>');
+                },
+                $src
+            ) ?? $src;
+
+            // [url] / [url=]
+            $src = preg_replace_callback(
+                '/\[url\](.*?)\[\/url\]/si',
+                function(array $m) use ($safe): string {
+                    $url = trim($this->filterDec($m[1]));
+                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
+                    $href = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
+                    return $this->addStash('<a href="'.$href.'">'.$this->filterEsc($url).'</a>');
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[url=([^\]]+)\](.*?)\[\/url\]/si',
+                function(array $m) use ($safe): string {
+                    $url = trim($this->filterDec($m[1]));
+                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
+                    $href = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
+                    return $this->addStash('<a href="'.$href.'">'.$m[2].'</a>');
+                },
+                $src
+            ) ?? $src;
+
+            // [img] / [img=align] / [img alt=] / [img=align alt=]
+            $src = preg_replace_callback(
+                '/\[img\](.*?)\[\/img\]/si',
+                function(array $m) use ($safe): string {
+                    $url  = trim($this->filterDec($m[1]));
+                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
+                    $src2 = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
+                    $alt  = $this->filterEsc($url);
+                    return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img">');
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[img=([a-zA-Z]+)\](.*?)\[\/img\]/si',
+                function(array $m) use ($safe): string {
+                    $align = strtolower(trim($m[1]));
+                    if (!in_array($align, ['left', 'right'], true)) $align = 'left';
+                    $url   = trim($this->filterDec($m[2]));
+                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
+                    $src2  = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
+                    $alt   = $this->filterEsc($url);
+                    return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img">');
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[img\s+alt=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/img\]/siu',
+                function(array $m) use ($safe): string {
+                    $alt  = $this->filterEsc(trim($this->filterDec($m[1])));
+                    $url  = trim($this->filterDec($m[2]));
+                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
+                    $src2 = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
+                    return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img">');
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[img=([a-zA-Z]+)\s+alt=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/img\]/siu',
+                function(array $m) use ($safe): string {
+                    $align = strtolower(trim($m[1]));
+                    if (!in_array($align, ['left', 'right'], true)) $align = 'left';
+                    $alt   = $this->filterEsc(trim($this->filterDec($m[2])));
+                    $url   = trim($this->filterDec($m[3]));
+                    if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
+                    $src2  = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
+                    return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img">');
+                },
+                $src
+            ) ?? $src;
+
+            // â”€â”€ Markdown inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+            $src = preg_replace_callback(
+                '/!\[([^\]]*)\]\(([^\s)]+)(?:\s+"([^"]*)")?\)/',
+                function($m) use ($safe) {
+                    $url = $this->filterEsc($safe ? $this->filterUrl($this->filterDec($m[2])) : $this->filterDec($m[2]));
+                    $alt = $this->filterEsc($this->filterDec($m[1]));
+                    $ttl = isset($m[3]) ? ' title="'.$this->filterEsc($this->filterDec($m[3])).'"' : '';
+                    return $this->addStash('<img src="'.$url.'" alt="'.$alt.'"'.$ttl.'>');
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/\[([^\]]+)\]\(([^\s)]+)(?:\s+"([^"]*)")?\)/',
+                function($m) use ($safe) {
+                    $href = $this->filterEsc($safe ? $this->filterUrl($this->filterDec($m[2])) : $this->filterDec($m[2]));
+                    $ttl  = isset($m[3]) ? ' title="'.$this->filterEsc($this->filterDec($m[3])).'"' : '';
+                    return $this->addStash('<a href="'.$href.'"'.$ttl.'>'.$m[1].'</a>');
+                },
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/<(https?:\/\/[^\s>]+)>/',
+                fn($m) => $this->addStash('<a href="'.$this->filterEsc($m[1]).'">'.$this->filterEsc($m[1]).'</a>'),
+                $src
+            ) ?? $src;
+
+            $src = preg_replace_callback(
+                '/<([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})>/',
+                fn($m) => $this->addStash('<a href="mailto:'.$this->filterEsc($m[1]).'">'.$this->filterEsc($m[1]).'</a>'),
+                $src
+            ) ?? $src;
+
+            if ($safe) {
+                $src = preg_replace_callback('/<[^>]+>/', fn($m) => $this->filterEsc($m[0]), $src) ?? $src;
+            }
+
+            $src = preg_replace(['/\*{3}(.+?)\*{3}/s', '/_{3}(.+?)_{3}/s'], '<strong><em>$1</em></strong>', $src);
+            $src = preg_replace(['/\*{2}(.+?)\*{2}/s', '/_{2}(.+?)_{2}/s'], '<strong>$1</strong>', $src);
+            $src = preg_replace(['/\*([^*\n]+)\*/', '/(?<![_\w])_([^_\n]+)_(?![_\w])/'], '<em>$1</em>', $src);
+            $src = preg_replace('/~~(.+?)~~/s', '<del>$1</del>', $src);
+            $src = preg_replace('/==(.+?)==/s', '<mark>$1</mark>', $src);
+            $src = preg_replace(['/  \n/', '/\\\\\n/'], "<br>\n", $src);
+
+            return $src;
+        }
+    };
+
+    return $md->filterHtml($src, $safe, $mod);
 }
 
-# Format tabs
-function encode_tabs($text) {
-    $num = isset($text[1]) ? intval($text[1]) : 0;
-    $rep = isset($text[2]) ? trim($text[2]) : 0;
-    $count = preg_match_all("#\[tab=([\pL0-9\_\-\.\"\s]+)\](.*?)\[/tab\]#siu", $rep, $date);
-    for ($i = 0; $i < $count; $i++) {
-        $title[] = $date[1][$i];
-        $test[] = $date[2][$i];
-    }
-    $tabs = getNaviTabs($num, "tab", $title, $test);
-    return $tabs;
-}
-
-# Format quote
-function encode_quote($text) {
-    return setTemplateBasic('quote', ['{%title%}' => _QUOTE, '{%text%}' => $text[1]]);
-}
-
-# Format hide
-function encode_hide($text) {
-    $text = (defined("ADMIN_FILE") || is_user()) ? setTemplateBasic('hide', ['{%title%}' => _HIDE, '{%text%}' => $text[1]]) : setTemplateBasic('hide', ['{%title%}' => _HIDE, '{%text%}' => _HIDETEXT]);
-    return $text;
-}
-
-# Format code
-function encode_code($text) {
-    return setTemplateBasic('code', ['{%title%}' => _CODE, '{%content%}' => str_replace("?", "&#063;", $text[1])]);
+# Decode BB (shim â€” delegates to filterMarkdown for backward compatibility)
+function bb_decode(string $src, string $mod = '', string $id = ''): string {
+    $out = filterMarkdown($src, false, $mod); // backward compat: HTML passes through as in old bb_decode
+    return search_replace($out, $mod);
 }
 
 # Format PHP code
@@ -3720,80 +4266,6 @@ function encode_php($text) {
     return setTemplateBasic('code', ['{%title%}' => $cname.' - '._CODE, '{%content%}' => $format]);
 }
 
-# Format use HTML
-function use_html($str) {
-    return htmlspecialchars_decode(replace_break($str[1]), ENT_QUOTES);
-}
-
-# Format use PHP
-function use_php($str) {
-    global $conf;
-    $in = array("&#036;", "&#092;");
-    $out = array("$", "\\");
-    $rep = str_replace($in, $out, $str[1]);
-    ob_start();
-    eval(htmlspecialchars_decode(replace_break($rep), ENT_QUOTES));
-    $con = ob_get_clean();
-    return $con;
-}
-
-# Format attach
-function encode_attach($sourse, $mod) {
-    $uploads_data = include('config/uploads.php');
-    $confup = $uploads_data['uploads'] ?? [];
-    $filetype_data = include('config/filetype.php');
-    $conftp = $filetype_data['filetype'] ?? [];
-    if (stripos($sourse, "rel=") && stripos($sourse, "width=")) {
-        $match_count = preg_match_all("#\[attach=([a-zA-Z0-9\_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9\_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+) rel=([a-zA-Z0-9\_\-]+)\]#siu", $sourse, $date);
-    } elseif (stripos($sourse, "width=")) {
-        $match_count = preg_match_all("#\[attach=([a-zA-Z0-9\_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9\_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+)\]#siu", $sourse, $date);
-    } else {
-        $match_count = preg_match_all("#\[attach=([a-zA-Z0-9\_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9\_\-\.\"\s]+)\]#siu", $sourse, $date);
-    }
-    $con = explode("|", (string)($confup[$mod] ?? ''));
-    $thumb_width = isset($con[6]) ? $con[6] : ($confup['width'] ?? '250');
-    $file = '';
-    $text = $sourse;
-    $cont = array();
-    $ftype = array("png", "jpg", "jpeg", "gif", "bmp");
-    for ($i = 0; $i < $match_count; $i++) {
-        $type = strtolower(substr(strrchr($date[1][$i], "."), 1));
-        $file = "uploads/".$mod."/".$date[1][$i];
-        $timg = $file;
-        $width = "";
-        $height = "";
-        if (in_array($type, $ftype)) {
-            $tfile = "uploads/".$mod."/thumb/".$date[1][$i];
-            $dtfile = "uploads/".$mod."/thumb";
-            if ($mod != "" && file_exists($file) && !file_exists($tfile)) {
-                if (!file_exists($dtfile)) mkdir($dtfile);
-                $thumb = create_img_gd($file, $tfile, $thumb_width);
-                $timg = ($thumb) ? $tfile : $file;
-            } else {
-                $timg = $tfile;
-            }
-            if (file_exists($file)) list($width, $height) = getimagesize($file);
-        } else {
-            $width = isset($date[4][$i]) ? $date[4][$i] : "";
-            $height = isset($date[5][$i]) ? $date[5][$i] : "";
-        }
-        $temp = $conftp[$type] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
-        $temp = str_replace("[src]", $file, $temp);
-        $temp = str_replace("[tsrc]", (string)$timg, $temp);
-        $temp = (!empty($width) && intval($width)) ? str_replace("[width]", $width, $temp) : str_replace("[width]", (string)($confup['width'] ?? '500'), $temp);
-        $temp = str_replace("[twidth]", (string)$thumb_width, $temp);
-        $temp = (!empty($height) && intval($height)) ? str_replace("[height]", $height, $temp) : str_replace("[height]", (string)($confup['height'] ?? '500'), $temp);
-        $temp = str_replace("[align]", $date[2][$i], $temp);
-        $temp = str_replace("[title]", $date[3][$i], $temp);
-        $temp = str_replace("[quot]", "&quot;", $temp);
-        $temp = (!empty($date[6][$i])) ? str_replace("[rel]", $date[6][$i], $temp) : str_replace("[rel]", "alternate", $temp);
-        $cont[] = $temp;
-        $text = preg_replace($date[0], $cont, $sourse);
-    }
-    $sourse = str_replace(array("[", "]"), "", $text);
-    return $sourse;
-}
-
 # Search and replace
 function search_replace($sourse, $mod) {
     global $confre;
@@ -3823,14 +4295,13 @@ function search_replace($sourse, $mod) {
 }
 
 # Admin mail add info
-function addmail() {
+function addmail(int $id, string $mod, string $username = '', string $title = '', bool $isComment = false, string $text = ''): void {
     global $db, $conf, $confu, $locale;
-    $arg = func_get_args();
-    $mod = analyze($arg[1]);
-    if ($arg[0] && $mod) {
-        $subject = (isset($arg[4]) == 1) ? $conf['sitename']." - ".$arg[3]." - "._COMMENT : $conf['sitename']." - ".$arg[3];
-        $puname = ($arg[2]) ? text_filter(substr($arg[2], 0, 25)) : _ANONYM;
-        $message = (isset($arg[4]) == 1) ? str_replace("[text]", sprintf(_ADDMAILC, $puname, $arg[3], $arg[5]), $conf['mtemp']) : str_replace("[text]", sprintf(_ADDMAIL, $puname, $arg[3]), $conf['mtemp']);
+    $mod = analyze($mod);
+    if ($id && $mod) {
+        $subject = $isComment ? $conf['sitename']." - ".$title." - "._COMMENT : $conf['sitename']." - ".$title;
+        $puname  = $username ? text_filter(substr($username, 0, 25)) : _ANONYM;
+        $message = $isComment ? str_replace("[text]", sprintf(_ADDMAILC, $puname, $title, $text), $conf['mtemp']) : str_replace("[text]", sprintf(_ADDMAIL, $puname, $title), $conf['mtemp']);
         $params = [];
         $where = ' WHERE smail = \'1\'';
         if ($conf['multilingual']) {
@@ -3947,11 +4418,17 @@ function addblocks($str) {
 function getBlocks($side, $fly="") {
     global $db, $conf, $locale, $name, $home, $pos, $b_id, $blockfile;
     static $barr;
-    $querylang = ($conf['multilingual'] == 1) ? "AND (blanguage = '".$locale."' OR blanguage = '')" : "";
+    if ($conf['multilingual'] == 1) {
+        $querylang = "AND (blanguage = :loc OR blanguage = '')";
+        $qlang_params = ['loc' => $locale];
+    } else {
+        $querylang = "";
+        $qlang_params = [];
+    }
     $pos = strtolower($side[0]);
     $side = $pos;
     if (!isset($barr)) {
-        $result = $db->sql_query("SELECT bid, bkey, title, content, url, blockfile, view, expire, action, bposition, which FROM ".PREFIX_DB."_blocks WHERE active = '1' ".$querylang." ORDER BY weight ASC");
+        $result = $db->sql_query("SELECT bid, bkey, title, content, url, blockfile, view, expire, action, bposition, which FROM ".PREFIX_DB."_blocks WHERE active = '1' ".$querylang." ORDER BY weight ASC", $qlang_params);
         while(list($bid, $bkey, $title, $content, $url, $blockfile, $view, $expire, $action, $bposition, $which) = $db->sql_fetchrow($result)) {
             $bid = intval($bid);
             $content = bb_decode($content, "all");
@@ -4054,10 +4531,10 @@ function getBlocks($side, $fly="") {
                 $b_id = $bid;
                 if ($expire && $expire < time()) {
                     if ($action == "d") {
-                        $db->sql_query("UPDATE ".PREFIX_DB."_blocks SET active = '0', expire = '0' WHERE bid = '".$bid."'");
+                        $db->sql_query("UPDATE ".PREFIX_DB."_blocks SET active = '0', expire = '0' WHERE bid = :bid", ['bid' => $bid]);
                         return;
                     } elseif ($action == "r") {
-                        $db->sql_query("DELETE FROM ".PREFIX_DB."_blocks WHERE bid = '".$bid."'");
+                        $db->sql_query("DELETE FROM ".PREFIX_DB."_blocks WHERE bid = :bid", ['bid' => $bid]);
                         return;
                     }
                 }
@@ -4126,48 +4603,52 @@ function render_blocks($side, $blockfile, $blocktitle, $content, $bid, $url) {
 # Format rating
 function rating() {
     global $db, $user, $confra;
-    $id = isset($_GET['id']) ? intval($_GET['id']) : "";
-    $typ = isset($_GET['typ']) ? analyze($_GET['typ']) : "";
-    $mod = isset($_GET['mod']) ? analyze($_GET['mod']) : "";
-    $rate = (isset($_GET['rate']) && isInt($_GET['rate']) && ($_GET['rate']) <= 5) ? intval($_GET['rate']) : 0;
-    $stl = isset($_GET['stl']) ? intval($_GET['stl']) : 0;
+    $id   = getVar('get', 'id',   'num',  0);
+    $typ  = analyze(getVar('get', 'typ',  'text', ''));
+    $mod  = analyze(getVar('get', 'mod',  'text', ''));
+    $rate = min(5, getVar('get', 'rate', 'num', 0));
+    $stl  = getVar('get', 'stl',  'num',  0);
     $con = explode("|", $confra[strtolower($mod)]);
     if ($id && $mod) {
+        $query = '';
         if ($mod == "account") {
-            $query = "user_votes, user_totalvotes FROM ".PREFIX_DB."_users WHERE user_id = '".$id."'";
+            $query = "SELECT user_votes, user_totalvotes FROM ".PREFIX_DB."_users WHERE user_id = :id";
         } elseif ($mod == "faq") {
-            $query = "ratings, score FROM ".PREFIX_DB."_faq WHERE fid = '".$id."'";
+            $query = "SELECT ratings, score FROM ".PREFIX_DB."_faq WHERE fid = :id";
         } elseif ($mod == "files") {
-            $query = "votes, totalvotes FROM ".PREFIX_DB."_files WHERE lid = '".$id."'";
+            $query = "SELECT votes, totalvotes FROM ".PREFIX_DB."_files WHERE lid = :id";
         } elseif ($mod == "forum") {
-            $query = "ratings, score FROM ".PREFIX_DB."_forum WHERE id = '".$id."'";
+            $query = "SELECT ratings, score FROM ".PREFIX_DB."_forum WHERE id = :id";
         } elseif ($mod == "help") {
-            $query = "ratings, score FROM ".PREFIX_DB."_help WHERE sid = '".$id."'";
+            $query = "SELECT ratings, score FROM ".PREFIX_DB."_help WHERE sid = :id";
         } elseif ($mod == "jokes") {
-            $query = "ratingtot, rating FROM ".PREFIX_DB."_jokes WHERE jokeid = '".$id."'";
+            $query = "SELECT ratingtot, rating FROM ".PREFIX_DB."_jokes WHERE jokeid = :id";
         } elseif ($mod == "links") {
-            $query = "votes, totalvotes FROM ".PREFIX_DB."_links WHERE lid = '".$id."'";
+            $query = "SELECT votes, totalvotes FROM ".PREFIX_DB."_links WHERE lid = :id";
         } elseif ($mod == "media") {
-            $query = "votes, totalvotes FROM ".PREFIX_DB."_media WHERE id = '".$id."'";
+            $query = "SELECT votes, totalvotes FROM ".PREFIX_DB."_media WHERE id = :id";
         } elseif ($mod == "news") {
-            $query = "ratings, score FROM ".PREFIX_DB."_news WHERE sid = '".$id."'";
+            $query = "SELECT ratings, score FROM ".PREFIX_DB."_news WHERE sid = :id";
         } elseif ($mod == "pages") {
-            $query = "ratings, score FROM ".PREFIX_DB."_pages WHERE pid = '".$id."'";
+            $query = "SELECT ratings, score FROM ".PREFIX_DB."_pages WHERE pid = :id";
         } elseif ($mod == "shop") {
-            $query = "votes, totalvotes FROM ".PREFIX_DB."_products WHERE id = '".$id."'";
+            $query = "SELECT votes, totalvotes FROM ".PREFIX_DB."_products WHERE id = :id";
+        }
+        if ($query == '') {
+            return;
         }
         $ip = getIp();
         $past = time() - intval($con[0]);
         $cmod = substr($mod, 0, 2)."-".$id;
         $cookies = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : "";
         $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
-        $db->sql_query("DELETE FROM ".PREFIX_DB."_rating WHERE time < '".$past."' AND modul = '".$mod."'");
-        list($num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_rating WHERE (mid = '".$id."' AND modul = '".$mod."' AND host = '".$ip."') OR (mid = '".$id."' AND modul = '".$mod."' AND uid = '".$uid."' AND uid != '0')"));
+        $db->sql_query("DELETE FROM ".PREFIX_DB."_rating WHERE time < :past AND modul = :mod", ['past' => $past, 'mod' => $mod]);
+        list($num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_rating WHERE (mid = :id AND modul = :mod AND host = :ip) OR (mid = :id2 AND modul = :mod2 AND uid = :uid AND uid != '0')", ['id' => $id, 'mod' => $mod, 'ip' => $ip, 'id2' => $id, 'mod2' => $mod, 'uid' => $uid]));
         if ($cookies == $id || $num > 0) {
-            list($votes, $totalvotes) = $db->sql_fetchrow($db->sql_query("SELECT ".$query));
+            list($votes, $totalvotes) = $db->sql_fetchrow($db->sql_query($query, ['id' => $id]));
             echo ajax_rating(2, "", "", $votes, $totalvotes, "", $stl);
         } elseif (!$cookies && !$num && !$rate) {
-            list($votes, $totalvotes) = $db->sql_fetchrow($db->sql_query("SELECT ".$query));
+            list($votes, $totalvotes) = $db->sql_fetchrow($db->sql_query($query, ['id' => $id]));
             if (intval($votes)) {
                 $votnum = $votes;
                 $votes = $votes;
@@ -4203,67 +4684,61 @@ function rating() {
         } elseif (!$cookies && !$num && $rate) {
             setcookie(substr($mod, 0, 2)."-".$id, $id, time() + intval($con[0]));
             $new = time();
-            $inserted = $db->sql_query("INSERT INTO ".PREFIX_DB."_rating VALUES (NULL, '".$id."', '".$mod."', '".$new."', '".$uid."', '".$ip."')");
+            $inserted = $db->sql_query("INSERT INTO ".PREFIX_DB."_rating (mid, modul, time, uid, host) VALUES (:mid, :modul, :time, :uid, :host)", ['mid' => $id, 'modul' => $mod, 'time' => $new, 'uid' => $uid, 'host' => $ip]);
             if ($inserted) {
                 if ($mod == "account" || $mod == "members") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_votes=user_votes+1, user_totalvotes=user_totalvotes+".$rate." WHERE user_id = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_votes = user_votes + 1, user_totalvotes = user_totalvotes + :rate WHERE user_id = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(2);
                 } elseif ($mod == "faq") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_faq SET score=score+".$rate.", ratings=ratings+1 WHERE fid = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_faq SET score = score + :rate, ratings = ratings + 1 WHERE fid = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(8);
                 } elseif ($mod == "files") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_files SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_files SET votes = votes + 1, totalvotes = totalvotes + :rate WHERE lid = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(12);
                 } elseif ($mod == "forum") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_forum SET score=score+".$rate.", ratings=ratings+1 WHERE id = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_forum SET score = score + :rate, ratings = ratings + 1 WHERE id = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(15);
                 } elseif ($mod == "help") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_help SET score=score+".$rate.", ratings=ratings+1 WHERE sid = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_help SET score = score + :rate, ratings = ratings + 1 WHERE sid = :id", ['rate' => $rate, 'id' => $id]);
                 } elseif ($mod == "gallery") {
                     #$db->sql_query("UPDATE ".PREFIX_DB."_gallery SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
                     update_points(18);
                 } elseif ($mod == "jokes") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_jokes SET rating=rating+".$rate.", ratingtot=ratingtot+1 WHERE jokeid = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_jokes SET rating = rating + :rate, ratingtot = ratingtot + 1 WHERE jokeid = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(20);
                 } elseif ($mod == "links") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_links SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_links SET votes = votes + 1, totalvotes = totalvotes + :rate WHERE lid = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(24);
                 } elseif ($mod == "media") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_media SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_media SET votes = votes + 1, totalvotes = totalvotes + :rate WHERE id = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(27);
                 } elseif ($mod == "multimedia") {
                     #$db->sql_query("UPDATE ".PREFIX_DB."_multimedia SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
                     update_points(30);
                 } elseif ($mod == "news") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_news SET score=score+".$rate.", ratings=ratings+1 WHERE sid = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_news SET score = score + :rate, ratings = ratings + 1 WHERE sid = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(33);
                 } elseif ($mod == "pages") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_pages SET score=score+".$rate.", ratings=ratings+1 WHERE pid = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_pages SET score = score + :rate, ratings = ratings + 1 WHERE pid = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(37);
                 } elseif ($mod == "shop") {
-                    $db->sql_query("UPDATE ".PREFIX_DB."_products SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_products SET votes = votes + 1, totalvotes = totalvotes + :rate WHERE id = :id", ['rate' => $rate, 'id' => $id]);
                     update_points(41);
                 }
             }
-            list($votes, $totalvotes) = $db->sql_fetchrow($db->sql_query("SELECT ".$query));
+            list($votes, $totalvotes) = $db->sql_fetchrow($db->sql_query($query, ['id' => $id]));
             echo ajax_rating(2, "", "", $votes, $totalvotes, "", $stl);
         }
     }
 }
 
 # Format BB Code and Smilies
-function textarea() {
+function textarea(string $id, string $name, string $var, string $mod, int $rows, string $placeholder = '', string $required = ''): string {
     global $admin, $op, $user, $conf;
-    $arg = func_get_args();
-    $id = $arg[0];
-    $name = $arg[1];
-    $var = $arg[2];
-    $mod = $arg[3];
-    $rows = $arg[4];
-    $placeholder = (!empty($arg[5])) ? " placeholder=\"".$arg[5]."\"" : "";
-    $required = (!empty($arg[6])) ? " required" : "";
+    $placeholder = $placeholder ? " placeholder=\"".$placeholder."\"" : "";
+    $required    = $required ? " required" : "";
     $stloc = substr(_LOCALE, 0, 2);
-    $desc = ($var) ? $var : (isset($_POST[$name]) ? save_text($_POST[$name]) : "");
+    $desc = $var ?: save_text(getVar('post', $name, 'raw', ''));
     $uploads_data = include('config/uploads.php');
     $confup = $uploads_data['uploads'] ?? [];
     $con = explode("|", (string)($confup[strtolower($mod)] ?? ''));
@@ -4324,9 +4799,9 @@ function textarea() {
             $code .= "<div class=\"sl_drop\"><span OnClick=\"HideShow('l-form-".$id."', 'blind', 'up', 500); changelanguage();\" class=\"sl_bb_translate\" title=\""._EAUTOTR."\"></span>
             <div id=\"l-form-".$id."\" class=\"sl_drop-form\">
                 <table class=\"sl_bb_trans\"><tr>
-                <td>Ð</td><td>Ð‘</td><td>Ð’</td><td>Ð“</td><td>Ð”</td><td>Ð•</td><td>Ð</td><td>Ð–</td><td>Ð—</td><td>Ð˜</td><td>Ð™</td>
-                <td>Ðš</td><td>Ð›</td><td>Ðœ</td><td>Ð</td><td>Ðž</td><td>ÐŸ</td><td>Ð </td><td>Ð¡</td><td>Ð¢</td><td>Ð£</td><td>Ð¤</td>
-                <td>Ð¥</td><td>Ð¦</td><td>Ð§</td><td>Ð¨</td><td>Ð©</td><td>Ð¬</td><td>Ð«</td><td>Ðª</td><td>Ð­</td><td>Ð®</td><td>Ð¯</td>
+                <td>ÃÂ</td><td>Ãâ€˜</td><td>Ãâ€™</td><td>Ãâ€œ</td><td>Ãâ€</td><td>Ãâ€¢</td><td>ÃÂ</td><td>Ãâ€“</td><td>Ãâ€”</td><td>ÃËœ</td><td>Ãâ„¢</td>
+                <td>ÃÅ¡</td><td>Ãâ€º</td><td>ÃÅ“</td><td>ÃÂ</td><td>ÃÅ¾</td><td>ÃÅ¸</td><td>ÃÂ </td><td>ÃÂ¡</td><td>ÃÂ¢</td><td>ÃÂ£</td><td>ÃÂ¤</td>
+                <td>ÃÂ¥</td><td>ÃÂ¦</td><td>ÃÂ§</td><td>ÃÂ¨</td><td>ÃÂ©</td><td>ÃÂ¬</td><td>ÃÂ«</td><td>ÃÂª</td><td>ÃÂ­</td><td>ÃÂ®</td><td>ÃÂ¯</td>
                 </tr><tr>
                 <td>A</td><td>B</td><td>V</td><td>G</td><td>D</td><td>E</td><td>JO</td><td>ZH</td><td>Z</td><td>I</td><td>J</td>
                 <td>K</td><td>L</td><td>M</td><td>N</td><td>O</td><td>P</td><td>R</td><td>S</td><td>T</td><td>U</td><td>F</td>
@@ -4600,20 +5075,10 @@ function textarea_code($id, $name, $style, $mode, $text) {
 }
 
 # Format nummer page for Ajax
-function num_ajax() {
-    global $admin_file;
-    $arg = func_get_args();
-    $mnum = ($arg[4]) ? $arg[4] : 8;
-    $num = ($arg[5]) ? $arg[5] : 1;
-    $ld = ($arg[6]) ? $arg[6] : "";
-    $go = ($arg[7]) ? $arg[7] : 0;
-    $op = ($arg[8]) ? $arg[8] : "";
-    $id = ($arg[9]) ? $arg[9] : 0;
-    $cid = ($arg[10]) ? $arg[10] : 0;
-    $typ = ($arg[11]) ? $arg[11] : "";
-    $mod = ($arg[12]) ? $arg[12] : "";
+function num_ajax(string $tpl, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', int $id = 0, int $cid = 0, string $typ = '', string $mod = ''): string {
+    global $afile;
     $nnum = $mnum + 1;
-    if ($arg[2] > 1) {
+    if ($pages > 1) {
         $cont = "";
         if ($num > 1) {
             $prev = $num - 1;
@@ -4621,26 +5086,27 @@ function num_ajax() {
         } else {
             $cprev = "<span class=\"sl_num\" title=\""._BACK."\">"._BACK."</span>";
         }
-        for ($i = 1; $i < $arg[2]+1; $i++) {
+        for ($i = 1; $i < $pages+1; $i++) {
             if ($i == $num) {
                 $cont .= "<span title=\"".$i."\">".$i."</span>";
             } else {
-                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $arg[2]) || ($i == 1)) $cont .= "<a href=\"#\" OnClick=\"AjaxLoad('GET', '".$ld."', '".$id."', 'go=".$go."&amp;op=".$op."&amp;id=".$cid."&amp;cid=".$i."&amp;typ=".$typ."&amp;dir=".$mod."', ''); return false;\" title=\"".$i."\">".$i."</a>";
+                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $pages) || ($i == 1)) $cont .= "<a href=\"#\" OnClick=\"AjaxLoad('GET', '".$ld."', '".$id."', 'go=".$go."&amp;op=".$op."&amp;id=".$cid."&amp;cid=".$i."&amp;typ=".$typ."&amp;dir=".$mod."', ''); return false;\" title=\"".$i."\">".$i."</a>";
             }
-            if ($i < $arg[2]) {
+            if ($i < $pages) {
                 if (($i > ($num - $nnum)) && ($i < ($num + $mnum))) $cont .= " ";
                 if (($num > $nnum) && ($i == 1)) $cont .= "<span class=\"sl_num_exit\" title=\"&hellip;\">&hellip;</span>";
-                if (($num < ($arg[2] - $mnum)) && ($i == ($arg[2] - 1))) $cont .= "<span class=\"sl_num_exit\" title=\"&hellip;\">&hellip;</span>";
+                if (($num < ($pages - $mnum)) && ($i == ($pages - 1))) $cont .= "<span class=\"sl_num_exit\" title=\"&hellip;\">&hellip;</span>";
             }
         }
-        if ($num < $arg[2]) {
+        if ($num < $pages) {
             $next = $num + 1;
             $cnext = " <a href=\"#\" OnClick=\"AjaxLoad('GET', '".$ld."', '".$id."', 'go=".$go."&amp;op=".$op."&amp;id=".$cid."&amp;cid=".$next."&amp;typ=".$typ."&amp;dir=".$mod."', ''); return false;\" class=\"sl_num\" title=\""._NEXT."\">"._NEXT."</a>";
         } else {
             $cnext = "<span class=\"sl_num\" title=\""._NEXT."\">"._NEXT."</span>";
         }
-        return setTemplateBasic($arg[0], ['{%overall%}' => _OVERALL, '{%count%}' => $arg[1], '{%by%}' => _BY, '{%pages%}' => $arg[2], '{%page_s%}' => _PAGE_S, '{%page%}' => $arg[3], '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
+        return setTemplateBasic($tpl, ['{%overall%}' => _OVERALL, '{%count%}' => $count, '{%by%}' => _BY, '{%pages%}' => $pages, '{%page_s%}' => _PAGE_S, '{%page%}' => $page, '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
     }
+    return '';
 }
 
 # Check type upload file
@@ -4701,7 +5167,7 @@ function upload($typ, $directory, $typefile, $maxsize, $namefile, $width, $heigh
             return 0;
         }
     } elseif ($typ == 2) {
-        if (isset($_FILES['file']) && !empty($_FILES['file']) && $_POST['token'] == md5_salt($conf['sitekey'])) {
+        if (isset($_FILES['file']) && !empty($_FILES['file']) && getVar('post', 'token', 'raw', '') == md5_salt($conf['sitekey'])) {
             $files = count($_FILES['file']['name']);
             for ($i = 0; $i < $files; $i++) {
                 if ($_FILES['file']['size'][$i] > $maxsize) {
@@ -4734,11 +5200,12 @@ function upload($typ, $directory, $typefile, $maxsize, $namefile, $width, $heigh
         } else {
             echo '<div class="ico sl_warn">'._ERROR_DOWN.'</div>';
         }
-    } elseif ($typ == 3 && !empty($_POST['sitefile'])) {
-        $afile = str_replace(array('&', '?', '#'), '', $_POST['sitefile']);
+    } elseif ($typ == 3 && !empty(getVar('post', 'sitefile', 'raw', ''))) {
+        $sitefile = getVar('post', 'sitefile', 'raw', '');
+        $afile = str_replace(array('&', '?', '#'), '', $sitefile);
         $type = strtolower(substr(strrchr($afile, '.'), 1));
-        if (!check_file($type, $typefile) && !check_size($_POST['sitefile'], $width, $height)) {
-            $fn = $_POST['sitefile'];
+        if (!check_file($type, $typefile) && !check_size($sitefile, $width, $height)) {
+            $fn = $sitefile;
             $path_sitefile = fopen($fn, 'rb');
             if (!$path_sitefile) {
                 $stop = _ERROR_DOWN;
@@ -4777,7 +5244,7 @@ function upload($typ, $directory, $typefile, $maxsize, $namefile, $width, $heigh
                 }
             }
         } else {
-            $stop = (!check_file($type, $typefile)) ? check_size($_POST['sitefile'], $width, $height) : check_file($type, $typefile);
+            $stop = (!check_file($type, $typefile)) ? check_size($sitefile, $width, $height) : check_file($type, $typefile);
             return 0;
         }
     } elseif ($typ == 4 && $url) {
@@ -4850,15 +5317,14 @@ function modul($name, $class, $modul, $no='') {
 }
 
 # Format categorie module
-function cat_modul() {
-    $arg = func_get_args();
-    $submit = isset($arg[3]) ? " OnChange=\"submit()\"" : "";
-    $class = isset($arg[1]) ? " class=\"".$arg[1]."\"" : "";
-    $content = "<select name=\"".$arg[0]."\"".$class.$submit.">";
-    $mods = array("faq", "files", "forum", "help", "jokes", "links", "media", "news", "pages", "shop");
-    for ($i = 0; $i < count($mods); $i++) {
-        $sel = ($arg[2] == $mods[$i]) ? " selected" : "";
-        $content .= "<option value=\"".$mods[$i]."\"".$sel.">".deflmconst($mods[$i])." - ".$mods[$i]."</option>";
+function cat_modul(string $selectName, string $extraClass = '', string $selected = '', bool $autoSubmit = false): string {
+    $submit  = $autoSubmit ? ' OnChange="submit()"' : '';
+    $class   = $extraClass ? ' class="'.$extraClass.'"' : '';
+    $content = "<select name=\"".$selectName."\"".$class.$submit.">";
+    $mods = ["faq", "files", "forum", "help", "jokes", "links", "media", "news", "pages", "shop"];
+    foreach ($mods as $m) {
+        $sel     = ($selected == $m) ? " selected" : "";
+        $content .= "<option value=\"".$m."\"".$sel.">".deflmconst($m)." - ".$m."</option>";
     }
     $content .= "</select>";
     return $content;
@@ -4888,21 +5354,32 @@ function redaktor($id, $name, $class, $editor, $submit) {
 }
 
 # Show comments
-function ashowcom() {
-    global $db, $admin_file, $confu, $confc, $confpr, $user;
-    $arg = func_get_args();
-    $cid = isset($arg[0]) ? intval($arg[0]) : "";
-    $mod = isset($arg[1]) ? analyze($arg[1]) : "";
+function ashowcom(int $cid = 0, string $mod = ''): string {
+    global $db, $afile, $confu, $confc, $confpr, $user;
+    $mod = analyze($mod);
+    $params = [];
     if (defined("ADMIN_FILE")) {
-        $ordern = (isset($_GET['status']) == 1) ? "WHERE status = '0'" : "WHERE status != '0'";
+        if (getVar('get', 'status', 'num', 0) == 1) {
+            $ordern = "WHERE status = :status";
+            $params = ['status' => 0];
+        } else {
+            $ordern = "WHERE status != :status";
+            $params = ['status' => 0];
+        }
         $ccnum = $confc['anum'];
         $plnum = $confc['anump'];
     } else {
-        $ordern = (is_moder($mod)) ? "WHERE cid = '".$cid."' AND modul = '".$mod."'" : "WHERE cid = '".$cid."' AND modul = '".$mod."' AND status != '0'";
+        if (is_moder($mod)) {
+            $ordern = "WHERE cid = :cid AND modul = :mod";
+            $params = ['cid' => $cid, 'mod' => $mod];
+        } else {
+            $ordern = "WHERE cid = :cid AND modul = :mod AND status != :status";
+            $params = ['cid' => $cid, 'mod' => $mod, 'status' => 0];
+        }
         $ccnum = $confc['num'];
         $plnum = $confc['nump'];
     }
-    list($numstories) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(cid) FROM ".PREFIX_DB."_comment ".$ordern));
+    list($numstories) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(cid) FROM ".PREFIX_DB."_comment ".$ordern, $params));
     if ($numstories > 0) {
         $com = getVar('get', 'com', 'num', '1');
         $offset = ($com - 1) * $ccnum;
@@ -4916,22 +5393,33 @@ function ashowcom() {
             if ($numstories > $offset) $a -= $offset;
         }
         $where = array();
-        $result = $db->sql_query("SELECT id, cid, modul, date, uid, name, host_name, comment, status FROM ".PREFIX_DB."_comment ".$ordern." ORDER BY date ".$sort." LIMIT ".$offset.", ".$ccnum);
+        $result = $db->sql_query("SELECT id, cid, modul, date, uid, name, host_name, comment, status FROM ".PREFIX_DB."_comment ".$ordern." ORDER BY date ".$sort." LIMIT ".intval($offset).", ".intval($ccnum), $params);
         while (list($com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status) = $db->sql_fetchrow($result)) {
             $cmassiv[] = array($com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status);
             if ($com_uid) $where[] = $com_uid;
             unset($com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status);
         }
         if ($where) {
-            $result2 = $db->sql_query("SELECT u.user_id, u.user_name, u.user_rank, u.user_email, u.user_website, u.user_avatar, u.user_regdate, u.user_from, u.user_sig, u.user_viewemail, u.user_points, u.user_warnings, u.user_gender, u.user_votes, u.user_totalvotes, g.name, g.rank, g.color FROM ".PREFIX_DB."_users AS u LEFT JOIN ".PREFIX_DB."_groups AS g ON ((g.extra = 1 AND u.user_group = g.id) OR (g.extra != 1 AND u.user_points >= g.points)) WHERE u.user_id IN (".implode(", ", $where).") ORDER BY g.extra ASC, g.points ASC");
-            while (list($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor) = $db->sql_fetchrow($result2)) {
-                $umassiv[] = array($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor);
-                unset($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor);
+            $uids = array_values(array_unique(array_map('intval', $where)));
+            $uids = array_values(array_filter($uids, static fn($v) => $v > 0));
+            if ($uids) {
+                $up = [];
+                $um = [];
+                foreach ($uids as $k => $v) {
+                    $ph = 'u'.$k;
+                    $up[] = ':'.$ph;
+                    $um[$ph] = $v;
+                }
+                $result2 = $db->sql_query("SELECT u.user_id, u.user_name, u.user_rank, u.user_email, u.user_website, u.user_avatar, u.user_regdate, u.user_from, u.user_sig, u.user_viewemail, u.user_points, u.user_warnings, u.user_gender, u.user_votes, u.user_totalvotes, g.name, g.rank, g.color FROM ".PREFIX_DB."_users AS u LEFT JOIN ".PREFIX_DB."_groups AS g ON ((g.extra = 1 AND u.user_group = g.id) OR (g.extra != 1 AND u.user_points >= g.points)) WHERE u.user_id IN (".implode(', ', $up).") ORDER BY g.extra ASC, g.points ASC", $um);
+                while (list($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor) = $db->sql_fetchrow($result2)) {
+                    $umassiv[] = array($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor);
+                    unset($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor);
+                }
             }
         }
         $cont = "";
         if (defined("ADMIN_FILE")) {
-            $cont .= "<form name=\"comm\" action=\"".$admin_file.".php\" method=\"post\">";
+            $cont .= "<form name=\"comm\" action=\"".$afile.".php\" method=\"post\">";
             $b = 0;
         }
         foreach ($cmassiv as $val) {
@@ -4990,7 +5478,7 @@ function ashowcom() {
             $profil = ($confc['profil'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
             $web = ($confc['web'] && !empty($user_website)) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
 
-            # Ð‘ÑƒÐ´ÑƒÑ‰Ð¸Ðµ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸
+            # Ãâ€˜Ã‘Æ’ÃÂ´Ã‘Æ’Ã‘â€°ÃÂ¸ÃÂµ Ã‘â€žÃ‘Æ’ÃÂ½ÃÂºÃ‘â€ ÃÂ¸ÃÂ¸
             #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
             #$thank = "<a href=\"javascript: scroll(0, 0);\" title=\""._THANK."\">"._THANK."</a>";
             $warn = "";
@@ -4998,7 +5486,7 @@ function ashowcom() {
 
             if (is_moder($com_modul)) {
                 if (defined("ADMIN_FILE")) {
-                    $edit = add_menu("<a href=\"index.php?name=".$com_modul."&amp;op=view&amp;id=".$com_cid."#".$com_id."\" title=\""._MVIEW."\">"._MVIEW."</a>||<a href=\"".$admin_file.".php?op=comm_edit&amp;id=".$com_id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$admin_file.".php?op=comm_act&amp;id=".$com_id."&amp;refer=1\" title=\""._ACTIVATE."\">"._ACTIVATE."</a>||<a href=\"".$admin_file.".php?op=comm_del&amp;id=".$com_id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".cutstr(text_filter(bb_decode($com_text, $com_modul)), 10)."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>");
+                    $edit = add_menu("<a href=\"index.php?name=".$com_modul."&amp;op=view&amp;id=".$com_cid."#".$com_id."\" title=\""._MVIEW."\">"._MVIEW."</a>||<a href=\"".$afile.".php?op=comm_edit&amp;id=".$com_id."\" title=\""._FULLEDIT."\">"._FULLEDIT."</a>||<a href=\"".$afile.".php?op=comm_act&amp;id=".$com_id."&amp;refer=1\" title=\""._ACTIVATE."\">"._ACTIVATE."</a>||<a href=\"".$afile.".php?op=comm_del&amp;id=".$com_id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE." &quot;".cutstr(text_filter(bb_decode($com_text, $com_modul)), 10)."&quot;?');\" title=\""._ONDELETE."\">"._ONDELETE."</a>");
                 } else {
                     $edit = add_menu("<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=editcom&amp;id=".$com_id."&amp;typ=1&amp;mod=".$com_modul."', ''); return false;\" title=\""._ONEDIT."\">"._ONEDIT."</a>||<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=closecom&amp;id=".$com_id."&amp;typ=0&amp;mod=".$com_modul."', ''); return false;\" title=\""._FMODC."\">"._FMODC."</a>||<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=closecom&amp;id=".$com_id."&amp;typ=1&amp;mod=".$com_modul."', ''); return false;\" title=\""._ACTIVATE."\">"._ACTIVATE."</a>");
                 }
@@ -5014,19 +5502,19 @@ function ashowcom() {
             } else {
                 $checkb = "";
             }
-            $cont .= tpl_func("comment", $com_id, $avname, $date, $ip, $amess, $avatar, $rank, $rlink, $rate, $rwarn, $group, $point, $regdate, $gender, $from, $text, bb_decode($sig, $com_modul), $personal, $privat, $profil, $web, $warn, $thank, $edit, $hclass, $checkb);
+            $cont .= setTemplateBasic("comment", ['{%id%}' => $com_id, '{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => bb_decode($sig, $com_modul), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass, '{%checkb%}' => $checkb]);
             if ($confc['sort']) { $a++; } else { $a--; }
         }
         if (defined("ADMIN_FILE")) {
             $selms = _CHECKOP.": <select name=\"op\"><option value=\"comm_act\">"._ACTIVATE."</option><option value=\"comm_del\">"._DELETE."</option></select> <input type=\"hidden\" name=\"refer\" value=\"1\"><input type=\"submit\" value=\""._OK."\" class=\"sl_but_blue\">";
-            $pag = (isset($_GET['status']) == 1) ? "op=comm_show&amp;status=1" : "op=comm_show";
-            $numpt = setPageNumbers("pagenum", $com_modul, $numstories, $numpages, $ccnum, $pag."&amp;", $plnum, '', 'com');
+            $pag = (getVar('get', 'status', 'num', 0) == 1) ? "op=comm_show&amp;status=1" : "op=comm_show";
+            $numpt = setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&amp;', $plnum, 0, '', 'com');
             $cont .= setTemplateBasic('list-bottom', ['{%pager%}' => $numpt, '{%select%}' => $selms]);
-            $out = tpl_func("open").$cont.tpl_func("close", "</form>");
+            $out = setTemplateBasic("open", []).$cont.setTemplateBasic("close", []);
         } else {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
-            $cont .= setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&', $plnum, '', '#comm', 'com');
+            $cont .= setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&', $plnum, 0, '#comm', 'com');
             $out = setTemplateBasic('title', array('{%title%}' => _COMMENTS)).setTemplateBasic('open').$cont.setTemplateBasic('close');
         }
     } else {
@@ -5039,11 +5527,11 @@ function ashowcom() {
 # Save edit comments
 function editcom() {
     global $db, $user, $confc;
-    $id = (isset($_POST['id'])) ? ((isset($_POST['id'])) ? intval($_POST['id']) : "") : ((isset($_GET['id'])) ? intval($_GET['id']) : "");
-    $typ = (isset($_POST['typ'])) ? ((isset($_POST['typ'])) ? intval($_POST['typ']) : "") : ((isset($_GET['typ'])) ? intval($_GET['typ']) : "");
-    $mod = (isset($_POST['mod'])) ? ((isset($_POST['mod'])) ? analyze($_POST['mod']) : "") : ((isset($_GET['mod'])) ? analyze($_GET['mod']) : "");
-    $text = (isset($_POST['text'])) ? ((isset($_POST['text'])) ? trim($_POST['text']) : "") : ((isset($_GET['text'])) ? trim($_GET['text']) : "");
-    list($uid, $date, $comment) = $db->sql_fetchrow($db->sql_query("SELECT uid, date, comment FROM ".PREFIX_DB."_comment WHERE id = '".$id."'"));
+    $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
+    $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
+    $mod  = analyze(getVar('post', 'mod',  'text', '') ?: getVar('get', 'mod',  'text', ''));
+    $text = trim(getVar('post', 'text', 'raw',  '') ?: getVar('get', 'text', 'raw',  ''));
+    list($uid, $date, $comment) = $db->sql_fetchrow($db->sql_query("SELECT uid, date, comment FROM ".PREFIX_DB."_comment WHERE id = :id", ['id' => $id]));
     $stime = strtotime($date) + $confc['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
@@ -5060,77 +5548,74 @@ function editcom() {
             $urlclick = (!is_moder($mod) && (($confc['alink'] == 1 && !is_user()) || ($confc['alink'] == 2))) ? 1 : 0;
             if (!$stop) {
                 $comm = save_text($text, $urlclick);
-                $db->sql_query("UPDATE ".PREFIX_DB."_comment SET comment = '".$comm."' WHERE id = '".$id."'");
+                $db->sql_query("UPDATE ".PREFIX_DB."_comment SET comment = :comment WHERE id = :id", ['comment' => $comm, 'id' => $id]);
                 echo bb_decode($comm, $mod);
             } else {
-                return tpl_warn("warn", $stop, "", "", "warn");
+                return setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
             }
         }
     } else {
         $info = sprintf(_PEDEND, intval($confc['edit'] / 60));
-        return tpl_warn("warn", $info, "", "", "warn");
+        return setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'warn']);
     }
 }
 
 # Close comments
 function closecom() {
     global $db;
-    $id = (isset($_POST['id'])) ? ((isset($_POST['id'])) ? intval($_POST['id']) : "") : ((isset($_GET['id'])) ? intval($_GET['id']) : "");
-    $typ = (isset($_POST['typ'])) ? ((isset($_POST['typ'])) ? intval($_POST['typ']) : 0) : ((isset($_GET['typ'])) ? intval($_GET['typ']) : 0);
-    $mod = (isset($_POST['mod'])) ? ((isset($_POST['mod'])) ? analyze($_POST['mod']) : "") : ((isset($_GET['mod'])) ? analyze($_GET['mod']) : "");
+    $id  = getVar('post', 'id',  'num',  0) ?: getVar('get', 'id',  'num',  0);
+    $typ = getVar('post', 'typ', 'num',  0) ?: getVar('get', 'typ', 'num',  0);
+    $mod = analyze(getVar('post', 'mod', 'text', '') ?: getVar('get', 'mod', 'text', ''));
     if ($id && $mod && is_moder($mod)) {
         $status = ($typ) ? 1 : 0;
         $info = ($typ) ? _PCOPEN : _PCLOSED;
         $numcom = ($typ) ? 0 : 1;
-        $db->sql_query("UPDATE ".PREFIX_DB."_comment SET status = '".$status."' WHERE id = '".$id."'");
-        list($cid, $uid) = $db->sql_fetchrow($db->sql_query("SELECT cid, uid FROM ".PREFIX_DB."_comment WHERE id = '".$id."'"));
+        $db->sql_query("UPDATE ".PREFIX_DB."_comment SET status = :status WHERE id = :id", ['status' => $status, 'id' => $id]);
+        list($cid, $uid) = $db->sql_fetchrow($db->sql_query("SELECT cid, uid FROM ".PREFIX_DB."_comment WHERE id = :id", ['id' => $id]));
         numcom($cid, $mod, $numcom, $uid);
-        echo tpl_warn("warn", $info, "", "", "warn");
+        echo setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'warn']);
     }
 }
 
 # Number comments
-function numcom() {
+function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0): void {
     global $db;
-    $arg = func_get_args();
-    $id = ($arg[0]) ? intval($arg[0]) : 0;
-    $mod = ($arg[1]) ? analyze($arg[1]) : "";
-    $typ = ($arg[2]) ? "-1" : "+1";
-    $uid = ($arg[3]) ? intval($arg[3]) : 0;
-    $point = ($arg[2]) ? 1 : 0;
+    $mod   = $mod ? analyze($mod) : '';
+    $delta = $del ? -1 : 1;
+    $point = $del ? 1 : 0;
     if ($id && $mod) {
         if ($mod == "account" || $mod == "members") {
             #$db->sql_query("UPDATE ".PREFIX_DB."_users SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
             update_points(3, $uid, $point);
         } elseif ($mod == "faq") {
-            $db->sql_query("UPDATE ".PREFIX_DB."_faq SET comments=comments".$typ." WHERE fid = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_faq SET comments = comments + :delta WHERE fid = :id", ['delta' => $delta, 'id' => $id]);
             update_points(7, $uid, $point);
         } elseif ($mod == "files") {
-            $db->sql_query("UPDATE ".PREFIX_DB."_files SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_files SET totalcomments = totalcomments + :delta WHERE lid = :id", ['delta' => $delta, 'id' => $id]);
             update_points(10, $uid, $point);
         } elseif ($mod == "gallery") {
             #$db->sql_query("UPDATE ".PREFIX_DB."_gallery SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
             update_points(17, $uid, $point);
         } elseif ($mod == "links") {
-            $db->sql_query("UPDATE ".PREFIX_DB."_links SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_links SET totalcomments = totalcomments + :delta WHERE lid = :id", ['delta' => $delta, 'id' => $id]);
             update_points(22, $uid, $point);
         } elseif ($mod == "media") {
-            $db->sql_query("UPDATE ".PREFIX_DB."_media SET totalcom=totalcom".$typ." WHERE id = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_media SET totalcom = totalcom + :delta WHERE id = :id", ['delta' => $delta, 'id' => $id]);
             update_points(26, $uid, $point);
         } elseif ($mod == "multimedia") {
             #$db->sql_query("UPDATE ".PREFIX_DB."_multimedia SET totalcom=totalcom".$typ." WHERE id = '".$id."'");
             update_points(29, $uid, $point);
         } elseif ($mod == "news") {
-            $db->sql_query("UPDATE ".PREFIX_DB."_news SET comments=comments".$typ." WHERE sid = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_news SET comments = comments + :delta WHERE sid = :id", ['delta' => $delta, 'id' => $id]);
             update_points(32, $uid, $point);
         } elseif ($mod == "pages") {
-            $db->sql_query("UPDATE ".PREFIX_DB."_pages SET comments=comments".$typ." WHERE pid = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_pages SET comments = comments + :delta WHERE pid = :id", ['delta' => $delta, 'id' => $id]);
             update_points(36, $uid, $point);
         } elseif ($mod == "shop") {
-            $db->sql_query("UPDATE ".PREFIX_DB."_products SET com=com".$typ." WHERE id = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_products SET com = com + :delta WHERE id = :id", ['delta' => $delta, 'id' => $id]);
             update_points(40, $uid, $point);
         } elseif ($mod == "voting") {
-            $db->sql_query("UPDATE ".PREFIX_DB."_voting SET comments=comments".$typ." WHERE id = '".$id."'");
+            $db->sql_query("UPDATE ".PREFIX_DB."_voting SET comments = comments + :delta WHERE id = :id", ['delta' => $delta, 'id' => $id]);
             update_points(43, $uid, $point);
         }
     }
@@ -5139,29 +5624,35 @@ function numcom() {
 # Voting result save
 function avoting_save() {
     global $db, $user, $locale, $conf, $confv;
-    $id = intval($_POST['id']);
-    $questions = $_POST['questions'];
-    $querylang = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND date <= NOW() AND enddate >= NOW()" : "date <= NOW() AND enddate >= NOW()";
-    $result = $db->sql_query("SELECT id FROM ".PREFIX_DB."_voting WHERE id = '".$id."' AND ".$querylang);
+    $id        = getVar('post', 'id', 'num', 0);
+    $questions = isset($_POST['questions']) && is_array($_POST['questions']) ? $_POST['questions'] : [];
+    if ($conf['multilingual'] == 1) {
+        $querylang = "(language = :locale OR language = '') AND date <= NOW() AND enddate >= NOW()";
+        $qlang_params = ['locale' => $locale];
+    } else {
+        $querylang = "date <= NOW() AND enddate >= NOW()";
+        $qlang_params = [];
+    }
+    $result = $db->sql_query("SELECT id FROM ".PREFIX_DB."_voting WHERE id = :id AND ".$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->sql_numrows($result) > 0) {
         if (!$questions) {
-            $cont = tpl_warn("warn", _SEROR1, "?name=voting&amp;op=view&amp;id=".$id, 3, "warn");
+            $cont = setTemplateWarning('warn', ['text' => _SEROR1, 'url' => '?name=voting&amp;op=view&amp;id='.$id, 'time' => 3, 'id' => 'warn']);
         } else {
             $ip = getIp();
             $past = time() - intval($confv['voting_t']);
             $cmod = substr("voting", 0, 2)."-".$id;
             $cookies = (isset($_COOKIE[$cmod])) ? intval($_COOKIE[$cmod]) : "";
             $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
-            $db->sql_query("DELETE FROM ".PREFIX_DB."_rating WHERE time < '".$past."' AND modul = 'voting'");
-            list($num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_rating WHERE (mid = '".$id."' AND modul = 'voting' AND host = '".$ip."') OR (mid = '".$id."' AND modul = 'voting' AND uid = '".$uid."' AND uid != '0')"));
+            $db->sql_query("DELETE FROM ".PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
+            list($num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND host = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
             if ($cookies == $id || $num > 0) {
-                $cont = tpl_warn("warn", _SEROR2, "?name=voting&amp;op=view&amp;id=".$id, 3, "warn");
+                $cont = setTemplateWarning('warn', ['text' => _SEROR2, 'url' => '?name=voting&amp;op=view&amp;id='.$id, 'time' => 3, 'id' => 'warn']);
             } else {
                 setcookie(substr("voting", 0, 2)."-".$id, $id, time() + intval($confv['voting_t']));
                 $new = time();
-                $inserted = $db->sql_query("INSERT INTO ".PREFIX_DB."_rating VALUES (NULL, '".$id."', 'voting', '".$new."', '".$uid."', '".$ip."')");
+                $inserted = $db->sql_query("INSERT INTO ".PREFIX_DB."_rating (mid, modul, time, uid, host) VALUES (:mid, 'voting', :time, :uid, :host)", ['mid' => $id, 'time' => $new, 'uid' => $uid, 'host' => $ip]);
                 if ($inserted) {
-                    list($answer) = $db->sql_fetchrow($db->sql_query("SELECT answer FROM ".PREFIX_DB."_voting WHERE id = '".$id."'"));
+                    list($answer) = $db->sql_fetchrow($db->sql_query("SELECT answer FROM ".PREFIX_DB."_voting WHERE id = :id", ['id' => $id]));
                     $answer = explode("|", $answer);
                     for ($q = 0; $q < count($answer); $q++) {
                         if ($answer[$q] != "") {
@@ -5177,7 +5668,7 @@ function avoting_save() {
                         }
                     }
                     $answ = implode("|", $answ);
-                    $db->sql_query("UPDATE ".PREFIX_DB."_voting SET answer = '".$answ."' WHERE id = '".$id."'");
+                    $db->sql_query("UPDATE ".PREFIX_DB."_voting SET answer = :answer WHERE id = :id", ['answer' => $answ, 'id' => $id]);
                     update_points(42);
                 }
                 $cont = getVoting($id);
@@ -5190,16 +5681,15 @@ function avoting_save() {
 }
 
 # Update points
-function update_points() {
+function update_points(int $id, int $uid = 0, bool $del = false): void {
     global $db, $user, $confu;
-    $arg = func_get_args();
-    $id = intval($arg[0]);
-    $uid = (!empty($arg[1])) ? intval($arg[1]) : ((is_user()) ? intval($user[0]) : "");
+    $uid = $uid ?: (is_user() ? intval($user[0]) : 0);
     if ($id && $uid && $confu['point'] == 1) {
         $upoints = explode(",", $confu['points']);
-        $a = $id - 1;
-        $rpoints = (!empty($arg[2])) ? "-".$upoints[$a] : "+".$upoints[$a];
-        $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_points = user_points".$rpoints." WHERE user_id = '".$uid."'");
+        $a       = $id - 1;
+        $delta   = isset($upoints[$a]) ? intval($upoints[$a]) : 0;
+        $delta   = $del ? -$delta : $delta;
+        $db->sql_query("UPDATE ".PREFIX_DB."_users SET user_points = user_points + :delta WHERE user_id = :uid", ['delta' => $delta, 'uid' => $uid]);
     }
 }
 
@@ -5285,8 +5775,8 @@ function create_img_gd($imgfile, $imgthumb, $newwidth) {
 # Format function mb_strtolower the strtolower version to support most amount of languages including russian, french and so on
 if (!function_exists("mb_strtolower")) {
     function mb_strtolower($str){
-        $to = array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "a", "a", "a", "a", "a", "a", "?", "c", "e", "e", "e", "e", "i", "i", "i", "i", "?", "n", "o", "o", "o", "o", "o", "o", "u", "u", "u", "u", "y", "Ð°", "Ð±", "Ð²", "Ð³", "Ð´", "Ðµ", "Ñ‘", "Ð¶", "Ð·", "Ð¸", "Ð¹", "Ðº", "Ð»", "Ð¼", "Ð½", "Ð¾", "Ð¿", "Ñ€", "Ñ", "Ñ‚", "Ñƒ", "Ñ„", "Ñ…", "Ñ†", "Ñ‡", "Ñˆ", "Ñ‰", "ÑŠ", "Ñ‹", "ÑŒ", "Ñ", "ÑŽ", "Ñ");
-        $from = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "A", "A", "A", "A", "A", "?", "C", "E", "E", "E", "E", "I", "I", "I", "I", "?", "N", "O", "O", "O", "O", "O", "O", "U", "U", "U", "U", "Y", "Ð", "Ð‘", "Ð’", "Ð“", "Ð”", "Ð•", "Ð", "Ð–", "Ð—", "Ð˜", "Ð™", "Ðš", "Ð›", "Ðœ", "Ð", "Ðž", "ÐŸ", "Ð ", "Ð¡", "Ð¢", "Ð£", "Ð¤", "Ð¥", "Ð¦", "Ð§", "Ð¨", "Ð©", "Ðª", "Ðª", "Ð¬", "Ð­", "Ð®", "Ð¯");
+        $to = array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "a", "a", "a", "a", "a", "a", "?", "c", "e", "e", "e", "e", "i", "i", "i", "i", "?", "n", "o", "o", "o", "o", "o", "o", "u", "u", "u", "u", "y", "ÃÂ°", "ÃÂ±", "ÃÂ²", "ÃÂ³", "ÃÂ´", "ÃÂµ", "Ã‘â€˜", "ÃÂ¶", "ÃÂ·", "ÃÂ¸", "ÃÂ¹", "ÃÂº", "ÃÂ»", "ÃÂ¼", "ÃÂ½", "ÃÂ¾", "ÃÂ¿", "Ã‘â‚¬", "Ã‘Â", "Ã‘â€š", "Ã‘Æ’", "Ã‘â€ž", "Ã‘â€¦", "Ã‘â€ ", "Ã‘â€¡", "Ã‘Ë†", "Ã‘â€°", "Ã‘Å ", "Ã‘â€¹", "Ã‘Å’", "Ã‘Â", "Ã‘Å½", "Ã‘Â");
+        $from = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "A", "A", "A", "A", "A", "?", "C", "E", "E", "E", "E", "I", "I", "I", "I", "?", "N", "O", "O", "O", "O", "O", "O", "U", "U", "U", "U", "Y", "ÃÂ", "Ãâ€˜", "Ãâ€™", "Ãâ€œ", "Ãâ€", "Ãâ€¢", "ÃÂ", "Ãâ€“", "Ãâ€”", "ÃËœ", "Ãâ„¢", "ÃÅ¡", "Ãâ€º", "ÃÅ“", "ÃÂ", "ÃÅ¾", "ÃÅ¸", "ÃÂ ", "ÃÂ¡", "ÃÂ¢", "ÃÂ£", "ÃÂ¤", "ÃÂ¥", "ÃÂ¦", "ÃÂ§", "ÃÂ¨", "ÃÂ©", "ÃÂª", "ÃÂª", "ÃÂ¬", "ÃÂ­", "ÃÂ®", "ÃÂ¯");
         return str_replace($from, $to, $str);
     }
 }
