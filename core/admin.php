@@ -263,81 +263,6 @@ function getAdminTabs(
     return setTemplateBasic('title', ['{%title%}' => $ttl, '{%icon%}' => $ico, '{%subtitle%}' => $sub, '{%content%}' => $cnt]);
 }
 
-# Handle view/edit of admin info pages
-function getAdminInfo(int $obj = 0, string $mod = '', string $file = ''): string {
-    global $locale, $conf;
-    $cont = '';
-    $tfile = '';
-    $ainfo = !empty($conf['adminfo']);
-    $id = getVar('post', 'id', 'num', 0);
-    $name = '';
-    $path = '';
-    if ($ainfo && $id === 1) {
-        $modp = getVar('post', 'modp', 'var', '');
-        $name = getVar('post', 'name', 'var', '');
-        $path = $modp.'admin/info/'.$name.'.html';
-        $cnt = getVar('post', 'text', 'text', '');
-        if ($cnt !== '') {
-            file_put_contents($path, $cnt, LOCK_EX);
-            $tfile = $cnt;
-        } else {
-            $tfile = is_file($path) ? file_get_contents($path) : _NO_INFO;
-        }
-        $mod = $modp;
-    } else {
-        $mpp  = !empty($mod) ? 'modules/'.$mod.'/' : '';
-        $fpre = $file !== '' ? $file.'-' : '';
-        $name = $fpre.$locale;
-        $path = $mpp.'admin/info/'.$name.'.html';
-        $tfile = is_file($path) ? file_get_contents($path) : _NO_INFO;
-        if ($ainfo) $cont .= checkPerms(BASE_DIR.'/'.$path);
-        $mod = $mpp;
-    }
-    $cont .= setTemplateBasic('open');
-    $cont .= bb_decode($tfile, 'info');
-    if ($ainfo) {
-        $cont .= '<hr><form name="post" id="formadm_info" method="post"><table class="sl_table_edit">'
-            .'<tr><td>'.textarea('1', 'text', $tfile, 'info', '40').'</td></tr>'
-            .'<tr><td class="sl_center"><input type="submit" onclick="AjaxLoad(\'POST\', \'1\', \'adm_info\', \'go=5&amp;op=adm_info&amp;id=1&amp;mod='.$mod.'&amp;name='.$name.'\', { \'text\':\''._CERROR1.'\' }); return false;" value="'._SAVECHANGES.'" title="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>'
-            .'</table></form>';
-    }
-    $cont .= setTemplateBasic('close');
-    if ($obj === 0) echo $cont;
-    return $cont;
-}
-
-# Legacy compatibility wrapper – will be removed later
-function navi_gen(...$arg): string
-{
-    $ops = isset($arg[3]) && is_array($arg[3]) ? $arg[3] : [];
-    $tabs = isset($arg[4]) && is_array($arg[4]) ? $arg[4] : [];
-
-    $subops = $arg[5] ?? [];
-    if (!is_array($subops)) {
-        $subops = [];
-    }
-
-    $subtabs = $arg[6] ?? [];
-    if (!is_array($subtabs)) {
-        $subtabs = [];
-    }
-
-    return getAdminTabs(
-        (string)($arg[0] ?? ''),
-        (string)($arg[1] ?? ''),
-        (string)($arg[2] ?? ''),
-        $ops,
-        $tabs,
-        $subops,
-        $subtabs,
-        (int)($arg[8] ?? 0),
-        (bool)($arg[9] ?? false),
-        (int)($arg[10] ?? 0),
-        (string)($arg[11] ?? 'menutab')
-    );
-}
-
-
 function admininfo() {
     global $db, $admin, $afile, $conf, $confdb, $confr, $confst, $panel;
     if (is_admin()) {
@@ -440,10 +365,13 @@ function admininfo() {
                 
                 $dbver = db_version();
                 $dbtotal = $dbfree = 0;
-                $dbresult = $db->sql_query("SHOW TABLE STATUS FROM ".$confdb['name']);
-                while ($row = $db->sql_fetchrow($dbresult)) {
-                    $dbtotal += $row['Data_length'] + $row['Index_length'];
-                    $dbfree += ($row['Data_free']) ? $row['Data_free'] : 0;
+                $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($confdb['name'] ?? ''));
+                if ($dbname !== '') {
+                    $dbresult = $db->sql_query("SHOW TABLE STATUS FROM `".$dbname."`");
+                    while ($row = $db->sql_fetchrow($dbresult)) {
+                        $dbtotal += $row['Data_length'] + $row['Index_length'];
+                        $dbfree += ($row['Data_free']) ? $row['Data_free'] : 0;
+                    }
                 }
                 function get_modules($mod) {
                     return (function_exists("apache_get_modules")) ? ((array_search($mod, apache_get_modules())) ? getHint(1, 2, 2, 1, 0, 0, 0, 0, 0) : getHint(0, 2, 2, 1, 0, 0, 0, 0, 0)) : getHint(_NO_INFO, 1, 0, 0, 6, 0, 0, 0, _NO_INFO);
@@ -525,18 +453,17 @@ function php_gd() {
 
 function db_version() {
     global $db;
-    list($dbv) = $db->sql_fetchrow($db->sql_query("SELECT VERSION()"));
+    list($dbv) = $db->sql_fetchrow($db->sql_query('SELECT VERSION()'));
     return $dbv;
 }
 
-function ajax_cat() {
+function ajax_cat(string $modul = '', int $obj = 0): string {
     global $db, $afile, $conf;
-    $arg = func_get_args();
-    $modul = analyze($arg[0]);
-    $obj = analyze($arg[1]);
-    $where = ($modul) ? "WHERE a.modul = '".$modul."'" : "";
+    $modul   = analyze($modul);
+    $where   = ($modul) ? 'WHERE a.modul = :modul' : '';
+    $params  = ($modul) ? ['modul' => $modul] : [];
     $modlink = ($modul) ? "&amp;modul=".$modul : "";
-    $result = $db->sql_query("SELECT a.id, a.modul, a.title, a.description, a.img, a.language, a.parentid, a.ordern, a.cstatus, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM ".PREFIX_DB."_categories AS a LEFT JOIN ".PREFIX_DB."_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN ".PREFIX_DB."_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) ".$where." ORDER BY a.modul, a.ordern");
+    $result  = $db->sql_query('SELECT a.id, a.modul, a.title, a.description, a.img, a.language, a.parentid, a.ordern, a.cstatus, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
     if ($db->sql_numrows($result) > 0) {
         while (list($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2) = $db->sql_fetchrow($result)) {
             $massiv[$id] = array($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2);
@@ -560,27 +487,27 @@ function ajax_cat() {
             $modul2 = $val[13];
             $order2 = $val[14];
             if ($modul == "faq") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(fid) FROM ".PREFIX_DB."_faq WHERE catid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(fid) FROM '.PREFIX_DB.'_faq WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "files") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".PREFIX_DB."_files WHERE cid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(lid) FROM '.PREFIX_DB.'_files WHERE cid = :id', ['id' => $id]));
             } elseif ($modul == "forum") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_forum WHERE catid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "help") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".PREFIX_DB."_help WHERE catid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(sid) FROM '.PREFIX_DB.'_help WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "jokes") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(jokeid) FROM ".PREFIX_DB."_jokes WHERE cat IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(jokeid) FROM '.PREFIX_DB.'_jokes WHERE cat = :id', ['id' => $id]));
             } elseif ($modul == "links") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(lid) FROM ".PREFIX_DB."_links WHERE cid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(lid) FROM '.PREFIX_DB.'_links WHERE cid = :id', ['id' => $id]));
             } elseif ($modul == "media") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_media WHERE cid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :id', ['id' => $id]));
             } elseif ($modul == "news") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(sid) FROM ".PREFIX_DB."_news WHERE catid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(sid) FROM '.PREFIX_DB.'_news WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "pages") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(pid) FROM ".PREFIX_DB."_pages WHERE catid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(pid) FROM '.PREFIX_DB.'_pages WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "shop") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_products WHERE cid IN (".$id.")"));
+                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid = :id', ['id' => $id]));
             }
-            list($ispid) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_categories WHERE parentid IN (".$id.")"));
+            list($ispid) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_categories WHERE parentid = :id', ['id' => $id]));
             $ordernm = $ordern - 1;
             $ordernp = $ordern + 1;
             $active = ($parentid) ? "<div class=\"sl_green\">"._YES."</div>" : "<div class=\"sl_red\">"._NO."</div>";
@@ -609,58 +536,61 @@ function ajax_cat() {
     } else {
         $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
     }
-    if ($obj) { return $cont; } else { echo $cont; }
+    if ($obj) { return $cont; }
+    echo $cont;
+    return '';
 }
 
-function cat_order() {
+function cat_order(): void {
     global $db;
-    $modul = isset($_GET['mod']) ? analyze($_GET['mod']) : 0;
+    $modul = analyze(getVar('get', 'mod', 'text', ''));
     if ($modul) {
-        $typ = intval($_GET['typ']);
-        $ordern = intval($_GET['ordern']);
-        $id = intval($_GET['id']);
-        $cid = intval($_GET['cid']);
-        $db->sql_query("UPDATE ".PREFIX_DB."_categories SET ordern = '".$typ."' WHERE id = '".$id."'");
-        $db->sql_query("UPDATE ".PREFIX_DB."_categories SET ordern = '".$ordern."' WHERE id = '".$cid."'");
+        $typ    = getVar('get', 'typ',    'num', 0);
+        $ordern = getVar('get', 'ordern', 'num', 0);
+        $id     = getVar('get', 'id',     'num', 0);
+        $cid    = getVar('get', 'cid',    'num', 0);
+        $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET ordern = :typ    WHERE id = :id',  ['typ' => $typ,    'id' => $id]);
+        $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :cid', ['ordern' => $ordern, 'cid' => $cid]);
     }
-    return ajax_cat($modul, 0);
+    ajax_cat($modul, 0);
 }
 
-function catacess() {
+function catacess(string $name, string $class, string $selected, int $limit): string {
     global $db;
-    $arg = func_get_args();
-    $gids = explode("|", $arg[2]);
-    $cont = "<select name=\"".$arg[0]."[]\" multiple=\"multiple\" class=\"".$arg[1]."\">";
-    if ($arg[3] < 1) {
+    $gids = explode("|", $selected);
+    $cont = "<select name=\"".$name."[]\" multiple=\"multiple\" class=\"".$class."\">";
+    if ($limit < 1) {
         $cont .= "<option value=\"0|0\"";
-        $cont .= ($arg[2] == "0|0") ? " selected" : "";
+        $cont .= ($selected == "0|0") ? " selected" : "";
         $cont .= ">"._ALL."</option>";
     }
-    if ($arg[3] < 2) {
+    if ($limit < 2) {
         $cont .= "<option value=\"1|0\"";
-        $cont .= ($arg[2] == "1|0") ? " selected" : "";
+        $cont .= ($selected == "1|0") ? " selected" : "";
         $cont .= ">"._USERS."</option>";
-        $where = "";
+        $where  = "";
+        $params = [];
     } else {
-        $where = "WHERE extra = '1'";
+        $where  = "WHERE extra = '1'";
+        $params = [];
     }
-    $result = $db->sql_query("SELECT id, name, extra FROM ".PREFIX_DB."_groups ".$where." ORDER BY extra, points");
-    while (list($id, $name, $extra) = $db->sql_fetchrow($result)) {
-        $select = "";
+    $result = $db->sql_query('SELECT id, name, extra FROM '.PREFIX_DB.'_groups '.$where.' ORDER BY extra, points', $params);
+    while (list($id, $gname, $extra) = $db->sql_fetchrow($result)) {
+        $sel = "";
         if ($gids[0] == 2) {
             $massiv = explode(",", $gids[1]);
             foreach ($massiv as $val) {
                 if ($val != "" && $val == $id) {
-                    $select = " selected";
+                    $sel = " selected";
                     break;
                 }
             }
         }
-        $title = ($extra) ? _SPEC_GROUP." \"".$name."\"" : _GROUP." \"".$name."\"";
-        $cont .= "<option value=\"2|".$id."\"".$select.">".$title."</option>";
+        $title = ($extra) ? _SPEC_GROUP." \"".$gname."\"" : _GROUP." \"".$gname."\"";
+        $cont .= "<option value=\"2|".$id."\"".$sel.">".$title."</option>";
     }
     $cont .= "<option value=\"3|0\"";
-    $cont .= ($arg[2] == "3|0") ? " selected" : "";
+    $cont .= ($selected == "3|0") ? " selected" : "";
     $cont .= ">"._ADMIN."</option></select>";
     return $cont;
 }
@@ -682,16 +612,16 @@ function scatacess($auth) {
     return $acess."|".implode(",", $select);
 }
 
-function ajax_block() {
+function ajax_block(): string {
     global $db, $conf, $afile;
-    $fcont = "";
-    $result = $db->sql_query("SELECT a.bid, a.bkey, a.title, a.url, a.bposition, a.weight, a.active, a.blanguage, a.blockfile, a.view, a.expire, a.action, b.bid, b.bposition, b.weight, c.bid, c.bposition, c.weight FROM ".PREFIX_DB."_blocks AS a LEFT JOIN ".PREFIX_DB."_blocks AS b ON (b.bposition = a.bposition AND b.weight = a.weight-1) LEFT JOIN ".PREFIX_DB."_blocks AS c ON (c.bposition = a.bposition AND c.weight = a.weight+1) ORDER BY a.bposition, a.weight");
+    $fcont  = "";
+    $result = $db->sql_query('SELECT a.bid, a.bkey, a.title, a.url, a.bposition, a.weight, a.active, a.blanguage, a.blockfile, a.view, a.expire, a.action, b.bid, b.bposition, b.weight, c.bid, c.bposition, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bposition = a.bposition AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bposition = a.bposition AND c.weight = a.weight+1) ORDER BY a.bposition, a.weight');
     while (list($bid, $bkey, $title, $url, $bposition, $weight, $active, $blanguage, $blockfile, $view, $expire, $action, $con1, $bposition1, $weight1, $con2, $bposition2, $weight2) = $db->sql_fetchrow($result)) {
         if (($expire && $expire < time()) || (!$active && $expire)) {
             if ($action == "d") {
-                $db->sql_query("UPDATE ".PREFIX_DB."_blocks SET active = '0', expire = '0' WHERE bid = '".$bid."'");
+                $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET active = 0, expire = 0 WHERE bid = :bid', ['bid' => $bid]);
             } elseif ($action == "r") {
-                $db->sql_query("DELETE FROM ".PREFIX_DB."_blocks WHERE bid = '".$bid."'");
+                $db->sql_query('DELETE FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]);
             }
         }
         $weight_minus = $weight - 1;
@@ -740,66 +670,72 @@ function ajax_block() {
     return $cont;
 }
 
-function blocks_order() {
+function blocks_order(): void {
     global $db;
-    $typ = intval($_GET['typ']);
-    $ordern = intval($_GET['ordern']);
-    $id = intval($_GET['id']);
-    $cid = intval($_GET['cid']);
-    $db->sql_query("UPDATE ".PREFIX_DB."_blocks SET weight = '".$typ."' WHERE bid = '".$id."'");
-    $db->sql_query("UPDATE ".PREFIX_DB."_blocks SET weight = '".$ordern."' WHERE bid = '".$cid."'");
+    $typ    = getVar('get', 'typ',    'num', 0);
+    $ordern = getVar('get', 'ordern', 'num', 0);
+    $id     = getVar('get', 'id',     'num', 0);
+    $cid    = getVar('get', 'cid',    'num', 0);
+    $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :typ    WHERE bid = :id',  ['typ' => $typ,    'id' => $id]);
+    $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :ordern WHERE bid = :cid', ['ordern' => $ordern, 'cid' => $cid]);
     echo ajax_block();
 }
 
 # Favorites list view
-function fav_aliste() {
+function fav_aliste(int $obj = 0): string {
     global $db, $conffav, $conf, $confu;
-    $arg = func_get_args();
-    $obj = empty($arg[0]) ? 0 : 1;
-    
     $newlistnum = intval($conffav['anum']);
-    $num = (empty($_GET['cid'])) ? "1" : intval($_GET['cid']);
+    $num = getVar('get', 'cid', 'num', 1);
     $offset = ($num-1) * $newlistnum;
     $offset = intval($offset);
-    list($fav_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_favorites"));
+    list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
     
-    $result = $db->sql_query("SELECT id, modul FROM ".PREFIX_DB."_favorites ORDER BY id DESC LIMIT ".$offset.", ".$newlistnum);
+    $result = $db->sql_query('SELECT id, modul FROM '.PREFIX_DB.'_favorites ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum));
     while (list($id, $modul) = $db->sql_fetchrow($result)) $fmassiv[$modul][] = $id;
     
     if (is_array($fmassiv)) {
         foreach ($fmassiv as $key => $val) {
-            $fid = implode(",", $val);
+            $ids = array_values(array_filter(array_map('intval', $val), static fn($v) => $v > 0));
+            if (!$ids) continue;
+            $pp = [];
+            $pm = [];
+            foreach ($ids as $k => $v) {
+                $ph = 'f'.$k;
+                $pp[] = ':'.$ph;
+                $pm[$ph] = $v;
+            }
+            $in = implode(', ', $pp);
             $numl = count($val);
             if ($key == "faq") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_faq AS n ON (f.fid = n.fid) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_faq AS n ON (f.fid = n.fid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "files") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_files AS n ON (f.fid = n.lid) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_files AS n ON (f.fid = n.lid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "forum") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_forum AS n ON (f.fid = n.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "help") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_help AS n ON (f.fid = n.sid) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_help AS n ON (f.fid = n.sid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "links") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_links AS n ON (f.fid = n.lid) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid = n.lid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "media") {
                 $confm = $conf['media'] ?? [];
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, n.subtitle, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_media AS n ON (f.fid = n.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, n.subtitle, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_media AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $subtitle, $uname) = $db->sql_fetchrow($result)) {
                     $title = ($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;
                     $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
                 }
             } elseif ($key == "news") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_news AS n ON (f.fid = n.sid) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_news AS n ON (f.fid = n.sid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "pages") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_pages AS n ON (f.fid = n.pid) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_pages AS n ON (f.fid = n.pid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "shop") {
-                $result = $db->sql_query("SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM ".PREFIX_DB."_favorites AS f LEFT JOIN ".PREFIX_DB."_products AS n ON (f.fid = n.id) LEFT JOIN ".PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.id IN (".$fid.") ORDER BY f.id DESC LIMIT 0, ".$numl."");
+                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             }
         }
@@ -827,30 +763,28 @@ function fav_aliste() {
     } else {
         $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
     }
-    if ($obj) { return $cont; } else { echo $cont; }
+    if ($obj) { return $cont; }
+    echo $cont;
+    return '';
 }
 
 # Favorites delete
-function fav_adel() {
+function fav_adel(): void {
     global $db;
-    $id = intval($_GET['id']);
-    $db->sql_query("DELETE FROM ".PREFIX_DB."_favorites WHERE id = '".$id."'");
-    return fav_aliste(0);
+    $id = getVar('get', 'id', 'num', 0);
+    $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
+    fav_aliste(0);
 }
 
 # Private messages list view
-function ajax_privat() {
+function ajax_privat(int $obj = 0): string {
     global $db, $confu, $confpr;
-    $arg = func_get_args();
-    $obj = empty($arg[0]) ? 0 : 1;
-    
     $newlistnum = intval($confpr['anum']);
-    $num = empty($_GET['cid']) ? "1" : intval($_GET['cid']);
-    $offset = ($num - 1) * $newlistnum;
-    $offset = intval($offset);
-    list($fav_num) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat"));
-    
-    $result = $db->sql_query("SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.status, i.user_name, o.user_name FROM ".PREFIX_DB."_privat AS p LEFT JOIN ".PREFIX_DB."_users AS i ON (p.uidin = i.user_id) LEFT JOIN ".PREFIX_DB."_users AS o ON (p.uidout = o.user_id) ORDER BY p.date DESC LIMIT ".$offset.", ".$newlistnum);
+    $num    = getVar('get', 'cid', 'num', 1);
+    $offset = intval(($num - 1) * $newlistnum);
+    list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat'));
+
+    $result = $db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.status, i.user_name, o.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.user_id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.user_id) ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum));
     if ($db->sql_numrows($result) > 0) {
         $cont = "<table class=\"sl_table_list\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._PRSE."</th><th>"._PRRE."</th><th>"._DATE."</th><th>"._STATUS."</th><th>"._FUNCTIONS."</th></tr></thead><tbody>";
         while (list($id, $uidin, $uidout, $title, $content, $date, $status, $user_re, $user_se) = $db->sql_fetchrow($result)) {
@@ -873,33 +807,35 @@ function ajax_privat() {
     } else {
         $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
     }
-    if ($obj) { return $cont; } else { echo $cont; }
+    if ($obj) { return $cont; }
+    echo $cont;
+    return '';
 }
 
 # Private message delete
-function ajax_privat_del() {
+function ajax_privat_del(): void {
     global $db;
-    $id = intval($_GET['id']);
-    $db->sql_query("DELETE FROM ".PREFIX_DB."_privat WHERE id = '".$id."'");
-    return ajax_privat(0);
+    $id = getVar('get', 'id', 'num', 0);
+    $db->sql_query('DELETE FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $id]);
+    ajax_privat(0);
 }
 
 # Show uploads files for admin
-function ashow_files() {
+function ashow_files(): void {
     global $user, $conf;
     $confup = $conf['uploads'] ?? [];
-    $id = isset($_GET['id']) ? analyze($_GET['id']) : 0;
-    $dir = isset($_GET['dir']) ? strtolower($_GET['dir']) : "";
-    $gzip = isset($_GET['cid']) ? intval($_GET['cid']) : 0;
-    $con = explode("|", (string)($confup[$dir] ?? ''));
+    $id   = analyze(getVar('get', 'id',   'text', ''));
+    $dir  = strtolower(getVar('get', 'dir',  'text', ''));
+    $gzip = getVar('get', 'cid',  'num',  0);
+    $con  = explode("|", (string)($confup[$dir] ?? ''));
     $connum = (!empty($con[7]) && intval($con[7])) ? $con[7] : "50";
-    $file = isset($_GET['file']) ? text_filter($_GET['file']) : "";
-    $num = ($gzip) ? $gzip : "1";
+    $file = text_filter(getVar('get', 'file', 'text', ''));
+    $num  = ($gzip) ? $gzip : "1";
     $path = ($id == 1) ? "uploads/".$dir."/" : "uploads/".$dir."/thumb/";
     if (is_dir($path)) {
         if ($file && $dir) {
             if (!$gzip) {
-                @unlink($path.$file);
+                if (file_exists($path.$file)) unlink($path.$file);
             } else {
                 zip_compress($path.$file, $path.$file);
             }
@@ -947,49 +883,13 @@ function ashow_files() {
     echo $content;
 }
 
-# DELETE
-# Navi admin bookmarks
-/*
-function navi_gen() {
-    global $afile;
-    $narg = func_get_args();
-    $menutab = empty($narg[11]) ? "menutab" : $narg[11];
-    $cont = "<ul id=\"".$menutab."\" class=\"reset tabmenu\">";
-    $k = 0;
-    foreach ($narg[4] as $val) {
-        if ($val != "") {
-            $sel = ($k == $narg[8]) ? " class=\"selected\"" : "";
-            if ($narg[9]) {
-                $scont = "<ul id=\"".$menutab."s\" class=\"reset tabsubmenu\">";
-                $l= 0;
-                foreach ($narg[6] as $vals) {
-                    if ($vals != "") {
-                        $ssel = ($l== $narg[10]) ? " class=\"selected\"" : "";
-                        $hrefs = ($narg[5][$l]) ? "href=\"".$afile.".php?op=".$narg[5][$l] : "rel=\"tabcs".$l."\" href=\"#";
-                        $scont .= "<li><a ".$hrefs."\"".$ssel."><b>".$vals."</b></a></li>";
-                        $l++;
-                    }
-                }
-                $scont .= "</ul>";
-            }
-            $href = ($narg[3][$k]) ? "href=\"".$afile.".php?op=".$narg[3][$k] : "rel=\"tabc".$k."\" href=\"#";
-            $cont .= "<li><a ".$href."\"".$sel."><b>".$val."</b></a></li>";
-            $k++;
-        }
-    }
-    $cont .= (!empty($scont)) ? "</ul>".$scont : "</ul>";
-    return setTemplateBasic('title', ['{%title%}' => $narg[0], '{%icon%}' => $narg[1], '{%subtitle%}' => $narg[2], '{%content%}' => $cont]);
-}
-*/
-
 # Format comments access
-function com_access() {
-    $arg = func_get_args();
-    $class = ($arg[2]) ? " class=\"".$arg[2]."\"" : "";
-    $cont = "<select name=\"".$arg[0]."\"".$class.">";
-    $mods = array(_DEACTIVATE, _APOSTMOD, _APOSTNOMOD);
+function com_access(string $name, int $selected, string $extraClass = ''): string {
+    $class = $extraClass ? " class=\"".$extraClass."\"" : "";
+    $cont  = "<select name=\"".$name."\"".$class.">";
+    $mods  = [_DEACTIVATE, _APOSTMOD, _APOSTNOMOD];
     for ($i = 0; $i < count($mods); $i++) {
-        $sel = ($arg[1] == $i) ? " selected" : "";
+        $sel   = ($selected == $i) ? " selected" : "";
         $cont .= "<option value=\"".$i."\"".$sel.">".$mods[$i]."</option>";
     }
     $cont .= "</select>";
@@ -997,17 +897,22 @@ function com_access() {
 }
 
 # Add voting
-function add_voting() {
+function add_voting(string $modul, string $selectName, int $selectedId, string $extraClass = ''): string {
     global $db, $locale, $conf;
-    $arg = func_get_args();
-    $modul = analyze($arg[0]);
-    $querylang = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND modul = '".$modul."' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '".$modul."' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
-    $class = ($arg[3]) ? "sl_field ".$arg[3] : "sl_field";
-    $cont = "<select name=\"".$arg[1]."\" class=\"".$class."\"><option value=\"0\">"._NO."</option>";
-    $result = $db->sql_query("SELECT id, title FROM ".PREFIX_DB."_voting WHERE ".$querylang." ORDER BY id DESC");
+    $modul  = analyze($modul);
+    $class  = $extraClass ? "sl_field ".$extraClass : "sl_field";
+    $params = ['modul' => $modul];
+    if ($conf['multilingual'] == 1) {
+        $where  = "(language = :locale OR language = '') AND modul = :modul AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $params['locale'] = $locale;
+    } else {
+        $where  = "modul = :modul AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+    }
+    $cont   = "<select name=\"".$selectName."\" class=\"".$class."\"><option value=\"0\">"._NO."</option>";
+    $result = $db->sql_query('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $params);
     if ($db->sql_numrows($result) > 0) {
         while (list($id, $title) = $db->sql_fetchrow($result)) {
-            $sel = ($arg[2] == $id) ? " selected" : "";
+            $sel   = ($selectedId == $id) ? " selected" : "";
             $cont .= "<option value=\"".$id."\"".$sel.">".$title."</option>";
         }
     }
@@ -1016,16 +921,15 @@ function add_voting() {
 }
 
 # Edit select list
-function edit_list() {
-    $arg = func_get_args();
-    $modul = analyze($arg[0]);
-    $class = ($arg[2]) ? " class=\"".$arg[2]."\"" : "";
-    $cont = "<select name=\"".$arg[1]."\" title=\""._CHECKOP."\"".$class.">";
+function edit_list(string $modul, string $name, string $extraClass = ''): string {
+    $modul = analyze($modul);
+    $class = $extraClass ? " class=\"".$extraClass."\"" : "";
+    $cont  = "<select name=\"".$name."\" title=\""._CHECKOP."\"".$class.">";
     $cont .= "<optgroup label=\""._OPMOD."\" class=\"sl_label\">";
-    $mass = array(_ACTIVATE => "a1", _DEACTIVATE => "a0", _FIXED => "f1", _LNFIX => "f0", _LHOME => "h1", _LNHOME => "h0", _LADATE => "t", _DELETE => "d");
+    $mass = [_ACTIVATE => "a1", _DEACTIVATE => "a0", _FIXED => "f1", _LNFIX => "f0", _LHOME => "h1", _LNHOME => "h0", _LADATE => "t", _DELETE => "d"];
     foreach ($mass as $var_n => $var_v) $cont .= "<option value=\"".$var_v."\">".$var_n."</option>";
     $cont .= "</optgroup><optgroup label=\""._COMMENTS."\" class=\"sl_label\">";
-    $coms = array(_DEACTIVATE => "c0", _APOSTMOD => "c1", _APOSTNOMOD => "c2");
+    $coms = [_DEACTIVATE => "c0", _APOSTMOD => "c1", _APOSTNOMOD => "c2"];
     foreach ($coms as $var_n => $var_v) $cont .= "<option value=\"".$var_v."\">".$var_n."</option>";
     $cont .= "</optgroup><optgroup label=\""._MOVETO."\" class=\"sl_label\">".getcat($modul, "", "", "", "", "1")."</optgroup>";
     $cont .= "</select>";
@@ -1033,17 +937,15 @@ function edit_list() {
 }
 
 # DELETE OLD / View and edit info
-function adm_info() {
+function adm_info(int $obj = 0, string $modArg = '', string $fileArg = ''): string {
     global $locale, $conf;
-    $arg = func_get_args();
-    $obj = empty($arg[0]) ? 0 : 1;
-    $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+    $id   = getVar('post', 'id', 'num', 0);
     $cont = "";
     if ($conf['adminfo'] && $id) {
-        $mod = isset($_POST['mod']) ? var_filter($_POST['mod']) : "";
-        $name = isset($_POST['name']) ? var_filter($_POST['name']) : "";
-        $content = save_text(trim($_POST['text']));
-        $fpdir = $mod."admin/info/".$name.".html";
+        $mod     = var_filter(getVar('post', 'mod',  'text', ''));
+        $name    = var_filter(getVar('post', 'name', 'text', ''));
+        $content = save_text(trim(getVar('post', 'text', 'raw', '')));
+        $fpdir   = $mod."admin/info/".$name.".html";
         if ($content) {
             $fp = fopen($fpdir, "wb");
             fwrite($fp, $content);
@@ -1051,10 +953,10 @@ function adm_info() {
         }
         $thefile = (file_exists($fpdir)) ? file_get_contents($fpdir) : _NO_INFO;
     } else {
-        $mod = ($arg[1]) ? "modules/".$arg[1]."/" : "";
-        $file = ($arg[2]) ? $arg[2]."-" : "";
-        $name = $file.$locale;
-        $dir = $mod."admin/info/".$name.".html";
+        $mod     = $modArg  ? "modules/".$modArg."/" : "";
+        $file    = $fileArg ? $fileArg."-" : "";
+        $name    = $file.$locale;
+        $dir     = $mod."admin/info/".$name.".html";
         $thefile = (file_exists($dir)) ? file_get_contents($dir) : _NO_INFO;
         if ($conf['adminfo']) {
             $cont .= checkPerms(BASE_DIR.'/'.$dir);
@@ -1069,5 +971,7 @@ function adm_info() {
         ."</table></form>";
     }
     $cont .= setTemplateBasic('close');
-    if ($obj) { return $cont; } else { echo $cont; }
+    if ($obj) { return $cont; }
+    echo $cont;
+    return '';
 }
