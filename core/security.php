@@ -286,12 +286,20 @@ if ($confs['error_log']) {
 
     // Bounded request context (structured, no raw superglobal dumps)
     $lctx = function() use ($lbound): array {
-        return [
-            'query' => $lbound($_GET ?? []),
-            'post' => $lbound($_POST ?? []),
-            'cookie_keys' => array_keys($_COOKIE ?? []),
-            'session_keys' => (session_status() === PHP_SESSION_ACTIVE) ? array_keys($_SESSION ?? []) : [],
-        ];
+        $q = $lbound($_GET ?? []);
+        if ($q === []) $q = new stdClass();
+        $p = $lbound($_POST ?? []);
+        if ($p === []) $p = new stdClass();
+        $ck = array_keys($_COOKIE ?? []);
+        $cktr = count($ck) > 50;
+        if ($cktr) $ck = array_slice($ck, 0, 50);
+        $sk = (session_status() === PHP_SESSION_ACTIVE) ? array_keys($_SESSION ?? []) : [];
+        $sktr = count($sk) > 50;
+        if ($sktr) $sk = array_slice($sk, 0, 50);
+        $ctx = ['query' => $q, 'post' => $p, 'cookie_keys' => $ck, 'session_keys' => $sk];
+        if ($cktr) $ctx['cookie_keys_truncated'] = true;
+        if ($sktr) $ctx['session_keys_truncated'] = true;
+        return $ctx;
     };
 
     // Common request fields
@@ -381,15 +389,15 @@ if ($confs['error_log']) {
             503 => 'HTTP/1.1 503 Service Unavailable',
             504 => 'HTTP/1.1 504 Gateway Time-out',
         ];
-        $http_msg = $http[$error] ?? null;
-        if ($http_msg) {
+        $httpmsg = $http[$error] ?? null;
+        if ($httpmsg) {
             $log = LOGS_DIR . '/error_site.log';
-            $fp = $lfp('site', '', '', $http_msg);
+            $fp = $lfp('site', '', '', $httpmsg);
             $row = array_merge([
                 'ts' => date('c'),
                 'level' => 'error',
                 'type' => 'site',
-                'msg' => $http_msg,
+                'msg' => $httpmsg,
                 'http_code' => $error,
                 'module' => isset($_GET['name']) ? $ls((string)$_GET['name'], 50) : null,
                 'op' => isset($_GET['op']) ? $ls((string)$_GET['op'], 50) : null,
@@ -398,15 +406,15 @@ if ($confs['error_log']) {
             $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
             if ($line !== false) { $lwrite($log, $line); }
         }
-        unset($http, $http_msg);
+        unset($http, $httpmsg);
         setExit('Error ' . $error, 1);
     }
 
     # PHP errors → error_php.log
-    function error_reporting_log($error_num, $error_var, $error_file, $error_line) {
+    function error_reporting_log($errno, $errmsg, $errfile, $errline) {
         global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
         // level: error|warning|notice  php_err: human label
-        $level_map = [
+        $levelmap = [
             1 => ['error', 'ERROR'],
             2 => ['warning', 'WARNING'],
             4 => ['error', 'PARSE'],
@@ -423,18 +431,18 @@ if ($confs['error_log']) {
             8192 => ['notice', 'DEPRECATED'], // notice — not warning
             16384 => ['notice', 'USER_DEPRECATED'], // notice — not warning
         ];
-        [$level, $php_err] = $level_map[$error_num] ?? ['error', 'UNKNOWN'];
+        [$level, $phperr] = $levelmap[$errno] ?? ['error', 'UNKNOWN'];
         $log = LOGS_DIR . '/error_php.log';
-        $fp = $lfp('php', $error_file, (string)$error_line, (string)$error_var);
+        $fp = $lfp('php', $errfile, (string)$errline, (string)$errmsg);
         $row = array_merge([
             'ts' => date('c'),
             'level' => $level,
             'type' => 'php',
-            'msg' => $ls((string)$error_var, 1024),
-            'php_errno' => $error_num,
-            'php_err' => $php_err,
-            'file' => $error_file,
-            'line' => (int)$error_line,
+            'msg' => $ls((string)$errmsg, 1024),
+            'php_errno' => $errno,
+            'php_err' => $phperr,
+            'file' => $errfile,
+            'line' => (int)$errline,
             'fingerprint' => $fp,
         ], $lreq(), $lctx(), $lmem());
         $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
@@ -504,12 +512,13 @@ if ($confs['error_log']) {
     function error_sql_log($errno, $error, $sql) {
         global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
         $log = LOGS_DIR . '/error_sql.log';
-        $sql_orig = (string)$sql;
-        $sql_bytes = strlen($sql_orig);
-        $sql_hash = hash('sha256', $sql_orig);
+        $sqlorig = (string)$sql;
+        $sqlbytes = strlen($sqlorig);
+        $sqlhash = hash('sha256', $sqlorig);
         // Redact quoted string literals, then truncate
-        $sql_safe = preg_replace("/'[^']{0,256}'/u", "'?'", $sql_orig);
-        $sql_safe = substr($sql_safe, 0, 2000) . (strlen($sql_safe) > 2000 ? ' [TRUNCATED]' : '');
+        $sqlsafe = preg_replace("/'[^']{0,256}'/u", "'?'", $sqlorig);
+        $tr = strlen($sqlsafe) > 2000;
+        $sqlsafe = substr($sqlsafe, 0, 2000) . ($tr ? ' [TRUNCATED]' : '');
         $msg = 'SQL error ' . $errno . ': ' . $ls((string)$error, 256);
         $fp = $lfp('sql', '', '', (string)$error);
         $row = array_merge([
@@ -519,9 +528,9 @@ if ($confs['error_log']) {
             'msg' => $msg,
             'sql_errno' => (int)$errno,
             'sql_state' => null,
-            'sql' => $sql_safe,
-            'sql_hash' => $sql_hash,
-            'sql_bytes' => $sql_bytes,
+            'sql' => $sqlsafe,
+            'sql_hash' => $sqlhash,
+            'sql_bytes' => $sqlbytes,
             'fingerprint' => $fp,
         ], $lreq(), $lctx(), $lmem());
         $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
