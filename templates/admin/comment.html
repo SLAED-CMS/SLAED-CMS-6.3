@@ -1,44 +1,44 @@
-<div id="$arg[1]" $arg[25]>
+<div id="{%id%}" {%hclass%}>
 	<table class="sl_table_basic"><thead>
 		<tr>
 			<th>
-				<a OnClick="HideShow(&#039;c-form-$arg[1]&#039;, &#039;blind&#039;, &#039;up&#039;, 500);"><b>$arg[2]</b></a>
+				<a OnClick="HideShow(&#039;c-form-{%id%}&#039;, &#039;blind&#039;, &#039;up&#039;, 500);"><b>{%username%}</b></a>
 				<div class="sl_drop">
-					<div id="c-form-$arg[1]" class="sl_drop-form">
+					<div id="c-form-{%id%}" class="sl_drop-form">
 						<ul class="list-text">
-							<li>$arg[11]</li>
-							<li>$arg[12]</li>
-							<li>$arg[13]</li>
-							<li>$arg[14]</li>
-							<li>$arg[15]</li>
-							<li>$arg[10]</li>
+							<li>{%group%}</li>
+							<li>{%points%}</li>
+							<li>{%regdate%}</li>
+							<li>{%gender%}</li>
+							<li>{%from%}</li>
+							<li>{%warn%}</li>
 						</ul>
 					</div>
 				</div>
 			</th>
-			<th><span style="float: left;">$arg[3]</span>$arg[4] $arg[5] $arg[26]</th>
+			<th><span style="float: left;">{%date%}</span>{%ip%} {%post_count%} {%checkb%}</th>
 		</tr>
 	</thead>
 	<tbody>
 		<tr>
 			<td style="vertical-align: top; text-align: center;">
-				<div><a title="$arg[2]" class="sl_avatar" style="background-image: url($arg[6]);"></a></div>
-				<div>$arg[7]</div>
-				<div>$arg[8]</div>
+				<div><a title="{%username%}" class="sl_avatar" style="background-image: url({%avatar%});"></a></div>
+				<div>{%rank%}</div>
+				<div>{%rank_link%}</div>
 			</td>
 			<td style="position: relative; width: 80%; height: 100%;">
-				<div style="position: absolute; top: 4px;">$arg[16]</div>
-				<div style="position: absolute; bottom: 4px;">$arg[17]</div>
+				<div style="position: absolute; top: 4px;">{%text%}</div>
+				<div style="position: absolute; bottom: 4px;">{%sig%}</div>
 			</td>
 		</tr>
 		<tr>
 			<td>
 				<div class="min-rate">
-					<div class="rate-like-box">$arg[9]</div>
+					<div class="rate-like-box">{%user_rate%}</div>
 				</div>
 			</td>
 			<td>
-				<div style="float: left;">$arg[19] $arg[20] $arg[21] $arg[22] $arg[23]</div><div style="float: right;">$arg[24]</div>
+				<div style="float: left;">{%btn_pm%} {%btn_profile%} {%btn_web%} {%btn_warn%} {%btn_thank%}</div><div style="float: right;">{%btn_edit%}</div>
 			</td>
 		</tr>
 	</tbody></table>

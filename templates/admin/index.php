@@ -1,13 +1,13 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2018 SLAED
+# Copyright Â© 2005 - 2018 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 function setTemplateHead($sub, $val = '') {
-	global $theme, $user, $conf, $confu, $db, $blocks, $admin, $admin_file;
+	global $theme, $user, $conf, $confu, $db, $blocks, $admin, $afile;
 	$langs = $menu = $blocks = $login = '';
 	if (is_admin()) {
 		if ($conf['multilingual'] == 1) {
@@ -16,7 +16,7 @@ function setTemplateHead($sub, $val = '') {
 				if (preg_match('#^(.+)\.php#', $file, $matches)) {
 					$lfound = $matches[1];
 					$title = deflang($lfound);
-					$langs .= '<a href="'.$admin_file.'.php?newlang='.$lfound.'"><img src="'.img_find('language/'.$lfound.'_mini.png').'" alt="'.$title.'" title="'.$title.'"></a>';
+					$langs .= '<a href="'.$afile.'.php?newlang='.$lfound.'"><img src="'.img_find('language/'.$lfound.'_mini.png').'" alt="'.$title.'" title="'.$title.'"></a>';
 				}
 			}
 			closedir($dir);
@@ -24,18 +24,18 @@ function setTemplateHead($sub, $val = '') {
 		if (!is_admin_god()) {
 			$uname = _HELLO.', '.substr($admin[1], 0, 25).'!';
 			$menu = '<li class="sl_first"><a href="#" title="'.$uname.'"><b>'.$uname.'</b></a></li>'
-			.'<li><a href="'.$admin_file.'.php" title="'._ADMINMENU.'"><b>'._HOME.'</b></a></li>'
+			.'<li><a href="'.$afile.'.php" title="'._ADMINMENU.'"><b>'._HOME.'</b></a></li>'
 			.'<li><a href="index.php" target="_blank" title="'._SITE.'"><b>'._SITE.'</b></a></li>'
 			.'<li><a href="index.php?name=account" target="_blank" title="'._ACCOUNT.'"><b>'._ACCOUNT.'</b></a></li>'
-			.'<li><a href="'.$admin_file.'.php?op=logout" title="'._LOGOUT.'"><b>'._LOGOUT.'</b></a></li>';
+			.'<li><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'"><b>'._LOGOUT.'</b></a></li>';
 		} else {
-			$menu = '<li class="sl_first"><a href="'.$admin_file.'.php" title="'._ADMINMENU.'"><b>'._HOME.'</b></a></li>'
-			.'<li><a href="'.$admin_file.'.php?op=blocks_show" title="'._BLOCKS.'"><b>'._BLOCKS.'</b></a></li>'
-			.'<li><a href="'.$admin_file.'.php?op=module" title="'._MODULES.'"><b>'._MODULES.'</b></a></li>'
-			.'<li><a href="'.$admin_file.'.php?op=cat_show" title="'._CATEGORIES.'"><b>'._CATEGORIES.'</b></a></li>'
+			$menu = '<li class="sl_first"><a href="'.$afile.'.php" title="'._ADMINMENU.'"><b>'._HOME.'</b></a></li>'
+			.'<li><a href="'.$afile.'.php?op=blocks_show" title="'._BLOCKS.'"><b>'._BLOCKS.'</b></a></li>'
+			.'<li><a href="'.$afile.'.php?op=module" title="'._MODULES.'"><b>'._MODULES.'</b></a></li>'
+			.'<li><a href="'.$afile.'.php?op=cat_show" title="'._CATEGORIES.'"><b>'._CATEGORIES.'</b></a></li>'
 			.'<li><a href="index.php" target="_blank" title="'._SITE.'"><b>'._SITE.'</b></a></li>'
 			.'<li><a href="index.php?name=account" target="_blank" title="'._ACCOUNT.'"><b>'._ACCOUNT.'</b></a></li>'
-			.'<li><a href="'.$admin_file.'.php?op=logout" title="'._LOGOUT.'"><b>'._LOGOUT.'</b></a></li>';
+			.'<li><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'"><b>'._LOGOUT.'</b></a></li>';
 		}
 		$blocks = getAdminPanelBlocks().admininfo().adminblock();
 	} else {

@@ -134,13 +134,13 @@ function setTemplateHead($sub, $val = '') {
 		$uname = htmlspecialchars(substr($user[1], 0, 25));
 		$userinfo = getusrinfo();
 		$user_avatar = (file_exists($confu['adirectory'].'/'.$userinfo['user_avatar'])) ? $userinfo['user_avatar'] : 'default/00.gif';
-		$cont = tpl_eval('login-logged', _ACCOUNT, $confu['adirectory'].'/'.$user_avatar, $uname, _LOGOUT);
+		$cont = setTemplateBasic('login-logged', ['{%title%}' => _ACCOUNT, '{%avatar%}' => $confu['adirectory'].'/'.$user_avatar, '{%user%}' => $uname, '{%logout%}' => _LOGOUT]);
 	} else {
 		if ($confu['enter'] == 1) {
 			$captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-			$cont = tpl_eval('login', _LOGIN, _NICKNAME, _PASSWORD, $captcha, _LOGIN, _PASSFOR, _REG);
+			$cont = setTemplateBasic('login', ['{%login%}' => _LOGIN, '{%nickname%}' => _NICKNAME, '{%password%}' => _PASSWORD, '{%captcha%}' => $captcha, '{%lost%}' => _PASSFOR, '{%register%}' => _REG]);
 		} else {
-			$cont = tpl_eval('login-without', _BREG);
+			$cont = setTemplateBasic('login-without', ['{%register%}' => _BREG]);
 		}
 	}
 	$mname = ($conf['name']) ? deflmconst($conf['name']) : '';
