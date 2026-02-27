@@ -165,7 +165,24 @@ function view() {
 	$result = $db->sql_query('SELECT s.sid, s.pid, s.catid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) WHERE (s.sid = :id1 OR s.pid = :id2) AND s.uid = :uid AND s.time <= NOW() '.$cwhere.' ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id, 'uid' => $uid]);
 	if ($db->sql_numrows($result) > 0) {
 		$db->sql_query('UPDATE '.PREFIX_DB.'_help SET counter = counter+1 WHERE sid = :id', ['id' => $id]);
-		setHead();
+		list($seotitle, $seohometext, $seotime, $seoctitle, $seoauthor_name) = $db->sql_fetchrow($db->sql_query(
+			'SELECT s.title, s.hometext, s.time, c.title, u.user_name FROM '.PREFIX_DB.'_help AS s '.
+			'LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) '.
+			'LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) '.
+			'WHERE s.sid = :id AND s.uid = :uid '.$cwhere, ['id' => $id, 'uid' => $uid]
+		));
+		$seodesc   = cutstr(trim(strip_tags(bb_decode($seohometext, $conf['name']))), 160);
+		$seoimg    = getImgText($seohometext, '', false);
+		$seoimg    = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
+		$seoauthor = $seoauthor_name ?: $conf['sitename'];
+		setHead([
+			'title'  => $seotitle,
+			'ctitle' => $seoctitle,
+			'desc'   => $seodesc,
+			'img'    => $seoimg,
+			'time'   => $seotime,
+			'author' => $seoauthor,
+		]);
 		$cont = navigate(_HELPINFO);
 		$a = 0;
 		while (list($hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $user_name) = $db->sql_fetchrow($result)) {
@@ -189,7 +206,7 @@ function view() {
 			} else {
 				$reads = $ctitle = $cimg = $favorites = $goback = '';
 			}
-			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $hid, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => '', '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
+			$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => !$pid], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $hid, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => '', '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
 			$a++;
 		}
 		$cont .= add_view($id);
