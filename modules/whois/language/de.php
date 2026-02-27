@@ -24,4 +24,3 @@ define("_WHOIS_NOL","hat nicht die offizielle Lizenz");
 define("_WHOIS_PR","Pr&#252;fung starten");
 define("_WHOIS_SUCH","Ergebnis der Suche");
 define("_WHOIS_TEXT","<fieldset><legend>Regeln der Domain Pr&#252;fung</legend>&bull; Geben Sie keine Erweiterung wie \"com\" oder \"net.in\" ein, sondern wдhlen Sie diese aus der Liste aus.<br>&bull; Beginnen Sie die Zeile nicht mit \"www\". Geben Sie nur den Namen ein den Sie pr&#252;fen wollen.<br>&bull; Erlaubt sind 0-9, a-z und \"-\" , alle anderen Zeichen wie &#228;&#246;&#252; und Leerzeichen sind nicht erlaubt.</fieldset><fieldset><legend>M&#246;gliche Fehler bei der Domain Pr&#252;fung</legend>&bull; Domain ist zu lang, es soll von 3 bis zu 57 Symbolen enthalten.<br>&bull; Domain soll nur aus den Buchstaben des englischen Alphabetes bestehen, Zahlen sind auch m&#246;glich.<br>&bull; Keine Verbindung mit Whois-Server. Versuchen Sie es sp&#228;ter noch einmal.</fieldset>");
-?>

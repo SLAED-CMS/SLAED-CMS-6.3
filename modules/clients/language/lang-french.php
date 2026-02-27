@@ -14,4 +14,3 @@ define("_CVERSION","Version");
 define("_GZIPGEN","Cr&#233;er un fichier d'archive avec le syst&#232;me");
 define("_GZIPOK","Archive a &#233;t&#233; cr&#233;&#233; avec succ&#232;s, et pour son t&#233;l&#233;chargement, cliquez sur le bouton appropri&#233;.");
 define("_PRODUCTSINFO","T&#233;l&#233;chargements de produits");
-?>

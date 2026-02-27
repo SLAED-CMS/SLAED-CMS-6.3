@@ -24,4 +24,3 @@ define("_WHOIS_NOL","does not have a formal license");
 define("_WHOIS_PR","Check");
 define("_WHOIS_SUCH","Search result");
 define("_WHOIS_TEXT","<fieldset><legend>Validation Rules domains</legend>&bull; When checking the third-level domain, for example, in the area of pp.ruin the field you should enter only the word before the domain zone, for example, mysite - in this case will be checked by the domain mysite.pp.ru.<br>&bull; Do Not enter \"www\" in front of the checked the domain name.<br>&bull; Valid Characters in a domain name: 0-9, a-z and \"-\".</fieldset><fieldset><legend>Possible error in checking</legend>&bull; Domain name is too long or short, it must contain from 3 to 57 characters.<br>&bull; Domain name must consist only of letters of the English alphabet, digits, there may be hyphens.<br>&bull; It is Impossible to establish a connection with a whois server. Try to check the domain later.</fieldset>");
-?>

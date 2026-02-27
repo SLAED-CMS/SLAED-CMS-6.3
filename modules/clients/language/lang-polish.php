@@ -14,4 +14,3 @@ define("_CVERSION","Wersja");
 define("_GZIPGEN","Utworzy&#263; archiwum z systemem");
 define("_GZIPOK","Archiwum pomy&#347;lnie utworzony, do pobrania, kliknij odpowiedni przycisk.");
 define("_PRODUCTSINFO","Pobieranie produkt&#243;w");
-?>
