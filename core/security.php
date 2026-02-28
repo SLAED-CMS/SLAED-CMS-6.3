@@ -22,8 +22,8 @@ unset($name, $file, $admin, $user, $admintrue, $godtrue, $usertrue, $aid, $uname
 # Set the default timezone
 date_default_timezone_set($conf['gtime']);
 
-# Language on
-getLang();
+# Language on — init locale, load main language file, set cookie
+setLang();
 
 # Database connection using unified config
 require_once BASE_DIR.'/core/classes/pdo.php';
@@ -794,22 +794,17 @@ function get_referer() {
     return $refer;
 }
 
-# Load language files and return the active locale code.
-# $module — module name ('news', 'admin', etc.) or '' for main file only.
-# $admin  — true loads modules/{module}/admin/language/ instead of modules/{module}/language/
-function getLang(string $module = '', bool $admin = false): string {
+# Determine active locale, load main language file, set language cookie.
+# Called once per request from bootstrap — never call from modules.
+function setLang(): void {
     global $locale, $conf;
-
-    static $mload = false;  // main language file loaded flag
-    static $lmods = [];     // module load cache (module|ctx|lang => bool)
 
     $mlang = (string)($conf['language'] ?? 'en');
     $mult  = ((int)($conf['multilingual'] ?? 0) === 1);
-    $rlang = getVar('req', 'newlang', 'var', '');
-    $clang = getCookies('language');
 
-    // determine active locale
     if ($mult) {
+        $rlang = getVar('req', 'newlang', 'var', '');
+        $clang = getCookies('language');
         if ($rlang && is_readable('language/'.$rlang.'.php')) {
             $locale = $rlang;
         } elseif ($clang && is_readable('language/'.$clang.'.php')) {
@@ -817,60 +812,58 @@ function getLang(string $module = '', bool $admin = false): string {
         } else {
             $locale = $mlang;
         }
+        if (!$clang || $clang !== $locale) {
+            setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $locale);
+        }
     } else {
         $locale = $mlang;
     }
 
-    // set cookie only when locale changes
-    if (!$clang || $clang !== $locale) {
-        setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $locale);
-    }
+    $file = 'language/'.$locale.'.php';
+    require_once is_readable($file) ? $file : 'language/'.$mlang.'.php';
+}
 
-    // load main language file once per request
-    if (!$mload) {
-        $file = 'language/'.$locale.'.php';
-        if (is_readable($file)) {
-            require_once $file;
+# Load module language file and return the active locale.
+# $module — module name ('news', 'admin', etc.) or '' to just return locale.
+# $admin  — true loads modules/{module}/admin/language/ instead of modules/{module}/language/
+function getLang(string $module = '', bool $admin = false): string {
+    global $locale, $conf;
+
+    static $lmods = [];  // module load cache (module|ctx|lang => bool)
+
+    if ($module === '') return $locale;
+
+    $mlang = (string)($conf['language'] ?? 'en');
+    $ctx   = $admin ? 'a' : 'f';
+    $key   = $module.'|'.$ctx.'|'.$locale;
+
+    if (!array_key_exists($key, $lmods)) {
+        if ($module === 'admin') {
+            $list = ['admin/language/'.$locale.'.php', 'admin/language/'.$mlang.'.php'];
+        } elseif ($admin) {
+            $list = [
+                'modules/'.$module.'/admin/language/'.$locale.'.php',
+                'modules/'.$module.'/admin/language/'.$mlang.'.php',
+            ];
         } else {
-            $fall = 'language/'.$mlang.'.php';
-            if (is_readable($fall)) require_once $fall;
+            $list = [
+                'modules/'.$module.'/language/'.$locale.'.php',
+                'modules/'.$module.'/language/'.$mlang.'.php',
+            ];
         }
-        $mload = true;
-    }
-
-    // load module language file (frontend, admin-panel, or module-admin context)
-    if ($module !== '') {
-        $ctx = $admin ? 'a' : 'f';
-        $key = $module.'|'.$ctx.'|'.$locale;
-        if (!array_key_exists($key, $lmods)) {
-            if ($module === 'admin') {
-                $list = ['admin/language/'.$locale.'.php', 'admin/language/'.$mlang.'.php'];
-            } elseif ($admin) {
-                $list = [
-                    'modules/'.$module.'/admin/language/'.$locale.'.php',
-                    'modules/'.$module.'/admin/language/'.$mlang.'.php',
-                ];
-            } else {
-                $list = [
-                    'modules/'.$module.'/language/'.$locale.'.php',
-                    'modules/'.$module.'/language/'.$mlang.'.php',
-                ];
+        $done = false;
+        foreach ($list as $p) {
+            if (is_readable($p)) {
+                require_once $p;
+                $done = true;
+                break;
             }
-            $done = false;
-            foreach ($list as $p) {
-                if (is_readable($p)) {
-                    require_once $p;
-                    $done = true;
-                    break;
-                }
-            }
-            $lmods[$key] = $done;
         }
+        $lmods[$key] = $done;
     }
 
     return $locale;
 }
-
 
 # Zip check
 function zip_check() {
