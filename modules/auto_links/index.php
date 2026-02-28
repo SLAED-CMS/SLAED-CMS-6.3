@@ -8,7 +8,6 @@ if (!defined('MODULE_FILE')) {
     header('Location: ../../index.php');
     exit;
 }
-get_lang($conf['name']);
 
 function navigate(string $title): string {
     global $conf;
@@ -81,23 +80,21 @@ function view(): void {
 }
 
 function add(): void {
-    global $stop, $conf;
-    if (is_user()) {
-        $userinfo = getusrinfo();
-        $mail = getVar('post', 'mail', 'text');
-        $mail = ($mail) ? text_filter($mail) : $userinfo['user_email'];
-        $site = getVar('post', 'site', 'url');
-        $site = ($site) ? $site : $userinfo['user_website'];
-    } else {
-        $mail = getVar('post', 'mail', 'text');
-        $mail = ($mail) ? text_filter($mail) : '';
-        $site = getVar('post', 'site', 'url', 'http://');
-        $site = ($site) ? $site : 'http://';
-    }
-    $name = getVar('post', 'name', 'text');
-    $name = ($name) ? save_text($name, 1) : '';
-    $desc = getVar('post', 'desc', 'text');
-    $desc = ($desc) ? save_text($desc) : '';
+	global $stop, $conf;
+	if (is_user()) {
+		$userinfo = getusrinfo();
+		$mail = getVar('post', 'mail', 'var');
+		$mail = ($mail) ? $mail : $userinfo['user_email'];
+		$site = getVar('post', 'site', 'url');
+		$site = ($site) ? $site : $userinfo['user_website'];
+	} else {
+		$mail = getVar('post', 'mail', 'var');
+		$mail = ($mail) ? $mail : '';
+		$site = getVar('post', 'site', 'url', 'http://');
+		$site = ($site) ? $site : 'http://';
+	}
+	$name = getVar('post', 'name', 'title');
+	$desc = getVar('post', 'desc', 'text');
     
     setHead(['title' => _ADD]);
     $cont = navigate(_ADD);
@@ -117,11 +114,11 @@ function add(): void {
 }
 
 function send(): void {
-    global $db, $user, $stop, $conf;
-    $name = getVar('post', 'name', 'text');
-    $desc = getVar('post', 'desc', 'text');
-    $site = getVar('post', 'site', 'url');
-    $mail = getVar('post', 'mail', 'text');
+	global $db, $user, $stop, $conf;
+	$name = getVar('post', 'name', 'title');
+	$desc = getVar('post', 'desc', 'text');
+	$site = getVar('post', 'site', 'url');
+	$mail = getVar('post', 'mail', 'var');
     $stop = [];
     if (!$name) $stop[] = _CERROR10;
     if (!$desc) $stop[] = _CERROR11;

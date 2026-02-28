@@ -9,7 +9,6 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-get_lang($conf['name']);
 
 function content(): void {
 	global $db, $afile, $conf;

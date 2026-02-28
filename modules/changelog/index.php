@@ -9,7 +9,6 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-get_lang($conf['name']);
 
 const CHLOG_GH_API_TIMEOUT = 10;
 const CHLOG_GH_API_CONNECT_TIMEOUT = 5;
@@ -371,7 +370,8 @@ function chlogGrpDate(array $commits): array {
     return $grouped;
 }
 
-function chlogRenderCommits(array $commits, array $conf): string {
+function chlogRenderCommits(array $commits): string {
+    global $conf;
     $html = '';
     $i = 0;
 
@@ -391,7 +391,7 @@ function chlogRenderCommits(array $commits, array $conf): string {
         }
 
         $statsHtml = '';
-        if (!empty($conf['showstat']) && !empty($commit['files'])) {
+        if (!empty($conf['changelog']['showstat']) && !empty($commit['files'])) {
             $totadd = $totdel = 0;
             foreach ($commit['files'] as $f) {
                 $totadd += $f['added'];
@@ -399,7 +399,7 @@ function chlogRenderCommits(array $commits, array $conf): string {
             }
 
             $filesHtml = '';
-            if (!empty($conf['showfile'])) {
+            if (!empty($conf['changelog']['showfile'])) {
                 $rows = [];
                 foreach ($commit['files'] as $f) {
                     $rows[] = '<div><span class="add">+'.str_pad($f['added'], 3, ' ', STR_PAD_LEFT).'</span> '

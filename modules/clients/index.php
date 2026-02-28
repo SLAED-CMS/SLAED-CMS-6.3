@@ -6,7 +6,6 @@ if (!defined('MODULE_FILE')) {
     header('Location: ../../index.php');
     exit;
 }
-get_lang($conf['name']);
 
 function systems(): void {
 	global $db, $conf, $afile, $user, $stop, $info;

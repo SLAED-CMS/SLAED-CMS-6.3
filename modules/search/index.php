@@ -8,7 +8,6 @@ if (!defined('MODULE_FILE')) {
     header('Location: ../../index.php');
     exit;
 }
-get_lang($conf['name']);
 
 function search_result(): void {
     global $db, $afile, $conf;

@@ -8,7 +8,6 @@ if (!defined('MODULE_FILE')) {
     header('Location: ../../index.php');
     exit;
 }
-get_lang($conf['name']);
 
 function money(): void {
 	global $conf, $stop;
@@ -66,7 +65,6 @@ function money(): void {
 	if ($conf['money']['an']) {
 		$sum = getVar('post', 'sum', 'num');
 		$info = getVar('post', 'info', 'array', []);
-		#$com = save_text($_POST['com'], 1);
 		$com = getVar('post', 'com', 'text');
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		$cont .= setTemplateBasic('open');
