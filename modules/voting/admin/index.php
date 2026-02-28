@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,13 +13,13 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function voting(): void {
-    global $db, $afile, $conf, $confv;
+    global $db, $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0);
     $num = getVar('get', 'num', 'num', 1);
-    $offset = ($num - 1) * $confv['anum'];
+    $offset = ($num - 1) * $conf['voting']['anum'];
     $offset = intval($offset);
-    $result = $db->sql_query('SELECT id, modul, date, enddate, title, language, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$confv['anum']);
+    $result = $db->sql_query('SELECT id, modul, date, enddate, title, language, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['anum']);
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th>';
@@ -27,10 +27,10 @@ function voting(): void {
         $cont .= '<th>'._MODUL.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $modul, $date, $enddate, $title, $language, $typ] = $db->sql_fetchrow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
-                $ad_view = (!$modul) ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||' : '';
+                $view = (!$modul) ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||' : '';
                 $active = '1';
             } else {
-                $ad_view = '';
+                $view = '';
                 $active = '0';
             }
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
@@ -43,10 +43,10 @@ function voting(): void {
             $mod = ($modul) ? deflmconst($modul) : _NONE;
             $cont .= '<td>'.$mod.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($ad_view.'<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
-        $cont .= setArticleNumbers('pagenum', '', $confv['anum'], 'name=voting&amp;', 'id', '_voting', '', '', $confv['anump']);
+        $cont .= setArticleNumbers('pagenum', '', $conf['voting']['anum'], 'name=voting&amp;', 'id', '_voting', '', '', $conf['voting']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -56,7 +56,7 @@ function voting(): void {
 }
 
 function add(): void {
-    global $db, $afile, $conf, $confv, $stop;
+    global $db, $afile, $conf, $stop;
     $stop = $stop ?? '';
     $id = getVar('req', 'id', 'num');
     if ($id) {
@@ -95,7 +95,7 @@ function add(): void {
     .'<tr><td>'._TITLE.' / '._POLLTITLE.':</td><td><input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.' / '._POLLTITLE.'" required></td></tr>'
     .'<tr><td colspan="2">';
     $i = 0;
-    while ($i < $confv['answ']) {
+    while ($i < $conf['voting']['answ']) {
         $a = $i + 1;
         $question = $questions[$i] ?? '';
         $ansval = $answer[$i] ?? '';
@@ -184,39 +184,39 @@ function delete(int $id = 0): void {
 }
 
 function conf(): void {
-    global $afile, $confv;
+    global $afile;
     head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="voting_t" value="'.intval($confv['voting_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$confv['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confv['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$confv['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$confv['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._VANSW.':</td><td><input type="number" name="answ" value="'.$confv['answ'].'" class="sl_conf" placeholder="'._VANSW.'" required></td></tr>'
+    .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="voting_t" value="'.intval($conf['voting']['voting_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['voting']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['voting']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['voting']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['voting']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._VANSW.':</td><td><input type="number" name="answ" value="'.$conf['voting']['answ'].'" class="sl_conf" placeholder="'._VANSW.'" required></td></tr>'
     .'<tr><td>'._VBLOCK.':</td><td><select name="block" class="sl_conf">'
     .'<option value="0"';
-    if ($confv['block'] == '0') $cont .= ' selected';
+    if ($conf['voting']['block'] == '0') $cont .= ' selected';
     $cont .= '>'._VLASTACT.'</option>'
     .'<option value="1"';
-    if ($confv['block'] == '1') $cont .= ' selected';
+    if ($conf['voting']['block'] == '1') $cont .= ' selected';
     $cont .= '>'._VLASTCLO.'</option>'
     .'<option value="2"';
-    if ($confv['block'] == '2') $cont .= ' selected';
+    if ($conf['voting']['block'] == '2') $cont .= ' selected';
     $cont .= '>'._VRANACT.'</option>'
     .'<option value="3"';
-    if ($confv['block'] == '3') $cont .= ' selected';
+    if ($conf['voting']['block'] == '3') $cont .= ' selected';
     $cont .= '>'._VRANCLO.'</option>'
     .'</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="voting"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="voting"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $cont = [
         'voting_t' => getVar('post', 'voting_t', 'num', 1) * 86400,
@@ -243,6 +243,8 @@ switch ($op) {
     case 'save': save(); break;
     case 'delete': delete(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+

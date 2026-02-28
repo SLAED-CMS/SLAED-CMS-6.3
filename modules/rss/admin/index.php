@@ -1,11 +1,10 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('rss')) die('Illegal file access');
-$confrs = $conf['rss'] ?? [];
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ($opt == 1) ? ['name=rss', 'name=rss', 'name=rss&amp;op=info'] : ['', '', 'name=rss&amp;op=info'];

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,20 +13,20 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function links(): void {
-    global $db, $afile, $conf, $confu;
+    global $db, $afile, $conf;
     $cfg = $conf['links'] ?? [];
     head();
     $num = getVar('get', 'num', 'num', 1);
     $anum = $cfg['anum'] ?? 25;
     $anump = $cfg['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
-    $status_req = getVar('get', 'status', 'num', 0);
-    if ($status_req == 1) {
+    $status = getVar('get', 'status', 'num', 0);
+    if ($status == 1) {
         $status = '0';
         $field = 'name=links&amp;status=1&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(0, 2, 0, 0);
-    } elseif ($status_req == 2) {
+    } elseif ($status == 2) {
         $status = '2';
         $field = 'name=links&amp;status=2&amp;';
         $refer = '&amp;refer=1';
@@ -41,24 +41,24 @@ function links(): void {
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._SITEURL.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $cid, $uname, $title, $url, $date, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
-            $post = $user_name ? user_info($user_name) : ($uname ?: _ANONYM);
+        while ([$id, $cid, $uname, $title, $url, $date, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+            $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
-            $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
+            $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $broc = ($status == 2) ? '<a href="'.$afile.'.php?name=links&amp;op=ignore&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
             if ($status && time() >= strtotime($date)) {
-                $ad_view = '<a href="index.php?name=links&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = '<a href="index.php?name=links&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
             } else {
-                $ad_view = '';
+                $view = '';
                 $active = '0';
             }
             $cont .= '<tr><td>'.$id.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip_sender).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span></td>'
+            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span></td>'
             .'<td>'.domain($url).'</td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($ad_view.$broc.'<a href="'.$afile.'.php?name=links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=links&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.$broc.'<a href="'.$afile.'.php?name=links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=links&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'lid', '_links', '', 'status = \''.$status.'\'', $anump);
@@ -71,19 +71,20 @@ function links(): void {
 }
 
 function add(): void {
-    global $db, $afile, $confu, $stop;
-    $fid = getVar('req', 'id', 'num', 0);
+    global $db, $afile, $stop;
+    $id = getVar('req', 'id', 'num', 0);
+    $fid = $id;
     if ($fid) {
         $result = $db->sql_query('SELECT l.cid, l.name, l.title, l.description, l.bodytext, l.url, l.date, l.email, l.ihome, l.acomm, u.user_name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.user_id) WHERE l.lid = :fid', ['fid' => $fid]);
-        [$cid, $uname, $title, $description, $bodytext, $url, $date, $email, $ihome, $acomm, $user_name] = $db->sql_fetchrow($result);
-        $postname = $user_name ?: ($uname ?: _ANONYM);
+        [$cid, $uname, $title, $description, $bodytext, $site, $date, $email, $ihome, $acomm, $nick] = $db->sql_fetchrow($result);
+        $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
         $cid = getVar('post', 'cid', 'num', 0);
         $title = getVar('post', 'title', 'title', '');
         $description = getVar('post', 'description', 'text', '');
         $bodytext = getVar('post', 'bodytext', 'text', '');
-        $url = getVar('post', 'url', 'url', 'http://');
+        $site = getVar('post', 'site', 'url', 'http://');
         $date = save_datetime(1, 'date');
         $ihome = getVar('post', 'ihome', 'num', 0);
         $acomm = getVar('post', 'acomm', 'num', 0);
@@ -94,7 +95,7 @@ function add(): void {
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if (!empty($description)) $cont .= preview($title, $description, $bodytext, '', 'links');
-    $link_url = (!empty($url) && $url !== 'http://') ? '<a href="'.$url.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
+    $link = (!empty($site) && $site !== 'http://') ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
@@ -103,7 +104,7 @@ function add(): void {
     .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'description', $description, 'links', '5', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._ENDTEXT.':</td><td>'.textarea('2', 'bodytext', $bodytext, 'links', '15', _ENDTEXT, '0').'</td></tr>'
     .'<tr><td>'._AUEMAIL.':</td><td><input type="email" name="email" value="'.$email.'" class="sl_form" placeholder="'._AUEMAIL.'" required></td></tr>'
-    .'<tr><td>'.$link_url.':</td><td><input type="url" name="url" value="'.$url.'" class="sl_form" placeholder="'._URL.'" required></td></tr>'
+    .'<tr><td>'.$link.':</td><td><input type="url" name="site" value="'.$site.'" class="sl_form" placeholder="'._URL.'" required></td></tr>'
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
     .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
@@ -120,12 +121,12 @@ function save(): void {
     $title = getVar('post', 'title', 'title', '');
     $description = getVar('post', 'description', 'text', '');
     $bodytext = getVar('post', 'bodytext', 'text', '');
-    $url = url_filter(getVar('post', 'url', 'text', ''));
+    $site = getVar('post', 'site', 'url', '');
     $date = save_datetime(1, 'date');
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
-    $email = text_filter(getVar('post', 'email', 'text', ''));
+    $email = getVar('post', 'email', 'text', '');
     $stop = [];
     if (!$title) $stop[] = _CERROR;
     if (!$description) $stop[] = _CERROR1;
@@ -136,10 +137,10 @@ function save(): void {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
         if ($fid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_links SET cid = :cid, uid = :uid, name = :name, title = :title, description = :description, bodytext = :bodytext, url = :url, date = :date, email = :email, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE lid = :fid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'email' => $email, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
+            $db->sql_query('UPDATE '.PREFIX_DB.'_links SET cid = :cid, uid = :uid, name = :name, title = :title, description = :description, bodytext = :bodytext, url = :url, date = :date, email = :email, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE lid = :fid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $site, 'date' => $date, 'email' => $email, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
         } else {
             $ip = getip();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_links (cid, uid, name, title, description, bodytext, url, date, email, ip_sender, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :description, :bodytext, :url, :date, :email, :ip, :ihome, :acomm, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'email' => $email, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm]);
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_links (cid, uid, name, title, description, bodytext, url, date, email, ip_sender, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :description, :bodytext, :url, :date, :email, :ip, :ihome, :acomm, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $site, 'date' => $date, 'email' => $email, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm]);
         }
         setRedirect($afile.'.php?name=links');
     } elseif ($posttype === 'delete') {
@@ -200,13 +201,13 @@ function conf(): void {
     .'<tr><td>'._C_19.'</td><td>'.radio_form($cfg['rate'] ?? 0, 'rate').'</td></tr>'
     .'<tr><td>'._C_20.'</td><td>'.radio_form($cfg['letter'] ?? 0, 'letter').'</td></tr>'
     .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($cfg['link'] ?? 0, 'link').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="links"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="links"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -250,6 +251,11 @@ switch ($op) {
     case 'del': del(); break;
     case 'ignore': ignore(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
+
+
+

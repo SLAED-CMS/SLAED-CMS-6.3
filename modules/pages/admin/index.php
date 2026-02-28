@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,7 +13,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function pages(): void {
-    global $db, $afile, $conf, $confu;
+    global $db, $afile, $conf;
     $cfg = $conf['pages'] ?? [];
     head();
     $num = getVar('get', 'num', 'num', 1);
@@ -35,22 +35,22 @@ function pages(): void {
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$pid, $catid, $uname, $title, $time, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
+        while ([$pid, $catid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
             $ctitle = ($catid) ? $ctitle : _NO;
-            $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
-            $post = $user_name ? user_info($user_name) : ($uname ?: _ANONYM);
+            $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
+            $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status && time() >= strtotime($time)) {
-                $ad_view = '<a href="index.php?name=pages&amp;op=view&amp;id='.$pid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = '<a href="index.php?name=pages&amp;op=view&amp;id='.$pid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
             } else {
-                $ad_view = '';
+                $view = '';
                 $active = '0';
             }
             $cont .= '<tr><td>'.$pid.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip_sender).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
+            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($ad_view.'<a href="'.$afile.'.php?name=pages&amp;op=add&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=pages&amp;op=del&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=pages&amp;op=add&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=pages&amp;op=del&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'pid', '_pages', '', 'status = \''.$status.'\'', $anump);
@@ -63,12 +63,13 @@ function pages(): void {
 }
 
 function add(): void {
-    global $db, $afile, $confu, $stop;
-    $pid = getVar('req', 'id', 'num', 0);
+    global $db, $afile, $stop;
+    $id = getVar('req', 'id', 'num', 0);
+    $pid = $id;
     if ($pid) {
         $result = $db->sql_query('SELECT p.catid, p.name, p.title, p.time, p.hometext, p.bodytext, p.ihome, p.acomm, u.user_name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.user_id) WHERE pid = :pid', ['pid' => $pid]);
-        [$cat, $uname, $subject, $time, $hometext, $bodytext, $ihome, $acomm, $user_name] = $db->sql_fetchrow($result);
-        $postname = $user_name ?: ($uname ?: _ANONYM);
+        [$cat, $uname, $subject, $time, $hometext, $bodytext, $ihome, $acomm, $nick] = $db->sql_fetchrow($result);
+        $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
         $pid = getVar('post', 'pid', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');
@@ -174,13 +175,13 @@ function conf(): void {
     .'<tr><td>'._C_19.'</td><td>'.radio_form($cfg['rate'] ?? 0, 'rate').'</td></tr>'
     .'<tr><td>'._C_20.'</td><td>'.radio_form($cfg['letter'] ?? 0, 'letter').'</td></tr>'
     .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($cfg['link'] ?? 0, 'link').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="pages"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="pages"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -220,6 +221,10 @@ switch ($op) {
     case 'save': save(); break;
     case 'del': del(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
+
+

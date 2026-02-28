@@ -1,11 +1,10 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('changelog')) die('Illegal file access');
-$conflog = $conf['changelog'] ?? [];
 
 // ============================================================================
 // CONSTANTS
@@ -86,9 +85,9 @@ function chsetcache(string $key, $data, string $url = '', string $etag = '', str
     $tmpfile = $file.'.tmp';
 
     $ttl = DEFAULT_CACHE_TTL;
-    global $conflog;
-    if (isset($conflog['cachettl'])) {
-        $ttl = (int)$conflog['cachettl'];
+    global $conf;
+    if (isset($conf['changelog']['cachettl'])) {
+        $ttl = (int)$conf['changelog']['cachettl'];
     }
 
     $cache = [
@@ -433,7 +432,7 @@ function gitparse(array $lines): array {
 // ============================================================================
 
 function changelog(): void {
-    global $afile, $conflog, $gherror, $giterror;
+    global $afile, $gherror, $giterror;
 
     head();
     
@@ -461,15 +460,15 @@ function changelog(): void {
     ];
 
     // Get commits
-    $source = $conflog['source'] ?? 'local';
-    $limit = clamp($conflog['limit'] ?? 50, 10, 500);
+    $source = $conf['changelog']['source'] ?? 'local';
+    $limit = clamp($conf['changelog']['limit'] ?? 50, 10, 500);
     $commits = [];
     $totcount = 0;
 
     if ($source === 'github') {
-        $ghowner = trim($conflog['ghowner'] ?? '');
-        $ghrepo = trim($conflog['ghrepo'] ?? '');
-        $ghtoken = trim($conflog['ghtoken'] ?? '');
+        $ghowner = trim($conf['changelog']['ghowner'] ?? '');
+        $ghrepo = trim($conf['changelog']['ghrepo'] ?? '');
+        $ghtoken = trim($conf['changelog']['ghtoken'] ?? '');
 
         if (empty($ghowner) || empty($ghrepo)) {
             $cont .= setTemplateWarning('warn', [
@@ -516,7 +515,7 @@ function changelog(): void {
     }
 
     // Pagination
-    $perpage = clamp($conflog['perpage'] ?? 10, 1, 50);
+    $perpage = clamp($conf['changelog']['perpage'] ?? 10, 1, 50);
     $totcom = count($commits);
     $totpage = max(1, ceil($totcom / $perpage));
     $page = clamp($page, 1, $totpage);
@@ -524,7 +523,7 @@ function changelog(): void {
     $compg = array_slice($commits, $offset, $perpage);
 
     // Group by date
-    if ($conflog['grpdate'] ?? false) {
+    if ($conf['changelog']['grpdate'] ?? false) {
         $compg = grpdate($compg);
     }
 
@@ -540,7 +539,7 @@ function changelog(): void {
         '{%totcom%}' => $totcom,
         '{%page%}' => $page,
         '{%totpage%}' => $totpage,
-        '{%commits%}' => rencom($compg, $conflog),
+        '{%commits%}' => rencom($compg),
         '{%paging%}' => rendpage($totcom, $totpage, $perpage, $page, $filters)
     ]);
 
@@ -549,7 +548,7 @@ function changelog(): void {
 }
 
 function conf(): void {
-    global $afile, $conflog;
+    global $afile;
     head();
     $cont = navi(0, 1);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
@@ -557,7 +556,7 @@ function conf(): void {
     $cont .= '<form action="'.esc($afile).'.php" method="post">';
     $cont .= '<table class="sl_table_conf">';
 
-    $source = $conflog['source'] ?? 'local';
+    $source = $conf['changelog']['source'] ?? 'local';
 
     $cont .= '<tr><td colspan="2" style="background: #4CAF50; color: white; padding: 8px; font-weight: bold;">Changelog-Quelle</td></tr>';
     $cont .= '<tr><td><strong>Quelle:</strong></td><td>';
@@ -569,28 +568,28 @@ function conf(): void {
     $display = $source === 'github' ? 'table-row-group' : 'none';
     $cont .= '<tbody id="github_fields" style="display: '.$display.'">';
     $cont .= '<tr><td><strong>GitHub Owner:</strong></td><td>';
-    $cont .= '<input type="text" name="ghowner" value="'.esc($conflog['ghowner'] ?? '').'" class="sl_conf"></td></tr>';
+    $cont .= '<input type="text" name="ghowner" value="'.esc($conf['changelog']['ghowner'] ?? '').'" class="sl_conf"></td></tr>';
     $cont .= '<tr><td><strong>GitHub Repository:</strong></td><td>';
-    $cont .= '<input type="text" name="ghrepo" value="'.esc($conflog['ghrepo'] ?? '').'" class="sl_conf"></td></tr>';
+    $cont .= '<input type="text" name="ghrepo" value="'.esc($conf['changelog']['ghrepo'] ?? '').'" class="sl_conf"></td></tr>';
     $cont .= '<tr><td><strong>GitHub Token:</strong></td><td>';
-    $cont .= '<input type="text" name="ghtoken" value="'.esc($conflog['ghtoken'] ?? '').'" class="sl_conf"></td></tr>';
+    $cont .= '<input type="text" name="ghtoken" value="'.esc($conf['changelog']['ghtoken'] ?? '').'" class="sl_conf"></td></tr>';
     $cont .= '</tbody>';
 
     $cont .= '<tr><td colspan="2" style="background: #2196F3; color: white; padding: 8px; font-weight: bold;">Anzeige-Optionen</td></tr>';
     $cont .= '<tr><td><strong>Anzahl Commits:</strong></td><td>';
-    $cont .= '<input type="number" name="limit" value="'.($conflog['limit'] ?? 50).'" class="sl_conf" min="10" max="500"></td></tr>';
+    $cont .= '<input type="number" name="limit" value="'.($conf['changelog']['limit'] ?? 50).'" class="sl_conf" min="10" max="500"></td></tr>';
     $cont .= '<tr><td><strong>Pro Seite:</strong></td><td>';
-    $cont .= '<input type="number" name="perpage" value="'.($conflog['perpage'] ?? 10).'" class="sl_conf" min="5" max="50"></td></tr>';
+    $cont .= '<input type="number" name="perpage" value="'.($conf['changelog']['perpage'] ?? 10).'" class="sl_conf" min="5" max="50"></td></tr>';
     $cont .= '<tr><td><strong>Cache TTL (Sekunden):</strong></td><td>';
-    $cont .= '<input type="number" name="cachettl" value="'.($conflog['cachettl'] ?? 900).'" class="sl_conf" min="0" max="3600"></td></tr>';
+    $cont .= '<input type="number" name="cachettl" value="'.($conf['changelog']['cachettl'] ?? 900).'" class="sl_conf" min="0" max="3600"></td></tr>';
     $cont .= '<tr><td><strong>Datum gruppieren:</strong></td><td>';
-    $cont .= '<input type="checkbox" name="grpdate" value="1" '.($conflog['grpdate'] ?? false ? 'checked' : '').'></td></tr>';
+    $cont .= '<input type="checkbox" name="grpdate" value="1" '.($conf['changelog']['grpdate'] ?? false ? 'checked' : '').'></td></tr>';
     $cont .= '<tr><td><strong>Dateien anzeigen:</strong></td><td>';
-    $cont .= '<input type="checkbox" name="showfile" value="1" '.($conflog['showfile'] ?? false ? 'checked' : '').'></td></tr>';
+    $cont .= '<input type="checkbox" name="showfile" value="1" '.($conf['changelog']['showfile'] ?? false ? 'checked' : '').'></td></tr>';
     $cont .= '<tr><td><strong>Statistiken:</strong></td><td>';
-    $cont .= '<input type="checkbox" name="showstat" value="1" '.($conflog['showstat'] ?? false ? 'checked' : '').'></td></tr>';
+    $cont .= '<input type="checkbox" name="showstat" value="1" '.($conf['changelog']['showstat'] ?? false ? 'checked' : '').'></td></tr>';
     $cont .= '<tr><td><strong>Export:</strong></td><td>';
-    $cont .= '<input type="checkbox" name="exporten" value="1" '.($conflog['exporten'] ?? false ? 'checked' : '').'></td></tr>';
+    $cont .= '<input type="checkbox" name="exporten" value="1" '.($conf['changelog']['exporten'] ?? false ? 'checked' : '').'></td></tr>';
 
     $cont .= '<tr><td colspan="2" class="sl_center">';
     $cont .= '<input type="hidden" name="name" value="changelog">';
@@ -632,16 +631,16 @@ function save(): void {
 }
 
 function export(): void {
-    global $conflog;
+    global $conf;
 
-    $format = getVar('get', 'id', 'var');
-    $source = $conflog['source'] ?? 'local';
-    $limit = clamp($conflog['limit'] ?? 50, 10, 500);
+    $id = getVar('get', 'id', 'var');
+    $source = $conf['changelog']['source'] ?? 'local';
+    $limit = clamp($conf['changelog']['limit'] ?? 50, 10, 500);
 
     if ($source === 'github') {
-        $ghowner = trim($conflog['ghowner'] ?? '');
-        $ghrepo = trim($conflog['ghrepo'] ?? '');
-        $ghtoken = trim($conflog['ghtoken'] ?? '');
+        $ghowner = trim($conf['changelog']['ghowner'] ?? '');
+        $ghrepo = trim($conf['changelog']['ghrepo'] ?? '');
+        $ghtoken = trim($conf['changelog']['ghtoken'] ?? '');
         $commits = ghfetch($ghowner, $ghrepo, [], $limit, $ghtoken);
     } else {
         $gitdir = realpath(__DIR__.'/../../');
@@ -688,9 +687,9 @@ function info(): void {
 }
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $conflog;
+    global $conf;
 
-    $exporten = $conflog['exporten'] ?? true;
+    $exporten = $conf['changelog']['exporten'] ?? true;
 
     if ($exporten) {
         $ops = [
@@ -834,3 +833,4 @@ switch ($op) {
     case 'export': export(); break;
     case 'info': info(); break;
 }
+

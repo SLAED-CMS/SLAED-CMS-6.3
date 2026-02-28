@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -88,13 +88,13 @@ function forum(): void {
     .'<tr><td>'._VPRIVAT.'</td><td>'.radio_form($cfg['privat'] ?? 0, 'privat').'</td></tr>'
     .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($cfg['profil'] ?? 0, 'profil').'</td></tr>'
     .'<tr><td>'._VWEB.'</td><td>'.radio_form($cfg['web'] ?? 0, 'web').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="forum"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="forum"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -127,6 +127,6 @@ function info(): void {
 switch ($op) {
     default: synch(); break;
     case 'conf': forum(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -53,25 +53,27 @@ function order(): void {
 
 function add(): void {
     global $db, $afile, $stop;
-    $mid = getVar('req', 'id', 'num', 0);
+    $id = getVar('req', 'id', 'num', 0);
+    $mid = $id;
+    $mid = $id;
     if ($mid) {
         $result = $db->sql_query('SELECT mail, info, com, date FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
-        [$mail, $info, $com, $date] = $db->sql_fetchrow($result);
+        [$mail, $field, $com, $date] = $db->sql_fetchrow($result);
     } else {
         $mid = getVar('post', 'mid', 'num', 0);
         $mail = getVar('post', 'mail', 'text', '');
-        $info = getVar('post', 'field', 'field');
+        $field = getVar('post', 'field', 'field');
         $com = getVar('post', 'com', 'text', '');
         $date = save_datetime(1, 'date');
     }
     head();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
-    if ($info) $cont .= preview($mail, $info, _COMMENT.': '.$com, '', 'all');
+    if ($field) $cont .= preview($mail, $field, _COMMENT.': '.$com, '', 'all');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._OR_9.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_form" placeholder="'._OR_9.'" required></td></tr>'
-    .fields_in($info, 'order')
+    .fields_in($field, 'order')
     .'<tr><td>'._OR_10.':</td><td><textarea name="com" cols="65" rows="5" class="sl_form" placeholder="'._OR_10.'">'.$com.'</textarea></td></tr>'
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
@@ -83,19 +85,19 @@ function add(): void {
 function save(): void {
     global $db, $afile, $stop;
     $mid = getVar('post', 'mid', 'num', 0);
-    $mail = text_filter(getVar('post', 'mail', 'text', ''));
-    $info = getVar('post', 'field', 'field');
-    $com = text_filter(getVar('post', 'com', 'text', ''));
+    $mail = getVar('post', 'mail', 'text', '');
+    $field = getVar('post', 'field', 'field');
+    $com = getVar('post', 'com', 'text', '');
     $date = save_datetime(1, 'date');
     checkemail($mail);
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         if ($mid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['mail' => $mail, 'info' => $info, 'com' => $com, 'date' => $date, 'mid' => $mid]);
+            $db->sql_query('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['mail' => $mail, 'info' => $field, 'com' => $com, 'date' => $date, 'mid' => $mid]);
         } else {
             $ip = getip();
             $agent = getagent();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
         }
         setRedirect($afile.'.php?name=order');
     } elseif ($posttype === 'delete') {
@@ -147,13 +149,13 @@ function conf(): void {
     .'<tr><td>'._OR_5.':</td><td>'.textarea('1', 'text', $cfg['text'] ?? '', 'all', '5', _OR_5, '1').'</td></tr>'
     .'<tr><td>'._OR_6.':</td><td>'.textarea('2', 'info', $cfg['info'] ?? '', 'all', '5', _OR_6, '1').'</td></tr>'
     .'<tr><td>'._OR_7.':</td><td>'.textarea('3', 'sendinfo', $cfg['sendinfo'] ?? '', 'all', '5', _OR_7, '1').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $cont = [
         'mail' => getVar('post', 'mail', 'text', ''),
@@ -183,6 +185,8 @@ switch ($op) {
     case 'active': active(); break;
     case 'del': del(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+

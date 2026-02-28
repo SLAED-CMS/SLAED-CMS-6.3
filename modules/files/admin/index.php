@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,7 +13,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function files(): void {
-    global $db, $afile, $conf, $confu;
+    global $db, $afile, $conf;
     $cfg = $conf['files'] ?? [];
     head();
     $num = getVar('get', 'num', 'num', 1);
@@ -41,23 +41,23 @@ function files(): void {
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $cid, $uname, $title, $date, $ip_sender, $ctitle, $user_name] = $db->sql_fetchrow($result)) {
-            $post = $user_name ? user_info($user_name) : ($uname ?: _ANONYM);
+        while ([$id, $cid, $uname, $title, $date, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+            $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
-            $ip_sender = ($ip_sender) ? user_geo_ip($ip_sender, 4) : _NO;
+            $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $broc = ($st == '2') ? '<a href="'.$afile.'.php?name=files&amp;op=ignore&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
             if ($st == '1' && time() >= strtotime($date)) {
-                $ad_view = '<a href="index.php?name=files&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = '<a href="index.php?name=files&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
             } else {
-                $ad_view = '';
+                $view = '';
                 $active = '0';
             }
             $cont .= '<tr><td>'.$id.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip_sender).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
+            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($ad_view.$broc.'<a href="'.$afile.'.php?name=files&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=files&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.$broc.'<a href="'.$afile.'.php?name=files&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=files&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'lid', '_files', '', 'status = \''.$st.'\'', $anump);
@@ -70,13 +70,15 @@ function files(): void {
 }
 
 function add(): void {
-    global $db, $afile, $conf, $confu, $stop;
+    global $db, $afile, $conf, $stop;
     $cfg = $conf['files'] ?? [];
-    $fid = getVar('req', 'id', 'num', 0);
+    $id = getVar('req', 'id', 'num', 0);
+    $fid = $id;
+    $fid = $id;
     if ($fid) {
         $result = $db->sql_query('SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.date, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE lid = :id', ['id' => $fid]);
-        [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $homepage, $ihome, $acomm, $user_name] = $db->sql_fetchrow($result);
-        $postname = $user_name ?: ($uname ?: _ANONYM);
+        [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $homepage, $ihome, $acomm, $nick] = $db->sql_fetchrow($result);
+        $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
         $cid = getVar('post', 'cid', 'num', 0);
@@ -98,16 +100,16 @@ function add(): void {
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($description) $cont .= preview($title, $description, $bodytext, '', 'files');
-    $link_url = ($url) ? '<a href="'.$url.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
+    $link = ($url) ? '<a href="'.$url.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
     $directory = '';
-    $cfg_path = $cfg['path'] ?? 'uploads/files';
+    $path = $cfg['path'] ?? 'uploads/files';
     if (file_exists($url)) {
-        $entries = is_dir($cfg_path) ? scandir($cfg_path) : [];
+        $entries = is_dir($path) ? scandir($path) : [];
         foreach ($entries as $entry) {
             if ($entry === '.' || $entry === '..') continue;
             if (!preg_match('/\./', $entry)) {
-                $selected = ($path === $cfg_path.'/'.$entry) ? ' selected' : '';
-                $directory .= '<option value="'.$cfg_path.'/'.$entry.'"'.$selected.'>'.$cfg_path.'/'.$entry.'</option>';
+                $selected = ($path === $path.'/'.$entry) ? ' selected' : '';
+                $directory .= '<option value="'.$path.'/'.$entry.'"'.$selected.'>'.$path.'/'.$entry.'</option>';
             }
         }
     }
@@ -122,8 +124,8 @@ function add(): void {
     .'<tr><td>'._SITE.':</td><td><input type="url" name="homepage" value="'.$homepage.'" class="sl_form" placeholder="'._SITE.'"></td></tr>'
     .'<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_form"></td></tr>'
     .'<tr><td>'._FILE_SITE.':</td><td><input type="text" name="sitefile" class="sl_form" placeholder="'._FILE_SITE.'"></td></tr>'
-    .'<tr><td>'.$link_url.':</td><td><input type="text" name="url" value="'.$url.'" class="sl_form" placeholder="'._URL.'"></td></tr>';
-    if (file_exists($url)) $cont .= '<tr><td>'._FILE_DIR.':</td><td><select name="path" class="sl_form"><option value="">'._NO.'</option><option value="'.$cfg_path.'">'.$cfg_path.'</option>'.$directory.'</select></td></tr>';
+    .'<tr><td>'.$link.':</td><td><input type="text" name="url" value="'.$url.'" class="sl_form" placeholder="'._URL.'"></td></tr>';
+    if (file_exists($url)) $cont .= '<tr><td>'._FILE_DIR.':</td><td><select name="path" class="sl_form"><option value="">'._NO.'</option><option value="'.$path.'">'.$path.'</option>'.$directory.'</select></td></tr>';
     $cont .= '<tr><td>'._VERSION.':</td><td><input type="text" name="version" value="'.$version.'" class="sl_form" placeholder="'._VERSION.'"></td></tr>'
     .'<tr><td>'._SIZENOTE.':</td><td><input type="number" name="filesize" value="'.$filesize.'" class="sl_form" placeholder="'._SIZENOTE.'"></td></tr>'
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
@@ -224,7 +226,7 @@ function conf(): void {
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
     .'<tr><td>'._F_0.':</td><td><input type="text" name="temp" value="'.($cfg['temp'] ?? '').'" class="sl_conf" placeholder="'._F_0.'" required></td></tr>'
     .'<tr><td>'._F_1.':</td><td><input type="text" name="path" value="'.($cfg['path'] ?? '').'" class="sl_conf" placeholder="'._F_1.'" required></td></tr>'
-    .'<tr><td>'._FSIZE._FIN.':</td><td><input type="number" name="max_size" value="'.($cfg['max_size'] ?? 0).'" class="sl_conf" placeholder="'._FSIZE._FIN.'" required></td></tr>'
+    .'<tr><td>'._FSIZE._FIN.':</td><td><input type="number" name="maxsize" value="'.($cfg['max_size'] ?? 0).'" class="sl_conf" placeholder="'._FSIZE._FIN.'" required></td></tr>'
     .'<tr><td>'._FTYPE.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="typefile" value="'.($cfg['typefile'] ?? '').'" class="sl_conf" placeholder="'._FTYPE.'" required></td></tr>'
     .'<tr><td>'._PAGELINKNUM.':</td><td><input type="number" name="linknum" value="'.($cfg['linknum'] ?? 0).'" class="sl_conf" placeholder="'._PAGELINKNUM.'" required></td></tr>'
     .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($cfg['listnum'] ?? 0).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
@@ -260,13 +262,13 @@ function conf(): void {
     .'<tr><td>'._C_19.'</td><td>'.radio_form($cfg['rate'] ?? 0, 'rate').'</td></tr>'
     .'<tr><td>'._C_20.'</td><td>'.radio_form($cfg['letter'] ?? 0, 'letter').'</td></tr>'
     .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($cfg['link'] ?? 0, 'link').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="files"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="files"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $typefile = getVar('post', 'typefile', 'text', '');
@@ -274,7 +276,7 @@ function confsave(): void {
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
         'temp' => getVar('post', 'temp', 'text', ''),
         'path' => getVar('post', 'path', 'text', ''),
-        'max_size' => getVar('post', 'max_size', 'num', 1048576),
+        'max_size' => getVar('post', 'maxsize', 'num', 1048576),
         'typefile' => $typefile ? strtolower(strtr($typefile, $protect)) : 'zip,gzip,7z,rar,tar',
         'linknum' => getVar('post', 'linknum', 'num', 10),
         'listnum' => getVar('post', 'listnum', 'num', 10),
@@ -318,6 +320,10 @@ switch ($op) {
     case 'del': del(); break;
     case 'ignore': ignore(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
+
+

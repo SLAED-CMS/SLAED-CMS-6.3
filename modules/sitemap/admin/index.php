@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -88,37 +88,37 @@ function conf(): void {
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._MODULES.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.modul('mod', 'sl_conf', $cfg['mod'] ?? '', 1).'</td></tr>';
     $frs = ['0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY, 'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER];
-    $cont_h = $cont_m = $cont_c = $cont_p = '';
+    $h = $m = $c = $popt = '';
     foreach ($frs as $key => $val) {
-        $sel_h = (($cfg['fr_h'] ?? '0') === (string)$key) ? ' selected' : '';
-        $cont_h .= '<option value="'.$key.'"'.$sel_h.'>'.$val.'</option>';
-        $sel_m = (($cfg['fr_m'] ?? '0') === (string)$key) ? ' selected' : '';
-        $cont_m .= '<option value="'.$key.'"'.$sel_m.'>'.$val.'</option>';
-        $sel_c = (($cfg['fr_c'] ?? '0') === (string)$key) ? ' selected' : '';
-        $cont_c .= '<option value="'.$key.'"'.$sel_c.'>'.$val.'</option>';
-        $sel_p = (($cfg['fr_p'] ?? '0') === (string)$key) ? ' selected' : '';
-        $cont_p .= '<option value="'.$key.'"'.$sel_p.'>'.$val.'</option>';
+        $sh = (($cfg['fr_h'] ?? '0') === (string)$key) ? ' selected' : '';
+        $h .= '<option value="'.$key.'"'.$sh.'>'.$val.'</option>';
+        $sm = (($cfg['fr_m'] ?? '0') === (string)$key) ? ' selected' : '';
+        $m .= '<option value="'.$key.'"'.$sm.'>'.$val.'</option>';
+        $sc = (($cfg['fr_c'] ?? '0') === (string)$key) ? ' selected' : '';
+        $c .= '<option value="'.$key.'"'.$sc.'>'.$val.'</option>';
+        $sp = (($cfg['fr_p'] ?? '0') === (string)$key) ? ' selected' : '';
+        $popt .= '<option value="'.$key.'"'.$sp.'>'.$val.'</option>';
     }
-    $cont .= '<tr><td>'._MAP_FR_H.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_h" class="sl_conf">'.$cont_h.'</select></td></tr>'
-    .'<tr><td>'._MAP_FR_M.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_m" class="sl_conf">'.$cont_m.'</select></td></tr>'
-    .'<tr><td>'._MAP_FR_C.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_c" class="sl_conf">'.$cont_c.'</select></td></tr>'
-    .'<tr><td>'._MAP_FR_P.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_p" class="sl_conf">'.$cont_p.'</select></td></tr>';
+    $cont .= '<tr><td>'._MAP_FR_H.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_h" class="sl_conf">'.$h.'</select></td></tr>'
+    .'<tr><td>'._MAP_FR_M.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_m" class="sl_conf">'.$m.'</select></td></tr>'
+    .'<tr><td>'._MAP_FR_C.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_c" class="sl_conf">'.$c.'</select></td></tr>'
+    .'<tr><td>'._MAP_FR_P.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_p" class="sl_conf">'.$popt.'</select></td></tr>';
     $prs = ['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0'];
-    $cont_h = $cont_m = $cont_c = $cont_p = '';
+    $h = $m = $c = $popt = '';
     foreach ($prs as $val) {
-        $sel_h = (($cfg['pr_h'] ?? '0') === (string)$val) ? ' selected' : '';
-        $cont_h .= '<option value="'.$val.'"'.$sel_h.'>'.$val.'</option>';
-        $sel_m = (($cfg['pr_m'] ?? '0') === (string)$val) ? ' selected' : '';
-        $cont_m .= '<option value="'.$val.'"'.$sel_m.'>'.$val.'</option>';
-        $sel_c = (($cfg['pr_c'] ?? '0') === (string)$val) ? ' selected' : '';
-        $cont_c .= '<option value="'.$val.'"'.$sel_c.'>'.$val.'</option>';
-        $sel_p = (($cfg['pr_p'] ?? '0') === (string)$val) ? ' selected' : '';
-        $cont_p .= '<option value="'.$val.'"'.$sel_p.'>'.$val.'</option>';
+        $sh = (($cfg['pr_h'] ?? '0') === (string)$val) ? ' selected' : '';
+        $h .= '<option value="'.$val.'"'.$sh.'>'.$val.'</option>';
+        $sm = (($cfg['pr_m'] ?? '0') === (string)$val) ? ' selected' : '';
+        $m .= '<option value="'.$val.'"'.$sm.'>'.$val.'</option>';
+        $sc = (($cfg['pr_c'] ?? '0') === (string)$val) ? ' selected' : '';
+        $c .= '<option value="'.$val.'"'.$sc.'>'.$val.'</option>';
+        $sp = (($cfg['pr_p'] ?? '0') === (string)$val) ? ' selected' : '';
+        $popt .= '<option value="'.$val.'"'.$sp.'>'.$val.'</option>';
     }
-    $cont .= '<tr><td>'._MAP_PR_H.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_h" class="sl_conf">'.$cont_h.'</select></td></tr>'
-    .'<tr><td>'._MAP_PR_M.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_m" class="sl_conf">'.$cont_m.'</select></td></tr>'
-    .'<tr><td>'._MAP_PR_C.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_c" class="sl_conf">'.$cont_c.'</select></td></tr>'
-    .'<tr><td>'._MAP_PR_P.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_p" class="sl_conf">'.$cont_p.'</select></td></tr>'
+    $cont .= '<tr><td>'._MAP_PR_H.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_h" class="sl_conf">'.$h.'</select></td></tr>'
+    .'<tr><td>'._MAP_PR_M.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_m" class="sl_conf">'.$m.'</select></td></tr>'
+    .'<tr><td>'._MAP_PR_C.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_c" class="sl_conf">'.$c.'</select></td></tr>'
+    .'<tr><td>'._MAP_PR_P.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_p" class="sl_conf">'.$popt.'</select></td></tr>'
     .'<tr><td>'._MAP_AUTO_T.':</td><td><input type="number" name="auto_t" value="'.(int)(($cfg['auto_t'] ?? 0) / 3600).'" class="sl_conf" placeholder="'._MAP_AUTO_T.'" required></td></tr>'
     .'<tr><td>'._MAP_AUTO.'</td><td>'.radio_form($cfg['auto'] ?? 0, 'auto').'</td></tr>'
     .'<tr><td>'._MAP_DAT_H.'</td><td>'.radio_form($cfg['dat_h'] ?? 0, 'dat_h').'</td></tr>'
@@ -131,13 +131,13 @@ function conf(): void {
     .'<tr><td>'._MAP_GEN_P.'</td><td>'.radio_form($cfg['gen_p'] ?? 0, 'gen_p').'</td></tr>'
     .'<tr><td>'._MAP_XSL.'</td><td>'.radio_form($cfg['xsl'] ?? 0, 'xsl').'</td></tr>'
     .'<tr><td>'._MAP_SITE.'</td><td>'.radio_form($cfg['txt'] ?? 0, 'txt').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $mod = getVar('post', 'mod[]', 'num', []);
     $cont = [
@@ -179,6 +179,7 @@ switch ($op) {
     case 'xsl': xsl(); break;
     case 'xslsave': xslsave(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+

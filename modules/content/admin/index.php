@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -27,10 +27,10 @@ function content(): void {
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._DATE.'</th><th>'.cutstr(_READS, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $title, $time, $counter] = $db->sql_fetchrow($result)) {
             if (time() >= strtotime($time)) {
-                $ad_view = '<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = '<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
             } else {
-                $ad_view = '';
+                $view = '';
                 $active = '0';
             }
             $cont .= '<tr><td>'.$id.'</td>'
@@ -38,7 +38,7 @@ function content(): void {
             .'<td>'.format_time($time, _TIMESTRING).'</td>'
             .'<td>'.$counter.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($ad_view.'<a href="'.$afile.'.php?name=content&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=content&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=content&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=content&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, 'name=content&amp;', 'id', '_content', '', '', $anump);
@@ -105,8 +105,8 @@ function save(): void {
     $cid = getVar('post', 'cid', 'num', 0);
     $title = getVar('post', 'title', 'title', '');
     $url = getVar('post', 'url', 'text', '');
-    $post_text = getVar('post', 'text', 'text', '');
-    $text = ($url) ? rss_read($url, 1) : $post_text;
+    $text = getVar('post', 'text', 'text', '');
+    $text = ($url) ? rss_read($url, 1) : $text;
     $field = getVar('post', 'field', 'field');
     $time = save_datetime(1, 'time');
     $refresh = getVar('post', 'refresh', 'num', 0);
@@ -147,13 +147,13 @@ function conf(): void {
     .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$cfg['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
     .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$cfg['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
     .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$cfg['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="content"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="content"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $cont = [
         'num' => getVar('post', 'num', 'num', 25),
@@ -177,6 +177,9 @@ switch ($op) {
     case 'save': save(); break;
     case 'del': del(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
+

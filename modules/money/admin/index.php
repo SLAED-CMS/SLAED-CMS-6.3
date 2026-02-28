@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright � 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -64,7 +64,8 @@ function money(): void {
 function add(): void {
     global $db, $afile, $conf, $stop;
     $cfg = $conf['money'] ?? [];
-    $mid = getVar('req', 'id', 'num', 0);
+    $id = getVar('req', 'id', 'num', 0);
+    $mid = $id;
     if ($mid) {
         $result = $db->sql_query('SELECT sum, mail, info, com, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $mid]);
         [$sum, $mail, $info, $com, $date] = $db->sql_fetchrow($result);
@@ -116,20 +117,20 @@ function save(): void {
     global $db, $afile, $stop;
     $mid = getVar('post', 'mid', 'num', 0);
     $sum = getVar('post', 'sum', 'num', 0);
-    $mail = text_filter(getVar('post', 'mail', 'text', ''));
-    $info_val = getVar('post', 'info', 'array', []);
-    $info = (!empty($info_val)) ? text_filter(implode('|', $info_val)) : '';
-    $com = text_filter(getVar('post', 'com', 'text', ''));
+    $mail = getVar('post', 'mail', 'text', '');
+    $info = getVar('post', 'info', 'array', []);
+    $list = (!empty($info)) ? text_filter(implode('|', $info)) : '';
+    $com = getVar('post', 'com', 'text', '');
     $date = save_datetime(1, 'date');
     checkemail($mail);
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         if ($mid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_money SET sum = :sum, mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['sum' => $sum, 'mail' => $mail, 'info' => $info, 'com' => $com, 'date' => $date, 'mid' => $mid]);
+            $db->sql_query('UPDATE '.PREFIX_DB.'_money SET sum = :sum, mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['sum' => $sum, 'mail' => $mail, 'info' => $list, 'com' => $com, 'date' => $date, 'mid' => $mid]);
         } else {
             $ip = getip();
             $agent = getagent();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['sum' => $sum, 'mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['sum' => $sum, 'mail' => $mail, 'info' => $list, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
         }
         setRedirect($afile.'.php?name=money');
     } elseif ($posttype === 'delete') {
@@ -149,11 +150,14 @@ function del(int $did = 0): void {
 function billing(string $title, string $autor, string $infos, string $num, string $date, string $menge, string $kurs, string $sum): void {
     global $theme, $conf;
     $template = file_get_contents('modules/money/templates/billing.html');
+    if ($template === false) {
+        return;
+    }
     $replacements = [
         '$charset' => _CHARSET,
         '$theme' => $theme,
         '$title' => $title,
-        '$site_logo' => $conf['site_logo'] ?? '',
+        '\$logo' => $conf['site_logo'] ?? '',
         '$sitename' => $conf['sitename'] ?? '',
         '$autor' => $autor,
         '$infos' => $infos,
@@ -172,8 +176,8 @@ function rechn(): void {
     $id = getVar('get', 'id', 'num', 0);
     [$sum, $mail, $info, $com, $ip, $agent, $date] = $db->sql_fetchrow($db->sql_query('SELECT sum, mail, info, com, ip, agent, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
     setThemeInclude();
-    $site_defis = urldecode($conf['defis'] ?? '%3E');
-    $title = _RECHN.' '.$site_defis.' '._MONEY.' '.$site_defis.' '.($conf['sitename'] ?? '');
+    $defis = urldecode($conf['defis'] ?? '%3E');
+    $title = _RECHN.' '.$defis.' '._MONEY.' '.$defis.' '.($conf['sitename'] ?? '');
     $form = explode(',', $cfg['form'] ?? '');
     $info = explode('|', $info);
     $i = 0;
@@ -184,12 +188,12 @@ function rechn(): void {
             $i++;
         }
     }
-    $num = getVar('get', 'rnum', 'text', '');
-    $kurs_cfg = (float)($cfg['kurs'] ?? 0);
-    $proz_cfg = (float)($cfg['proz'] ?? 0);
-    $menge = ($sum / 100) * $kurs_cfg * (100 - $proz_cfg);
+    $rnum = getVar('get', 'rnum', 'text', '');
+    $kurs = (float)($cfg['kurs'] ?? 0);
+    $proz = (float)($cfg['proz'] ?? 0);
+    $menge = ($sum / 100) * $kurs * (100 - $proz);
     $kurs = ($menge > 0) ? round($sum / $menge, 2) : 0;
-    billing($title, bb_decode($cfg['autor'] ?? '', 'money'), bb_decode($infos, 'money'), $num, format_time($date), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
+    billing($title, bb_decode($cfg['autor'] ?? '', 'money'), bb_decode($infos, 'money'), $rnum, format_time($date), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
 }
 
 function active(): void {
@@ -233,13 +237,13 @@ function conf(): void {
     .'<tr><td>'._MA_12.':</td><td>'.textarea('2', 'info', $cfg['info'] ?? '', 'all', '5', _MA_12, '1').'</td></tr>'
     .'<tr><td>'._MA_13.':</td><td>'.textarea('3', 'sendinfo', $cfg['sendinfo'] ?? '', 'all', '5', _MA_13, '1').'</td></tr>'
     .'<tr><td>'._MA_14.':</td><td>'.textarea('4', 'autor', $cfg['autor'] ?? '', 'all', '5', _MA_14, '1').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="money"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="money"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
 }
 
-function confsave(): void {
+function saveconf(): void {
     global $afile;
     $xkurs = str_replace(',', '.', getVar('post', 'kurs', 'text', '0'));
     $xkurs2 = str_replace(',', '.', getVar('post', 'kurs2', 'text', '0'));
@@ -279,6 +283,13 @@ switch ($op) {
     case 'del': del(); break;
     case 'rechn': rechn(); break;
     case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
+
+
+
+
+
