@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -9,8 +9,8 @@ if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
 require_once CONFIG_DIR.'/uploads.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    global $afile, $confup;
-    $dir = getVar('post', 'dir', 'var', $confup['dir']);
+    global $afile, $conf;
+    $dir = getVar('post', 'dir', 'var', $conf['uploads']['dir']);
     $ops = ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'];
     $lang = [_FILES, _TEMPLATES, _PREFERENCES, _INFO];
     $sops = ($opt == 1) ? ['', ''] : ['', '', ''];
@@ -32,9 +32,9 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function uploads(): void {
-    global $afile, $confup, $stop;
+    global $afile, $conf, $stop;
     $dir = getVar('post', 'dir', 'var', '');
-    if ($dir === '') $dir = getVar('get', 'dir', 'var', $confup['dir']);
+    if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
     head();
     $cont = navi(0, 0, 1, 0, 'uploads');
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
@@ -106,27 +106,27 @@ function uploads(): void {
 
 function uploadsave(): void {
     global $afile, $stop;
-    $sdir = getVar('post', 'dir', 'var');
-    upload(3, 'uploads/'.$sdir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $sdir, '1600', '1600', '1');
+    $dir = getVar('post', 'dir', 'var');
+    upload(3, 'uploads/'.$dir, 'gif,jpg,jpeg,png,zip,rar', '104857600', $dir, '1600', '1600', '1');
     if ($stop) {
         uploads();
     } else {
-        setRedirect($afile.'.php?name=uploads&dir='.$sdir);
+        setRedirect($afile.'.php?name=uploads&dir='.$dir);
     }
 }
 
 function templconf(): void {
-    global $afile, $confup;
+    global $afile, $conf;
     require_once CONFIG_DIR.'/filetype.php';
     head();
     $cont = navi(0, 1, 0, 0, 'templconf');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
-    $typm = explode(',', $confup['typ']);
+    $typm = explode(',', $conf['uploads']['typ']);
     $conts = '';
     for ($i = 0; $i < count($typm); $i++) {
         $hr = ($i == 0) ? '' : '<hr>';
-        $conts .= $hr.'<table class="sl_table_edit"><tr><td><h5>'._TPFOR.': '.$typm[$i].'</h5></td></tr><tr><td>'.textarea_code('code_'.$i.'', 'tmp[]', 'sl_form', 'text/html', $conftp[$typm[$i]]).'</td></tr></table>';
+        $conts .= $hr.'<table class="sl_table_edit"><tr><td><h5>'._TPFOR.': '.$typm[$i].'</h5></td></tr><tr><td>'.textarea_code('code_'.$i.'', 'tmp[]', 'sl_form', 'text/html', $conf['filetype'][$typm[$i]] ?? '').'</td></tr></table>';
     }
     $cont .= setTemplateBasic('open').'<form action="'.$afile.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="templsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.setTemplateBasic('close');
     echo $cont;
@@ -134,9 +134,9 @@ function templconf(): void {
 }
 
 function templsave(): void {
-    global $afile, $confup;
+    global $afile, $conf;
     $cont = [];
-    $typm = explode(',', $confup['typ']);
+    $typm = explode(',', $conf['uploads']['typ']);
     $tmp = getVar('post', 'tmp', 'raw');
     for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i];
     setConfigFile('filetype.php', $cont);
@@ -144,7 +144,7 @@ function templsave(): void {
 }
 
 function conf(): void {
-    global $afile, $confup;
+    global $afile, $conf;
     head();
     $cont = navi(1, 2, 1, 0, 'conf');
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
@@ -153,7 +153,7 @@ function conf(): void {
     if ($handle !== false) {
         while (($file = readdir($handle)) !== false) {
             if (!preg_match('/\./', $file)) {
-                $sel = ($confup['dir'] == $file) ? ' selected' : '';
+                $sel = ($conf['uploads']['dir'] == $file) ? ' selected' : '';
                 $directory .= '<option value="'.$file.'"'.$sel.'>uploads/'.$file.'</option>';
             }
         }
@@ -163,16 +163,16 @@ function conf(): void {
     .'<div id="tabcs0" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._DIRDEF.':</td><td><select name="dir" class="sl_conf">'.$directory.'</select></td></tr>'
-    .'<tr><td>'._TPFORM.':<div class="sl_small">'._TPFORMIN.'</div></td><td><textarea name="ttyp" cols="65" rows="5" class="sl_conf" placeholder="'._TPFORM.'" required>'.$confup['typ'].'</textarea></td></tr>'
-    .'<tr><td>'._TPWIDTH.':</td><td><input type="number" name="twidth" value="'.$confup['width'].'" class="sl_conf" placeholder="'._TPWIDTH.'" required></td></tr>'
-    .'<tr><td>'._TPHEIGHT.':</td><td><input type="number" name="theight" value="'.$confup['height'].'" class="sl_conf" placeholder="'._TPHEIGHT.'" required></td></tr></table>'
+    .'<tr><td>'._TPFORM.':<div class="sl_small">'._TPFORMIN.'</div></td><td><textarea name="ttyp" cols="65" rows="5" class="sl_conf" placeholder="'._TPFORM.'" required>'.$conf['uploads']['typ'].'</textarea></td></tr>'
+    .'<tr><td>'._TPWIDTH.':</td><td><input type="number" name="twidth" value="'.$conf['uploads']['width'].'" class="sl_conf" placeholder="'._TPWIDTH.'" required></td></tr>'
+    .'<tr><td>'._TPHEIGHT.':</td><td><input type="number" name="theight" value="'.$conf['uploads']['height'].'" class="sl_conf" placeholder="'._TPHEIGHT.'" required></td></tr></table>'
     .'</div>'
     .'<div id="tabcs1" class="tabcont">';
     $mods = ['all', 'account', 'album', 'auto_links', 'content', 'faq', 'files', 'forum', 'help', 'info', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
     $i = 0;
     foreach ($mods as $val) {
         if ($val != '') {
-            $con = explode('|', $confup[$val]);
+            $con = explode('|', $conf['uploads'][$val]);
             $hr = ($i == 0) ? '' : '<hr>';
             $conts .= $hr.'<table class="sl_table_conf">'
             .'<tr><td>'._MODUL.':</td><td>'.deflmconst($val).'</td></tr>'
@@ -216,11 +216,11 @@ function confsave(): void {
     $theight = getVar('post', 'theight', 'num', 500);
     $xtheight = (!$theight) ? 500 : $theight;
     $dir = getVar('post', 'dir', 'var');
-    $confup = [];
-    $confup['dir'] = $dir;
-    $confup['typ'] = $xttyp;
-    $confup['width'] = $xtwidth;
-    $confup['height'] = $xtheight;
+    $cont = [];
+    $cont['dir'] = $dir;
+    $cont['typ'] = $xttyp;
+    $cont['width'] = $xtwidth;
+    $cont['height'] = $xtheight;
     $mods = ['all', 'account', 'album', 'auto_links', 'content', 'faq', 'files', 'forum', 'help', 'info', 'links', 'media', 'news', 'pages', 'shop', 'voting'];
     $type = getVar('post', 'type', 'raw');
     $allsize = getVar('post', 'allsize', 'raw');
@@ -247,11 +247,11 @@ function confsave(): void {
             $xusum = (!intval($usum[$i])) ? 100 : $usum[$i];
             $upload = getVar('post', $i.'upload', 'num');
             $upguest = getVar('post', $i.'upguest', 'num');
-            $confup[$val] = $xtype.'|'.$xallsize.'|'.$xsize.'|'.$xwidth.'|'.$xheight.'|'.$xup.'|'.$xgdwidth.'|'.$xnum.'|'.$xasum.'|'.$xusum.'|'.$upload.'|'.$upguest;
+            $cont[$val] = $xtype.'|'.$xallsize.'|'.$xsize.'|'.$xwidth.'|'.$xheight.'|'.$xup.'|'.$xgdwidth.'|'.$xnum.'|'.$xasum.'|'.$xusum.'|'.$upload.'|'.$upguest;
             $i++;
         }
     }
-    setConfigFile('uploads.php', $confup);
+    setConfigFile('uploads.php', $cont);
     setRedirect($afile.'.php?name=uploads&op=conf');
 }
 
@@ -270,3 +270,4 @@ switch ($op) {
     case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
+

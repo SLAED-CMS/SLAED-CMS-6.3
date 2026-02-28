@@ -80,7 +80,7 @@ class sql_db {
     # Executes SQL query (raw or with parameters)
     # Supports: Named (:name) or Positional (?) placeholders
     function sql_query(string $query = '', array $params = []): PDOStatement|false {
-        global $conf, $confs;
+ global $conf;
         if ($this->qresult) unset($this->qresult);
         if (!$query) return false;
         $this->qid = uniqid('', true);
@@ -119,7 +119,7 @@ class sql_db {
             unset($this->qrow[$this->qid], $this->qrowset[$this->qid]);
             return $this->qresult;
         } else {
-            if ($confs['error_log']) {
+            if ($conf['security']['error_log']) {
                 $error = $this->sql_error();
                 $errmsg = htmlspecialchars($error['message']);
                 $errinfo = $error['sqlstate'].' / '.$error['code'];

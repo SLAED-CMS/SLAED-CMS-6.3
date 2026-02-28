@@ -14,12 +14,11 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function content(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['content'] ?? [];
-    head();
+        head();
     $cont = navi(0, 0, 0, 0);
     $num = getVar('get', 'num', 'num', 1);
-    $anum = $cfg['anum'] ?? 10;
-    $anump = $cfg['anump'] ?? 10;
+    $anum = $conf['content']['anum'] ?? 10;
+    $anump = $conf['content']['anump'] ?? 10;
     $offset = ($num - 1) * $anum;
     $result = $db->sql_query('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content ORDER BY id DESC LIMIT '.$offset.', '.$anum);
     if ($db->sql_numrows($result) > 0) {
@@ -137,16 +136,15 @@ function del(int $cid = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-    $cfg = $conf['content'] ?? [];
-    head();
+        head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$cfg['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$cfg['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$cfg['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$cfg['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['content']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['content']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['content']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['content']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="content"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -180,6 +178,7 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
 
 
 

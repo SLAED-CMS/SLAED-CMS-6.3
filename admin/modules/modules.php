@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -18,7 +18,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function modules(): void {
-    global $confmd, $db, $afile, $infos;
+    global $conf, $db, $afile, $infos;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     head();
@@ -36,8 +36,8 @@ function modules(): void {
         if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) {
             $module = $matches[1];
             $modlist[] = $module;
-            if (!isset($confmd[$module])) {
-                $confmd[$module] = [
+            if (!isset($conf['modules'][$module])) {
+                $conf['modules'][$module] = [
                     'lang'   => '_'.strtoupper($module),
                     'img'    => strtolower($module).'.png',
                     'active' => 1,
@@ -60,8 +60,8 @@ function modules(): void {
     while (false !== ($file = readdir($handle))) {
         if (!preg_match("/\./", $file) && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) {
             $modlist[] = $file;
-            if (!isset($confmd[$file])) {
-                $confmd[$file] = [
+            if (!isset($conf['modules'][$file])) {
+                $conf['modules'][$file] = [
                     'lang'   => '_'.strtoupper($file),
                     'img'    => strtolower($file).'.png',
                     'active' => 0,
@@ -92,9 +92,9 @@ function modules(): void {
     }
 
     // Remove modules from config that no longer exist in filesystem
-    foreach (array_keys($confmd) as $module) {
+    foreach (array_keys($conf['modules']) as $module) {
         if (!in_array($module, $modlist, true)) {
-            unset($confmd[$module]);
+            unset($conf['modules'][$module]);
             $removed[] = $module;
             $config = true;
         }
@@ -108,12 +108,12 @@ function modules(): void {
 
     // Save config if changed
     if ($config) {
-        setConfigFile('modules.php', $confmd);
+        setConfigFile('modules.php', $conf['modules']);
     }
 
     // Filter modules by type
     $mods = [];
-    foreach ($confmd as $mname => $mdata) {
+    foreach ($conf['modules'] as $mname => $mdata) {
         $type = (int)($mdata['type'] ?? 1);
         if ($mtype === 2 || $mtype === $type) {
             $mods[$mname] = $mdata;
@@ -221,19 +221,19 @@ function modules(): void {
 }
 
 function edit(): void {
-    global $confmd, $db, $afile;
+    global $conf, $db, $afile;
     $mod = getVar('get', 'mod', 'var');
-    if (!isset($confmd[$mod])) {
+    if (!isset($conf['modules'][$mod])) {
         setRedirect($afile.'.php?name=modules');
     }
-    $lang = $confmd[$mod]['lang'] ?? '_'.strtoupper($mod);
-    $img = $confmd[$mod]['img'] ?? $mod.'.png';
-    $active = $confmd[$mod]['active'];
-    $view = $confmd[$mod]['view'];
-    $menu = $confmd[$mod]['menu'];
-    $group = $confmd[$mod]['group'];
-    $side = $confmd[$mod]['side'];
-    $top = $confmd[$mod]['top'];
+    $lang = $conf['modules'][$mod]['lang'] ?? '_'.strtoupper($mod);
+    $img = $conf['modules'][$mod]['img'] ?? $mod.'.png';
+    $active = $conf['modules'][$mod]['active'];
+    $view = $conf['modules'][$mod]['view'];
+    $menu = $conf['modules'][$mod]['menu'];
+    $group = $conf['modules'][$mod]['group'];
+    $side = $conf['modules'][$mod]['side'];
+    $top = $conf['modules'][$mod]['top'];
     head();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
@@ -300,24 +300,24 @@ function edit(): void {
 }
 
 function status(): void {
-    global $confmd, $afile;
+    global $conf, $afile;
     $mod = getVar('get', 'mod', 'var');
     $act = getVar('get', 'act', 'num');
-    if (isset($confmd[$mod])) {
-        $confmd[$mod]['active'] = $act;
-        setConfigFile('modules.php', $confmd);
+    if (isset($conf['modules'][$mod])) {
+        $conf['modules'][$mod]['active'] = $act;
+        setConfigFile('modules.php', $conf['modules']);
     }
     setRedirect($afile.'.php?name=modules');
 }
 
 function save(): void {
-    global $confmd, $afile;
+    global $conf, $afile;
     $mod = getVar('post', 'mod', 'var');
-    if (isset($confmd[$mod])) {
+    if (isset($conf['modules'][$mod])) {
         $view = getVar('post', 'view', 'num');
         $img = str_replace('templates/admin/images/admin/', '', getVar('post', 'img', 'text'));
-        $type = $confmd[$mod]['type'] ?? 1;
-        $confmd[$mod] = [
+        $type = $conf['modules'][$mod]['type'] ?? 1;
+        $conf['modules'][$mod] = [
             'lang'   => getVar('post', 'lang', 'var', '_'.strtoupper($mod)),
             'img'    => $img ?: strtolower($mod).'.png',
             'active' => getVar('post', 'active', 'num'),
@@ -328,16 +328,16 @@ function save(): void {
             'top'    => getVar('post', 'top', 'num'),
             'type'   => $type,
         ];
-        setConfigFile('modules.php', $confmd);
+        setConfigFile('modules.php', $conf['modules']);
     }
     setRedirect($afile.'.php?name=modules');
 }
 
 function add(): void {
     global $db, $id, $infos;
-    $module = getVar('get', 'mod', 'var');
-    if ($module && $id) {
-        $filename = ($id == 3) ? file_get_contents('modules/'.$module.'/sql/update.sql') : file_get_contents('modules/'.$module.'/sql/table.sql');
+    $mod = getVar('get', 'mod', 'var');
+    if ($mod && $id) {
+        $filename = ($id == 3) ? file_get_contents('modules/'.$mod.'/sql/update.sql') : file_get_contents('modules/'.$mod.'/sql/table.sql');
         if ($id == 1) {
             $ttitle = _DB_DELETE;
         } elseif ($id == 2) {
@@ -355,7 +355,7 @@ function add(): void {
                 $info .= _TABLE.': '.$table[1].' - '._STATUS.': '.(($ident) ? '<span class="sl_green">'._OK.'</span>' : '<span class="sl_red">'._ERROR.'</span>').'<br>';
             }
         }
-        $infos = $ttitle.': '.$module.'<br><br>'.$info;
+        $infos = $ttitle.': '.$mod.'<br><br>'.$info;
     }
     modules();
 }
@@ -374,3 +374,4 @@ switch ($op) {
     case 'add': add(); break;
     case 'info': info(); break;
 }
+

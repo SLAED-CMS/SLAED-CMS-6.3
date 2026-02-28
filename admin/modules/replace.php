@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function replace(): void {
-    global $afile, $confre;
+    global $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0, 'replace');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _REPLACEINFO]);
@@ -25,7 +25,7 @@ function replace(): void {
     foreach ($mods as $val) {
         if ($val != '') {
             $content .= '<div id="tabc'.$k.'" class="tabcont">';
-            $fieldc = explode('||', $confre[$val]);
+            $fieldc = explode('||', $conf['replace'][$val]);
             for ($c = 0; $c < 50; $c++) {
                 preg_match('#(.*)\|(.*)#i', $fieldc[$c], $out);
                 $b = $c + 1;

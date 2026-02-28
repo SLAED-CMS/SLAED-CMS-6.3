@@ -9,12 +9,11 @@ if (!defined('BLOCK_FILE')) {
     exit;
 }
 
-global $confmd;
 $mods_1 = '<tr><td><a href="index.php" title="'._HOME.'" class="sl_modul">'._HOME.'</a></td></tr>';
 $mods_2 = '';
 $mods_3 = '';
 $mods_4 = '';
-$mod_list = $confmd;
+$mod_list = $conf['modules'];
 ksort($mod_list);
 foreach ($mod_list as $m_title => $info) {
     $type = (int)($info['type'] ?? 1);

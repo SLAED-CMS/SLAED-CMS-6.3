@@ -14,11 +14,10 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function help(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['help'] ?? [];
-    head();
+        head();
     $num = getVar('get', 'num', 'num', 1);
-    $anum = $cfg['anum'] ?? 25;
-    $anump = $cfg['anump'] ?? 10;
+    $anum = $conf['help']['anum'] ?? 25;
+    $anump = $conf['help']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
     if (getVar('get', 'status', 'num', 0) == 1) {
         $status = '1';
@@ -206,25 +205,24 @@ function del(int $fid = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-    $cfg = $conf['help'] ?? [];
-    head();
+        head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($cfg['listnum'] ?? 0).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($cfg['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($cfg['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($cfg['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($cfg['catdesc'] ?? 0, 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($cfg['subcat'] ?? 0, 'subcat').'</td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($cfg['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._HELPADD.'</td><td>'.radio_form($cfg['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($cfg['date'] ?? 0, 'date').'</td></tr>'
-    .'<tr><td>'._C_18.'</td><td>'.radio_form($cfg['read'] ?? 0, 'read').'</td></tr>'
-    .'<tr><td>'._C_20.'</td><td>'.radio_form($cfg['letter'] ?? 0, 'letter').'</td></tr>'
+    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['help']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
+    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($conf['help']['listnum'] ?? 0).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['help']['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['help']['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($conf['help']['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['help']['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['help']['catdesc'] ?? 0, 'catdesc').'</td></tr>'
+    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['help']['subcat'] ?? 0, 'subcat').'</td></tr>'
+    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['help']['addmail'] ?? 0, 'addmail').'</td></tr>'
+    .'<tr><td>'._HELPADD.'</td><td>'.radio_form($conf['help']['add'] ?? 0, 'add').'</td></tr>'
+    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['help']['date'] ?? 0, 'date').'</td></tr>'
+    .'<tr><td>'._C_18.'</td><td>'.radio_form($conf['help']['read'] ?? 0, 'read').'</td></tr>'
+    .'<tr><td>'._C_20.'</td><td>'.radio_form($conf['help']['letter'] ?? 0, 'letter').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;

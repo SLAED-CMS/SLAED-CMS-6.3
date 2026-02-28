@@ -19,25 +19,25 @@ function privat(): void {
 }
 
 function conf(): void {
-    global $afile, $confpr;
+    global $afile, $conf;
     head();
     $cont = navi(0, 1, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$confpr['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confpr['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$confpr['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$confpr['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._COMLETTER.':</td><td><input type="number" name="letter" value="'.$confpr['letter'].'" class="sl_conf" placeholder="'._COMLETTER.'" required></td></tr>'
-    .'<tr><td>'._CSEND.':</td><td><input type="number" name="send" value="'.$confpr['send'].'" class="sl_conf" placeholder="'._CSEND.'" required></td></tr>'
-    .'<tr><td>'._PRINM.':</td><td><input type="number" name="messin" value="'.$confpr['messin'].'" class="sl_conf" placeholder="'._PRINM.'" required></td></tr>'
-    .'<tr><td>'._PRSAVEM.':</td><td><input type="number" name="messsav" value="'.$confpr['messsav'].'" class="sl_conf" placeholder="'._PRSAVEM.'" required></td></tr>'
-    .'<tr><td>'._PRMAIL.'</td><td>'.radio_form($confpr['newmail'], 'newmail').'</td></tr>'
-    .'<tr><td>'._PRSELF.'</td><td>'.radio_form($confpr['himself'], 'himself').'</td></tr>'
-    .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($confpr['profil'], 'profil').'</td></tr>'
-    .'<tr><td>'._VWEB.'</td><td>'.radio_form($confpr['web'], 'web').'</td></tr>'
-    .'<tr><td>'._PRACT.'</td><td>'.radio_form($confpr['act'], 'act').'</td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['privat']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['privat']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['privat']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['privat']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._COMLETTER.':</td><td><input type="number" name="letter" value="'.$conf['privat']['letter'].'" class="sl_conf" placeholder="'._COMLETTER.'" required></td></tr>'
+    .'<tr><td>'._CSEND.':</td><td><input type="number" name="send" value="'.$conf['privat']['send'].'" class="sl_conf" placeholder="'._CSEND.'" required></td></tr>'
+    .'<tr><td>'._PRINM.':</td><td><input type="number" name="messin" value="'.$conf['privat']['messin'].'" class="sl_conf" placeholder="'._PRINM.'" required></td></tr>'
+    .'<tr><td>'._PRSAVEM.':</td><td><input type="number" name="messsav" value="'.$conf['privat']['messsav'].'" class="sl_conf" placeholder="'._PRSAVEM.'" required></td></tr>'
+    .'<tr><td>'._PRMAIL.'</td><td>'.radio_form($conf['privat']['newmail'], 'newmail').'</td></tr>'
+    .'<tr><td>'._PRSELF.'</td><td>'.radio_form($conf['privat']['himself'], 'himself').'</td></tr>'
+    .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($conf['privat']['profil'], 'profil').'</td></tr>'
+    .'<tr><td>'._VWEB.'</td><td>'.radio_form($conf['privat']['web'], 'web').'</td></tr>'
+    .'<tr><td>'._PRACT.'</td><td>'.radio_form($conf['privat']['act'], 'act').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="privat"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;

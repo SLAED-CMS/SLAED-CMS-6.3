@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,11 +13,11 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function getBlockModules(): array {
-    global $confmd;
+    global $conf;
     static $mods = null;
     if ($mods === null) {
         $mods = [];
-        foreach ($confmd as $name => $info) {
+        foreach ($conf['modules'] as $name => $info) {
             if ((int)($info['type'] ?? 1) !== 1) continue;
             $mods[] = $name;
         }
@@ -162,7 +162,7 @@ function addsave(): void {
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
     $url = ($headline) ? $headline : $url;
-    $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
+    $blockwhere = getVar('post', 'blockwhere', 'var', []);
     [$weight] = $db->sql_fetchrow($db->sql_query('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC', ['bposition' => $bposition]));
     $weight++;
     $bkey = '';
@@ -252,12 +252,12 @@ function filecodesave(): void {
         if ($handle = fopen('blocks/'.$bf, 'wb')) {
             $html_b = '';
             $html_e = '';
-            $flaged = getVar('post', 'flag', 'var', '');
-            if ($flaged == 'html') {
+            $flag = getVar('post', 'flag', 'var', '');
+            if ($flag == 'html') {
                 $html_b = "\$content = <<<BLOCKHTML\r\n";
                 $html_e = "\r\nBLOCKHTML;\r\n";
             }
-            fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
+            fwrite($handle, '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Ã‚Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\'BLOCK_FILE\')) {'.PHP_EOL.'header(\'Location: ../index.php\');'.PHP_EOL.'exit;'.PHP_EOL.'}'.PHP_EOL.PHP_EOL.$html_b.$blocktext.$html_e.PHP_EOL.'?>');
             fclose($handle);
             setRedirect($afile.'.php?name=blocks');
         }
@@ -410,7 +410,7 @@ function editsave(): void {
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
-    $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
+    $blockwhere = getVar('post', 'blockwhere', 'var', []);
     if (isset($blockwhere)) {
         $which = '';
         if (in_array('all', $blockwhere)) $which = 'all';
@@ -547,3 +547,4 @@ switch ($op) {
     case 'del': del(); break;
     case 'info': info(); break;
 }
+

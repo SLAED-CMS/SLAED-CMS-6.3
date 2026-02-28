@@ -352,7 +352,7 @@ function conf(): void {
     .'<tr><td>'._ASIZE.':</td><td><input type="number" name="amaxsize" value="'.$conf['users']['amaxsize'].'" class="sl_conf" placeholder="'._ASIZE.'" required></td></tr>'
     .'<tr><td>'._AWIDTH._AIN.':</td><td><input type="number" name="awidth" value="'.$conf['users']['awidth'].'" class="sl_conf" placeholder="'._AWIDTH._AIN.'" required></td></tr>'
     .'<tr><td>'._AHEIGHT._AIN.':</td><td><input type="number" name="aheight" value="'.$conf['users']['aheight'].'" class="sl_conf" placeholder="'._AHEIGHT._AIN.'" required></td></tr>'
-    .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="user_t" value="'.intval($conf['users']['user_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
+    .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="user" value="'.intval($conf['users']['user_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
     .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['users']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
     .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['users']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
     .'<tr><td>'._PASSWDLEN.':</td><td><select name="minpass" class="sl_conf">';
@@ -383,9 +383,9 @@ function conf(): void {
     .'<tr><td>'._NETWORKACTIVE.'</td><td>'.radio_form($conf['users']['network'], 'network').'</td></tr>'
     .'<tr><td>'._RULACT.'</td><td>'.radio_form($conf['users']['rule'], 'rule').'</td></tr>'
     .'<tr><td>'._RULES.':</td><td><textarea name="rules" cols="65" rows="10" class="sl_conf" placeholder="'._RULES.'">'.$conf['users']['rules'].'</textarea></td></tr>'
-    .'<tr><td>'._NETWORKCODE.':</td><td>'.textarea_code('code', 'network_c', 'sl_conf', 'text/html', $conf['users']['network_c']).'</td></tr>'
-    .'<tr><td>'._NAME_BLOCK.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="name_b" cols="65" rows="5" class="sl_conf" placeholder="'._NAME_BLOCK.'">'.$conf['users']['name_b'].'</textarea></td></tr>'
-    .'<tr><td>'._MAIL_BLOCK.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="mail_b" cols="65" rows="5" class="sl_conf" placeholder="'._MAIL_BLOCK.'">'.$conf['users']['mail_b'].'</textarea></td></tr>'
+    .'<tr><td>'._NETWORKCODE.':</td><td>'.textarea_code('code', 'network', 'sl_conf', 'text/html', $conf['users']['network_c']).'</td></tr>'
+    .'<tr><td>'._NAME_BLOCK.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="name" cols="65" rows="5" class="sl_conf" placeholder="'._NAME_BLOCK.'">'.$conf['users']['name_b'].'</textarea></td></tr>'
+    .'<tr><td>'._MAIL_BLOCK.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="mail" cols="65" rows="5" class="sl_conf" placeholder="'._MAIL_BLOCK.'">'.$conf['users']['mail_b'].'</textarea></td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -401,7 +401,7 @@ function save(): void {
         'amaxsize' => getVar('post', 'amaxsize', 'num', 51200),
         'awidth' => getVar('post', 'awidth', 'num', 100),
         'aheight' => getVar('post', 'aheight', 'num', 100),
-        'user_t' => getVar('post', 'user_t', 'num', 30) * 86400,
+        'user_t' => getVar('post', 'user', 'num', 30) * 86400,
         'anum' => getVar('post', 'anum', 'num', 50),
         'anump' => getVar('post', 'anump', 'num', 10),
         'minpass' => getVar('post', 'minpass', 'num'),
@@ -417,9 +417,9 @@ function save(): void {
         'network' => getVar('post', 'network', 'num'),
         'rule' => getVar('post', 'rule', 'num'),
         'rules' => getVar('post', 'rules', 'text'),
-        'network_c' => "<<<HTML\n".getVar('post', 'network_c', 'text')."\nHTML",
-        'name_b' => strtolower(strtr(getVar('post', 'name_b', 'text'), $protect)),
-        'mail_b' => strtolower(strtr(getVar('post', 'mail_b', 'text'), $protect)),
+        'network_c' => "<<<HTML\n".getVar('post', 'network', 'text')."\nHTML",
+        'name_b' => strtolower(strtr(getVar('post', 'name', 'text'), $protect)),
+        'mail_b' => strtolower(strtr(getVar('post', 'mail', 'text'), $protect)),
         'points' => $conf['users']['points']
     ];
     setConfigFile('users.php', $cont);

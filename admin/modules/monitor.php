@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -173,14 +173,14 @@ function getNetworkStats(): array {
 }
 
 function isModuleActive(string $mod): bool {
-    global $confmd;
+    global $conf;
     if (function_exists('is_active')) return is_active($mod);
-    $info = $confmd[$mod] ?? [];
+    $info = $conf['modules'][$mod] ?? [];
     return !empty($info['active']);
 }
 
 function getMonitor(): void {
-    global $db, $conf, $confdb;
+    global $db, $conf;
     head();
     $cont = getMonitorTabs(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
@@ -200,7 +200,7 @@ function getMonitor(): void {
     // DB Stats
     $dbsize = 0;
     $dbtabs = 0;
-    $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($confdb['name'] ?? ''));
+    $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname !== '') {
         $db_result = $db->sql_query('SHOW TABLE STATUS FROM `'.$dbname.'`');
         while ($row = $db->sql_fetchrow($db_result)) {
@@ -350,3 +350,5 @@ switch ($op) {
     default: getMonitor(); break;
     case 'info': getInfo(); break;
 }
+
+

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright ï¿½ 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -26,24 +26,23 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
         $sops = ['', ''];
         $slang = [_EXPORT, _IMPORT];
     }
-    $search = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     $priv = [_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE];
     $search = getVar('post', 'search', 'num');
     $csearch = getVar('post', 'csearch', 'text');
     foreach ($priv as $key => $value) {
         $sort = $key + 1;
         $sel = ($search == $sort || (!$search && $sort == 2)) ? ' selected' : '';
-        $search .= '<option value="'.$sort.'\''.$sel.'>'.$value.'</option>';
+        $box .= '<option value="'.$sort.'"'.$sel.'>'.$value.'</option>';
     }
-    $search .= '</select> '.get_user_search('csearch', $csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs(_SHOP, 'shop.png', $search, $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
+    $box .= '</select> '.get_user_search('csearch', $csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = setTemplateBasic('searchbox', ['{%searchbox%}' => $box]);
+    return getAdminTabs(_SHOP, 'shop.png', $box, $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
 }
 
 function clients(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['shop'] ?? [];
-    $csearch = getVar('post', 'csearch', 'text');
+        $csearch = getVar('post', 'csearch', 'text');
     $search = getVar('post', 'search', 'num');
     head();
     $searchCols = [
@@ -63,7 +62,7 @@ function clients(): void {
         $searchParams['csearch'] = '%'.$csearch.'%';
     }
     $num = getVar('get', 'num', 'num', 1);
-    $offset = ($num - 1) * $cfg['anum'];
+    $offset = ($num - 1) * $conf['shop']['anum'];
     $a = ($num) ? $offset+1 : 1;
     if ($csearch) {
         $sqlstatus = 'active != \'2\'';
@@ -86,9 +85,9 @@ function clients(): void {
         $refer = '&amp;refer=1';
         $cont = navi(0, 0, 1, 0);
     }
-    $result = $db->sql_query('SELECT c.id, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_name, p.title FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.'.$sqlstatus.$searchWhere.' ORDER BY '.$searchOrder.' LIMIT '.$offset.', '.$cfg['anum'], $searchParams);
+    $result = $db->sql_query('SELECT c.id, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_name, p.title FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.'.$sqlstatus.$searchWhere.' ORDER BY '.$searchOrder.' LIMIT '.$offset.', '.$conf['shop']['anum'], $searchParams);
     [$numstories] = $db->sql_fetchrow($db->sql_query('SELECT Count(c.id) FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) WHERE c.'.$sqlstatus.$searchWhere, $searchParams));
-    $numpages = ($cfg['anum'] > 0) ? (int)ceil($numstories / $cfg['anum']) : 1;
+    $numpages = ($conf['shop']['anum'] > 0) ? (int)ceil($numstories / $conf['shop']['anum']) : 1;
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._SITE.'</th><th>'._NICKNAME.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -112,7 +111,7 @@ function clients(): void {
             $a++;
         }
         $cont .= '</tbody></table>';
-        $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $cfg['anum'], $field, $cfg['anump']);
+        $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $conf['shop']['anum'], $field, $conf['shop']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -132,17 +131,16 @@ function clientsact(): void {
 
 function clientsadd(): void {
     global $db, $afile, $conf, $stop;
-    $cfg = $conf['shop'] ?? [];
-    if (getVar('req', 'cid', 'num', 0)) {
+        if (getVar('req', 'cid', 'num', 0)) {
         $cid = getVar('req', 'cid', 'num');
         $result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_partner) WHERE c.id = :cid', ['cid' => $cid]);
         [$cid, $uid, $product, $partner, $proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick] = $db->sql_fetchrow($result);
         $cregdate = date('Y-m-d H:i:s', $cregdate);
         $cenddate = ($cenddate) ? date('Y-m-d H:i:s', $cenddate) : date('Y-m-d H:i:s');
     } else {
-        $partner = getVar('post', 'cid_partner', 'num');
-        $uid = getVar('post', 'cid_user', 'num');
-        $product = getVar('post', 'cid_product', 'num');
+        $partner = getVar('post', 'partner', 'num');
+        $uid = getVar('post', 'uid', 'num');
+        $product = getVar('post', 'product', 'num');
         $cname = getVar('post', 'cname', 'text');
         $cadres = getVar('post', 'cadres', 'text');
         $cphone = getVar('post', 'cphone', 'text');
@@ -160,13 +158,13 @@ function clientsadd(): void {
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     if ($partner) {
         if (!$proz) {
-            $num = $db->sql_numrows($db->sql_query('SELECT id_partner FROM '.PREFIX_DB.'_clients WHERE id_partner = :cid_partner AND active != 2', ['cid_partner' => $partner]));
-            if ($num >= $cfg['clients2']) {
-                $proz = $cfg['proz2'];
-            } elseif ($num >= $cfg['clients1']) {
-                $proz = $cfg['proz1'];
-            } elseif ($num >= $cfg['clients']) {
-                $proz = $cfg['proz'];
+            $num = $db->sql_numrows($db->sql_query('SELECT id_partner FROM '.PREFIX_DB.'_clients WHERE id_partner = :partner AND active != 2', ['partner' => $partner]));
+            if ($num >= $conf['shop']['clients2']) {
+                $proz = $conf['shop']['proz2'];
+            } elseif ($num >= $conf['shop']['clients1']) {
+                $proz = $conf['shop']['proz1'];
+            } elseif ($num >= $conf['shop']['clients']) {
+                $proz = $conf['shop']['proz'];
             } else {
                 $proz = '0';
             }
@@ -176,12 +174,12 @@ function clientsadd(): void {
         }
         $nick = ($nick) ? user_info($nick) : _ANONYM;
         $cont .= '<tr><td>'._PARTNER_NAME.':</td><td>'.$nick.'</td></tr>'
-        .'<tr><td>'._PARTNER_ID.':</td><td><input type="hidden" name="cid_partner" value="'.$partner.'">'.$partner.'</td></tr>'
+        .'<tr><td>'._PARTNER_ID.':</td><td><input type="hidden" name="partner" value="'.$partner.'">'.$partner.'</td></tr>'
         .'<tr><td>'._PERCENT.':</td><td>'.$proz.' %</td></tr>';
     }
-    $cont .= '<tr><td>'._USER_ID.':</td><td><input type="number" name="cid_user" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'"></td></tr>';
+    $cont .= '<tr><td>'._USER_ID.':</td><td><input type="number" name="uid" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'"></td></tr>';
     $productslist = $db->sql_query('SELECT id, title FROM '.PREFIX_DB.'_products ORDER BY title');
-    $cont .= '<tr><td>'._PRODUCT.':</td><td><select name="cid_product" class="sl_form">';
+    $cont .= '<tr><td>'._PRODUCT.':</td><td><select name="product" class="sl_form">';
     while([$pid, $ptitle] = $db->sql_fetchrow($productslist)) {
         $cont .= '<option value="'.$pid.'\'';
         if ($product == $pid) $cont .= ' selected';
@@ -205,10 +203,9 @@ function clientsadd(): void {
 
 function clientssave(): void {
     global $db, $afile, $conf, $stop;
-    $cfg = $conf['shop'] ?? [];
-    $partner = getVar('post', 'cid_partner', 'num');
-    $uid = getVar('post', 'cid_user', 'num');
-    $product = getVar('post', 'cid_product', 'num');
+    $partner = getVar('post', 'partner', 'num');
+    $uid = getVar('post', 'uid', 'num');
+    $product = getVar('post', 'product', 'num');
     $cname = getVar('post', 'cname', 'text');
     $cadres = getVar('post', 'cadres', 'text');
     $cphone = getVar('post', 'cphone', 'text');
@@ -228,28 +225,28 @@ function clientssave(): void {
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         if ($cid) {
             if ($partner && $cppi) {
-                [$ppreis] = $db->sql_fetchrow($db->sql_query('SELECT preis FROM '.PREFIX_DB.'_products WHERE id = :cid_product', ['cid_product' => $product]));
-                $num = $db->sql_numrows($db->sql_query('SELECT id_partner FROM '.PREFIX_DB.'_clients WHERE id_partner = :cid_partner AND active != 2', ['cid_partner' => $partner]));
-                if ($num >= $cfg['clients2']) {
-                    $cfg['proz2'] = ($cfg['proz2']) ? $cfg['proz2'] : 1;
-                    $preis = $ppreis / 100 * $cfg['proz2'];
-                    $proz = $cfg['proz2'];
-                } elseif ($num >= $cfg['clients1']) {
-                    $cfg['proz1'] = ($cfg['proz1']) ? $cfg['proz1'] : 1;
-                    $preis = $ppreis / 100 * $cfg['proz1'];
-                    $proz = $cfg['proz1'];
-                } elseif ($num >= $cfg['clients']) {
-                    $cfg['proz'] = ($cfg['proz']) ? $cfg['proz'] : 1;
-                    $preis = $ppreis / 100 * $cfg['proz'];
-                    $proz = $cfg['proz'];
+                [$ppreis] = $db->sql_fetchrow($db->sql_query('SELECT preis FROM '.PREFIX_DB.'_products WHERE id = :product', ['product' => $product]));
+                $num = $db->sql_numrows($db->sql_query('SELECT id_partner FROM '.PREFIX_DB.'_clients WHERE id_partner = :partner AND active != 2', ['partner' => $partner]));
+                if ($num >= $conf['shop']['clients2']) {
+                    $conf['shop']['proz2'] = ($conf['shop']['proz2']) ? $conf['shop']['proz2'] : 1;
+                    $preis = $ppreis / 100 * $conf['shop']['proz2'];
+                    $proz = $conf['shop']['proz2'];
+                } elseif ($num >= $conf['shop']['clients1']) {
+                    $conf['shop']['proz1'] = ($conf['shop']['proz1']) ? $conf['shop']['proz1'] : 1;
+                    $preis = $ppreis / 100 * $conf['shop']['proz1'];
+                    $proz = $conf['shop']['proz1'];
+                } elseif ($num >= $conf['shop']['clients']) {
+                    $conf['shop']['proz'] = ($conf['shop']['proz']) ? $conf['shop']['proz'] : 1;
+                    $preis = $ppreis / 100 * $conf['shop']['proz'];
+                    $proz = $conf['shop']['proz'];
                 }
-                $db->sql_query('UPDATE '.PREFIX_DB.'_partners SET rest = rest+:end_preis WHERE id_user = :cid_partner', ['end_preis' => $preis, 'cid_partner' => $partner]);
-                $db->sql_query('UPDATE '.PREFIX_DB.'_clients SET id_user = :cid_user, id_product = :cid_product, id_partner = :cid_partner, partner_proz = :cpartner_proz, name = :cname, adres = :cadres, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, active = :cactive WHERE id = :cid', ['cid_user' => $uid, 'cid_product' => $product, 'cid_partner' => $partner, 'cpartner_proz' => $proz, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
+                $db->sql_query('UPDATE '.PREFIX_DB.'_partners SET rest = rest+:end_preis WHERE id_user = :partner', ['end_preis' => $preis, 'partner' => $partner]);
+                $db->sql_query('UPDATE '.PREFIX_DB.'_clients SET id_user = :uid, id_product = :product, id_partner = :partner, partner_proz = :cpartner_proz, name = :cname, adres = :cadres, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, active = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'partner' => $partner, 'cpartner_proz' => $proz, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
             } else {
-                $db->sql_query('UPDATE '.PREFIX_DB.'_clients SET id_user = :cid_user, id_product = :cid_product, name = :cname, adres = :cadres, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, active = :cactive WHERE id = :cid', ['cid_user' => $uid, 'cid_product' => $product, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
+                $db->sql_query('UPDATE '.PREFIX_DB.'_clients SET id_user = :uid, id_product = :product, name = :cname, adres = :cadres, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, active = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
             }
         } else {
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :cid_user, :cid_product, \'0\', \'0\', :cname, :cadres, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)', ['cid_user' => $uid, 'cid_product' => $product, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive]);
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :uid, :product, \'0\', \'0\', :cname, :cadres, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive]);
         }
         setRedirect($afile.'.php?name=shop&op=clients');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
@@ -268,10 +265,9 @@ function clientsdel(int $id = 0): void {
 
 function products(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['shop'] ?? [];
-    head();
+        head();
     $num = getVar('get', 'num', 'num', 1);
-    $offset = ($num-1) * $cfg['anum'];
+    $offset = ($num-1) * $conf['shop']['anum'];
     $offset = intval($offset);
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'active=0';
@@ -284,7 +280,7 @@ function products(): void {
         $refer = '&amp;refer=1';
         $cont = navi(1, 1, 1, 0);
     }
-    $result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.preis, p.vote, p.active, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$cfg['anum']);
+    $result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.preis, p.vote, p.active, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" action="'.$afile.'.php" method="post">'
@@ -302,14 +298,14 @@ function products(): void {
             $typ = ($pactive) ? '0' : '1';
             $cont .= '<tr><td>'.$pid.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime, _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span></td>'
-            .'<td>'.$ppreis.' '.$cfg['valute'].'</td>'
+            .'<td>'.$ppreis.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.ad_status('', $active).'</td>'
             .'<td>'.add_menu($view.$vote.ad_status($afile.'.php?name=shop&op=productsadmin&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive).'||<a href="'.$afile.'.php?name=shop&op=productsadd&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=productsadmin&amp;typ=d&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$ptitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
             .'<td><input type="checkbox" name="id[]" class="sl_check" value="'.$pid.'"></td></tr>';
         }
         $cont .= '</tbody></table>';
         $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="productsadmin"><input type="hidden" name="refer" value="1"> <input type="submit" value="'._OK.'" class="sl_but_blue">';
-        $numpt = setArticleNumbers('pagenum', '', $cfg['anum'], $field, 'id', '_products', '', $sqlstatus, $cfg['anump']);
+        $numpt = setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_products', '', $sqlstatus, $conf['shop']['anump']);
         $cont .= '<table class="searchboxtab"><tr><td>'.$numpt.'</td><td><div class="searchbox">'.$selms.'</div></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
     } else {
@@ -451,10 +447,9 @@ function productsadmin(int|array $id = 0, string $vtyp = ''): void {
 
 function partners(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['shop'] ?? [];
-    head();
+        head();
     $num = getVar('get', 'num', 'num', 1);
-    $offset = ($num - 1) * $cfg['anum'];
+    $offset = ($num - 1) * $conf['shop']['anum'];
     $offset = intval($offset);
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'active=1';
@@ -472,7 +467,7 @@ function partners(): void {
         $refer = '&amp;refer=1';
         $cont = navi(2, 2, 1, 0);
     }
-    $result = $db->sql_query('SELECT p.id, p.name, p.adres, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.active, u.user_name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = p.id_user) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$cfg['anum']);
+    $result = $db->sql_query('SELECT p.id, p.name, p.adres, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.active, u.user_name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = p.id_user) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PARTNERREST.'</th><th>'._PARTNERBEK.'</th><th>'._SITE.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -486,14 +481,14 @@ function partners(): void {
             }
             $cont .= '<tr><td>'.$paid.'</td>'
             .'<td>'.title_tip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paadres.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$nick.'</td>'
-            .'<td>'.$parest.' '.$cfg['valute'].'</td>'
-            .'<td>'.$pabek.' '.$cfg['valute'].'</td>'
+            .'<td>'.$parest.' '.$conf['shop']['valute'].'</td>'
+            .'<td>'.$pabek.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.domain($pawebsite).'</td>'
             .'<td>'.date(_TIMESTRING, $paregdate).'</td>'
             .'<td>'.add_menu(ad_status($afile.'.php?name=shop&op=partnersact&amp;id='.$paid.$refer, $paactive).'||<a href="'.$afile.'.php?name=shop&op=partnersdetails&amp;paid='.$paid.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=shop&op=partnersadd&amp;paid='.$paid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=partnersdel&amp;id='.$paid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
-        $cont .= setArticleNumbers('pagenum', '', $cfg['anum'], $field, 'id', '_partners', '', $sqlstatus, $cfg['anump']);
+        $cont .= setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_partners', '', $sqlstatus, $conf['shop']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -519,7 +514,7 @@ function partnersadd(): void {
         [$paid, $uid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive, $nick] = $db->sql_fetchrow($result);
         $paregdate = ($paregdate) ? date('Y-m-d H:i:s', $paregdate) : date('Y-m-d H:i:s');
     } else {
-        $uid = getVar('post', 'paid_user', 'num');
+        $uid = getVar('post', 'uid', 'num');
         $paname = getVar('post', 'paname', 'text');
         $paadres = getVar('post', 'paadres', 'text');
         $paphone = getVar('post', 'paphone', 'text');
@@ -542,7 +537,7 @@ function partnersadd(): void {
         $cont .= '<tr><td>'._NICKNAME.':</td><td>'.$nick.'</td></tr>';
     }
     $cont .= '<tr><td>'._USER_ID.':</td><td>';
-    $cont .= ($uid == 0) ? '<input type="number" name="paid_user" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'" required>' : '<input type="hidden" name="paid_user" value="'.$uid.'">'.$uid;
+    $cont .= ($uid == 0) ? '<input type="number" name="uid" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'" required>' : '<input type="hidden" name="uid" value="'.$uid.'">'.$uid;
     $cont .= '</td></tr><tr><td>'._CLIENTNAME.':</td><td><input type="text" name="paname" value="'.$paname.'" maxlength="255" class="sl_form" placeholder="'._CLIENTNAME.'" required></td></tr>'
     .'<tr><td>'._CLIENTADRES.':</td><td><input type="text" name="paadres" value="'.$paadres.'" maxlength="255" class="sl_form" placeholder="'._CLIENTADRES.'" required></td></tr>'
     .'<tr><td>'._CLIENTPHONE.':</td><td><input type="text" name="paphone" value="'.$paphone.'" maxlength="255" class="sl_form" placeholder="'._CLIENTPHONE.'" required></td></tr>'
@@ -564,7 +559,7 @@ function partnersadd(): void {
 
 function partnerssave(): void {
     global $db, $afile, $stop;
-    $uid = getVar('post', 'paid_user', 'num');
+    $uid = getVar('post', 'uid', 'num');
     $paname = getVar('post', 'paname', 'text');
     $paadres = getVar('post', 'paadres', 'text');
     $paphone = getVar('post', 'paphone', 'text');
@@ -603,13 +598,12 @@ function partnersdel(int $id = 0): void {
 
 function partnersdetails(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['shop'] ?? [];
-    $paid = getVar('get', 'paid', 'num');
+        $paid = getVar('get', 'paid', 'num');
     head();
     $cont = navi(2, 2, 1, 1);
     $result = $db->sql_query('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
     [$paid, $uid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->sql_fetchrow($result);
-    $result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id=c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.id_product) WHERE c.id_partner = :paid_user AND c.active != 2 ORDER BY c.id ASC', ['paid_user' => $uid]);
+    $result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id=c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.id_product) WHERE c.id_partner = :uid AND c.active != 2 ORDER BY c.id ASC', ['uid' => $uid]);
     if ($db->sql_numrows($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th><th>'._PERCENT.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._SUM.'</th></tr></thead><tbody>';
@@ -622,10 +616,10 @@ function partnersdetails(): void {
             $cont .= '<tr><td>'.$cid.'</td>'
             .'<td>'.user_info($nick).'</td>'
             .'<td>'.$ptitle.'</td>'
-            .'<td>'.$ppreis.' '.$cfg['valute'].'</td>'
+            .'<td>'.$ppreis.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.$proz.' %</td>'
             .'<td>'.date(_TIMESTRING, $cregdate).'</td>'
-            .'<td>'.$partsum.' '.$cfg['valute'].'</td></tr>';
+            .'<td>'.$partsum.' '.$conf['shop']['valute'].'</td></tr>';
             $a++;
         }
         $cont .= '</tbody></table>';
@@ -636,9 +630,9 @@ function partnersdetails(): void {
     .'<tr><td>'.$a.'</td>'
     .'<td>'.$pawebmoney.'</td>'
     .'<td>'.$papaypal.'</td>'
-    .'<td>'.$partsumges.' '.$cfg['valute'].'</td>'
-    .'<td>'.$parest.' '.$cfg['valute'].'</td>'
-    .'<td>'.$pabek.' '.$cfg['valute'].'</td></tr></tbody></table>';
+    .'<td>'.$partsumges.' '.$conf['shop']['valute'].'</td>'
+    .'<td>'.$parest.' '.$conf['shop']['valute'].'</td>'
+    .'<td>'.$pabek.' '.$conf['shop']['valute'].'</td></tr></tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     foot();
@@ -761,48 +755,47 @@ function exportdata(): void {
 
 function conf(): void {
     global $afile, $conf;
-    $cfg = $conf['shop'] ?? [];
-    head();
+        head();
     $cont = navi(0, 4, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/shop.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis']).'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._C_0.':</td><td><input type="number" name="clients" value="'.$cfg['clients'].'" class="sl_conf" placeholder="'._C_0.'" required></td></tr>'
-    .'<tr><td>'._C_1.':</td><td><input type="number" name="proz" value="'.$cfg['proz'].'" class="sl_conf" placeholder="'._C_1.'" required></td></tr>'
-    .'<tr><td>'._C_2.':</td><td><input type="number" name="clients1" value="'.$cfg['clients1'].'" class="sl_conf" placeholder="'._C_2.'" required></td></tr>'
-    .'<tr><td>'._C_3.':</td><td><input type="number" name="proz1" value="'.$cfg['proz1'].'" class="sl_conf" placeholder="'._C_3.'" required></td></tr>'
-    .'<tr><td>'._C_4.':</td><td><input type="number" name="clients2" value="'.$cfg['clients2'].'" class="sl_conf" placeholder="'._C_4.'" required></td></tr>'
-    .'<tr><td>'._C_5.':</td><td><input type="number" name="proz2" value="'.$cfg['proz2'].'" class="sl_conf" placeholder="'._C_5.'" required></td></tr>'
-    .'<tr><td>'._C_6.':</td><td><input type="text" name="valute" value="'.$cfg['valute'].'" maxlength="25" class="sl_conf" placeholder="'._C_6.'" required></td></tr>'
-    .'<tr><td>'._C_7.':</td><td><input type="email" name="mail" value="'.$cfg['mail'].'" maxlength="25" class="sl_conf" placeholder="'._C_7.'" required></td></tr>'
-    .'<tr><td>'._C_8.':</td><td><input type="number" name="shop_t" value="'.intval($cfg['shop_t'] / 86400).'" class="sl_conf" placeholder="'._C_8.'" required></td></tr>'
-    .'<tr><td>'._C_9.':</td><td><input type="number" name="part_t" value="'.intval($cfg['part_t'] / 86400).'" class="sl_conf" placeholder="'._C_9.'" required></td></tr>'
-    .'<tr><td>'._BASCOL.':</td><td><input type="number" name="bascol" value="'.$cfg['bascol'].'" class="sl_conf" placeholder="'._BASCOL.'" required></td></tr>'
-    .'<tr><td>'._C_11.':</td><td><input type="number" name="assocnum" value="'.$cfg['assocnum'].'" class="sl_conf" placeholder="'._C_11.'" required></td></tr>'
-    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.$cfg['listnum'].'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$cfg['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$cfg['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$cfg['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$cfg['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($cfg['homcat'], 'homcat').'</td></tr>'
-    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($cfg['viewcat'], 'viewcat').'</td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($cfg['catdesc'], 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($cfg['subcat'], 'subcat').'</td></tr>'
-    .'<tr><td>'._C_14.'</td><td>'.radio_form($cfg['mailuser'], 'mailuser').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($cfg['date'], 'date').'</td></tr>'
-    .'<tr><td>'._C_18.'</td><td>'.radio_form($cfg['read'], 'read').'</td></tr>'
-    .'<tr><td>'._C_19.'</td><td>'.radio_form($cfg['rate'], 'rate').'</td></tr>'
-    .'<tr><td>'._C_20.'</td><td>'.radio_form($cfg['letter'], 'letter').'</td></tr>'
-    .'<tr><td>'._C_23.'</td><td>'.radio_form($cfg['assoc'], 'assoc').'</td></tr>'
-    .'<tr><td>'._C_24.'</td><td>'.radio_form($cfg['mailsend'], 'mailsend').'</td></tr>'
-    .'<tr><td>'._C_25.'</td><td>'.radio_form($cfg['part'], 'part').'</td></tr>'
-    .'<tr><td>'._C_26.':<div class="sl_small">'._PART_ID.'</div></td><td><input type="url" name="partlink" value="'.$cfg['partlink'].'" maxlength="25" class="sl_conf" placeholder="'._C_26.'" required></td></tr>'
-    .'<tr><td>'._C_27.':</td><td>'.textarea('1', 'sende', $cfg['sende'], 'shop', '5', _C_27, '1').'</td></tr>'
-    .'<tr><td>'._C_28.':</td><td>'.textarea('2', 'userinfo', $cfg['userinfo'], 'shop', '5', _C_28, '1').'</td></tr>'
-    .'<tr><td>'._C_29.':</td><td>'.textarea('3', 'partinfo', $cfg['partinfo'], 'shop', '5', _C_29, '1').'</td></tr>'
-    .'<tr><td>'._C_30.':</td><td>'.textarea('4', 'partinfo2', $cfg['partinfo2'], 'shop', '5', _C_30, '1').'</td></tr>'
-    .'<tr><td>'._C_31.':</td><td>'.textarea('5', 'shopinfo', $cfg['shopinfo'], 'shop', '5', _C_31, '1').'</td></tr>'
+    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['shop']['defis']).'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
+    .'<tr><td>'._C_0.':</td><td><input type="number" name="clients" value="'.$conf['shop']['clients'].'" class="sl_conf" placeholder="'._C_0.'" required></td></tr>'
+    .'<tr><td>'._C_1.':</td><td><input type="number" name="proz" value="'.$conf['shop']['proz'].'" class="sl_conf" placeholder="'._C_1.'" required></td></tr>'
+    .'<tr><td>'._C_2.':</td><td><input type="number" name="clients1" value="'.$conf['shop']['clients1'].'" class="sl_conf" placeholder="'._C_2.'" required></td></tr>'
+    .'<tr><td>'._C_3.':</td><td><input type="number" name="proz1" value="'.$conf['shop']['proz1'].'" class="sl_conf" placeholder="'._C_3.'" required></td></tr>'
+    .'<tr><td>'._C_4.':</td><td><input type="number" name="clients2" value="'.$conf['shop']['clients2'].'" class="sl_conf" placeholder="'._C_4.'" required></td></tr>'
+    .'<tr><td>'._C_5.':</td><td><input type="number" name="proz2" value="'.$conf['shop']['proz2'].'" class="sl_conf" placeholder="'._C_5.'" required></td></tr>'
+    .'<tr><td>'._C_6.':</td><td><input type="text" name="valute" value="'.$conf['shop']['valute'].'" maxlength="25" class="sl_conf" placeholder="'._C_6.'" required></td></tr>'
+    .'<tr><td>'._C_7.':</td><td><input type="email" name="mail" value="'.$conf['shop']['mail'].'" maxlength="25" class="sl_conf" placeholder="'._C_7.'" required></td></tr>'
+    .'<tr><td>'._C_8.':</td><td><input type="number" name="shop" value="'.intval($conf['shop']['shop_t'] / 86400).'" class="sl_conf" placeholder="'._C_8.'" required></td></tr>'
+    .'<tr><td>'._C_9.':</td><td><input type="number" name="part" value="'.intval($conf['shop']['part_t'] / 86400).'" class="sl_conf" placeholder="'._C_9.'" required></td></tr>'
+    .'<tr><td>'._BASCOL.':</td><td><input type="number" name="bascol" value="'.$conf['shop']['bascol'].'" class="sl_conf" placeholder="'._BASCOL.'" required></td></tr>'
+    .'<tr><td>'._C_11.':</td><td><input type="number" name="assocnum" value="'.$conf['shop']['assocnum'].'" class="sl_conf" placeholder="'._C_11.'" required></td></tr>'
+    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.$conf['shop']['listnum'].'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['shop']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['shop']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['shop']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['shop']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($conf['shop']['homcat'], 'homcat').'</td></tr>'
+    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($conf['shop']['viewcat'], 'viewcat').'</td></tr>'
+    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['shop']['catdesc'], 'catdesc').'</td></tr>'
+    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['shop']['subcat'], 'subcat').'</td></tr>'
+    .'<tr><td>'._C_14.'</td><td>'.radio_form($conf['shop']['mailuser'], 'mailuser').'</td></tr>'
+    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['shop']['date'], 'date').'</td></tr>'
+    .'<tr><td>'._C_18.'</td><td>'.radio_form($conf['shop']['read'], 'read').'</td></tr>'
+    .'<tr><td>'._C_19.'</td><td>'.radio_form($conf['shop']['rate'], 'rate').'</td></tr>'
+    .'<tr><td>'._C_20.'</td><td>'.radio_form($conf['shop']['letter'], 'letter').'</td></tr>'
+    .'<tr><td>'._C_23.'</td><td>'.radio_form($conf['shop']['assoc'], 'assoc').'</td></tr>'
+    .'<tr><td>'._C_24.'</td><td>'.radio_form($conf['shop']['mailsend'], 'mailsend').'</td></tr>'
+    .'<tr><td>'._C_25.'</td><td>'.radio_form($conf['shop']['part'], 'part').'</td></tr>'
+    .'<tr><td>'._C_26.':<div class="sl_small">'._PART_ID.'</div></td><td><input type="url" name="partlink" value="'.$conf['shop']['partlink'].'" maxlength="25" class="sl_conf" placeholder="'._C_26.'" required></td></tr>'
+    .'<tr><td>'._C_27.':</td><td>'.textarea('1', 'sende', $conf['shop']['sende'], 'shop', '5', _C_27, '1').'</td></tr>'
+    .'<tr><td>'._C_28.':</td><td>'.textarea('2', 'userinfo', $conf['shop']['userinfo'], 'shop', '5', _C_28, '1').'</td></tr>'
+    .'<tr><td>'._C_29.':</td><td>'.textarea('3', 'partinfo', $conf['shop']['partinfo'], 'shop', '5', _C_29, '1').'</td></tr>'
+    .'<tr><td>'._C_30.':</td><td>'.textarea('4', 'partinfo2', $conf['shop']['partinfo2'], 'shop', '5', _C_30, '1').'</td></tr>'
+    .'<tr><td>'._C_31.':</td><td>'.textarea('5', 'shopinfo', $conf['shop']['shopinfo'], 'shop', '5', _C_31, '1').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -811,51 +804,50 @@ function conf(): void {
 
 function save(): void {
     global $afile, $conf;
-    $cfg = $conf['shop'] ?? [];
-    $defis = getVar('post', 'defis', 'text', urldecode($cfg['defis'] ?? '%3E'));
+        $defis = getVar('post', 'defis', 'text', urldecode($conf['shop']['defis'] ?? '%3E'));
     $xdefis = ($defis) ? urlencode($defis) : '%3E';
-    $shop = getVar('post', 'shop_t', 'num', (int)(($cfg['shop_t'] ?? 2592000) / 86400));
+    $shop = getVar('post', 'shop', 'num', (int)(($conf['shop']['shop_t'] ?? 2592000) / 86400));
     $xtshop = (!$shop) ? 2592000 : intval($shop * 86400);
-    $part = getVar('post', 'part_t', 'num', (int)(($cfg['part_t'] ?? 2592000) / 86400));
+    $part = getVar('post', 'part', 'num', (int)(($conf['shop']['part_t'] ?? 2592000) / 86400));
     $xtpart = (!$part) ? 2592000 : intval($part * 86400);
-    $bascol = getVar('post', 'bascol', 'num', (int)($cfg['bascol'] ?? 1));
+    $bascol = getVar('post', 'bascol', 'num', (int)($conf['shop']['bascol'] ?? 1));
     $xcol = (!$bascol) ? '1' : $bascol;
-    $sende = getVar('post', 'sende', 'text', $cfg['sende'] ?? '');
-    $userinfo = getVar('post', 'userinfo', 'text', $cfg['userinfo'] ?? '');
-    $partinfo = getVar('post', 'partinfo', 'text', $cfg['partinfo'] ?? '');
-    $partinfo2 = getVar('post', 'partinfo2', 'text', $cfg['partinfo2'] ?? '');
-    $shopinfo = getVar('post', 'shopinfo', 'text', $cfg['shopinfo'] ?? '');
+    $sende = getVar('post', 'sende', 'text', $conf['shop']['sende'] ?? '');
+    $userinfo = getVar('post', 'userinfo', 'text', $conf['shop']['userinfo'] ?? '');
+    $partinfo = getVar('post', 'partinfo', 'text', $conf['shop']['partinfo'] ?? '');
+    $partinfo2 = getVar('post', 'partinfo2', 'text', $conf['shop']['partinfo2'] ?? '');
+    $shopinfo = getVar('post', 'shopinfo', 'text', $conf['shop']['shopinfo'] ?? '');
     $cont = [
         'defis' => $xdefis,
-        'clients' => getVar('post', 'clients', 'num', (int)($cfg['clients'] ?? 1)),
-        'clients1' => getVar('post', 'clients1', 'num', (int)($cfg['clients1'] ?? 1)),
-        'clients2' => getVar('post', 'clients2', 'num', (int)($cfg['clients2'] ?? 1)),
-        'proz' => getVar('post', 'proz', 'num', (int)($cfg['proz'] ?? 1)),
-        'proz1' => getVar('post', 'proz1', 'num', (int)($cfg['proz1'] ?? 1)),
-        'proz2' => getVar('post', 'proz2', 'num', (int)($cfg['proz2'] ?? 1)),
-        'valute' => getVar('post', 'valute', 'text', $cfg['valute'] ?? ''),
-        'mail' => getVar('post', 'mail', 'text', $cfg['mail'] ?? ''),
+        'clients' => getVar('post', 'clients', 'num', (int)($conf['shop']['clients'] ?? 1)),
+        'clients1' => getVar('post', 'clients1', 'num', (int)($conf['shop']['clients1'] ?? 1)),
+        'clients2' => getVar('post', 'clients2', 'num', (int)($conf['shop']['clients2'] ?? 1)),
+        'proz' => getVar('post', 'proz', 'num', (int)($conf['shop']['proz'] ?? 1)),
+        'proz1' => getVar('post', 'proz1', 'num', (int)($conf['shop']['proz1'] ?? 1)),
+        'proz2' => getVar('post', 'proz2', 'num', (int)($conf['shop']['proz2'] ?? 1)),
+        'valute' => getVar('post', 'valute', 'text', $conf['shop']['valute'] ?? ''),
+        'mail' => getVar('post', 'mail', 'text', $conf['shop']['mail'] ?? ''),
         'shop_t' => $xtshop,
         'part_t' => $xtpart,
         'bascol' => $xcol,
-        'assocnum' => getVar('post', 'assocnum', 'num', (int)($cfg['assocnum'] ?? 10)),
-        'listnum' => getVar('post', 'listnum', 'num', (int)($cfg['listnum'] ?? 10)),
-        'num' => getVar('post', 'num', 'num', (int)($cfg['num'] ?? 10)),
-        'anum' => getVar('post', 'anum', 'num', (int)($cfg['anum'] ?? 10)),
-        'nump' => getVar('post', 'nump', 'num', (int)($cfg['nump'] ?? 10)),
-        'anump' => getVar('post', 'anump', 'num', (int)($cfg['anump'] ?? 10)),
-        'homcat' => getVar('post', 'homcat', 'num', (int)($cfg['homcat'] ?? 1)),
-        'viewcat' => getVar('post', 'viewcat', 'num', (int)($cfg['viewcat'] ?? 1)),
-        'catdesc' => getVar('post', 'catdesc', 'num', (int)($cfg['catdesc'] ?? 1)),
-        'subcat' => getVar('post', 'subcat', 'num', (int)($cfg['subcat'] ?? 1)),
-        'mailuser' => getVar('post', 'mailuser', 'num', (int)($cfg['mailuser'] ?? 1)),
-        'date' => getVar('post', 'date', 'num', (int)($cfg['date'] ?? 1)),
-        'read' => getVar('post', 'read', 'num', (int)($cfg['read'] ?? 1)),
-        'rate' => getVar('post', 'rate', 'num', (int)($cfg['rate'] ?? 1)),
-        'letter' => getVar('post', 'letter', 'num', (int)($cfg['letter'] ?? 1)),
-        'assoc' => getVar('post', 'assoc', 'num', (int)($cfg['assoc'] ?? 1)),
-        'mailsend' => getVar('post', 'mailsend', 'num', (int)($cfg['mailsend'] ?? 1)),
-        'part' => getVar('post', 'part', 'num', (int)($cfg['part'] ?? 1)),
+        'assocnum' => getVar('post', 'assocnum', 'num', (int)($conf['shop']['assocnum'] ?? 10)),
+        'listnum' => getVar('post', 'listnum', 'num', (int)($conf['shop']['listnum'] ?? 10)),
+        'num' => getVar('post', 'num', 'num', (int)($conf['shop']['num'] ?? 10)),
+        'anum' => getVar('post', 'anum', 'num', (int)($conf['shop']['anum'] ?? 10)),
+        'nump' => getVar('post', 'nump', 'num', (int)($conf['shop']['nump'] ?? 10)),
+        'anump' => getVar('post', 'anump', 'num', (int)($conf['shop']['anump'] ?? 10)),
+        'homcat' => getVar('post', 'homcat', 'num', (int)($conf['shop']['homcat'] ?? 1)),
+        'viewcat' => getVar('post', 'viewcat', 'num', (int)($conf['shop']['viewcat'] ?? 1)),
+        'catdesc' => getVar('post', 'catdesc', 'num', (int)($conf['shop']['catdesc'] ?? 1)),
+        'subcat' => getVar('post', 'subcat', 'num', (int)($conf['shop']['subcat'] ?? 1)),
+        'mailuser' => getVar('post', 'mailuser', 'num', (int)($conf['shop']['mailuser'] ?? 1)),
+        'date' => getVar('post', 'date', 'num', (int)($conf['shop']['date'] ?? 1)),
+        'read' => getVar('post', 'read', 'num', (int)($conf['shop']['read'] ?? 1)),
+        'rate' => getVar('post', 'rate', 'num', (int)($conf['shop']['rate'] ?? 1)),
+        'letter' => getVar('post', 'letter', 'num', (int)($conf['shop']['letter'] ?? 1)),
+        'assoc' => getVar('post', 'assoc', 'num', (int)($conf['shop']['assoc'] ?? 1)),
+        'mailsend' => getVar('post', 'mailsend', 'num', (int)($conf['shop']['mailsend'] ?? 1)),
+        'part' => getVar('post', 'part', 'num', (int)($conf['shop']['part'] ?? 1)),
         'partlink' => $conf['homeurl'].'/index.php?name=shop&amp;op=part&amp;id=[id]',
         'sende' => $sende,
         'userinfo' => $userinfo,
@@ -899,6 +891,7 @@ switch($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+
 
 
 

@@ -10,10 +10,10 @@ define('FUNC_FILE', true);
 require_once BASE_DIR.'/config/global.php';
 require_once BASE_DIR.'/config/security.php';
 
-if ($confs['error'] == 2) {
+if ($conf['security']['error'] == 2) {
     ini_set('display_errors', 1);
     error_reporting(E_ALL);
-} elseif ($confs['error'] == 1) {
+} elseif ($conf['security']['error'] == 1) {
     ini_set('display_errors', 1);
     error_reporting(E_ALL ^ E_NOTICE);
 } else {
@@ -155,7 +155,7 @@ function getInfo(string $table, mixed $id): string {
 }
 
 function setHead(): void {
-    global $title, $conf;
+ global $title, $conf;
     echo '<!doctype html>'.PHP_EOL
     .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
     .'<head>'.PHP_EOL
@@ -186,7 +186,7 @@ function setHead(): void {
 }
 
 function setFoot(): void {
-    global $copyright;
+ global $copyright;
     echo '</div>'
     .'</div>'
     .'</div>'
@@ -203,7 +203,7 @@ function setFoot(): void {
 }
 
 function setExit(string $msg, string $typ = ''): never {
-    global $conf;
+ global $conf;
     $cont = '<!doctype html>'.PHP_EOL
     .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
     .'<head>'.PHP_EOL
@@ -236,7 +236,7 @@ function checkWritableConfig(string $file): void {
         $permsdir = decoct(fileperms($file));
         $perms = substr($permsdir, -3);
         if ($perms != '666') {
-            global $title;
+ global $title;
             $title = _FILE.' '.$file.' '._SERRORPERM.' CHMOD - 666';
             setHead();
             setFoot();
@@ -246,7 +246,7 @@ function checkWritableConfig(string $file): void {
 }
 
 function language(): void {
-    global $title, $clang;
+ global $title, $clang;
     $title = _LANG;
     setHead();
     $cont = '<table class="sl_table">';
@@ -271,7 +271,7 @@ function language(): void {
 }
 
 function lang(): void {
-    global $conf, $url;
+ global $conf, $url;
     $time = time() + 3600;
     $lang = (preg_match('#[^a-zA-Z0-9_]#', $_GET['id'])) ? 'en' : $_GET['id'];
     $url = parse_url($url);
@@ -282,17 +282,17 @@ function lang(): void {
 }
 
 function config(): void {
-    global $title, $conf, $confs;
+ global $title, $conf;
     $title = _CONFIG;
     checkWritableConfig(BASE_DIR.'/config/db.php');
     checkWritableConfig(BASE_DIR.'/config/global.php');
     require_once BASE_DIR.'/config/db.php';
-    $xhost = ($confdb['host']) ? $confdb['host'] : 'localhost';
-    $xuname = ($confdb['uname']) ? $confdb['uname'] : '';
-    $xpass = ($confdb['pass']) ? $confdb['pass'] : '';
-    $xname = ($confdb['name']) ? $confdb['name'] : '';
-    $xprefix = ($confdb['prefix']) ? $confdb['prefix'] : getPass('10');
-    $xafile = ($confs['afile']) ? $confs['afile'] : strtolower(getPass('10'));
+    $xhost = ($conf['db']['host']) ? $conf['db']['host'] : 'localhost';
+    $xuname = ($conf['db']['uname']) ? $conf['db']['uname'] : '';
+    $xpass = ($conf['db']['pass']) ? $conf['db']['pass'] : '';
+    $xname = ($conf['db']['name']) ? $conf['db']['name'] : '';
+    $xprefix = ($conf['db']['prefix']) ? $conf['db']['prefix'] : getPass('10');
+    $xafile = ($conf['security']['afile']) ? $conf['security']['afile'] : strtolower(getPass('10'));
     $info = sprintf(_CONF_10_INFO, strtolower(getPass('10')));
     setHead();
     echo '<form action="setup.php" method="post">'
@@ -320,7 +320,7 @@ function config(): void {
 }
 
 function save(): void {
-    global $title, $clang, $conf, $confs, $url;
+ global $title, $clang, $conf, $url;
     $setup = (isset($_POST['setup'])) ? $_POST['setup'] : '';
     $xhost = (isset($_POST['xhost'])) ? $_POST['xhost'] : '';
     $xuname = (isset($_POST['xuname'])) ? $_POST['xuname'] : '';
@@ -337,7 +337,7 @@ function save(): void {
     setConfigFile('global.php', $conf, $cont);
     require_once BASE_DIR.'/config/global.php';
 
-    $tafile = ($confs['afile']) ? $confs['afile'] : 'admin';
+    $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
     if (file_exists($tafile.'.php') && !file_exists($xafile.'.php')) {
         if (!@rename($tafile.'.php', $xafile.'.php')) {
             $xafile = $tafile;
@@ -346,12 +346,12 @@ function save(): void {
         $xafile = file_exists($xafile.'.php') ? $xafile : $tafile;
     }
     $cont = array('afile' => $xafile);
-    setConfigFile('security.php', $confs, $cont);
+    setConfigFile('security.php', $conf['security'], $cont);
     require_once BASE_DIR.'/config/security.php';
     
     require_once BASE_DIR.'/config/db.php';
     $cont = array('host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync);
-    setConfigFile('db.php', $confdb, $cont);
+    setConfigFile('db.php', $conf['db'], $cont);
 
     require_once 'core/classes/pdo.php';
     $db = new sql_db($xhost, $xuname, $xpass, $xname, $xcharset);
@@ -549,7 +549,7 @@ function save(): void {
     }
     setHead();
     echo '<table class="sl_table">'.$bodytext.'</table>'
-    .'<div class="sl_center"><form action="'.$confs['afile'].'.php" method="post">'._GOBACK.' <input type="submit" value="'._ADMIN_SE.'" class="sl_but_blue"></form></div>';
+    .'<div class="sl_center"><form action="'.$conf['security']['afile'].'.php" method="post">'._GOBACK.' <input type="submit" value="'._ADMIN_SE.'" class="sl_but_blue"></form></div>';
     setFoot();
 }
 

@@ -269,18 +269,18 @@ function kasse(): void {
 		$userinfo = getusrinfo();
 		$sid = $userinfo['user_id'];
 		$slogin = $userinfo['user_name'];
-		$smail = getVar('post', 'sender_email', 'text', $userinfo['user_email']);
-		$sdom = getVar('post', 'sender_dom', 'url', $userinfo['user_website']);
+		$smail = getVar('post', 'smail', 'text', $userinfo['user_email']);
+		$sdom = getVar('post', 'sdom', 'url', $userinfo['user_website']);
 	} else {
 		$sid = 0;
 		$slogin = _ANONYM;
-		$smail = getVar('post', 'sender_email', 'text');
-		$sdom = getVar('post', 'sender_dom', 'url', 'http://');
+		$smail = getVar('post', 'smail', 'text');
+		$sdom = getVar('post', 'sdom', 'url', 'http://');
 	}
-	$sname = getVar('post', 'sender_name', 'text');
-	$sadr = getVar('post', 'sender_adr', 'text');
-	$stel = getVar('post', 'sender_tel', 'text');
-	$smsg = getVar('post', 'sender_message', 'text');
+	$sname = getVar('post', 'sname', 'text');
+	$sadr = getVar('post', 'sadr', 'text');
+	$stel = getVar('post', 'stel', 'text');
+	$smsg = getVar('post', 'smsg', 'text');
 	$opi = getVar('post', 'opi', 'num');
 	$shopCookie = filter_input(INPUT_COOKIE, 'shop', FILTER_DEFAULT) ?: '';
 	$cookieRaw = base64_decode($shopCookie, true);
@@ -289,12 +289,12 @@ function kasse(): void {
 	$idPartner = ($idPartner !== false && $idPartner !== null) ? $idPartner : '';
 	$stop = (!$cookies) ? _SERRORP : '';
 	$form = '<form method="post" action="index.php?name='.$conf['name'].'"><table class="sl_table_form">'
-	.'<tr><td>'._C_PIN.':</td><td><input type="text" name="sender_name" value="'.$sname.'" class="sl_field '.$conf['style'].'" placeholder="'._C_PINB.'" required></td></tr>'
-	.'<tr><td>'._C_PIP.':</td><td><input type="text" name="sender_adr" value="'.$sadr.'" class="sl_field '.$conf['style'].'" placeholder="'._C_PIPB.'" required></td></tr>'
-	.'<tr><td>'._C_TEL.':</td><td><input type="text" name="sender_tel" value="'.$stel.'" class="sl_field '.$conf['style'].'" placeholder="'._C_TELB.'" required></td></tr>'
-	.'<tr><td>'._C_MAIL.':</td><td><input type="email" name="sender_email" value="'.$smail.'" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'" required></td></tr>'
-	.'<tr><td>'._SDOM.':</td><td><input type="url" name="sender_dom" value="'.$sdom.'" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
-	.'<tr><td>'._C_MESSAGE.':</td><td><textarea name="sender_message" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._C_MESSAGE.'">'.$smsg.'</textarea></td></tr>'
+	.'<tr><td>'._C_PIN.':</td><td><input type="text" name="sname" value="'.$sname.'" class="sl_field '.$conf['style'].'" placeholder="'._C_PINB.'" required></td></tr>'
+	.'<tr><td>'._C_PIP.':</td><td><input type="text" name="sadr" value="'.$sadr.'" class="sl_field '.$conf['style'].'" placeholder="'._C_PIPB.'" required></td></tr>'
+	.'<tr><td>'._C_TEL.':</td><td><input type="text" name="stel" value="'.$stel.'" class="sl_field '.$conf['style'].'" placeholder="'._C_TELB.'" required></td></tr>'
+	.'<tr><td>'._C_MAIL.':</td><td><input type="email" name="smail" value="'.$smail.'" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'" required></td></tr>'
+	.'<tr><td>'._SDOM.':</td><td><input type="url" name="sdom" value="'.$sdom.'" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
+	.'<tr><td>'._C_MESSAGE.':</td><td><textarea name="smsg" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._C_MESSAGE.'">'.$smsg.'</textarea></td></tr>'
 	.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="opi" value="1"><input type="hidden" name="op" value="kasse"><input type="submit" value="'._C_SEND.'" class="sl_but_blue"></td></tr></table></form>';
 	setHead(['title' => _C_TITLE]);
 	$cont = navigate(_C_TITLE);
@@ -511,7 +511,7 @@ function partners(): void {
 			.'<tr><td>'._SITE.':</td><td><input type="url" value="'.$sdom.'" name="pawebsite" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
 			.'<tr><td>'._WEBMONEY.':</td><td><input type="text" name="pawebmoney" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_WEBMONEYB.'"></td></tr>'
 			.'<tr><td>'._PAYPAL.':</td><td><input type="text" name="papaypal" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'"></td></tr>'
-			.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="paid_user" value="'.$uid.'"><input type="hidden" name="op" value="partners_send"><input type="submit" value="'._PARTNERSEND.'" class="sl_but_blue"></td></tr></table></form>';
+			.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="puid" value="'.$uid.'"><input type="hidden" name="op" value="partners_send"><input type="submit" value="'._PARTNERSEND.'" class="sl_but_blue"></td></tr></table></form>';
 			$cont .= setTemplateBasic('close');
 		}
 		echo $cont;
@@ -524,7 +524,7 @@ function partners(): void {
 function partners_send(): void {
 	global $db, $user, $conf, $stop;
 	if (is_user() && is_active('shop')) {
-		$puid = getVar('post', 'paid_user', 'num');
+		$puid = getVar('post', 'puid', 'num');
 		$paname = getVar('post', 'paname', 'text');
 		$paadres = getVar('post', 'paadres', 'text');
 		$paphone = getVar('post', 'paphone', 'text');
@@ -535,7 +535,7 @@ function partners_send(): void {
 		checkemail($paemail);
 		if (!$paname || !$paadres || !$paphone) $stop[] = _ERROR_ALL;
 		if (!$stop) {
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :paid_user, :paname, :paadres, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['paid_user' => $puid, 'paname' => $paname, 'paadres' => $paadres, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :puid, :paname, :paadres, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['puid' => $puid, 'paname' => $paname, 'paadres' => $paadres, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
 			setRedirect('index.php?name='.$conf['name'].'&op=partners');
 		} else {
 			partners();

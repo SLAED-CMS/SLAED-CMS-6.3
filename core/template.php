@@ -10,7 +10,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 if (!function_exists('getTemplateVars')) {
     function getTemplateVars(): array {
         static $cache = [];
-        global $conf;
+ global $conf;
         $theme = getTheme();
         if (isset($cache[$theme])) return $cache[$theme];
         return $cache[$theme] = [
@@ -99,20 +99,20 @@ if (!function_exists('setTemplateIf')) {
 # Set template of head
 if (!function_exists('setTemplateHead')) {
     function setTemplateHead(string $sub, array $val = []): string {
-        global $user, $conf, $confu;
+ global $user, $conf;
         if (is_user()) {
             $uname = htmlspecialchars(substr((string)$user[1], 0, 25), ENT_QUOTES, 'UTF-8');
             $userinfo = getusrinfo();
-            $avpath = BASE_DIR.'/'.$confu['adirectory'].'/'.$userinfo['user_avatar'];
+            $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.$userinfo['user_avatar'];
             $avatar = (!empty($userinfo['user_avatar']) && is_file($avpath)) ? $userinfo['user_avatar'] : 'default/00.gif';
             $login = setTemplateBasic('login-logged', [
                 '{%title%}' => _ACCOUNT,
-                '{%avatar%}' => $confu['adirectory'].'/'.$avatar,
+                '{%avatar%}' => $conf['users']['adirectory'].'/'.$avatar,
                 '{%user%}' => $uname,
                 '{%logout%}' => _LOGOUT,
             ]);
         } else {
-            if ($confu['enter']) {
+            if ($conf['users']['enter']) {
                 $gfx = (int)($conf['gfx_chk'] ?? 0);
                 $captcha = in_array($gfx, [2, 4, 5, 7], true) ? getCaptcha(2) : '';
                 $login = setTemplateBasic('login', [
@@ -152,7 +152,7 @@ if (!function_exists('setTemplateBasic')) {
 # Set template of block
 if (!function_exists('setTemplateBlock')) {
     function setTemplateBlock(string $tpl, array $val = []): string {
-        global $pos, $blockfile, $b_id;
+ global $pos, $blockfile, $b_id;
         $flags = [];
         if (isset($val['if_flag']) && is_array($val['if_flag'])) {
             $flags = $val['if_flag'];

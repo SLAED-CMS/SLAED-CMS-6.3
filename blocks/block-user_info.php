@@ -9,14 +9,14 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $db, $locale, $conf, $confu, $conffav, $confpr;
+global $db, $locale, $conf;
 if (is_user()) {
 	$userinfo = getusrinfo();
 	$uname = $userinfo['user_name'];
 	$user_id = intval($userinfo['user_id']);
-	$user_avatar = (file_exists($confu['adirectory'].'/'.$userinfo['user_avatar'])) ? $userinfo['user_avatar'] : 'default/00.gif';
-	$content = '<span class="sl_pos_center"><a title="'.$uname.'" class="sl_avatar" style="background-image: url('.$confu['adirectory'].'/'.$user_avatar.');"></a><br><b>'._HELLO.',<br>'.$uname.'</b></span>';
-	if ($confpr['act']) {
+	$user_avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['user_avatar'])) ? $userinfo['user_avatar'] : 'default/00.gif';
+	$content = '<span class="sl_pos_center"><a title="'.$uname.'" class="sl_avatar" style="background-image: url('.$conf['users']['adirectory'].'/'.$user_avatar.');"></a><br><b>'._HELLO.',<br>'.$uname.'</b></span>';
+	if ($conf['privat']['act']) {
 		list($prin) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin='".$user_id."' AND status = '0'"));
 		list($prout) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidout='".$user_id."' AND status = '0'"));
 		if ($prin > 0) {
@@ -36,13 +36,13 @@ if (is_user()) {
 		</table>';
 	}
 	$content .= '<hr><table class="sl_table_block">';
-	$content .= ($conffav['favact']) ? '<tr><td><a href="index.php?name=account&amp;op=favorites" title="'._FAVORITES.'">'._FAVORITES.'</a></td></tr>': '';
+	$content .= ($conf['favorites']['favact']) ? '<tr><td><a href="index.php?name=account&amp;op=favorites" title="'._FAVORITES.'">'._FAVORITES.'</a></td></tr>': '';
 	$content .= '<tr><td><a href="index.php?name=account&amp;op=edithome" title="'._CHANGE.'">'._CHANGE.'</a></td></tr>
 	<tr><td><a href="index.php?name=account&amp;op=logout&amp;refer=1" title="'._LOGOUT.'">'._LOGOUT.'</a></td></tr>
 	</table>';
 } else {
 	$captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-	$content = '<span class="sl_pos_center"><a title="'._ANONYM.'" class="sl_avatar" style="background-image: url('.$confu['adirectory'].'/default/0.gif);"></a><br><b>'._WELCOMETO.',<br>'._ANONYM.'</b></span>
+	$content = '<span class="sl_pos_center"><a title="'._ANONYM.'" class="sl_avatar" style="background-image: url('.$conf['users']['adirectory'].'/default/0.gif);"></a><br><b>'._WELCOMETO.',<br>'._ANONYM.'</b></span>
 	<hr>
 	<form action="index.php?name=account" method="post">
 	<table class="sl_table_block">
@@ -54,7 +54,7 @@ if (is_user()) {
 	<tr><td>'._NICKNAME.':</td><td><input type="text" name="user_name" maxlength="25" class="sl_field sl_bl_field" placeholder="'._NICKNAME.'" required></td></tr>
 	<tr><td>'._PASSWORD.':</td><td><input type="password" name="user_password" maxlength="25" class="sl_field sl_bl_field" placeholder="'._PASSWORD.'" required></td></tr>
 	<tr><td colspan="2" class="sl_center">'.$captcha.'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="login"><input type="submit" value="'._LOGIN.'" class="sl_but_blue"></td></tr>';
-	$content .= ($confu['network']) ? '<tr><td colspan="2" class="sl_center">'._LOGINNETWORK.'</td></tr><tr><td colspan="2" class="sl_center">'.getNetworks().'</td></tr>' : '';
+	$content .= ($conf['users']['network']) ? '<tr><td colspan="2" class="sl_center">'._LOGINNETWORK.'</td></tr><tr><td colspan="2" class="sl_center">'.getNetworks().'</td></tr>' : '';
 	$content .= '</table></form>';
 }
 if ($conf['session']) $content .= '<div id="repsinfo">'.user_sinfo(1).'</div>';

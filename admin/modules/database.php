@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,12 +13,12 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function database(): void {
-    global $db, $confdb, $afile;
+    global $db, $conf, $afile;
 
     $type     = getVar('get', 'type', 'var'); // '', 'optimize', 'repair'
     $ftitleth = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
 
-    $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($confdb['name'] ?? ''));
+    $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
         head();
         echo navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _ERROR]);
@@ -61,7 +61,7 @@ function database(): void {
         $rows = (int) $info['Rows']; // Fallback
 
         $res = $db->sql_query(
-            'SELECT COUNT(*) AS cnt FROM `'.$confdb['name'].'`.`'.$name.'`'
+            'SELECT COUNT(*) AS cnt FROM `'.$conf['db']['name'].'`.`'.$name.'`'
         );
         if ($res && $row = $db->sql_fetchrow($res)) {
             $rows = (int) $row['cnt'];
@@ -192,7 +192,7 @@ function database(): void {
         $db->sql_query('FLUSH TABLES');
         $cont = navi(0, 1, 0, 0);
 
-        $info = _OPTIMIZE.': '.$confdb['name']
+        $info = _OPTIMIZE.': '.$conf['db']['name']
                   . '<br>'._TOTALSPACE.': '.files_size($total)
                   . '<br>'._TOTALFREE.': '.files_size($totalfree);
 
@@ -206,7 +206,7 @@ function database(): void {
     } elseif ($type === 'repair') {
         $cont = navi(0, 2, 0, 0);
 
-        $info = _REPAIR.': '.$confdb['name']
+        $info = _REPAIR.': '.$conf['db']['name']
                   . '<br>'._TOTALSPACE.': '.files_size($total)
                   . '<br>'._TOTALFREE.': '.files_size($totalfree);
 
@@ -227,13 +227,13 @@ function database(): void {
 }
 
 function dump(): void {
-    global $db, $confdb, $afile;
+    global $db, $conf, $afile;
     $type = getVar('post', 'type', 'var', '');
     $pstring = filter_input(INPUT_POST, 'string', FILTER_UNSAFE_RAW) ?? '';
     head();
     $cont = navi(0, 3, 0, 0);
     if ($type === 'dump' && !empty($pstring)) {
-        $replacements = ['{prefix}' => $confdb['prefix'], '{engine}' => $confdb['engine'], '{charset}' => $confdb['charset'], '{collate}' => $confdb['collate']];
+        $replacements = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
         $info = '';
         $queries = array_filter(array_map('trim', explode(';', $pstring)));
         foreach ($queries as $query) {
@@ -254,7 +254,7 @@ function dump(): void {
                 $info .= _TABLE.': '.$tablename.'<br>'._STATUS.': '.$status.'<br>';
             }
         }
-        $cont .= !empty($info) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INQUIRY.': '.$confdb['name'].'<br>'.$info]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _DBERROR]);
+        $cont .= !empty($info) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INQUIRY.': '.$conf['db']['name'].'<br>'.$info]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _DBERROR]);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _DBINFO]);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _DBWARN]);
@@ -289,11 +289,11 @@ function info(): void {
 function del(): void {
     global $db, $afile;
     $tb = getVar('get', 'tb', 'var');
-    $delid = getVar('get', 'id', 'num');
+    $id = getVar('get', 'id', 'num');
     $tb = preg_match('#^[a-zA-Z0-9_]+$#', (string)$tb) ? $tb : '';
-    if ($tb && $delid == 1) {
+    if ($tb && $id == 1) {
         $db->sql_query('TRUNCATE TABLE `'.$tb.'`');
-    } elseif ($tb && $delid == 2) {
+    } elseif ($tb && $id == 2) {
         $db->sql_query('DROP TABLE `'.$tb.'`');
     }
     setRedirect($afile.'.php?name=database');
@@ -305,3 +305,4 @@ switch ($op) {
     case 'del': del(); break;
     case 'info': info(); break;
 }
+

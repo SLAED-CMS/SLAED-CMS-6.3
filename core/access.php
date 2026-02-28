@@ -53,20 +53,20 @@ function setExit($msg, $typ = '') {
 	die($cont);
 }
 
-if ($confs['admin_ip'] != '') {
-	$admin_ip = explode(',', $confs['admin_ip']);
+if ($conf['security']['admin_ip'] != '') {
+	$admin_ip = explode(',', $conf['security']['admin_ip']);
 	foreach ($admin_ip as $val) {
 		$temp_ip = getIp();
 		$admin_ip = $val;
-		if ($confs['admin_mask'] <= 3) {
+		if ($conf['security']['admin_mask'] <= 3) {
 			$temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
 			$admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
 		}
-		if ($confs['admin_mask'] <= 2) {
+		if ($conf['security']['admin_mask'] <= 2) {
 			$temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
 			$admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
 		}
-		if ($confs['admin_mask'] == 1) {
+		if ($conf['security']['admin_mask'] == 1) {
 			$temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
 			$admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
 		}
@@ -80,13 +80,13 @@ if ($confs['admin_ip'] != '') {
 	if (!$ip_check) setExit(_AUTH_ERROR_IP);
 }
 
-if ($confs['login'] != '' && $confs['password'] != '') {
+if ($conf['security']['login'] != '' && $conf['security']['password'] != '') {
 	if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])) setUnauthorized();
-	if (!password_verify($_SERVER['PHP_AUTH_USER'], $confs['login']) || !password_verify($_SERVER['PHP_AUTH_PW'], $confs['password'])) setUnauthorized();
+	if (!password_verify($_SERVER['PHP_AUTH_USER'], $conf['security']['login']) || !password_verify($_SERVER['PHP_AUTH_PW'], $conf['security']['password'])) setUnauthorized();
 } else {
 	setExit(_AUTH_ERROR);
 }
 
 unset($conf);
-unset($confs);
+unset($conf['security']);
 unset($path);

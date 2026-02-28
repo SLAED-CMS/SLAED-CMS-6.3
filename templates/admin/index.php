@@ -7,7 +7,7 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 function setTemplateHead($sub, $val = '') {
-	global $theme, $user, $conf, $confu, $db, $blocks, $admin, $afile;
+	global $theme, $user, $conf, $db, $blocks, $admin, $afile;
 	$langs = $menu = $blocks = $login = '';
 	if (is_admin()) {
 		if ($conf['multilingual'] == 1) {
@@ -60,7 +60,7 @@ function setTemplateBlock($tpl, $val = '') {
 }
 
 function setTemplateFoot($sub, $val = '') {
-	global $theme, $user, $conf, $confu;
+	global $theme, $user, $conf;
 	$value = array('{%upper%}' => _PAGETOP);
 	$value = is_array($val) ? array_merge($value, $val) : $value;
 	return str_replace(array_keys($value), array_values($value), $sub);

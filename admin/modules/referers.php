@@ -13,19 +13,19 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     $lang = [_HOME, _PREFERENCES, _DELETE, _INFO];
     $search = '<form method="post" action="'.$afile.'.php">'._SORTE.': <select name="sort">';
     $priv = [_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF];
-    $psort = getVar('post', 'sort', 'num', 0);
-    $porder = getVar('post', 'order', 'num', 0);
+    $sort = getVar('post', 'sort', 'num', 0);
+    $order = getVar('post', 'order', 'num', 0);
     foreach ($priv as $key => $value) {
-        $sort = $key + 1;
-        $sel = ($psort == $sort) ? ' selected' : '';
-        $search .= '<option value="'.$sort.'"'.$sel.'>'.$value.'</option>';
+        $idx = $key + 1;
+        $sel = ($sort == $idx) ? ' selected' : '';
+        $search .= '<option value="'.$idx.'"'.$sel.'>'.$value.'</option>';
     }
     $search .= '</select> <select name="order">';
     $privs = [_ASC, _DESC];
     foreach ($privs as $key => $value) {
-        $sort = $key + 1;
-        $sel = ($porder == $sort) ? ' selected' : '';
-        $search .= '<option value="'.$sort.'"'.$sel.'>'.$value.'</option>';
+        $idx = $key + 1;
+        $sel = ($order == $idx) ? ' selected' : '';
+        $search .= '<option value="'.$idx.'"'.$sel.'>'.$value.'</option>';
     }
     $search .= '</select> <input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="referers"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
@@ -33,12 +33,12 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function referers(): void {
-    global $db, $confr;
+    global $db, $conf;
     $sort = getVar('req', 'sort', 'num', 10);
     $order = getVar('req', 'order', 'num', 2);
     $num = getVar('get', 'num', 'num', 1);
-    $offset = ($num - 1) * $confr['anum'];
-    $tnum = ($offset) ? $confr['anum'] + $offset : $confr['anum'];
+    $offset = ($num - 1) * $conf['referers']['anum'];
+    $tnum = ($offset) ? $conf['referers']['anum'] + $offset : $conf['referers']['anum'];
     $sortmap = [
         1 => ['referer', 'hits'], 2 => ['referer', 'referer'],
         3 => ['link', 'hits'], 4 => ['link', 'link'],
@@ -74,8 +74,8 @@ function referers(): void {
             }
         }
         $cont .= '</tbody></table>';
-        $numpages = ceil($a / $confr['anum']);
-        $cont .= setPageNumbers('pagenum', '', $a, $numpages, $confr['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $confr['anump']);
+        $numpages = ceil($a / $conf['referers']['anum']);
+        $cont .= setPageNumbers('pagenum', '', $a, $numpages, $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -85,17 +85,17 @@ function referers(): void {
 }
 
 function conf(): void {
-    global $afile, $confr;
+    global $afile, $conf;
     head();
     $cont = navi(0, 1, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-       .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confr['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-       .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$confr['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-       .'<tr><td>'._REFER_T.':</td><td><input type="number" name="refer_t" value="'.intval($confr['refer_t'] / 86400).'" class="sl_conf" placeholder="'._REFER_T.'" required></td></tr>'
-       .'<tr><td>'._REFER.'</td><td>'.radio_form($confr['refer'], 'refer').'</td></tr>'
-       .'<tr><td>'._REFERB.'</td><td>'.radio_form($confr['referb'], 'referb').'</td></tr>'
+       .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['referers']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+       .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['referers']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+       .'<tr><td>'._REFER_T.':</td><td><input type="number" name="refer_t" value="'.intval($conf['referers']['refer_t'] / 86400).'" class="sl_conf" placeholder="'._REFER_T.'" required></td></tr>'
+       .'<tr><td>'._REFER.'</td><td>'.radio_form($conf['referers']['refer'], 'refer').'</td></tr>'
+       .'<tr><td>'._REFERB.'</td><td>'.radio_form($conf['referers']['referb'], 'referb').'</td></tr>'
        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;

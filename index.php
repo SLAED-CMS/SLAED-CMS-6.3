@@ -42,7 +42,7 @@ if (empty($go)) {
         $conf['name'] = $name;
         $conf['style'] = 'sl_mod_'.strtolower($name);
         $module = 1;
-        $mconf = $confmd[$name] ?? [];
+        $mconf = $conf['modules'][$name] ?? [];
         $active = $mconf['active'] ?? 0;
         $view = $mconf['view'] ?? 0;
         $path = BASE_DIR.'/modules/'.$name.'/'.$file.'.php';
@@ -157,7 +157,7 @@ if (empty($go)) {
             $userid = (getVar('get', 'userid', 'num')) ? getVar('get', 'userid', 'num') : '0';
             switch($go) {
                 default:
-                $con = explode('|', $confup[$mod]);
+                $con = explode('|', $conf['uploads'][$mod]);
                 upload(2, 'uploads/'.$mod, $con[0], $con[2], $mod, $con[3], $con[4], $userid);
                 break;
             }

@@ -14,13 +14,12 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function money(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['money'] ?? [];
-    head();
+        head();
     $cont = navi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MA_15]);
     $num = getVar('get', 'num', 'num', 1);
-    $anum = $cfg['anum'] ?? 25;
-    $anump = $cfg['anump'] ?? 10;
+    $anum = $conf['money']['anum'] ?? 25;
+    $anump = $conf['money']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
     $result = $db->sql_query('SELECT id, sum, mail, info, com, ip, agent, date, status FROM '.PREFIX_DB.'_money ORDER BY date DESC LIMIT '.$offset.', '.$anum);
     if ($db->sql_numrows($result) > 0) {
@@ -30,7 +29,7 @@ function money(): void {
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._SUM.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        $form = explode(',', $cfg['form'] ?? '');
+        $form = explode(',', $conf['money']['form'] ?? '');
         while ([$id, $sum, $mail, $info, $com, $ip, $agent, $date, $status] = $db->sql_fetchrow($result)) {
             $act = ($status) ? 0 : 1;
             $info = explode('|', $info);
@@ -63,8 +62,7 @@ function money(): void {
 
 function add(): void {
     global $db, $afile, $conf, $stop;
-    $cfg = $conf['money'] ?? [];
-    $id = getVar('req', 'id', 'num', 0);
+        $id = getVar('req', 'id', 'num', 0);
     $mid = $id;
     if ($mid) {
         $result = $db->sql_query('SELECT sum, mail, info, com, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $mid]);
@@ -82,7 +80,7 @@ function add(): void {
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($info) {
-        $form = explode(',', $cfg['form'] ?? '');
+        $form = explode(',', $conf['money']['form'] ?? '');
         $i = 0;
         $infos = '';
         foreach ($form as $val) {
@@ -97,7 +95,7 @@ function add(): void {
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._MA_17.':</td><td><input type="number" name="sum" value="'.$sum.'" class="sl_form" placeholder="'._MA_17.'" required></td></tr>'
     .'<tr><td>'._MA_18.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_form" placeholder="'._MA_18.'" required></td></tr>';
-    $form = explode(',', $cfg['form'] ?? '');
+    $form = explode(',', $conf['money']['form'] ?? '');
     $i = 0;
     foreach ($form as $val) {
         if ($val != '') {
@@ -172,13 +170,12 @@ function billing(string $title, string $autor, string $infos, string $num, strin
 
 function rechn(): void {
     global $db, $conf;
-    $cfg = $conf['money'] ?? [];
-    $id = getVar('get', 'id', 'num', 0);
+        $id = getVar('get', 'id', 'num', 0);
     [$sum, $mail, $info, $com, $ip, $agent, $date] = $db->sql_fetchrow($db->sql_query('SELECT sum, mail, info, com, ip, agent, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
     setThemeInclude();
     $defis = urldecode($conf['defis'] ?? '%3E');
     $title = _RECHN.' '.$defis.' '._MONEY.' '.$defis.' '.($conf['sitename'] ?? '');
-    $form = explode(',', $cfg['form'] ?? '');
+    $form = explode(',', $conf['money']['form'] ?? '');
     $info = explode('|', $info);
     $i = 0;
     $infos = '';
@@ -189,25 +186,24 @@ function rechn(): void {
         }
     }
     $rnum = getVar('get', 'rnum', 'text', '');
-    $kurs = (float)($cfg['kurs'] ?? 0);
-    $proz = (float)($cfg['proz'] ?? 0);
+    $kurs = (float)($conf['money']['kurs'] ?? 0);
+    $proz = (float)($conf['money']['proz'] ?? 0);
     $menge = ($sum / 100) * $kurs * (100 - $proz);
     $kurs = ($menge > 0) ? round($sum / $menge, 2) : 0;
-    billing($title, bb_decode($cfg['autor'] ?? '', 'money'), bb_decode($infos, 'money'), $rnum, format_time($date), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
+    billing($title, bb_decode($conf['money']['autor'] ?? '', 'money'), bb_decode($infos, 'money'), $rnum, format_time($date), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
 }
 
 function active(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['money'] ?? [];
-    $act = getVar('get', 'act', 'num', 0);
+        $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
     $db->sql_query('UPDATE '.PREFIX_DB.'_money SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
     if ($act) {
         [$mail] = $db->sql_fetchrow($db->sql_query('SELECT mail FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
-        $amail = ($cfg['mail'] ?? '') ? $cfg['mail'] : ($conf['adminmail'] ?? '');
+        $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._MONEY;
         $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
-        $msg .= bb_decode($cfg['sendinfo'] ?? '', 'all');
+        $msg .= bb_decode($conf['money']['sendinfo'] ?? '', 'all');
         mail_send($mail, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=money&send=1');
     }
@@ -216,27 +212,26 @@ function active(): void {
 
 function conf(): void {
     global $afile, $conf;
-    $cfg = $conf['money'] ?? [];
-    head();
+        head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._MA_3.':</td><td><input type="text" name="proz" value="'.($cfg['proz'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_3.'" required></td></tr>'
-    .'<tr><td>'._MA_4.': EUR > USD</td><td><input type="text" name="kurs" value="'.($cfg['kurs'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_4.'" required></td></tr>'
-    .'<tr><td>'._MA_4.': EUR > RUB</td><td><input type="text" name="kurs2" value="'.($cfg['kurs2'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_4.'" required></td></tr>'
-    .'<tr><td>'._MA_5.':</td><td><input type="text" name="bal" value="'.($cfg['bal'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_5.'" required></td></tr>'
-    .'<tr><td>'._MA_6.':</td><td><input type="email" name="mail" value="'.($cfg['mail'] ?? '').'" maxlength="255" class="sl_conf" placeholder="'._MA_6.'" required></td></tr>'
-    .'<tr><td>'._MA_7.':</td><td><textarea name="form" cols="65" rows="5" class="sl_conf" placeholder="'._MA_7.'" required>'.($cfg['form'] ?? '').'</textarea></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 25).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($cfg['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._MA_8.'</td><td>'.radio_form($cfg['an'] ?? 0, 'an').'</td></tr>'
-    .'<tr><td>'._MA_9.'</td><td>'.radio_form($cfg['pr'] ?? 0, 'pr').'</td></tr>'
-    .'<tr><td>'._MA_10.'</td><td>'.radio_form($cfg['ad'] ?? 0, 'ad').'</td></tr>'
-    .'<tr><td>'._MA_11.':</td><td>'.textarea('1', 'text', $cfg['text'] ?? '', 'all', '5', _MA_11, '1').'</td></tr>'
-    .'<tr><td>'._MA_12.':</td><td>'.textarea('2', 'info', $cfg['info'] ?? '', 'all', '5', _MA_12, '1').'</td></tr>'
-    .'<tr><td>'._MA_13.':</td><td>'.textarea('3', 'sendinfo', $cfg['sendinfo'] ?? '', 'all', '5', _MA_13, '1').'</td></tr>'
-    .'<tr><td>'._MA_14.':</td><td>'.textarea('4', 'autor', $cfg['autor'] ?? '', 'all', '5', _MA_14, '1').'</td></tr>'
+    .'<tr><td>'._MA_3.':</td><td><input type="text" name="proz" value="'.($conf['money']['proz'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_3.'" required></td></tr>'
+    .'<tr><td>'._MA_4.': EUR > USD</td><td><input type="text" name="kurs" value="'.($conf['money']['kurs'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_4.'" required></td></tr>'
+    .'<tr><td>'._MA_4.': EUR > RUB</td><td><input type="text" name="kurs2" value="'.($conf['money']['kurs2'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_4.'" required></td></tr>'
+    .'<tr><td>'._MA_5.':</td><td><input type="text" name="bal" value="'.($conf['money']['bal'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_5.'" required></td></tr>'
+    .'<tr><td>'._MA_6.':</td><td><input type="email" name="mail" value="'.($conf['money']['mail'] ?? '').'" maxlength="255" class="sl_conf" placeholder="'._MA_6.'" required></td></tr>'
+    .'<tr><td>'._MA_7.':</td><td><textarea name="form" cols="65" rows="5" class="sl_conf" placeholder="'._MA_7.'" required>'.($conf['money']['form'] ?? '').'</textarea></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['money']['anum'] ?? 25).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['money']['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._MA_8.'</td><td>'.radio_form($conf['money']['an'] ?? 0, 'an').'</td></tr>'
+    .'<tr><td>'._MA_9.'</td><td>'.radio_form($conf['money']['pr'] ?? 0, 'pr').'</td></tr>'
+    .'<tr><td>'._MA_10.'</td><td>'.radio_form($conf['money']['ad'] ?? 0, 'ad').'</td></tr>'
+    .'<tr><td>'._MA_11.':</td><td>'.textarea('1', 'text', $conf['money']['text'] ?? '', 'all', '5', _MA_11, '1').'</td></tr>'
+    .'<tr><td>'._MA_12.':</td><td>'.textarea('2', 'info', $conf['money']['info'] ?? '', 'all', '5', _MA_12, '1').'</td></tr>'
+    .'<tr><td>'._MA_13.':</td><td>'.textarea('3', 'sendinfo', $conf['money']['sendinfo'] ?? '', 'all', '5', _MA_13, '1').'</td></tr>'
+    .'<tr><td>'._MA_14.':</td><td>'.textarea('4', 'autor', $conf['money']['autor'] ?? '', 'all', '5', _MA_14, '1').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="money"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;

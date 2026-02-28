@@ -14,13 +14,11 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function whois(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['whois'] ?? [];
-    $anum = $cfg['anum'] ?? 10;
-    $anump = $cfg['anump'] ?? 10;
+        $anum = $conf['whois']['anum'] ?? 10;
+    $anump = $conf['whois']['anump'] ?? 10;
 
     head();
-    $wid = $id ?: $wid;
-    $num = getVar('get', 'num', 'num', 1);
+        $num = getVar('get', 'num', 'num', 1);
     $offset = intval(($num - 1) * $anum);
     $status = getVar('get', 'status', 'num');
     if ($status == 1) {
@@ -88,7 +86,7 @@ function add(): void {
     $stop = $stop ?? [];
     $wid = 0;
     $id = getVar('req', 'id', 'num');
-    if ($id) {
+    if ($wid) {
         $result = $db->sql_query('SELECT w.id, w.name, w.domain, w.host, w.dc, w.hometext, u.user_name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.user_id) WHERE w.id = :id', ['id' => $id]);
         [$id, $uname, $domain, $host, $dc, $hometext, $userName] = $db->sql_fetchrow($result);
         $postname = $userName ?: ($uname ?: _ANONYM);
@@ -101,8 +99,7 @@ function add(): void {
         $hometext = getVar('post', 'hometext', 'text', '');
     }
     head();
-    $wid = $id ?: $wid;
-    $cont = navi(0, 1, 0, 0);
+        $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
@@ -134,7 +131,7 @@ function save(): void {
         $postid = is_user_id($postname);
         $uid = $postid ? $postid : '';
         $name = $postid ? '' : text_filter(substr($postname, 0, 25));
-        if ($id) {
+        if ($wid) {
             $db->sql_query('UPDATE '.PREFIX_DB."_whois SET uid = :uid, name = :name, domain = :domain, host = :host, dc = :dc, hometext = :hometext, status = '1' WHERE id = :id", ['uid' => $uid, 'name' => $name, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext, 'id' => $wid]);
         } else {
             $ip = getIp();
@@ -157,18 +154,16 @@ function del(int $id = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-    $cfg = $conf['whois'] ?? [];
-    head();
-    $wid = $id ?: $wid;
-    $cont = navi(0, 3, 0, 0);
+        head();
+        $cont = navi(0, 3, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-        .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 10).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-        .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($cfg['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-        .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($cfg['addmail'] ?? 0, 'addmail').'</td></tr>'
-        .'<tr><td>'._WHOISADD.'</td><td>'.radio_form($cfg['add'] ?? 0, 'add').'</td></tr>'
-        .'<tr><td>'._WHOISADDG.'</td><td>'.radio_form($cfg['addquest'] ?? 0, 'addquest').'</td></tr>'
+        .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['whois']['anum'] ?? 10).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+        .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['whois']['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+        .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['whois']['addmail'] ?? 0, 'addmail').'</td></tr>'
+        .'<tr><td>'._WHOISADD.'</td><td>'.radio_form($conf['whois']['add'] ?? 0, 'add').'</td></tr>'
+        .'<tr><td>'._WHOISADDG.'</td><td>'.radio_form($conf['whois']['addquest'] ?? 0, 'addquest').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="whois"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -190,8 +185,7 @@ function saveconf(): void {
 
 function info(): void {
     head();
-    $wid = $id ?: $wid;
-    echo navi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 'whois', 0).'</div>';
+        echo navi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 'whois', 0).'</div>';
     foot();
 }
 
@@ -205,4 +199,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
 

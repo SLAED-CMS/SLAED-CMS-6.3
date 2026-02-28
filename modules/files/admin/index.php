@@ -14,12 +14,11 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function files(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['files'] ?? [];
-    head();
+        head();
     $num = getVar('get', 'num', 'num', 1);
     $status = getVar('get', 'status', 'num', 0);
-    $anum = $cfg['anum'] ?? 25;
-    $anump = $cfg['anump'] ?? 10;
+    $anum = $conf['files']['anum'] ?? 25;
+    $anump = $conf['files']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
     if ($status == 1) {
         $st = '0';
@@ -71,8 +70,7 @@ function files(): void {
 
 function add(): void {
     global $db, $afile, $conf, $stop;
-    $cfg = $conf['files'] ?? [];
-    $id = getVar('req', 'id', 'num', 0);
+        $id = getVar('req', 'id', 'num', 0);
     $fid = $id;
     $fid = $id;
     if ($fid) {
@@ -102,7 +100,7 @@ function add(): void {
     if ($description) $cont .= preview($title, $description, $bodytext, '', 'files');
     $link = ($url) ? '<a href="'.$url.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
     $directory = '';
-    $path = $cfg['path'] ?? 'uploads/files';
+    $path = $conf['files']['path'] ?? 'uploads/files';
     if (file_exists($url)) {
         $entries = is_dir($path) ? scandir($path) : [];
         foreach ($entries as $entry) {
@@ -139,8 +137,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $stop, $conf;
-    $cfg = $conf['files'] ?? [];
-    $fid = getVar('post', 'fid', 'num', 0);
+        $fid = getVar('post', 'fid', 'num', 0);
     $cid = getVar('post', 'cid', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
     $title = getVar('post', 'title', 'title', '');
@@ -160,8 +157,8 @@ function save(): void {
     if (!$description) $stop[] = _CERROR1;
     if (!$postname) $stop[] = _CERROR3;
     if (!$fid && $db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
-    $filename = upload(1, $cfg['path'] ?? 'uploads/files', $cfg['typefile'] ?? 'zip,rar', $cfg['max_size'] ?? 1048576, 'files', '1600', '1600', '1');
-    $url = ($filename) ? ($cfg['path'] ?? 'uploads/files').'/'.$filename : $url;
+    $filename = upload(1, $conf['files']['path'] ?? 'uploads/files', $conf['files']['typefile'] ?? 'zip,rar', $conf['files']['max_size'] ?? 1048576, 'files', '1600', '1600', '1');
+    $url = ($filename) ? ($conf['files']['path'] ?? 'uploads/files').'/'.$filename : $url;
     $filesize = ($filename) ? filesize($url) : $filesize;
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && !$url && $posttype === 'save') {
@@ -217,51 +214,50 @@ function ignore(): void {
 
 function conf(): void {
     global $afile, $conf;
-    $cfg = $conf['files'] ?? [];
-    head();
+        head();
     $cont = navi(0, 4, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._F_0.':</td><td><input type="text" name="temp" value="'.($cfg['temp'] ?? '').'" class="sl_conf" placeholder="'._F_0.'" required></td></tr>'
-    .'<tr><td>'._F_1.':</td><td><input type="text" name="path" value="'.($cfg['path'] ?? '').'" class="sl_conf" placeholder="'._F_1.'" required></td></tr>'
-    .'<tr><td>'._FSIZE._FIN.':</td><td><input type="number" name="maxsize" value="'.($cfg['max_size'] ?? 0).'" class="sl_conf" placeholder="'._FSIZE._FIN.'" required></td></tr>'
-    .'<tr><td>'._FTYPE.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="typefile" value="'.($cfg['typefile'] ?? '').'" class="sl_conf" placeholder="'._FTYPE.'" required></td></tr>'
-    .'<tr><td>'._PAGELINKNUM.':</td><td><input type="number" name="linknum" value="'.($cfg['linknum'] ?? 0).'" class="sl_conf" placeholder="'._PAGELINKNUM.'" required></td></tr>'
-    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($cfg['listnum'] ?? 0).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($cfg['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($cfg['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($cfg['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['files']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
+    .'<tr><td>'._F_0.':</td><td><input type="text" name="temp" value="'.($conf['files']['temp'] ?? '').'" class="sl_conf" placeholder="'._F_0.'" required></td></tr>'
+    .'<tr><td>'._F_1.':</td><td><input type="text" name="path" value="'.($conf['files']['path'] ?? '').'" class="sl_conf" placeholder="'._F_1.'" required></td></tr>'
+    .'<tr><td>'._FSIZE._FIN.':</td><td><input type="number" name="maxsize" value="'.($conf['files']['max_size'] ?? 0).'" class="sl_conf" placeholder="'._FSIZE._FIN.'" required></td></tr>'
+    .'<tr><td>'._FTYPE.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="typefile" value="'.($conf['files']['typefile'] ?? '').'" class="sl_conf" placeholder="'._FTYPE.'" required></td></tr>'
+    .'<tr><td>'._PAGELINKNUM.':</td><td><input type="number" name="linknum" value="'.($conf['files']['linknum'] ?? 0).'" class="sl_conf" placeholder="'._PAGELINKNUM.'" required></td></tr>'
+    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($conf['files']['listnum'] ?? 0).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['files']['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['files']['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($conf['files']['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['files']['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
     .'<tr><td>'._STREAM.':</td><td><select name="stream" class="sl_conf">'
     .'<option value="0"';
-    if (($cfg['stream'] ?? null) == '0') $cont .= ' selected';
+    if (($conf['files']['stream'] ?? null) == '0') $cont .= ' selected';
     $cont .= '>'._STREAM_NO.'</option>'
     .'<option value="1"';
-    if (($cfg['stream'] ?? null) == '1') $cont .= ' selected';
+    if (($conf['files']['stream'] ?? null) == '1') $cont .= ' selected';
     $cont .= '>'._STREAM_1.'</option>'
     .'<option value="2"';
-    if (($cfg['stream'] ?? null) == '2') $cont .= ' selected';
+    if (($conf['files']['stream'] ?? null) == '2') $cont .= ' selected';
     $cont .= '>'._STREAM_2.'</option>'
     .'</select></td></tr>'
-    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($cfg['homcat'] ?? 0, 'homcat').'</td></tr>'
-    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($cfg['viewcat'] ?? 0, 'viewcat').'</td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($cfg['catdesc'] ?? 0, 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($cfg['subcat'] ?? 0, 'subcat').'</td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($cfg['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._F_8.'</td><td>'.radio_form($cfg['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._F_9.'</td><td>'.radio_form($cfg['addquest'] ?? 0, 'addquest').'</td></tr>'
-    .'<tr><td>'._F_11.'</td><td>'.radio_form($cfg['broc'] ?? 0, 'broc').'</td></tr>'
-    .'<tr><td>'._F_12.'</td><td>'.radio_form($cfg['down'] ?? 0, 'down').'</td></tr>'
-    .'<tr><td>'._UPFILE.'</td><td>'.radio_form($cfg['upload'] ?? 0, 'upload').'</td></tr>'
-    .'<tr><td>'._C_37.'</td><td>'.radio_form($cfg['autor'] ?? 0, 'autor').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($cfg['date'] ?? 0, 'date').'</td></tr>'
-    .'<tr><td>'._C_18.'</td><td>'.radio_form($cfg['read'] ?? 0, 'read').'</td></tr>'
-    .'<tr><td>'._F_2.'</td><td>'.radio_form($cfg['hits'] ?? 0, 'hits').'</td></tr>'
-    .'<tr><td>'._C_19.'</td><td>'.radio_form($cfg['rate'] ?? 0, 'rate').'</td></tr>'
-    .'<tr><td>'._C_20.'</td><td>'.radio_form($cfg['letter'] ?? 0, 'letter').'</td></tr>'
-    .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($cfg['link'] ?? 0, 'link').'</td></tr>'
+    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($conf['files']['homcat'] ?? 0, 'homcat').'</td></tr>'
+    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($conf['files']['viewcat'] ?? 0, 'viewcat').'</td></tr>'
+    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['files']['catdesc'] ?? 0, 'catdesc').'</td></tr>'
+    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['files']['subcat'] ?? 0, 'subcat').'</td></tr>'
+    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['files']['addmail'] ?? 0, 'addmail').'</td></tr>'
+    .'<tr><td>'._F_8.'</td><td>'.radio_form($conf['files']['add'] ?? 0, 'add').'</td></tr>'
+    .'<tr><td>'._F_9.'</td><td>'.radio_form($conf['files']['addquest'] ?? 0, 'addquest').'</td></tr>'
+    .'<tr><td>'._F_11.'</td><td>'.radio_form($conf['files']['broc'] ?? 0, 'broc').'</td></tr>'
+    .'<tr><td>'._F_12.'</td><td>'.radio_form($conf['files']['down'] ?? 0, 'down').'</td></tr>'
+    .'<tr><td>'._UPFILE.'</td><td>'.radio_form($conf['files']['upload'] ?? 0, 'upload').'</td></tr>'
+    .'<tr><td>'._C_37.'</td><td>'.radio_form($conf['files']['autor'] ?? 0, 'autor').'</td></tr>'
+    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['files']['date'] ?? 0, 'date').'</td></tr>'
+    .'<tr><td>'._C_18.'</td><td>'.radio_form($conf['files']['read'] ?? 0, 'read').'</td></tr>'
+    .'<tr><td>'._F_2.'</td><td>'.radio_form($conf['files']['hits'] ?? 0, 'hits').'</td></tr>'
+    .'<tr><td>'._C_19.'</td><td>'.radio_form($conf['files']['rate'] ?? 0, 'rate').'</td></tr>'
+    .'<tr><td>'._C_20.'</td><td>'.radio_form($conf['files']['letter'] ?? 0, 'letter').'</td></tr>'
+    .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($conf['files']['link'] ?? 0, 'link').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="files"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -323,6 +319,7 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
 
 
 

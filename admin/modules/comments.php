@@ -14,8 +14,8 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function comments(): void {
     head();
-    $id = getVar('get', 'status', 'num') ? 1 : 0;
-    echo navi(0, $id, 0, 0).ashowcom();
+    $status = getVar('get', 'status', 'num') ? 1 : 0;
+    echo navi(0, $status, 0, 0).ashowcom();
     foot();
 }
 
@@ -44,54 +44,54 @@ function editsave(): void {
 }
 
 function conf(): void {
-    global $afile, $confc;
+    global $afile, $conf;
     head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$confc['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$confc['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$confc['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$confc['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._COMLETTER.':</td><td><input type="number" name="letter" value="'.$confc['letter'].'" class="sl_conf" placeholder="'._COMLETTER.'" required></td></tr>'
-    .'<tr><td>'._CEDITT.':</td><td><input type="number" name="edit" value="'.intval($confc['edit'] / 60).'" class="sl_conf" placeholder="'._CEDITT.'" required></td></tr>'
-    .'<tr><td>'._CSEND.':</td><td><input type="number" name="send" value="'.$confc['send'].'" class="sl_conf" placeholder="'._CSEND.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['comments']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['comments']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['comments']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['comments']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._COMLETTER.':</td><td><input type="number" name="letter" value="'.$conf['comments']['letter'].'" class="sl_conf" placeholder="'._COMLETTER.'" required></td></tr>'
+    .'<tr><td>'._CEDITT.':</td><td><input type="number" name="edit" value="'.intval($conf['comments']['edit'] / 60).'" class="sl_conf" placeholder="'._CEDITT.'" required></td></tr>'
+    .'<tr><td>'._CSEND.':</td><td><input type="number" name="send" value="'.$conf['comments']['send'].'" class="sl_conf" placeholder="'._CSEND.'" required></td></tr>'
     .'<tr><td>'._SORT.':</td><td><select name="sort" class="sl_conf">'
     .'<option value="1"';
-    if ($confc['sort'] == '1') $cont .= ' selected';
+    if ($conf['comments']['sort'] == '1') $cont .= ' selected';
     $cont .= '>'._ASC.'</option>'
     .'<option value="0"';
-    if ($confc['sort'] == '0') $cont .= ' selected';
+    if ($conf['comments']['sort'] == '0') $cont .= ' selected';
     $cont .= '>'._DESC.'</option>'
     .'</select></td></tr>'
-    .'<tr><td>'._ALLOWANONPOST.'</td><td>'.com_access('anonpost', $confc['anonpost'], 'sl_conf').'</td></tr>'
+    .'<tr><td>'._ALLOWANONPOST.'</td><td>'.com_access('anonpost', $conf['comments']['anonpost'], 'sl_conf').'</td></tr>'
     .'<tr><td>'._NOLINKP.':<div class="sl_small">'._NOAUM.'</div></td><td><select name="link" class="sl_conf">'
     .'<option value="0"';
-    if ($confc['link'] == '0') $cont .= ' selected';
+    if ($conf['comments']['link'] == '0') $cont .= ' selected';
     $cont .= '>'._NO.'</option>'
     .'<option value="1"';
-    if ($confc['link'] == '1') $cont .= ' selected';
+    if ($conf['comments']['link'] == '1') $cont .= ' selected';
     $cont .= '>'._ANONIMP.'</option>'
     .'<option value="2"';
-    if ($confc['link'] == '2') $cont .= ' selected';
+    if ($conf['comments']['link'] == '2') $cont .= ' selected';
     $cont .= '>'._ALLUSER.'</option>'
     .'</select></td></tr>'
     .'<tr><td>'._NOALINKP.':<div class="sl_small">'._NOAUM.'</div></td><td><select name="alink" class="sl_conf">'
     .'<option value="0"';
-    if ($confc['alink'] == '0') $cont .= ' selected';
+    if ($conf['comments']['alink'] == '0') $cont .= ' selected';
     $cont .= '>'._NO.'</option>'
     .'<option value="1"';
-    if ($confc['alink'] == '1') $cont .= ' selected';
+    if ($conf['comments']['alink'] == '1') $cont .= ' selected';
     $cont .= '>'._ANONIMP.'</option>'
     .'<option value="2"';
-    if ($confc['alink'] == '2') $cont .= ' selected';
+    if ($conf['comments']['alink'] == '2') $cont .= ' selected';
     $cont .= '>'._ALLUSER.'</option>'
     .'</select></td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($confc['addmail'], 'addmail').'</td></tr>'
-    .'<tr><td>'._VPRIVAT.'</td><td>'.radio_form($confc['privat'], 'privat').'</td></tr>'
-    .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($confc['profil'], 'profil').'</td></tr>'
-    .'<tr><td>'._VWEB.'</td><td>'.radio_form($confc['web'], 'web').'</td></tr>'
+    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['comments']['addmail'], 'addmail').'</td></tr>'
+    .'<tr><td>'._VPRIVAT.'</td><td>'.radio_form($conf['comments']['privat'], 'privat').'</td></tr>'
+    .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($conf['comments']['profil'], 'profil').'</td></tr>'
+    .'<tr><td>'._VWEB.'</td><td>'.radio_form($conf['comments']['web'], 'web').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -124,7 +124,7 @@ function save(): void {
 function act(): void {
     global $db, $afile;
     $get_id = getVar('get', 'id', 'num');
-    $id = getVar('post', 'id[]', 'num', []);
+    $id = getVar('post', 'id', 'num', []);
     if (!$id && $get_id) $id = [$get_id];
     if (is_array($id)) {
         foreach ($id as $val) {
@@ -143,7 +143,7 @@ function act(): void {
 function del(): void {
     global $db, $afile;
     $get_id = getVar('get', 'id', 'num');
-    $id = getVar('post', 'id[]', 'num', []);
+    $id = getVar('post', 'id', 'num', []);
     if (!$id && $get_id) $id = [$get_id];
     if (is_array($id)) {
         foreach ($id as $val) {

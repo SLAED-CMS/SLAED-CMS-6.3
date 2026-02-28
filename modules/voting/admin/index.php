@@ -190,7 +190,7 @@ function conf(): void {
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="voting_t" value="'.intval($conf['voting']['voting_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
+    .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="time" value="'.intval($conf['voting']['voting_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
     .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['voting']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
     .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['voting']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
     .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['voting']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
@@ -219,7 +219,7 @@ function conf(): void {
 function saveconf(): void {
     global $afile;
     $cont = [
-        'voting_t' => getVar('post', 'voting_t', 'num', 1) * 86400,
+        'voting_t' => getVar('post', 'time', 'num', 1) * 86400,
         'num' => getVar('post', 'num', 'num', 10),
         'anum' => getVar('post', 'anum', 'num', 10),
         'nump' => getVar('post', 'nump', 'num', 10),
@@ -246,5 +246,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
 
 

@@ -11,7 +11,7 @@ setCache('0');
 checkAccess();
 
 function getAdminMenu(string $url, string $title, string $image, string $class = ''): string {
-    global $conf, $panel, $count;
+ global $conf, $panel, $count;
     $ltitle = ($class !== '') ? $title.' - '._DEACT : $title;
     $path = img_find('admin/'.$image);
     $image = file_exists($path) ? $path : img_find('admin/components.png');
@@ -27,11 +27,11 @@ function getAdminMenu(string $url, string $title, string $image, string $class =
 }
 
 function getAdminPanelBlocks(): string {
-    global $confmd, $panel, $afile;
+ global $panel, $afile;
     if (!$panel) {
         $cont = '';
         if (is_admin_god()) {
-            foreach ($confmd as $name => $mod) {
+            foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) {
                     $class = (!$mod['active']) ? ' sl_hidden' : '';
                     $cont .= getAdminMenu(
@@ -45,7 +45,7 @@ function getAdminPanelBlocks(): string {
             $block = setTemplateBlock('block-left', ['{%title%}' => _ADMIN, '{%content%}' => $cont, '{%id%}' => '1']);
             $cont = '';
         }
-        foreach ($confmd as $name => $mod) {
+        foreach ($conf['modules'] as $name => $mod) {
             if (($mod['type'] ?? 1) == 1) {
                 if (is_admin_god() || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
@@ -69,7 +69,7 @@ function getAdminPanelBlocks(): string {
 }
 
 function getAdminPanel(): void {
-    global $confmd, $conf, $panel, $count, $afile, $class;
+ global $conf, $panel, $count, $afile, $class;
     head();
     $content = '';
     $minver = '8.1.0';
@@ -81,7 +81,7 @@ function getAdminPanel(): void {
         $count = 1;
         if (is_admin_god()) {
             $cont = '';
-            foreach ($confmd as $name => $mod) {
+            foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) {
                     $class = (!$mod['active']) ? ' sl_hidden' : '';
                     $cont .= getAdminMenu(
@@ -96,7 +96,7 @@ function getAdminPanel(): void {
         }
         $count = 1;
         $cont = '';
-        foreach ($confmd as $name => $mod) {
+        foreach ($conf['modules'] as $name => $mod) {
             if (($mod['type'] ?? 1) == 1) {
                 if (is_admin_god() || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
@@ -121,7 +121,7 @@ function getAdminPanel(): void {
 
 # OLD FUNCTIONS - REFAKTORING NEEDED
 function add_admin() {
-    global $db, $afile, $conf, $stop;
+ global $db, $afile, $conf, $stop;
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $aname = $_POST['aname'];
         $aurl = url_filter($_POST['aurl']);
@@ -154,7 +154,7 @@ function add_admin() {
 }
 
 function check_admin() {
-    global $db, $afile, $conf, $stop;
+ global $db, $afile, $conf, $stop;
     if (($conf['gfx_chk'] == 1 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) && checkCaptcha(2)) $stop = _SECCODEINCOR;
     $name = htmlspecialchars(trim(substr($_POST['name'], 0, 25)));
     $pwd = htmlspecialchars(trim(substr($_POST['pwd'], 0, 25)));
@@ -179,7 +179,7 @@ function check_admin() {
 }
 
 function login() {
-    global $db, $afile, $conf, $stop;
+ global $db, $afile, $conf, $stop;
     head();
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
@@ -194,7 +194,7 @@ function login() {
 }
 
 function changeeditor() {
-    global $db, $admin, $afile, $conf;
+ global $db, $admin, $afile, $conf;
     $editor = (isset($_POST['editor'])) ? intval($_POST['editor']) : intval($conf['redaktor']);
     $aid = intval(substr($admin[0], 0, 11));
     $info = base64_decode($_SESSION[$conf['admin_c']]);
@@ -206,7 +206,7 @@ function changeeditor() {
 }
 
 function logout() {
-    global $db, $admin, $afile, $conf;
+ global $db, $admin, $afile, $conf;
     $aname = text_filter(substr($admin[1], 0, 25), 1);
     $db->sql_query('DELETE FROM '.PREFIX_DB."_session WHERE uname = '".$aname."' AND guest = '3'");
     unset($_SESSION[$conf['admin_c']], $admin);
@@ -231,7 +231,7 @@ if (is_admin()) {
             $module_file = BASE_DIR.'/admin/modules/'.$name.'.php';
             if (file_exists($module_file)) require_once $module_file;
         }
-        if (isset($confmd[$name])) {
+        if (isset($conf['modules'][$name])) {
             if (is_admin_god() || is_admin_modul($name)) {
                 $path = BASE_DIR.'/modules/'.$name.'/admin';
                 if (file_exists($path.'/index.php')) {
@@ -250,4 +250,3 @@ if (is_admin()) {
         case 'check_admin'; check_admin(); break;
     }
 }
-

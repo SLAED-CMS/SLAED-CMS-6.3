@@ -76,18 +76,17 @@ function save(): void {
         'use' => getVar('post', 'use', 'bool', 0),
     ];
     $rss = '';
+    $field1 = getVar('post', 'field1', 'raw', []);
+    $field2 = getVar('post', 'field2', 'raw', []);
+    $field3 = getVar('post', 'field3', 'raw', []);
     for ($i = 0; $i < 50; $i++) {
         $ident = ($i == 0) ? '' : '||';
-        $field1 = getVar('post', 'field1['.$i.']', '', '0');
-        $field2 = getVar('post', 'field2['.$i.']', '', '0');
-        $field3 = getVar('post', 'field3['.$i.']', 'num', '0');
-        $rss .= $ident.$field1.'|'.$field2.'|'.$field3;
+        $rss .= $ident.($field1[$i] ?? '0').'|'.($field2[$i] ?? '0').'|'.intval($field3[$i] ?? 0);
     }
     $cont['rss'] = $rss;
     setConfigFile('rss.php', $cont);
     setRedirect($afile.'.php?name=rss');
 }
-
 function info(): void {
     head();
     echo navi(1, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 'rss', 0).'</div>';

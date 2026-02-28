@@ -14,14 +14,13 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function contact(): void {
     global $afile, $conf;
-    $cfg = $conf['contact'] ?? [];
-    head();
+        head();
     $cont = navi(0, 0, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/contact.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._CONTACTINFO.':</td><td>'.textarea('1', 'info', $cfg['info'], 'all', '10', _CONTACTINFO, '0').'</td></tr>'
-    .'<tr><td>'._CONTACTALL.'</td><td>'.radio_form($cfg['admins'], 'admins').'</td></tr>'
+    .'<tr><td>'._CONTACTINFO.':</td><td>'.textarea('1', 'info', $conf['contact']['info'], 'all', '10', _CONTACTINFO, '0').'</td></tr>'
+    .'<tr><td>'._CONTACTALL.'</td><td>'.radio_form($conf['contact']['admins'], 'admins').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="contact"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -49,3 +48,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+

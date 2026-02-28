@@ -14,11 +14,10 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function media(): void {
     global $db, $afile, $conf;
-    $cfg = $conf['media'] ?? [];
-    head();
+        head();
     $num = getVar('get', 'num', 'num', 1);
-    $anum = $cfg['anum'] ?? 25;
-    $anump = $cfg['anump'] ?? 10;
+    $anum = $conf['media']['anum'] ?? 25;
+    $anump = $conf['media']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
     $status = getVar('get', 'status', 'num', 0);
     if ($status == 1) {
@@ -72,8 +71,7 @@ function media(): void {
 
 function add(): void {
     global $db, $afile, $conf, $stop;
-    $cfg = $conf['media'] ?? [];
-    $date = getdate();
+        $date = getdate();
     $id = getVar('req', 'id', 'num', 0);
     $mid = $id;
     if ($mid) {
@@ -105,7 +103,7 @@ function add(): void {
         $ihome = getVar('post', 'ihome', 'num', 0);
         $acomm = getVar('post', 'acomm', 'num', 0);
     }
-    $mtitle = ($subtitle) ? $title.' '.urldecode($cfg['mdefis'] ?? '%7C').' '.$subtitle : $title;
+    $mtitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis'] ?? '%7C').' '.$subtitle : $title;
     head();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
@@ -130,7 +128,7 @@ function add(): void {
     .'<tr><td>'._MCREATEDBY.':</td><td><input type="text" name="createdby" value="'.$createdby.'" maxlength="100" class="sl_form" placeholder="'._MCREATEDBY.'"></td></tr>'
     .'<tr><td>'._MDURATION.':</td><td><input type="text" name="duration" value="'.$duration.'" maxlength="100" class="sl_form" placeholder="'._MDURATION.'"></td></tr>'
     .'<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">';
-    $langs = explode(',', $cfg['lang'] ?? '');
+    $langs = explode(',', $conf['media']['lang'] ?? '');
     foreach ($langs as $val) {
         $sel = ($val == $lang && $val != '') ? ' selected' : '';
         $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
@@ -139,7 +137,7 @@ function add(): void {
     .'<tr><td>'._NOTE.':</td><td>'.textarea('2', 'note', $note, 'media', '10', _NOTE, '0').'</td></tr>'
     .'<tr><td>'._MFORMAT.':</td><td><select name="format" class="sl_form">'
     .'<option value="">'._NO_INFO.'</option>';
-    $formats = explode(',', $cfg['format'] ?? '');
+    $formats = explode(',', $conf['media']['format'] ?? '');
     foreach ($formats as $val) {
         $sel = ($val == $format && $val != '') ? ' selected' : '';
         $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
@@ -147,7 +145,7 @@ function add(): void {
     $cont .= '</select></td></tr>'
     .'<tr><td>'._MQUALITY.':</td><td><select name="quality" class="sl_form">'
     .'<option value="">'._NO_INFO.'</option>';
-    $qualities = explode(',', $cfg['quality'] ?? '');
+    $qualities = explode(',', $conf['media']['quality'] ?? '');
     foreach ($qualities as $val) {
         $sel = ($val == $quality && $val != '') ? ' selected' : '';
         $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
@@ -157,7 +155,7 @@ function add(): void {
     .'<tr><td>'._MRELEASED.':</td><td><input type="text" name="released" value="'.$released.'" maxlength="100" class="sl_form" placeholder="'._MRELEASED.'"></td></tr>'
     .'<tr><td colspan="2">';
     $i = 0;
-    $lnum = (int)($cfg['links'] ?? 0);
+    $lnum = (int)($conf['media']['links'] ?? 0);
     while ($i < $lnum) {
         $a = $i + 1;
         $link = $links[$i] ?? '';
@@ -242,39 +240,38 @@ function ignore(): void {
 
 function conf(): void {
     global $afile, $conf;
-    $cfg = $conf['media'] ?? [];
-    head();
+        head();
     $cont = navi(0, 4, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/media.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($cfg['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._PAGELINKNUM.':</td><td><input type="number" name="linknum" value="'.($cfg['linknum'] ?? 10).'" class="sl_conf" placeholder="'._PAGELINKNUM.'" required></td></tr>'
-    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($cfg['listnum'] ?? 10).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($cfg['num'] ?? 25).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($cfg['anum'] ?? 25).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($cfg['nump'] ?? 10).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($cfg['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._M_1.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="lang" value="'.($cfg['lang'] ?? '').'" class="sl_conf" placeholder="'._M_1.'" required></td></tr>'
-    .'<tr><td>'._M_2.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="format" value="'.($cfg['format'] ?? '').'" class="sl_conf" placeholder="'._M_2.'" required></td></tr>'
-    .'<tr><td>'._M_3.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="quality" value="'.($cfg['quality'] ?? '').'" class="sl_conf" placeholder="'._M_3.'" required></td></tr>'
-    .'<tr><td>'._M_4.':</td><td><input type="number" name="links" value="'.($cfg['links'] ?? 0).'" class="sl_conf" placeholder="'._M_4.'" required></td></tr>'
-    .'<tr><td>'._DEFIS.':</td><td><input type="text" name="mdefis" value="'.urldecode($cfg['mdefis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._DEFIS.'" required></td></tr>'
-    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($cfg['homcat'] ?? 0, 'homcat').'</td></tr>'
-    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($cfg['viewcat'] ?? 0, 'viewcat').'</td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($cfg['catdesc'] ?? 0, 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($cfg['subcat'] ?? 0, 'subcat').'</td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($cfg['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._M_7.'</td><td>'.radio_form($cfg['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._M_8.'</td><td>'.radio_form($cfg['addquest'] ?? 0, 'addquest').'</td></tr>'
-    .'<tr><td>'._M_9.'</td><td>'.radio_form($cfg['broc'] ?? 0, 'broc').'</td></tr>'
-    .'<tr><td>'._M_10.'</td><td>'.radio_form($cfg['hide'] ?? 0, 'hide').'</td></tr>'
-    .'<tr><td>'._C_37.'</td><td>'.radio_form($cfg['autor'] ?? 0, 'autor').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($cfg['date'] ?? 0, 'date').'</td></tr>'
-    .'<tr><td>'._C_18.'</td><td>'.radio_form($cfg['read'] ?? 0, 'read').'</td></tr>'
-    .'<tr><td>'._C_19.'</td><td>'.radio_form($cfg['rate'] ?? 0, 'rate').'</td></tr>'
-    .'<tr><td>'._C_20.'</td><td>'.radio_form($cfg['letter'] ?? 0, 'letter').'</td></tr>'
-    .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($cfg['link'] ?? 0, 'link').'</td></tr>'
+    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['media']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
+    .'<tr><td>'._PAGELINKNUM.':</td><td><input type="number" name="linknum" value="'.($conf['media']['linknum'] ?? 10).'" class="sl_conf" placeholder="'._PAGELINKNUM.'" required></td></tr>'
+    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($conf['media']['listnum'] ?? 10).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
+    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['media']['num'] ?? 25).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
+    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['media']['anum'] ?? 25).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
+    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($conf['media']['nump'] ?? 10).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
+    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['media']['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
+    .'<tr><td>'._M_1.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="lang" value="'.($conf['media']['lang'] ?? '').'" class="sl_conf" placeholder="'._M_1.'" required></td></tr>'
+    .'<tr><td>'._M_2.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="format" value="'.($conf['media']['format'] ?? '').'" class="sl_conf" placeholder="'._M_2.'" required></td></tr>'
+    .'<tr><td>'._M_3.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="quality" value="'.($conf['media']['quality'] ?? '').'" class="sl_conf" placeholder="'._M_3.'" required></td></tr>'
+    .'<tr><td>'._M_4.':</td><td><input type="number" name="links" value="'.($conf['media']['links'] ?? 0).'" class="sl_conf" placeholder="'._M_4.'" required></td></tr>'
+    .'<tr><td>'._DEFIS.':</td><td><input type="text" name="mdefis" value="'.urldecode($conf['media']['mdefis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._DEFIS.'" required></td></tr>'
+    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($conf['media']['homcat'] ?? 0, 'homcat').'</td></tr>'
+    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($conf['media']['viewcat'] ?? 0, 'viewcat').'</td></tr>'
+    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['media']['catdesc'] ?? 0, 'catdesc').'</td></tr>'
+    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['media']['subcat'] ?? 0, 'subcat').'</td></tr>'
+    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['media']['addmail'] ?? 0, 'addmail').'</td></tr>'
+    .'<tr><td>'._M_7.'</td><td>'.radio_form($conf['media']['add'] ?? 0, 'add').'</td></tr>'
+    .'<tr><td>'._M_8.'</td><td>'.radio_form($conf['media']['addquest'] ?? 0, 'addquest').'</td></tr>'
+    .'<tr><td>'._M_9.'</td><td>'.radio_form($conf['media']['broc'] ?? 0, 'broc').'</td></tr>'
+    .'<tr><td>'._M_10.'</td><td>'.radio_form($conf['media']['hide'] ?? 0, 'hide').'</td></tr>'
+    .'<tr><td>'._C_37.'</td><td>'.radio_form($conf['media']['autor'] ?? 0, 'autor').'</td></tr>'
+    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['media']['date'] ?? 0, 'date').'</td></tr>'
+    .'<tr><td>'._C_18.'</td><td>'.radio_form($conf['media']['read'] ?? 0, 'read').'</td></tr>'
+    .'<tr><td>'._C_19.'</td><td>'.radio_form($conf['media']['rate'] ?? 0, 'rate').'</td></tr>'
+    .'<tr><td>'._C_20.'</td><td>'.radio_form($conf['media']['letter'] ?? 0, 'letter').'</td></tr>'
+    .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($conf['media']['link'] ?? 0, 'link').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="media"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;

@@ -8,10 +8,10 @@ if (!defined('ADMIN_FILE')) die('Illegal file access');
 
 # Format statistic image
 function getStatistic(): void {
-    global $conf, $confst;
+ global $conf;
     require_once CONFIG_DIR.'/statistic.php';
     $report = getVar('get', 'report', 'num', 0);
-    $mday   = getVar('get', 'day', 'num', 15);
+    $day    = getVar('get', 'day', 'num', 15);
     $file   = getVar('get', 'file', 'text', '');
     $off = 1;
 
@@ -48,7 +48,7 @@ function getStatistic(): void {
     }
     $f = ($f !== false) ? $f : [];
     $to = count($f);
-    if ($mday > 15) {
+    if ($day > 15) {
         $from = 0;
         $to = 15;
     } else {
@@ -76,36 +76,36 @@ function getStatistic(): void {
             $w = round((230 / $max2) * $day[2]);
             if ($w < 4) $w = 4;
             $off = 134;
-            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi'], 249, $yellow);
-            imagerectangle($image, $off+$confst['bet']*$i, 250-$w, $off+$confst['bet']*$i+$confst['shi'], 249, $black);
-            imagerectangle($image, $off+$confst['bet']*$i+$confst['shi']+1, 250-$w+3, $off+$confst['bet']*$i+$confst['shi']+2, 249, $gray);
+            imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi'], 249, $yellow);
+            imagerectangle($image, $off+$conf['statistic']['bet']*$i, 250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi'], 249, $black);
+            imagerectangle($image, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+1, 250-$w+3, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+2, 249, $gray);
             $w = round((230 / $max1) * $day[1]);
             if ($w < 5) $w = 1;
             $off = 120;
 
-            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi']+3, 249, $wblue);
-            imagerectangle($image, $off+$confst['bet']*$i,250-$w, $off+$confst['bet']*$i+$confst['shi']+3, 249, $black);
-            imagerectangle($image, $off+$confst['bet']*$i+$confst['shi']+4, 250-$w+4, $off+$confst['bet']*$i+$confst['shi']+5, 249, $black);
+            imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $wblue);
+            imagerectangle($image, $off+$conf['statistic']['bet']*$i,250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $black);
+            imagerectangle($image, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+4, 250-$w+4, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+5, 249, $black);
             $zzz = $day[1] - ($day[4] + $day[5]);
             $w = round((230 / $max1) * $zzz);
             if ($w < 4) $w = $w + 31;
 
-            imagefilledrectangle($image, $off+$confst['bet']*$i+1, 250-$w+1, $off+$confst['bet']*$i+$confst['shi']+3, 249, $wgreen);
-            imagerectangle($image, $off+$confst['bet']*$i, 250-$w, $off+$confst['bet']*$i+$confst['shi']+3, 249, $black);
-            imagestring($image, 1, $off+$confst['bet']*$i+2, 250-$w+1-10, $day[1], $white);
+            imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $wgreen);
+            imagerectangle($image, $off+$conf['statistic']['bet']*$i, 250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $black);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+2, 250-$w+1-10, $day[1], $white);
 
             $d = explode('.', $day[0]);
             $d = $d[0].'.'.$d[1];
 
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 255, $d, $wblue);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 265, $day[1], $red);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 275, $day[2], $green);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 285, $day[6], $purple);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 255, $d, $wblue);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 265, $day[1], $red);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 275, $day[2], $green);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 285, $day[6], $purple);
 
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 300, $day[5], $wblue);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 310, $day[4], $red);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 320, $zzz, $green);
-            imagestring($image, 1, $off+$confst['bet']*$i+1, 330, rtrim($day[7]), $purple);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 300, $day[5], $wblue);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 310, $day[4], $red);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 320, $zzz, $green);
+            imagestring($image, 1, $off+$conf['statistic']['bet']*$i+1, 330, rtrim($day[7]), $purple);
 
             imagestring($image, 1, 3, 255, 'DATE:', $wblue);
             imagestring($image, 1, 3, 265, 'UNIQUE VISITORS:', $red);
@@ -160,21 +160,21 @@ function getStatistic(): void {
 
 # Authenticate and IP address check
 function checkAccess() {
-    global $confs;
-    if ($confs['admin_ip'] != '') {
-        $admin_ip = explode(',', $confs['admin_ip']);
+    global $conf;
+    if ($conf['security']['admin_ip'] != '') {
+        $admin_ip = explode(',', $conf['security']['admin_ip']);
         foreach ($admin_ip as $val) {
             $temp_ip = getip();
             $admin_ip = $val;
-            if ($confs['admin_mask'] <= 3) {
+            if ($conf['security']['admin_mask'] <= 3) {
                 $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
                 $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
             }
-            if ($confs['admin_mask'] <= 2) {
+            if ($conf['security']['admin_mask'] <= 2) {
                 $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
                 $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
             }
-            if ($confs['admin_mask'] == 1) {
+            if ($conf['security']['admin_mask'] == 1) {
                 $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
                 $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
             }
@@ -187,9 +187,9 @@ function checkAccess() {
         }
         if (!$ip_check) setExit(_AUTH_ERROR_IP);
     }
-    if (!empty($confs['login']) && !empty($confs['password'])) {
+    if (!empty($conf['security']['login']) && !empty($conf['security']['password'])) {
         if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])) setUnauthorized();
-        if (!password_verify($_SERVER['PHP_AUTH_USER'], $confs['login']) || !password_verify($_SERVER['PHP_AUTH_PW'], $confs['password'])) setUnauthorized();
+        if (!password_verify($_SERVER['PHP_AUTH_USER'], $conf['security']['login']) || !password_verify($_SERVER['PHP_AUTH_PW'], $conf['security']['password'])) setUnauthorized();
     }
 }
 
@@ -214,7 +214,7 @@ function getAdminTabs(
     int $act_sub = 0,
     string $mtab = 'menutab'
 ): string {
-    global $afile;
+ global $afile;
 
     $cnt = '<ul id="'.$mtab.'" class="reset tabmenu">';
     $scnt = '';
@@ -264,7 +264,7 @@ function getAdminTabs(
 }
 
 function admininfo() {
-    global $db, $admin, $afile, $conf, $confdb, $confr, $confst, $panel;
+ global $db, $admin, $afile, $conf, $panel;
     if (is_admin()) {
         $ablocks = '';
         if ($panel) {
@@ -365,7 +365,7 @@ function admininfo() {
                 
                 $dbver = db_version();
                 $dbtotal = $dbfree = 0;
-                $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($confdb['name'] ?? ''));
+                $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
                 if ($dbname !== '') {
                     $dbresult = $db->sql_query("SHOW TABLE STATUS FROM `".$dbname."`");
                     while ($row = $db->sql_fetchrow($dbresult)) {
@@ -379,8 +379,8 @@ function admininfo() {
                 $gzip = function_exists("gzopen") ? 1 : 0;
                 $bzip = function_exists("bzopen") ? 1 : 0;
                 $zip = checkCompress() ? 1 : 0;
-                $stat = (is_array($confst) && isset($confst['stat'])) ? $confst['stat'] : 0;
-                $refer = (is_array($confr) && isset($confr['refer'])) ? $confr['refer'] : 0;
+                $stat = (is_array($conf['statistic']) && isset($conf['statistic']['stat'])) ? $conf['statistic']['stat'] : 0;
+                $refer = (is_array($conf['referers']) && isset($conf['referers']['refer'])) ? $conf['referers']['refer'] : 0;
                 
                 $s_cont = '<table class="sl_tab_bl">'
                 .'<tr><td>'._SCLOSE.':</td><td>'.getHint($conf['close'], 2, 0, 0, 0, 0, 0, 0, 0).'</td></tr>'
@@ -398,7 +398,7 @@ function admininfo() {
                 .'<tr><td>PHP GD:</td><td>'.getHint($gdver, 0, 1, 0, 8, 0, '2', '2.0.2', $gdver).'</td></tr>'
                 .'<tr><td>MySQL:</td><td>'.getHint(substr($dbver, 0, strrpos($dbver, '.')), 0, 1, 0, 8, 0, '5', '10', $dbver).'</td></tr>'
                 .'<tr><td>DB size:</td><td>'.getHint($dbtotal, 0, 0, 0, 8, 1, 52428800, 104857600, 0).'</td></tr>';
-                $s_cont .= ($confdb['engine'] != 'InnoDB') ? '<tr><td>DB overhead:</td><td>'.getHint($dbfree, 0, 0, 8, 0, 1, 512000, 1048576, 0).'</td></tr>' : '';
+                $s_cont .= ($conf['db']['engine'] != 'InnoDB') ? '<tr><td>DB overhead:</td><td>'.getHint($dbfree, 0, 0, 8, 0, 1, 512000, 1048576, 0).'</td></tr>' : '';
                 $s_cont .= '<tr><td>Post max size:</td><td>'.getHint((str_replace('M', '', ini_get('post_max_size')) * 1024 * 1024), 0, 1, 0, 8, 1, 2097152, 4194304, 0).'</td></tr>'
                 .'<tr><td>File uploads:</td><td>'.getHint(ini_get('file_uploads'), 2, 2, 1, 0, 0, 0, 0, 0).'</td></tr>'
                 .'<tr><td>Upload max file size:</td><td>'.getHint((str_replace('M', '', ini_get('upload_max_filesize')) * 1024 * 1024), 0, 1, 0, 8, 1, 2097152, 4194304, 0).'</td></tr>'
@@ -452,13 +452,13 @@ function php_gd() {
 }
 
 function db_version() {
-    global $db;
+ global $db;
     list($dbv) = $db->sql_fetchrow($db->sql_query('SELECT VERSION()'));
     return $dbv;
 }
 
 function ajax_cat(string $modul = '', int $obj = 0): string {
-    global $db, $afile, $conf;
+ global $db, $afile, $conf;
     $modul   = analyze($modul);
     $where   = ($modul) ? 'WHERE a.modul = :modul' : '';
     $params  = ($modul) ? ['modul' => $modul] : [];
@@ -542,7 +542,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
 }
 
 function cat_order(): void {
-    global $db;
+ global $db;
     $modul = analyze(getVar('get', 'mod', 'text', ''));
     if ($modul) {
         $typ    = getVar('get', 'typ',    'num', 0);
@@ -556,7 +556,7 @@ function cat_order(): void {
 }
 
 function catacess(string $name, string $class, string $selected, int $limit): string {
-    global $db;
+ global $db;
     $gids = explode("|", $selected);
     $cont = "<select name=\"".$name."[]\" multiple=\"multiple\" class=\"".$class."\">";
     if ($limit < 1) {
@@ -613,7 +613,7 @@ function scatacess($auth) {
 }
 
 function ajax_block(): string {
-    global $db, $conf, $afile;
+ global $db, $conf, $afile;
     $fcont  = "";
     $result = $db->sql_query('SELECT a.bid, a.bkey, a.title, a.url, a.bposition, a.weight, a.active, a.blanguage, a.blockfile, a.view, a.expire, a.action, b.bid, b.bposition, b.weight, c.bid, c.bposition, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bposition = a.bposition AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bposition = a.bposition AND c.weight = a.weight+1) ORDER BY a.bposition, a.weight');
     while (list($bid, $bkey, $title, $url, $bposition, $weight, $active, $blanguage, $blockfile, $view, $expire, $action, $con1, $bposition1, $weight1, $con2, $bposition2, $weight2) = $db->sql_fetchrow($result)) {
@@ -671,7 +671,7 @@ function ajax_block(): string {
 }
 
 function blocks_order(): void {
-    global $db;
+ global $db;
     $typ    = getVar('get', 'typ',    'num', 0);
     $ordern = getVar('get', 'ordern', 'num', 0);
     $id     = getVar('get', 'id',     'num', 0);
@@ -683,10 +683,10 @@ function blocks_order(): void {
 
 # Favorites list view
 function fav_aliste(int $obj = 0): string {
-    global $db, $conffav, $conf, $confu;
-    $newlistnum = intval($conffav['anum']);
-    $num = getVar('get', 'cid', 'num', 1);
-    $offset = ($num-1) * $newlistnum;
+ global $db, $conf;
+    $newlistnum = intval($conf['favorites']['anum']);
+    $cid = getVar('get', 'cid', 'num', 1);
+    $offset = ($cid-1) * $newlistnum;
     $offset = intval($offset);
     list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
     
@@ -722,10 +722,10 @@ function fav_aliste(int $obj = 0): string {
                 $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid = n.lid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "media") {
-                $confm = $conf['media'] ?? [];
+                $conf['media'] = $conf['media'] ?? [];
                 $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, n.subtitle, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_media AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $subtitle, $uname) = $db->sql_fetchrow($result)) {
-                    $title = ($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;
+                    $title = ($subtitle) ? $title." ".urldecode($conf['media']['mdefis'])." ".$subtitle : $title;
                     $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
                 }
             } elseif ($key == "news") {
@@ -756,7 +756,7 @@ function fav_aliste(int $obj = 0): string {
             }
             $cont .= "</tbody></table>";
             $numpages = ceil($fav_num / $newlistnum);
-            $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conffav['anump'], $num, "0", "5", "fav_aliste", "fav_aliste", "", "", "");
+            $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, "0", "5", "fav_aliste", "fav_aliste", "", "", "");
         } else {
             $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
         }
@@ -770,7 +770,7 @@ function fav_aliste(int $obj = 0): string {
 
 # Favorites delete
 function fav_adel(): void {
-    global $db;
+ global $db;
     $id = getVar('get', 'id', 'num', 0);
     $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
     fav_aliste(0);
@@ -778,16 +778,16 @@ function fav_adel(): void {
 
 # Private messages list view
 function ajax_privat(int $obj = 0): string {
-    global $db, $confu, $confpr;
-    $newlistnum = intval($confpr['anum']);
-    $num    = getVar('get', 'cid', 'num', 1);
-    $offset = intval(($num - 1) * $newlistnum);
+    global $db, $conf;
+    $newlistnum = intval($conf['privat']['anum']);
+    $cid    = getVar('get', 'cid', 'num', 1);
+    $offset = intval(($cid - 1) * $newlistnum);
     list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat'));
 
-    $result = $db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.status, i.user_name, o.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.user_id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.user_id) ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum));
+    $result = $db->sql_query('SELECT p.id, p.title, p.content, p.date, p.status, i.user_name, o.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.user_id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.user_id) ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum));
     if ($db->sql_numrows($result) > 0) {
         $cont = "<table class=\"sl_table_list\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._PRSE."</th><th>"._PRRE."</th><th>"._DATE."</th><th>"._STATUS."</th><th>"._FUNCTIONS."</th></tr></thead><tbody>";
-        while (list($id, $uidin, $uidout, $title, $content, $date, $status, $user_re, $user_se) = $db->sql_fetchrow($result)) {
+        while (list($id, $title, $content, $date, $status, $user_re, $user_se) = $db->sql_fetchrow($result)) {
             $unre = ($user_re) ? user_info($user_re) : _ANONYM;
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
@@ -803,7 +803,7 @@ function ajax_privat(int $obj = 0): string {
         }
         $cont .= "</tbody></table>";
         $numpages = ceil($fav_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $confpr['anump'], $num, "0", "5", "ajax_privat", "ajax_privat", "", "", "");
+        $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, "0", "5", "ajax_privat", "ajax_privat", "", "", "");
     } else {
         $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
     }
@@ -814,7 +814,7 @@ function ajax_privat(int $obj = 0): string {
 
 # Private message delete
 function ajax_privat_del(): void {
-    global $db;
+ global $db;
     $id = getVar('get', 'id', 'num', 0);
     $db->sql_query('DELETE FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $id]);
     ajax_privat(0);
@@ -822,19 +822,19 @@ function ajax_privat_del(): void {
 
 # Show uploads files for admin
 function ashow_files(): void {
-    global $user, $conf;
-    $confup = $conf['uploads'] ?? [];
+ global $user, $conf;
+    $conf['uploads'] = $conf['uploads'] ?? [];
     $id   = analyze(getVar('get', 'id',   'text', ''));
     $dir  = strtolower(getVar('get', 'dir',  'text', ''));
-    $gzip = getVar('get', 'cid',  'num',  0);
-    $con  = explode("|", (string)($confup[$dir] ?? ''));
+    $cid  = getVar('get', 'cid',  'num',  0);
+    $con  = explode("|", (string)($conf['uploads'][$dir] ?? ''));
     $connum = (!empty($con[7]) && intval($con[7])) ? $con[7] : "50";
     $file = text_filter(getVar('get', 'file', 'text', ''));
-    $num  = ($gzip) ? $gzip : "1";
+    $num  = ($cid) ? $cid : "1";
     $path = ($id == 1) ? "uploads/".$dir."/" : "uploads/".$dir."/thumb/";
     if (is_dir($path)) {
         if ($file && $dir) {
-            if (!$gzip) {
+            if (!$cid) {
                 if (file_exists($path.$file)) unlink($path.$file);
             } else {
                 zip_compress($path.$file, $path.$file);
@@ -898,7 +898,7 @@ function com_access(string $name, int $selected, string $extraClass = ''): strin
 
 # Add voting
 function add_voting(string $modul, string $selectName, int $selectedId, string $extraClass = ''): string {
-    global $db, $locale, $conf;
+ global $db, $locale, $conf;
     $modul  = analyze($modul);
     $class  = $extraClass ? "sl_field ".$extraClass : "sl_field";
     $params = ['modul' => $modul];
@@ -938,7 +938,7 @@ function edit_list(string $modul, string $name, string $extraClass = ''): string
 
 # DELETE OLD / View and edit info
 function adm_info(int $obj = 0, string $modArg = '', string $fileArg = ''): string {
-    global $locale, $conf;
+ global $locale, $conf;
     $id   = getVar('post', 'id', 'num', 0);
     $cont = "";
     if ($conf['adminfo'] && $id) {

@@ -112,7 +112,7 @@ function setTemplateMenu() {
 }
 
 function setTemplateForum() {
-    global $db;
+ global $db;
     $blimit = "3";
     $bclos = "97, 98, 99, 100, 101";
     $bwhere = ($bclos) ? "catid NOT IN (".$bclos.") AND" : "";
@@ -129,20 +129,20 @@ function setTemplateForum() {
 }
 
 function setTemplateHead($sub, $val = '') {
-    global $theme, $user, $conf, $confu, $conff, $db;
+ global $theme, $user, $conf, $db;
     if (is_user()) {
         $uname = htmlspecialchars(substr($user[1], 0, 25));
         $userinfo = getusrinfo();
         $uavatar = (is_array($userinfo) && !empty($userinfo['user_avatar'])) ? $userinfo['user_avatar'] : '';
-        $avatar = ($uavatar && file_exists($confu['adirectory'].'/'.$uavatar)) ? $uavatar : 'default/00.gif';
+        $avatar = ($uavatar && file_exists($conf['users']['adirectory'].'/'.$uavatar)) ? $uavatar : 'default/00.gif';
         $cont = setTemplateBasic('login-logged', [
             '{%title%}' => _ACCOUNT,
-            '{%avatar%}' => $confu['adirectory'].'/'.$avatar,
+            '{%avatar%}' => $conf['users']['adirectory'].'/'.$avatar,
             '{%user%}' => $uname,
             '{%logout%}' => _LOGOUT,
         ]);
     } else {
-        if ($confu['enter'] == 1) {
+        if ($conf['users']['enter'] == 1) {
             $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
             $cont = setTemplateBasic('login', [
                 '{%login%}' => _LOGIN,
@@ -158,7 +158,7 @@ function setTemplateHead($sub, $val = '') {
     }
     $mname = ($conf['name']) ? deflmconst($conf['name']) : '';
     $fcat = (isset($_GET['cat'])) ? intval($_GET['cat']) : 0;
-    $cname = ($fcat && !empty($conff)) ? catlink($conf['name'], $fcat, $conff['defis'], $mname) : '';
+    $cname = ($fcat && !empty($conf['files'])) ? catlink($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
     list($count) = $db->sql_fetchrow($db->sql_query("SELECT Count(fid) FROM ".PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
     $random = mt_rand(0, $count);
     $result = $db->sql_query("SELECT fid, title FROM ".PREFIX_DB."_faq ORDER BY fid DESC LIMIT ".$random.", 1");
@@ -170,7 +170,7 @@ function setTemplateHead($sub, $val = '') {
 }
 
 function setTemplateFoot($sub, $val = '') {
-    global $theme, $user, $conf, $confu;
+ global $theme, $user, $conf;
     $cont = '';
     $contactblock = '<div id="block-feedback" class="dropdown">
         <a OnClick="HideShow(\'f-form\', \'slide\', \'right\', 500);" title="'._FEEDBACK.'" class="btn-feedback"><b class="font">'._FEEDBACK.'</b></a>

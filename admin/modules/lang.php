@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -21,10 +21,10 @@ function getLangPath(string $mod = '', string $typ = ''): string {
 }
 
 function lang(): void {
-    global $confmd, $afile;
+    global $conf, $afile;
     $modbase = [];
     $who_view = [];
-    foreach ($confmd as $ttl => $info) {
+    foreach ($conf['modules'] as $ttl => $info) {
         $modbase[$ttl] = !empty($info['active']) ? 1 : 0;
         $view = (int)($info['view'] ?? 0);
         if ($view === 0) {
@@ -74,13 +74,13 @@ function lang(): void {
 }
 
 function editfile(): void {
-    global $afile, $confla;
+    global $afile, $conf;
     head();
     $cont = navi(0, 0);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
-    $per_page = $confla['per_page'] ?? 100;
+    $per_page = $conf['lang']['per_page'] ?? 100;
     $lng_cn = [];
     $cnst_arr = [];
     $lang_path = getLangPath($mod, $typ);
@@ -131,14 +131,14 @@ function editfile(): void {
         $cj = count($lng_cn);
         for ($j = 0; $j < $cj; $j++) {
             $val = ($valc) ? trim(str_replace('\"', '&quot;', $lng_arr[$lng_cn[$j]][$cnst_arr[$idx]])) : '';
-            if ($lng_cn[$j] == $confla['lang']) {
+            if ($lng_cn[$j] == $conf['lang']['lang']) {
                 $class = 'from_'.$i;
                 $button = '';
             } else {
                 $class = 'to_'.$i.'-'.$j;
-                $floc = substr($confla['lang'], 0, 2);
+                $floc = substr($conf['lang']['lang'], 0, 2);
                 $tloc = substr($lng_cn[$j], 0, 2);
-                $button = '<input type="button" OnClick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$confla['key'].'\');" value="'._OK.'" title="'._EAUTOTR.'" class="sl_but_blue">';
+                $button = '<input type="button" OnClick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');" value="'._OK.'" title="'._EAUTOTR.'" class="sl_but_blue">';
             }
             $cont .= '<tr><td>'.deflang($lng_cn[$j]).':</td><td><input type="text" name="lng['.$lng_cn[$j].'][]" value="'.$val.'" class="sl_form '.$class.'" placeholder="'.deflang($lng_cn[$j]).'"></td><td>'.$button.'</td></tr>';
         }
@@ -169,8 +169,8 @@ function save(): void {
     $typ = getVar('post', 'typ', 'var', '');
     $lng_cn = getVar('post', 'lcn[]', 'var', []);
     $page = getVar('post', 'page', 'num', 1);
-    $cnst = getVar('post', 'cnst[]', 'var', []);
-    $translations = getVar('post', 'lng', 'var', []);
+    $cnst = getVar('post', 'cnst', 'var', []);
+    $lng = getVar('post', 'lng', 'var', []);
     $lang_path = getLangPath($mod, $typ);
     $cj = count($lng_cn);
     for ($j = 0; $j < $cj; $j++) {
@@ -192,16 +192,16 @@ function save(): void {
         $ci = count($cnst);
         for ($i = 0; $i < $ci; $i++) {
             if (empty($cnst[$i])) continue;
-            if (empty($translations[$lng_cnj][$i])) continue;
+            if (empty($lng[$lng_cnj][$i])) continue;
             $cons = trim($cnst[$i]);
             $in = ['\\\'', '\\$', '<?php', '?>'];
             $ou = ['\'', '\$', '&lt;?php', '?&gt;'];
-            $cont = trim(str_replace($in, $ou, $translations[$lng_cnj][$i]));
+            $cont = trim(str_replace($in, $ou, $lng[$lng_cnj][$i]));
             $existing[$cons] = $cont;
         }
 
         // Write all constants back (submitted + existing)
-        $lng_str = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Ã‚Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
+        $lng_str = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright Ãƒâ€šÃ‚Â© 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
         foreach ($existing as $cons => $cont) {
             $cons_esc = str_replace("'", "\\'", $cons);
             $cont_esc = str_replace("'", "\\'", $cont);
@@ -216,16 +216,16 @@ function save(): void {
 }
 
 function conf(): void {
-    global $afile, $confla;
+    global $afile, $conf;
     head();
     checkPerms(CONFIG_DIR.'/lang.php');
     $cont = navi(1, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._LANGKEY.':</td><td><input type="text" name="key" value="'.$confla['key'].'" class="sl_conf" placeholder="'._LANGKEY.'" required></td></tr>'
-    .'<tr><td>'._LANGTR.':</td><td><select name="lang" class="sl_conf">'.language($confla['lang'], 1).'</select></td></tr>'
-    .'<tr><td>'._LANGCOUNT.':</td><td><input type="number" name="count" value="'.$confla['count'].'" class="sl_conf" placeholder="'._LANGCOUNT.'" required></td></tr>'
-    .'<tr><td>Konstanten pro Seite:<div class="sl_small">Max. Konstanten pro Seite (empfohlen: 100)</div></td><td><input type="number" name="per_page" value="'.($confla['per_page'] ?? 100).'" class="sl_conf" placeholder="100" min="10" max="500" required></td></tr>'
+    .'<tr><td>'._LANGKEY.':</td><td><input type="text" name="key" value="'.$conf['lang']['key'].'" class="sl_conf" placeholder="'._LANGKEY.'" required></td></tr>'
+    .'<tr><td>'._LANGTR.':</td><td><select name="lang" class="sl_conf">'.language($conf['lang']['lang'], 1).'</select></td></tr>'
+    .'<tr><td>'._LANGCOUNT.':</td><td><input type="number" name="count" value="'.$conf['lang']['count'].'" class="sl_conf" placeholder="'._LANGCOUNT.'" required></td></tr>'
+    .'<tr><td>Konstanten pro Seite:<div class="sl_small">Max. Konstanten pro Seite (empfohlen: 100)</div></td><td><input type="number" name="per_page" value="'.($conf['lang']['per_page'] ?? 100).'" class="sl_conf" placeholder="100" min="10" max="500" required></td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="lang"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -233,14 +233,14 @@ function conf(): void {
 }
 
 function confsave(): void {
-    global $afile, $confla;
+    global $afile, $conf;
     $cont = [
         'key' => getVar('post', 'key', 'text', ''),
         'lang' => getVar('post', 'lang', 'var', 'russian'),
         'count' => getVar('post', 'count', 'num', 0),
         'per_page' => getVar('post', 'per_page', 'num', 100)
     ];
-    setConfigFile('lang.php', $cont, $confla);
+    setConfigFile('lang.php', $cont, $conf['lang']);
     setRedirect($afile.'.php?name=lang&op=conf');
 }
 
@@ -258,3 +258,4 @@ switch ($op) {
     case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
+

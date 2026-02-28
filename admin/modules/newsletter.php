@@ -199,7 +199,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $conf, $stop;
-    $id = getVar('post', 'nid', 'num', 0);
+    $nid = getVar('post', 'nid', 'num', 0);
     $title = getVar('post', 'title', 'title');
     $content = getVar('post', 'content', 'text');
     $mails = getVar('post', 'mails', '');
@@ -222,9 +222,9 @@ function save(): void {
             $emails = $mails;
         }
         $emails = ($send) ? $emails : '';
-        if ($id) {
+        if ($nid) {
             $db->sql_query('UPDATE '.PREFIX_DB.'_newsletter SET title = :title, content = :content, mails = :mails, send = 0, time = now(), endtime = 0 WHERE id = :id', [
-                'title' => $title, 'content' => $content, 'mails' => $emails, 'id' => $id
+                'title' => $title, 'content' => $content, 'mails' => $emails, 'id' => $nid
             ]);
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_newsletter (title, content, mails, send, time, endtime) VALUES (:title, :content, :mails, 0, now(), 0)', [

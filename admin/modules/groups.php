@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -96,7 +96,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $conf, $stop;
-    $id = getVar('post', 'gid', 'num');
+    $gid = getVar('post', 'gid', 'num');
     $grname = getVar('post', 'grname', 'title');
     $description = getVar('post', 'description', 'text');
     $points = getVar('post', 'points', 'num');
@@ -108,8 +108,8 @@ function save(): void {
     if (!$stop) {
         $points = ($grextra == '1') ? '0' : $points;
         $rank = str_replace('templates/'.$conf['theme'].'/images/ranks/', '', $rank);
-        if ($id) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_groups SET name = :name, description = :description, points = :points, extra = :extra, rank = :rank, color = :color WHERE id = :id', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $id]);
+        if ($gid) {
+            $db->sql_query('UPDATE '.PREFIX_DB.'_groups SET name = :name, description = :description, points = :points, extra = :extra, rank = :rank, color = :color WHERE id = :id', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $gid]);
         } else {
             $db->sql_query('INSERT INTO '.PREFIX_DB.'_groups (name, description, points, extra, rank, color) VALUES (:name, :description, :points, :extra, :rank, :color)', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
         }
@@ -120,7 +120,7 @@ function save(): void {
 }
 
 function points(): void {
-    global $afile, $confu;
+    global $afile, $conf;
     head();
     $cont = navi(0, 2, 0, 0);
     $cont .= setTemplateBasic('open');
@@ -128,7 +128,7 @@ function points(): void {
        .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._DESCRIPTION.'</th><th class="{sorter: false}">'._POINTS.'</th></tr></thead><tbody>';
     $p = [_POINTS01, _POINTS02, _POINTS03, _POINTS04, _POINTS05, _POINTS06, _POINTS07, _POINTS08, _POINTS09, _POINTS10, _POINTS11, _POINTS12, _POINTS13, _POINTS14, _POINTS15, _POINTS16, _POINTS17, _POINTS18, _POINTS19, _POINTS20, _POINTS21, _POINTS22, _POINTS23, _POINTS24, _POINTS25, _POINTS26, _POINTS27, _POINTS28, _POINTS29, _POINTS30, _POINTS31, _POINTS32, _POINTS33, _POINTS34, _POINTS35, _POINTS36, _POINTS37, _POINTS38, _POINTS39, _POINTS40, _POINTS41, _POINTS42, _POINTS43, _POINTS44, _POINTS45];
     $d = [_DESC01, _DESC02, _DESC03, _DESC04, _DESC05, _DESC06, _DESC07, _DESC08, _DESC09, _DESC10, _DESC11, _DESC12, _DESC13, _DESC14, _DESC15, _DESC16, _DESC17, _DESC18, _DESC19, _DESC20, _DESC21, _DESC22, _DESC23, _DESC24, _DESC25, _DESC26, _DESC27, _DESC28, _DESC29, _DESC30, _DESC31, _DESC32, _DESC33, _DESC34, _DESC35, _DESC36, _DESC37, _DESC38, _DESC39, _DESC40, _DESC41, _DESC42, _DESC43, _DESC44, _DESC45];
-    $points = explode(',', $confu['points']);
+    $points = explode(',', $conf['users']['points']);
     $count = count($p);
     for ($i = 0; $i < $count; $i++) {
         $a = $i + 1;
@@ -141,29 +141,29 @@ function points(): void {
 }
 
 function pointssave(): void {
-    global $afile, $confu;
-    $spoints = getVar('post', 'spoints[]', 'num');
+    global $afile, $conf;
+    $spoints = getVar('post', 'spoints', 'num');
     if ($spoints) {
         $npoints = implode(',', $spoints);
         $cont = ['points' => $npoints];
-        setConfigFile('users.php', $cont, $confu);
+        setConfigFile('users.php', $cont, $conf['users']);
     }
     setRedirect($afile.'.php?name=groups&op=points');
 }
 
 function del(): void {
-    global $db, $afile, $confmd;
+    global $db, $afile, $conf;
     $id = getVar('get', 'id', 'num');
     if ($id) {
         $db->sql_query('DELETE FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
         $changed = false;
-        foreach ($confmd as $name => $info) {
+        foreach ($conf['modules'] as $name => $info) {
             if ((int)($info['group'] ?? 0) === $id) {
-                $confmd[$name]['group'] = 0;
+                $conf['modules'][$name]['group'] = 0;
                 $changed = true;
             }
         }
-        if ($changed) setConfigFile('modules.php', $confmd);
+        if ($changed) setConfigFile('modules.php', $conf['modules']);
     }
     setRedirect($afile.'.php?name=groups');
 }
@@ -183,3 +183,4 @@ switch ($op) {
     case 'pointssave': pointssave(); break;
     case 'info': info(); break;
 }
+

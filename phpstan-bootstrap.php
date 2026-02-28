@@ -4,8 +4,8 @@
 if (!isset($conf)) {
     $conf = [];
 }
-if (!isset($confu)) {
-    $confu = [];
+if (!isset($conf['users'])) {
+    $conf['users'] = [];
 }
 if (!isset($user)) {
     $user = [];

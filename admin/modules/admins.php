@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -32,7 +32,7 @@ function admins(): void {
 }
 
 function add(): void {
-    global $db, $afile, $conf, $confmd, $stop;
+    global $db, $afile, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->sql_query('SELECT id, name, title, url, email, super, editor, smail, modules, lang FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
@@ -45,16 +45,16 @@ function add(): void {
             $modules = $new_modules;
         }
     } else {
-        $aid = getVar('post', 'aid', 'num', '');
-        $name = getVar('post', 'adminname', 'name', '');
+        $aid = getVar('post', 'aid', 'num', 0);
+        $name = getVar('post', 'name', 'name', '');
         $title = getVar('post', 'title', 'title', '');
         $email = getVar('post', 'email', '', '');
         $url = getVar('post', 'url', 'url', 'https://');
-        $amodules = getVar('post', 'amodules[]', 'var', []);
-        $modules = $amodules ? implode(',', $amodules) : '';
+        $modules = getVar('post', 'modules', 'var', []);
+        $modules = $modules ? implode(',', $modules) : '';
         $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
         $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
-        $smail = getVar('post', 'smail', '', '');
+        $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
         $lang = getVar('post', 'lang', '', $conf['language']);
     }
     head();
@@ -65,7 +65,7 @@ function add(): void {
     $cont .= '<form name="post" action="'.$afile.'.php?name=admins" method="post">'
     .'<input type="hidden" name="op" value="save">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('adminname', $name, '25', 'sl_form', '1').'</td></tr>'
+    .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('name', $name, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._URANK.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="50" class="sl_form" placeholder="'._URANK.'"></td></tr>'
     .'<tr><td>'._EMAIL.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required></td></tr>'
     .'<tr><td>'._URL.':</td><td><input type="url" name="url" value="'.$url.'" maxlength="255" class="sl_form" placeholder="'._URL.'"></td></tr>'
@@ -81,7 +81,7 @@ function add(): void {
     $a = 3;
     $i = 1;
     $amodules = explode(',', $modules);
-    foreach ($confmd as $title => $info) {
+    foreach ($conf['modules'] as $title => $info) {
         if ((int)($info['type'] ?? 1) !== 1) continue;
         $path = BASE_DIR.'/modules/'.$title.'/admin/index.php';
         if (!file_exists($path)) continue;
@@ -95,7 +95,7 @@ function add(): void {
         }
         $tdwidth = intval(100/$a);
         if (($i - 1) % $a == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="amodules[]" value="'.$mid.'"'.$sel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
+        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="modules[]" value="'.$mid.'"'.$sel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
         if ($i % $a == 0) $cont .= '</tr>';
         $i++;
     }
@@ -110,15 +110,15 @@ function add(): void {
 function save(): void {
     global $db, $afile, $conf, $stop;
     $aid = getVar('post', 'aid', 'num', 0);
-    $name = getVar('post', 'adminname', 'name');
+    $name = getVar('post', 'name', 'name');
     $title = getVar('post', 'title', 'title');
     $url = getVar('post', 'url', 'url');
     $email = getVar('post', 'email', 'email');
     $pwd = getVar('post', 'pwd', '', 0);
     $pwd2 = getVar('post', 'pwd2', '', 0);
     $lang = getVar('post', 'lang');
-    $amodules = getVar('post', 'amodules[]', 'var', []);
-    $modules = $amodules ? implode(',', $amodules) : '';
+    $modules = getVar('post', 'modules', 'var', []);
+    $modules = $modules ? implode(',', $modules) : '';
     $super = getVar('post', 'super', 'bool', 0) ? 1 : 0;
     $editor = getVar('post', 'editor', 'num', intval($conf['redaktor']));
     $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
@@ -190,3 +190,4 @@ switch ($op) {
     case 'del': del(); break;
     case 'info': info(); break;
 }
+

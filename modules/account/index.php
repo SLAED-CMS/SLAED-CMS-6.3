@@ -68,14 +68,14 @@ function newuser(): void {
             $unkey = md5_salt($conf['sitekey']);
             $nick = getVar('post', $unkey, 'text');
             $nick = ($nick) ? text_filter(substr($nick, 0, 25)) : '';
-            $mail = getVar('post', 'user_email', 'text');
+            $mail = getVar('post', 'mail', 'text');
             $mail = ($mail) ? text_filter($mail) : '';
             $captcha = ($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
             $cont .= setTemplateBasic('open');
             $cont .= '<form action="index.php?name='.$conf['name'].'" method="post">'
             .'<table class="sl_table_form">'
             .'<tr><td>'._NICKNAME.':</td><td><input type="text" name="'.$unkey.'" value="'.$nick.'" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._NICKNAME.'" required></td></tr>'
-            .'<tr><td>'._EMAIL.':</td><td><input type="email" name="user_email" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._EMAIL.'" required></td></tr>'
+            .'<tr><td>'._EMAIL.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._EMAIL.'" required></td></tr>'
             .'<tr><td>'.title_tip(_BLANKFORAUTO)._PASSWORD.':</td><td><input type="password" name="user_password" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._PASSWORD.'"></td></tr>'
             .'<tr><td>'.title_tip(_BLANKFORAUTO)._RETYPEPASSWORD.':</td><td><input type="password" name="user_password2" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._RETYPEPASSWORD.'"></td></tr>';
             if ($conf['users']['rule']) {
@@ -102,7 +102,7 @@ function finnewuser(): void {
     } else {
         $unkey = md5_salt($conf['sitekey']);
         $nick = getVar('post', $unkey, 'name');
-        $mail = getVar('post', 'user_email', 'text');
+        $mail = getVar('post', 'mail', 'text');
         $rules = getVar('post', 'rules', 'num');
         checkuser($nick, $mail, $rules);
         $pass = htmlspecialchars(substr(getVar('post', 'user_password', 'text'), 0, 40));
@@ -704,16 +704,16 @@ function edithome(): void {
         if ($conf['users']['point']) $change .= '<tr><td>'._POINTS.':</td><td>'.$userinfo['user_points'].'</td></tr>';
         $change .= '<tr><td>'._YOURNAME.':</td><td>'.$userinfo['user_name'].'</td></tr>'
         .'<tr><td>'._BIRTHDAY.':</td><td>'.datetime(2, 'user_birthday', $userinfo['user_birthday'], 10, $conf['style']).'</td></tr>'
-        .'<tr><td>'._GENDER.':</td><td>'.get_gender('user_gender', $userinfo['user_gender'], $conf['style']).'</td></tr>'
-        .'<tr><td>'._YOUREMAIL.':</td><td><input type="email" name="user_email" value="'.$userinfo['user_email'].'" maxlength="60" class="sl_field '.$conf['style'].'" placeholder="'._YOUREMAIL.'" required></td></tr>'
-        .'<tr><td>'._SITEURL.':</td><td><input type="url" name="user_website" value="'.$userinfo['user_website'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._SITEURL.'"></td></tr>'
-        .'<tr><td>'._OCCUPATION.':</td><td><input type="text" name="user_occ" value="'.$userinfo['user_occ'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._OCCUPATION.'"></td></tr>'
-        .'<tr><td>'._LOCALITYLANG.':</td><td><input type="text" name="user_from" value="'.$userinfo['user_from'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._LOCALITYLANG.'"></td></tr>'
-        .'<tr><td>'._INTERESTS.':</td><td><input type="text" name="user_interests" value="'.$userinfo['user_interests'].'" maxlength="150" class="sl_field '.$conf['style'].'" placeholder="'._INTERESTS.'"></td></tr>'
-        .'<tr><td>'._SIGNATURE.':<div class="sl_small">'._SIGNATURE_TEXT.'</div></td><td>'.textarea('1', 'user_sig', $userinfo['user_sig'], $conf['name'], '5', _SIGNATURE, '0').'</td></tr>'
+        .'<tr><td>'._GENDER.':</td><td>'.get_gender('gender', $userinfo['user_gender'], $conf['style']).'</td></tr>'
+        .'<tr><td>'._YOUREMAIL.':</td><td><input type="email" name="mail" value="'.$userinfo['user_email'].'" maxlength="60" class="sl_field '.$conf['style'].'" placeholder="'._YOUREMAIL.'" required></td></tr>'
+        .'<tr><td>'._SITEURL.':</td><td><input type="url" name="site" value="'.$userinfo['user_website'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._SITEURL.'"></td></tr>'
+        .'<tr><td>'._OCCUPATION.':</td><td><input type="text" name="occ" value="'.$userinfo['user_occ'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._OCCUPATION.'"></td></tr>'
+        .'<tr><td>'._LOCALITYLANG.':</td><td><input type="text" name="from" value="'.$userinfo['user_from'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._LOCALITYLANG.'"></td></tr>'
+        .'<tr><td>'._INTERESTS.':</td><td><input type="text" name="inter" value="'.$userinfo['user_interests'].'" maxlength="150" class="sl_field '.$conf['style'].'" placeholder="'._INTERESTS.'"></td></tr>'
+        .'<tr><td>'._SIGNATURE.':<div class="sl_small">'._SIGNATURE_TEXT.'</div></td><td>'.textarea('1', 'sig', $userinfo['user_sig'], $conf['name'], '5', _SIGNATURE, '0').'</td></tr>'
         .fields_in($userinfo['user_field'], $conf['name']);
         if ($conf['users']['news'] == 1) {
-            $change .= '<tr><td>'._C_12.':</td><td><select name="user_storynum" class="sl_field '.$conf['style'].'">';
+            $change .= '<tr><td>'._C_12.':</td><td><select name="story" class="sl_field '.$conf['style'].'">';
             $xusnum = 3;
             while ($xusnum <= 20) {
                 $sel = ($xusnum == $userinfo['user_storynum']) ? ' selected' : '';
@@ -722,14 +722,14 @@ function edithome(): void {
             }
             $change .= '</select></td></tr>';
         } else {
-            $change .= '<input type="hidden" name="user_storynum" value="'.($conf['news']['num'] ?? 0).'">';
+            $change .= '<input type="hidden" name="story" value="'.($conf['news']['num'] ?? 0).'">';
         }
-        $change .= '<tr><td>'._RNEWSLETTER.'</td><td>'.radio_form($userinfo['user_newsletter'], 'user_newsletter').'</td></tr>';
-        if (is_active('forum')) $change .= '<tr><td>'._FSMAIL.'</td><td>'.radio_form($userinfo['user_fsmail'], 'user_fsmail').'</td></tr>';
-        if (($conf['privat']['act'] ?? 0)) $change .= '<tr><td>'._PSMAIL.'</td><td>'.radio_form($userinfo['user_psmail'], 'user_psmail').'</td></tr>';
-        $change .= '<tr><td>'._ALLOWUSERS.'</td><td>'.radio_form($userinfo['user_viewemail'], 'user_viewemail').'</td></tr>'
-        .'<tr><td>'._ACTIVATEPERSONAL.'</td><td>'.radio_form($userinfo['user_blockon'], 'user_blockon').'</td></tr>'
-        .'<tr><td>'._MENUCONF.':<div class="sl_small">'._MENUINFO.'</div></td><td>'.textarea('2', 'user_block', $userinfo['user_block'], $conf['name'], '10', _MENUCONF, '0').'</td></tr>';
+        $change .= '<tr><td>'._RNEWSLETTER.'</td><td>'.radio_form($userinfo['user_newsletter'], 'news').'</td></tr>';
+        if (is_active('forum')) $change .= '<tr><td>'._FSMAIL.'</td><td>'.radio_form($userinfo['user_fsmail'], 'fsmail').'</td></tr>';
+        if (($conf['privat']['act'] ?? 0)) $change .= '<tr><td>'._PSMAIL.'</td><td>'.radio_form($userinfo['user_psmail'], 'psmail').'</td></tr>';
+        $change .= '<tr><td>'._ALLOWUSERS.'</td><td>'.radio_form($userinfo['user_viewemail'], 'view').'</td></tr>'
+        .'<tr><td>'._ACTIVATEPERSONAL.'</td><td>'.radio_form($userinfo['user_blockon'], 'blockon').'</td></tr>'
+        .'<tr><td>'._MENUCONF.':<div class="sl_small">'._MENUINFO.'</div></td><td>'.textarea('2', 'block', $userinfo['user_block'], $conf['name'], '10', _MENUCONF, '0').'</td></tr>';
         if ($conf['users']['theme']) {
             $tcategory = '';
             $tcount = 0;
@@ -742,7 +742,7 @@ function edithome(): void {
                 }
             }
             closedir($dh);
-            if ($tcount > 1) $change .= '<tr><td>'._THEME.':</td><td><select name="user_theme" class="sl_field '.$conf['style'].'">'.$tcategory.'</select></td></tr>';
+            if ($tcount > 1) $change .= '<tr><td>'._THEME.':</td><td><select name="theme" class="sl_field '.$conf['style'].'">'.$tcategory.'</select></td></tr>';
         }
         $change .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="user_name" value="'.$userinfo['user_name'].'">'
         .'<input type="hidden" name="op" value="savehome"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>'
@@ -795,7 +795,7 @@ function edithome(): void {
 
 function savehome(): void {
     global $db, $user, $conf, $stop;
-    $mail = getVar('post', 'user_email', 'text');
+    $mail = getVar('post', 'mail', 'text');
     checkemail($mail);
     if (!$stop) {
         $uid = intval($user[0]);
@@ -803,21 +803,21 @@ function savehome(): void {
         $checkp = htmlspecialchars($user[2]);
         [$id, $name, $pass] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name, user_password FROM '.PREFIX_DB.'_users WHERE user_id = :user_id', ['user_id' => $uid]));
         if ($id == $uid && $name == $checkn && $pass == $checkp) {
-            $site = getVar('post', 'user_website', 'url');
-            $occ = getVar('post', 'user_occ', 'text');
-            $from = getVar('post', 'user_from', 'text');
-            $inter = getVar('post', 'user_interests', 'text');
-            $sig = getVar('post', 'user_sig', 'text');
-            $view = getVar('post', 'user_viewemail', 'num');
-            $story = getVar('post', 'user_storynum', 'num');
-            $blockon = getVar('post', 'user_blockon', 'num');
-            $block = getVar('post', 'user_block', 'text');
-            $theme = getVar('post', 'user_theme', 'text');
-            $news = getVar('post', 'user_newsletter', 'num');
-            $fsmail = getVar('post', 'user_fsmail', 'num');
-            $psmail = getVar('post', 'user_psmail', 'num');
+            $site = getVar('post', 'site', 'url');
+            $occ = getVar('post', 'occ', 'text');
+            $from = getVar('post', 'from', 'text');
+            $inter = getVar('post', 'inter', 'text');
+            $sig = getVar('post', 'sig', 'text');
+            $view = getVar('post', 'view', 'num');
+            $story = getVar('post', 'story', 'num');
+            $blockon = getVar('post', 'blockon', 'num');
+            $block = getVar('post', 'block', 'text');
+            $theme = getVar('post', 'theme', 'text');
+            $news = getVar('post', 'news', 'num');
+            $fsmail = getVar('post', 'fsmail', 'num');
+            $psmail = getVar('post', 'psmail', 'num');
             $birth = save_datetime(2, 'user_birthday');
-            $gender = getVar('post', 'user_gender', 'num');
+            $gender = getVar('post', 'gender', 'num');
             $field = getVar('post', 'field', 'field');
             $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_email = :user_email, user_website = :user_website, user_viewemail = :user_viewemail, user_occ = :user_occ, user_from = :user_from, user_interests = :user_interests, user_sig = :user_sig, user_storynum = :user_storynum, user_blockon = :user_blockon, user_block = :user_block, user_theme = :user_theme, user_newsletter = :user_newsletter, user_fsmail = :user_fsmail, user_psmail = :user_psmail, user_birthday = :user_birthday, user_gender = :user_gender, user_field = :user_field WHERE user_id = :user_id', ['user_email' => $mail, 'user_website' => $site, 'user_viewemail' => $view, 'user_occ' => $occ, 'user_from' => $from, 'user_interests' => $inter, 'user_sig' => $sig, 'user_storynum' => $story, 'user_blockon' => $blockon, 'user_block' => $block, 'user_theme' => $theme, 'user_newsletter' => $news, 'user_fsmail' => $fsmail, 'user_psmail' => $psmail, 'user_birthday' => $birth, 'user_gender' => $gender, 'user_field' => $field, 'user_id' => $uid]);
             $userinfo = getusrinfo();

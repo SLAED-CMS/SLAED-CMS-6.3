@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function ratings(): void {
-    global $afile, $confra;
+    global $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
@@ -22,7 +22,7 @@ function ratings(): void {
     $i = 0;
     $content = '';
     foreach ($mods as $val) {
-        $con = explode('|', $confra[$val]);
+        $con = explode('|', $conf['ratings'][$val]);
         $hr = ($i == 0) ? '' : '<tr><td colspan="2" class="sl_center"><hr></td></tr>';
         $content .= $hr
            .'<tr><td>'._MODUL.':</td><td><span title="'._MODUL.': '.$val.'" class="sl_note">'.deflmconst($val).'</span></td></tr>'
@@ -39,7 +39,7 @@ function ratings(): void {
 }
 
 function save(): void {
-    global $afile, $confra;
+    global $afile;
     $content = [];
     $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     $i = 0;

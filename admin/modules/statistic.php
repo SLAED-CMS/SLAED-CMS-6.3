@@ -9,7 +9,7 @@ require_once CONFIG_DIR.'/statistic.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $afile;
-    $sfile = getVar('post', 'file', 'text');
+    $file = getVar('post', 'file', 'text');
     $ops = ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
     $files = [];
@@ -22,7 +22,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     $search = '<form method="post" action="'.$afile.'.php">'._STATFROM.': <select name="file"><option value="">'._NO_INFO.'</option>';
     foreach ($files as $val) {
         if ($val != '' && preg_match('/^statistic\_(.+)\.log/', $val, $matches)) {
-            $sel = ($sfile && $sfile == $val) ? ' selected' : '';
+            $sel = ($file && $file == $val) ? ' selected' : '';
             $search .= '<option value="'.$val.'"'.$sel.'>'.$matches[1].'</option>';
         }
     }
@@ -89,15 +89,15 @@ function add(): void {
 }
 
 function conf(): void {
-    global $afile, $confst;
+    global $afile, $conf;
     head();
     $cont = navi(0, 1, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._STATBET.':</td><td><input type="number" name="bet" value="'.$confst['bet'].'" class="sl_conf" placeholder="'._STATBET.'" required></td></tr>'
-    .'<tr><td>'._STATSHI.':</td><td><input type="number" name="shi" value="'.$confst['shi'].'" class="sl_conf" placeholder="'._STATSHI.'" required></td></tr>'
-    .'<tr><td>'._STATACT.'</td><td>'.radio_form($confst['stat'], 'stat').'</td></tr>'
+    .'<tr><td>'._STATBET.':</td><td><input type="number" name="bet" value="'.$conf['statistic']['bet'].'" class="sl_conf" placeholder="'._STATBET.'" required></td></tr>'
+    .'<tr><td>'._STATSHI.':</td><td><input type="number" name="shi" value="'.$conf['statistic']['shi'].'" class="sl_conf" placeholder="'._STATSHI.'" required></td></tr>'
+    .'<tr><td>'._STATACT.'</td><td>'.radio_form($conf['statistic']['stat'], 'stat').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="statistic"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;

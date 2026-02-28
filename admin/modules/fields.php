@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function fields(): void {
-    global $afile, $conffi;
+    global $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0, 'fields');
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
@@ -22,7 +22,7 @@ function fields(): void {
     $content = '';
     $k = 0;
     foreach ($mods as $val) {
-        $fieldc = explode('||', $conffi[$val]);
+        $fieldc = explode('||', $conf['fields'][$val]);
         $content .= '<div id="tabc'.$k.'" class="tabcont">';
         for ($c = 0; $c < 10; $c++) {
             preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);

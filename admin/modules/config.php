@@ -285,8 +285,8 @@ function save(): void {
     $protect = ['\n' => '', '\t' => '', '\r' => '', ' ' => ''];
     $kprotect = [', ' => ',', ' ,' => ',', ' , ' => ',', ',,' => ',', '\n' => ',', '\t' => ',', '\r' => ','];
 
-    $xurl = getVar('post', 'homeurl', 'url');
-    $xhomeurl = ($xurl[strlen($xurl) - 1] == '/') ? substr($xurl, 0, -1) : $xurl;
+    $homeurl = getVar('post', 'homeurl', 'url');
+    $xhomeurl = ($homeurl[strlen($homeurl) - 1] == '/') ? substr($homeurl, 0, -1) : $homeurl;
     $xsite_logo = str_replace('templates/'.$conf['theme'].'/images/logos/', '', getVar('post', 'site_logo', 'text'));
 
     $xuser_c = getVar('post', 'user_c', 'text');
@@ -296,20 +296,20 @@ function save(): void {
         $xadmin_c = 'admin-'.$xadmin_c;
     }
 
-    $xmodule = getVar('post', 'module[]', 'var');
-    $xmodule = $xmodule ? implode(',', $xmodule) : '0';
+    $module = getVar('post', 'module', 'var');
+    $xmodule = $module ? implode(',', $module) : '0';
 
-    $xvar = getVar('post', 'variables[]', 'var');
-    $xvar = $xvar ? array_map('strval', (array)$xvar) : [];
+    $variables = getVar('post', 'variables', 'var');
+    $variables = $variables ? array_map('strval', (array)$variables) : [];
     $xvariables = [];
-    for ($i = 0; $i < 9; $i++) $xvariables[] = in_array((string)$i, $xvar, true) ? '1' : '0';
+    for ($i = 0; $i < 9; $i++) $xvariables[] = in_array((string)$i, $variables, true) ? '1' : '0';
     $xvariables = implode(',', $xvariables);
 
     $xcensor_r = strtolower(strtr(getVar('post', 'censor_r', 'text', ''), $protect));
     $xcensor_l = strtolower(strtr(getVar('post', 'censor_l', 'text', ''), $protect));
     $xcensor = (!$xcensor_r || !$xcensor_l) ? 0 : getVar('post', 'censor', 'num');
-    $xsearch = getVar('post', 'search[]', 'var');
-    $xsearch = $xsearch ? implode(',', $xsearch) : '0';
+    $search = getVar('post', 'search', 'var');
+    $xsearch = $search ? implode(',', $search) : '0';
 
     $cont = [
         'version' => '6.3.0 Phoenix',

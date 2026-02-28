@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -46,13 +46,13 @@ function fileview(): void {
     global $afile;
     head();
     $cont = navi(0, 0, 0, 0, 'security');
-    $fname = getVar('get', 'file', 'var');
-    if ($fname) {
+    $file = getVar('get', 'file', 'var');
+    if ($file) {
         $langs = ['dump' => _SEC_STAT_DUM, 'dump_log' => _SEC_STAT_DUML, 'error' => _SEC_STAT_ERROR_D, 'error_site' => _SEC_STAT_ERROR_S, 'error_sql' => _SEC_STAT_ERROR_SQL, 'hack' => _SEC_STAT_HACK, 'log' => _SEC_STAT_LOG, 'log_admin' => _SEC_STAT_A, 'log_user' => _SEC_STAT_U, 'warn' => _SEC_STAT_WARN];
-        $title = strtr($fname, $langs);
-        $file = 'config/logs/'.$fname.'.txt';
-        $content = file_get_contents($file);
-        $cont .= checkPerms(CONFIG_DIR.'/logs/'.$fname.'.txt');
+        $title = strtr($file, $langs);
+        $path = 'config/logs/'.$file.'.txt';
+        $content = file_get_contents($path);
+        $cont .= checkPerms(CONFIG_DIR.'/logs/'.$file.'.txt');
         $cont .= setTemplateBasic('open').'<table class="sl_table_edit"><tr><td><h5>'.$title.'</h5></td></tr><tr><td>'.textarea_code('code', '', 'sl_form', 'message/http', $content).'</td></tr></table>'.setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -62,7 +62,7 @@ function fileview(): void {
 }
 
 function block(): void {
-    global $conf, $confs, $afile;
+    global $conf, $afile;
     $time = getVar('req', 'time', 'num');
     $info = getVar('req', 'info', 'text');
     $hash = getVar('req', 'hash', 'text');
@@ -74,8 +74,8 @@ function block(): void {
     if (getVar('get', 'send', 'var')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<div id="tabcs0" class="tabcont">';
-    $bip = explode('||', $confs['blocker_ip']);
-    if ($confs['blocker_ip']) {
+    $bip = explode('||', $conf['security']['blocker_ip']);
+    if ($conf['security']['blocker_ip']) {
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._IP.'</th><th>'._IP_MASK.'</th><th>'._HASH.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         foreach ($bip as $val) {
             if ($val != '') {
@@ -90,7 +90,7 @@ function block(): void {
         }
         $cont .= '</tbody></table><hr>';
     }
-    $ip = getVar('get', 'new_ip', 'text');
+    $ip = getVar('get', 'ip', 'text');
     $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
     .'<tr><td>'._IP.':</td><td><input type="text" name="ip" value="'.$ip.'" maxlength="255" class="sl_form" placeholder="'._IP.'" required></td></tr>'
     .'<tr><td>'._IP_MASK.':</td><td><select name="ip_mask" class="sl_form">'
@@ -105,8 +105,8 @@ function block(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="blocksave"><input type="hidden" name="id" value="2"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
     .'</div>';
     $cont .= '<div id="tabcs1" class="tabcont">';
-    $bip = explode('||', $confs['blocker_user']);
-    if ($confs['blocker_user']) {
+    $bip = explode('||', $conf['security']['blocker_user']);
+    if ($conf['security']['blocker_user']) {
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._BANN_REAS.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         foreach ($bip as $val) {
             if ($val != '') {
@@ -142,7 +142,7 @@ function block(): void {
 }
 
 function blocksave(): void {
-    global $db, $conf, $confs, $afile;
+    global $db, $conf, $afile;
     $send = '';
     $id = getVar('req', 'id', 'num');
     $ip = getVar('req', 'ip', 'text');
@@ -155,20 +155,20 @@ function blocksave(): void {
     $hash = getVar('req', 'hash', 'text', '0');
     $time = getVar('req', 'time', 'num');
     
-    $cont = $confs; // Copy existing
+    $cont = $conf['security']; // Copy existing
     
     if ($id == 1 && $ip) {
-        $blocker_ip = preg_replace('#'.$ip.'\|'.$ip_mask.'\|'.$hash.'\|'.$time.'\|(.*)\|\|#iU', '', $confs['blocker_ip']);
+        $blocker_ip = preg_replace('#'.$ip.'\|'.$ip_mask.'\|'.$hash.'\|'.$time.'\|(.*)\|\|#iU', '', $conf['security']['blocker_ip']);
         $cont['blocker_ip'] = $blocker_ip;
     } elseif ($id == 2 && $ip) {
         $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
-        $cont['blocker_ip'] = $confs['blocker_ip'].$ip.'|'.$ip_mask.'|'.$hash.'|'.$time.'|'.$info.'||';
+        $cont['blocker_ip'] = $conf['security']['blocker_ip'].$ip.'|'.$ip_mask.'|'.$hash.'|'.$time.'|'.$info.'||';
     } elseif ($id == 3 && $name) {
-        $blocker_user = preg_replace('#'.$name.'\|'.$time.'\|(.*)\|\|#iU', '', $confs['blocker_user']);
+        $blocker_user = preg_replace('#'.$name.'\|'.$time.'\|(.*)\|\|#iU', '', $conf['security']['blocker_user']);
         $cont['blocker_user'] = $blocker_user;
     } elseif ($id == 4 && $name) {
         $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
-        $cont['blocker_user'] = $confs['blocker_user'].$name.'|'.$time.'|'.$info.'||';
+        $cont['blocker_user'] = $conf['security']['blocker_user'].$name.'|'.$time.'|'.$info.'||';
         if ($mail) {
             [$mail_addr] = $db->sql_fetchrow($db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
             $subject = $conf['sitename'].' - '._SECURITY;
@@ -182,20 +182,20 @@ function blocksave(): void {
 }
 
 function pass(): void {
-    global $confs, $afile;
+    global $conf, $afile;
     head();
     $cont = navi(0, 2, 0, 0, 'security');
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
-    $cont .= (!$confs['login'] || !$confs['password']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEC_AUTH_INFO]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEC_AUTH_OK]);
+    $cont .= (!$conf['security']['login'] || !$conf['security']['password']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEC_AUTH_INFO]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEC_AUTH_OK]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._SEC_ADMIN_MASK.':</td><td><select name="admin_mask" class="sl_conf">';
-    $cont .= '<option value="4"'.(($confs['admin_mask'] == 4) ? ' selected' : '').'>255.255.255.255</option>'
-    .'<option value="3"'.(($confs['admin_mask'] == 3) ? ' selected' : '').'>255.255.255.***</option>'
-    .'<option value="2"'.(($confs['admin_mask'] == 2) ? ' selected' : '').'>255.255.***.***</option>'
-    .'<option value="1"'.(($confs['admin_mask'] == 1) ? ' selected' : '').'>255.***.***.***</option></select></td></tr>'
-    .'<tr><td>'._SEC_ADMIN_IP.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="admin_ip" cols="65" rows="5" class="sl_conf" placeholder="'._SEC_ADMIN_IP.'">'.$confs['admin_ip'].'</textarea></td></tr>';
-    if (!$confs['login'] || !$confs['password']) {
+    $cont .= '<option value="4"'.(($conf['security']['admin_mask'] == 4) ? ' selected' : '').'>255.255.255.255</option>'
+    .'<option value="3"'.(($conf['security']['admin_mask'] == 3) ? ' selected' : '').'>255.255.255.***</option>'
+    .'<option value="2"'.(($conf['security']['admin_mask'] == 2) ? ' selected' : '').'>255.255.***.***</option>'
+    .'<option value="1"'.(($conf['security']['admin_mask'] == 1) ? ' selected' : '').'>255.***.***.***</option></select></td></tr>'
+    .'<tr><td>'._SEC_ADMIN_IP.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="admin_ip" cols="65" rows="5" class="sl_conf" placeholder="'._SEC_ADMIN_IP.'">'.$conf['security']['admin_ip'].'</textarea></td></tr>';
+    if (!$conf['security']['login'] || !$conf['security']['password']) {
         $cont .= '<tr><td>'._SEC_LOGIN.':</td><td><input type="text" name="login" value="" maxlength="255" class="sl_conf" placeholder="'._SEC_LOGIN.'"></td></tr>'
         .'<tr><td>'._SEC_PASSWORD.':</td><td><input type="text" name="password" value="" maxlength="255" class="sl_conf" placeholder="'._SEC_PASSWORD.'"></td></tr>';
     } else {
@@ -208,7 +208,7 @@ function pass(): void {
 }
 
 function passsave(): void {
-    global $confs, $afile;
+    global $conf, $afile;
     $protect = [PHP_EOL => '', ' ' => ''];
     $admin_ip = getVar('post', 'admin_ip', 'text');
     $login = getVar('post', 'login', 'text');
@@ -216,10 +216,10 @@ function passsave(): void {
     $admin_mask = getVar('post', 'admin_mask', 'num');
     
     $xadmin_ip = strtr($admin_ip, $protect);
-    $xlogin = empty($login) ? $confs['login'] : password_hash($login, PASSWORD_DEFAULT);
-    $xpassword = empty($password) ? $confs['password'] : password_hash($password, PASSWORD_DEFAULT);
+    $xlogin = empty($login) ? $conf['security']['login'] : password_hash($login, PASSWORD_DEFAULT);
+    $xpassword = empty($password) ? $conf['security']['password'] : password_hash($password, PASSWORD_DEFAULT);
     
-    $cont = $confs;
+    $cont = $conf['security'];
     $cont['admin_mask'] = $admin_mask;
     $cont['admin_ip'] = $xadmin_ip;
     $cont['login'] = $xlogin;
@@ -230,7 +230,7 @@ function passsave(): void {
 }
 
 function conf(): void {
-    global $confs, $afile;
+    global $conf, $afile;
     head();
     $cont = navi(0, 3, 0, 0, 'security');
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
@@ -238,38 +238,38 @@ function conf(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._SFLOOD.':</td><td><select name="flood" class="sl_conf">'
-    . '<option value="0"'.(($confs['flood'] == 0) ? ' selected' : '').'>'._NO.'</option>'
-    .'<option value="1"'.(($confs['flood'] == 1) ? ' selected' : '').'>'._SFLOOD_1.'</option>'
-    .'<option value="2"'.(($confs['flood'] == 2) ? ' selected' : '').'>'._SFLOOD_2.'</option>'
-    .'<option value="3"'.(($confs['flood'] == 3) ? ' selected' : '').'>'._SFLOOD_3.'</option>'
+    . '<option value="0"'.(($conf['security']['flood'] == 0) ? ' selected' : '').'>'._NO.'</option>'
+    .'<option value="1"'.(($conf['security']['flood'] == 1) ? ' selected' : '').'>'._SFLOOD_1.'</option>'
+    .'<option value="2"'.(($conf['security']['flood'] == 2) ? ' selected' : '').'>'._SFLOOD_2.'</option>'
+    .'<option value="3"'.(($conf['security']['flood'] == 3) ? ' selected' : '').'>'._SFLOOD_3.'</option>'
     .'</select></td></tr>'
     .'<tr><td>'._SEC_VIEW.':</td><td><select name="error" class="sl_conf">'
-    . '<option value="0"'.(($confs['error'] == 0) ? ' selected' : '').'>'._NO.'</option>'
-    .'<option value="1"'.(($confs['error'] == 1) ? ' selected' : '').'>'._SEC_VIEW_1.'</option>'
-    .'<option value="2"'.(($confs['error'] == 2) ? ' selected' : '').'>'._SEC_VIEW_2.'</option>'
+    . '<option value="0"'.(($conf['security']['error'] == 0) ? ' selected' : '').'>'._NO.'</option>'
+    .'<option value="1"'.(($conf['security']['error'] == 1) ? ' selected' : '').'>'._SEC_VIEW_1.'</option>'
+    .'<option value="2"'.(($conf['security']['error'] == 2) ? ' selected' : '').'>'._SEC_VIEW_2.'</option>'
     .'</select></td></tr>'
-    .'<tr><td>'._SFLOD_T.':</td><td><input type="number" name="flood_t" value="'.$confs['flood_t'].'" class="sl_conf" placeholder="'._SFLOD_T.'" required></td></tr>'
-    .'<tr><td>'._SEC_COOKIE.':</td><td><input type="text" name="blocker_cookie" value="'.$confs['blocker_cookie'].'" maxlength="255" class="sl_conf" placeholder="'._SEC_COOKIE.'" required></td></tr>'
-    .'<tr><td>'._ADMIN_FILE.':<div class="sl_small">'.$ainfo.'</div></td><td><input type="text" name="afile" value="'.$confs['afile'].'" maxlength="255" class="sl_conf" placeholder="'._ADMIN_FILE.'" required></td></tr>'
-    .'<tr><td>'._SEC_LOG_SIZE.':</td><td><input type="number" name="log_size" value="'.$confs['log_size'].'" class="sl_conf" placeholder="'._SEC_LOG_SIZE.'" required></td></tr>'
-    .'<tr><td>'._SEC_LOG_DS.':</td><td><input type="number" name="sess_d" value="'.intval($confs['sess_d'] / 60).'" class="sl_conf" placeholder="'._SEC_LOG_DS.'" required></td></tr>'
-    .'<tr><td>'._SEC_LOG_DB.':</td><td><input type="number" name="sess_b" value="'.intval($confs['sess_b'] / 60).'" class="sl_conf" placeholder="'._SEC_LOG_DB.'" required></td></tr>'
-    .'<tr><td>'._SEC_DB.'</td><td>'.radio_form($confs['log_b'], 'log_b').'</td></tr>'
-    .'<tr><td>'._SEC_VIEW_JAVA.'</td><td>'.radio_form($confs['error_java'], 'error_java').'</td></tr>'
-    .'<tr><td>'._SEC_STAT.'</td><td>'.radio_form($confs['error_log'], 'error_log').'</td></tr>'
-    .'<tr><td>'._SEC_URL_GET.'</td><td>'.radio_form($confs['url_get'], 'url_get').'</td></tr>'
-    .'<tr><td>'._SEC_URL_POST.'</td><td>'.radio_form($confs['url_post'], 'url_post').'</td></tr>'
-    .'<tr><td>'._SEC_REF_POST.'</td><td>'.radio_form($confs['ref_post'], 'ref_post').'</td></tr>'
-    .'<tr><td>'._SEC_MAIL_SEND.'</td><td>'.radio_form($confs['mail'], 'mail').'</td></tr>'
-    .'<tr><td>'._SEC_MAIL_W_SEND.'</td><td>'.radio_form($confs['mail_w'], 'mail_w').'</td></tr>'
-    .'<tr><td>'._SEC_MAIL_D_SEND.'</td><td>'.radio_form($confs['mail_d'], 'mail_d').'</td></tr>'
-    .'<tr><td>'._SEC_HACK_STAT.'</td><td>'.radio_form($confs['write_h'], 'write_h').'</td></tr>'
-    .'<tr><td>'._SEC_WARN_STAT.'</td><td>'.radio_form($confs['write_w'], 'write_w').'</td></tr>'
-    .'<tr><td>'._SEC_LOG.'</td><td>'.radio_form($confs['log'], 'log').'</td></tr>'
-    .'<tr><td>'._SEC_LOG_D.'</td><td>'.radio_form($confs['log_d'], 'log_d').'</td></tr>'
-    .'<tr><td>'._SEC_LOG_A.'</td><td>'.radio_form($confs['log_a'], 'log_a').'</td></tr>'
-    .'<tr><td>'._SEC_LOG_U.'</td><td>'.radio_form($confs['log_u'], 'log_u').'</td></tr>'
-    .'<tr><td>'._SEC_WARN_BLOCK.'</td><td>'.radio_form($confs['block'], 'block').'</td></tr>'
+    .'<tr><td>'._SFLOD_T.':</td><td><input type="number" name="flood_t" value="'.$conf['security']['flood_t'].'" class="sl_conf" placeholder="'._SFLOD_T.'" required></td></tr>'
+    .'<tr><td>'._SEC_COOKIE.':</td><td><input type="text" name="blocker_cookie" value="'.$conf['security']['blocker_cookie'].'" maxlength="255" class="sl_conf" placeholder="'._SEC_COOKIE.'" required></td></tr>'
+    .'<tr><td>'._ADMIN_FILE.':<div class="sl_small">'.$ainfo.'</div></td><td><input type="text" name="afile" value="'.$conf['security']['afile'].'" maxlength="255" class="sl_conf" placeholder="'._ADMIN_FILE.'" required></td></tr>'
+    .'<tr><td>'._SEC_LOG_SIZE.':</td><td><input type="number" name="log_size" value="'.$conf['security']['log_size'].'" class="sl_conf" placeholder="'._SEC_LOG_SIZE.'" required></td></tr>'
+    .'<tr><td>'._SEC_LOG_DS.':</td><td><input type="number" name="sess_d" value="'.intval($conf['security']['sess_d'] / 60).'" class="sl_conf" placeholder="'._SEC_LOG_DS.'" required></td></tr>'
+    .'<tr><td>'._SEC_LOG_DB.':</td><td><input type="number" name="sess_b" value="'.intval($conf['security']['sess_b'] / 60).'" class="sl_conf" placeholder="'._SEC_LOG_DB.'" required></td></tr>'
+    .'<tr><td>'._SEC_DB.'</td><td>'.radio_form($conf['security']['log_b'], 'log_b').'</td></tr>'
+    .'<tr><td>'._SEC_VIEW_JAVA.'</td><td>'.radio_form($conf['security']['error_java'], 'error_java').'</td></tr>'
+    .'<tr><td>'._SEC_STAT.'</td><td>'.radio_form($conf['security']['error_log'], 'error_log').'</td></tr>'
+    .'<tr><td>'._SEC_URL_GET.'</td><td>'.radio_form($conf['security']['url_get'], 'url_get').'</td></tr>'
+    .'<tr><td>'._SEC_URL_POST.'</td><td>'.radio_form($conf['security']['url_post'], 'url_post').'</td></tr>'
+    .'<tr><td>'._SEC_REF_POST.'</td><td>'.radio_form($conf['security']['ref_post'], 'ref_post').'</td></tr>'
+    .'<tr><td>'._SEC_MAIL_SEND.'</td><td>'.radio_form($conf['security']['mail'], 'mail').'</td></tr>'
+    .'<tr><td>'._SEC_MAIL_W_SEND.'</td><td>'.radio_form($conf['security']['mail_w'], 'mail_w').'</td></tr>'
+    .'<tr><td>'._SEC_MAIL_D_SEND.'</td><td>'.radio_form($conf['security']['mail_d'], 'mail_d').'</td></tr>'
+    .'<tr><td>'._SEC_HACK_STAT.'</td><td>'.radio_form($conf['security']['write_h'], 'write_h').'</td></tr>'
+    .'<tr><td>'._SEC_WARN_STAT.'</td><td>'.radio_form($conf['security']['write_w'], 'write_w').'</td></tr>'
+    .'<tr><td>'._SEC_LOG.'</td><td>'.radio_form($conf['security']['log'], 'log').'</td></tr>'
+    .'<tr><td>'._SEC_LOG_D.'</td><td>'.radio_form($conf['security']['log_d'], 'log_d').'</td></tr>'
+    .'<tr><td>'._SEC_LOG_A.'</td><td>'.radio_form($conf['security']['log_a'], 'log_a').'</td></tr>'
+    .'<tr><td>'._SEC_LOG_U.'</td><td>'.radio_form($conf['security']['log_u'], 'log_u').'</td></tr>'
+    .'<tr><td>'._SEC_WARN_BLOCK.'</td><td>'.radio_form($conf['security']['block'], 'block').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -277,11 +277,11 @@ function conf(): void {
 }
 
 function confsave(): void {
-    global $confs, $afile;
+    global $conf, $afile;
     
     $flood_t = getVar('post', 'flood_t', 'num', '1');
     $afile = getVar('post', 'afile', 'text');
-    $tafile = ($confs['afile']) ? $confs['afile'] : 'admin';
+    $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
     
     if ($afile != $tafile) {
         rename($tafile.'.php', $afile.'.php');
@@ -320,12 +320,12 @@ function confsave(): void {
     ];
     
     // Preserve existing blocking data which isn't in this form
-    $cont['blocker_ip'] = $confs['blocker_ip'];
-    $cont['blocker_user'] = $confs['blocker_user'];
-    $cont['admin_mask'] = $confs['admin_mask'];
-    $cont['admin_ip'] = $confs['admin_ip'];
-    $cont['login'] = $confs['login'];
-    $cont['password'] = $confs['password'];
+    $cont['blocker_ip'] = $conf['security']['blocker_ip'];
+    $cont['blocker_user'] = $conf['security']['blocker_user'];
+    $cont['admin_mask'] = $conf['security']['admin_mask'];
+    $cont['admin_ip'] = $conf['security']['admin_ip'];
+    $cont['login'] = $conf['security']['login'];
+    $cont['password'] = $conf['security']['password'];
     
     setConfigFile('security.php', $cont);
     setRedirect($afile.'.php?name=security&op=conf');
@@ -339,9 +339,9 @@ function info(): void {
 
 function down(): void {
     global $afile;
-    $fname = getVar('get', 'file', 'var');
-    if ($fname) {
-        stream('config/logs/'.$fname.'.txt', date('d.m.Y').'_'.$fname.'.txt');
+    $file = getVar('get', 'file', 'var');
+    if ($file) {
+        stream('config/logs/'.$file.'.txt', date('d.m.Y').'_'.$file.'.txt');
     } else {
         setRedirect($afile.'.php?name=security');
     }
@@ -349,8 +349,8 @@ function down(): void {
 
 function del(): void {
     global $afile;
-    $fname = getVar('get', 'file', 'var');
-    if ($fname) unlink('config/logs/'.$fname.'.txt');
+    $file = getVar('get', 'file', 'var');
+    if ($file) unlink('config/logs/'.$file.'.txt');
     setRedirect($afile.'.php?name=security');
 }
 
@@ -367,3 +367,4 @@ switch ($op) {
     case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
+
