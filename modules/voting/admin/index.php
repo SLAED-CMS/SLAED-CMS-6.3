@@ -184,7 +184,7 @@ function delete(int $id = 0): void {
 }
 
 function conf(): void {
-    global $afile;
+    global $afile, $conf;
     head();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');

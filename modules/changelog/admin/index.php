@@ -364,7 +364,7 @@ function gitfetch(string $gitdir, array $filters, int $limit): array {
     $cmd = escapeshellarg($gitexe).' log --pretty="format:'.$format.'" --date="format:'.$dateformat.'" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
 
     $gitlog = [];
-    exec($cmd, $gitlog, $retcode);
+    gitexec($cmd, $gitlog, $retcode);
     chdir($olddir);
 
     if ($retcode !== 0) {
@@ -376,6 +376,15 @@ function gitfetch(string $gitdir, array $filters, int $limit): array {
     chsetcache($cachekey, $commits, "git:$gitdir");
 
     return $commits;
+}
+
+function gitexec(string $cmd, array &$out, int &$code): void {
+    $out = [];
+    $code = 1;
+    if (!function_exists('exec')) return;
+    if (strpbrk($cmd, "`0`r`n") !== false) return;
+    if (stripos($cmd, 'git') === false || stripos($cmd, ' log ') === false) return;
+    exec($cmd, $out, $code);
 }
 
 function gitparse(array $lines): array {
@@ -432,7 +441,7 @@ function gitparse(array $lines): array {
 // ============================================================================
 
 function changelog(): void {
-    global $afile, $gherror, $giterror;
+    global $afile, $conf, $gherror, $giterror;
 
     head();
     
@@ -548,7 +557,7 @@ function changelog(): void {
 }
 
 function conf(): void {
-    global $afile;
+    global $afile, $conf;
     head();
     $cont = navi(0, 1);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
@@ -742,7 +751,8 @@ function grpdate(array $commits): array {
     return $grouped;
 }
 
-function rencom(array $commits, array $conf): string {
+function rencom(array $commits): string {
+    global $conf;
     $html = '';
     $i = 0;
 
@@ -762,7 +772,7 @@ function rencom(array $commits, array $conf): string {
         }
 
         $statsHtml = '';
-        if (!empty($conf['showstat']) && !empty($commit['files'])) {
+        if (!empty($conf['changelog']['showstat']) && !empty($commit['files'])) {
             $totadd = $totdel = 0;
             foreach ($commit['files'] as $f) {
                 $totadd += $f['added'];
@@ -770,7 +780,7 @@ function rencom(array $commits, array $conf): string {
             }
 
             $filesHtml = '';
-            if (!empty($conf['showfile'])) {
+            if (!empty($conf['changelog']['showfile'])) {
                 $rows = [];
                 foreach ($commit['files'] as $f) {
                     $rows[] = '<div><span class="add">+'.str_pad($f['added'], 3, ' ', STR_PAD_LEFT).'</span> '

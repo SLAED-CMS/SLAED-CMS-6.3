@@ -13,7 +13,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 }
 
 function rss(): void {
-    global $afile;
+    global $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0, 'rss');
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
@@ -67,7 +67,7 @@ function rss(): void {
 }
 
 function save(): void {
-    global $afile;
+    global $afile, $conf;
     $cont = [
         'min' => getVar('post', 'min', 'num', 10),
         'max' => getVar('post', 'max', 'num', 100),

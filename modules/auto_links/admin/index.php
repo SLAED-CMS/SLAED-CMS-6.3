@@ -94,7 +94,6 @@ function stats(): void {
     elseif ($sort == 9) { $count = 'date'; $ordby = 'hits'; }
     else { $count = 'date'; $ordby = 'date'; }
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    // GROUP BY / ORDER BY use allowlisted column names — safe to concatenate
     $result = $db->sql_query('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, date FROM '.PREFIX_DB.'_referer WHERE lid = :lid GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc, ['lid' => $id]);
     head();
     $cont = navi(0, 0, 0, 0);
