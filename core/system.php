@@ -3483,6 +3483,8 @@ function catmids(string $modul, string $field): string {
 
 # Length end filter
 function cutstr($strip, $size, $type='') {
+    $strip = (string)$strip;
+    $size = (int)$size;
     if (!$type) {
         $end = '&hellip;';
     } elseif ($type == '1') {
