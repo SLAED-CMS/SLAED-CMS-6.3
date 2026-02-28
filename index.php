@@ -48,8 +48,10 @@ if (empty($go)) {
         $path = BASE_DIR.'/modules/'.$name.'/'.$file.'.php';
         if (intval($active) || is_moder($name)) {
             if ($view == 0 && file_exists($path)) {
+                getLang($name);
                 require_once $path;
             } elseif (($view == 1 && (is_user() && is_mod_group($name)) || is_moder($name)) && file_exists($path)) {
+                getLang($name);
                 require_once $path;
             } elseif ($view == 1 && !is_moder($name)) {
                 if (!is_user()) $info = _MODULEUSERS.' ';
@@ -65,6 +67,7 @@ if (empty($go)) {
                 foot();
                 exit;
             } elseif ($view == 2 && is_moder($name) && file_exists($path)) {
+                getLang($name);
                 require_once $path;
             } elseif ($view == 2 && !is_moder($name)) {
                 head();
@@ -93,6 +96,7 @@ if (empty($go)) {
             $conf['name'] = $name;
             $path = BASE_DIR.'/modules/'.$name.'/'.$file.'.php';
             if (file_exists($path)) {
+                getLang($name);
                 require_once $path;
                 exit;
             } else {
@@ -129,7 +133,7 @@ if (empty($go)) {
             case 'avoting_save': avoting_save(); break;
         }
     } elseif ($go == 2) {
-        get_lang('shop');
+        getLang('shop');
         setCache('0');
         require_once CONFIG_DIR.'/shop.php';
         switch($op) {
@@ -163,7 +167,7 @@ if (empty($go)) {
     } elseif ($go == 5) {
         if (is_admin_god()) {
             define('ADMIN_FILE', true);
-            get_lang('admin');
+            getLang('admin');
             setCache('0');
             require_once BASE_DIR.'/core/admin.php';
             switch($op) {

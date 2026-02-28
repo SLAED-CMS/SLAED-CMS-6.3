@@ -6,7 +6,7 @@
 
 if (!defined('ADMIN_FILE')) die('Illegal file access');
 require_once BASE_DIR.'/core/system.php';
-get_lang('admin');
+getLang('admin');
 setCache('0');
 checkAccess();
 
@@ -57,7 +57,7 @@ function getAdminPanelBlocks(): string {
                             $mod['img'],
                             $class,
                         );
-                        if (file_exists($path.'/language/'.$locale.'.php')) require_once $path.'/language/'.$locale.'.php';
+                        getLang($name, true);
                     }
                 }
             }
@@ -108,7 +108,7 @@ function getAdminPanel(): void {
                             $mod['img'],
                             $class,
                         );
-                        if (file_exists($path.'/language/'.$locale.'.php')) require_once $path.'/language/'.$locale.'.php';
+                        getLang($name, true);
                     }
                 }
             }
@@ -235,7 +235,7 @@ if (is_admin()) {
             if (is_admin_god() || is_admin_modul($name)) {
                 $path = BASE_DIR.'/modules/'.$name.'/admin';
                 if (file_exists($path.'/index.php')) {
-                    if (file_exists($path.'/language/'.$locale.'.php')) require_once $path.'/language/'.$locale.'.php';
+                    getLang($name, true);
                     require_once $path.'/index.php';
                 }
             }
