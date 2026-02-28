@@ -1,5 +1,5 @@
 <?php
-# Copyright Â© 2005 - 2015 SLAED
+# Copyright © 2005 - 2026 SLAED
 # Website: http://www.slaed.net
 
 if (!defined('MODULE_FILE')) {
@@ -17,16 +17,17 @@ function systems(): void {
 	if ($info) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
 	$result = $db->sql_query('SELECT id, title, infotext, url, num, hits, prod_id, status FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');
 	if ($db->sql_numrows($result) > 0) {
-		$user_id = intval($user['0']);
+		$uid = (int)($user[0] ?? 0);
+		$conts = '';
 		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CLOADS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
 		$i = 0;
 		$a = 1;
-		while ([$id, $title, $infotext, $url, $num, $hits, $prod_id, $status] = $db->sql_fetchrow($result)) {
-			$tpath = 'uploads/clients/thumb/'.$id.'_'.$user_id.'.zip';
+		while ([$id, $title, $infotext, $url, $num, $hits, $prod, $status] = $db->sql_fetchrow($result)) {
+			$tpath = 'uploads/clients/thumb/'.$id.'_'.$uid.'.zip';
 			$dtitle = (file_exists($tpath)) ? _CDOWN : _GZIPGEN;
 			$moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=clients_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
-			$acont = add_menu($moder.'<a OnClick="HideShow(\'cl'.$i.'\', \'blind\', \'up\', 500);" title="'._CINFO.'">'._CINFO.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;prod_id='.$prod_id.'" title="'.$dtitle.'">'.$dtitle.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;prod_id='.$prod_id.'" title="'._CLIZENS.'">'._CLIZENS.'</a>');
+			$acont = add_menu($moder.'<a OnClick="HideShow(\'cl'.$i.'\', \'blind\', \'up\', 500);" title="'._CINFO.'">'._CINFO.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;prod_id='.$prod.'" title="'.$dtitle.'">'.$dtitle.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;prod_id='.$prod.'" title="'._CLIZENS.'">'._CLIZENS.'</a>');
 			$time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
 			$cont .= '<tr id="'.$a.'">'
 			.'<td><a href="#'.$a.'" title="'.$a.'" class="sl_pnum">'.$a.'</a></td>'
@@ -49,16 +50,16 @@ function systems(): void {
 
 function download(): void {
 	global $db, $user, $conf, $stop, $info;
-	$user_id = intval($user['0']);
-	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $user_id]);
+	$uid = (int)($user[0] ?? 0);
+	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $uid]);
 	if (is_user() && $db->sql_numrows($result) > 0) {
 		$id = getVar('get', 'id', 'num');
 		[$pid, $url, $num] = $db->sql_fetchrow($db->sql_query('SELECT id, url, num FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
-		$tpath = 'uploads/clients/thumb/'.$pid.'_'.$user_id.'.zip';
+		$tpath = 'uploads/clients/thumb/'.$pid.'_'.$uid.'.zip';
 		if (!file_exists($tpath)) {
 			$ipath = 'uploads/clients/images';
 			$path = 'uploads/clients/'.$url;
-			$code = base64_encode($user_id.'-'.getip().'-'.getagent());
+			$code = base64_encode($uid.'-'.getip().'-'.getagent());
 		
 			# Ð¨Ð¸Ñ„Ñ€ÑƒÐµÐ¼ Ñ„Ð°Ð¹Ð»Ñ‹
 			$input = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S' ,'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '='];
@@ -95,20 +96,30 @@ function download(): void {
 function save_hidden(string $path, string $ipath, string $code): void {
 	# Ð§Ð¸Ñ‚Ð°ÐµÐ¼ Ð¸ Ð¿ÐµÑ€ÐµÐ·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ Ñ„Ð°Ð¹Ð»
 	$content = file_get_contents($ipath);
+	if ($content === false) {
+		return;
+	}
 	$code = $content.$code;
 	$fp = fopen($path, 'wb');
+	if ($fp === false) {
+		return;
+	}
 	fwrite($fp, $code);
 	fclose($fp);
 	# ÐœÐµÐ½ÑÐµÐ¼ Ð²Ñ€ÐµÐ¼Ñ Ñ„Ð°Ð¹Ð»Ð°
 	$atime = filemtime($ipath);
-	touch($path, $atime, $atime);
+	if ($atime !== false) {
+		touch($path, $atime, $atime);
+	}
 }
 
 function generator(string $path = ''): void {
 	global $db, $user, $conf, $stop;
-	$user_id = intval($user['0']);
-	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $user_id]);
+	$uid = (int)($user[0] ?? 0);
+	$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $uid]);
 	if (is_user() && $db->sql_numrows($result) > 0) {
+		$domains = [];
+		$code = '';
 		while ([$domain] = $db->sql_fetchrow($result)) $domains[] = $domain;
 		$domains = preg_replace('#https?://|www\.#i', '', implode(',', $domains));
 		$id = getVar('get', 'id', 'num');
@@ -123,11 +134,18 @@ function generator(string $path = ''): void {
 		$code .= md5($pass.'localhost'.$pass)."\n";
 		$code .= md5($pass.'127.0.0.1'.$pass);
 		$dir = ($path) ? $path : 'uploads/clients/thumb/';
-		$nfile = ($path) ? 'license' : $user_id;
+		$nfile = ($path) ? 'license' : $uid;
 		$fp = fopen($dir.'/'.$nfile.'.txt', 'wb');
+		if ($fp === false) {
+			if (!$path) {
+				$stop = _CLERROR2;
+				systems();
+			}
+			return;
+		}
 		fwrite($fp, $code);
 		fclose($fp);
-		if (!$path) stream($dir.'/'.$user_id.'.txt', 'license.txt');
+		if (!$path) stream($dir.'/'.$uid.'.txt', 'license.txt');
 	} else {
 		$stop = _CLERROR;
 		systems();

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2021 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -11,30 +11,30 @@ if (!defined('MODULE_FILE')) {
 get_lang($conf['name']);
 
 function money(): void {
-	global $conf, $confmo, $stop;
+	global $conf, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
-		$mail_val = getVar('post', 'mail', 'text');
-		$mail = ($mail_val) ? text_filter($mail_val) : $userinfo['user_email'];
+		$mail = getVar('post', 'mail', 'text');
+		$mail = ($mail) ? $mail : $userinfo['user_email'];
 	} else {
-		$mail = text_filter(getVar('post', 'mail', 'text'));
+		$mail = getVar('post', 'mail', 'text');
 	}
 	setHead(['title' => _MONEY]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _MONEY]);
 
 
-	$cont .= ($confmo['an']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MO_5.': '.$confmo['bal'].' EUR']) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MO_11]);
+	$cont .= ($conf['money']['an']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MO_11]);
 	
 	
 	
 	$cont .= setTemplateBasic('open');
-	$cont .= bb_decode(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$confmo['proz'], $confmo['kurs'], $confmo['kurs2']], $confmo['text']), 'all');
+	$cont .= bb_decode(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), 'all');
 	$cont .= setTemplateBasic('close');
 	$cont .= setTemplateBasic('open');
 	$cont .= '<script>
 	function Rechner(form) {
 		a = form.a.value;
-		b = a/100 * '.$confmo['kurs'].' * (100-'.$confmo['proz'].");
+		b = a/100 * '.$conf['money']['kurs'].' * (100-'.$conf['money']['proz'].");
 		b = (Math.round(b * 100) / 100).toString();
 		b += (b.indexOf('.') == -1) ? '.00' : '00';
 		form.total.value = b.substring(0, b.indexOf('.') + 3);
@@ -43,7 +43,7 @@ function money(): void {
 	$cont .= '<script>
 	function Rechner1(form) {
 		a = form.a.value;
-		b = a/100 * '.$confmo['kurs2'].' * (100-'.$confmo['proz'].");
+		b = a/100 * '.$conf['money']['kurs2'].' * (100-'.$conf['money']['proz'].");
 		b = (Math.round(b * 100) / 100).toString();
 		b += (b.indexOf('.') == -1) ? '.00' : '00';
 		form.total.value = b.substring(0, b.indexOf('.') + 3);
@@ -52,7 +52,7 @@ function money(): void {
 	$cont .= '<script>
 	function Rechner2(form) {
 		a = form.a.value;
-		b = a/100 * (100-'.$confmo['proz'].");
+		b = a/100 * (100-'.$conf['money']['proz'].");
 		b = (Math.round(b * 100) / 100).toString();
 		b += (b.indexOf('.') == -1) ? '.00' : '00';
 		form.total.value = b.substring(0, b.indexOf('.') + 3);
@@ -63,7 +63,7 @@ function money(): void {
 	.'<form name="form"><table class="sl_table_form"><tr><td>'._MO_2.': <input type="number" name="a" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td>'._MO_3.' R: <input name="total" style="width: 65px;" class="sl_field '.$conf['style'].'"> RUB</td><td><input type="button" value="'._MO_4.'" class="sl_but_blue" OnClick=Rechner1(this.form)></td></tr></table></form>'
 	.'<form name="form"><table class="sl_table_form"><tr><td>'._MO_2.': <input type="number" name="a" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td>'._MO_3.' E: <input name="total" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td><input type="button" value="'._MO_4.'" class="sl_but_blue" OnClick=Rechner2(this.form)></td></tr></table></form>';
 	$cont .= setTemplateBasic('close');
-	if ($confmo['an']) {
+	if ($conf['money']['an']) {
 		$sum = getVar('post', 'sum', 'num');
 		$info = getVar('post', 'info', 'array', []);
 		#$com = save_text($_POST['com'], 1);
@@ -74,11 +74,11 @@ function money(): void {
 		.'<table class="sl_table_form">'
 		.'<tr><td>'._MO_7.':</td><td><input type="number" name="sum" value="'.$sum.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_7.'" required></td></tr>'
 		.'<tr><td>'._MO_8.':</td><td><input type="email" name="mail" value="'.$mail.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_8.'" required></td></tr>';
-		$form = explode(',', $confmo['form']);
+		$form = explode(',', $conf['money']['form']);
 		$i = 0;
 		foreach ($form as $val) {
 			if ($val != '') {
-				$cont .= '<tr><td>'.$val.':</td><td><input type="text" name="info[]" value="'.save_text($info[$i], 1).'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'.$val.'" required></td></tr>';
+				$cont .= '<tr><td>'.$val.':</td><td><input type="text" name="info[]" value="'.save_text($info[$i] ?? '', 1).'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'.$val.'" required></td></tr>';
 				$i++;
 			}
 		}
@@ -91,11 +91,12 @@ function money(): void {
 }
 
 function send(): void {
-	global $db, $conf, $confmo, $stop;
-	if ($confmo['an']) {
+	global $db, $conf, $stop;
+	if ($conf['money']['an']) {
 		$sum = getVar('post', 'sum', 'num');
-		$mail = text_filter(getVar('post', 'mail', 'text'));
+		$mail = getVar('post', 'mail', 'text');
 		$info = getVar('post', 'info', 'array', []);
+		$binfo = '';
 		$stop = [];
 		$i = 0;
 		foreach ($info as $val) {
@@ -115,18 +116,19 @@ function send(): void {
 		checkemail($mail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
-			$status = ($confmo['pr']) ? '0' : '1';
+			$status = ($conf['money']['pr']) ? '0' : '1';
 			$db->sql_query('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :binfo, :com, :ip, :agent, NOW(), :status)', ['sum' => $sum, 'mail' => $mail, 'binfo' => $binfo, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
-			if ($confmo['ad']) {
-				$form = explode(',', $confmo['form']);
+			if ($conf['money']['ad']) {
+				$form = explode(',', $conf['money']['form']);
+				$sinfo = '';
 				$i = 0;
 				foreach ($form as $val) {
 					if ($val != '') {
-						$sinfo .= $val.': '.save_text($info[$i], 1).'<br>';
+						$sinfo .= $val.': '.save_text($info[$i] ?? '', 1).'<br>';
 						$i++;
 					}
 				}
-				$amail = ($confmo['mail']) ? $confmo['mail'] : $conf['adminmail'];
+				$amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._MONEY;
 				$msg = $conf['sitename'].' - '._MONEY.'<br><br>';
 				$msg .= '<b>'._PERSONALINFO.'</b><br><br>';
@@ -136,15 +138,15 @@ function send(): void {
 				$msg .= _MO_9.': '.$com;
 				mail_send($amail, $mail, $subject, $msg, 1, 1);
 			}
-			if (!$confmo['pr']) {
-				$amail = ($confmo['mail']) ? $confmo['mail'] : $conf['adminmail'];
+			if (!$conf['money']['pr']) {
+				$amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._MONEY;
 				$msg = $conf['sitename'].' - '._MONEY.'<br><br>';
-				$msg .= bb_decode($confmo['sendinfo'], 'all');
+				$msg .= bb_decode($conf['money']['sendinfo'], 'all');
 				mail_send($mail, $amail, $subject, $msg, 0, 3);
 			}
 			setHead(['title' => _MONEY]);
-			echo setTemplateBasic('title', ['{%title%}' => _MONEY]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => bb_decode($confmo['info'], 'all')]);
+			echo setTemplateBasic('title', ['{%title%}' => _MONEY]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => bb_decode($conf['money']['info'], 'all')]);
 			setFoot();
 		} else {
 			money();
@@ -158,3 +160,4 @@ switch($op) {
 	default: money(); break;
 	case 'send': send(); break;
 }
+

@@ -12,7 +12,8 @@ get_lang($conf['name']);
 
 function navigate(string $title, string|int $cat=''): string {
 	global $conf;
-	$ncat = getVar('get', 'cat', 'num');
+	$cat = getVar('get', 'cat', 'num');
+	$ncat = $cat;
 	$cpar = $ncat ? ['cat' => $ncat] : [];
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._FILES.'" class="sl_but_navi">'._HOME.'</a>';
 	$best = ($conf['files']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
@@ -27,23 +28,24 @@ function files(): void {
 	global $db, $afile, $user, $conf, $home, $op;
 	$cwhere = catmids($conf['name'], 'f.cid');
 	$unum = user_news($user[3] ?? 0, $conf['files']['num']);
-	$ncat = getVar('get', 'cat', 'num');
+	$cat = getVar('get', 'cat', 'num');
+	$ncat = $cat;
 	$params = [];
 	if (!$ncat && $op && $conf['files']['rate']) {
 		$caton = 0;
 		$field = 'op='.$op.'&';
 		if ($op == 'best') {
-			$orderby = '(f.totalvotes/f.votes) DESC';
+			$orderby = 'IFNULL((f.totalvotes/NULLIF(f.votes,0)),0) DESC';
 			$ntitle = _BEST;
 		} else {
-			$orderby = '(f.hits/(TO_DAYS(NOW()) - TO_DAYS(f.date))) DESC';
+			$orderby = 'IFNULL((f.hits/NULLIF((TO_DAYS(NOW()) - TO_DAYS(f.date)),0)),0) DESC';
 			$ntitle = _POP;
 		}
 		$order = "WHERE f.date <= NOW() AND f.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$onum = "date <= NOW() AND status != '0'";
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-		$orderby = ($op) ? (($op == 'best') ? '(f.totalvotes/f.votes) DESC' : '(f.hits/(TO_DAYS(NOW()) - TO_DAYS(f.date))) DESC') : 'f.date DESC';
+		$orderby = ($op) ? (($op == 'best') ? 'IFNULL((f.totalvotes/NULLIF(f.votes,0)),0) DESC' : 'IFNULL((f.hits/NULLIF((TO_DAYS(NOW()) - TO_DAYS(f.date)),0)),0) DESC') : 'f.date DESC';
 		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (f.cid = :ncat1 OR c.parentid = :ncat2) AND f.date <= NOW() AND f.status != '0' ".$cwhere.' ORDER BY '.$orderby;
@@ -82,7 +84,7 @@ function files(): void {
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT f.lid, f.cid, f.name, f.title, f.description, f.bodytext, f.date, f.counter, f.acomm, f.votes, f.totalvotes, f.totalcomments, f.hits, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
-		while ([$id, $cid, $uname, $stitle, $description, $bodytext, $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $uname, $stitle, $description, $bodytext, $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -91,7 +93,7 @@ function files(): void {
 			$cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
 			$title = '<a href="'.$thref.'" title="'.$stitle.'">'.$stitle.'</a> '.new_graphic($time);
 			$read = '<a href="'.$thref.'" title="'.$stitle.'" class="sl_but_read">'._READMORE.'</a>';
-			$post = ($conf['files']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
+			$post = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
 			$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 			$date = ($conf['files']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
 			$reads = ($conf['files']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
@@ -132,13 +134,13 @@ function liste(): void {
 	if ($db->sql_numrows($result) > 0) {
 		$letter = ($conf['files']['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
-		while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
-			$post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM);
+			$post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
 			$cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $post, '{%time%}' => format_time($time)]);
 		}
 		$cont .= setTemplateBasic('liste-close');
@@ -159,7 +161,7 @@ function view(): void {
 	$result = $db->sql_query('SELECT f.cid, f.name, f.title, f.url, f.description, f.bodytext, f.date, f.filesize, f.version, f.email, f.homepage, f.counter, f.acomm, f.votes, f.totalvotes, f.hits, f.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.lid = :id AND f.date <= NOW() AND f.status != '0' ".$cwhere, ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
 		$db->sql_query('UPDATE '.PREFIX_DB."_files SET counter = counter+1 WHERE lid = :id", ['id' => $id]);
-		[$cid, $uname, $title, $url, $description, $bodytext, $date, $fsize, $fversion, $aemail, $ahomepage, $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result);
+		[$cid, $uname, $title, $url, $description, $bodytext, $date, $fsize, $fversion, $aemail, $ahomepage, $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
@@ -167,7 +169,7 @@ function view(): void {
 		$seoimg = getImgText($description, '', false);
 		$seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
 		$seotime = $date;
-		$seoauthor = $user_name ?: ($uname ?: $conf['sitename']);
+		$seoauthor = $nick ?: ($uname ?: $conf['sitename']);
 		setHead([
 			'title' => $seotitle,
 			'ctitle' => $seoctitle,
@@ -184,7 +186,7 @@ function view(): void {
 		$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
 		$cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
 		$cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-		$post = ($conf['files']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
+		$post = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
 		$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 		$date = ($conf['files']['date']) ? '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>' : '';
 		$reads = ($conf['files']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
@@ -242,11 +244,11 @@ function add(): void {
 		$postname = getVar('post', 'postname', 'name');
 		if (is_user()) {
 			$userinfo = getusrinfo();
-			$authormail = getVar('post', 'authormail', 'text', $userinfo['user_email']);
-			$authorurl = getVar('post', 'authorurl', 'url', $userinfo['user_website']);
+			$mail = getVar('post', 'mail', 'text', $userinfo['user_email']);
+			$home = getVar('post', 'home', 'url', $userinfo['user_website']);
 		} else {
-			$authormail = getVar('post', 'authormail', 'text');
-			$authorurl = getVar('post', 'authorurl', 'url', 'http://');
+			$mail = getVar('post', 'mail', 'text');
+			$home = getVar('post', 'home', 'url', 'http://');
 		}
 		$url = getVar('post', 'url', 'url', 'http://');
 		$fversion = getVar('post', 'fversion', 'text');
@@ -267,12 +269,12 @@ function add(): void {
 			$postname = ($postname) ? $postname : _ANONYM;
 			$cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
 		}
-		$cont .= '<tr><td>'._AUEMAIL.':</td><td><input type="email" name="authormail" value="'.$authormail.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._AUEMAIL.'" required></td></tr>'
+		$cont .= '<tr><td>'._AUEMAIL.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._AUEMAIL.'" required></td></tr>'
 		.'<tr><td>'._NAME.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._NAME.'" required></td></tr>'
 		.'<tr><td>'._CATEGORY.':</td><td>'.getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>').'</td></tr>'
 		.'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1').'</td></tr>'
 		.'<tr><td>'._ENDTEXT.':</td><td>'.textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0').'</td></tr>'
-		.'<tr><td>'._SITE.':</td><td><input type="url" name="authorurl" value="'.$authorurl.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._SITE.'"></td></tr>';
+		.'<tr><td>'._SITE.':</td><td><input type="url" name="home" value="'.$home.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._SITE.'"></td></tr>';
 		if ($conf['files']['upload'] == 1) $cont .= '<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_field '.$conf['style'].'"></td></tr>';
 		$cont .= '<tr><td>'._URL.':</td><td><input type="url" name="url" value="'.$url.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._URL.'"></td></tr>'
 		.'<tr><td>'._VERSION.':</td><td><input type="text" name="fversion" value="'.$fversion.'" maxlength="10" class="sl_field '.$conf['style'].'" placeholder="'._VERSION.'"></td></tr>'
@@ -294,8 +296,8 @@ function send(): void {
 		$description = getVar('post', 'description', 'text');
 		$bodytext = getVar('post', 'bodytext', 'text');
 		$postname = getVar('post', 'postname', 'name');
-		$authormail = getVar('post', 'authormail', 'text');
-		$authorurl = getVar('post', 'authorurl', 'url');
+		$mail = getVar('post', 'mail', 'text');
+		$home = getVar('post', 'home', 'url');
 		$url = getVar('post', 'url', 'url');
 		$fversion = getVar('post', 'fversion', 'text');
 		$fsize = getVar('post', 'fsize', 'num');
@@ -303,7 +305,7 @@ function send(): void {
 		if (!$title) $stop[] = _CERROR;
 		if (!$description) $stop[] = _CERROR1;
 		if (!$postname && !is_user()) $stop[] = _CERROR3;
-		checkemail($authormail);
+		checkemail($mail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if ($db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB."_files WHERE title = :title", ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
 		$userid = isset($user[0]) ? intval($user[0]) : '0';
@@ -318,7 +320,7 @@ function send(): void {
 		if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->sql_query('INSERT INTO '.PREFIX_DB."_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :description, :bodytext, :url, NOW(), :fsize, :fversion, :authormail, :authorurl, :ip_sender, '0')", ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'fsize' => $fsize, 'fversion' => $fversion, 'authormail' => $authormail, 'authorurl' => $authorurl, 'ip_sender' => getIp()]);
+			$db->sql_query('INSERT INTO '.PREFIX_DB."_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :description, :bodytext, :url, NOW(), :fsize, :fversion, :mail, :home, :ip_sender, '0')", ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'fsize' => $fsize, 'fversion' => $fversion, 'mail' => $mail, 'home' => $home, 'ip_sender' => getIp()]);
 			update_points(9);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
@@ -381,3 +383,4 @@ switch($op) {
 	case 'broken': broken(); break;
 	case 'loading': loading(); break;
 }
+

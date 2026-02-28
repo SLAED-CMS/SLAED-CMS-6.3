@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2021 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -45,16 +45,16 @@ function send(): void {
 	global $db, $conf, $stop;
 	if ($conf['order']['an']) {
 		$mail = getVar('post', 'mail', 'text');
-		$info = getVar('post', 'field', 'field');
+		$field = getVar('post', 'field', 'field');
 		$com = getVar('post', 'com', 'text');
 		$stop = [];
 		checkemail($mail);
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			$status = ($conf['order']['pr']) ? '0' : '1';
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, NOW(), :status)', ['mail' => $mail, 'info' => $info, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, NOW(), :status)', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
 			if ($conf['order']['ad']) {
-				$infos = fields_out($info, $conf['name']);
+				$infos = fields_out($field, $conf['name']);
 				$amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._ORDER;
 				$msg = $conf['sitename'].' - '._ORDER.'<br><br><b>'._PERSONALINFO.'</b><br><br>'._OR_2.': '.$mail.'<br>'.$infos.'<br>'._OR_3.': '.$com;

@@ -12,7 +12,8 @@ get_lang($conf['name']);
 
 function navigate(string $title, string|int $cat=''): string {
 	global $conf;
-	$ncat = getVar('get', 'cat', 'num');
+	$cat = getVar('get', 'cat', 'num');
+	$ncat = $cat;
 	$cpar = $ncat ? ['cat' => $ncat] : [];
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._SHOP.'" class="sl_but_navi">'._HOME.'</a>';
 	$best = ($conf['shop']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
@@ -26,23 +27,24 @@ function shop(): void {
 	global $db, $conf, $afile, $home, $user, $op;
 	$cwhere = catmids($conf['name'], 'p.cid');
 	$unum = user_news($user[3] ?? 0, $conf['shop']['num']);
-	$ncat = getVar('get', 'cat', 'num');
+	$cat = getVar('get', 'cat', 'num');
+	$ncat = $cat;
 	$params = [];
-	if (!$ncat && $op && $conf['shop']['rate']) {
-		$caton = 0;
-		$field = 'op='.$op.'&';
-		if ($op == 'best') {
-			$orderby = '(p.totalvotes/p.votes) DESC';
-			$ntitle = _BEST;
-		} else {
-			$orderby = '(p.count/(TO_DAYS(NOW()) - TO_DAYS(p.time))) DESC';
-			$ntitle = _POP;
-		}
+		if (!$ncat && $op && $conf['shop']['rate']) {
+			$caton = 0;
+			$field = 'op='.$op.'&';
+			if ($op == 'best') {
+				$orderby = 'IFNULL((p.totalvotes/NULLIF(p.votes,0)),0) DESC';
+				$ntitle = _BEST;
+			} else {
+				$orderby = 'IFNULL((p.count/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC';
+				$ntitle = _POP;
+			}
 		$order = "WHERE p.time <= NOW() AND p.active != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$onum = "time <= NOW() AND active != '0'";
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-		$orderby = ($op) ? (($op == 'best') ? '(p.totalvotes/p.votes) DESC' : '(p.count/(TO_DAYS(NOW()) - TO_DAYS(p.time))) DESC') : 'p.fix DESC, p.time DESC';
+			$orderby = ($op) ? (($op == 'best') ? 'IFNULL((p.totalvotes/NULLIF(p.votes,0)),0) DESC' : 'IFNULL((p.count/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC') : 'p.fix DESC, p.time DESC';
 		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (p.cid = :ncat1 OR p.assoc REGEXP :ncat_re OR c.parentid = :ncat2) AND p.time <= NOW() AND p.active != '0' ".$cwhere.' ORDER BY '.$orderby;
@@ -83,7 +85,7 @@ function shop(): void {
 	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.acomm, p.com, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
-		$width_tab = 100 / $conf['shop']['bascol'];
+		$width = 100 / $conf['shop']['bascol'];
 		$i = 1;
 		$cont .= '<table>';
 		while ([$id, $cid, $time, $stitle, $text, $bodytext, $ppreis, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->sql_fetchrow($result)) {
@@ -98,8 +100,8 @@ function shop(): void {
 			
 			#### In Bearbeitung
 			$uname = $uname ?? '';
-			$user_name = $user_name ?? '';
-			$post = isset($conf['shop']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
+			$nick = $nick ?? '';
+			$post = isset($conf['shop']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
 			$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 			####
 			
@@ -119,7 +121,7 @@ function shop(): void {
 			$cart = '<a OnClick="AjaxLoad(\'GET\', \'0\', \'kasse\', \'go=2&amp;op=add_kasse&amp;id='.$id.'\', \'\'); AddBasket(\''.$id.'\'); return false;" title="'._SCART.'" class="sl_shop_add">'._SCART.'</a>';
 			$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
 			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= '<tr>';
-			$cont .= '<td style="width: '.$width_tab.'%;">';
+			$cont .= '<td style="width: '.$width.'%;">';
 			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($text, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '', '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 			$cont .= '</td>';
 			if ($i % $conf['shop']['bascol'] == 0) $cont .= '</tr>';
@@ -192,7 +194,7 @@ function view(): void {
 		$seoimg = getImgText($text, '', false);
 		$seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
 		$seotime = $time;
-		$seoauthor = ($user_name ?? '') ?: (($uname ?? '') ?: $conf['sitename']);
+		$seoauthor = ($nick ?? '') ?: (($uname ?? '') ?: $conf['sitename']);
 		setHead([
 			'title' => $seotitle,
 			'ctitle' => $seoctitle,
@@ -214,8 +216,8 @@ function view(): void {
 		
 		#### In Bearbeitung
 		$uname = $uname ?? '';
-		$user_name = $user_name ?? '';
-		$post = isset($conf['shop']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
+		$nick = $nick ?? '';
+		$post = isset($conf['shop']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : (_ANONYM ?? ''))) : '';
 		$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 		####
 		
@@ -266,31 +268,34 @@ function kasse(): void {
 	global $db, $conf, $stop;
 	if (is_user()) {
 		$userinfo = getusrinfo();
-		$sender_id = $userinfo['user_id'];
-		$sender_login = $userinfo['user_name'];
-		$sender_email = getVar('post', 'sender_email', 'text', $userinfo['user_email']);
-		$sender_dom = getVar('post', 'sender_dom', 'url', $userinfo['user_website']);
+		$sid = $userinfo['user_id'];
+		$slogin = $userinfo['user_name'];
+		$smail = getVar('post', 'sender_email', 'text', $userinfo['user_email']);
+		$sdom = getVar('post', 'sender_dom', 'url', $userinfo['user_website']);
 	} else {
-		$sender_id = 0;
-		$sender_login = _ANONYM;
-		$sender_email = getVar('post', 'sender_email', 'text');
-		$sender_dom = getVar('post', 'sender_dom', 'url', 'http://');
+		$sid = 0;
+		$slogin = _ANONYM;
+		$smail = getVar('post', 'sender_email', 'text');
+		$sdom = getVar('post', 'sender_dom', 'url', 'http://');
 	}
-	$sender_name = getVar('post', 'sender_name', 'text');
-	$sender_adr = getVar('post', 'sender_adr', 'text');
-	$sender_tel = getVar('post', 'sender_tel', 'text');
-	$sender_message = getVar('post', 'sender_message', 'text');
+	$sname = getVar('post', 'sender_name', 'text');
+	$sadr = getVar('post', 'sender_adr', 'text');
+	$stel = getVar('post', 'sender_tel', 'text');
+	$smsg = getVar('post', 'sender_message', 'text');
 	$opi = getVar('post', 'opi', 'num');
-	$cookies = isset($_COOKIE['shop']) ? ((preg_match('/[^0-9,]/', base64_decode($_COOKIE['shop']))) ? '' : base64_decode($_COOKIE['shop'])) : '';
-	$id_partner = isset($_COOKIE['part']) ? intval($_COOKIE['part']) : '';
+	$shopCookie = filter_input(INPUT_COOKIE, 'shop', FILTER_DEFAULT) ?: '';
+	$cookieRaw = base64_decode($shopCookie, true);
+	$cookies = (is_string($cookieRaw) && !preg_match('/[^0-9,]/', $cookieRaw)) ? $cookieRaw : '';
+	$idPartner = filter_input(INPUT_COOKIE, 'part', FILTER_VALIDATE_INT);
+	$idPartner = ($idPartner !== false && $idPartner !== null) ? $idPartner : '';
 	$stop = (!$cookies) ? _SERRORP : '';
 	$form = '<form method="post" action="index.php?name='.$conf['name'].'"><table class="sl_table_form">'
-	.'<tr><td>'._C_PIN.':</td><td><input type="text" name="sender_name" value="'.$sender_name.'" class="sl_field '.$conf['style'].'" placeholder="'._C_PINB.'" required></td></tr>'
-	.'<tr><td>'._C_PIP.':</td><td><input type="text" name="sender_adr" value="'.$sender_adr.'" class="sl_field '.$conf['style'].'" placeholder="'._C_PIPB.'" required></td></tr>'
-	.'<tr><td>'._C_TEL.':</td><td><input type="text" name="sender_tel" value="'.$sender_tel.'" class="sl_field '.$conf['style'].'" placeholder="'._C_TELB.'" required></td></tr>'
-	.'<tr><td>'._C_MAIL.':</td><td><input type="email" name="sender_email" value="'.$sender_email.'" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'" required></td></tr>'
-	.'<tr><td>'._SDOM.':</td><td><input type="url" name="sender_dom" value="'.$sender_dom.'" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
-	.'<tr><td>'._C_MESSAGE.':</td><td><textarea name="sender_message" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._C_MESSAGE.'">'.$sender_message.'</textarea></td></tr>'
+	.'<tr><td>'._C_PIN.':</td><td><input type="text" name="sender_name" value="'.$sname.'" class="sl_field '.$conf['style'].'" placeholder="'._C_PINB.'" required></td></tr>'
+	.'<tr><td>'._C_PIP.':</td><td><input type="text" name="sender_adr" value="'.$sadr.'" class="sl_field '.$conf['style'].'" placeholder="'._C_PIPB.'" required></td></tr>'
+	.'<tr><td>'._C_TEL.':</td><td><input type="text" name="sender_tel" value="'.$stel.'" class="sl_field '.$conf['style'].'" placeholder="'._C_TELB.'" required></td></tr>'
+	.'<tr><td>'._C_MAIL.':</td><td><input type="email" name="sender_email" value="'.$smail.'" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'" required></td></tr>'
+	.'<tr><td>'._SDOM.':</td><td><input type="url" name="sender_dom" value="'.$sdom.'" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
+	.'<tr><td>'._C_MESSAGE.':</td><td><textarea name="sender_message" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._C_MESSAGE.'">'.$smsg.'</textarea></td></tr>'
 	.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="opi" value="1"><input type="hidden" name="op" value="kasse"><input type="submit" value="'._C_SEND.'" class="sl_but_blue"></td></tr></table></form>';
 	setHead(['title' => _C_TITLE]);
 	$cont = navigate(_C_TITLE);
@@ -299,11 +304,9 @@ function kasse(): void {
 		$cont .= setTemplateBasic('title', ['{%title%}' => _C_TITLE]).setTemplateBasic('open').$form.setTemplateBasic('close');
 	} elseif ($opi && $cookies) {
 		$stop = [];
-		checkemail($sender_email);
-		if (!$sender_name || !$sender_adr || !$sender_tel || !$sender_email) {
+		checkemail($smail);
+		if (!$sname || !$sadr || !$stel || !$smail) {
 			$stop[] = _ERROR_ALL;
-		} elseif ($stop) {
-			$stop[] = $stop;
 		}
 		if (!$stop) {
 			$preistotal = 0;
@@ -326,14 +329,14 @@ function kasse(): void {
 				$msg = $conf['sitename'].' - '._C_TITLE.'<br><br>';
 				$msg .= $pinfo.'<br><br>';
 				$msg .= '<b>'._PERSONALINFO.'</b><br><br>';
-				$msg .= _NICKNAME.': '.$sender_login.'<br>';
-				$msg .= _C_PIN.': '.$sender_name.'<br>';
-				$msg .= _C_PIP.': '.$sender_adr.'<br>';
-				$msg .= _C_TEL.': '.$sender_tel.'<br>';
-				$msg .= _C_MAIL.': '.$sender_email.'<br>';
-				$msg .= _SITEURL.': '.$sender_dom.'<br>';
-				$msg .= _C_MESSAGE.': '.$sender_message;
-				mail_send($amail, $sender_email, $subject, $msg, 1, 1);
+				$msg .= _NICKNAME.': '.$slogin.'<br>';
+				$msg .= _C_PIN.': '.$sname.'<br>';
+				$msg .= _C_PIP.': '.$sadr.'<br>';
+				$msg .= _C_TEL.': '.$stel.'<br>';
+				$msg .= _C_MAIL.': '.$smail.'<br>';
+				$msg .= _SITEURL.': '.$sdom.'<br>';
+				$msg .= _C_MESSAGE.': '.$smsg;
+				mail_send($amail, $smail, $subject, $msg, 1, 1);
 			}
 			if ($conf['shop']['mailuser']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
@@ -342,20 +345,20 @@ function kasse(): void {
 				$msg .= bb_decode($conf['shop']['sende'], $conf['name']).'<br><br>';
 				$msg .= $pinfo.'<br><br>';
 				$msg .= '<b>'._PERSONALINFO.'</b><br><br>';
-				$msg .= _NICKNAME.': '.$sender_login.'<br>';
-				$msg .= _C_PIN.': '.$sender_name.'<br>';
-				$msg .= _C_PIP.': '.$sender_adr.'<br>';
-				$msg .= _C_TEL.': '.$sender_tel.'<br>';
-				$msg .= _C_MAIL.': '.$sender_email.'<br>';
-				$msg .= _SDOM.': '.$sender_dom.'<br>';
-				$msg .= _C_MESSAGE.': '.$sender_message;
-				mail_send($sender_email, $amail, $subject, $msg, 0, 3);
+				$msg .= _NICKNAME.': '.$slogin.'<br>';
+				$msg .= _C_PIN.': '.$sname.'<br>';
+				$msg .= _C_PIP.': '.$sadr.'<br>';
+				$msg .= _C_TEL.': '.$stel.'<br>';
+				$msg .= _C_MAIL.': '.$smail.'<br>';
+				$msg .= _SDOM.': '.$sdom.'<br>';
+				$msg .= _C_MESSAGE.': '.$smsg;
+				mail_send($smail, $amail, $subject, $msg, 0, 3);
 			}
 			$massiv = explode(',', $cookies);
 			foreach ($massiv as $val) {
 				if ($val != '') {
-					$sender_regdate = time();
-					$db->sql_query('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :sender_id, :val, :id_partner, \'0\', :sender_name, :sender_adr, :sender_tel, :sender_email, :sender_dom, :sender_regdate, \'0\', \'0\', \'2\')', ['sender_id' => $sender_id, 'val' => $val, 'id_partner' => $id_partner, 'sender_name' => $sender_name, 'sender_adr' => $sender_adr, 'sender_tel' => $sender_tel, 'sender_email' => $sender_email, 'sender_dom' => $sender_dom, 'sender_regdate' => $sender_regdate]);
+					$sreg = time();
+					$db->sql_query('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :sender_id, :val, :id_partner, \'0\', :sender_name, :sender_adr, :sender_tel, :sender_email, :sender_dom, :sender_regdate, \'0\', \'0\', \'2\')', ['sender_id' => $sid, 'val' => $val, 'id_partner' => $idPartner, 'sender_name' => $sname, 'sender_adr' => $sadr, 'sender_tel' => $stel, 'sender_email' => $smail, 'sender_dom' => $sdom, 'sender_regdate' => $sreg]);
 				}
 			}
 			setcookie('shop', false);
@@ -384,15 +387,15 @@ function part(): void {
 function clients(): void {
 	global $db, $user, $conf;
 	if (is_user() && is_active('shop')) {
-		$user_id = intval($user[0]);
+		$uid = intval($user[0]);
 		setHead(['title' => _CLIENTINFO]);
 		$cont = navigate(_CLIENTINFO);
 		$cont .= navi();
-		$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_user = :user_id ORDER BY c.id ASC', ['user_id' => $user_id]);
+		$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_user = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
 		if ($db->sql_numrows($result) > 0) {
 			$cont .= setTemplateBasic('open');
 			$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._L_DATE.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
-			while([$cid, $cid_user, $cid_product, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $user_id, $user_name, $pid, $stitle, $ppreis] = $db->sql_fetchrow($result)) {
+			while([$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $ppreis] = $db->sql_fetchrow($result)) {
 				$website = ($cwebsite) ? '<br>'._SITE.': '.$cwebsite : '';
 				$note = ($cinfo) ? '<br>'._NOTE.' : '.$cinfo : '';
 				$cenddate = ($cenddate != '0') ? rest_time($cenddate) : _NO;
@@ -422,7 +425,7 @@ function rech(): void {
 		$id = getVar('get', 'id', 'num');
 		$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.text, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
 		if ($db->sql_numrows($result) > 0) {
-			[$cid, $cid_user, $cid_product, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $ppreis] = $db->sql_fetchrow($result);
+			[$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $ppreis] = $db->sql_fetchrow($result);
 			$cont = '<!doctype html>'."\n";
 			$cont .= '<html>'."\n";
 			$cont .= '<head>'."\n";
@@ -455,32 +458,32 @@ function partners(): void {
 	global $db, $conf, $stop;
 	if (is_user() && is_active('shop')) {
 		$userinfo = getusrinfo();
-		$user_id = intval($userinfo['user_id']);
-		$sender_email = $userinfo['user_email'];
-		$sender_dom = $userinfo['user_website'];
+		$uid = intval($userinfo['user_id']);
+		$smail = $userinfo['user_email'];
+		$sdom = $userinfo['user_website'];
 		setHead(['title' => _PARTNERINFO]);
 		$cont = navigate(_PARTNERINFO);
 		$cont .= navi();
-		$result = $db->sql_query('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id_user = :user_id', ['user_id' => $user_id]);
+		$result = $db->sql_query('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id_user = :user_id', ['user_id' => $uid]);
 		if ($db->sql_numrows($result) > 0) {
-			[$paid, $paid_user, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->sql_fetchrow($result);
+			[$paid, $puid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->sql_fetchrow($result);
 			if ($paactive == 2) {
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PARTNERADD_W]);
 			} elseif ($paactive == 0) {
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _PARTNER_AUS]);
 			} else {
-				$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_partner = :user_id AND c.active != 2 ORDER BY c.id ASC', ['user_id' => $user_id]);
+				$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_partner = :user_id AND c.active != 2 ORDER BY c.id ASC', ['user_id' => $uid]);
 				$partsum = $partsumges = $a = 0;
 				if ($db->sql_numrows($result) > 0) {
 					$content = '';
-					while([$cid, $cid_user, $cid_product, $cid_partner, $cpartner_proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuser_id, $user_name, $pid, $stitle, $ppreis] = $db->sql_fetchrow($result)) {
-						$partsum = $ppreis / 100 * $cpartner_proz;
+					while([$cid, $cuid, $cprod, $cpart, $proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $ppreis] = $db->sql_fetchrow($result)) {
+						$partsum = $ppreis / 100 * $proz;
 						$partsumges += $partsum;
 						$content .= '<tr id="'.$cid.'">'
 						.'<td><a href="#'.$cid.'" title="'.$cid.'" class="sl_pnum">'.$cid.'</a></td>'
-						.'<td>'.user_info($user_name).'</td>'
+						.'<td>'.user_info($nick).'</td>'
 						.'<td>'.title_tip(_PREIS.': '.$ppreis.' '.$conf['shop']['valute'].'<br>'._DATE.' : '.date(_TIMESTRING, $cregdate)).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
-						.'<td>'.$cpartner_proz.' %</td>'
+						.'<td>'.$proz.' %</td>'
 						.'<td>'.$partsum.' '.$conf['shop']['valute'].'</td></tr>';
 						$a++;
 					}
@@ -493,8 +496,8 @@ function partners(): void {
 				.'<tr><td>'.$a.'</td><td>'.$pawebmoney.'</td><td>'.$papaypal.'</td>'
 				.'<td>'.$partsumges.' '.$conf['shop']['valute'].'</td><td>'.$parest.' '.$conf['shop']['valute'].'</td><td>'.$pabek.' '.$conf['shop']['valute'].'</td></tr></tbody></table>';
 				$cont .= setTemplateBasic('close');
-				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $user_id, $conf['shop']['partlink'])]);
-				$cont .= setTemplateBasic('open').bb_decode(str_replace('[id]', $user_id, $conf['shop']['partinfo2']), $conf['name']).setTemplateBasic('close');
+				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
+				$cont .= setTemplateBasic('open').bb_decode(str_replace('[id]', $uid, $conf['shop']['partinfo2']), $conf['name']).setTemplateBasic('close');
 			}
 		} else {
 			if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
@@ -505,11 +508,11 @@ function partners(): void {
 			.'<tr><td>'._C_PIN.':</td><td><input type="text" name="paname" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_PINB.'" required></td></tr>'
 			.'<tr><td>'._C_PIP.':</td><td><input type="text" name="paadres" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_PIPB.'" required></td></tr>'
 			.'<tr><td>'._C_TEL.':</td><td><input type="text" name="paphone" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_TELB.'" required></td></tr>'
-			.'<tr><td>'._EMAIL.':</td><td><input type="email" value="'.$sender_email.'" name="paemail" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'" required></td></tr>'
-			.'<tr><td>'._SITE.':</td><td><input type="url" value="'.$sender_dom.'" name="pawebsite" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
+			.'<tr><td>'._EMAIL.':</td><td><input type="email" value="'.$smail.'" name="paemail" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'" required></td></tr>'
+			.'<tr><td>'._SITE.':</td><td><input type="url" value="'.$sdom.'" name="pawebsite" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
 			.'<tr><td>'._WEBMONEY.':</td><td><input type="text" name="pawebmoney" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_WEBMONEYB.'"></td></tr>'
 			.'<tr><td>'._PAYPAL.':</td><td><input type="text" name="papaypal" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'"></td></tr>'
-			.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="paid_user" value="'.$user_id.'"><input type="hidden" name="op" value="partners_send"><input type="submit" value="'._PARTNERSEND.'" class="sl_but_blue"></td></tr></table></form>';
+			.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="paid_user" value="'.$uid.'"><input type="hidden" name="op" value="partners_send"><input type="submit" value="'._PARTNERSEND.'" class="sl_but_blue"></td></tr></table></form>';
 			$cont .= setTemplateBasic('close');
 		}
 		echo $cont;
@@ -522,7 +525,7 @@ function partners(): void {
 function partners_send(): void {
 	global $db, $user, $conf, $stop;
 	if (is_user() && is_active('shop')) {
-		$paid_user = getVar('post', 'paid_user', 'num');
+		$puid = getVar('post', 'paid_user', 'num');
 		$paname = getVar('post', 'paname', 'text');
 		$paadres = getVar('post', 'paadres', 'text');
 		$paphone = getVar('post', 'paphone', 'text');
@@ -533,7 +536,7 @@ function partners_send(): void {
 		checkemail($paemail);
 		if (!$paname || !$paadres || !$paphone) $stop[] = _ERROR_ALL;
 		if (!$stop) {
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :paid_user, :paname, :paadres, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['paid_user' => $paid_user, 'paname' => $paname, 'paadres' => $paadres, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
+			$db->sql_query('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :paid_user, :paname, :paadres, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['paid_user' => $puid, 'paname' => $paname, 'paadres' => $paadres, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
 			setRedirect('index.php?name='.$conf['name'].'&op=partners');
 		} else {
 			partners();
@@ -554,3 +557,5 @@ switch($op) {
 	case 'partners': partners(); break;
 	case 'partners_send': partners_send(); break;
 }
+
+

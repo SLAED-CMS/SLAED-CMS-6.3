@@ -9,7 +9,6 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 get_lang($conf['name']);
-$confrs = $conf['rss'] ?? [];
 
 function info(): void {
     global $db, $conf;

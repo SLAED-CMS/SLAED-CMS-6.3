@@ -19,31 +19,31 @@ function navigate(string $title, string|int $cat=''): string {
 
 function mwhois(): void {
 	global $db, $afile, $user, $conf, $home, $locale;
-	global $domain_whois, $ext, $nomatch, $server, $domain_option;
-	$domain_licens = getVar('req', 'domain_licens', 'word');
+	global $domainwhois, $ext, $nomatch, $server, $domainopt;
+	$domainlicens = getVar('req', 'domain_licens', 'word');
 	
-	$licens_option = '<fieldset><legend class="sl_red">'._WHOIS_LICENS.'</legend>'
+	$licensopt = '<fieldset><legend class="sl_red">'._WHOIS_LICENS.'</legend>'
 	.'<form method="post" action="index.php?name='.$conf['name'].'">'
-	.'<table><tr><td><input type="text" name="domain_licens" value="'.$domain_licens.'" class="sl_field '.$conf['style'].'"></td><td><input type="hidden" name="option" value="licens"><input type="submit" value="'._WHOIS_PR.'" class="sl_but_blue"></td></tr></table>'
+	.'<table><tr><td><input type="text" name="domain_licens" value="'.$domainlicens.'" class="sl_field '.$conf['style'].'"></td><td><input type="hidden" name="option" value="licens"><input type="submit" value="'._WHOIS_PR.'" class="sl_but_blue"></td></tr></table>'
 	.'</form>'
 	.'</fieldset>';
 	
-	$domain_whois = getVar('req', 'domain_whois', 'word');
+	$domainwhois = getVar('req', 'domain_whois', 'word');
 	$ext = getVar('req', 'ext', 'word');
 	
-	$domain_option = '<fieldset><legend class="sl_green">'._WHOIS_DOM.'</legend>'
+	$domainopt = '<fieldset><legend class="sl_green">'._WHOIS_DOM.'</legend>'
 	.'<form method="post" action="index.php?name='.$conf['name'].'">'
-	.'<table><tr><td><input type="text" name="domain_whois" value="'.$domain_whois.'" class="sl_field '.$conf['style'].'"></td><td><select name="ext" class="sl_field">';
+	.'<table><tr><td><input type="text" name="domain_whois" value="'.$domainwhois.'" class="sl_field '.$conf['style'].'"></td><td><select name="ext" class="sl_field">';
 	
 	$exmas = ['ru', 'com', 'net', 'org', 'biz', 'info', 'name', 'us', 'de', 'in', 'co.in', 'firm.in', 'gen.in', 'ind.in', 'net.in', 'org.in', 'com.ru', 'net.ru', 'org.ru', 'pp.ru', 'spb.ru', 'msk.ru', 'ws', 'cn'];
 	foreach ($exmas as $val) {
 		if ($val != '') {
 			$sel = ($val == $ext) ? 'selected' : '';
-			$domain_option .= '<option value="'.$val.'" '.$sel.'>.'.$val.'</option>';
+			$domainopt .= '<option value="'.$val.'" '.$sel.'>.'.$val.'</option>';
 		}
 	}
 	
-	$domain_option .= '</select></td><td><input type="hidden" name="option" value="check"><input type="submit" value="'._WHOIS_PR.'" class="sl_but_blue"></td></tr></table>'
+	$domainopt .= '</select></td><td><input type="hidden" name="option" value="check"><input type="submit" value="'._WHOIS_PR.'" class="sl_but_blue"></td></tr></table>'
 	.'</form>'
 	.'</fieldset>';
 
@@ -77,47 +77,48 @@ function mwhois(): void {
 	setHead(['title' => _WHOIS_LIC]);
 	$cont = navigate(_WHOIS_LIC);
 	$cont .= setTemplateBasic('open');
-	$cont .= $licens_option;
-	if ($option == 'licens' && !namecheck($domain_licens)) {
+	$cont .= $licensopt;
+	if ($option == 'licens' && !namecheck($domainlicens)) {
 		$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active != \'2\'');
-		while ([$website] = $db->sql_fetchrow($result)) $cwebsite[] = $website;
-		$cwebsite = implode(',', $cwebsite);
-		$cmassiv = explode(',', $cwebsite);
-		$wlicens = false;
-		foreach ($cmassiv as $val) {
-			if ($val != '' && ($val == 'http://'.strtolower($domain_licens) || $val == 'http://www.'.strtolower($domain_licens))) {
-				$wlicens = true;
+		$list = [];
+		while ([$website] = $db->sql_fetchrow($result)) $list[] = $website;
+		$list = implode(',', $list);
+		$mass = explode(',', $list);
+		$licens = false;
+		foreach ($mass as $val) {
+			if ($val != '' && ($val == 'http://'.strtolower($domainlicens) || $val == 'http://www.'.strtolower($domainlicens))) {
+				$licens = true;
 				break;
 			}
 		}
 		$cont .= '<fieldset class="sl_center"><legend class="sl_blue">'._WHOIS_SUCH.'</legend>';
-		if ($wlicens) {
-			$cont .= '<span class="sl_green">'._DOMAIN.' Â«'.$domain_licens.'Â» '._WHOIS_ISL.'!</span>';
+		if ($licens) {
+			$cont .= '<span class="sl_green">'._DOMAIN.' Â«'.$domainlicens.'Â» '._WHOIS_ISL.'!</span>';
 		} else {
-			$cont .= '<span class="sl_red">'._DOMAIN.' Â«'.$domain_licens.'Â» '._WHOIS_NOL.'!</span>';
-			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? '<form method="post" action="index.php?name='.$conf['name'].'"><input type="hidden" name="op" value="add"><input type="hidden" name="domain" value="'.$domain_licens.'"><input type="submit" value="'._WHOIS_LICENS_SEND.'" class="sl_but_blue"></form>' : '';
+			$cont .= '<span class="sl_red">'._DOMAIN.' Â«'.$domainlicens.'Â» '._WHOIS_NOL.'!</span>';
+			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? '<form method="post" action="index.php?name='.$conf['name'].'"><input type="hidden" name="op" value="add"><input type="hidden" name="domain" value="'.$domainlicens.'"><input type="submit" value="'._WHOIS_LICENS_SEND.'" class="sl_but_blue"></form>' : '';
 		}
 		$cont .= '</fieldset>';
 	} elseif ($option == 'licens') {
-		$cont .= print_results(namecheck($domain_licens), 1);
+		$cont .= printresults(namecheck($domainlicens), 1);
 	}
 	$cont .= setTemplateBasic('close');
 	$cont .= setTemplateBasic('open');
 	if ($option != 'check' && $option != 'whois') {
-		$cont .= $domain_option._WHOIS_TEXT;
+		$cont .= $domainopt._WHOIS_TEXT;
 	} else {
-		if (!namecheck($domain_whois)) {
-			if ($serverdefs[$ext]) {
+		if (!namecheck($domainwhois)) {
+			if (isset($serverdefs[$ext])) {
 				$server = $serverdefs[$ext][0];
 				$nomatch = $serverdefs[$ext][1];
 				if ($option=='check') {
-					$layout = check_domain($domain_whois,$ext);
-					$cont .= print_results($layout, 0);
+					$layout = checkdomain($domainwhois,$ext);
+					$cont .= printresults($layout, 0);
 				}
-				if ($option=='whois') $cont .= whois($domain_whois,$ext);
+				if ($option=='whois') $cont .= whois($domainwhois,$ext);
 			}
 		} else {
-			$cont .= print_results(namecheck($domain_whois), 0);
+			$cont .= printresults(namecheck($domainwhois), 0);
 		}
 	}
 	$cont .= setTemplateBasic('close');
@@ -189,7 +190,7 @@ function send(): void {
 	}
 }
 
-function check_domain(string $domain_whois, string $ext): int {
+function checkdomain(string $domainwhois, string $ext): int {
 	global $nomatch, $server;
 	$output = '';
 	set_error_handler(function() { return true; }, E_WARNING);
@@ -198,19 +199,19 @@ function check_domain(string $domain_whois, string $ext): int {
 	if ($sc === false) {
 		return 2;
 	}
-	fputs($sc, $domain_whois.'.'.$ext."\n");
+	fputs($sc, $domainwhois.'.'.$ext."\n");
 	while(!feof($sc)) {
 		$output .= fgets($sc, 128);
 	}
 	fclose($sc);
-	if (stripos($nomatch, $output)) {
+	if (stripos($output, $nomatch) !== false) {
 		return 0;
 	} else {
 		return 1;
 	}
 }
 
-function whois(string $domain_whois, string $ext): string {
+function whois(string $domainwhois, string $ext): string {
 	global $server;
 	$cont = '';
 	set_error_handler(function() { return true; }, E_WARNING);
@@ -219,14 +220,14 @@ function whois(string $domain_whois, string $ext): string {
 	if ($sc === false) {
 		$cont .= 'There is a temporary service disruption Please again try later';
 		$layout = 2;
-		$cont .= print_results($layout, 0);
+		$cont .= printresults($layout, 0);
 		exit;
 	}
 	if ($ext=='com' || $ext=='net') {
-		fputs($sc, $domain_whois.'.'.$ext."\n");
+		fputs($sc, $domainwhois.'.'.$ext."\n");
 		while(!feof($sc)) {
 			$temp = fgets($sc, 128);
-			if (stripos('Whois Server:', $temp)) {
+			if (stripos($temp, 'Whois Server:') !== false) {
 				$server = str_replace('Whois Server: ', '', $temp);
 				$server = trim($server);
 			}
@@ -237,32 +238,32 @@ function whois(string $domain_whois, string $ext): string {
 		restore_error_handler();
 		if ($sc === false) {
 			$layout = 2;
-			$cont .= print_results($layout, 0);
+			$cont .= printresults($layout, 0);
 			exit;
 		}
 	}
 	$output = '';
-	fputs($sc, $domain_whois.'.'.$ext."\n");
+	fputs($sc, $domainwhois.'.'.$ext."\n");
 	while(!feof($sc)) {
 		$output .= fgets($sc, 128);
 	}
 	fclose($sc);
-	$cont .= print_whois($output);
+	$cont .= printwhois($output);
 	return $cont;
 }
 
-function print_results(int|string|null $layout, int $id): string {
-	global $domain_whois, $ext, $server, $domain_option, $conf;
+function printresults(int|string|null $layout, int $id): string {
+	global $domainwhois, $ext, $server, $domainopt, $conf;
 	$cont = '';
-	if (!$id) $cont .= $domain_option;
+	if (!$id) $cont .= $domainopt;
 	$cont .= '<fieldset class="sl_center"><legend class="sl_blue">'._WHOIS_SUCH.'</legend>';
 	if ($layout=='0') {
-		$cont .= '<span class="sl_green">'._DOMAIN.' Â«'.$domain_whois.'.'.$ext.'Â» '._WHOIS_FREI.'!</span>';
+		$cont .= '<span class="sl_green">'._DOMAIN.' Â«'.$domainwhois.'.'.$ext.'Â» '._WHOIS_FREI.'!</span>';
 	} elseif($layout=='1') {
-		$cont .= '<span class="sl_red">'._DOMAIN.' Â«'.$domain_whois.'.'.$ext.'Â» '._WHOIS_B.'!</span>'
+		$cont .= '<span class="sl_red">'._DOMAIN.' Â«'.$domainwhois.'.'.$ext.'Â» '._WHOIS_B.'!</span>'
 		.'<form method="post" action="index.php?name='.$conf['name'].'">'
 		.'<input type="hidden" name="option" value="whois">'
-		.'<input type="hidden" name="domain_whois" value="'.$domain_whois.'">'
+		.'<input type="hidden" name="domain_whois" value="'.$domainwhois.'">'
 		.'<input type="hidden" name="ext" value="'.$ext.'">'
 		.'<input type="submit" value="'._WHOIS_INF_US.'" class="sl_but_blue">'
 		.'</form>';
@@ -275,10 +276,10 @@ function print_results(int|string|null $layout, int $id): string {
 	return $cont;
 }
 
-function print_whois(string|array $output): string {
-	global $domain_whois, $ext, $domain_option;
+function printwhois(string|array $output): string {
+	global $domainwhois, $ext, $domainopt;
 	$cont = '<table><tr><td>'
-	.$domain_option
+	.$domainopt
 	.'<fieldset><legend class="sl_blue">'._WHOIS_INF_US.'</legend>'
 	.'<table><tr><td>';
 	$output= explode("\n",$output);
@@ -290,12 +291,12 @@ function print_whois(string|array $output): string {
 	return $cont;
 }
 
-function namecheck(string $domain_whois): string|null {
-	if ($domain_whois == '') return _WHOIS_FEL.'!';
-	if (strlen($domain_whois) < 3) return _WHOIS_FEL1.'!';
-	if (strlen($domain_whois) > 57) return _WHOIS_FEL2.'!';
-	if (preg_match('#^-|-$#', $domain_whois)) return _WHOIS_FEL3.'!';
-	if (preg_match('#[^a-zA-Z0-9._-]#', $domain_whois)) return _WHOIS_FEL4.'!';
+function namecheck(string $domainwhois): string|null {
+	if ($domainwhois == '') return _WHOIS_FEL.'!';
+	if (strlen($domainwhois) < 3) return _WHOIS_FEL1.'!';
+	if (strlen($domainwhois) > 57) return _WHOIS_FEL2.'!';
+	if (preg_match('#^-|-$#', $domainwhois)) return _WHOIS_FEL3.'!';
+	if (preg_match('#[^a-zA-Z0-9._-]#', $domainwhois)) return _WHOIS_FEL4.'!';
 	return null;
 }
 
@@ -312,3 +313,4 @@ switch($op) {
 	send();
 	break;
 }
+

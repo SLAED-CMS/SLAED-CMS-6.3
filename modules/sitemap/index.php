@@ -14,8 +14,9 @@ function sitemap(): void {
     $path = SITEMAP_DIR.'/sitemap.txt';
     setHead(['title' => _SITEMAP]);
     $cont = setTemplateBasic('title', ['{%title%}' => _SITEMAP]);
-    if (file_exists($path)) {
-        $cont .= setTemplateBasic('open').file_get_contents($path).setTemplateBasic('close');
+    if (is_readable($path)) {
+        $map = file_get_contents($path);
+        $cont .= setTemplateBasic('open').($map !== false ? $map : '').setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }

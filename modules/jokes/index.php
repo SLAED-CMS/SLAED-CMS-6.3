@@ -12,7 +12,8 @@ get_lang($conf['name']);
 
 function navigate(string $title, string|int $cat=''): string {
 	global $conf;
-	$ncat = getVar('get', 'cat', 'num');
+	$cat = getVar('get', 'cat', 'num');
+	$ncat = $cat;
 	$cpar = $ncat ? ['cat' => $ncat] : [];
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._JOKES.'" class="sl_but_navi">'._HOME.'</a>';
 	$best = ($conf['jokes']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
@@ -27,23 +28,24 @@ function jokes(): void {
 	$cwhere = catmids($conf['name'], 'j.cat');
 	$word = getVar('get', 'word', 'word');
 	$unum = user_news($user[3] ?? 0, $conf['jokes']['num']);
-	$ncat = getVar('get', 'cat', 'num');
+	$cat = getVar('get', 'cat', 'num');
+	$ncat = $cat;
 	$params = [];
 	if (!$ncat && $op && $conf['jokes']['rate']) {
 		$caton = 0;
 		$field = 'op='.$op.'&';
 		if ($op == 'best') {
-			$orderby = '(j.rating/j.ratingtot) DESC';
+			$orderby = 'IFNULL((j.rating/NULLIF(j.ratingtot,0)),0) DESC';
 			$ntitle = _BEST;
 		} else {
-			$orderby = '(j.ratingtot/(TO_DAYS(NOW()) - TO_DAYS(j.date))) DESC';
+			$orderby = 'IFNULL((j.ratingtot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.date)),0)),0) DESC';
 			$ntitle = _POP;
 		}
 		$order = "WHERE j.date <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$onum = "date <= NOW() AND status != '0'";
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-		$orderby = ($op) ? (($op == 'best') ? '(j.rating/j.ratingtot) DESC' : '(j.ratingtot/(TO_DAYS(NOW()) - TO_DAYS(j.date))) DESC') : 'j.date DESC';
+		$orderby = ($op) ? (($op == 'best') ? 'IFNULL((j.rating/NULLIF(j.ratingtot,0)),0) DESC' : 'IFNULL((j.ratingtot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.date)),0)),0) DESC') : 'j.date DESC';
 		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (j.cat = :ncat1 OR c.parentid = :ncat2) AND j.date <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
@@ -80,9 +82,9 @@ function jokes(): void {
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, j.rating, j.ratingtot, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
-		while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result)) {
+		while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result)) {
 			$title = '<a href="#'.$id.'" title="'.$jtitle.'">'.search_color($jtitle, $word).'</a> '.new_graphic($time);
-			$post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM);
+			$post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
 			$post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
 			$date = ($conf['jokes']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -177,3 +179,4 @@ switch($op) {
 	send();
 	break;
 }
+

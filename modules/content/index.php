@@ -12,11 +12,14 @@ if (!defined('MODULE_FILE')) {
 get_lang($conf['name']);
 
 function content(): void {
-	global $db, $afile, $conf, $confcn;
+	global $db, $afile, $conf;
+	$limit = (int)($conf['content']['num'] ?? ($conf['content']['num'] ?? 10));
+	$nump = (int)($conf['content']['nump'] ?? ($conf['content']['nump'] ?? 5));
+	if ($limit < 1) $limit = 10;
+	if ($nump < 1) $nump = 5;
 	setHead(['title' => _CONTENT]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _CONTENT]);
 	$num = getVar('get', 'num', 'num', '1');
-	$limit = (int) $confcn['num'];
 	$offset = ($num - 1) * $limit;
 	$result = $db->sql_query('SELECT id, title, text, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
 	if ($db->sql_numrows($result) > 0) {
@@ -31,7 +34,7 @@ function content(): void {
 			.'<td>'.$edit.'</td></tr>';
 		}
 		$cont .= '</tbody></table>';
-		$cont .= setArticleNumbers('pagenum', $conf['name'], $confcn['num'], '', 'id', '_content', '', '', $confcn['nump']);
+		$cont .= setArticleNumbers('pagenum', $conf['name'], $limit, '', 'id', '_content', '', '', $nump);
 		$cont .= setTemplateBasic('close');
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);

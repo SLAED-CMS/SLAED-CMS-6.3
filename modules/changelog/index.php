@@ -10,7 +10,6 @@ if (!defined('MODULE_FILE')) {
 }
 
 get_lang($conf['name']);
-$conflog = $conf['changelog'] ?? [];
 
 const CHLOG_GH_API_TIMEOUT = 10;
 const CHLOG_GH_API_CONNECT_TIMEOUT = 5;
@@ -57,9 +56,9 @@ function chlogSetCache(string $key, $data, string $url = '', string $etag = '', 
 
     $file = CACHE_DIR.'/'.sha1($key).'.json';
     $ttl = CHLOG_DEFAULT_CACHE_TTL;
-    global $conflog;
-    if (isset($conflog['cachettl'])) {
-        $ttl = (int) $conflog['cachettl'];
+    global $conf;
+    if (isset($conf['changelog']['cachettl'])) {
+        $ttl = (int) $conf['changelog']['cachettl'];
     }
 
     $cache = [
@@ -469,7 +468,7 @@ function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perp
 }
 
 function changelog(): void {
-    global $conf, $conflog;
+    global $conf;
 
     setHead();
 
@@ -491,17 +490,17 @@ function changelog(): void {
         'until' => $dateto
     ];
 
-    $source = $conflog['source'] ?? 'local';
-    $limit = chlogClamp((int) ($conflog['limit'] ?? 50), 10, 500);
-    $perpage = chlogClamp((int) ($conflog['perpage'] ?? 10), 1, 50);
+    $source = $conf['changelog']['source'] ?? 'local';
+    $limit = chlogClamp((int) ($conf['changelog']['limit'] ?? 50), 10, 500);
+    $perpage = chlogClamp((int) ($conf['changelog']['perpage'] ?? 10), 1, 50);
     $commits = [];
     $totcount = 0;
     $error = '';
 
     if ($source === 'github') {
-        $ghowner = trim($conflog['ghowner'] ?? '');
-        $ghrepo = trim($conflog['ghrepo'] ?? '');
-        $ghtoken = trim($conflog['ghtoken'] ?? '');
+        $ghowner = trim($conf['changelog']['ghowner'] ?? '');
+        $ghrepo = trim($conf['changelog']['ghrepo'] ?? '');
+        $ghtoken = trim($conf['changelog']['ghtoken'] ?? '');
 
         if ($ghowner === '' || $ghrepo === '') {
             echo setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _CHLOG_ERR_GH_CONF]);
@@ -539,7 +538,7 @@ function changelog(): void {
     $offset = ($page - 1) * $perpage;
     $compg = array_slice($commits, $offset, $perpage);
 
-    if (!empty($conflog['grpdate'])) {
+    if (!empty($conf['changelog']['grpdate'])) {
         $compg = chlogGrpDate($compg);
     }
 
@@ -555,7 +554,7 @@ function changelog(): void {
         '{%totcom%}' => $totcom,
         '{%page%}' => $page,
         '{%totpage%}' => $totpage,
-        '{%commits%}' => chlogRenderCommits($compg, $conflog),
+        '{%commits%}' => chlogRenderCommits($compg),
         '{%paging%}' => chlogRenderPaging($conf['name'], $totcom, $totpage, $perpage, $page, $filters),
         '{%txt_filter_heading%}' => _CHLOG_FILTER,
         '{%txt_search_label%}' => _CHLOG_SEARCH,

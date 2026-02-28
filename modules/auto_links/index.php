@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 get_lang($conf['name']);
 
-function navigate(string $title, string $cat = ''): string {
+function navigate(string $title): string {
     global $conf;
     $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._A_LINKS.'" class="sl_but_navi">'._HOME.'</a>';
     $new = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'new']).'" title="'._NEW.'" class="sl_but_navi">'._NEW.'</a>';
@@ -68,7 +68,10 @@ function view(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num');
     if ($id) {
-        [$link]= $db->sql_fetchrow($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
+        [$link] = $db->sql_fetchrow($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
+        if (!$link) {
+            setRedirect('index.php?name='.$conf['name']);
+        }
         $db->sql_query('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
         update_points(4);
         setRedirect($link);
@@ -81,32 +84,32 @@ function add(): void {
     global $stop, $conf;
     if (is_user()) {
         $userinfo = getusrinfo();
-        $post_adminemail = getVar('post', 'adminemail', 'text');
-        $authormail = ($post_adminemail) ? text_filter($post_adminemail) : $userinfo['user_email'];
-        $post_sitelink = getVar('post', 'sitelink', 'text');
-        $authorurl = ($post_sitelink) ? url_filter($post_sitelink) : $userinfo['user_website'];
+        $mail = getVar('post', 'mail', 'text');
+        $mail = ($mail) ? text_filter($mail) : $userinfo['user_email'];
+        $site = getVar('post', 'site', 'url');
+        $site = ($site) ? $site : $userinfo['user_website'];
     } else {
-        $post_adminemail = getVar('post', 'adminemail', 'text');
-        $authormail = ($post_adminemail) ? text_filter($post_adminemail) : '';
-        $post_sitelink = getVar('post', 'sitelink', 'text');
-        $authorurl = ($post_sitelink) ? url_filter($post_sitelink) : 'http://';
+        $mail = getVar('post', 'mail', 'text');
+        $mail = ($mail) ? text_filter($mail) : '';
+        $site = getVar('post', 'site', 'url', 'http://');
+        $site = ($site) ? $site : 'http://';
     }
-    $post_sitename = getVar('post', 'sitename', 'text');
-    $sitename = ($post_sitename) ? save_text($post_sitename, 1) : '';
-    $post_description = getVar('post', 'description', 'text');
-    $description = ($post_description) ? save_text($post_description) : '';
+    $name = getVar('post', 'name', 'text');
+    $name = ($name) ? save_text($name, 1) : '';
+    $desc = getVar('post', 'desc', 'text');
+    $desc = ($desc) ? save_text($desc) : '';
     
     setHead(['title' => _ADD]);
     $cont = navigate(_ADD);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-    if ($description) $cont .= preview($sitename, $description, '', '', $conf['name']);
+    if ($desc) $cont .= preview($name, $desc, '', '', $conf['name']);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_I]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._SITENAME.':</td><td><input type="text" name="sitename" value="'.$sitename.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SITENAME.'" required></td></tr>'
-    .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="adminemail" value="'.$authormail.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_E.'" required></td></tr>'
-    .'<tr><td>'._A_LINKS_TEXT.':</td><td>'.textarea('1', 'description', $description, $conf['name'], '5', _A_LINKS_TEXT, '1').'</td></tr>'
-    .'<tr><td>'._A_LINKS_L.':</td><td><input type="url" name="sitelink" value="'.$authorurl.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_L.'" required></td></tr>'
+    .'<tr><td>'._SITENAME.':</td><td><input type="text" name="name" value="'.$name.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SITENAME.'" required></td></tr>'
+    .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_E.'" required></td></tr>'
+    .'<tr><td>'._A_LINKS_TEXT.':</td><td>'.textarea('1', 'desc', $desc, $conf['name'], '5', _A_LINKS_TEXT, '1').'</td></tr>'
+    .'<tr><td>'._A_LINKS_L.':</td><td><input type="url" name="site" value="'.$site.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_L.'" required></td></tr>'
     .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -115,32 +118,35 @@ function add(): void {
 
 function send(): void {
     global $db, $user, $stop, $conf;
-    $sitename = getVar('post', 'sitename', 'text');
-    $description = getVar('post', 'description', 'text');
-    $sitelink = url_filter(getVar('post', 'sitelink', 'text'));
-    $adminemail = text_filter(getVar('post', 'adminemail', 'text'));
+    $name = getVar('post', 'name', 'text');
+    $desc = getVar('post', 'desc', 'text');
+    $site = getVar('post', 'site', 'url');
+    $mail = getVar('post', 'mail', 'text');
     $stop = [];
-    if (!$sitename) $stop[] = _CERROR10;
-    if (!$description) $stop[] = _CERROR11;
-    if (!$sitelink) $stop[] = _CERROR4;
-    checkemail($adminemail);
+    if (!$name) $stop[] = _CERROR10;
+    if (!$desc) $stop[] = _CERROR11;
+    if (!$site) $stop[] = _CERROR4;
+    checkemail($mail);
     if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-    if ($db->sql_numrows($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE link = :sitelink', ['sitelink' => $sitelink])) > 0) $stop[] = _LINKEXIST;
+    if ($db->sql_numrows($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE link = :sitelink', ['sitelink' => $site])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         setHead(['title' => _ADD]);
         $cont = navigate(_ADD);
-        $db->sql_query('INSERT INTO '.PREFIX_DB.'_auto_links VALUES (NULL, :sitename, :description, :sitelink, :adminemail, 0, 0, NOW())', ['sitename' => $sitename, 'description' => $description, 'sitelink' => $sitelink, 'adminemail' => $adminemail]);
+        $db->sql_query('INSERT INTO '.PREFIX_DB.'_auto_links VALUES (NULL, :sitename, :description, :sitelink, :adminemail, 0, 0, NOW())', ['sitename' => $name, 'description' => $desc, 'sitelink' => $site, 'adminemail' => $mail]);
         $puname = (is_user()) ? $user[1] : '';
         addmail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_OK]);
         $cont .= setTemplateBasic('open');
-        $my_link = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['slogan'].'&quot;>'.$conf['sitename'].'</a>';
+        $code = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['slogan'].'&quot;>'.$conf['sitename'].'</a>';
         $cont .= '<table class="sl_table_form">'
-        .'<tr><td>'._A_LINKS_M.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$my_link.'</textarea></td></tr>';
+        .'<tr><td>'._A_LINKS_M.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$code.'</textarea></td></tr>';
         if ($conf['auto_links']['img']) {
-            [$imgwidth, $imgheight] = getimagesize($conf['homeurl'].'/'.img_find('banners/'.$conf['auto_links']['img']));
-            $my_img_link = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['sitename'].' - '.$conf['slogan'].'&quot;><img src=&quot;'.$conf['homeurl'].'/'.img_find('banners/'.$conf['auto_links']['img']).'&quot; alt=&quot;'.$conf['sitename'].' - '.$conf['slogan'].'&quot; style=&quot;border: 0; width: '.$imgwidth.'; height: '.$imgheight.';&quot;></a>';
-            $cont .= '<tr><td>'._A_LINKS_IMG.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$my_img_link.'</textarea></td></tr>';
+            $banner = img_find('banners/'.$conf['auto_links']['img']);
+            if ($banner && file_exists($banner)) {
+                [$imgwidth, $imgheight] = getimagesize($banner);
+                $code = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['sitename'].' - '.$conf['slogan'].'&quot;><img src=&quot;'.$conf['homeurl'].'/'.$banner.'&quot; alt=&quot;'.$conf['sitename'].' - '.$conf['slogan'].'&quot; style=&quot;border: 0; width: '.$imgwidth.'; height: '.$imgheight.';&quot;></a>';
+                $cont .= '<tr><td>'._A_LINKS_IMG.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$code.'</textarea></td></tr>';
+            }
         }
         $cont .= '</table>';
         $cont .= setTemplateBasic('close');

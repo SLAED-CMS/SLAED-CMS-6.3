@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2022 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -92,12 +92,17 @@ function main(): void {
             <ul id="slaed_sites">';
             $path = 'uploads/screens';
             $path2 = 'uploads/screens/thumb';
-            $dir = opendir($path2);
-            while (false !== ($file = readdir($dir))) {
-                if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($path2.'/'.$file)) $screens[] = $file;
+            $screens = [];
+            if (is_dir($path2)) {
+                $dir = opendir($path2);
+                if ($dir !== false) {
+                    while (false !== ($file = readdir($dir))) {
+                        if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($path2.'/'.$file)) $screens[] = $file;
+                    }
+                    closedir($dir);
+                }
             }
-            closedir($dir);
-            shuffle($screens);
+            if ($screens) shuffle($screens);
             foreach ($screens as $val) {
                 $sname = ucfirst(str_ireplace(['.gif', '.jpg', '.png', '.com', '.net', '.ru', '.ua', '.biz', '.info', '.su', '.in', '.org'], '', $val));
                 $srat = round(filesize($path2.'/'.$val) / 20);

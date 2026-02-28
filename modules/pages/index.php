@@ -12,7 +12,8 @@ get_lang($conf['name']);
 
 function navigate(string $title, string|int $cat=''): string {
 	global $conf;
-	$ncat = getVar('get', 'cat', 'num');
+	$cat = getVar('get', 'cat', 'num');
+	$ncat = $cat;
 	$cpar = $ncat ? ['cat' => $ncat] : [];
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._PAGES.'" class="sl_but_navi">'._HOME.'</a>';
 	$best = ($conf['pages']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
@@ -27,23 +28,24 @@ function pages(): void {
 	global $db, $afile, $user, $conf, $home, $op;
 	$cwhere = catmids($conf['name'], 's.catid');
 	$unum = user_news($user[3] ?? 0, $conf['pages']['num']);
-	$ncat = getVar('get', 'cat', 'num');
+	$cat = getVar('get', 'cat', 'num');
+	$ncat = $cat;
 	$params = [];
 	if (!$ncat && $op && $conf['pages']['rate']) {
 		$caton = 0;
 		$field = 'op='.$op.'&';
-		if ($op == 'best') {
-			$orderby = '(s.score/s.ratings) DESC';
-			$ntitle = _BEST;
-		} else {
-			$orderby = '(s.counter/(TO_DAYS(NOW()) - TO_DAYS(s.time))) DESC';
-			$ntitle = _POP;
-		}
+			if ($op == 'best') {
+				$orderby = 'IFNULL((s.score/NULLIF(s.ratings,0)),0) DESC';
+				$ntitle = _BEST;
+			} else {
+				$orderby = 'IFNULL((s.counter/NULLIF((TO_DAYS(NOW()) - TO_DAYS(s.time)),0)),0) DESC';
+				$ntitle = _POP;
+			}
 		$order = "WHERE s.time <= NOW() AND s.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$onum = "time <= NOW() AND status != '0'";
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-		$orderby = ($op) ? (($op == 'best') ? '(s.score/s.ratings) DESC' : '(s.counter/(TO_DAYS(NOW()) - TO_DAYS(s.time))) DESC') : 's.time DESC';
+			$orderby = ($op) ? (($op == 'best') ? 'IFNULL((s.score/NULLIF(s.ratings,0)),0) DESC' : 'IFNULL((s.counter/NULLIF((TO_DAYS(NOW()) - TO_DAYS(s.time)),0)),0) DESC') : 's.time DESC';
 		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (s.catid = :ncat1 OR c.parentid = :ncat2) AND s.time <= NOW() AND s.status != '0' ".$cwhere.' ORDER BY '.$orderby;
@@ -82,7 +84,7 @@ function pages(): void {
 	$offset = intval($offset);
 	$result = $db->sql_query('SELECT s.pid, s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->sql_numrows($result) > 0) {
-		while([$id, $cid, $uname, $stitle, $time, $hometext, $bodytext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result)) {
+		while([$id, $cid, $uname, $stitle, $time, $hometext, $bodytext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -91,7 +93,7 @@ function pages(): void {
 			$cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
 			$title = '<a href="'.$thref.'" title="'.$stitle.'">'.$stitle.'</a> '.new_graphic($time);
 			$read = '<a href="'.$thref.'" title="'.$stitle.'" class="sl_but_read">'._READMORE.'</a>';
-			$post = ($conf['pages']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
+			$post = ($conf['pages']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
 			$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 			$date = ($conf['pages']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
 			$reads = ($conf['pages']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
@@ -131,13 +133,13 @@ function liste(): void {
 	if ($db->sql_numrows($result) > 0) {
 		$letter = ($conf['pages']['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
-		while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $user_name] = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->sql_fetchrow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
-			$post = ($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM);
+			$post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
 			$cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $post, '{%time%}' => format_time($time)]);
 		}
 		$cont .= setTemplateBasic('liste-close');
@@ -153,13 +155,14 @@ function liste(): void {
 function view(): void {
 	global $db, $afile, $conf;
 	$id = getVar('get', 'id', 'num');
-	$pag = getVar('get', 'num', 'num', '1');
+	$num = getVar('get', 'num', 'num', '1');
+	$pag = $num;
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 's.catid');
 	$result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) WHERE s.pid = :id AND s.time<=NOW() AND s.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->sql_numrows($result) == 1) {
 		$db->sql_query('UPDATE '.PREFIX_DB.'_pages SET counter = counter+1 WHERE pid = :id', ['id' => $id]);
-		[$cid, $uname, $title, $time, $hometext, $bodytext, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $user_name] = $db->sql_fetchrow($result);
+		[$cid, $uname, $title, $time, $hometext, $bodytext, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
@@ -167,7 +170,7 @@ function view(): void {
 		$seoimg = getImgText($hometext, '', false);
 		$seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
 		$seotime = $time;
-		$seoauthor = $user_name ?: ($uname ?: $conf['sitename']);
+		$seoauthor = $nick ?: ($uname ?: $conf['sitename']);
 		setHead([
 			'title' => $seotitle,
 			'ctitle' => $seoctitle,
@@ -189,7 +192,7 @@ function view(): void {
 		$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
 		$cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
 		$cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-		$post = ($conf['pages']['autor']) ? (($user_name) ? user_info($user_name) : (($uname) ? $uname : _ANONYM)) : '';
+		$post = ($conf['pages']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
 		$post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
 		$date = ($conf['pages']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
 		$reads = ($conf['pages']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
@@ -228,7 +231,8 @@ function add(): void {
 	global $db, $user, $conf, $stop;
 	if ((is_user() && $conf['pages']['add'] == 1) || (!is_user() && $conf['pages']['addquest'] == 1)) {
 		$title = getVar('post', 'title', 'title');
-		$cid = getVar('post', 'catid', 'num');
+		$catid = getVar('post', 'catid', 'num');
+		$cid = $catid;
 		$hometext = getVar('post', 'hometext', 'text');
 		$bodytext = getVar('post', 'bodytext', 'text');
 		$postname = getVar('post', 'postname', 'name');
@@ -262,7 +266,8 @@ function send(): void {
 	global $db, $user, $conf, $stop;
 	if ((is_user() && $conf['pages']['add'] == 1) || (!is_user() && $conf['pages']['addquest'] == 1)) {
 		$title = getVar('post', 'title', 'title');
-		$cid = getVar('post', 'catid', 'num');
+		$catid = getVar('post', 'catid', 'num');
+		$cid = $catid;
 		$hometext = getVar('post', 'hometext', 'text');
 		$bodytext = getVar('post', 'bodytext', 'text');
 		$postname = getVar('post', 'postname', 'name');
@@ -296,3 +301,4 @@ switch($op) {
 	case 'add': add(); break;
 	case 'send': send(); break;
 }
+
