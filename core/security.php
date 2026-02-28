@@ -1,10 +1,13 @@
-﻿<?php
+<?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
+
+# Output buffering on — must precede all bootstrap operations.
+if (ob_get_level() === 0) ob_start();
 
 # Security: block /index.php/... PATH_INFO abuse to avoid routing bypass and unexpected module execution via malformed URLs.
 $uri = $_SERVER['REQUEST_URI'] ?? '';
@@ -16,23 +19,11 @@ if (!empty($_SERVER['PATH_INFO']) || strpos($uri, '/index.php/') !== false) {
 # Load unified config - merges all /config/*.php into $conf, applies local.php overrides
 $conf = getConfig();
 
-# Murder variables
-unset($name, $file, $admin, $user, $admintrue, $godtrue, $usertrue, $aid, $uname, $guest, $userinfo, $stop);
-
 # Set the default timezone
 date_default_timezone_set($conf['gtime']);
 
 # Language on — init locale, load main language file, set cookie
 setLang();
-
-# Database connection using unified config
-require_once BASE_DIR.'/core/classes/pdo.php';
-$db = new sql_db($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
-if ($conf['db']['sync']) $db->sql_query("SET LOCAL time_zone = '".date('P')."'");
-define('PREFIX_DB', $conf['db']['prefix']);
-
-# Security and routing aliases
-$afile = $conf['security']['afile'];
 
 # Transition aliases - existing code references these globals; remove after full migration to $conf
 $confdb  = $conf['db']         ?? [];
@@ -72,8 +63,18 @@ $confup  = $conf['uploads']    ?? [];
 $conftp  = $conf['filetype']   ?? [];
 $confla  = $conf['lang']       ?? [];
 
+
+# Database connection using unified config
+require_once BASE_DIR.'/core/classes/pdo.php';
+$db = new sql_db($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
+if ($conf['db']['sync']) $db->sql_query("SET LOCAL time_zone = '".date('P')."'");
+define('PREFIX_DB', $conf['db']['prefix']);
+
+# Security and routing aliases
+$afile = $conf['security']['afile'];
+
 # Report PHP errors
-$emode = (int)($confs['error'] ?? 0);
+$emode = (int)($conf['security']['error'] ?? 0);
 if ($emode === 2) {
     ini_set('display_errors', '1');
     error_reporting(E_ALL);
@@ -85,19 +86,16 @@ if ($emode === 2) {
     error_reporting(0);
 }
 
-# Output buffering on
-if (ob_get_level() === 0) ob_start();
-
 # Session start
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 # Flood Protection
-if (!defined('ADMIN_FILE') && $confs['flood']) {
+if (!defined('ADMIN_FILE') && $conf['security']['flood']) {
     $ctime = time();
-    $ftime = $ctime - intval($confs['flood_t']);
+    $ftime = $ctime - intval($conf['security']['flood_t']);
     $flood = (isset($_SESSION['flood']) && $_SESSION['flood'] > $ftime) ? 1 : 0;
-    if ($confs['flood'] == 3 && $flood) doWarnReport('Flood attack');
-    if ($confs['flood'] == 2 && isset($_GET) && $flood) doWarnReport('Flood in GET - '.print_r($_GET, true));
+    if ($conf['security']['flood'] == 3 && $flood) doWarnReport('Flood attack');
+    if ($conf['security']['flood'] == 2 && isset($_GET) && $flood) doWarnReport('Flood in GET - '.print_r($_GET, true));
     if (isset($_POST) && $flood) doWarnReport('Flood in POST - '.print_r($_POST, true));
     unset($_SESSION['flood']);
     $_SESSION['flood'] = $ctime;
@@ -121,7 +119,7 @@ function getVariablesInfo(): string {
 
 # Add log report entry
 function log_report(): bool {
-    global $user, $confu, $confs;
+    global $user, $conf;
 
     $ip = getIp();
     $agent = getAgent();
@@ -137,7 +135,7 @@ function log_report(): bool {
     }
 
     $log = LOGS_DIR.'/log.log';
-    $max = $confs['log_size'] ?? 10485760; // fallback 10 MB
+    $max = $conf['security']['log_size'] ?? 10485760; // fallback 10 MB
 
     $fhandle = fopen($log, 'ab');
     if ($fhandle === false) {
@@ -174,7 +172,7 @@ function log_report(): bool {
 
 # Log report
 /*function log_report() {
-    global $user, $confu, $confs;
+    global $user, $conf;
     $ip = getIp();
     $agent = getAgent();
     $url = text_filter(getenv('REQUEST_URI'));
@@ -183,7 +181,7 @@ function log_report(): bool {
     $luser = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
     $path = 'config/logs/log.txt';
     if ($fhandle = @fopen($path, 'ab')) {
-        if (filesize($path) > $confs['log_size']) {
+        if (filesize($path) > $conf['security']['log_size']) {
             zip_compress($path, 'config/logs/log_'.date('Y-m-d_H-i').'.txt');
             @unlink($path);
         }
@@ -192,14 +190,14 @@ function log_report(): bool {
     }
 }*/
 
-if ($confs['log']) log_report();
+if ($conf['security']['log']) log_report();
 
 # Security cookies blocker or ip blocker and member blocker
-$bcookie = getCookies($confs['blocker_cookie']);
+$bcookie = getCookies($conf['security']['blocker_cookie']);
 if ($bcookie == 'block') {
     setExit(_BANN_INFO);
 } else {
-    $bip = explode('||', $confs['blocker_ip']);
+    $bip = explode('||', $conf['security']['blocker_ip']);
     if ($bip) {
         foreach ($bip as $val) {
             if ($val != '') {
@@ -221,7 +219,7 @@ if ($bcookie == 'block') {
                         $ipb = substr($ipb, 0, strrpos($ipb, '.'));
                     }
                     if ((!$binfo[2] && $ipt == $ipb) || ($binfo[2] && $ipt == $ipb && $uagt == $binfo[2])) {
-                        setCookies($confs['blocker_cookie'], $binfo[3], 'block');
+                        setCookies($conf['security']['blocker_cookie'], $binfo[3], 'block');
                         $btext = _BANN_INFO.'<br>'._BANN_TERM.': '.rest_time($binfo[3]).'<br>'._BANN_REAS.': '.$binfo[4];
                         setExit($btext);
                     }
@@ -229,7 +227,7 @@ if ($bcookie == 'block') {
             }
         }
     }
-    $bus = explode('||', $confs['blocker_user']);
+    $bus = explode('||', $conf['security']['blocker_user']);
     if ($bus && $user) {
         foreach ($bus as $val) {
             if ($val != '') {
@@ -237,7 +235,7 @@ if ($bcookie == 'block') {
                 $uinfo = explode('|', $val);
                 if (time() <= $uinfo[1]) {
                     if ($tus == $uinfo[0]) {
-                        setCookies($confs['blocker_cookie'], $uinfo[1], 'block');
+                        setCookies($conf['security']['blocker_cookie'], $uinfo[1], 'block');
                         $utext = _BANN_INFO.'<br>'._BANN_TERM.': '.rest_time($uinfo[1]).'<br>'._BANN_REAS.': '.$uinfo[2];
                         setExit($utext);
                     }
@@ -247,9 +245,9 @@ if ($bcookie == 'block') {
     }
 }
 
-$confs['error_log'] = 1;
+$conf['security']['error_log'] = 1;
 # Error reporting log â€” NDJSON (one JSON object per line, AI-ready schema)
-if ($confs['error_log']) {
+if ($conf['security']['error_log']) {
     # --- Inline helpers (closures only, no new named functions) ---
 
     // Sanitize: strip log-injection chars (\r \n \0), trim, truncate
@@ -544,7 +542,7 @@ if (!is_admin_god()) {
     # Checking GET variable for safety
     if (isset($_GET)) {
         function checkGet($name, $val) {
-            global $confs;
+            global $conf;
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
             $char = '#\([^>]*\"?[^)]*\)#';
@@ -552,7 +550,7 @@ if (!is_admin_god()) {
             $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if ($confs['url_get']) if (preg_match($links, $val)) doWarnReport('URL in GET - '.$name.' = '. $val);
+            if ($conf['security']['url_get']) if (preg_match($links, $val)) doWarnReport('URL in GET - '.$name.' = '. $val);
             if (preg_match($script, urldecode($val)) || preg_match($char, $val)) doWarnReport('HTML in GET - '.$name.' = '. $val);
             if (preg_match($quote, $val)) doHackReport('Hack in GET - '.$name.' = '. $val);
             if (preg_match($string, $val)) doHackReport('XSS in GET - '.$name.' = '. $val);
@@ -577,7 +575,7 @@ if (!is_admin_god()) {
     # Checking POST variable for safety
     if (isset($_POST)) {
         function checkPost($name, $val) {
-            global $confs, $conf, $admin;
+            global $conf, $admin;
             #$val = is_array($val) ? fields_save($val) : $val;
             $flag = is_array($admin) ? ($admin[3] ?? '') : '';
             $editor = (int)substr($flag, 0, 1);
@@ -586,8 +584,8 @@ if (!is_admin_god()) {
             $string = '#'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if ($confs['ref_post'] && isset($_FILES['file']['size'])) if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), get_host())) doWarnReport('POST from referer - '.$name.' = '. $val);
-            if ($confs['url_post']) if (preg_match($links, $val)) doWarnReport('URL in POST - '.$name.' = '. $val);
+            if ($conf['security']['ref_post'] && isset($_FILES['file']['size'])) if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), get_host())) doWarnReport('POST from referer - '.$name.' = '. $val);
+            if ($conf['security']['url_post']) if (preg_match($links, $val)) doWarnReport('URL in POST - '.$name.' = '. $val);
             if (((defined('ADMIN_FILE') && $editor != 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] != 1)) && preg_match($script, urldecode($val))) doWarnReport('HTML in POST - '.$name.' = '. $val);
             if (preg_match($string, $val)) doHackReport('XSS in POST - '.$name.' = '. $val);
             if (preg_match($string, $decode)) doHackReport('XSS base64 in POST - '.$name.' = '. $val);
@@ -803,10 +801,10 @@ function setLang(): void {
     $mult  = ((int)($conf['multilingual'] ?? 0) === 1);
 
     if ($mult) {
-        $rlang = getVar('req', 'newlang', 'var', '');
+        $newlang = getVar('req', 'newlang', 'var', '');
         $clang = getCookies('language');
-        if ($rlang && is_readable('language/'.$rlang.'.php')) {
-            $locale = $rlang;
+        if ($newlang && is_readable('language/'.$newlang.'.php')) {
+            $locale = $newlang;
         } elseif ($clang && is_readable('language/'.$clang.'.php')) {
             $locale = $clang;
         } else {
@@ -1277,7 +1275,7 @@ function mail_send($email, $smail, $subject, $message, $id='', $pr='') {
 
 # Hack report
 function doHackReport($msg) {
-    global $user, $conf, $confu, $confs;
+    global $user, $conf;
     $msg = text_filter(substr($msg, 0, 500));
     $url = text_filter(getenv('REQUEST_URI'));
     $refer = get_referer();
@@ -1286,20 +1284,20 @@ function doHackReport($msg) {
     $agent = getAgent();
     $date_time = date(_TIMESTRING);
     $user = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
-    if ($confs['block']) {
+    if ($conf['security']['block']) {
         $btime = time() + 86400;
-        $cont = array('blocker_ip' => $confs['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||');
-        doConfig('config/security.php', 'confs', $cont, $confs, '');
-        setCookies($confs['blocker_cookie'], $btime, 'block');
+        $cont = array('blocker_ip' => $conf['security']['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||');
+        doConfig('config/security.php', 'confs', $cont, $conf['security'], '');
+        setCookies($conf['security']['blocker_cookie'], $btime, 'block');
     }
-    if ($confs['mail']) {
+    if ($conf['security']['mail']) {
         $subject = $conf['sitename'].' - '._SECURITY;
         $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._HACK.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$user.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$date_time;
         mail_send($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
     }
-    if ($confs['write_h']) {
+    if ($conf['security']['write_h']) {
         $log = LOGS_DIR.'/hack.log';
-        $max = $confs['log_size'] ?? 10485760;
+        $max = $conf['security']['log_size'] ?? 10485760;
         $fhandle = fopen($log, 'ab');
         if ($fhandle !== false) {
             clearstatcache(true, $log);
@@ -1320,7 +1318,7 @@ function doHackReport($msg) {
 
 # Warn report
 function doWarnReport($msg) {
-    global $user, $conf, $confu, $confs;
+    global $user, $conf;
     $msg = text_filter(substr($msg, 0, 500));
     $url = text_filter(getenv('REQUEST_URI'));
     $refer = get_referer();
@@ -1329,14 +1327,14 @@ function doWarnReport($msg) {
     $agent = getAgent();
     $date_time = date(_TIMESTRING);
     $user = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
-    if ($confs['mail_w']) {
+    if ($conf['security']['mail_w']) {
         $subject = $conf['sitename'].' - '._SECURITY;
         $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._WARN.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$user.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$date_time;
         mail_send($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
     }
-    if ($confs['write_w']) {
+    if ($conf['security']['write_w']) {
         $log = LOGS_DIR.'/warn.log';
-        $max = $confs['log_size'] ?? 10485760;
+        $max = $conf['security']['log_size'] ?? 10485760;
         $fhandle = fopen($log, 'ab');
         if ($fhandle !== false) {
             clearstatcache(true, $log);
@@ -1354,4 +1352,3 @@ function doWarnReport($msg) {
     }
     setExit(_WARN.'!', 1);
 }
-
