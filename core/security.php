@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 # Author: Eduard Laas
 # Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
@@ -23,7 +23,7 @@ unset($name, $file, $admin, $user, $admintrue, $godtrue, $usertrue, $aid, $uname
 date_default_timezone_set($conf['gtime']);
 
 # Language on
-get_lang();
+getLang();
 
 # Database connection using unified config
 require_once BASE_DIR.'/core/classes/pdo.php';
@@ -794,23 +794,21 @@ function get_referer() {
     return $refer;
 }
 
-# Load language files and return the active language
-function get_lang(string $module = ''): string {
+# Load language files and return the active locale code.
+# $module — module name ('news', 'admin', etc.) or '' for main file only.
+# $admin  — true loads modules/{module}/admin/language/ instead of modules/{module}/language/
+function getLang(string $module = '', bool $admin = false): string {
     global $locale, $conf;
 
-    // per-request small caches (variable names follow SLAED: no CamelCase, 4-8 chars)
-    static $mload = false;    // main language file loaded flag
-    static $lmods = [];       // module load cache (module|lang => bool)
+    static $mload = false;  // main language file loaded flag
+    static $lmods = [];     // module load cache (module|ctx|lang => bool)
 
-    $mlang   = (string)($conf['language'] ?? 'en');       // main/default language
-    $mult    = ((int)($conf['multilingual'] ?? 0) === 1); // multilingual flag (4-8 chars)
-
-    // sanitize incoming requested language
-    $rlang = $_REQUEST['newlang'] ?? '';
-    $rlang = $rlang !== '' ? isVar($rlang) : '';
+    $mlang = (string)($conf['language'] ?? 'en');
+    $mult  = ((int)($conf['multilingual'] ?? 0) === 1);
+    $rlang = getVar('req', 'newlang', 'var', '');
     $clang = getCookies('language');
 
-    // determine active language
+    // determine active locale
     if ($mult) {
         if ($rlang && is_readable('language/'.$rlang.'.php')) {
             $locale = $rlang;
@@ -823,96 +821,56 @@ function get_lang(string $module = ''): string {
         $locale = $mlang;
     }
 
-    // set cookie only when needed
+    // set cookie only when locale changes
     if (!$clang || $clang !== $locale) {
         setCookies('language', time() + (int)($conf['user_c_t'] ?? 0), $locale);
     }
 
-    // include main language file once per request
+    // load main language file once per request
     if (!$mload) {
         $file = 'language/'.$locale.'.php';
         if (is_readable($file)) {
             require_once $file;
         } else {
-            $fallback = 'language/'.$mlang.'.php';
-            if (is_readable($fallback)) {
-                require_once $fallback;
-            }
+            $fall = 'language/'.$mlang.'.php';
+            if (is_readable($fall)) require_once $fall;
         }
         $mload = true;
     }
 
-    // module-specific language loading, cached per-request
+    // load module language file (frontend, admin-panel, or module-admin context)
     if ($module !== '') {
-        $key = $module . '|' . $locale;
+        $ctx = $admin ? 'a' : 'f';
+        $key = $module.'|'.$ctx.'|'.$locale;
         if (!array_key_exists($key, $lmods)) {
-            $candidates = $module === 'admin'
-                ? ['admin/language/'.$locale.'.php', 'admin/language/'.$mlang.'.php']
-                : ['modules/'.$module.'/language/'.$locale.'.php', 'modules/'.$module.'/language/'.$mlang.'.php'];
-
-            $loaded = false;
-            foreach ($candidates as $p) {
+            if ($module === 'admin') {
+                $list = ['admin/language/'.$locale.'.php', 'admin/language/'.$mlang.'.php'];
+            } elseif ($admin) {
+                $list = [
+                    'modules/'.$module.'/admin/language/'.$locale.'.php',
+                    'modules/'.$module.'/admin/language/'.$mlang.'.php',
+                ];
+            } else {
+                $list = [
+                    'modules/'.$module.'/language/'.$locale.'.php',
+                    'modules/'.$module.'/language/'.$mlang.'.php',
+                ];
+            }
+            $done = false;
+            foreach ($list as $p) {
                 if (is_readable($p)) {
                     require_once $p;
-                    $loaded = true;
+                    $done = true;
                     break;
                 }
             }
-            $lmods[$key] = $loaded; // cache result (even false) to avoid repeated fs checks
+            $lmods[$key] = $done;
         }
     }
 
     return $locale;
 }
 
-
-# OLD DELETE
-# Format language
-/* function get_lang($module='') {
-    global $locale, $conf;
-    $rlang = isset($_REQUEST['newlang']) ? isVar($_REQUEST['newlang']) : '';
-    $clang = getCookies('language');
-    if ($rlang && $conf['multilingual'] == '1') {
-        if (file_exists('language/lang-'.$rlang.'.php')) {
-            setCookies('language', time() + intval($conf['user_c_t']), $rlang);
-            include_once('language/lang-'.$rlang.'.php');
-            $locale = $rlang;
-        } else {
-            setCookies('language', time() + intval($conf['user_c_t']), $conf['language']);
-            include_once('language/lang-'.$conf['language'].'.php');
-            $locale = $conf['language'];
-        }
-    } elseif ($clang && $conf['multilingual'] == '1') {
-        if (file_exists('language/lang-'.$clang.'.php')) {
-            include_once('language/lang-'.$clang.'.php');
-            $locale = $clang;
-        } else {
-            include_once('language/lang-'.$conf['language'].'.php');
-            $locale = $conf['language'];
-        }
-    } else {
-        if (!$clang) {
-            setCookies('language', time() + intval($conf['user_c_t']), $conf['language']);
-        }
-        include_once('language/lang-'.$conf['language'].'.php');
-        $locale = $conf['language'];
-    }
-    if ($module != '') {
-        if (file_exists('modules/'.$module.'/language/lang-'.$locale.'.php')) {
-            if ($module == 'admin') {
-                include_once('admin/language/lang-'.$locale.'.php');
-            } else {
-                include_once('modules/'.$module.'/language/lang-'.$locale.'.php');
-            }
-        } else {
-            if ($module == 'admin') {
-                include_once('admin/language/lang-'.$locale.'.php');
-            } else {
-                include_once('modules/'.$module.'/language/lang-'.$conf['language'].'.php');
-            }
-        }
-    }
-} */
 
 # Zip check
 function zip_check() {
