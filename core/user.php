@@ -71,7 +71,7 @@ function navi() {
     global $conf, $conffav, $confpr;
     $userinfo = getusrinfo();
     $uid = intval($userinfo['user_id']);
-    if ($conf['name'] != 'account') get_lang('account');
+    if ($conf['name'] != 'account') getLang('account');
     
     $title[] = _HOME;
     $ititle[] = _RETURNACCOUNT;
@@ -85,14 +85,14 @@ function navi() {
         $img[] = 'account/messages.png';
     }
     if (is_active('clients') && is_mod_group('clients')) {
-        get_lang('clients');
+        getLang('clients');
         $title[] = _PRODUCTS;
         $ititle[] = _PRODUCTSINFO;
         $link[] = 'index.php?name=clients';
         $img[] = 'account/product.png';
     }
     if (is_active('shop')) {
-        get_lang('shop');
+        getLang('shop');
         $title[] = _CLIENT;
         $ititle[] = _CLIENTINFO;
         $link[] = 'index.php?name=shop&amp;op=clients';
@@ -106,7 +106,7 @@ function navi() {
         }
     }
     if (is_active('help') && is_mod_group('help')) {
-        get_lang('help');
+        getLang('help');
         $title[] = _HELP;
         $ititle[] = _HELPINFO;
         $link[] = 'index.php?name=help';
@@ -710,7 +710,7 @@ function favordel() {
 # RSS Channel
 function rss_channel() {
     global $db, $conf, $confrs, $confu;
-    get_lang();
+    getLang();
     header_remove("X-Content-Type-Options");
     header("Content-Type: application/rss+xml; charset="._CHARSET);
     header("Content-Encoding: none");
@@ -821,7 +821,7 @@ function rss_channel() {
 # Open search
 function open_search() {
     global $conf;
-    get_lang();
+    getLang();
     header("Content-Type: application/opensearchdescription+xml");
     header("Content-Encoding: none");
     return "<?xml version=\"1.0\" encoding=\""._CHARSET."\"?>\n"
