@@ -710,7 +710,6 @@ function favordel() {
 # RSS Channel
 function rss_channel() {
     global $db, $conf, $confrs, $confu;
-    getLang();
     header_remove("X-Content-Type-Options");
     header("Content-Type: application/rss+xml; charset="._CHARSET);
     header("Content-Encoding: none");
@@ -821,7 +820,6 @@ function rss_channel() {
 # Open search
 function open_search() {
     global $conf;
-    getLang();
     header("Content-Type: application/opensearchdescription+xml");
     header("Content-Encoding: none");
     return "<?xml version=\"1.0\" encoding=\""._CHARSET."\"?>\n"

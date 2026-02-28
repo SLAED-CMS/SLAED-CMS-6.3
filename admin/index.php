@@ -27,7 +27,7 @@ function getAdminMenu(string $url, string $title, string $image, string $class =
 }
 
 function getAdminPanelBlocks(): string {
-    global $confmd, $panel, $locale, $afile;
+    global $confmd, $panel, $afile;
     if (!$panel) {
         $cont = '';
         if (is_admin_god()) {
@@ -69,7 +69,7 @@ function getAdminPanelBlocks(): string {
 }
 
 function getAdminPanel(): void {
-    global $confmd, $conf, $panel, $count, $afile, $locale, $class;
+    global $confmd, $conf, $panel, $count, $afile, $class;
     head();
     $content = '';
     $minver = '8.1.0';
