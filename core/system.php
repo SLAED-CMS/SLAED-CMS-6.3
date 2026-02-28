@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 # Author: Eduard Laas
 # Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
@@ -410,7 +410,7 @@ function addCompress(string $dir, string $src, string $name, string $mode = 'aut
 
 # Error logging with rotation and compression
 function addErrorFile(string $msg): bool {
-    global $conf;
+ global $conf;
     static $running = false;
     if ($running) {
         error_log('[LOG] Recursive call prevented: '.$msg);
@@ -436,11 +436,11 @@ function addErrorFile(string $msg): bool {
 
 # Captcha check
 function checkCaptcha($id) {
-    global $conf;
+ global $conf;
     if ($conf['gfx_chk'] >= '1' && ($id == 2 || ($id == 1 && !is_user()))) {
-        $res = getVar('post', 'recaptcha', 'text');
-        if ($res) {
-            $url = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret='.$conf['capsec'].'&response='.$res.'&remoteip='.getIp());
+        $recaptcha = getVar('post', 'recaptcha', 'text');
+        if ($recaptcha) {
+            $url = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret='.$conf['capsec'].'&response='.$recaptcha.'&remoteip='.getIp());
             $ret = json_decode($url, true);
             $cont = ($ret['success'] == 1 && substr($ret['score'], 2) >= $conf['quality']) ? false : true;
         } else {
@@ -475,7 +475,7 @@ function isInt($num) {
 
 # Generating categories for modules
 function setCategories($mod, $sub, $desc, $id='') {
-    global $db, $user, $conf, $locale;
+ global $db, $user, $conf, $locale;
     if (analyze($mod)) {
         $id = (intval($id)) ? $id : 0;
         $params = ['mod' => $mod];
@@ -578,7 +578,7 @@ function setCategories($mod, $sub, $desc, $id='') {
 
 # Generation of article numbers
 function setArticleNumbers(string $name, string $mod, int $limit, string $url, string $cntfld, string $tbl, string $catfld = '', string $where = '', int $maxpg = 10, array $params = []): string {
-    global $db, $conf, $locale;
+ global $db, $conf, $locale;
     if (!defined('ADMIN_FILE') && $catfld && $where) {
         if ($conf['multilingual']) {
             $lng_where = 'WHERE modul = :mod AND (language = :loc OR language = \'\')';
@@ -604,7 +604,7 @@ function setArticleNumbers(string $name, string $mod, int $limit, string $url, s
 
 # Generation of page numbers
 function setPageNumbers(string $tpl, string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
-    global $afile;
+ global $afile;
     $num  = $num ?: getVar('get', $n, 'num', 1);
     $nnum = $maxpg + 1;
     if ($pages > 1) {
@@ -642,7 +642,7 @@ function setPageNumbers(string $tpl, string $mod, int $count, int $pages, int $l
 function setCache($id=''): void {
     header('Content-Type: text/html; charset='._CHARSET);
     if ($id === "1") {
-        global $conf;
+ global $conf;
         $cached = (int) ($conf['cache_d'] ?? 7);
         $max = $cached * 86400;
         $expires = time() + $max;
@@ -762,12 +762,12 @@ function doConfig($fp, $name, $array, $actual='', $type='') {
 
 # Definition and processing of header scripts files
 function doScript() {
-    global $theme, $conf, $confs;
+ global $theme, $conf;
     $async = ($conf['script_a']) ? 'async ' : '';
     $sfile = 'config/cache/'.md5($theme.'script').'.txt';
     $array = explode(',', $conf['script_f']);
     $array = is_array($array) ? $array : array();
-    $array = (!$confs['error_java']) ? array_merge($array, array('plugins/system/block-error.js')) : $array;
+    $array = (!$conf['security']['error_java']) ? array_merge($array, array('plugins/system/block-error.js')) : $array;
     if (!defined('ADMIN_FILE')) {
         if ($conf['cache_script'] && file_exists($sfile) && filesize($sfile) != 0 && (time() - $conf['cache_t']) < filemtime($sfile)) {
             $cont = ($conf['script_h']) ? file_get_contents($sfile) : '<script '.$async.'src="index.php?go=script"></script>';
@@ -806,7 +806,7 @@ function doScript() {
 
 # Definition and processing of CSS files
 function doCss() {
-    global $theme, $conf;
+ global $theme, $conf;
     $array = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
     if (is_array($array)) {
         if (!defined('ADMIN_FILE')) {
@@ -852,16 +852,14 @@ function doCss() {
 
 # Create a sitemap
 function doSitemap() {
-    global $db, $conf;
-    $sitemap_data = include('config/sitemap.php');
-    $confma = $sitemap_data['sitemap'] ?? [];
-    if (defined('ADMIN_FILE') || !empty($confma['auto'])) {
+ global $db, $conf;
+    if (defined('ADMIN_FILE') || !empty($conf['sitemap']['auto'])) {
         $sess_f = 'sitemap.xml';
         $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
-        $past = time() - intval($confma['auto_t'] ?? 0);
+        $past = time() - intval($conf['sitemap']['auto_t'] ?? 0);
         if (defined('ADMIN_FILE') || $sess_b < $past) {
             $date = date('Y-m-d');
-            $modules_raw = (string)($confma['mod'] ?? '');
+            $modules_raw = (string)($conf['sitemap']['mod'] ?? '');
             $mod = ($modules_raw === '') ? array('0') : explode(',', $modules_raw);
             for ($i = 0; $i < count($mod); $i++) {
                 if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
@@ -910,19 +908,19 @@ function doSitemap() {
             $map_h = $map_m = $map_c = $map_p = '';
             if (count($info) > 0) {
                 foreach ($info as $key => $val) {
-                    if ($confma['gen_m']) {
+                    if ($conf['sitemap']['gen_m']) {
                         $map_m .= '<url><loc>'.$conf['homeurl'].'/index.php?name='.$key.'</loc>';
-                        $map_m .= $confma['dat_m'] ? '<lastmod>'.$date.'</lastmod>' : '';
-                        $map_m .= $confma['fr_m'] ? '<changefreq>'.$confma['fr_m'].'</changefreq>' : '';
-                        $map_m .= $confma['pr_m'] ? '<priority>'.$confma['pr_m'].'</priority>' : '';
+                        $map_m .= $conf['sitemap']['dat_m'] ? '<lastmod>'.$date.'</lastmod>' : '';
+                        $map_m .= $conf['sitemap']['fr_m'] ? '<changefreq>'.$conf['sitemap']['fr_m'].'</changefreq>' : '';
+                        $map_m .= $conf['sitemap']['pr_m'] ? '<priority>'.$conf['sitemap']['pr_m'].'</priority>' : '';
                         $map_m .= '</url>'."\n";
                     }
                     foreach ($info[$key] as $key2 => $val2) {
-                        if ($confma['gen_p'] && $info[$key][$key2][0]) {
+                        if ($conf['sitemap']['gen_p'] && $info[$key][$key2][0]) {
                             $map_p .= '<url><loc>'.$conf['homeurl']."/index.php?name=".$info[$key][$key2][4]."&amp;op=view&amp;id=".$info[$key][$key2][0].'</loc>';
-                            $map_p .= $confma['dat_p'] ? '<lastmod>'.format_time($info[$key][$key2][3], 'Y-m-d').'</lastmod>' : '';
-                            $map_p .= $confma['fr_p'] ? '<changefreq>'.$confma['fr_p'].'</changefreq>' : '';
-                            $map_p .= $confma['pr_p'] ? '<priority>'.$confma['pr_p'].'</priority>' : '';
+                            $map_p .= $conf['sitemap']['dat_p'] ? '<lastmod>'.format_time($info[$key][$key2][3], 'Y-m-d').'</lastmod>' : '';
+                            $map_p .= $conf['sitemap']['fr_p'] ? '<changefreq>'.$conf['sitemap']['fr_p'].'</changefreq>' : '';
+                            $map_p .= $conf['sitemap']['pr_p'] ? '<priority>'.$conf['sitemap']['pr_p'].'</priority>' : '';
                             $map_p .= '</url>'."\n";
                         }
                         $htm[$key][$info[$key][$key2][1]][] = array($info[$key][$key2][0],$info[$key][$key2][2]);
@@ -930,17 +928,17 @@ function doSitemap() {
                     $result = $db->sql_query("SELECT id, modul, title, parentid FROM ".PREFIX_DB."_categories WHERE modul = :mod", ['mod' => $key]);
                     while (list($cid, $cmodul, $title, $parentid) = $db->sql_fetchrow($result)) {
                         $cd[$cid] = array($cid, $parentid, $title, $cmodul);
-                        if ($confma['gen_c']) {
+                        if ($conf['sitemap']['gen_c']) {
                             $map_c .= '<url><loc>'.$conf['homeurl'].'/index.php?name='.$cmodul.'&amp;cat='.$cid.'</loc>';
-                            $map_c .= $confma['dat_c'] ? '<lastmod>'.$date.'</lastmod>' : '';
-                            $map_c .= $confma['fr_c'] ? '<changefreq>'.$confma['fr_c'].'</changefreq>' : '';
-                            $map_c .= $confma['pr_c'] ? '<priority>'.$confma['pr_c'].'</priority>' : '';
+                            $map_c .= $conf['sitemap']['dat_c'] ? '<lastmod>'.$date.'</lastmod>' : '';
+                            $map_c .= $conf['sitemap']['fr_c'] ? '<changefreq>'.$conf['sitemap']['fr_c'].'</changefreq>' : '';
+                            $map_c .= $conf['sitemap']['pr_c'] ? '<priority>'.$conf['sitemap']['pr_c'].'</priority>' : '';
                             $map_c .= '</url>'."\n";
                         }
                     }
                 }
             }
-            if ($confma['txt']) {
+            if ($conf['sitemap']['txt']) {
                 $buffer = '<ol class="sl_list">';
                 foreach ($htm as $key => $val) {
                     $buffer .= '<li><a href="index.php?name='.$key.'" title="'.deflmconst($key).'">'.deflmconst($key).'</a>';
@@ -964,11 +962,11 @@ function doSitemap() {
                 $buffer .= '</ol>';
                 file_put_contents('config/sitemap/sitemap.txt', $buffer);
             }
-            if ($confma['gen_h']) {
+            if ($conf['sitemap']['gen_h']) {
                 $map_h = '<url><loc>'.$conf['homeurl'].'/index.php</loc>';
-                $map_h .= ($confma['dat_h']) ? '<lastmod>'.$date.'</lastmod>' : '';
-                $map_h .= ($confma['fr_h']) ? '<changefreq>'.$confma['fr_h'].'</changefreq>' : '';
-                $map_h .= ($confma['pr_h']) ? '<priority>'.$confma['pr_h'].'</priority>' : '';
+                $map_h .= ($conf['sitemap']['dat_h']) ? '<lastmod>'.$date.'</lastmod>' : '';
+                $map_h .= ($conf['sitemap']['fr_h']) ? '<changefreq>'.$conf['sitemap']['fr_h'].'</changefreq>' : '';
+                $map_h .= ($conf['sitemap']['pr_h']) ? '<priority>'.$conf['sitemap']['pr_h'].'</priority>' : '';
                 $map_h .= '</url>'."\n";
             }
             $map = $map_h.$map_m.$map_c.$map_p;
@@ -984,7 +982,7 @@ function doSitemap() {
                     $urls = '';
                     foreach ($sitemap as $val) $urls .= empty($val) ? '' : $val."\n";
                     $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-                    $cont .= ($confma['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
+                    $cont .= ($conf['sitemap']['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
                     $cont .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$urls.'</urlset>';
                     if ($conf['rewrite']) {
                         $cont = str_replace($conf['homeurl'].'/', '', $cont);
@@ -1008,7 +1006,7 @@ function doSitemap() {
                 $set = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$map.'</urlset>';
             }
             $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-            $cont .= ($confma['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n".$set : $set;
+            $cont .= ($conf['sitemap']['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n".$set : $set;
             if ($conf['rewrite']) {
                 $cont = str_replace($conf['homeurl'].'/', '', $cont);
                 $cont = preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
@@ -1052,11 +1050,11 @@ function getTranslit($st, $lo='') {
 
 # Social networks code
 function getNetworks() {
-    global $conf, $confu;
-    if ($confu['network_c']) {
+ global $conf;
+    if ($conf['users']['network_c']) {
         $url = urlencode($conf['homeurl'].'/index.php?name=account&op=network');
         $st = array('[url]' => $url);
-        $cont = strtr($confu['network_c'], $st);
+        $cont = strtr($conf['users']['network_c'], $st);
     } else {
         $cont = '';
     }
@@ -1065,7 +1063,7 @@ function getNetworks() {
 
 # Get captcha
 function getCaptcha($id) {
-    global $conf;
+ global $conf;
     if ($conf['gfx_chk'] >= '1' && ($id == 2 || ($id == 1 && !is_user()))) {
         $cont = '<script src="https://www.google.com/recaptcha/api.js?render='.$conf['capkey'].'"></script>
         <script>grecaptcha.ready(function() { grecaptcha.execute("'.$conf['capkey'].'", { action: "homepage" }) .then(function(token) { document.getElementById("recaptcha").value = token; }); });</script>';
@@ -1179,7 +1177,7 @@ function getCompressHtml($html) {
 
 # Voting view
 function getVoting(int $id = 0, string $votid = ''): string {
-    global $db, $afile, $user, $locale, $conf, $confv;
+ global $db, $afile, $user, $locale, $conf;
     if ($conf['multilingual'] == 1) {
         $querylang = "(language = :locale OR language = '') AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
         $qlang_params = ['locale' => $locale];
@@ -1192,7 +1190,7 @@ function getVoting(int $id = 0, string $votid = ''): string {
     $result = $db->sql_query("SELECT modul, title, questions, answer, enddate, multi, comments, acomm, typ, status FROM ".PREFIX_DB."_voting WHERE id = :id AND ".$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->sql_numrows($result) > 0) {
         $ip = getIp();
-        $past = time() - intval($confv['voting_t']);
+        $past = time() - intval($conf['voting']['voting_t']);
         $cmod = substr("voting", 0, 2)."-".$id;
         $cookies = (isset($_COOKIE[$cmod])) ? intval($_COOKIE[$cmod]) : "";
         $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
@@ -1301,7 +1299,7 @@ function getCpuLoad($tcache = 2) {
 
 # Variable analyzer
 function getVariables() {
-    global $db, $conf;
+ global $db, $conf;
     $cont = '';
     $cvar = explode(',', $conf['variables']);
     if ($cvar[1]) {
@@ -1322,9 +1320,9 @@ function getVariables() {
 
 # Number of user news
 function getUserNews($num) {
-    global $confu, $user;
+ global $user, $conf;
     $unum = $user[3] ?? 0;
-    $num = (!empty($unum) && $unum <= $num && $confu['news'] == 1) ? intval($unum) : intval($num);
+    $num = (!empty($unum) && $unum <= $num && $conf['users']['news'] == 1) ? intval($unum) : intval($num);
     return $num;
 }
 
@@ -1358,14 +1356,14 @@ function getProtocol() {
 
 # User news DELETE
 function user_news($unum, $mnum) {
-    global $confu;
-    $num = (!empty($unum) && $unum <= $mnum && $confu['news'] == 1) ? intval($unum) : intval($mnum);
+    global $conf;
+    $num = (!empty($unum) && $unum <= $mnum && $conf['users']['news'] == 1) ? intval($unum) : intval($mnum);
     return $num;
 }
 
 # Get the image from the text
 function getImgText(string $text, string $type = '', bool $check = true): string|false {
-    global $conf;
+ global $conf;
     if (preg_match('#\[attach=(.*?)\s(.*?)\]#i', $text, $match)) {
         $fname = basename(trim($match[1]));
         $img = (!$type) ? 'uploads/'.$conf['name'].'/thumb/'.$fname : 'uploads/'.$conf['name'].'/'.$fname;
@@ -1382,7 +1380,7 @@ function getImgText(string $text, string $type = '', bool $check = true): string
 
 # Format SEO url
 function getSeoUrl(array $params): string {
-    global $conf;
+ global $conf;
     $sep   = $conf['sep'] ?? '-';
     $tsep  = $conf['tsep'] ?? '-';
     $slugs = ['title', 'ctitle'];
@@ -1428,7 +1426,7 @@ function filterSlug(string $text, string $sep = '-'): string {
 function getTheme(): string {
     static $cached = null;
     if ($cached !== null) return $cached;
-    global $user, $conf;
+ global $user, $conf;
     if (defined('ADMIN_FILE')) return $cached = 'admin';
     $default = $conf['theme'] ?? 'default';
     if (!is_user()) return $cached = $default;
@@ -1439,7 +1437,7 @@ function getTheme(): string {
 
 # Format theme file
 function getThemeFile(string $name): string|false {
-    global $home, $conf, $op;
+ global $home, $conf, $op;
     static $cache = [];
     static $files = null;
     static $dir = null;
@@ -1487,7 +1485,7 @@ function getThemeLoad(string $tpl): ?string {
 
 # Determining the load time
 function getTimeLoads() {
-    global $db, $sgtime;
+ global $db, $sgtime;
     $ttime = sprintf('%.3f', microtime(true) - $sgtime);
     $qnums = $db->qnum;
     $sqltime = sprintf('%.3f', $db->sqltime);
@@ -1601,7 +1599,7 @@ function gender($gender) {
 # OLD DELETE
 # Format search highlight
 function search_color($sourse, $word) {
-    global $conf;
+ global $conf;
     $word = var_filter(urldecode($word));
     if ($word) {
         if (strstr($word, " ")) {
@@ -1626,7 +1624,7 @@ function search_color($sourse, $word) {
 
 # Replace break
 function replace_break($text) {
-    global $admin, $conf;
+ global $admin, $conf;
     if ($text) {
         $flag = is_array($admin) ? ($admin[3] ?? '') : '';
         $editor = (int)substr($flag, 0, 1);
@@ -1638,7 +1636,7 @@ function replace_break($text) {
 # DELETE OR MODIFY
 # User country information
 function user_geo_ip($ip, $id = 4) {
-    global $conf;
+ global $conf;
     if ((PHP_VERSION >= "5") && $conf['geo_ip'] && preg_match("#([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3}).([0-9]{1,3})#", $ip)) {
         if ($id == 1) {
             $cont = $ip;
@@ -1663,7 +1661,7 @@ function user_geo_ip($ip, $id = 4) {
 
 # User information for user
 function user_sinfo($id="") {
-    global $db, $conf;
+ global $db, $conf;
     if ($conf['session']) {
         $who_online = ""; $m = 0; $b = 0; $u = 0; $i = 0;
         $result = $db->sql_query("SELECT uname, time, host_addr, guest, module FROM ".PREFIX_DB."_session ORDER BY uname");
@@ -1694,7 +1692,7 @@ function user_sinfo($id="") {
 
 # User information for admin
 function user_sainfo($id="") {
-    global $db, $conf;
+ global $db, $conf;
     if ($conf['session'] && is_admin()) {
         $a = $b = $m = $u = $i = 0;
         $who_online = array("0" => "", "1" => "", "2" => "", "3" => "");
@@ -1738,7 +1736,7 @@ function user_sainfo($id="") {
 
 # Format admin block
 function adminblock() {
-    global $db, $afile;
+ global $db, $afile;
     if (is_admin()) {
         $cont = '<table class="sl_table_block"><tr><td><a href="'.$afile.'.php" title="'._ADMINMENU.'">'._ADMINMENU.'</a></td></tr>'
         .'<tr><td><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'">'._LOGOUT.'</a></td></tr></table>';
@@ -1753,7 +1751,7 @@ function adminblock() {
 
 # Newsletter send
 function updateNewsletter(): void {
-    global $db, $conf;
+ global $db, $conf;
     if ($conf['newsletter']) {
         $result = $db->sql_query("SELECT id, title, content, mails FROM ".PREFIX_DB."_newsletter WHERE mails != ''");
         if ($db->sql_numrows($result) > 0) {
@@ -1775,9 +1773,9 @@ function updateNewsletter(): void {
 
 # User info link
 function user_info($name) {
-    global $confu;
+    global $conf;
     if ($name) {
-        $link = ($confu['prof'] != 1 || ($confu['prof'] == 1 && is_user()) || is_admin()) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($name)."\" title=\""._PERSONALINFO."\">".$name."</a>" : $name;
+        $link = ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || is_admin()) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($name)."\" title=\""._PERSONALINFO."\">".$name."</a>" : $name;
     } else {
         $link = "";
     }
@@ -1786,7 +1784,7 @@ function user_info($name) {
 
 # Show kasse
 function show_kasse($info="") {
-    global $db, $confso;
+ global $db, $conf;
     $shop = (isset($_COOKIE['shop'])) ? base64_decode($_COOKIE['shop']) : "";
     $info = (empty($info)) ? $shop : base64_decode($info);
     $cookies = (preg_match("#[^0-9,]#", $info)) ? "" : $info;
@@ -1816,27 +1814,27 @@ function show_kasse($info="") {
             $mtitle = ($i > 1) ? _PMINUS : _DELETE;
             $plus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=add_kasse&amp;id=".$id."', ''); return false;\" title=\""._PPLUS."\" class=\"sl_shop_plus\"></a>";
             $minus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=del_kasse&amp;id=".$id."', ''); return false;\" title=\"".$mtitle."\" class=\"sl_shop_minus\"></a>";
-            $cont .= setTemplateBasic("kasse-basic", ['{%id%}' => $id, '{%title%}' => $ptitle, '{%qty%}' => $i, '{%price%}' => $preis." ".$confso['valute'], '{%plus%}' => $plus, '{%minus%}' => $minus]);
+            $cont .= setTemplateBasic("kasse-basic", ['{%id%}' => $id, '{%title%}' => $ptitle, '{%qty%}' => $i, '{%price%}' => $preis." ".$conf['shop']['valute'], '{%plus%}' => $plus, '{%minus%}' => $minus]);
         }
         $cart = "<a href=\"index.php?name=shop&amp;op=kasse\" title=\""._SCACH."\" class=\"sl_shop_kasse\">"._SCACH."</a>";
-        $total = "<span title=\""._PARTNERGES."\" class=\"sl_shop_total\">"._PARTNERGES.": ".$preistotal." ".$confso['valute']."</span>";
+        $total = "<span title=\""._PARTNERGES."\" class=\"sl_shop_total\">"._PARTNERGES.": ".$preistotal." ".$conf['shop']['valute']."</span>";
         return setTemplateBasic("kasse-open", ['{%title%}' => _PBASKET, '{%col_id%}' => _ID, '{%col_product%}' => _PRODUCT, '{%col_qty%}' => cutstr(_QUANTITY, 3, 1), '{%col_price%}' => _PREIS, '{%col_fn%}' => _FUNCTIONS]).$cont.setTemplateBasic("kasse-close", ['{%cart%}' => $cart, '{%total%}' => $total]);
     }
 }
 
 # Add kasse
 function add_kasse() {
-    global $confso;
+    global $conf;
     $id = getVar('get', 'id', 'num', 0);
     $cookies = (preg_match("#[^0-9,]#", base64_decode($_COOKIE['shop']))) ? "" : base64_decode($_COOKIE['shop']);
     if ($id) {
         setcookie("shop", false);
         if ($cookies) {
             $info = base64_encode($cookies.",".$id);
-            setcookie("shop", $info, time() + $confso['shop_t']);
+            setcookie("shop", $info, time() + $conf['shop']['shop_t']);
         } else {
             $info = base64_encode($id);
-            setcookie("shop", $info, time() + $confso['shop_t']);
+            setcookie("shop", $info, time() + $conf['shop']['shop_t']);
         }
     }
     echo show_kasse($info);
@@ -1844,7 +1842,7 @@ function add_kasse() {
 
 # Delete kasse
 function del_kasse() {
-    global $confso;
+    global $conf;
     $id = getVar('get', 'id', 'num', 0);
     $cookies = (preg_match("#[^0-9,]#", base64_decode($_COOKIE['shop']))) ? "" : base64_decode($_COOKIE['shop']);
     if ($id && $cookies) {
@@ -1868,7 +1866,7 @@ function del_kasse() {
             }
         }
         $info = base64_encode($info);
-        setcookie("shop", $info, time() + $confso['shop_t']);
+        setcookie("shop", $info, time() + $conf['shop']['shop_t']);
     }
     echo show_kasse($info);
 }
@@ -1888,7 +1886,7 @@ function warnings($warnings) {
 
 # Format ajax rating
 function ajax_rating($typ, $id, $mod, $rat, $scor, $obj="", $stl="") {
-    global $confra;
+    global $conf;
     if (intval($rat)) {
         $votnum = $rat;
         $votes = $rat;
@@ -1917,7 +1915,7 @@ function ajax_rating($typ, $id, $mod, $rat, $scor, $obj="", $stl="") {
     if ($typ == 2) {
         $content = "<div class=\"".$crate."\">".$img."</div>";
     } else {
-        $con = explode("|", $confra[strtolower($mod)]);
+        $con = explode("|", $conf['ratings'][strtolower($mod)]);
         if (($con[1] && $id && $mod) || ($rat && $scor)) {
             $content = (($con[1] && $typ) || ($con[1] && !$con[2] && !$typ)) ? "<div id=\"rep".$id.$obj."\" class=\"".$crate."\">".$imgr."</div>" : "<div class=\"".$crate."\">".$img."</div>";
         } else {
@@ -1929,21 +1927,21 @@ function ajax_rating($typ, $id, $mod, $rat, $scor, $obj="", $stl="") {
 
 # Show editor files
 function show_files() {
-    global $conf, $user;
+ global $conf, $user;
     $uploads_data = include('config/uploads.php');
-    $confup = $uploads_data['uploads'] ?? [];
+    $conf['uploads'] = $uploads_data['uploads'] ?? [];
     $id   = analyze(getVar('get', 'id',   'text', '')) ?: 0;
     $dir  = strtolower(getVar('get', 'dir',  'text', ''));
-    $gzip = getVar('get', 'cid', 'num', 0);
-    $con = explode("|", (string)($confup[$dir] ?? ''));
+    $cid = getVar('get', 'cid', 'num', 0);
+    $con = explode("|", (string)($conf['uploads'][$dir] ?? ''));
     $connum = (isset($con[7]) && intval($con[7])) ? $con[7] : "50";
     $eallf = (is_moder()) ? intval($con[8] ?? 0) : intval($con[9] ?? 0);
     $file = text_filter(getVar('get', 'file', 'raw', ''));
-    $num = ($gzip) ? $gzip : "1";
+    $num = ($cid) ? $cid : "1";
     $uname = (is_user()) ? intval($user[0]) : 0;
     $path = "uploads/".$dir."/";
     if (is_moder($dir) && $file && $dir) {
-        if (!$gzip) {
+        if (!$cid) {
             unlink($path.$file);
         } else {
             zip_compress($path.$file, $path.$file);
@@ -2024,7 +2022,7 @@ function anti_spam($mail) {
 
 # Format letter
 function letter($mod) {
-    global $db, $user;
+ global $db, $user;
     if ($mod == "faq") {
         $result = $db->sql_query("SELECT title FROM ".PREFIX_DB."_faq WHERE time <= NOW() AND status != '0'");
     } elseif ($mod == "files") {
@@ -2096,7 +2094,7 @@ function ad_status($link, $id, $typ="", $text="") {
 
 # Add mailto
 function mailto($mail) {
-    global $conf;
+ global $conf;
     return "<a href=\"mailto:".$mail."?subject=".$conf['sitename']."\" target=\"_blank\">".$mail."</a>";
 }
 
@@ -2121,10 +2119,10 @@ function img_find($img) {
 
 # Format select RSS
 function rss_select() {
-    global $conf, $confrs;
+ global $conf;
     require_once CONFIG_DIR.'/rss.php';
-    $fieldc = explode("||", $confrs['rss']);
-    $url = url_filter(getVar('post', 'url', 'text', ''));
+    $fieldc = explode("||", $conf['rss']['rss']);
+    $url = getVar('post', 'url', 'url', '');
     $cont = "";
     foreach ($fieldc as $val) {
         if ($val != "") {
@@ -2167,14 +2165,14 @@ function rss_read($url, $id) {
             if (!$title) $title = $url;
             preg_match_all("#<item>(.*)</item>#Uism", $content, $items, PREG_PATTERN_ORDER);
             if (!empty($items[1])) {
-                $number = ($confrs['max'] > count($items[1])) ? count($items[1]) : $confrs['max'];
+                $number = ($conf['rss']['max'] > count($items[1])) ? count($items[1]) : $conf['rss']['max'];
                 $cont = "";
                 for ($i = 0; $i < $number; $i++) {
                     preg_match("#<title>(.*)</title>#Uism", $items[1][$i], $rss_title);
                     preg_match("#<pubDate>(.*)</pubDate>#Uism", $items[1][$i], $rss_date);
                     preg_match("#<guid>(.*)</guid>(.*)#Uism", $items[1][$i], $rss_guid);
                     preg_match("#<description>(.*)</description>#Uism", $items[1][$i], $rss_desc);
-                    $temp = $confrs['temp'];
+                    $temp = $conf['rss']['temp'];
                     $rss_title = $rss_title[1] ?? '';
                     $rss_date = $rss_date[1] ?? '';
                     $rss_guid = $rss_guid[1] ?? '';
@@ -2199,7 +2197,7 @@ function rss_read($url, $id) {
 
 # Load RSS
 function rss_load($bid) {
-    global $db;
+ global $db;
     $bid = intval($bid);
     list($title, $content, $url, $refresh, $otime) = $db->sql_fetchrow($db->sql_query("SELECT title, content, url, refresh, time FROM ".PREFIX_DB."_blocks WHERE bid = :bid", ['bid' => $bid]));
     $past = time() - $refresh;
@@ -2240,13 +2238,13 @@ function deflang($con) {
 
 # Fields in
 function fields_in($fieldb, $mod) {
-    global $conf, $conffi;
+ global $conf;
     $mod = strtolower($mod);
     $style = (defined('ADMIN_FILE')) ? 'sl_field sl_form' : 'sl_field '.$conf['style'];
-    $fieldc = $conffi[$mod];
-    $fieldPost = getVar('post', 'field', 'raw', '');
-    if ($fieldPost !== '') {
-        $fieldb = fields_save($fieldPost);
+    $fieldc = $conf['fields'][$mod];
+    $field = getVar('post', 'field', 'raw', '');
+    if ($field !== '') {
+        $fieldb = fields_save($field);
     }
     $fieldb = explode('|', $fieldb ?? '');
     $fieldc = explode('||', $fieldc);
@@ -2289,10 +2287,10 @@ function fields_in($fieldb, $mod) {
 
 # Fields out
 function fields_out($fieldb, $mod) {
-    global $conffi;
+    global $conf;
     $mod = strtolower($mod);
     if ($fieldb && $mod) {
-        $fieldc = $conffi[$mod];
+        $fieldc = $conf['fields'][$mod];
         $fieldb = explode("|", $fieldb);
         $fieldc = explode("||", $fieldc);
         $i = 0;
@@ -2318,7 +2316,7 @@ function domain($url, $str="") {
 
 # Check bot
 function is_bot() {
-    global $conf;
+ global $conf;
     $bots = explode(",", $conf['bots']);
     for ($i = 0; $i < count($bots); $i++) {
         list($uagent, $bname) = explode("=", $bots[$i]);
@@ -2333,7 +2331,7 @@ function is_bot() {
 }
 # Check referer from bot
 function from_bot() {
-    global $conf;
+ global $conf;
     $bots = explode(",", $conf['fbots']);
     for ($i = 0; $i < count($bots); $i++) {
         if (preg_match("#".$bots[$i]."#i", get_referer())) {
@@ -2379,7 +2377,7 @@ function engines_word($refer) {
 
 # Check user
 function is_user($usr="") {
-    global $db, $user, $confu;
+ global $db, $conf, $user;
     static $usertrue;
     if (!isset($usertrue) && $user) {
         $uid = intval(substr($user[0], 0, 11));
@@ -2387,7 +2385,7 @@ function is_user($usr="") {
         $pwd = htmlspecialchars(substr($user[2], 0, 40));
         $ip = getIp();
         if ($uid != "" && $pwd != "") {
-            if ($confu['check'] == "0") {
+            if ($conf['users']['check'] == "0") {
                 list($pass) = $db->sql_fetchrow($db->sql_query("SELECT user_password FROM ".PREFIX_DB."_users WHERE user_id = :uid AND user_name = :name", ['uid' => $uid, 'name' => $una]));
                 if ($pass == $pwd && $pass != "") {
                     $usertrue = 1;
@@ -2413,7 +2411,7 @@ function is_user($usr="") {
 
 # Get user id
 function is_user_id($name) {
-    global $db;
+ global $db;
     $name = text_filter(substr($name, 0, 25));
     list($uid) = $db->sql_fetchrow($db->sql_query('SELECT user_id FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
     return intval($uid);
@@ -2421,7 +2419,7 @@ function is_user_id($name) {
 
 # Check admin
 function is_admin($adm="") {
-    global $db, $admin;
+ global $db, $admin;
     static $admintrue;
     if (!empty($admin)) {
         if (!isset($admintrue)) {
@@ -2454,7 +2452,7 @@ function getAdminModuleNames(string $modules): array {
 
 # Check modul admin
 function is_admin_modul($modul) {
-    global $db, $admin;
+ global $db, $admin;
     $aid = intval(substr($admin[0], 0, 11));
     $modul = addslashes(trim(substr($modul, 0, 25)));
     if ($modul == '') return 0;
@@ -2485,7 +2483,7 @@ function is_moder($modul="") {
 
 # Search user name
 function get_user() {
-    global $db;
+ global $db;
     $let = analyze_name(getVar('get', 'term', 'text', ''));
     if ($let) {
         $result = $db->sql_query('SELECT user_name FROM '.PREFIX_DB.'_users WHERE user_name LIKE :name ORDER BY user_name ASC', ['name' => $let.'%']);
@@ -2496,7 +2494,7 @@ function get_user() {
 
 # Autocomplete user name
 function get_user_search(string $id, string $val, int $maxlength, string $extraClass = '', string $required = ''): string {
-    global $conf;
+ global $conf;
     $class = $extraClass ? "sl_field ".$extraClass : "sl_field";
     $req   = $required ? " required" : "";
     $cont = "<script>
@@ -2535,7 +2533,7 @@ function url_types(string $urls): string {
 
 # Check user
 function check_user() {
-    global $user;
+ global $user;
     if (is_user()) {
         $f = COUNTER_DIR.'/user.log';
         $un = text_filter(substr($user[1], 0, 25), 1);
@@ -2562,7 +2560,7 @@ function check_user() {
 
 # Format head
 function setHead(array $seo = []): void {
-    global $db, $home, $index, $conf, $confs, $confr, $confrs, $confst, $user, $admin, $name, $theme, $op;
+ global $db, $home, $index, $conf, $user, $admin, $name, $theme, $op;
     $name = $name ?? '';
     $ctime = time();
     $request = getenv('REQUEST_URI');
@@ -2610,12 +2608,12 @@ function setHead(array $seo = []): void {
             }
         }
     }
-    if ($confr['refer']) {
+    if ($conf['referers']['refer']) {
         $referer = get_referer();
         if ($referer) {
             $refer_f = "config/counter/refer.txt";
             $refer_t = (file_exists($refer_f) && filesize($refer_f) != 0) ? file_get_contents($refer_f) : 0;
-            $past = $ctime - intval($confr['refer_t']);
+            $past = $ctime - intval($conf['referers']['refer_t']);
             if ($refer_t < $past) {
                 $db->sql_query("DELETE FROM ".PREFIX_DB."_referer WHERE lid = :lid", ['lid' => 0]);
                 unlink($refer_f);
@@ -2629,7 +2627,7 @@ function setHead(array $seo = []): void {
             if (is_active('auto_links')) {
                 list($exist) = $db->sql_fetchrow($db->sql_query("SELECT ip FROM ".PREFIX_DB."_referer WHERE ip = :ip AND lid != :lid", ['ip' => $ip, 'lid' => 0]));
                 if ($exist) {
-                    if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
+                    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
                 } else {
                     $result = $db->sql_query("SELECT link FROM ".PREFIX_DB."_auto_links");
                     while(list($slink) = $db->sql_fetchrow($result)) {
@@ -2645,15 +2643,15 @@ function setHead(array $seo = []): void {
                         list($lid) = $db->sql_fetchrow($db->sql_query("SELECT id FROM ".PREFIX_DB."_auto_links WHERE link = :link", ['link' => $slink]));
                         $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => $lid]);
                     } else {
-                        if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
+                        if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
                     }
                 }
             } else {
-                if ($confr['referb'] != 1 || ($confr['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
+                if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
             }
         }
     }
-    if ($confst['stat']) {
+    if ($conf['statistic']['stat']) {
         $sreferer = get_referer();
         $sreqhom = text_filter($request);
         $spath = COUNTER_DIR.'/';
@@ -2806,8 +2804,8 @@ function setHead(array $seo = []): void {
         }
         $strlink .= '<link rel="shortcut icon" href="templates/'.$theme.'/favicon.png">'."\n";
         if (strpos($conf['homeurl'], get_host()) !== false) $strlink .= '<link rel="canonical" href="'.$purl.'">'."\n";
-        if ($confrs['act']) {
-            $fieldc = explode('||', $confrs['rss']);
+        if ($conf['rss']['act']) {
+            $fieldc = explode('||', $conf['rss']['rss']);
             foreach ($fieldc as $val) {
                 if ($val != '') {
                     $out = explode('|', $val);
@@ -2826,10 +2824,10 @@ function setHead(array $seo = []): void {
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
     $head = str_replace(array('{%META%}', '{%LINK%}', '{%SCRIPT%}'), array($strmeta, $strlink, $script), addblocks($head));
     $cron = 0;
-    if ($confs['log_d']) {
+    if ($conf['security']['log_d']) {
         $sess_f = 'config/counter/dump.txt';
         $sess_d = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
-        $past = $ctime - intval($confs['sess_d']);
+        $past = $ctime - intval($conf['security']['sess_d']);
         if ($sess_d < $past) {
             $head = preg_replace("#<body(.*?)>#si", "<body OnLoad=\"AjaxLoad('GET', '0', 'filereport', 'go=3&amp;op=filereport', ''); return false;\"$1>", $head);
             $cron = 1;
@@ -2837,10 +2835,10 @@ function setHead(array $seo = []): void {
             $cron = 0;
         }
     }
-    if ($confs['log_b'] && !$cron) {
+    if ($conf['security']['log_b'] && !$cron) {
         $sess_f = COUNTER_DIR.'/backup.log';
         $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
-        $past = $ctime - intval($confs['sess_b']);
+        $past = $ctime - intval($conf['security']['sess_b']);
         if ($sess_b < $past) {
             $head = preg_replace("#<body(.*?)>#si", "<body OnLoad=\"AjaxLoad('GET', '0', 'backup', 'go=3&amp;op=backup', ''); return false;\"$1>", $head);
             $cron = 1;
@@ -2848,12 +2846,10 @@ function setHead(array $seo = []): void {
             $cron = 0;
         }
     }
-    $sitemap_data = include('config/sitemap.php');
-    $confma = $sitemap_data['sitemap'] ?? [];
-    if (!empty($confma['auto']) && !$cron) {
+    if (!empty($conf['sitemap']['auto']) && !$cron) {
         $sess_f = 'sitemap.xml';
         $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
-        $past = $ctime - intval($confma['auto_t'] ?? 0);
+        $past = $ctime - intval($conf['sitemap']['auto_t'] ?? 0);
         if ($sess_b < $past) {
             $head = preg_replace("#<body(.*?)>#si", "<body OnLoad=\"AjaxLoad('GET', '0', 'sitemap', 'go=3&amp;op=sitemap', ''); return false;\"$1>", $head);
             $cron = 1;
@@ -2876,7 +2872,7 @@ function head(): void {
 
 # Format foot
 function setFoot(): void {
-    global $home, $name, $index, $conf, $confs, $do_gzip_compress;
+ global $home, $name, $index, $conf, $do_gzip_compress;
     $index = addblocks($index);
     $index = (!defined('ADMIN_FILE') && !empty($conf['script_b'])) ? str_replace('{%SCRIPT%}', doScript(), $index) : str_replace('{%SCRIPT%}', '', $index);
     echo setTemplateFoot($index);
@@ -2961,9 +2957,9 @@ function write_dump($dump, $file) {
 }
 
 function write_log($log, $file) {
-    global $confs;
+    global $conf;
     if ($fp = fopen($file, "ab")) {
-        if (filesize($file) > $confs['log_size']) {
+        if (filesize($file) > $conf['security']['log_size']) {
             zip_compress($file, "config/logs/dump_log_".date("Y-m-d_H-i").".txt");
             unlink($file);
         }
@@ -2999,11 +2995,11 @@ function diff_dump($dump, $old) {
 }
 
 function filereport() {
-    global $conf, $confs;
-    if ($confs['log_d']) {
+ global $conf;
+    if ($conf['security']['log_d']) {
         $sess_f = "config/counter/dump.txt";
         $sess_d = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
-        $past = time() - intval($confs['sess_d']);
+        $past = time() - intval($conf['security']['sess_d']);
         if ($sess_d < $past) {
             unlink($sess_f);
             $fp = fopen($sess_f, "wb");
@@ -3022,7 +3018,7 @@ function filereport() {
             }
             write_log($log, "config/logs/dump_log.txt");
             write_dump($dump, "config/logs/dump.txt");
-            if ($confs['mail_d']) {
+            if ($conf['security']['mail_d']) {
                 $log = ($log) ? implode("<br>", $log) : _NO;
                 $subject = $conf['sitename']." - "._SECURITY;
                 $mmsg = $conf['sitename']." - "._SECURITY."<br><br>".$log."<br>"._DATE.": ".date(_TIMESTRING);
@@ -3034,9 +3030,9 @@ function filereport() {
 
 # User and admin login report
 function login_report($id, $typ, $login, $pass) {
-    global $admin, $user, $confs;
+ global $admin, $conf, $user;
     $id = ($id) ? "admin" : "user";
-    if (($confs['log_a'] && $id) || ($confs['log_u'] && !$id)) {
+    if (($conf['security']['log_a'] && $id) || ($conf['security']['log_u'] && !$id)) {
         $typ = ($typ) ? _YES : _NO;
         $ip = getIp();
         $login = ($login) ? "\n"._NICKNAME.": ".substr($login, 0, 25) : "";
@@ -3047,7 +3043,7 @@ function login_report($id, $typ, $login, $pass) {
         $luser = ($user) ? "\n"._USER.": ".substr($user[1], 0, 25) : "";
         $path = "config/logs/log_".$id.".txt";
         if ($fhandle = fopen($path, "ab")) {
-            if (filesize($path) > $confs['log_size']) {
+            if (filesize($path) > $conf['security']['log_size']) {
                 zip_compress($path, "config/logs/log_".$id."_".date("Y-m-d_H-i").".txt");
                 unlink($path);
             }
@@ -3059,9 +3055,9 @@ function login_report($id, $typ, $login, $pass) {
 
 # Backup DB for MySQL 8.0+ & MariaDB 10+
 function addBackupDb(): bool {
-    global $confs, $confdb, $db;
+ global $db, $conf;
 
-    if (!$confs['log_b']) {
+    if (!$conf['security']['log_b']) {
         return false;
     }
 
@@ -3070,7 +3066,7 @@ function addBackupDb(): bool {
 
     $sess_f = COUNTER_DIR.'/backup.log';
     $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
-    $past = time() - intval($confs['sess_b']);
+    $past = time() - intval($conf['security']['sess_b']);
 
     if ($sess_b >= $past) {
         return false; // Not yet time for Backup
@@ -3225,7 +3221,7 @@ function addBackupDb(): bool {
     }
 
     // FIX: Path Traversal security vulnerability
-    $safe_dbname = preg_replace('/[^a-zA-Z0-9_-]/', '_', $confdb['name']);
+    $safe_dbname = preg_replace('/[^a-zA-Z0-9_-]/', '_', $conf['db']['name']);
     $name = $safe_dbname."_".date("Y-m-d_H-i-s");
 
     // FIX: Verzeichnis-Check
@@ -3247,7 +3243,7 @@ function addBackupDb(): bool {
     }
 
     // Header schreiben
-    fwrite($fp, "# DB: ".$confdb['name']."\n");
+    fwrite($fp, "# DB: ".$conf['db']['name']."\n");
     fwrite($fp, "# Tables: ".$tabs."\n");
     fwrite($fp, "# Size: ".round($bsize / 1048576, 2)." MB\n");
     fwrite($fp, "# Lines: ".number_format($tabinfo[0], 0, ",", " ")."\n");
@@ -3340,7 +3336,7 @@ function addBackupDb(): bool {
 
 # Check user acess
 function is_acess($ids) {
-    global $db, $user, $conf;
+ global $db, $user, $conf;
     if ($ids) {
         $id = explode("|", $ids);
         if (is_moder(isset($conf['name']))) {
@@ -3375,7 +3371,7 @@ function is_acess($ids) {
 
 # Format categories select
 function getcat(string $modul = '', int $id = 0, string $selectName = '', string $extraClass = '', string $emptyOption = '', string $noSelect = ''): string {
-    global $db, $conf;
+ global $db, $conf;
     $modul = analyze($modul);
     $conf['name'] = $conf['name'] ?? $modul;
     $class  = $extraClass ? "sl_field ".$extraClass : "sl_field";
@@ -3409,7 +3405,7 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
 
 # Format categories links
 function catlink(string $mod = '', int $id = 0, string $sep = '', string $home = ''): string {
-    global $db, $conf;
+ global $db, $conf;
     $mod     = analyze($mod);
     $sep     = $sep ? " ".urldecode($sep)." " : " ".urldecode($conf['defis'])." ";
     $content = $home ? "<a href=\"index.php?name=".$conf['name']."\" title=\"".$home."\">".$home."</a>".$sep : "";
@@ -3439,7 +3435,7 @@ function catlink(string $mod = '', int $id = 0, string $sep = '', string $home =
 
 # Format categories IDs
 function catids(string $mod = '', int $id = 0): string {
-    global $db;
+ global $db;
     $mod     = analyze($mod);
     $content = '';
     if ($mod) {
@@ -3468,7 +3464,7 @@ function catids(string $mod = '', int $id = 0): string {
 
 # Format categories IDs from module
 function catmids(string $modul, string $field): string {
-    global $db, $conf, $locale;
+ global $db, $conf, $locale;
     if ($conf['multilingual']) {
         $where  = 'WHERE modul = :modul AND (language = :locale OR language = \'\')';
         $params = ['modul' => $modul, 'locale' => $locale];
@@ -3498,11 +3494,11 @@ function cutstr($strip, $size, $type='') {
 
 # Check module
 function is_active($mod, $view='') {
-    global $confmd;
+    global $conf;
     static $list = null;
     if ($list === null) {
         $list = [];
-        foreach ($confmd as $name => $item) {
+        foreach ($conf['modules'] as $name => $item) {
             if (empty($item['active'])) continue;
             $mview = intval($item['view'] ?? 0);
             if (!isset($list[$mview])) $list[$mview] = [];
@@ -4212,7 +4208,7 @@ function bb_decode(string $src, string $mod = '', string $id = ''): string {
 
 # Format PHP code
 function encode_php($text) {
-    global $conf;
+ global $conf;
     static $sname;
 
     $replace = isset($text[2]) ? trim($text[2]) : trim($text[1]);
@@ -4270,8 +4266,8 @@ function encode_php($text) {
 
 # Search and replace
 function search_replace($sourse, $mod) {
-    global $confre;
-    $mod = ($mod && isset($confre[$mod])) ? $confre[$mod] : "";
+    global $conf;
+    $mod = ($mod && isset($conf['replace'][$mod])) ? $conf['replace'][$mod] : "";
     if ($mod) {
         $mod = explode("||", $mod);
         foreach ($mod as $word) {
@@ -4298,7 +4294,7 @@ function search_replace($sourse, $mod) {
 
 # Admin mail add info
 function addmail(int $id, string $mod, string $username = '', string $title = '', bool $isComment = false, string $text = ''): void {
-    global $db, $conf, $confu, $locale;
+ global $db, $conf, $locale;
     $mod = analyze($mod);
     if ($id && $mod) {
         $subject = $isComment ? $conf['sitename']." - ".$title." - "._COMMENT : $conf['sitename']." - ".$title;
@@ -4333,7 +4329,7 @@ function addmail(int $id, string $mod, string $username = '', string $title = ''
 
 # Mail check
 function checkemail($mail) {
-    global $stop;
+ global $stop;
     $mail = strtolower(text_filter($mail, 1));
     if ((!$mail) || ($mail=="") || (!preg_match("#^[_\.a-z0-9-]+@([a-z0-9_-]+\.)+[a-z]{2,6}$#", $mail))) $stop[] = _ERROR1."<br>"._ERROR2." (<b>email@domain.com</b>)";
     if ((strlen($mail) >= 4) && (substr($mail, 0, 4) == "www.")) $stop[] = _ERROR1."<br>"._ERROR3." (<b>www.</b>)";
@@ -4343,7 +4339,7 @@ function checkemail($mail) {
 
 # Format add block
 function addblocks($str) {
-    global $blocks, $blocks_c, $home, $showbanners, $foot, $db, $conf, $foot;
+ global $blocks, $blocks_c, $home, $showbanners, $foot, $db, $conf, $foot;
     preg_match_all("#{%BLOCKS([^%]+)%}#iUs", $str, $blk);
     $ci = count($blk[1]);
     for ($i = 0; $i < $ci; $i++) {
@@ -4418,7 +4414,7 @@ function addblocks($str) {
 
 # Format block
 function getBlocks($side, $fly="") {
-    global $db, $conf, $locale, $name, $home, $pos, $b_id, $blockfile;
+ global $db, $conf, $locale, $name, $home, $pos, $b_id, $blockfile;
     static $barr;
     if ($conf['multilingual'] == 1) {
         $querylang = "AND (blanguage = :loc OR blanguage = '')";
@@ -4566,7 +4562,7 @@ function getBlocks($side, $fly="") {
 
 # Format block
 function render_blocks($side, $blockfile, $blocktitle, $content, $bid, $url) {
-    global $showbanners, $foot;
+ global $showbanners, $foot;
     if ($url == '') {
         $blocktitle = defconst($blocktitle);
         if ($blockfile != '') {
@@ -4604,13 +4600,13 @@ function render_blocks($side, $blockfile, $blocktitle, $content, $bid, $url) {
 
 # Format rating
 function rating() {
-    global $db, $user, $confra;
+ global $db, $conf, $user;
     $id   = getVar('get', 'id',   'num',  0);
     $typ  = analyze(getVar('get', 'typ',  'text', ''));
     $mod  = analyze(getVar('get', 'mod',  'text', ''));
     $rate = min(5, getVar('get', 'rate', 'num', 0));
     $stl  = getVar('get', 'stl',  'num',  0);
-    $con = explode("|", $confra[strtolower($mod)]);
+    $con = explode("|", $conf['ratings'][strtolower($mod)]);
     if ($id && $mod) {
         $query = '';
         if ($mod == "account") {
@@ -4736,14 +4732,14 @@ function rating() {
 
 # Format BB Code and Smilies
 function textarea(string $id, string $name, string $var, string $mod, int $rows, string $placeholder = '', string $required = ''): string {
-    global $admin, $op, $user, $conf;
+ global $admin, $op, $user, $conf;
     $placeholder = $placeholder ? " placeholder=\"".$placeholder."\"" : "";
     $required    = $required ? " required" : "";
     $stloc = substr(_LOCALE, 0, 2);
     $desc = $var ?: save_text(getVar('post', $name, 'raw', ''));
     $uploads_data = include('config/uploads.php');
-    $confup = $uploads_data['uploads'] ?? [];
-    $con = explode("|", (string)($confup[strtolower($mod)] ?? ''));
+    $conf['uploads'] = $uploads_data['uploads'] ?? [];
+    $con = explode("|", (string)($conf['uploads'][strtolower($mod)] ?? ''));
     $style = (defined('ADMIN_FILE')) ? ' sl_form' : ' '.$conf['style'];
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     if ((defined("ADMIN_FILE") && $editor == 1) || (!defined("ADMIN_FILE") && $conf['redaktor'] == 1)) {
@@ -5024,7 +5020,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
 
 # Format ajax edit
 function textareae($obj, $go, $op, $id, $cid, $typ, $mod, $text, $rows) {
-    global $conf, $admin;
+ global $conf, $admin;
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     $desc = ((defined("ADMIN_FILE") && $editor == 1) || (!defined("ADMIN_FILE") && $conf['redaktor'] == 1)) ? replace_break($text) : $text;
     $code = "<form name=\"textareae\" id=\"form".$obj."\" method=\"post\">
@@ -5078,7 +5074,7 @@ function textarea_code($id, $name, $style, $mode, $text) {
 
 # Format nummer page for Ajax
 function num_ajax(string $tpl, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', int $id = 0, int $cid = 0, string $typ = '', string $mod = ''): string {
-    global $afile;
+ global $afile;
     $nnum = $mnum + 1;
     if ($pages > 1) {
         $cont = "";
@@ -5125,14 +5121,14 @@ function check_size($file, $width, $height) {
 
 # Crypted md5 and salt
 function md5_salt($pass) {
-    global $conf;
+ global $conf;
     $crypt = md5(md5($conf['lic_f']).md5($pass));
     return $crypt;
 }
 
 # Upload file
 function upload($typ, $directory, $typefile, $maxsize, $namefile, $width, $height, $userid='', $url='') {
-    global $user, $conf, $stop;
+ global $user, $conf, $stop;
     if ($typ == 1 && !empty($_FILES['userfile']['size'])) {
         if (is_uploaded_file($_FILES['userfile']['tmp_name'])) {
             if ($_FILES['userfile']['size'] > $maxsize) {
@@ -5334,7 +5330,7 @@ function cat_modul(string $selectName, string $extraClass = '', string $selected
 
 # Format editor
 function redaktor($id, $name, $class, $editor, $submit) {
-    global $conf;
+ global $conf;
     $submit = ($submit) ? ' OnChange="submit()"' : '';
     $class = ($class) ? ' class="'.$class.'"' : '';
     $content = '<select name="'.$name.'"'.$submit.$class.'>';
@@ -5357,7 +5353,7 @@ function redaktor($id, $name, $class, $editor, $submit) {
 
 # Show comments
 function ashowcom(int $cid = 0, string $mod = ''): string {
-    global $db, $afile, $confu, $confc, $confpr, $user;
+ global $db, $conf, $afile, $user;
     $mod = analyze($mod);
     $params = [];
     if (defined("ADMIN_FILE")) {
@@ -5368,8 +5364,8 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $ordern = "WHERE status != :status";
             $params = ['status' => 0];
         }
-        $ccnum = $confc['anum'];
-        $plnum = $confc['anump'];
+        $ccnum = $conf['comments']['anum'];
+        $plnum = $conf['comments']['anump'];
     } else {
         if (is_moder($mod)) {
             $ordern = "WHERE cid = :cid AND modul = :mod";
@@ -5378,15 +5374,15 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $ordern = "WHERE cid = :cid AND modul = :mod AND status != :status";
             $params = ['cid' => $cid, 'mod' => $mod, 'status' => 0];
         }
-        $ccnum = $confc['num'];
-        $plnum = $confc['nump'];
+        $ccnum = $conf['comments']['num'];
+        $plnum = $conf['comments']['nump'];
     }
     list($numstories) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(cid) FROM ".PREFIX_DB."_comment ".$ordern, $params));
     if ($numstories > 0) {
         $com = getVar('get', 'com', 'num', '1');
         $offset = ($com - 1) * $ccnum;
         $numpages = ceil($numstories / $ccnum);
-        if ($confc['sort']) {
+        if ($conf['comments']['sort']) {
             $sort = "ASC";
             $a = ($com) ? $offset+1 : 1;
         } else {
@@ -5463,22 +5459,22 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $date = "<span title=\""._PADD."\" class=\"sl_t_post\">".format_time($com_date, _TIMESTRING)."</span>";
             $ip = (is_moder($com_modul)) ? user_geo_ip($com_host, 4) : "";
             $amess = "<a href=\"#".$com_id."\" title=\""._COMMENT.": ".$a."\" class=\"sl_pnum\">".$a."</a>";
-            $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($confu['adirectory']."/".$user_avatar)) ? $confu['adirectory']."/".$user_avatar : $confu['adirectory']."/default/00.gif") : $confu['adirectory']."/default/0.gif";
+            $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory']."/".$user_avatar)) ? $conf['users']['adirectory']."/".$user_avatar : $conf['users']['adirectory']."/default/00.gif") : $conf['users']['adirectory']."/default/0.gif";
             $rank = (!empty($user_rank)) ? $user_rank : "";
             $trank = (!empty($user_gname)) ? _GROUP.": ".$user_gname : _RANK;
             $rlink = (!empty($user_grank) && file_exists(img_find("ranks/".$user_grank))) ? "<img src=\"".img_find("ranks/".$user_grank)."\" alt=\"".$trank."\" title=\"".$trank."\">" : "";
             $rate = (!empty($user_id)) ? ajax_rating(0, $user_id, "account", $user_votes, $user_totalvotes, $com_id, 1) : "";
             $rwarn = (!empty($user_warnings)) ? _UWARNS.": ".warnings($user_warnings) : "";
             $group = (!empty($user_gname)) ? _GROUP.": <span style=\"color: ".$user_gcolor."\">".$user_gname."</span>" : "";
-            $point = ($confu['point'] && !empty($user_points)) ? _POINTS.": ".$user_points : "";
+            $point = ($conf['users']['point'] && !empty($user_points)) ? _POINTS.": ".$user_points : "";
             $regdate = (!empty($user_regdate)) ? _REG.": ".format_time($user_regdate) : _NO_INFO;
             $gender = (!empty($user_gender)) ? _GENDER.": ".gender($user_gender) : "";
             $from = (!empty($user_from)) ? _FROM.": ".$user_from : "";
             $sig = (!empty($user_sig)) ? "<hr>".$user_sig : "";
-            $personal = (is_moder($com_modul) || is_user() || $confc['anonpost'] != 0) ? "<a href=\"javascript: InsertCode('name', '".$avname."', '', '', '1');\" title=\""._PERSONAL."\" class=\"sl_but_blue\">"._PERS."</a>" : "";
-            $privat = ($confc['privat'] && $confpr['act'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=privat&amp;uname=".urlencode($user_name)."\" title=\""._SENDMES."\" class=\"sl_but_green\">"._MESSAGE."</a>" : "";
-            $profil = ($confc['profil'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
-            $web = ($confc['web'] && !empty($user_website)) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
+            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? "<a href=\"javascript: InsertCode('name', '".$avname."', '', '', '1');\" title=\""._PERSONAL."\" class=\"sl_but_blue\">"._PERS."</a>" : "";
+            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=privat&amp;uname=".urlencode($user_name)."\" title=\""._SENDMES."\" class=\"sl_but_green\">"._MESSAGE."</a>" : "";
+            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
+            $web = ($conf['comments']['web'] && !empty($user_website)) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
 
             # Ãâ€˜Ã‘Æ’ÃÂ´Ã‘Æ’Ã‘â€°ÃÂ¸ÃÂµ Ã‘â€žÃ‘Æ’ÃÂ½ÃÂºÃ‘â€ ÃÂ¸ÃÂ¸
             #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
@@ -5493,7 +5489,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $edit = add_menu("<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=editcom&amp;id=".$com_id."&amp;typ=1&amp;mod=".$com_modul."', ''); return false;\" title=\""._ONEDIT."\">"._ONEDIT."</a>||<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=closecom&amp;id=".$com_id."&amp;typ=0&amp;mod=".$com_modul."', ''); return false;\" title=\""._FMODC."\">"._FMODC."</a>||<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=closecom&amp;id=".$com_id."&amp;typ=1&amp;mod=".$com_modul."', ''); return false;\" title=\""._ACTIVATE."\">"._ACTIVATE."</a>");
                 }
             } else {
-                $stime = strtotime($com_date) + $confc['edit'];
+                $stime = strtotime($com_date) + $conf['comments']['edit'];
                 $edit = (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) ? add_menu("<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=editcom&amp;id=".$com_id."&amp;typ=1&amp;mod=".$com_modul."', ''); return false;\" title=\""._ONEDIT."\">"._ONEDIT."</a>") : "";
             }
             $hclass = (!defined("ADMIN_FILE") && !$com_status) ? "title=\""._PCLOSED."\" class=\"sl_hidden\"" : "";
@@ -5505,7 +5501,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 $checkb = "";
             }
             $cont .= setTemplateBasic("comment", ['{%id%}' => $com_id, '{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => bb_decode($sig, $com_modul), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass, '{%checkb%}' => $checkb]);
-            if ($confc['sort']) { $a++; } else { $a--; }
+            if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined("ADMIN_FILE")) {
             $selms = _CHECKOP.": <select name=\"op\"><option value=\"comm_act\">"._ACTIVATE."</option><option value=\"comm_del\">"._DELETE."</option></select> <input type=\"hidden\" name=\"refer\" value=\"1\"><input type=\"submit\" value=\""._OK."\" class=\"sl_but_blue\">";
@@ -5528,13 +5524,13 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
 
 # Save edit comments
 function editcom() {
-    global $db, $user, $confc;
+ global $db, $conf, $user;
     $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
     $mod  = analyze(getVar('post', 'mod',  'text', '') ?: getVar('get', 'mod',  'text', ''));
     $text = trim(getVar('post', 'text', 'raw',  '') ?: getVar('get', 'text', 'raw',  ''));
     list($uid, $date, $comment) = $db->sql_fetchrow($db->sql_query("SELECT uid, date, comment FROM ".PREFIX_DB."_comment WHERE id = :id", ['id' => $id]));
-    $stime = strtotime($date) + $confc['edit'];
+    $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
             $content = ($typ) ? textareae("com".$id, "1", "editcom", $id, "0", "0", $mod, $comment, "10") : bb_decode($comment, $mod);
@@ -5545,9 +5541,9 @@ function editcom() {
             for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
             $stop = array();
             if ($text == "") $stop[] = _CERROR1;
-            if ($o > $confc['letter']) $stop[] = _CERROR2;
-            if (!is_moder($mod) && (($confc['link'] == 1 && !is_user()) || ($confc['link'] == 2)) && stripos($text, "http://") !== false) $stop[] = _CERROR9;
-            $urlclick = (!is_moder($mod) && (($confc['alink'] == 1 && !is_user()) || ($confc['alink'] == 2))) ? 1 : 0;
+            if ($o > $conf['comments']['letter']) $stop[] = _CERROR2;
+            if (!is_moder($mod) && (($conf['comments']['link'] == 1 && !is_user()) || ($conf['comments']['link'] == 2)) && stripos($text, "http://") !== false) $stop[] = _CERROR9;
+            $urlclick = (!is_moder($mod) && (($conf['comments']['alink'] == 1 && !is_user()) || ($conf['comments']['alink'] == 2))) ? 1 : 0;
             if (!$stop) {
                 $comm = save_text($text, $urlclick);
                 $db->sql_query("UPDATE ".PREFIX_DB."_comment SET comment = :comment WHERE id = :id", ['comment' => $comm, 'id' => $id]);
@@ -5557,14 +5553,14 @@ function editcom() {
             }
         }
     } else {
-        $info = sprintf(_PEDEND, intval($confc['edit'] / 60));
+        $info = sprintf(_PEDEND, intval($conf['comments']['edit'] / 60));
         return setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'warn']);
     }
 }
 
 # Close comments
 function closecom() {
-    global $db;
+ global $db;
     $id  = getVar('post', 'id',  'num',  0) ?: getVar('get', 'id',  'num',  0);
     $typ = getVar('post', 'typ', 'num',  0) ?: getVar('get', 'typ', 'num',  0);
     $mod = analyze(getVar('post', 'mod', 'text', '') ?: getVar('get', 'mod', 'text', ''));
@@ -5581,7 +5577,7 @@ function closecom() {
 
 # Number comments
 function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0): void {
-    global $db;
+ global $db;
     $mod   = $mod ? analyze($mod) : '';
     $delta = $del ? -1 : 1;
     $point = $del ? 1 : 0;
@@ -5625,8 +5621,8 @@ function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0):
 
 # Voting result save
 function avoting_save() {
-    global $db, $user, $locale, $conf, $confv;
-    $id        = getVar('post', 'id', 'num', 0);
+ global $db, $conf, $user, $locale;
+    $id = getVar('post', 'id', 'num', 0);
     $questions = isset($_POST['questions']) && is_array($_POST['questions']) ? $_POST['questions'] : [];
     if ($conf['multilingual'] == 1) {
         $querylang = "(language = :locale OR language = '') AND date <= NOW() AND enddate >= NOW()";
@@ -5641,7 +5637,7 @@ function avoting_save() {
             $cont = setTemplateWarning('warn', ['text' => _SEROR1, 'url' => '?name=voting&amp;op=view&amp;id='.$id, 'time' => 3, 'id' => 'warn']);
         } else {
             $ip = getIp();
-            $past = time() - intval($confv['voting_t']);
+            $past = time() - intval($conf['voting']['voting_t']);
             $cmod = substr("voting", 0, 2)."-".$id;
             $cookies = (isset($_COOKIE[$cmod])) ? intval($_COOKIE[$cmod]) : "";
             $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
@@ -5650,7 +5646,7 @@ function avoting_save() {
             if ($cookies == $id || $num > 0) {
                 $cont = setTemplateWarning('warn', ['text' => _SEROR2, 'url' => '?name=voting&amp;op=view&amp;id='.$id, 'time' => 3, 'id' => 'warn']);
             } else {
-                setcookie(substr("voting", 0, 2)."-".$id, $id, time() + intval($confv['voting_t']));
+                setcookie(substr("voting", 0, 2)."-".$id, $id, time() + intval($conf['voting']['voting_t']));
                 $new = time();
                 $inserted = $db->sql_query("INSERT INTO ".PREFIX_DB."_rating (mid, modul, time, uid, host) VALUES (:mid, 'voting', :time, :uid, :host)", ['mid' => $id, 'time' => $new, 'uid' => $uid, 'host' => $ip]);
                 if ($inserted) {
@@ -5684,10 +5680,10 @@ function avoting_save() {
 
 # Update points
 function update_points(int $id, int $uid = 0, bool $del = false): void {
-    global $db, $user, $confu;
+ global $db, $conf, $user;
     $uid = $uid ?: (is_user() ? intval($user[0]) : 0);
-    if ($id && $uid && $confu['point'] == 1) {
-        $upoints = explode(",", $confu['points']);
+    if ($id && $uid && $conf['users']['point'] == 1) {
+        $upoints = explode(",", $conf['users']['points']);
         $a       = $id - 1;
         $delta   = isset($upoints[$a]) ? intval($upoints[$a]) : 0;
         $delta   = $del ? -$delta : $delta;

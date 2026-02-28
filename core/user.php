@@ -8,13 +8,13 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Show comments and form
 function setComShow(int $id = 0, int $cid = 0): string {
-    global $conf, $confu, $confc, $user;
+ global $conf, $user;
     $cont = '<a id="comm"></a><div id="repcsave">'.ashowcom($id, $conf['name']).'</div>';
-    if (!is_user() && $confc['anonpost'] == 0) {
+    if (!is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOANONCOMMENTS));
     } else {
         $userinfo = getusrinfo();
-        if ($cid == 1 || $userinfo['user_acess'] || (!is_user() && $confc['anonpost'] == 1)) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE));
+        if ($cid == 1 || $userinfo['user_acess'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE));
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" id="formcsave" method="post">'
         .'<table class="sl_table_form">';
@@ -32,7 +32,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
 
 # Showing messages on the home page
 function setMessageShow() {
-    global $db, $afile, $conf, $currentlang;
+ global $db, $afile, $conf, $currentlang;
     if ($conf['message'] == 1) {
         $params = [];
         $querylang = ($conf['multilingual'] == 1) ? 'AND (mlanguage = :lang OR mlanguage = \'\')' : '';
@@ -68,7 +68,7 @@ function setMessageShow() {
 
 # User account navigation
 function navi() {
-    global $conf, $conffav, $confpr;
+ global $conf;
     $userinfo = getusrinfo();
     $uid = intval($userinfo['user_id']);
     if ($conf['name'] != 'account') getLang('account');
@@ -78,7 +78,7 @@ function navi() {
     $link[] = 'index.php?name=account';
     $img[] = 'account/home.png';
     
-    if ($confpr['act']) {
+    if ($conf['privat']['act']) {
         $title[] = _MESSAGES;
         $ititle[] = _PRIVAT;
         $link[] = 'index.php?name=account&amp;op=privat';
@@ -97,8 +97,8 @@ function navi() {
         $ititle[] = _CLIENTINFO;
         $link[] = 'index.php?name=shop&amp;op=clients';
         $img[] = 'account/clients.png';
-        $confso = $conf['shop'] ?? [];
-        if ($confso['part'] == 1) {
+        $conf['shop'] = $conf['shop'] ?? [];
+        if ($conf['shop']['part'] == 1) {
             $title[] = _PARTNER;
             $ititle[] = _PARTNERINFO;
             $link[] = 'index.php?name=shop&amp;op=partners';
@@ -112,7 +112,7 @@ function navi() {
         $link[] = 'index.php?name=help';
         $img[] = 'account/help.png';
     }
-    if ($conffav['favact']) {
+    if ($conf['favorites']['favact']) {
         $title[] = _FAVORITES;
         $ititle[] = _FAVORITES;
         $link[] = 'index.php?name=account&amp;op=favorites';
@@ -142,13 +142,13 @@ function navi() {
 
 # Check group
 function is_mod_group($name) {
-    global $db, $user, $confmd;
+ global $db, $user;
     if (is_user()) {
         $uid = intval($user[0]);
         $row = $db->sql_fetchrow($db->sql_query('SELECT user_points, user_group FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $uid]));
         $points = $row['user_points'] ?? 0;
         $group = $row['user_group'] ?? 0;
-        $mod_conf = $confmd[$name] ?? [];
+        $mod_conf = $conf['modules'][$name] ?? [];
         $mgroup = intval($mod_conf['group'] ?? 0);
         $grpoints = 0;
         $grextra = 0;
@@ -168,7 +168,7 @@ function is_mod_group($name) {
 
 # Get user info
 function getusrinfo() {
-    global $db, $user;
+ global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     if (is_user() && $uid) {
         $info = $db->sql_fetchrow($db->sql_query('SELECT * FROM '.PREFIX_DB.'_users WHERE user_id = :uid', ['uid' => $uid]));
@@ -178,7 +178,7 @@ function getusrinfo() {
 
 # Show user block
 function userblock() {
-    global $db, $user;
+ global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
@@ -190,7 +190,7 @@ function userblock() {
 
 # Save comments
 function savecom() {
-    global $db, $user, $conf, $confc;
+ global $db, $user, $conf;
     $id       = getVar('post', 'id',   'num',  0);
     $cid      = getVar('post', 'cid',  'num',  0);
     $mod      = analyze(getVar('post', 'mod',  'text', ''));
@@ -198,17 +198,17 @@ function savecom() {
     $ip       = getip();
     $comment  = trim(getVar('post', 'text', 'raw', ''));
     list($date) = $db->sql_fetchrow($db->sql_query('SELECT date FROM '.PREFIX_DB.'_comment WHERE host_name = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
-    $stime = strtotime($date) + $confc['send'];
+    $stime = strtotime($date) + $conf['comments']['send'];
     $checks = str_replace(array("\n", "\r", "\t"), " ", $comment);
     $e = explode(" ", $checks);
     for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
     $stop = "";
     if ($comment == "") $stop = _CERROR1;
-    if ($o > $confc['letter']) $stop = _CERROR2;
-    if ((!is_user() && $postname == "") || (!is_user() && $confc['anonpost'] == 0)) $stop = _CERROR3;
-    if ($stime > time()) $stop = sprintf(_CERROR5, $confc['send']);
-    if (!is_moder($mod) && (($confc['link'] == 1 && !is_user()) || ($confc['link'] == 2)) && stripos($comment, "http://") !== false) $stop = _CERROR9;
-    $urlclick = (!is_moder($mod) && (($confc['alink'] == 1 && !is_user()) || ($confc['alink'] == 2))) ? 1 : 0;
+    if ($o > $conf['comments']['letter']) $stop = _CERROR2;
+    if ((!is_user() && $postname == "") || (!is_user() && $conf['comments']['anonpost'] == 0)) $stop = _CERROR3;
+    if ($stime > time()) $stop = sprintf(_CERROR5, $conf['comments']['send']);
+    if (!is_moder($mod) && (($conf['comments']['link'] == 1 && !is_user()) || ($conf['comments']['link'] == 2)) && stripos($comment, "http://") !== false) $stop = _CERROR9;
+    $urlclick = (!is_moder($mod) && (($conf['comments']['alink'] == 1 && !is_user()) || ($conf['comments']['alink'] == 2))) ? 1 : 0;
     if (checkCaptcha(1)) $stop = _SECCODEINCOR;
     if (!$stop && $id && $mod) {
         $comment = save_text($comment, $urlclick);
@@ -220,7 +220,7 @@ function savecom() {
         } else {
             $postid = "0";
             $postname = $postname;
-            $status = (!is_moder($mod) && ($cid == 1 || $confc['anonpost'] == 1)) ? 0 : 1;
+            $status = (!is_moder($mod) && ($cid == 1 || $conf['comments']['anonpost'] == 1)) ? 0 : 1;
         }
         $db->sql_query(
             'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :host_name, :comment, :status)',
@@ -230,7 +230,7 @@ function savecom() {
         list($lcom_id) = $db->sql_fetchrow($db->sql_query('SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1', ['cid' => $id, 'uid' => $postid]));
         $finishlink = $conf['homeurl']."/index.php?name=".$mod."&amp;op=view&amp;id=".$id."#".$lcom_id;
         $clink = "<a href=\"".$finishlink."\">".$finishlink."</a>";
-        addmail($confc['addmail'], $mod, $postname, deflmconst($mod), 1, $clink);
+        addmail($conf['comments']['addmail'], $mod, $postname, deflmconst($mod), 1, $clink);
         echo ashowcom($id, $mod);
     } else {
         $stop = ($stop) ? $stop : _ERROR;
@@ -240,15 +240,15 @@ function savecom() {
 
 # Save edit forum post
 function editpost() {
-    global $db, $user, $conf;
-    $conffo = $conf['forum'] ?? [];
+ global $db, $user, $conf;
+    $conf['forum'] = $conf['forum'] ?? [];
     $id    = getVar('post', 'id',  'num',  0)  ?: getVar('get', 'id',  'num',  0);
-    $catid = getVar('post', 'cid', 'num',  0)  ?: getVar('get', 'cid', 'num',  0);
+    $cid   = getVar('post', 'cid', 'num',  0)  ?: getVar('get', 'cid', 'num',  0);
     $typ   = getVar('post', 'typ', 'num',  0)  ?: getVar('get', 'typ', 'num',  0);
     $mod   = analyze(getVar('post', 'mod', 'text', '') ?: getVar('get', 'mod', 'text', ''));
     $text  = trim(getVar('post', 'text', 'raw', ''));
-    if ($conffo['add'] && $id && $catid) {
-        list($auth_edit, $auth_mod) = $db->sql_fetchrow($db->sql_query('SELECT auth_edit, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+    if ($conf['forum']['add'] && $id && $cid) {
+        list($auth_edit, $auth_mod) = $db->sql_fetchrow($db->sql_query('SELECT auth_edit, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]));
         $isedit = is_acess($auth_edit);
         $ismod = is_acess($auth_mod);
         list($pid, $uid, $hometext, $fstatus) = $db->sql_fetchrow($db->sql_query('SELECT pid, uid, hometext, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
@@ -261,7 +261,7 @@ function editpost() {
         }
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             if (!$text) {
-                $content = ($typ) ? textareae("for".$id, "1", "editpost", $id, $catid, "0", $mod, $hometext, "15") : bb_decode($hometext, $mod);
+                $content = ($typ) ? textareae("for".$id, "1", "editpost", $id, $cid, "0", $mod, $hometext, "15") : bb_decode($hometext, $mod);
                 echo $content;
             } else {
                 $postid = (is_user()) ? intval($user[0]) : "";
@@ -271,7 +271,7 @@ function editpost() {
                 for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
                 $stop = "";
                 if ($text == "") $stop[] = _CERROR1;
-                if ($o > $conffo['letter']) $stop[] = _CERROR2;
+                if ($o > $conf['forum']['letter']) $stop[] = _CERROR2;
                 if (!$stop) {
                     $htext = save_text($text);
                     $db->sql_query(
@@ -293,12 +293,12 @@ function editpost() {
 
 # Private messages input view
 function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0): string {
-    global $db, $user, $conf, $confu, $confpr;
+ global $db, $user, $conf;
     $typ = $typ ?: getVar('get', 'typ', 'num', 0);
     $uid = intval($user[0]);
-    $newlistnum = intval($confpr['num']);
-    $num = getVar('get', 'cid', 'num', 1);
-    $offset = ($num-1) * $newlistnum;
+    $newlistnum = intval($conf['privat']['num']);
+    $cid = getVar('get', 'cid', 'num', 1);
+    $offset = ($cid-1) * $newlistnum;
     $offset = intval($offset);
     $conf['name'] = "account";
     $conf['style'] = ($conf['style']) ? $conf['style'] : "sl_account";
@@ -306,12 +306,12 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
     if ($typ == 1) {
         list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status <= 1', ['uid' => $uid]));
         $fstatus = '';
-        if ($pr_num >= $confpr['messin']) {
-            $messinfo = sprintf(_PRINEXIT, $confpr['messin']);
+        if ($pr_num >= $conf['privat']['messin']) {
+            $messinfo = sprintf(_PRINEXIT, $conf['privat']['messin']);
             $fstatus = "warn";
-        } elseif ($pr_num >= ($confpr['messin'] / 2)) {
-            $acmess = ($confpr['messin'] - $pr_num);
-            $messinfo = sprintf(_PRINMAX, $confpr['messin'], $pr_num, $acmess);
+        } elseif ($pr_num >= ($conf['privat']['messin'] / 2)) {
+            $acmess = ($conf['privat']['messin'] - $pr_num);
+            $messinfo = sprintf(_PRINMAX, $conf['privat']['messin'], $pr_num, $acmess);
             $fstatus = "info";
         }
         if ($fstatus) $cont .= setTemplateWarning('warn', ['text' => $messinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
@@ -342,7 +342,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
         }
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $confpr['nump'], $num, "0", "1", "prmess", "prmessin", "", "1", "");
+        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", "1", "prmess", "prmessin", "", "1", "");
     } elseif ($typ == 2) {
         $result = $db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.user_id) WHERE p.uidout = :uid AND p.status <= 1 ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->sql_numrows($result) > 0) {
@@ -369,16 +369,16 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
         }
         list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidout = :uid AND status <= 1', ['uid' => $uid]));
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $confpr['nump'], $num, "0", "1", "prmess", "prmessou", "", "2", "");
+        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", "1", "prmess", "prmessou", "", "2", "");
     } elseif ($typ == 3) {
         list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status = 2', ['uid' => $uid]));
         $fstatus = '';
-        if ($pr_num >= $confpr['messsav']) {
-            $messinfo = sprintf(_PRSAVEEXIT, $confpr['messsav']);
+        if ($pr_num >= $conf['privat']['messsav']) {
+            $messinfo = sprintf(_PRSAVEEXIT, $conf['privat']['messsav']);
             $fstatus = "warn";
-        } elseif ($pr_num >= ($confpr['messsav'] / 2)) {
-            $acmess = ($confpr['messsav'] - $pr_num);
-            $messinfo = sprintf(_PRSAVEMAX, $confpr['messsav'], $pr_num, $acmess);
+        } elseif ($pr_num >= ($conf['privat']['messsav'] / 2)) {
+            $acmess = ($conf['privat']['messsav'] - $pr_num);
+            $messinfo = sprintf(_PRSAVEMAX, $conf['privat']['messsav'], $pr_num, $acmess);
             $fstatus = "info";
         }
         if ($fstatus) $cont .= setTemplateWarning('warn', ['text' => $messinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
@@ -397,7 +397,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
         }
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $confpr['nump'], $num, "0", "1", "prmess", "prmesssa", "", "3", "");
+        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", "1", "prmess", "prmesssa", "", "3", "");
     } elseif ($typ == 4) {
         if ($stop) {
             $cont .= setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
@@ -405,7 +405,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'info']);
         }
         $id  = getVar('get', 'id',  'num', 0);
-        $qid = getVar('get', 'cid', 'num', 0);
+        $cid = getVar('get', 'cid', 'num', 0);
         $mod = getVar('get', 'mod', 'num', 0);
         if ($mod == 1) {
             $prmid = "prmessin";
@@ -417,7 +417,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             $prmid = "prmessfo";
         }
         if ($id) {
-            if ($qid == "2") {
+            if ($cid == "2") {
                 list($idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name) = $db->sql_fetchrow($db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.ip_sender, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.user_id) WHERE p.id = :id AND p.uidout = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
             } else {
                 list($idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name) = $db->sql_fetchrow($db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.ip_sender, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.user_id) WHERE p.id = :id AND p.uidin = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
@@ -432,20 +432,20 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
                 $avname = ($user_name) ? $user_name : $com_name." ("._ANONYM.")";
                 $date = "<span title=\""._PADD."\" class=\"sl_t_post\">".format_time($date, _TIMESTRING)."</span>";
                 $ip = (is_moder($conf['name'])) ? user_geo_ip($ip_sender, 4) : "";
-                $avatar = ($user_name) ? (($user_avatar && file_exists($confu['adirectory']."/".$user_avatar)) ? $confu['adirectory']."/".$user_avatar : $confu['adirectory']."/default/00.gif") : $confu['adirectory']."/default/0.gif";
+                $avatar = ($user_name) ? (($user_avatar && file_exists($conf['users']['adirectory']."/".$user_avatar)) ? $conf['users']['adirectory']."/".$user_avatar : $conf['users']['adirectory']."/default/00.gif") : $conf['users']['adirectory']."/default/0.gif";
                 $rank = ($user_rank) ? $user_rank : "";
                 $trank = ($user_gname) ? _GROUP.": ".$user_gname : _RANK;
                 $rlink = ($user_grank && file_exists(img_find("ranks/".$user_grank))) ? "<img src=\"".img_find("ranks/".$user_grank)."\" alt=\"".$trank."\" title=\"".$trank."\">" : "";
                 $rate = ajax_rating(0, $user_id, $conf['name'], $user_votes, $user_totalvotes, $com_id, 1);
                 $rwarn = ($user_warnings) ? _UWARNS.": ".warnings($user_warnings) : "";
                 $group = ($user_gname) ? _GROUP.": <span style=\"color: ".$user_gcolor."\">".$user_gname."</span>" : "";
-                $point = ($confu['point'] && $user_points) ? _POINTS.": ".$user_points : "";
+                $point = ($conf['users']['point'] && $user_points) ? _POINTS.": ".$user_points : "";
                 $regdate = ($user_regdate) ? _REG.": ".format_time($user_regdate) : _NO_INFO;
                 $gender = ($user_gender) ? _GENDER.": ".gender($user_gender) : "";
                 $from = ($user_from) ? _FROM.": ".$user_from : "";
                 $sig = ($user_sig) ? "<hr>".$user_sig : "";
-                $profil = ($confpr['profil'] && $user_name) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
-                $web = ($confpr['web'] && $user_website) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
+                $profil = ($conf['privat']['profil'] && $user_name) ? "<a href=\"index.php?name=account&amp;op=view&amp;uname=".urlencode($user_name)."\" title=\""._PERSONALINFO."\" class=\"sl_but\">"._ACCOUNT."</a>" : "";
+                $web = ($conf['privat']['web'] && $user_website) ? "<a href=\"".$user_website."\" target=\"_blank\" title=\""._DOWNLLINK."\" class=\"sl_but\">"._SITE."</a>" : "";
                 
 
                 
@@ -453,9 +453,9 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
                 $cont .= setTemplateBasic("privat-message", ['{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%title%}' => cutstr($title, 35), '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => bb_decode($content, $conf['name']), '{%sig%}' => bb_decode($sig, $conf['name']), '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_edit%}' => $edit]);
             }
         }
-        if (!$info && (!$qid || $qid == "1")) {
-            $raw = getVar('post', 'name', 'raw', '') ?: urldecode(getVar('get', 'uname', 'raw', ''));
-            $sname = text_filter(substr($raw, 0, 25));
+        if (!$info && (!$cid || $cid == "1")) {
+            $name = getVar('post', 'name', 'raw', '') ?: urldecode(getVar('get', 'uname', 'raw', ''));
+            $sname = text_filter(substr($name, 0, 25));
             $stitle = text_filter(trim(getVar('post', 'title', 'raw', '')));
             $stext = text_filter(trim(getVar('post', 'text', 'raw', '')));
             $rpost = ($sname) ? $sname : (($user_name ?? '') ? $user_name : "");
@@ -478,7 +478,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
 
 # Private message send and save
 function prmesssend() {
-    global $db, $user, $conf, $confpr;
+ global $db, $user, $conf;
     $postname = text_filter(substr(getVar('post', 'name',  'raw', ''), 0, 25));
     $title    = trim(getVar('post', 'title', 'raw', ''));
     $text     = trim(getVar('post', 'text',  'raw', ''));
@@ -488,7 +488,7 @@ function prmesssend() {
     $uidout = (is_user()) ? intval($user[0]) : "";
     
     list($date) = $db->sql_fetchrow($db->sql_query('SELECT date FROM '.PREFIX_DB.'_privat WHERE uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidout' => $uidout]));
-    $stime = strtotime($date) + $confpr['send'];
+    $stime = strtotime($date) + $conf['privat']['send'];
     $checks = str_replace(array("\n", "\r", "\t"), " ", $text);
     $e = explode(" ", $checks);
     for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
@@ -499,22 +499,22 @@ function prmesssend() {
     } elseif (!$uidin) {
         $stop[] = _CERROR7;
     }
-    if ($confpr['himself'] && $uidin == $uidout) $stop[] = _CERROR8;
+    if ($conf['privat']['himself'] && $uidin == $uidout) $stop[] = _CERROR8;
     if (!$title) $stop[] = _CERROR;
     if (!$text) $stop[] = _CERROR1;
-    if ($o > $confpr['letter']) $stop[] = _CERROR2;
+    if ($o > $conf['privat']['letter']) $stop[] = _CERROR2;
     if (!$uidout) $stop[] = _CERROR3;
-    if ($stime > time()) $stop[] = sprintf(_CERROR5, $confpr['send']);
+    if ($stime > time()) $stop[] = sprintf(_CERROR5, $conf['privat']['send']);
 
     list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uidin AND status <= 1', ['uidin' => $uidin]));
-    if ($pr_num >= $confpr['messin']) $stop[] = sprintf(_PRSENDOVER, $postname);
+    if ($pr_num >= $conf['privat']['messin']) $stop[] = sprintf(_PRSENDOVER, $postname);
     
-    if (!$stop && $confpr['act'] && is_user()) {
+    if (!$stop && $conf['privat']['act'] && is_user()) {
         $title = save_text($title, 1);
         $text = save_text($text);
         $db->sql_query('INSERT INTO '.PREFIX_DB.'_privat VALUES (NULL, :uidin, :uidout, :title, :content, NOW(), :ip_sender, 0)', ['uidin' => $uidin, 'uidout' => $uidout, 'title' => $title, 'content' => $text, 'ip_sender' => $ip]);
         update_points(45);
-        if ($confpr['newmail']) {
+        if ($conf['privat']['newmail']) {
             list($user_email, $user_psmail) = $db->sql_fetchrow($db->sql_query('SELECT user_email, user_psmail FROM '.PREFIX_DB.'_users WHERE user_id = :uidin', ['uidin' => $uidin]));
             if ($user_email && $user_psmail) {
                 list($id) = $db->sql_fetchrow($db->sql_query('SELECT id FROM '.PREFIX_DB.'_privat WHERE uidin = :uidin AND uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidin' => $uidin, 'uidout' => $uidout]));
@@ -536,45 +536,45 @@ function prmesssend() {
 
 # Private message save to user
 function prmesssave() {
-    global $db, $user, $confpr;
+ global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id = getVar('get', 'id', 'num', 0);
     list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status = 2', ['uid' => $uid]));
     $pr_numi = $pr_num + 1;
-    if ($pr_num >= $confpr['messsav']) {
-        $stop = sprintf(_PRSAVEEXIT, $confpr['messsav']);
+    if ($pr_num >= $conf['privat']['messsav']) {
+        $stop = sprintf(_PRSAVEEXIT, $conf['privat']['messsav']);
         $info = 0;
-    } elseif ($pr_numi >= ($confpr['messsav'] / 2)) {
-        $acmess = ($confpr['messsav'] - $pr_numi);
+    } elseif ($pr_numi >= ($conf['privat']['messsav'] / 2)) {
+        $acmess = ($conf['privat']['messsav'] - $pr_numi);
         $stop = 0;
-        $info = sprintf(_PRSAVEMAX, $confpr['messsav'], $pr_numi, $acmess);
+        $info = sprintf(_PRSAVEMAX, $conf['privat']['messsav'], $pr_numi, $acmess);
     }
-    if (!$stop && $confpr['act'] && $uid && $id) $db->sql_query('UPDATE '.PREFIX_DB.'_privat SET status = 2 WHERE id = :id AND uidin = :uid', ['id' => $id, 'uid' => $uid]);
+    if (!$stop && $conf['privat']['act'] && $uid && $id) $db->sql_query('UPDATE '.PREFIX_DB.'_privat SET status = 2 WHERE id = :id AND uidin = :uid', ['id' => $id, 'uid' => $uid]);
     return prmess(0, $stop, $info, 1);
 }
 
 # Private message delete
 function prmessdel() {
-    global $db, $user, $confpr;
+ global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id  = getVar('get', 'id',  'num', 0);
     $typ = getVar('get', 'typ', 'num', 1);
-    if ($confpr['act'] && $uid && $id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_privat WHERE (id = :id_in AND uidin = :uid_in) OR (id = :id_out AND uidout = :uid_out AND status = 0)', ['id_in' => $id, 'uid_in' => $uid, 'id_out' => $id, 'uid_out' => $uid]);
+    if ($conf['privat']['act'] && $uid && $id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_privat WHERE (id = :id_in AND uidin = :uid_in) OR (id = :id_out AND uidout = :uid_out AND status = 0)', ['id_in' => $id, 'uid_in' => $uid, 'id_out' => $id, 'uid_out' => $uid]);
     return prmess(0, 0, 0, $typ);
 }
 
 # Favorites view
 function favorview($fid, $mod) {
-    global $db, $user, $conffav;
+ global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
-    if ($conffav['favact'] && $uid) {
+    if ($conf['favorites']['favact'] && $uid) {
         list($fav) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]));
         if ($fav) {
             $content = "<span title=\""._FAVOR."\" class=\"sl_favor sl_favor_on\"></span>";
         } else {
             list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
-            if ($fav_num >= $conffav['favorites']) {
-                $fav_exit = sprintf(_FAVOR_EXIT, $conffav['favorites']);
+            if ($fav_num >= $conf['favorites']['favorites']) {
+                $fav_exit = sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']);
                 $content = "<span title=\"".$fav_exit."\" class=\"sl_favor sl_favor_off\"></span>";
             } else {
                 $content = "<span id=\"rep".$fid.$mod."\"><span OnClick=\"AjaxLoad('GET', '0', '".$fid.$mod."', 'go=1&amp;op=favoradd&amp;id=".$fid."&amp;mod=".$mod."', ''); return false;\" title=\""._FAVOR_ADD."\" class=\"sl_favor\"></span></span>";
@@ -586,39 +586,39 @@ function favorview($fid, $mod) {
 
 # Favorites add
 function favoradd() {
-    global $db, $user, $conffav;
-    $fid = getVar('get', 'id',  'num',  0);
+ global $db, $conf, $user;
+    $id = getVar('get', 'id',  'num',  0);
     $mod = analyze(getVar('get', 'mod', 'text', ''));
     $uid = (is_user()) ? intval($user[0]) : 0;
-    if ($conffav['favact'] && $uid && $fid && $mod) {
-        list($fav) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]));
+    if ($conf['favorites']['favact'] && $uid && $id && $mod) {
+        list($fav) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]));
         if ($fav) {
-            echo favorview($fid, $mod);
+            echo favorview($id, $mod);
         } else {
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul)', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]);
+            $db->sql_query('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul)', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]);
             update_points(44);
         }
     }
-    echo favorview($fid, $mod);
+    echo favorview($id, $mod);
 }
 
 # Favorites liste view
 function favorliste(int $obj = 0): string {
-    global $db, $user, $conffav, $conf;
+ global $db, $conf, $user;
     $uid = intval($user[0]);
-    $newlistnum = intval($conffav['num']);
-    $num = getVar('get', 'cid', 'num', 1);
-    $offset = ($num-1) * $newlistnum;
+    $newlistnum = intval($conf['favorites']['num']);
+    $cid = getVar('get', 'cid', 'num', 1);
+    $offset = ($cid - 1) * $newlistnum;
     $offset = intval($offset);
-    $a = ($num) ? $offset+1 : 1;
+    $a = ($cid) ? $offset + 1 : 1;
     
     list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
-    if ($fav_num >= $conffav['favorites']) {
-        $favinfo = sprintf(_FAVOR_EXIT, $conffav['favorites']);
+    if ($fav_num >= $conf['favorites']['favorites']) {
+        $favinfo = sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']);
         $fstatus = "warn";
     } else {
-        $acfavor = ($conffav['favorites'] - $fav_num);
-        $favinfo = sprintf(_FAVOR_MAX, $conffav['favorites'], $fav_num, $acfavor);
+        $acfavor = ($conf['favorites']['favorites'] - $fav_num);
+        $favinfo = sprintf(_FAVOR_MAX, $conf['favorites']['favorites'], $fav_num, $acfavor);
         $fstatus = "info";
     }
     
@@ -654,10 +654,10 @@ function favorliste(int $obj = 0): string {
                 $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid=n.lid) WHERE f.uid = :uid AND n.lid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title);
             } elseif ($key == "media") {
-                $confm = $conf['media'] ?? [];
+                $conf['media'] = $conf['media'] ?? [];
                 $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, n.subtitle FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_media AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while (list($id, $fid, $modul, $title, $subtitle) = $db->sql_fetchrow($result)) {
-                    $title = ($subtitle) ? $title." ".urldecode($confm['mdefis'])." ".$subtitle : $title;
+                    $title = ($subtitle) ? $title." ".urldecode($conf['media']['mdefis'])." ".$subtitle : $title;
                     $ffmassiv[] = array($id, $fid, $modul, $title);
                 }
             } elseif ($key == "news") {
@@ -689,7 +689,7 @@ function favorliste(int $obj = 0): string {
         }
         $cont .= "</tbody></table>";
         $numpages = ceil($fav_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conffav['nump'], $num, "0", "1", "favorliste", "favorliste", "", "", "");
+        $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, "0", "1", "favorliste", "favorliste", "", "", "");
     } else {
         $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
     }
@@ -700,16 +700,16 @@ function favorliste(int $obj = 0): string {
 
 # Favorites delete
 function favordel() {
-    global $db, $user, $conffav;
+ global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id = getVar('get', 'id', 'num', 0);
-    if ($conffav['favact'] && $uid && $id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id AND uid = :uid', ['id' => $id, 'uid' => $uid]);
+    if ($conf['favorites']['favact'] && $uid && $id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id AND uid = :uid', ['id' => $id, 'uid' => $uid]);
     return favorliste(0);
 }
 
 # RSS Channel
 function rss_channel() {
-    global $db, $conf, $confrs, $confu;
+ global $db, $conf;
     header_remove("X-Content-Type-Options");
     header("Content-Type: application/rss+xml; charset="._CHARSET);
     header("Content-Encoding: none");
@@ -721,7 +721,7 @@ function rss_channel() {
     $name = ($name) ? $name : $cname;
     $cat  = getVar('post', 'cat', 'num', 0) ?: getVar('get', 'cat', 'num', 0);
     $num  = getVar('post', 'num', 'num', 0) ?: getVar('get', 'num', 'num', 0);
-    $num = ($num) ? (($num <= $confrs['max']) ? $num : $confrs['max']) : $confrs['min'];
+    $num = ($num) ? (($num <= $conf['rss']['max']) ? $num : $conf['rss']['max']) : $conf['rss']['min'];
     $id   = getVar('post', 'id',  'num', 0) ?: getVar('get', 'id',  'num', 0);
 
     if (($name == "content") && $id) {
@@ -819,7 +819,7 @@ function rss_channel() {
 
 # Open search
 function open_search() {
-    global $conf;
+ global $conf;
     header("Content-Type: application/opensearchdescription+xml");
     header("Content-Encoding: none");
     return "<?xml version=\"1.0\" encoding=\""._CHARSET."\"?>\n"
@@ -838,7 +838,7 @@ function open_search() {
 
 # Open xsl template
 function open_xsl() {
-    global $conf;
+ global $conf;
     if (file_exists('config/sitemap/sitemap.xsl')) {
         $file = file_get_contents('config/sitemap/sitemap.xsl');
         $licens = str_replace('&copy;', '©', base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']));
@@ -864,5 +864,3 @@ switch(getVar('get', 'stat', 'num', 0)) {
     imagepng($image);
     exit;
 }
-
-
