@@ -568,6 +568,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
             return setTemplateBasic('categories', ['{%categories%}' => _CATEGORIES, '{%content%}' => $cont, '{%total%}' => _ALLIN, '{%pages%}' => $pnum, '{%in%}' => $in, '{%cat%}' => $cnum, '{%category%}' => _ALLINC, '{%mod%}' => $mod]);
         }
     }
+    return '';
 }
 
 # Generation of article numbers
@@ -735,7 +736,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     };
     $cnt = '<?php'.PHP_EOL
     .'# Author: Eduard Laas'.PHP_EOL
-    .'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL
+    .'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL
     .'# License: GNU GPL 3'.PHP_EOL
     .'# Website: slaed.net'.PHP_EOL.PHP_EOL
     .'return '.$exp($data).';'.PHP_EOL;
@@ -749,7 +750,7 @@ function doConfig(string $fp, string $name, array $array, array|string $actual =
         ksort($array);
         array_walk($array, function (&$v) { $v = is_bool($v) ? strval(intval($v)) : strval($v); });
         $cons = empty($type) ? 'FUNC_FILE' : 'ADMIN_FILE';
-        $cont = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright © 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL.'$'.$name.' = '.var_export($array, true).';';
+        $cont = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL.'if (!defined(\''.$cons.'\')) die(\'Illegal file access\');'.PHP_EOL.PHP_EOL.'$'.$name.' = '.var_export($array, true).';';
         file_put_contents($fp, $cont, LOCK_EX);
     }
 }
@@ -1036,20 +1037,20 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
 # Transliteration
 function getTranslit(string $st, string $lo = ''): string {
     $st = strtr($st, [
-        'а' => 'a',  'б' => 'b',    'в' => 'v',    'г' => 'g',    'д' => 'd',
-        'е' => 'e',  'ж' => 'g',    'з' => 'z',    'и' => 'i',    'й' => 'y',
-        'к' => 'k',  'л' => 'l',    'м' => 'm',    'н' => 'n',    'о' => 'o',
-        'п' => 'p',  'р' => 'r',    'с' => 's',    'т' => 't',    'у' => 'u',
-        'ф' => 'f',  'ы' => 'i',    'э' => 'e',
-        'А' => 'A',  'Б' => 'B',    'В' => 'V',    'Г' => 'G',    'Д' => 'D',
-        'Е' => 'E',  'Ж' => 'G',    'З' => 'Z',    'И' => 'I',    'Й' => 'Y',
-        'К' => 'K',  'Л' => 'L',    'М' => 'M',    'Н' => 'N',    'О' => 'O',
-        'П' => 'P',  'Р' => 'R',    'С' => 'S',    'Т' => 'T',    'У' => 'U',
-        'Ф' => 'F',  'Ы' => 'I',    'Э' => 'E',
-        'ё' => 'yo', 'х' => 'h',    'ц' => 'ts',   'ч' => 'ch',   'ш' => 'sh',
-        'щ' => 'shch', 'ъ' => '',   'ь' => '',     'ю' => 'yu',   'я' => 'ya',
-        'Ё' => 'Yo', 'Х' => 'H',    'Ц' => 'Ts',   'Ч' => 'Ch',   'Ш' => 'Sh',
-        'Щ' => 'Shch', 'Ъ' => '',   'Ь' => '',     'Ю' => 'Yu',   'Я' => 'Ya',
+        "\u{0430}" => 'a', "\u{0431}" => 'b', "\u{0432}" => 'v', "\u{0433}" => 'g', "\u{0434}" => 'd',
+        "\u{0435}" => 'e', "\u{0436}" => 'g', "\u{0437}" => 'z', "\u{0438}" => 'i', "\u{0439}" => 'y',
+        "\u{043A}" => 'k', "\u{043B}" => 'l', "\u{043C}" => 'm', "\u{043D}" => 'n', "\u{043E}" => 'o',
+        "\u{043F}" => 'p', "\u{0440}" => 'r', "\u{0441}" => 's', "\u{0442}" => 't', "\u{0443}" => 'u',
+        "\u{0444}" => 'f', "\u{044B}" => 'i', "\u{044D}" => 'e',
+        "\u{0410}" => 'A', "\u{0411}" => 'B', "\u{0412}" => 'V', "\u{0413}" => 'G', "\u{0414}" => 'D',
+        "\u{0415}" => 'E', "\u{0416}" => 'G', "\u{0417}" => 'Z', "\u{0418}" => 'I', "\u{0419}" => 'Y',
+        "\u{041A}" => 'K', "\u{041B}" => 'L', "\u{041C}" => 'M', "\u{041D}" => 'N', "\u{041E}" => 'O',
+        "\u{041F}" => 'P', "\u{0420}" => 'R', "\u{0421}" => 'S', "\u{0422}" => 'T', "\u{0423}" => 'U',
+        "\u{0424}" => 'F', "\u{042B}" => 'I', "\u{042D}" => 'E',
+        "\u{0451}" => 'yo', "\u{0445}" => 'h', "\u{0446}" => 'ts', "\u{0447}" => 'ch', "\u{0448}" => 'sh',
+        "\u{0449}" => 'shch', "\u{044A}" => '', "\u{044C}" => '', "\u{044E}" => 'yu', "\u{044F}" => 'ya',
+        "\u{0401}" => 'Yo', "\u{0425}" => 'H', "\u{0426}" => 'Ts', "\u{0427}" => 'Ch', "\u{0428}" => 'Sh',
+        "\u{0429}" => 'Shch', "\u{042A}" => '', "\u{042C}" => '', "\u{042E}" => 'Yu', "\u{042F}" => 'Ya',
     ]);
     $st = empty($lo) ? $st : mb_strtolower($st);
     $st = preg_replace('#[^a-zA-Z0-9]#', '', $st);
@@ -1413,17 +1414,17 @@ function getSeoUrl(array $params): string {
 
 function filterSlug(string $text, string $sep = '-'): string {
     $text = trim($text);
-    static $rus = [
-        'Ð'=>'A','Ð‘'=>'B','Ð’'=>'V','Ð“'=>'G','Ð”'=>'D','Ð•'=>'E','Ð'=>'E','Ð–'=>'Zh',
-        'Ð—'=>'Z','Ð˜'=>'I','Ð™'=>'I','Ðš'=>'K','Ð›'=>'L','Ðœ'=>'M','Ð'=>'N','Ðž'=>'O',
-        'ÐŸ'=>'P','Ð '=>'R','Ð¡'=>'S','Ð¢'=>'T','Ð£'=>'U','Ð¤'=>'F','Ð¥'=>'Kh','Ð¦'=>'Ts',
-        'Ð§'=>'Ch','Ð¨'=>'Sh','Ð©'=>'Shch','Ð«'=>'Y','Ð­'=>'E','Ð®'=>'Yu','Ð¯'=>'Ya',
-        'Ðª'=>'','Ð¬'=>'',
-        'Ð°'=>'a','Ð±'=>'b','Ð²'=>'v','Ð³'=>'g','Ð´'=>'d','Ðµ'=>'e','Ñ‘'=>'e','Ð¶'=>'zh',
-        'Ð·'=>'z','Ð¸'=>'i','Ð¹'=>'i','Ðº'=>'k','Ð»'=>'l','Ð¼'=>'m','Ð½'=>'n','Ð¾'=>'o',
-        'Ð¿'=>'p','Ñ€'=>'r','Ñ'=>'s','Ñ‚'=>'t','Ñƒ'=>'u','Ñ„'=>'f','Ñ…'=>'kh','Ñ†'=>'ts',
-        'Ñ‡'=>'ch','Ñˆ'=>'sh','Ñ‰'=>'shch','Ñ‹'=>'y','Ñ'=>'e','ÑŽ'=>'yu','Ñ'=>'ya',
-        'ÑŠ'=>'','ÑŒ'=>'',
+        static $rus = [
+        "\u{0410}" => 'A', "\u{0411}" => 'B', "\u{0412}" => 'V', "\u{0413}" => 'G', "\u{0414}" => 'D', "\u{0415}" => 'E', "\u{0401}" => 'E', "\u{0416}" => 'Zh',
+        "\u{0417}" => 'Z', "\u{0418}" => 'I', "\u{0419}" => 'I', "\u{041A}" => 'K', "\u{041B}" => 'L', "\u{041C}" => 'M', "\u{041D}" => 'N', "\u{041E}" => 'O',
+        "\u{041F}" => 'P', "\u{0420}" => 'R', "\u{0421}" => 'S', "\u{0422}" => 'T', "\u{0423}" => 'U', "\u{0424}" => 'F', "\u{0425}" => 'Kh', "\u{0426}" => 'Ts',
+        "\u{0427}" => 'Ch', "\u{0428}" => 'Sh', "\u{0429}" => 'Shch', "\u{042B}" => 'Y', "\u{042D}" => 'E', "\u{042E}" => 'Yu', "\u{042F}" => 'Ya',
+        "\u{042A}" => '', "\u{042C}" => '',
+        "\u{0430}" => 'a', "\u{0431}" => 'b', "\u{0432}" => 'v', "\u{0433}" => 'g', "\u{0434}" => 'd', "\u{0435}" => 'e', "\u{0451}" => 'e', "\u{0436}" => 'zh',
+        "\u{0437}" => 'z', "\u{0438}" => 'i', "\u{0439}" => 'i', "\u{043A}" => 'k', "\u{043B}" => 'l', "\u{043C}" => 'm', "\u{043D}" => 'n', "\u{043E}" => 'o',
+        "\u{043F}" => 'p', "\u{0440}" => 'r', "\u{0441}" => 's', "\u{0442}" => 't', "\u{0443}" => 'u', "\u{0444}" => 'f', "\u{0445}" => 'kh', "\u{0446}" => 'ts',
+        "\u{0447}" => 'ch', "\u{0448}" => 'sh', "\u{0449}" => 'shch', "\u{044B}" => 'y', "\u{044D}" => 'e', "\u{044E}" => 'yu', "\u{044F}" => 'ya',
+        "\u{044A}" => '', "\u{044C}" => '',
     ];
     $text = strtr($text, $rus);
     $text = preg_replace('~[^a-zA-Z0-9]+~', $sep, $text);
@@ -1483,13 +1484,13 @@ function getThemeFile(string $name): string|false {
 }
 
 # Get theme load
-function getThemeLoad(string $tpl): ?string {
+function getThemeLoad(string $tpl): string {
     $path = getThemeFile($tpl);
-    if (!$path) return null;
+    if (!$path) return '';
     static $cache = [];
     if (array_key_exists($path, $cache)) return $cache[$path];
     $raw = file_get_contents($path);
-    return $cache[$path] = $raw !== false ? $raw : null;
+    return $cache[$path] = $raw !== false ? $raw : '';
 }
 
 # Determining the load time
@@ -1632,7 +1633,7 @@ function search_color(string $sourse, string $word): string {
 }
 
 # Replace break
-function replace_break(string $text): ?string {
+function replace_break(string $text): string {
  global $admin, $conf;
     if ($text) {
         $flag = is_array($admin) ? ($admin[3] ?? '') : '';
@@ -1640,6 +1641,7 @@ function replace_break(string $text): ?string {
         $out = ((defined("ADMIN_FILE") && $editor == 1) || (!defined("ADMIN_FILE") && $conf['redaktor'] == 1)) ? preg_replace("#<br.*>#i", "", $text) : $text;
         return $out;
     }
+    return '';
 }
 
 # DELETE OR MODIFY
@@ -1669,7 +1671,7 @@ function user_geo_ip(string $ip, int $id = 4): string {
 }
 
 # User information for user
-function user_sinfo(string $id = ''): ?string {
+function user_sinfo(string $id = ''): string {
  global $db, $conf;
     if ($conf['session']) {
         $who_online = ""; $m = 0; $b = 0; $u = 0; $i = 0;
@@ -1697,10 +1699,11 @@ function user_sinfo(string $id = ''): ?string {
         $content .= ($who_online) ? "<a OnClick=\"HideShow('u-block', 'slide', 'up', 500);\" title=\""._READMORE."\" class=\"sl_but_blue\">"._READMORE."</a></td></tr></table><table id=\"u-block\" class=\"sl_table_block sl_none\">".$who_online."</table>" : "</td></tr></table>";
         if ($id) { return $content; } else { echo $content; }
     }
+    return '';
 }
 
 # User information for admin
-function user_sainfo(string $id = ''): ?string {
+function user_sainfo(string $id = ''): string {
  global $db, $conf;
     if ($conf['session'] && is_admin()) {
         $a = $b = $m = $u = $i = 0;
@@ -1741,10 +1744,11 @@ function user_sainfo(string $id = ''): ?string {
         ."<table class=\"sl_table_block\"><tr><td>"._OVERALL.":</td><td class=\"sl_right\">".$i."</td></tr></table><hr><table class=\"sl_table_block\"><tr><td class=\"sl_center\"><a OnClick=\"AjaxLoad('GET', '0', 'sainfo', 'go=1&amp;op=user_sainfo', ''); return false;\" title=\""._UPDATE."\" class=\"sl_but_green\">"._UPDATE."</a></td></tr></table>";
         if ($id) { return $content_who; } else { echo $content_who; }
     }
+    return '';
 }
 
 # Format admin block
-function adminblock(): ?string {
+function adminblock(): string {
  global $db, $afile;
     if (is_admin()) {
         $cont = '<table class="sl_table_block"><tr><td><a href="'.$afile.'.php" title="'._ADMINMENU.'">'._ADMINMENU.'</a></td></tr>'
@@ -1756,6 +1760,7 @@ function adminblock(): ?string {
         $a_title = ($title) ? $title : _ADMINS;
         return setTemplateBlock('block-left', ['{%title%}' => $a_title, '{%content%}' => $cont, '{%id%}' => '7']).setTemplateBlock('block-left', ['{%title%}' => _WHO, '{%content%}' => '<div id="repsainfo">'.user_sainfo(1).'</div>', '{%id%}' => '8']);
     }
+    return '';
 }
 
 # Newsletter send
@@ -1829,6 +1834,7 @@ function show_kasse(string $info = ''): string {
         $total = "<span title=\""._PARTNERGES."\" class=\"sl_shop_total\">"._PARTNERGES.": ".$preistotal." ".$conf['shop']['valute']."</span>";
         return setTemplateBasic("kasse-open", ['{%title%}' => _PBASKET, '{%col_id%}' => _ID, '{%col_product%}' => _PRODUCT, '{%col_qty%}' => cutstr(_QUANTITY, 3, 1), '{%col_price%}' => _PREIS, '{%col_fn%}' => _FUNCTIONS]).$cont.setTemplateBasic("kasse-close", ['{%cart%}' => $cart, '{%total%}' => $total]);
     }
+    return '';
 }
 
 # Add kasse
@@ -2070,7 +2076,7 @@ function letter(string $mod): string {
 }
 
 # Format admin menu
-function add_menu(string $links): ?string {
+function add_menu(string $links): string {
     if ($links) {
         $links = explode("||", $links);
         $cont = "<nav class=\"sl_menu\"><ul><li><span class=\"sl_but_red\">"._EDITOR."</span><ul>";
@@ -2078,6 +2084,7 @@ function add_menu(string $links): ?string {
         $cont .= "</ul></li></ul></nav>";
         return $cont;
     }
+    return '';
 }
 
 # Format title tips
@@ -2147,7 +2154,7 @@ function rss_select(): string {
 }
 
 # Read RSS
-function rss_read(mixed $url, mixed $id): ?string {
+function rss_read(mixed $url, mixed $id): string {
     if ($url) {
         require_once CONFIG_DIR.'/rss.php';
         $url = trim(html_entity_decode(str_replace(["&#038;", "&amp;"], "&", $url), ENT_QUOTES, 'UTF-8'));
@@ -2202,6 +2209,7 @@ function rss_read(mixed $url, mixed $id): ?string {
         }
         return $cont;
     }
+    return '';
 }
 
 # Load RSS
@@ -2295,7 +2303,7 @@ function fields_in(mixed $fieldb, string $mod): string {
 }
 
 # Fields out
-function fields_out(mixed $fieldb, string $mod): ?string {
+function fields_out(mixed $fieldb, string $mod): string {
     global $conf;
     $mod = strtolower($mod);
     if ($fieldb && $mod) {
@@ -2313,6 +2321,7 @@ function fields_out(mixed $fieldb, string $mod): ?string {
         }
         return $fields;
     }
+    return '';
 }
 
 # Format domain
@@ -2354,7 +2363,7 @@ function from_bot(): int|string {
 }
 
 # Check referer from Search Engines
-function engines_word(string $refer): ?string {
+function engines_word(string $refer): string {
     $engines = ["images.google." => ["q", "prev"], "bing.com" => "q", ".alot." => "q", "a993.com" => "q1", "abcsok." => "q", "alltheweb." => "q", "altavista." => "q", "aol." => ["q", "query", "encquery"], "aolsvc." => "query", "avantfind.com" => "keywords", "bonvote.com" => "search", "bonweb.com" => "search", "comcast.net" => "q", "conduit." => "q", "eniro.se" => "search_word", "excite." => "search", "google." => ["q", "as_q"], "gogo.ru" => "q", "yandex." => ["text", "query"], "ya.ru" => "text", "hotbot." => "query", "icerocket.com" => "q", "icq.com" => "q", "isheyka.com" => "q", "midco.net" => "q", "live.com" => "q", "msn." => "q", "yahoo." => ["p", "k"], "search." => "q", "kvasir.no" => "q", "myway.com" => "searchfor", "netscape." => ["q", "query"], "oceanfree.net" => "as_q", "qip.ru" => "query", "sweetim.com" => "q", "tut.by" => "query", "ukr.net" => "search_query", "search.oboz.ua" => "k", "search.www.infoseek.co.jp" => "qt", ".setooz.com" => "query", "toile.com" => "q", "vinden.nl" => "q", ".i.ua" => "q", ".mail.ru" => ["q", "tag"], ".onru.ru" => "q", "aport.ru" => "r", "find.ru" => "text", "gde.ru" => ["keywords", "query", "t", "search_query", "id"], "go.km.ru" => "sq", "meta.ua" => "q", "metabot.ru" => "st", "nerus.ru" => "query", "nigma.ru" => ["s", "pq"], "nova.rambler.ru" => "query", "poisk.ru" => "text", "protonet.ru" => "q", "rambler.ru" => "query", "tyndex.ru" => "pnam", "webalta.ru" => "q", "exactseek.com" => ["q", "query"], "lycos." => "query", "ask." => "q", "cnn." => "query", "looksmart." => "qt", "about." => "terms", "mamma." => "query", "gigablast." => "q", "voila." => "rdata", "virgilio." => "qs", "baidu." => "wd", "alice." => "qs", "najdi." => "q", "club-internet." => "q", "mama." => "query", "seznam." => "q", "netsprint." => "q", "szukacz." => "q", "yam." => "k", "pchome." => "q"];
 
     $refer= str_replace(["&#038;", "&amp;"], "&", $refer);
@@ -2382,6 +2391,7 @@ function engines_word(string $refer): ?string {
             break;
         }
     }
+    return '';
 }
 
 # Check user
@@ -3109,16 +3119,16 @@ function addBackupDb(): bool {
     $conlycreate = "MRG_MyISAM,MERGE,HEAP,MEMORY";
 
     # Table filter uses wildcard patterns. Supported special characters:
-    # * — any number of characters;
-    # ? — one arbitrary character;
-    # ^ — excludes table(s) from the list.
+    # * - any number of characters;
+    # ? - one arbitrary character;
+    # ^ - excludes table(s) from the list.
 
     # Examples:
-    # slaed_*           — all tables starting with "slaed_" (all Invision Board forum tables)
-    # slaed_*, ^slaed_session  — all tables starting with "slaed_", except "slaed_session"
-    # slaed_s*s, ^slaed_session — all tables starting with "slaed_s" and ending with "s", except "slaed_session"
-    # ^*s               — all tables except those ending with "s"
-    # ^slaed_????       — all tables except those starting with "slaed_" with 4 chars after the underscore
+    # slaed_*           - all tables starting with "slaed_" (all Invision Board forum tables)
+    # slaed_*, ^slaed_session  - all tables starting with "slaed_", except "slaed_session"
+    # slaed_s*s, ^slaed_session - all tables starting with "slaed_s" and ending with "s", except "slaed_session"
+    # ^*s               - all tables except those ending with "s"
+    # ^slaed_????       - all tables except those starting with "slaed_" with 4 chars after the underscore
     $ctables = "^ipb_*";
 
     $bsize = 0;
@@ -3264,7 +3274,7 @@ function addBackupDb(): bool {
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$table)) {
             continue;
         }
-        // FIX: Charset isset() Check
+        // Add a comma before each next VALUES row (except first row and after split markers) Check
         if ($bmysql_ver > 40101 && isset($tab_charset[$table]) && $tab_charset[$table] != $last_charset) {
             if ($ccharset == "auto" && !empty($tab_charset[$table])) {
                 $tcharset = preg_replace('#[^a-zA-Z0-9_\\-]#', '', (string)$tab_charset[$table]);
@@ -3321,7 +3331,7 @@ function addBackupDb(): bool {
                         }
                     }
 
-                    // Ãâ€ÃÂ¾ÃÂ±ÃÂ°ÃÂ²ÃÂ»Ã‘ÂÃÂµÃÂ¼ ÃÂ·ÃÂ°ÃÂ¿Ã‘ÂÃ‘â€šÃ‘Æ’Ã‘Å½ ÃÅ¸Ãâ€¢ÃÂ Ãâ€¢Ãâ€ Ã‘ÂÃ‘â€šÃ‘â‚¬ÃÂ¾ÃÂºÃÂ¾ÃÂ¹ (ÃÂºÃ‘â‚¬ÃÂ¾ÃÂ¼ÃÂµ ÃÂ¿ÃÂµÃ‘â‚¬ÃÂ²ÃÂ¾ÃÂ¹ ÃÂ¸ ÃÂ¿ÃÂ¾Ã‘ÂÃÂ»ÃÂµ Ã‘â‚¬ÃÂ°ÃÂ·ÃÂ´ÃÂµÃÂ»ÃÂµÃÂ½ÃÂ¸Ã‘Â)
+                    // Add a comma before each next VALUES row (except first row and after split markers)
                     $is_first_in_block = ($i == 1) || (($i - 1) % 10000 == 0);
                     fwrite($fp, ($is_first_in_block ? "\n" : ",\n")."(".implode(",", $row).")");
                 }
@@ -3519,9 +3529,9 @@ function is_active(string $mod, string $view = ''): int {
 }
 
 # Convert Markdown+BB source to safe HTML.
-# Safe mode (true): escapes HTML, URL allowlist — for user content.
+# Safe mode (true): escapes HTML, URL allowlist - for user content.
 # Safe mode (false): allows raw HTML blocks + admin BB tags.
-function filterMarkdown(string $src, bool $safe = true, string $mod = ''): string {
+function filterMarkdown(string $src, string $mod = '', bool $safe = true): string {
     static $md = null;
     $md ??= new class {
 
@@ -3535,10 +3545,17 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
             $this->hids  = [];
             $this->salt  = bin2hex(random_bytes(4));
             $this->mod   = $mod !== '' ? strtolower($mod) : 'all';
-            return trim(strtr($this->filterMain($src, $safe), $this->stash));
+            $out = $this->filterMain($src, $safe);
+            $sentinel = "\x02{$this->salt}:";
+            while (str_contains($out, $sentinel)) {
+                $prev = $out;
+                $out  = strtr($out, $this->stash);
+                if ($out === $prev) break;
+            }
+            return trim($out);
         }
 
-        // Same pipeline, but WITHOUT resetting stash/salt (used for nested [quote]/[hide])
+        // Add a comma before each next VALUES row (except first row and after split markers)
         private function filterNest(string $src, bool $safe): string {
             return $this->filterMain($src, $safe);
         }
@@ -3547,13 +3564,13 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
             $src = str_replace(["\r\n", "\r"], "\n", $src);
             $src = $this->filterBbBlocks($src, $safe);
             $src = $this->filterFencedCode($src);
-            $src = $this->filterIndentedCode($src);
+            if ($safe) $src = $this->filterIndentedCode($src);
             $src = $this->filterInlineCode($src);
             $src = $this->filterBlocks($src, $safe);
             return $src;
         }
 
-        // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Helpers
 
         private function addStash(string $html): string {
             $key = "\x02{$this->salt}:".count($this->stash)."\x03";
@@ -3584,13 +3601,13 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
             return preg_match('/^(?:https?:\/\/|mailto:|[\/\.#?])/i', $url) ? $url : '#';
         }
 
-        // â”€â”€ BB blocks (stash before Markdown parsing) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // BB blocks (stash before Markdown parsing)
 
         private function filterBbBlocks(string $src, bool $safe): string {
-            // [hr] (legacy)
+            // Add a comma before each next VALUES row (except first row and after split markers)
             $src = preg_replace('/\[hr\]/si', $this->addStash('<hr>'), $src) ?? $src;
 
-            // [li] (legacy bullet)
+            // Add a comma before each next VALUES row (except first row and after split markers)
             $src = preg_replace('/\[li\]/si', $this->addStash('&bull; '), $src) ?? $src;
 
             // *01 smilies
@@ -3606,7 +3623,7 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
                 ) ?? $src;
             }
 
-            // [usehtml]...[/usehtml] (admin only)
+            // Add a comma before each next VALUES row (except first row and after split markers)
             $src = preg_replace_callback(
                 '/\[usehtml\](.*?)\[\/usehtml\]/si',
                 function(array $m) use ($safe): string {
@@ -3617,7 +3634,7 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
                 $src
             ) ?? $src;
 
-            // [usephp]...[/usephp] (admin only)
+            // Add a comma before each next VALUES row (except first row and after split markers)
             $src = preg_replace_callback(
                 '/\[usephp\](.*?)\[\/usephp\]/si',
                 function(array $m) use ($safe): string {
@@ -3684,7 +3701,7 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
                 $src
             ) ?? $src;
 
-            // [quote]...[/quote] (nested, innermost first)
+            // Add a comma before each next VALUES row (except first row and after split markers)
             while (preg_match('/\[quote\](.*?)\[\/quote\]/si', $src)) {
                 $src = preg_replace_callback(
                     '/\[quote\](.*?)\[\/quote\]/si',
@@ -3697,7 +3714,7 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
                 ) ?? $src;
             }
 
-            // [hide]...[/hide] (nested, innermost first)
+            // Add a comma before each next VALUES row (except first row and after split markers)
             while (preg_match('/\[hide\](.*?)\[\/hide\]/si', $src)) {
                 $src = preg_replace_callback(
                     '/\[hide\](.*?)\[\/hide\]/si',
@@ -3785,7 +3802,7 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
             return $src;
         }
 
-        // â”€â”€ Code protection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Code protection
 
         private function filterFencedCode(string $src): string {
             return preg_replace_callback(
@@ -3819,7 +3836,7 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
             ) ?? $src;
         }
 
-        // â”€â”€ Blocks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Blocks
 
         private function filterBlocks(string $src, bool $safe): string {
             $lines = explode("\n", $src);
@@ -3877,10 +3894,11 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
                     }
                 }
 
-                if (!$safe && preg_match('/^<\/?(?:div|section|article|aside|nav|header|footer|main|pre|ul|ol|table|figure)[\s>\/]/i', $trim)) {
+                if (!$safe && preg_match('/^<\/?[a-zA-Z]/', $trim)) {
                     $raw = '';
                     while ($i < $n && trim($lines[$i]) !== '') { $raw .= $lines[$i++]."\n"; }
-                    $out .= $this->addStash($raw);
+                    $raw = strtr($raw, $this->stash);
+                    $out .= $this->addStash(str_replace(['&#034;', '&#039;'], ['"', "'"], $raw));
                     continue;
                 }
 
@@ -3986,13 +4004,13 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
             return [$html."</tbody>\n</table>\n", $i];
         }
 
-        // â”€â”€ Inlines: Markdown + BB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // Inlines: Markdown + BB
 
         private function filterInlines(string $src, bool $safe): string {
 
-            // â”€â”€ BB inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // BB inline
 
-            // ed2k links — must come BEFORE generic [url] patterns
+            // ed2k links - must come BEFORE generic [url] patterns
             $src = preg_replace_callback(
                 '/\[url\](ed2k:\/\/\|file\|(.*?)\|\d+\|\w+\|(h=\w+\|)?\/?)\[\/url\]/si',
                 function(array $m): string {
@@ -4156,7 +4174,7 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
                 $src
             ) ?? $src;
 
-            // â”€â”€ Markdown inline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // Markdown inline
 
             $src = preg_replace_callback(
                 '/!\[([^\]]*)\]\(([^\s)]+)(?:\s+"([^"]*)")?\)/',
@@ -4209,9 +4227,9 @@ function filterMarkdown(string $src, bool $safe = true, string $mod = ''): strin
     return $md->filterHtml($src, $safe, $mod);
 }
 
-# Decode BB (shim — delegates to filterMarkdown for backward compatibility)
+# Decode BB (shim - delegates to filterMarkdown for backward compatibility)
 function bb_decode(string $src, string $mod = '', string $id = ''): string {
-    $out = filterMarkdown($src, false, $mod); // backward compat: HTML passes through as in old bb_decode
+    $out = filterMarkdown($src, $mod, false); // backward compat: HTML passes through as in old bb_decode
     return search_replace($out, $mod);
 }
 
@@ -4347,7 +4365,7 @@ function checkemail(string $mail): array {
 }
 
 # Format add block
-function addblocks(string $str): ?string {
+function addblocks(string $str): string {
  global $blocks, $blocks_c, $home, $showbanners, $foot, $db, $conf, $foot;
     preg_match_all("#{%BLOCKS([^%]+)%}#iUs", $str, $blk);
     $ci = count($blk[1]);
@@ -4570,7 +4588,7 @@ function getBlocks(string $side, string $fly = ''): void {
 }
 
 # Format block
-function render_blocks(string $side, string $blockfile, string $blocktitle, string $content, mixed $bid, string $url): ?string {
+function render_blocks(string $side, string $blockfile, string $blocktitle, string $content, mixed $bid, string $url): string {
  global $showbanners, $foot;
     if ($url == '') {
         $blocktitle = defconst($blocktitle);
@@ -4605,6 +4623,7 @@ function render_blocks(string $side, string $blockfile, string $blocktitle, stri
     } else {
         rss_load($bid);
     }
+    return '';
 }
 
 # Format rating
@@ -5117,15 +5136,17 @@ function num_ajax(string $tpl, int $count, int $pages, int $page, int $mnum = 8,
 }
 
 # Check type upload file
-function check_file(string $type, string $typefile): ?string {
+function check_file(string $type, string $typefile): string {
     $strtypefile = str_replace(",", "|", $typefile);
     if (!preg_match("#".$strtypefile."#i", $type) || preg_match("#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i", $type)) return _ERROR_FILE;
+    return '';
 }
 
 # Check size upload file
-function check_size(string $file, int $width, int $height): ?string {
+function check_size(string $file, int $width, int $height): string {
     list($imgwidth, $imgheight) = getimagesize($file);
     if ($imgwidth > $width || $imgheight > $height) return _ERROR_SIZE;
+    return '';
 }
 
 # Crypted md5 and salt
@@ -5277,6 +5298,7 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
         file_put_contents($dir, $from);
         return $newname;
     }
+    return null;
 }
 
 # Format language
@@ -5532,7 +5554,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
 }
 
 # Save edit comments
-function editcom(): ?string {
+function editcom(): string {
  global $db, $conf, $user;
     $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
@@ -5565,6 +5587,7 @@ function editcom(): ?string {
         $info = sprintf(_PEDEND, intval($conf['comments']['edit'] / 60));
         return setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'warn']);
     }
+    return '';
 }
 
 # Close comments
@@ -5705,21 +5728,11 @@ function create_img_gd(string $imgfile, string $imgthumb, int $newwidth): string
     if (function_exists("imagecreate")) {
         $imginfo = getimagesize($imgfile);
         switch($imginfo[2]) {
-            case 1:
-            $type = IMG_GIF;
-            break;
-            case 2:
-            $type = IMG_JPG;
-            break;
-            case 3:
-            $type = IMG_PNG;
-            break;
-            case 4:
-            $type = IMG_WBMP;
-            break;
-            default:
-            return $imgfile;
-            break;
+            default: return $imgfile; break;
+            case 1: $type = IMG_GIF; break;
+            case 2: $type = IMG_JPG; break;
+            case 3: $type = IMG_PNG; break;
+            case 4: $type = IMG_WBMP; break;
         }
         switch($type) {
             case IMG_GIF:
@@ -5768,54 +5781,11 @@ function create_img_gd(string $imgfile, string $imgthumb, int $newwidth): string
                 imagewbmp($destImage, $imgthumb);
                 break;
             }
-            imagedestroy($srcImage);
-            imagedestroy($destImage);
             return $imgthumb;
         } else {
             return $imgfile;
         }
     } else {
         return $imgfile;
-    }
-}
-
-# Format function mb_strtolower the strtolower version to support most amount of languages including russian, french and so on
-if (!function_exists("mb_strtolower")) {
-    function mb_strtolower($str){
-        $to = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "a", "a", "a", "a", "a", "a", "?", "c", "e", "e", "e", "e", "i", "i", "i", "i", "?", "n", "o", "o", "o", "o", "o", "o", "u", "u", "u", "u", "y", "ÃÂ°", "ÃÂ±", "ÃÂ²", "ÃÂ³", "ÃÂ´", "ÃÂµ", "Ã‘â€˜", "ÃÂ¶", "ÃÂ·", "ÃÂ¸", "ÃÂ¹", "ÃÂº", "ÃÂ»", "ÃÂ¼", "ÃÂ½", "ÃÂ¾", "ÃÂ¿", "Ã‘â‚¬", "Ã‘Â", "Ã‘â€š", "Ã‘Æ’", "Ã‘â€ž", "Ã‘â€¦", "Ã‘â€ ", "Ã‘â€¡", "Ã‘Ë†", "Ã‘â€°", "Ã‘Å ", "Ã‘â€¹", "Ã‘Å’", "Ã‘Â", "Ã‘Å½", "Ã‘Â"];
-        $from = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A", "A", "A", "A", "A", "A", "?", "C", "E", "E", "E", "E", "I", "I", "I", "I", "?", "N", "O", "O", "O", "O", "O", "O", "U", "U", "U", "U", "Y", "ÃÂ", "Ãâ€˜", "Ãâ€™", "Ãâ€œ", "Ãâ€", "Ãâ€¢", "ÃÂ", "Ãâ€“", "Ã—", "ÃËœ", "Ãâ„¢", "ÃÅ¡", "Ãâ€º", "ÃÅ“", "ÃÂ", "ÃÅ¾", "ÃÅ¸", "ÃÂ ", "ÃÂ¡", "ÃÂ¢", "ÃÂ£", "ÃÂ¤", "ÃÂ¥", "ÃÂ¦", "ÃÂ§", "ÃÂ¨", "ÃÂ©", "ÃÂª", "ÃÂª", "ÃÂ¬", "ÃÂ­", "ÃÂ®", "ÃÂ¯"];
-        return str_replace($from, $to, $str);
-    }
-}
-
-# Format function fputcsv for PHP 4
-if (!function_exists("fputcsv")) {
-    function fputcsv(&$handle, $fields = [], $delimiter = ',', $enclosure = '"') {
-        $str = '';
-        $escape_char = '\\';
-        foreach ($fields as $value) {
-            if (strpos($value, $delimiter) !== false || strpos($value, $enclosure) !== false || strpos($value, "\n") !== false || strpos($value, "\r") !== false || strpos($value, "\t") !== false || strpos($value, ' ') !== false) {
-                $str2 = $enclosure;
-                $escaped = 0;
-                $len = strlen($value);
-                for ($i=0; $i < $len; $i++) {
-                    if ($value[$i] == $escape_char) {
-                        $escaped = 1;
-                    } elseif (!$escaped && $value[$i] == $enclosure) {
-                        $str2 .= $enclosure;
-                    } else {
-                        $escaped = 0;
-                    }
-                    $str2 .= $value[$i];
-                }
-                $str2 .= $enclosure;
-                $str .= $str2.$delimiter;
-            } else {
-                $str .= $value.$delimiter;
-            }
-        }
-        $str = substr($str,0,-1);
-        $str .= "\n";
-        return fwrite($handle, $str);
     }
 }

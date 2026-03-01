@@ -137,8 +137,8 @@ if (!function_exists('setTemplateHead')) {
 if (!function_exists('setTemplateBasic')) {
     function setTemplateBasic(string $tpl, array $val = []): string {
         $vars = getTemplateVars();
+        if (!getThemeFile($tpl)) return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => sprintf(_ERRORTPL, $tpl)]);
         $raw = getThemeLoad($tpl);
-        if ($raw === null) return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => sprintf(_ERRORTPL, $tpl)]);
         $flags = [];
         if (isset($val['if_flag']) && is_array($val['if_flag'])) {
             $flags = $val['if_flag'];
@@ -211,8 +211,8 @@ if (!function_exists('setTemplateFoot')) {
 if (!function_exists('setTemplateWarning')) {
     function setTemplateWarning(string $tpl, array $set = [], array $val = []): string {
         $theme = getTheme();
+        if (!getThemeFile($tpl)) return sprintf('<fieldset><legend>%s</legend>%s</fieldset>', _ERROR, sprintf(_ERRORTPL, $tpl));
         $raw = getThemeLoad($tpl);
-        if ($raw === null) return sprintf('<fieldset><legend>%s</legend>%s</fieldset>', _ERROR, sprintf(_ERRORTPL, $tpl));
         $text = $set['text'] ?? '';
         if (is_array($text)) $text = implode('<br>', $text);
         $url  = $set['url'] ?? '';

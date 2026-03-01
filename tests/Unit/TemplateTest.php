@@ -40,16 +40,16 @@ namespace {
     }
 
     if (!function_exists('getThemeLoad')) {
-        function getThemeLoad(string $tpl): ?string
+        function getThemeLoad(string $tpl): string
         {
-            return $GLOBALS['__test_templates'][$tpl] ?? null;
+            return $GLOBALS['__test_templates'][$tpl] ?? '';
         }
     }
 
     if (!function_exists('getThemeFile')) {
         function getThemeFile(string $tpl): string|false
         {
-            return false;
+            return isset($GLOBALS['__test_templates'][$tpl]) ? $tpl : false;
         }
     }
 

@@ -42,7 +42,7 @@ function content(): void {
 }
 
 function view(): void {
-    global $db, $conf, $afile;
+    global $db, $conf;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $result = $db->sql_query('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
@@ -69,7 +69,7 @@ function view(): void {
             'time' => $time,
             'author' => $conf['sitename'],
         ]);
-        echo setTemplateBasic('title', ['if_flag' => ['is_view' => true], '{%title%}' => $title]).setTemplateBasic('open').search_color(bb_decode($hometext, $conf['name']), $word).setTemplateBasic('close');
+        echo setTemplateBasic('title', ['if_flag' => ['is_view' => true], '{%title%}' => $title]).setTemplateBasic('open').search_color(filterMarkdown($hometext, $conf['name'], false), $word).setTemplateBasic('close');
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);
