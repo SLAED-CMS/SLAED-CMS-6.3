@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2022 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -13,14 +13,14 @@ require_once $path.'config/security.php';
 require_once $path.'language/'.$conf['language'].'.php';
 
 # Denial of Authenticate
-function setUnauthorized() {
+function setUnauthorized(): never {
 	header('WWW-Authenticate: Basic realm="SLAED"');
 	header('HTTP/1.0 401 Unauthorized');
 	setExit(_LOGININCOR);
 }
 
 # Get IP
-function getIp() {
+function getIp(): string {
 	if (getenv('REMOTE_ADDR') && strcasecmp(getenv('REMOTE_ADDR'), 'unknown')) {
 		$ip = getenv('REMOTE_ADDR');
 	} elseif (!empty($_SERVER['REMOTE_ADDR']) && strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) {
@@ -32,7 +32,7 @@ function getIp() {
 }
 
 # Format exit info
-function setExit($msg, $typ = '') {
+function setExit(string $msg, string $typ = ''): never {
 	global $conf, $path;
 	$cont = '<!doctype html>'.PHP_EOL
 	.'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
@@ -87,6 +87,4 @@ if ($conf['security']['login'] != '' && $conf['security']['password'] != '') {
 	setExit(_AUTH_ERROR);
 }
 
-unset($conf);
-unset($conf['security']);
-unset($path);
+unset($conf, $path);

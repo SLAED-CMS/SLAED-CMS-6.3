@@ -11,10 +11,10 @@ function setComShow(int $id = 0, int $cid = 0): string {
  global $conf, $user;
     $cont = '<a id="comm"></a><div id="repcsave">'.ashowcom($id, $conf['name']).'</div>';
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
-        $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOANONCOMMENTS));
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOANONCOMMENTS]);
     } else {
         $userinfo = getusrinfo();
-        if ($cid == 1 || $userinfo['user_acess'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE));
+        if ($cid == 1 || $userinfo['user_acess'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE]);
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" id="formcsave" method="post">'
         .'<table class="sl_table_form">';
@@ -31,7 +31,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
 }
 
 # Showing messages on the home page
-function setMessageShow() {
+function setMessageShow(): ?string {
  global $db, $afile, $conf, $currentlang;
     if ($conf['message'] == 1) {
         $params = [];
@@ -50,16 +50,16 @@ function setMessageShow() {
                 $info = '| '._PURCHASED.': '.$exp.' | <a href="'.$afile.'.php?op=msg_add&amp;id='.$mid.'" title="'._EDIT.'">'._EDIT.'</a> ]</div>';
                 if ($view == 4 && is_moder()) {
                     $content .= '<div class="sl_center">[ '._VIEW.': '._MVADMIN.' '.$info;
-                    return setTemplateBasic('messagebox', array('{%title%}' => $title, '{%content%}' => $content));
+                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $content]);
                 } elseif (($view == 3 && is_user()) || ($view == 3 && is_user() && is_moder())) {
                     if (is_moder()) $content .= '<div class="sl_center">[ '._VIEW.': '._MVUSERS.' '.$info;
-                    return setTemplateBasic('messagebox', array('{%title%}' => $title, '{%content%}' => $content));
+                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $content]);
                 } elseif (($view == 2 && !is_user()) || ($view == 2 && !is_user() && is_moder())) {
                     if (is_moder()) $content .= '<div class="sl_center">[ '._VIEW.': '._MVANON.' '.$info;
-                    return setTemplateBasic('messagebox', array('{%title%}' => $title, '{%content%}' => $content));
+                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $content]);
                 } elseif ($view == 1) {
                     if (is_moder()) $content .= '<div class="sl_center">[ '._VIEW.': '._MVALL.' '.$info;
-                    return setTemplateBasic('messagebox', array('{%title%}' => $title, '{%content%}' => $content));
+                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $content]);
                 }
             }
         }
@@ -141,7 +141,7 @@ function navi() {
 }
 
 # Check group
-function is_mod_group($name) {
+function is_mod_group(string $name): int {
  global $db, $user;
     if (is_user()) {
         $uid = intval($user[0]);
@@ -177,14 +177,14 @@ function getusrinfo() {
 }
 
 # Show user block
-function userblock() {
+function userblock(): ?string {
  global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
         list($userblock) = $db->sql_fetchrow($db->sql_query('SELECT user_block FROM '.PREFIX_DB.'_users WHERE user_id = :uid', ['uid' => $uid]));
         $userblock = bb_decode($userblock, 'account');
-        return setTemplateBlock('', array('{%title%}' => _MENUFOR, '{%content%}' => $userblock));
+        return setTemplateBlock('', ['{%title%}' => _MENUFOR, '{%content%}' => $userblock]);
     }
 }
 
@@ -339,7 +339,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             }
             $cont .= "</tbody></table>";
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", "1", "prmess", "prmessin", "", "1", "");
@@ -365,7 +365,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             }
             $cont .= "</tbody></table>";
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
         list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidout = :uid AND status <= 1', ['uid' => $uid]));
         $numpages = ceil($pr_num / $newlistnum);
@@ -394,7 +394,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             }
             $cont .= "</tbody></table>";
         } else {
-            $cont .= setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", "1", "prmess", "prmesssa", "", "3", "");
@@ -691,7 +691,7 @@ function favorliste(int $obj = 0): string {
         $numpages = ceil($fav_num / $newlistnum);
         $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, "0", "1", "favorliste", "favorliste", "", "", "");
     } else {
-        $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
+        $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -699,7 +699,7 @@ function favorliste(int $obj = 0): string {
 }
 
 # Favorites delete
-function favordel() {
+function favordel(): string {
  global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id = getVar('get', 'id', 'num', 0);
@@ -837,13 +837,13 @@ function open_search() {
 }
 
 # Open xsl template
-function open_xsl() {
+function open_xsl(): string {
  global $conf;
     if (file_exists('config/sitemap/sitemap.xsl')) {
         $file = file_get_contents('config/sitemap/sitemap.xsl');
         $licens = str_replace('&copy;', '©', base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']));
         $title = $conf['sitename'].' - '._SITEMAP;
-        $langs = array('$lan[0]' => $title, '$lan[1]' => $licens, '$lan[2]' => _SITEMAP_XML, '$lan[3]' => _URL, '$lan[4]' => _PRIORITY, '$lan[5]' => _CHANGEFREQ, '$lan[6]' => _LASTMOD);
+        $langs = ['$lan[0]' => $title, '$lan[1]' => $licens, '$lan[2]' => _SITEMAP_XML, '$lan[3]' => _URL, '$lan[4]' => _PRIORITY, '$lan[5]' => _CHANGEFREQ, '$lan[6]' => _LASTMOD];
         $cont = strtr($file, $langs);
     } else {
         $cont = '';

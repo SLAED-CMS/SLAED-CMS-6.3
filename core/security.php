@@ -246,7 +246,7 @@ if ($bcookie == 'block') {
 }
 
 $conf['security']['error_log'] = 1;
-# Error reporting log â€” NDJSON (one JSON object per line, AI-ready schema)
+# Error reporting log — NDJSON (one JSON object per line, AI-ready schema)
 if ($conf['security']['error_log']) {
     # --- Inline helpers (closures only, no new named functions) ---
 
@@ -319,7 +319,7 @@ if ($conf['security']['error_log']) {
         'mem_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 2),
     ];
 
-    // Stable fingerprint: type|file|line|msg-normalized â€” no errno (unstable for exceptions)
+    // Stable fingerprint: type|file|line|msg-normalized — no errno (unstable for exceptions)
     $lfp = function(string $type, string $file, string $line, string $msg): string {
         $norm = preg_replace(['/\d+/', '/\s+/'], ['#', ' '], substr($msg, 0, 200));
         return substr(sha1($type . '|' . $file . '|' . $line . '|' . $norm), 0, 8);
@@ -341,7 +341,7 @@ if ($conf['security']['error_log']) {
         file_put_contents($log, $line . PHP_EOL, FILE_APPEND | LOCK_EX);
     };
 
-    # HTTP error â†’ error_site.log
+    # HTTP error → error_site.log
     if (isset($_GET['error'])) {
         $error = intval($_GET['error']);
         $http = [
@@ -406,7 +406,7 @@ if ($conf['security']['error_log']) {
         setExit('Error ' . $error, 1);
     }
 
-    # PHP errors â†’ error_php.log
+    # PHP errors → error_php.log
     function error_reporting_log($errno, $errmsg, $errfile, $errline) {
         global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
         // level: error|warning|notice  php_err: human label
@@ -422,10 +422,10 @@ if ($conf['security']['error_log']) {
             256 => ['error', 'USER_ERROR'],
             512 => ['warning', 'USER_WARNING'],
             1024 => ['notice', 'USER_NOTICE'],
-            2048 => ['notice', 'STRICT'], // notice â€” not warning
+            2048 => ['notice', 'STRICT'], // notice — not warning
             4096 => ['error', 'RECOVERABLE_ERROR'],
-            8192 => ['notice', 'DEPRECATED'], // notice â€” not warning
-            16384 => ['notice', 'USER_DEPRECATED'], // notice â€” not warning
+            8192 => ['notice', 'DEPRECATED'], // notice — not warning
+            16384 => ['notice', 'USER_DEPRECATED'], // notice — not warning
         ];
         [$level, $phperr] = $levelmap[$errno] ?? ['error', 'UNKNOWN'];
         $log = LOGS_DIR . '/error_php.log';
@@ -471,7 +471,7 @@ if ($conf['security']['error_log']) {
         $lexcepted = true;
     });
 
-    // Shutdown: real fatals only (E_ERROR etc.) â€” skip if exception handler already logged this event
+    // Shutdown: real fatals only (E_ERROR etc.) — skip if exception handler already logged this event
     register_shutdown_function(function() use ($ls, $lwrite, $lfp, &$lexcepted) {
         if ($lexcepted) return;
         $e = error_get_last();
@@ -504,7 +504,7 @@ if ($conf['security']['error_log']) {
         }
     });
 
-    # SQL errors â†’ error_sql.log
+    # SQL errors → error_sql.log
     function error_sql_log($errno, $error, $sql) {
         global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
         $log = LOGS_DIR . '/error_sql.log';
@@ -709,7 +709,7 @@ function is_admin_god() {
 }
 
 # Format exit and displaying information
-function setExit($msg, $typ = '') {
+function setExit(string $msg, string $typ = ''): never {
     global $conf;
     $cont = '<!doctype html>'.PHP_EOL
     .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
@@ -730,30 +730,30 @@ function setExit($msg, $typ = '') {
 }
 
 # Cookie set
-function setCookies($name, $time, $value) {
+function setCookies(string $name, int $time, string|array $value): void {
     global $conf;
     $info = is_array($value) ? base64_encode($value[0].':'.$value[1].':'.$value[2].':'.$value[3].':'.$value[4].':'.$value[5]) : $value;
     $url = parse_url($conf['homeurl']);
     $sec = ($url['scheme'] == 'http') ? false : true;
-    $options = array('expires' => $time, 'path' => '/', 'domain' => $url['host'], 'secure' => $sec, 'httponly' => true, 'samesite' => 'Lax');
+    $options = ['expires' => $time, 'path' => '/', 'domain' => $url['host'], 'secure' => $sec, 'httponly' => true, 'samesite' => 'Lax'];
     setcookie($conf['user_c'].'-'.$name, $info, $options);
 }
 
 # Delete cookie set
-function setCookiesDelete($name) {
+function setCookiesDelete(string $name): void {
     global $conf;
     setcookie($conf['user_c'].'-'.$name, '', time() - 3600, '/', parse_url($conf['homeurl'], PHP_URL_HOST));
 }
 
 # Get cookie
-function getCookies($name) {
+function getCookies(string $name): string {
     global $conf;
     $cookie = isset($_COOKIE[$conf['user_c'].'-'.$name]) ? analyze($_COOKIE[$conf['user_c'].'-'.$name]) : '';
     return $cookie;
 }
 
 # Get the client's real IP address
-function getIp() {
+function getIp(): string {
     foreach (['REMOTE_ADDR', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED'] as $header) {
         if (isset($_SERVER[$header])) {
             foreach (explode(',', $_SERVER[$header]) as $ip) {
@@ -766,7 +766,7 @@ function getIp() {
 }
 
 # Get user agent
-function getAgent() {
+function getAgent(): string {
     if (getenv('HTTP_USER_AGENT') && strcasecmp(getenv('HTTP_USER_AGENT'), 'unknown')) {
         return text_filter(getenv('HTTP_USER_AGENT'));
     } elseif (!empty($_SERVER['HTTP_USER_AGENT']) && strcasecmp($_SERVER['HTTP_USER_AGENT'], 'unknown')) {
@@ -776,13 +776,13 @@ function getAgent() {
 }
 
 # Get host
-function get_host() {
+function get_host(): string {
     $host = (getenv('HTTP_HOST')) ? getenv('HTTP_HOST') : getenv('SERVER_NAME');
     return $host;
 }
 
 # Get referer
-function get_referer() {
+function get_referer(): string {
     $referer = text_filter(getenv('HTTP_REFERER'));
     if (!empty($referer) && $referer != '' && !preg_match('#^unknown#i', $referer) && !preg_match('#^bookmark#i', $referer) && !stristr($referer, get_host())) {
         $refer = $referer;
@@ -914,13 +914,13 @@ function zip_compress($src, $dst) {
 
 # Clean access to POST, GET or Request parameters
 /**
- * Sauberer Zugriff auf POST, GET oder Request-Parameter
+ * Clean access to POST, GET or Request parameters
  *
- * @param string $var     'post', 'get' oder 'req'
- * @param string $key     Name des Parameters (Bracket-Notation: field[0], field[])
- * @param string $type    Typ fÃ¼r Filterung: num, let, word, name, title, text, field, url, var, bool, raw
- * @param mixed  $default Standardwert, falls Parameter fehlt
- * @return mixed Gefilterter Wert oder Default / false
+ * @param string $var     'post', 'get' or 'req'
+ * @param string $key     Parameter name (bracket notation: field[0], field[])
+ * @param string $type    Filter type: num, let, word, name, title, text, field, url, var, bool, raw
+ * @param mixed  $default Default value if parameter is missing
+ * @return mixed Filtered value or default / false
  */
 function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
     // Bracket-Notation parsen: field[0] oder field[]
@@ -930,9 +930,9 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
     if (preg_match('/^([^\[]+)\[(\d*)\]$/', $key, $matches)) {
         $key = $matches[1];  // field
         if ($matches[2] === '') {
-            $is_array_all = true;  // field[] â†’ ganzes Array
+            $is_array_all = true;  // field[] → whole array
         } else {
-            $array_index = (int)$matches[2];  // field[0] â†’ Index
+            $array_index = (int)$matches[2];  // field[0] → index
         }
     }
 
@@ -1030,7 +1030,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         if (is_string($value)) $value = trim($value);
     }
 
-    // Leere Werte â†’ false
+    // empty values → false
     return ($value !== '' && $value !== null) ? $value : false;
 }
 
@@ -1176,7 +1176,7 @@ function text_filter($message, $type='') {
 
 # Length center filter
 function cutstrc($linkstrip, $strip) {
-    if (strlen($linkstrip) > $strip) $linkstrip = substr($linkstrip, 0, $strip - 19).'â€¦'.substr($linkstrip, -16);
+    if (strlen($linkstrip) > $strip) $linkstrip = substr($linkstrip, 0, $strip - 19).'...'.substr($linkstrip, -16);
     return $linkstrip;
 }
 
@@ -1184,7 +1184,7 @@ function cutstrc($linkstrip, $strip) {
 function ed2k_link($m) {
     $href = 'url='.$m[2];
     $fname = rawurldecode($m[3]);
-    $fname = str_replace(array('&#038;', '&amp;'), '&', $fname);
+    $fname = str_replace(['&#038;', '&amp;'], '&', $fname);
     $size = files_size($m[4]);
     $cont = ' eMule/eDonkey: ['.$href.']'.cutstrc($fname, 50).'[/url] - '._SIZE.': '.$size;
     return $cont;
@@ -1218,9 +1218,9 @@ function save_text($text, $id='') {
         $editor = (int)substr($flag, 0, 1);
         if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
             $text = ($conf['clickable'] && $id != 1) ? url_clickable($text) : $text;
-            $out = nl2br(str_replace(array('$', '\\'), array('&#036;', '&#092;'), stripslashes(text_filter($text, 2))), false);
+            $out = nl2br(str_replace(['$', '\\'], ['&#036;', '&#092;'], stripslashes(text_filter($text, 2))), false);
         } else {
-            $out = str_replace(array('"', '$', '\'', '\\'), array('&#034;', '&#036;', '&#039;', '&#092;'), stripslashes($text));
+            $out = str_replace(['"', '$', '\'', '\\'], ['&#034;', '&#036;', '&#039;', '&#092;'], stripslashes($text));
         }
         return $out;
     }
@@ -1286,7 +1286,7 @@ function doHackReport($msg) {
     $user = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
     if ($conf['security']['block']) {
         $btime = time() + 86400;
-        $cont = array('blocker_ip' => $conf['security']['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||');
+        $cont = ['blocker_ip' => $conf['security']['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||'];
         doConfig('config/security.php', 'confs', $cont, $conf['security'], '');
         setCookies($conf['security']['blocker_cookie'], $btime, 'block');
     }
