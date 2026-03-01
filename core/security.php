@@ -25,45 +25,6 @@ date_default_timezone_set($conf['gtime']);
 # Language on — init locale, load main language file, set cookie
 setLang();
 
-# Transition aliases - existing code references these globals; remove after full migration to $conf
-$confdb  = $conf['db']         ?? [];
-$confmd  = $conf['modules']    ?? [];
-$confu   = $conf['users']      ?? [];
-$confs   = $conf['security']   ?? [];
-$confc   = $conf['comments']   ?? [];
-$conffav = $conf['favorites']  ?? [];
-$conffi  = $conf['fields']     ?? [];
-$confst  = $conf['statistic']  ?? [];
-$confrs  = $conf['rss']        ?? [];
-$confra  = $conf['ratings']    ?? [];
-$confre  = $conf['replace']    ?? [];
-$confr   = $conf['referers']   ?? [];
-$confpr  = $conf['privat']     ?? [];
-$confv   = $conf['voting']     ?? [];
-# Module-specific aliases for legacy globals used across modules
-$confn   = $conf['news']       ?? [];
-$conffa  = $conf['faq']        ?? [];
-$conff   = $conf['files']      ?? [];
-$confw   = $conf['whois']      ?? [];
-$confal  = $conf['auto_links'] ?? [];
-$confl   = $conf['links']      ?? [];
-$confj   = $conf['jokes']      ?? [];
-$conffo  = $conf['forum']      ?? [];
-$confh   = $conf['help']       ?? [];
-$confp   = $conf['pages']      ?? [];
-$confso  = $conf['shop']       ?? [];
-$confm   = $conf['media']      ?? [];
-$confmo  = $conf['money']      ?? [];
-$confor  = $conf['order']      ?? [];
-$confco  = $conf['contact']    ?? [];
-$confcn  = $conf['content']   ?? [];
-$confma  = $conf['sitemap']    ?? [];
-$conflog = $conf['changelog']  ?? [];
-$confup  = $conf['uploads']    ?? [];
-$conftp  = $conf['filetype']   ?? [];
-$confla  = $conf['lang']       ?? [];
-
-
 # Database connection using unified config
 require_once BASE_DIR.'/core/classes/pdo.php';
 $db = new sql_db($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
@@ -169,26 +130,6 @@ function log_report(): bool {
 
     return true;
 }
-
-# Log report
-/*function log_report() {
-    global $user, $conf;
-    $ip = getIp();
-    $agent = getAgent();
-    $url = text_filter(getenv('REQUEST_URI'));
-    $refer = get_referer();
-    $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
-    $luser = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
-    $path = 'config/logs/log.txt';
-    if ($fhandle = @fopen($path, 'ab')) {
-        if (filesize($path) > $conf['security']['log_size']) {
-            zip_compress($path, 'config/logs/log_'.date('Y-m-d_H-i').'.txt');
-            @unlink($path);
-        }
-        fwrite($fhandle, getVariablesInfo()._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL);
-        fclose($fhandle);
-    }
-}*/
 
 if ($conf['security']['log']) log_report();
 
@@ -1034,90 +975,6 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
     return ($value !== '' && $value !== null) ? $value : false;
 }
 
-
-
-# DELETE Get variables
-/*
-function getVar($var, $val, $typ = '', $obj = '') {
-    global $conf;
-    
-    $p = filter_input(INPUT_POST, $val, FILTER_DEFAULT) ?? '';
-    $g = filter_input(INPUT_GET, $val, FILTER_DEFAULT) ?? '';
-   
-    
-    // Rewrite-URL Parsing placeholder (getUrlMeta removed)
-    
-    if ($var == 'post') {
-        if ($typ == 'num') {
-            $out = ($p) ? num_filter($p) : (($obj) ? num_filter($obj) : '');
-        } elseif ($typ == 'let') {
-            $out = ($p) ? mb_substr($p, 0, 1, 'utf-8') : (($obj) ? mb_substr($obj, 0, 1, 'utf-8') : '');
-        } elseif ($typ == 'word') {
-            $out = ($p) ? text_filter($p) : (($obj) ? text_filter($obj) : '');
-        } elseif ($typ == 'name') {
-            $out = ($p) ? text_filter(substr($p, 0, 25)) : (($obj) ? text_filter(substr($obj, 0, 25)) : '');
-        } elseif ($typ == 'title') {
-            $out = ($p) ? save_text($p, 1) : (($obj) ? save_text($obj, 1) : '');
-        } elseif ($typ == 'text') {
-            $out = ($p) ? save_text($p) : (($obj) ? save_text($obj) : '');
-        } elseif ($typ == 'field') {
-            $out = ($p) ? fields_save($p) : (($obj) ? fields_save($obj) : '');
-        } elseif ($typ == 'url') {
-            $out = ($p) ? url_filter($p) : (($obj) ? $obj : '');
-        } elseif ($typ == 'var') {
-            $out = ($p) ? isVar($p) : (($obj) ? $obj : '');
-        } else {
-            $out = ($p) ? $p : (($obj) ? $obj : '');
-        }
-    } elseif ($var == 'get') {
-        if ($typ == 'num') {
-            $out = ($g) ? num_filter($g) : (($obj) ? num_filter($obj) : '');
-        } elseif ($typ == 'let') {
-            $out = ($g) ? mb_substr($g, 0, 1, 'utf-8') : (($obj) ? mb_substr($obj, 0, 1, 'utf-8') : '');
-        } elseif ($typ == 'word') {
-            $out = ($g) ? text_filter($g) : (($obj) ? text_filter($obj) : '');
-        } elseif ($typ == 'name') {
-            $out = ($g) ? text_filter(substr($g, 0, 25)) : (($obj) ? text_filter(substr($obj, 0, 25)) : '');
-        } elseif ($typ == 'title') {
-            $out = ($g) ? save_text($g, 1) : (($obj) ? save_text($obj, 1) : '');
-        } elseif ($typ == 'text') {
-            $out = ($g) ? save_text($g) : (($obj) ? save_text($obj) : '');
-        } elseif ($typ == 'field') {
-            $out = ($g) ? fields_save($g) : (($obj) ? fields_save($obj) : '');
-        } elseif ($typ == 'url') {
-            $out = ($g) ? url_filter($g) : (($obj) ? $obj : '');
-        } elseif ($typ == 'var') {
-            $out = ($g) ? isVar($g) : (($obj) ? $obj : '');
-        } else {
-            $out = ($g) ? $g : (($obj) ? $obj : '');
-        }
-    } elseif ($var == 'req') {
-        if ($typ == 'num') {
-            $out = ($p) ? num_filter($p) : (($g) ? num_filter($g) : (($obj) ? num_filter($obj) : ''));
-        } elseif ($typ == 'let') {
-            $out = ($p) ? mb_substr($p, 0, 1, 'utf-8') : (($g) ? mb_substr($g, 0, 1, 'utf-8') : (($obj) ? mb_substr($obj, 0, 1, 'utf-8') : ''));
-        } elseif ($typ == 'word') {
-            $out = ($p) ? text_filter($p) : (($g) ? text_filter($g) : (($obj) ? text_filter($obj) : ''));
-        } elseif ($typ == 'name') {
-            $out = ($p) ? text_filter(substr($p, 0, 25)) : (($g) ? text_filter(substr($g, 0, 25)) : (($obj) ? text_filter(substr($obj, 0, 25)) : ''));
-        } elseif ($typ == 'title') {
-            $out = ($p) ? save_text($p, 1) : (($g) ? save_text($g, 1) : (($obj) ? save_text($obj, 1) : ''));
-        } elseif ($typ == 'text') {
-            $out = ($p) ? save_text($p) : (($g) ? save_text($g) : (($obj) ? save_text($obj) : ''));
-        } elseif ($typ == 'field') {
-            $out = ($p) ? fields_save($p) : (($g) ? fields_save($g) : (($obj) ? fields_save($obj) : ''));
-        } elseif ($typ == 'url') {
-            $out = ($p) ? url_filter($p) : (($g) ? url_filter($g) : (($obj) ? $obj : ''));
-        } elseif ($typ == 'var') {
-            $out = ($p) ? isVar($p) : (($g) ? isVar($g) : (($obj) ? $obj : ''));
-        } else {
-            $out = ($p) ? $p : (($g) ? $g : (($obj) ? $obj : ''));
-        }
-    }
-    return ($out) ? $out : false;
-}
-*/
-
 # Strict variable analyzer
 function isVar($var) {
     if (is_array($var)) {
@@ -1211,7 +1068,7 @@ function url_clickable($text) {
 }
 
 # Save text
-function save_text($text, $id='') {
+function save_text($text, $id=''): string {
     global $admin, $conf;
     if ($text) {
         $flag = is_array($admin) ? ($admin[3] ?? '') : '';
@@ -1224,14 +1081,16 @@ function save_text($text, $id='') {
         }
         return $out;
     }
+    return '';
 }
 
 # Fields save
-function fields_save($field) {
+function fields_save($field): string {
     if (isArray($field)) {
         $fields = stripslashes(text_filter(implode('|', $field), 2));
         return $fields;
     }
+    return '';
 }
 
 # Display Time filter

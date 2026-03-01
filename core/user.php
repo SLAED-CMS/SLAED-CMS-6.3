@@ -31,7 +31,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
 }
 
 # Showing messages on the home page
-function setMessageShow(): ?string {
+function setMessageShow(): string {
  global $db, $afile, $conf, $currentlang;
     if ($conf['message'] == 1) {
         $params = [];
@@ -64,6 +64,7 @@ function setMessageShow(): ?string {
             }
         }
     }
+    return '';
 }
 
 # User account navigation
@@ -177,7 +178,7 @@ function getusrinfo() {
 }
 
 # Show user block
-function userblock(): ?string {
+function userblock(): string {
  global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     $block = (isset($user[4])) ? intval($user[4]) : 0;
@@ -186,6 +187,7 @@ function userblock(): ?string {
         $userblock = bb_decode($userblock, 'account');
         return setTemplateBlock('', ['{%title%}' => _MENUFOR, '{%content%}' => $userblock]);
     }
+    return '';
 }
 
 # Save comments
