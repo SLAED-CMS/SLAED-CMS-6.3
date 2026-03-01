@@ -44,7 +44,7 @@ function clients(): void {
     global $db, $afile, $conf;
         $csearch = getVar('post', 'csearch', 'text');
     $search = getVar('post', 'search', 'num');
-    head();
+    setHead();
     $searchCols = [
         1 => 'u.user_id',
         2 => 'u.user_name',
@@ -117,7 +117,7 @@ function clients(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function clientsact(): void {
@@ -151,7 +151,7 @@ function clientsadd(): void {
         $cinfo = getVar('post', 'cinfo', 'text');
         $cactive = getVar('post', 'cactive', 'num');
     }
-    head();
+    setHead();
     $cont = navi(0, 0, 1, 3);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     $cont .= setTemplateBasic('open');
@@ -198,7 +198,7 @@ function clientsadd(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="cppi" value="'.$cppi.'">'.ad_save('cid', $cid, 'clientssave', 1).'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function clientssave(): void {
@@ -265,7 +265,7 @@ function clientsdel(int $id = 0): void {
 
 function products(): void {
     global $db, $afile, $conf;
-        head();
+        setHead();
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num-1) * $conf['shop']['anum'];
     $offset = intval($offset);
@@ -312,7 +312,7 @@ function products(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function productsadd(): void {
@@ -337,7 +337,7 @@ function productsadd(): void {
         $fix = getVar('post', 'fix', 'num');
         $pactive = getVar('post', 'pactive', 'num');
     }
-    head();
+    setHead();
     $cont = navi(1, 1, 1, 2);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     $ptextpre = ($vote) ? '<div id="repshop">'.getVoting($vote, 'shop').'</div><hr>'.$ptext : $ptext;
@@ -373,7 +373,7 @@ function productsadd(): void {
     .'<tr><td colspan="2" class="sl_center">'.ad_save('pid', $pid, 'productssave').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function productssave(): void {
@@ -447,7 +447,7 @@ function productsadmin(int|array $id = 0, string $vtyp = ''): void {
 
 function partners(): void {
     global $db, $afile, $conf;
-        head();
+        setHead();
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['shop']['anum'];
     $offset = intval($offset);
@@ -494,7 +494,7 @@ function partners(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function partnersact(): void {
@@ -527,7 +527,7 @@ function partnersadd(): void {
         $pabek = getVar('post', 'pabek', 'text');
         $paactive = getVar('post', 'paactive', 'num');
     }
-    head();
+    setHead();
     $cont = navi(2, 2, 1, 3);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     $cont .= setTemplateBasic('open');
@@ -554,7 +554,7 @@ function partnersadd(): void {
     .'<tr><td colspan="2" class="sl_center">'.ad_save('paid', $paid, 'partnerssave', 1).'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function partnerssave(): void {
@@ -599,7 +599,7 @@ function partnersdel(int $id = 0): void {
 function partnersdetails(): void {
     global $db, $afile, $conf;
         $paid = getVar('get', 'paid', 'num');
-    head();
+    setHead();
     $cont = navi(2, 2, 1, 1);
     $result = $db->sql_query('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
     [$paid, $uid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->sql_fetchrow($result);
@@ -635,7 +635,7 @@ function partnersdetails(): void {
     .'<td>'.$pabek.' '.$conf['shop']['valute'].'</td></tr></tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function exportdata(): void {
@@ -703,7 +703,7 @@ function exportdata(): void {
         fclose ($handle);
         setRedirect($afile.'.php?name=shop&op='.$idb);
     } else {
-        head();
+        setHead();
         $cont = navi(3, 3, 1, 0, 'export');
         $cont .= checkPerms(BASE_DIR.'/uploads/shop/temp');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _S_NOTE]);
@@ -749,13 +749,13 @@ function exportdata(): void {
         </script>';
         $cont .= setTemplateBasic('open').$content.setTemplateBasic('close');
         echo $cont;
-        foot();
+        setFoot();
     }
 }
 
-function conf(): void {
+function shop(): void {
     global $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 4, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/shop.php');
     $cont .= setTemplateBasic('open');
@@ -799,7 +799,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -860,12 +860,12 @@ function save(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 'shop', 0).'</div>';
-    foot();
+    setFoot();
 }
 
-function shop(): void {
+function conf(): void {
     clients();
 }
 
@@ -891,6 +891,8 @@ switch($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+
+
 
 
 

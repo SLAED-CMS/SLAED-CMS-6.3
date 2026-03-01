@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function sitemap(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $file = 'sitemap.xml';
     $cont = navi(0, 0, 0, 0);
     $cont .= checkPerms(BASE_DIR.'/'.$file);
@@ -43,7 +43,7 @@ function sitemap(): void {
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add"><input type="submit" value="'._UPDATE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -54,7 +54,7 @@ function add(): void {
 
 function xsl(): void {
     global $afile;
-    head();
+    setHead();
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $cont = navi(0, 1, 0, 0);
     $cont .= checkPerms($file);
@@ -65,7 +65,7 @@ function xsl(): void {
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="xslsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function xslsave(): void {
@@ -80,7 +80,7 @@ function xslsave(): void {
 
 function conf(): void {
     global $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
     $cont .= setTemplateBasic('open');
@@ -133,7 +133,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function saveconf(): void {
@@ -167,9 +167,9 @@ function saveconf(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 'sitemap', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -181,5 +181,7 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
 
 

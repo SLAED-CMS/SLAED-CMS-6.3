@@ -9,11 +9,10 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function navigate(string $title, string|int $cat=''): string {
+function navigate(string $title, string|int $cat = ''): string {
 	global $conf;
 	$cat = getVar('get', 'cat', 'num');
-	$ncat = $cat;
-	$cpar = $ncat ? ['cat' => $ncat] : [];
+	$cpar = $cat ? ['cat' => $cat] : [];
 	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._FAQ.'" class="sl_but_navi">'._HOME.'</a>';
 	$best = ($conf['faq']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
 	$pop = ($conf['faq']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';

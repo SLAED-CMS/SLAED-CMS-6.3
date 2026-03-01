@@ -40,13 +40,20 @@ function voting(): void {
 function view(): void {
 	global $db, $conf;
 	$id = getVar('get', 'id', 'num');
-	setHead(['title' => _VOTING]);
-	$result = $db->sql_query('SELECT acomm FROM '.PREFIX_DB.'_voting WHERE id = :id AND modul = \'\' AND date <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
+	$result = $db->sql_query('SELECT title, date, acomm FROM '.PREFIX_DB.'_voting WHERE id = :id AND modul = \'\' AND date <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
 	if ($db->sql_numrows($result) > 0) {
-		[$acomm] = $db->sql_fetchrow($result);
+		[$title, $date, $acomm] = $db->sql_fetchrow($result);
+		setHead([
+			'title' => $title,
+			'ctitle' => _VOTING,
+			'desc' => cutstr(trim(strip_tags($title)), 160),
+			'time' => $date,
+			'author' => $conf['sitename'],
+		]);
 		$cont = setTemplateBasic('title', ['{%title%}' => _VOTING]).setTemplateBasic('voting-basic', ['{%content%}' => '<div id="rep'.$conf['name'].'">'.getVoting($id, $conf['name']).'</div>']);
 		if ($acomm) $cont .= setComShow($id, $acomm);
 	} else {
+		setHead(['title' => _VOTING]);
 		$cont = setTemplateWarning('warn', ['time' => '3', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _NO_INFO]);
 	}
 	echo $cont;

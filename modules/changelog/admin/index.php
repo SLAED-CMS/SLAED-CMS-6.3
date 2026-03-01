@@ -443,7 +443,7 @@ function gitparse(array $lines): array {
 function changelog(): void {
     global $afile, $conf, $gherror, $giterror;
 
-    head();
+    setHead();
     
 
     $cont = navi(0, 0);
@@ -485,7 +485,7 @@ function changelog(): void {
                 'text' => 'GitHub Owner/Repo nicht konfiguriert.'
             ]);
             echo $cont;
-            foot();
+            setFoot();
             return;
         }
 
@@ -519,7 +519,7 @@ function changelog(): void {
             ]);
         }
         echo $cont;
-        foot();
+        setFoot();
         return;
     }
 
@@ -553,12 +553,12 @@ function changelog(): void {
     ]);
 
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 1);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
     $cont .= setTemplateBasic('open');
@@ -615,7 +615,7 @@ function conf(): void {
     $cont .= '</form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -690,9 +690,9 @@ function export(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 4).'<div id="repadm_info">'.adm_info(1, 'changelog', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
@@ -843,4 +843,6 @@ switch ($op) {
     case 'export': export(); break;
     case 'info': info(); break;
 }
+
+
 

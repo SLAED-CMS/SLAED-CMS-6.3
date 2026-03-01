@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function help(): void {
     global $db, $afile, $conf;
-        head();
+        setHead();
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['help']['anum'] ?? 25;
     $anump = $conf['help']['anump'] ?? 10;
@@ -53,14 +53,14 @@ function help(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function view(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
     $result = $db->sql_query('SELECT s.sid, s.pid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) WHERE s.sid = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id]);
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
     $a = 0;
@@ -89,7 +89,7 @@ function view(): void {
     $cont .= setTemplateBasic('close');
     $cont .= addview($id);
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function addview(int $id): string {
@@ -127,7 +127,7 @@ function add(): void {
         $field = getVar('post', 'field', 'field');
     }
     $status = getVar('post', 'status', 'num', 0) ? getVar('post', 'status', 'num', 0) : ($status ?? 0);
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
@@ -142,7 +142,7 @@ function add(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="pid" value="'.$pid.'">'.ad_save('sid', $sid, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -205,7 +205,7 @@ function del(int $fid = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $cont .= setTemplateBasic('open');
@@ -226,7 +226,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function saveconf(): void {
@@ -251,9 +251,9 @@ function saveconf(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 'help', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -266,6 +266,8 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
 
 
 

@@ -12,7 +12,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     return getAdminTabs(_FORUM, 'forum.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
-function synch(): void {
+function forum(): void {
     global $db;
     $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost_id = \'0\' WHERE modul = \'forum\'');
     $result = $db->sql_query('SELECT id, parentid FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
@@ -32,7 +32,7 @@ function synch(): void {
             $flag = (int)($massiv[$flag][0] ?? 0);
         }
     }
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHIN]);
     $cont .= setTemplateBasic('open');
@@ -46,12 +46,12 @@ function synch(): void {
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
-function forum(): void {
+function conf(): void {
     global $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
@@ -90,7 +90,7 @@ function forum(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="forum"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function saveconf(): void {
@@ -118,15 +118,17 @@ function saveconf(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 'forum', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
-    default: synch(); break;
-    case 'conf': forum(); break;
+    default: forum(); break;
+    case 'conf': conf(); break;
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
 

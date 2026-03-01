@@ -50,7 +50,7 @@ function chlogGetCache(string $key): ?array {
     ];
 }
 
-function chlogSetCache(string $key, $data, string $url = '', string $etag = '', string $lastmod = ''): void {
+function chlogSetCache(string $key, mixed $data, string $url = '', string $etag = '', string $lastmod = ''): void {
     if (!is_dir(CACHE_DIR)) mkdir(CACHE_DIR, 0755, true);
 
     $file = CACHE_DIR.'/'.sha1($key).'.json';
@@ -273,6 +273,7 @@ function chlogGitFetch(string $gitdir, array $filters, int $limit, string &$erro
     $cmd = escapeshellarg($gitexe).' log --pretty="format:'.$format.'" --date="format:'.$dateformat.'" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
 
     $gitlog = [];
+    $retcode = 1;
     chlogExecGit($cmd, $gitlog, $retcode);
     chdir($olddir);
 

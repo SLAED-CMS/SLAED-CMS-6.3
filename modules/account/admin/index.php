@@ -28,7 +28,7 @@ function account(): void {
     global $db, $afile, $conf;
     $search = getVar('req', 'search', 'num');
     $chng = getVar('req', 'chng');
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     if (getVar('get','send','num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $where = '1 = 1';
@@ -89,7 +89,7 @@ function account(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _USERNOEXIST]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -127,7 +127,7 @@ function add(): void {
         $gender = getVar('post', 'gender');
         $field = getVar('post', 'field', 'field');
     }
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= setTemplateBasic('open');
@@ -202,7 +202,7 @@ function add(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function addsave(): void {
@@ -285,7 +285,7 @@ function addsave(): void {
 
 function newuser(): void {
     global $db, $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 2, 0, 0);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $conf['users']['anum'];
@@ -308,12 +308,12 @@ function newuser(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function nullpoints(): void {
     global $afile;
-    head();
+    setHead();
     $cont = navi(0, 3, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -324,7 +324,7 @@ function nullpoints(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="nullsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function nullsave(): void {
@@ -342,7 +342,7 @@ function nullsave(): void {
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 4, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/users.php');
     $cont .= setTemplateBasic('open');
@@ -389,7 +389,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -445,9 +445,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 'account', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -463,3 +463,5 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+
+

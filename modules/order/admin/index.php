@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function order(): void {
     global $db, $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _OR_8]);
     $num = getVar('get', 'num', 'num', 1);
@@ -47,7 +47,7 @@ function order(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -65,7 +65,7 @@ function add(): void {
         $com = getVar('post', 'com', 'text', '');
         $date = save_datetime(1, 'date');
     }
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($field) $cont .= preview($mail, $field, _COMMENT.': '.$com, '', 'all');
@@ -78,7 +78,7 @@ function add(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -132,7 +132,7 @@ function active(): void {
 
 function conf(): void {
     global $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $cont .= setTemplateBasic('open');
@@ -149,7 +149,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function saveconf(): void {
@@ -170,9 +170,9 @@ function saveconf(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 3, 0, 0).'<div id="repadm_info">'.adm_info(1, 'order', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -185,5 +185,7 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
 
 

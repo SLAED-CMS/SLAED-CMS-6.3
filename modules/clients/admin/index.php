@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function clients(): void {
     global $db, $afile, $stop;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _CERROR]);
     $result = $db->sql_query('SELECT id, title, infotext, url, num, hits, prod_id, status FROM '.PREFIX_DB.'_clients_down');
@@ -43,7 +43,7 @@ function clients(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -62,7 +62,7 @@ function add(): void {
         $prod = getVar('post', 'prod', 'num', 0);
         $status = getVar('post', 'status', 'num', 0);
     }
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) {
         $stopText = is_array($stop) ? implode('<br>', $stop) : $stop;
@@ -81,7 +81,7 @@ function add(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="clients">'.ad_save('cid', $cid, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -128,9 +128,9 @@ function status(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 'clients', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -141,5 +141,6 @@ switch ($op) {
     case 'del': del(); break;
     case 'info': info(); break;
 }
+
 
 

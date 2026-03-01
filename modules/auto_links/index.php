@@ -80,21 +80,21 @@ function view(): void {
 }
 
 function add(): void {
-	global $stop, $conf;
-	if (is_user()) {
-		$userinfo = getusrinfo();
-		$mail = getVar('post', 'mail', 'var');
-		$mail = ($mail) ? $mail : $userinfo['user_email'];
-		$site = getVar('post', 'site', 'url');
-		$site = ($site) ? $site : $userinfo['user_website'];
-	} else {
-		$mail = getVar('post', 'mail', 'var');
-		$mail = ($mail) ? $mail : '';
-		$site = getVar('post', 'site', 'url', 'http://');
-		$site = ($site) ? $site : 'http://';
-	}
-	$name = getVar('post', 'name', 'title');
-	$desc = getVar('post', 'desc', 'text');
+    global $stop, $conf;
+    if (is_user()) {
+        $userinfo = getusrinfo();
+        $mail = getVar('post', 'mail', 'var');
+        $mail = ($mail) ? $mail : $userinfo['user_email'];
+        $site = getVar('post', 'site', 'url');
+        $site = ($site) ? $site : $userinfo['user_website'];
+    } else {
+        $mail = getVar('post', 'mail', 'var');
+        $mail = ($mail) ? $mail : '';
+        $site = getVar('post', 'site', 'url', 'http://');
+        $site = ($site) ? $site : 'http://';
+    }
+    $name = getVar('post', 'name', 'title');
+    $desc = getVar('post', 'desc', 'text');
     
     setHead(['title' => _ADD]);
     $cont = navigate(_ADD);
@@ -114,11 +114,11 @@ function add(): void {
 }
 
 function send(): void {
-	global $db, $user, $stop, $conf;
-	$name = getVar('post', 'name', 'title');
-	$desc = getVar('post', 'desc', 'text');
-	$site = getVar('post', 'site', 'url');
-	$mail = getVar('post', 'mail', 'var');
+    global $db, $user, $stop, $conf;
+    $name = getVar('post', 'name', 'title');
+    $desc = getVar('post', 'desc', 'text');
+    $site = getVar('post', 'site', 'url');
+    $mail = getVar('post', 'mail', 'var');
     $stop = [];
     if (!$name) $stop[] = _CERROR10;
     if (!$desc) $stop[] = _CERROR11;

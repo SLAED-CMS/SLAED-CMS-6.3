@@ -17,7 +17,7 @@ function whois(): void {
         $anum = $conf['whois']['anum'] ?? 10;
     $anump = $conf['whois']['anump'] ?? 10;
 
-    head();
+    setHead();
         $num = getVar('get', 'num', 'num', 1);
     $offset = intval(($num - 1) * $anum);
     $status = getVar('get', 'status', 'num');
@@ -60,7 +60,7 @@ function whois(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function act(): void {
@@ -98,7 +98,7 @@ function add(): void {
         $dc = getVar('post', 'dc', 'url', 'http://');
         $hometext = getVar('post', 'hometext', 'text', '');
     }
-    head();
+    setHead();
         $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
     $cont .= setTemplateBasic('open');
@@ -111,7 +111,7 @@ function add(): void {
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="whois">'.ad_save('wid', $wid, 'save', 1).'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -154,7 +154,7 @@ function del(int $id = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-        head();
+        setHead();
         $cont = navi(0, 3, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $cont .= setTemplateBasic('open');
@@ -167,7 +167,7 @@ function conf(): void {
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="whois"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function saveconf(): void {
@@ -184,9 +184,9 @@ function saveconf(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
         echo navi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 'whois', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -199,6 +199,8 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
 
 
 

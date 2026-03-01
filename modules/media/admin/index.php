@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function media(): void {
     global $db, $afile, $conf;
-        head();
+        setHead();
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['media']['anum'] ?? 25;
     $anump = $conf['media']['anump'] ?? 10;
@@ -66,7 +66,7 @@ function media(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -104,7 +104,7 @@ function add(): void {
         $acomm = getVar('post', 'acomm', 'num', 0);
     }
     $mtitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis'] ?? '%7C').' '.$subtitle : $title;
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($description) $cont .= preview($mtitle, $description, '', '', 'media');
@@ -170,7 +170,7 @@ function add(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="media">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -240,7 +240,7 @@ function ignore(): void {
 
 function conf(): void {
     global $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 4, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/media.php');
     $cont .= setTemplateBasic('open');
@@ -275,7 +275,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="media"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function saveconf(): void {
@@ -318,9 +318,9 @@ function saveconf(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 'media', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -333,6 +333,8 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
 
 
 

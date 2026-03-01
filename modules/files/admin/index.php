@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function files(): void {
     global $db, $afile, $conf;
-        head();
+        setHead();
     $num = getVar('get', 'num', 'num', 1);
     $status = getVar('get', 'status', 'num', 0);
     $anum = $conf['files']['anum'] ?? 25;
@@ -65,7 +65,7 @@ function files(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -94,7 +94,7 @@ function add(): void {
         $email = getVar('post', 'email', 'name', '');
         $homepage = getVar('post', 'homepage', 'url', 'http://');
     }
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($description) $cont .= preview($title, $description, $bodytext, '', 'files');
@@ -132,7 +132,7 @@ function add(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="files">'.ad_save('fid', $fid, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -214,7 +214,7 @@ function ignore(): void {
 
 function conf(): void {
     global $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 4, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
     $cont .= setTemplateBasic('open');
@@ -261,7 +261,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="files"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function saveconf(): void {
@@ -304,9 +304,9 @@ function saveconf(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 'files', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -319,6 +319,8 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+
 
 
 

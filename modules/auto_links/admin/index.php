@@ -39,7 +39,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function auto_links(): void {
     global $db, $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['auto_links']['anum'];
@@ -72,7 +72,7 @@ function auto_links(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function stats(): void {
@@ -95,7 +95,7 @@ function stats(): void {
     else { $count = 'date'; $ordby = 'date'; }
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
     $result = $db->sql_query('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, date FROM '.PREFIX_DB.'_referer WHERE lid = :lid GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc, ['lid' => $id]);
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $list = [];
     $a = 0;
@@ -128,7 +128,7 @@ function stats(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -147,7 +147,7 @@ function add(): void {
         $hits = getVar('post', 'hits', 'num', 0);
         $outs = getVar('post', 'outs', 'num', 0);
     }
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
     if ($desc) $cont .= preview($name, $desc, '', '', 'auto_links');
@@ -162,7 +162,7 @@ function add(): void {
        .'<tr><td colspan="2" class="sl_center">'.ad_save('id', $id, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -218,7 +218,7 @@ function noindel(): void {
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 4, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/auto_links.php');
     $cont .= setTemplateBasic('open');
@@ -246,7 +246,7 @@ function conf(): void {
        .'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function saveconf(): void {
@@ -266,9 +266,9 @@ function saveconf(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 'auto_links', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -283,3 +283,5 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
+
+

@@ -13,7 +13,7 @@ function account(): void {
     global $conf, $stop;
     if (is_user()) {
         profil();
-    } else{
+    } else {
         setHead(['title' => _USERREGLOGIN]);
         $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
         $cont = setTemplateBasic('title', ['{%title%}' => _USERREGLOGIN]);
@@ -33,7 +33,7 @@ function account(): void {
     }
 }
 
-function checkuser($nick, $mail, $rules) {
+function checkuser(string $nick, string $mail, int|string $rules): ?array {
     global $db, $conf, $stop;
     if ($conf['users']['rule'] && $rules != '1') $stop[] = _ERROR_RULES;
     checkemail($mail);

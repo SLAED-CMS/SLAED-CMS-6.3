@@ -796,5 +796,3 @@ switch($op) {
     case 'send': send(); break;
     case 'delete': delete(); break;
 }
-
-

@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 
 function rss(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0, 'rss');
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
     $content = '';
@@ -63,7 +63,7 @@ function rss(): void {
     </script>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -88,9 +88,9 @@ function save(): void {
     setRedirect($afile.'.php?name=rss');
 }
 function info(): void {
-    head();
+    setHead();
     echo navi(1, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 'rss', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -98,3 +98,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+

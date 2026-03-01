@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function contact(): void {
     global $afile, $conf;
-        head();
+        setHead();
     $cont = navi(0, 0, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/contact.php');
     $cont .= setTemplateBasic('open');
@@ -24,7 +24,7 @@ function contact(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="contact"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -38,9 +38,9 @@ function save(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 1, 0, 0).'<div id="repadm_info">'.adm_info(1, 'contact', 0).'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {
@@ -48,4 +48,5 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+
 
