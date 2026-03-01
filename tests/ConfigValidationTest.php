@@ -1,7 +1,7 @@
 <?php
 /**
- * Ð¢ÐµÑÑ‚ Ð²Ð°Ð»Ð¸Ð´Ð°Ñ†Ð¸Ð¸ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ñ… Ñ„Ð°Ð¹Ð»Ð¾Ð²
- * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ Ð½Ð°Ð»Ð¸Ñ‡Ð¸Ðµ Ð¸ ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ð¾ÑÑ‚ÑŒ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸
+ * Configuration validation tests.
+ * Checks presence and basic correctness of config files.
  */
 
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ class ConfigValidationTest extends TestCase
     }
 
     /**
-     * Ð¡ÐºÐ°Ð½Ð¸Ñ€ÑƒÐµÑ‚ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ðµ Ñ„Ð°Ð¹Ð»Ñ‹
+     * Scan configuration files.
      */
     private static function scanconfig_files(): void
     {
@@ -35,7 +35,7 @@ class ConfigValidationTest extends TestCase
     }
 
     /**
-     * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ Ð½Ð°Ð»Ð¸Ñ‡Ð¸Ðµ Ð¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ñ‹Ñ… ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ñ… Ñ„Ð°Ð¹Ð»Ð¾Ð²
+     * Check required config files exist.
      */
     public function testRequiredconfig_filesExist(): void
     {
@@ -48,18 +48,18 @@ class ConfigValidationTest extends TestCase
 
         foreach ($required as $file) {
             if (!file_exists(self::$config_path.'/'.$file)) {
-                $errors[] = "config/$file - Ð¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ñ‹Ð¹ Ñ„Ð°Ð¹Ð» Ð¾Ñ‚ÑÑƒÑ‚ÑÑ‚Ð²ÑƒÐµÑ‚";
+                $errors[] = "config/$file - required file is missing";
             }
         }
 
         $this->assertEmpty(
             $errors,
-            "ÐžÑ‚ÑÑƒÑ‚ÑÑ‚Ð²ÑƒÑŽÑ‚ Ð¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ñ‹Ðµ Ñ„Ð°Ð¹Ð»Ñ‹ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸:\n".implode("\n", $errors)
+            "Missing required configuration files:\n".implode("\n", $errors)
         );
     }
 
     /**
-     * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ ÑÐ¸Ð½Ñ‚Ð°ÐºÑÐ¸Ñ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ñ… Ñ„Ð°Ð¹Ð»Ð¾Ð²
+     * Check syntax of config files.
      */
     public function testconfig_filesSyntax(): void
     {
@@ -72,7 +72,7 @@ class ConfigValidationTest extends TestCase
 
             if ($return_code !== 0) {
                 $errors[] = sprintf(
-                    'config/%s - ÑÐ¸Ð½Ñ‚Ð°ÐºÑÐ¸Ñ‡ÐµÑÐºÐ°Ñ Ð¾ÑˆÐ¸Ð±ÐºÐ°',
+                    'config/%s - syntax error',
                     basename($file)
                 );
             }
@@ -80,41 +80,39 @@ class ConfigValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Ð¡Ð¸Ð½Ñ‚Ð°ÐºÑÐ¸Ñ‡ÐµÑÐºÐ¸Ðµ Ð¾ÑˆÐ¸Ð±ÐºÐ¸ Ð² ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸:\n".implode("\n", $errors)
+            "Configuration syntax errors:\n".implode("\n", $errors)
         );
     }
 
     /**
-     * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ ÑÑ‚Ñ€ÑƒÐºÑ‚ÑƒÑ€Ñƒ db.php
+     * Check db.php structure.
      */
     public function testDbConfigStructure(): void
     {
         $db_file = self::$config_path.'/db.php';
         if (!file_exists($db_file)) {
-            $this->markTestSkipped('db.php Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½');
+            $this->markTestSkipped('db.php not found');
             return;
         }
 
         $content = file_get_contents($db_file);
-
-        // ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ Ð½Ð°Ð»Ð¸Ñ‡Ð¸Ðµ Ð¾Ð±ÑÐ·Ð°Ñ‚ÐµÐ»ÑŒÐ½Ñ‹Ñ… Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð¾Ð²
         $required_params = ['host', 'name', 'uname', 'prefix'];
 
         $errors = [];
         foreach ($required_params as $param) {
             if (!preg_match('/[\'"]'.$param.'[\'"]\s*=>/', $content)) {
-                $errors[] = "db.php - Ð¾Ñ‚ÑÑƒÑ‚ÑÑ‚Ð²ÑƒÐµÑ‚ Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€ '$param'";
+                $errors[] = "db.php - missing parameter '$param'";
             }
         }
 
         $this->assertEmpty(
             $errors,
-            "ÐŸÑ€Ð¾Ð±Ð»ÐµÐ¼Ñ‹ Ð² ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸ Ð‘Ð”:\n".implode("\n", $errors)
+            "DB configuration issues:\n".implode("\n", $errors)
         );
     }
 
     /**
-     * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ Ñ‡Ñ‚Ð¾ Ð¿Ð°Ñ€Ð¾Ð»Ð¸ Ð½Ðµ ÑÐ¾Ð´ÐµÑ€Ð¶Ð°Ñ‚ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ
+     * Check for default passwords in config.
      */
     public function testNodefault_passwords(): void
     {
@@ -125,21 +123,20 @@ class ConfigValidationTest extends TestCase
             $content = file_get_contents($file);
             $file_name = basename($file);
 
-            // Ð˜Ñ‰ÐµÐ¼ Ð¿Ð°Ñ€Ð¾Ð»Ð¸
             if (preg_match('/[\'"]pass(?:word)?[\'"]\s*=>\s*[\'"]([^\'"]*)[\'"]/i', $content, $match)) {
                 $password = $match[1];
-                if (in_array(strtolower($password), $default_passwords)) {
-                    $warnings[] = "config/$file_name - Ð¾Ð±Ð½Ð°Ñ€ÑƒÐ¶ÐµÐ½ ÑÑ‚Ð°Ð½Ð´Ð°Ñ€Ñ‚Ð½Ñ‹Ð¹ Ð¿Ð°Ñ€Ð¾Ð»ÑŒ";
+                if (in_array(strtolower($password), $default_passwords, true)) {
+                    $warnings[] = "config/$file_name - default password detected";
                 }
             }
         }
 
-        // Ð­Ñ‚Ð¾ Ð¿Ñ€ÐµÐ´ÑƒÐ¿Ñ€ÐµÐ¶Ð´ÐµÐ½Ð¸Ðµ Ð´Ð»Ñ Ð¿Ñ€Ð¾Ð´Ð°ÐºÑˆÐµÐ½Ð°, Ð½Ð¾ Ð½Ðµ Ð¾ÑˆÐ¸Ð±ÐºÐ° Ð´Ð»Ñ Ñ€Ð°Ð·Ñ€Ð°Ð±Ð¾Ñ‚ÐºÐ¸
-        $this->assertTrue(true, count($warnings).' Ñ„Ð°Ð¹Ð»Ð¾Ð² Ñ Ð¿Ð¾Ñ‚ÐµÐ½Ñ†Ð¸Ð°Ð»ÑŒÐ½Ð¾ Ð½ÐµÐ±ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ñ‹Ð¼Ð¸ Ð¿Ð°Ñ€Ð¾Ð»ÑÐ¼Ð¸');
+        // Informational check for development environments.
+        $this->assertTrue(true, count($warnings).' files with potentially unsafe passwords');
     }
 
     /**
-     * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ ÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÑƒ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ñ… Ñ„Ð°Ð¹Ð»Ð¾Ð²
+     * Check config file encoding.
      */
     public function testconfig_filesEncoding(): void
     {
@@ -149,31 +146,28 @@ class ConfigValidationTest extends TestCase
             $content = file_get_contents($file);
             $file_name = basename($file);
 
-            // ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ Ð½Ð° Ð½ÐµÐ²Ð°Ð»Ð¸Ð´Ð½Ñ‹Ð¹ UTF-8
             if (!mb_check_encoding($content, 'UTF-8')) {
-                $errors[] = "config/$file_name - Ð½ÐµÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ð°Ñ ÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÐ°";
+                $errors[] = "config/$file_name - invalid encoding";
             }
 
-            // ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ Ð½Ð° BOM
             if (substr($content, 0, 3) === "\xEF\xBB\xBF") {
-                $errors[] = "config/$file_name - ÑÐ¾Ð´ÐµÑ€Ð¶Ð¸Ñ‚ BOM";
+                $errors[] = "config/$file_name - contains BOM";
             }
         }
 
         $this->assertEmpty(
             $errors,
-            "ÐŸÑ€Ð¾Ð±Ð»ÐµÐ¼Ñ‹ Ñ ÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÐ¾Ð¹:\n".implode("\n", $errors)
+            "Encoding problems:\n".implode("\n", $errors)
         );
     }
 
     /**
-     * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ Ñ‡Ñ‚Ð¾ ÐºÐ¾Ð½Ñ„Ð¸Ð³ Ñ„Ð°Ð¹Ð»Ñ‹ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÑŽÑ‚ ÑÑ‚Ð°Ð½Ð´Ð°Ñ€Ñ‚ return []
+     * Check array style in key config files.
      */
     public function testconfig_filesDefineArrays(): void
     {
         $errors = [];
 
-        // Ð¤Ð°Ð¹Ð»Ñ‹ ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ðµ Ð´Ð¾Ð»Ð¶Ð½Ñ‹ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ return []
         $array_configs = [
             'global.php',
             'db.php',
@@ -187,35 +181,34 @@ class ConfigValidationTest extends TestCase
 
             $content = file_get_contents($file_path);
 
-            // ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ ÑÑ‚Ð°Ð½Ð´Ð°Ñ€Ñ‚: return [ Ð¸Ð»Ð¸ return array(
             if (!preg_match('/return\s*(\[|array\s*\()/', $content)) {
-                $errors[] = "config/$file - Ñ„Ð°Ð¹Ð» Ð½Ðµ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÑ‚ ÑÑ‚Ð°Ð½Ð´Ð°Ñ€Ñ‚ return []";
+                $errors[] = "config/$file - file does not use return [] style";
             }
         }
 
         $this->assertEmpty(
             $errors,
-            "ÐŸÑ€Ð¾Ð±Ð»ÐµÐ¼Ñ‹ Ñ Ð¾Ð¿Ñ€ÐµÐ´ÐµÐ»ÐµÐ½Ð¸ÐµÐ¼ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸:\n".implode("\n", $errors)
+            "Configuration definition issues:\n".implode("\n", $errors)
         );
     }
 
     /**
-     * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ Ñ‡Ñ‚Ð¾ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ðµ Ñ„Ð°Ð¹Ð»Ñ‹ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹
+     * Check config files are detected.
      */
     public function testconfig_filesFound(): void
     {
-        $this->assertNotEmpty(self::$config_files, 'ÐšÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ðµ Ñ„Ð°Ð¹Ð»Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹');
-        $this->assertGreaterThan(5, count(self::$config_files), 'ÐÐ°Ð¹Ð´ÐµÐ½Ð¾ ÑÐ»Ð¸ÑˆÐºÐ¾Ð¼ Ð¼Ð°Ð»Ð¾ Ñ„Ð°Ð¹Ð»Ð¾Ð² ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸');
+        $this->assertNotEmpty(self::$config_files, 'Configuration files not found');
+        $this->assertGreaterThan(5, count(self::$config_files), 'Too few configuration files found');
     }
 
     /**
-     * ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÑ‚ Ð¿Ñ€Ð°Ð²Ð° Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð° Ðº ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¾Ð½Ð½Ñ‹Ð¼ Ñ„Ð°Ð¹Ð»Ð°Ð¼
+     * Check permissions for config files.
      */
     public function testconfig_filesNotworld_readable(): void
     {
-        // Ð­Ñ‚Ð° Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð°ÐºÑ‚ÑƒÐ°Ð»ÑŒÐ½Ð° Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð´Ð»Ñ Unix-ÑÐ¸ÑÑ‚ÐµÐ¼
+        // Only relevant on Unix-like systems.
         if (DIRECTORY_SEPARATOR === '\\') {
-            $this->markTestSkipped('ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð¿Ñ€Ð°Ð² Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð° Ð½Ðµ Ð¿Ñ€Ð¸Ð¼ÐµÐ½Ð¸Ð¼Ð° Ðº Windows');
+            $this->markTestSkipped('Permission check is not applicable on Windows');
             return;
         }
 
@@ -226,14 +219,13 @@ class ConfigValidationTest extends TestCase
             $world_readable = ($perms & 0x0004);
 
             if ($world_readable && strpos(basename($file), 'db') !== false) {
-                $warnings[] = 'config/'.basename($file).' - Ð´Ð¾ÑÑ‚ÑƒÐ¿ÐµÐ½ Ð´Ð»Ñ Ñ‡Ñ‚ÐµÐ½Ð¸Ñ Ð²ÑÐµÐ¼';
+                $warnings[] = 'config/'.basename($file).' - world-readable';
             }
         }
 
         $this->assertEmpty(
             $warnings,
-            "ÐÐµÐ±ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ñ‹Ðµ Ð¿Ñ€Ð°Ð²Ð° Ð´Ð¾ÑÑ‚ÑƒÐ¿Ð°:\n".implode("\n", $warnings)
+            "Unsafe permission flags:\n".implode("\n", $warnings)
         );
     }
 }
-

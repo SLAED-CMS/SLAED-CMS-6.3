@@ -92,9 +92,9 @@ function mwhois(): void {
 		}
 		$cont .= '<fieldset class="sl_center"><legend class="sl_blue">'._WHOIS_SUCH.'</legend>';
 		if ($licens) {
-			$cont .= '<span class="sl_green">'._DOMAIN.' Â«'.$domainlicens.'Â» '._WHOIS_ISL.'!</span>';
+			$cont .= '<span class="sl_green">'._DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!</span>';
 		} else {
-			$cont .= '<span class="sl_red">'._DOMAIN.' Â«'.$domainlicens.'Â» '._WHOIS_NOL.'!</span>';
+			$cont .= '<span class="sl_red">'._DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!</span>';
 			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? '<form method="post" action="index.php?name='.$conf['name'].'"><input type="hidden" name="op" value="add"><input type="hidden" name="domain" value="'.$domainlicens.'"><input type="submit" value="'._WHOIS_LICENS_SEND.'" class="sl_but_blue"></form>' : '';
 		}
 		$cont .= '</fieldset>';
@@ -257,9 +257,9 @@ function printresults(int|string|null $layout, int $id): string {
 	if (!$id) $cont .= $domainopt;
 	$cont .= '<fieldset class="sl_center"><legend class="sl_blue">'._WHOIS_SUCH.'</legend>';
 	if ($layout=='0') {
-		$cont .= '<span class="sl_green">'._DOMAIN.' Â«'.$domainwhois.'.'.$ext.'Â» '._WHOIS_FREI.'!</span>';
+		$cont .= '<span class="sl_green">'._DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!</span>';
 	} elseif($layout=='1') {
-		$cont .= '<span class="sl_red">'._DOMAIN.' Â«'.$domainwhois.'.'.$ext.'Â» '._WHOIS_B.'!</span>'
+		$cont .= '<span class="sl_red">'._DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!</span>'
 		.'<form method="post" action="index.php?name='.$conf['name'].'">'
 		.'<input type="hidden" name="option" value="whois">'
 		.'<input type="hidden" name="domain_whois" value="'.$domainwhois.'">'

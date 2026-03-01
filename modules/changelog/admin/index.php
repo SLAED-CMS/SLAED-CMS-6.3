@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 # Author: Eduard Laas
-# Copyright � 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -250,19 +250,19 @@ function ghpage(string $owner, string $repo, array $filters, int $perpage, int $
     if ($httpcode !== 200) {
         $errdata = json_decode($body, true);
         $gherror = '<strong>GitHub API Fehler:</strong><br>';
-        $gherror .= 'â€¢ HTTP Status: '.$httpcode.'<br>';
+        $gherror .= '- HTTP Status: '.$httpcode.'<br>';
 
         if ($httpcode === 403) {
             if (preg_match('/X-RateLimit-Remaining: (\d+)/i', $header, $m)) {
-                $gherror .= 'â€¢ Rate Limit verbleibend: '.$m[1].'<br>';
+                $gherror .= '- Rate Limit verbleibend: '.$m[1].'<br>';
             }
             if (preg_match('/X-RateLimit-Reset: (\d+)/i', $header, $m)) {
-                $gherror .= 'â€¢ Reset um: '.date('H:i:s', intval($m[1])).'<br>';
+                $gherror .= '- Reset um: '.date('H:i:s', intval($m[1])).'<br>';
             }
         }
 
         if (isset($errdata['message'])) {
-            $gherror .= 'â€¢ Nachricht: '.esc($errdata['message']);
+            $gherror .= '- Nachricht: '.esc($errdata['message']);
         }
 
         return [];
@@ -791,7 +791,7 @@ function rencom(array $commits): string {
             }
 
             $statsHtml = '<div class="commit-stats">';
-            $statsHtml .= '<strong>Änderungen:</strong> ';
+            $statsHtml .= '<strong>Aenderungen:</strong> ';
             $statsHtml .= '<span class="add">+'.$totadd.'</span> / ';
             $statsHtml .= '<span class="del">-'.$totdel.'</span> | ';
             $statsHtml .= '<strong>'.count($commit['files']).' Datei(en)</strong>';
@@ -843,6 +843,8 @@ switch ($op) {
     case 'export': export(); break;
     case 'info': info(); break;
 }
+
+
 
 
 

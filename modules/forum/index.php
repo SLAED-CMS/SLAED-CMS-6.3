@@ -368,7 +368,6 @@ function view(): void {
                 $profil = ($conf['forum']['profil'] && !empty($nick)) ? '<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($nick).'" title="'._PERSONALINFO.'" class="sl_but">'._ACCOUNT.'</a>' : '';
                 $web = ($conf['forum']['web'] && !empty($site)) ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'" class="sl_but">'._SITE.'</a>' : '';
                 
-                # Ð‘ÑƒÐ´ÑƒÑ‰Ð¸Ðµ Ñ„ÑƒÐ½ÐºÑ†Ð¸Ð¸
                 #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
                 #$thank = "<a href=\"javascript: scroll(0, 0);\" title=\""._THANK."\">"._THANK."</a>";
                 $warn = '';
@@ -474,7 +473,6 @@ function add(): void {
     $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
     [$fstatus] = $db->sql_fetchrow($db->sql_query('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
 
-    # Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€ÑƒÐµÐ¼ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ Ð¸Ð»Ð¸ Ñ‚ÐµÐ¼Ñƒ
     if ($conf['forum']['add'] && $id) {
         $fid = $id;
         [$qpid, $uid, $subject, $time, $hometext, $field, $status] = $db->sql_fetchrow($db->sql_query('SELECT pid, uid, title, time, hometext, field, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
@@ -491,20 +489,17 @@ function add(): void {
         $hometext = getVar('post', 'hometext', 'text');
         $hometext = ($hometext) ? save_text($hometext) : $oldhometext;
 
-    # ÐžÑ‚Ð²ÐµÑ‡Ð°ÐµÐ¼ Ð¸ ÑÐ¾Ð·Ð´Ð°Ñ‘Ð¼
     } elseif ($conf['forum']['add'] && ($istopic || $isreply)) {
         $fid = getVar('post', 'fid', 'num');
 
         $qid = getVar('req', 'qid', 'num');
         $subh = (!empty($pid) || !empty($qpid)) ? 1 : 0;
 
-        # ÐžÑ‚Ð²ÐµÑ‡Ð°ÐµÐ¼ Ð² ÑÑƒÑ‰ÐµÑÑ‚Ð²ÑƒÑŽÑ‰ÐµÐ¹ Ñ‚ÐµÐ¼Ðµ
         if ($pid) {
             $id = ($qid) ? $qid : $pid;
             [$ftitle, $ftext, $status] = $db->sql_fetchrow($db->sql_query('SELECT title, hometext, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
             $form = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
         
-        # Ð¡Ð¾Ð·Ð´Ð°Ñ‘Ð¼ Ð½Ð¾Ð²ÑƒÑŽ Ñ‚ÐµÐ¼Ñƒ
         } else {
             $form = true;
         }
@@ -614,7 +609,6 @@ function send(): void {
             $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
             [$fstatus] = $db->sql_fetchrow($db->sql_query('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
             
-            # Ð ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€ÑƒÐµÐ¼ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ Ð¸Ð»Ð¸ Ñ‚ÐµÐ¼Ñƒ
             if ($id) {
                 [$fpid, $uid, $ftime] = $db->sql_fetchrow($db->sql_query('SELECT pid, uid, time FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
                 $fpid = ($fpid) ? $fpid : $id;
@@ -627,7 +621,6 @@ function send(): void {
                     }
                 }
             
-            # ÐžÑ‚Ð²ÐµÑ‡Ð°ÐµÐ¼ Ð¸ ÑÐ¾Ð·Ð´Ð°Ñ‘Ð¼
             } else {
                 if ($ismod) {
                     $userinfo = getusrinfo();
@@ -643,11 +636,9 @@ function send(): void {
                 }
                 $insert = false;
 
-                # ÐžÑ‚Ð²ÐµÑ‡Ð°ÐµÐ¼ Ð² ÑÑƒÑ‰ÐµÑÑ‚Ð²ÑƒÑŽÑ‰ÐµÐ¹ Ñ‚ÐµÐ¼Ðµ
                 if ($pid && $isreply) {
                     $insert = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
                     
-                # Ð¡Ð¾Ð·Ð´Ð°Ñ‘Ð¼ Ð½Ð¾Ð²ÑƒÑŽ Ñ‚ÐµÐ¼Ñƒ
                 } elseif ($istopic) {
                     $insert = true;
                 }
@@ -709,15 +700,11 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
         if ($ismod || ($isdelete && $uid == intval($user[0]))) {
             $recycle = intval($conf['forum']['recycle']);
             
-            # ÐŸÐµÑ€ÐµÐ½Ð¾Ñ Ð² Ñ„Ð¾Ñ€ÑƒÐ¼, Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÐ¼Ñ‹Ð¹ Ð² ÐºÐ°Ñ‡ÐµÑÑ‚Ð²Ðµ ÐºÐ¾Ñ€Ð·Ð¸Ð½Ñ‹
-            
             if ($recycle && $recycle != $catid) {
                 $rcatids = catids($conf['name'], $recycle);
-                # Ð¡Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ
                 if ($pid) {
                     $db->sql_query('UPDATE '.PREFIX_DB."_forum SET pid = '0', catid = :recycle WHERE id = :id", ['recycle' => $recycle, 'id' => $id]);
                     $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, lpost_id = :id WHERE id IN ('.$rcatids.')', ['id' => $id]);
-                # Ð¢ÐµÐ¼Ð°
                 } else {
                     $db->sql_query('UPDATE '.PREFIX_DB.'_forum SET catid = :recycle WHERE id = :id OR pid = :pid', ['recycle' => $recycle, 'id' => $id, 'pid' => $id]);
                     [$rnpost] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :id', ['id' => $id]));
@@ -726,9 +713,6 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                 }
             }
             
-            # Ð¡Ð¸Ð½Ñ…Ñ€Ð¾Ð½Ð¸Ð·Ð°Ñ†Ð¸Ñ Ñ„Ð¾Ñ€ÑƒÐ¼Ð¾Ð² Ð¸ Ñ‚ÐµÐ¼
-            
-            # Ð¡Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ
             $catids = catids($conf['name'], $catid);
 
             if ($pid) {
@@ -741,7 +725,6 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                 }
                 $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET posts = posts-1 WHERE id IN ('.$catids.')');
 
-            # Ð¢ÐµÐ¼Ð°
             } else {
                 [$lid] = $db->sql_fetchrow($db->sql_query('SELECT lpost_id FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
                 [$npost] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :id', ['id' => $id]));
@@ -754,27 +737,19 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                 }
             }
             
-            # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ‚ÐµÐ¼ Ð¸ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ð¹
-            
             if (!$recycle || $recycle == $catid) {
-            
-                # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð¿ÑƒÐ½ÐºÑ‚Ð¾Ð² Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»ÐµÐ¹ Ð·Ð° Ñ‚ÐµÐ¼Ñƒ Ð¸Ð»Ð¸ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ
                 if ($uid) {
-                    # Ð¡Ð¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ðµ
                     if ($pid) {
                         update_points(14, $uid, 1);
-                    # Ð¢ÐµÐ¼Ð°
                     } else {
                         update_points(13, $uid, 1);
                     }
                 }
-                # ÐŸÑ€Ð¾Ð²ÐµÑ€ÐºÐ°, Ð´Ð¾Ð±Ð°Ð²Ð»ÐµÐ½Ð° Ð»Ð¸ Ñ‚ÐµÐ¼Ð° Ð² Ñ„Ð°Ð²Ð¾Ñ€Ð¸Ñ‚Ñ‹, ÐµÑÐ»Ð¸ Ð´Ð°, ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ„Ð°Ð²Ð¾Ñ€Ð¸Ñ‚Ð¾Ð² Ð¸ Ð¿ÑƒÐ½ÐºÑ‚Ð¾Ð² Ð·Ð° Ð½Ð¸Ñ…
                 [$fid, $fuid] = $db->sql_fetchrow($db->sql_query('SELECT id, uid FROM '.PREFIX_DB."_favorites WHERE fid = :id AND modul = 'forum'", ['id' => $id]));
                 if ($fid) {
                     if ($fuid) update_points(44, $fuid, 1);
                     $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :fid', ['fid' => $fid]);
                 }
-                # Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ñ‚ÐµÐ¼Ñ‹ Ð¸ ÑÐ¾Ð¾Ð±Ñ‰ÐµÐ½Ð¸Ð¹
                 $db->sql_query('DELETE FROM '.PREFIX_DB.'_forum WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
             }
             
