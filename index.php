@@ -180,7 +180,7 @@ if (empty($go)) {
                 case 'ajax_privat': ajax_privat(); break;
                 case 'ajax_privat_del': ajax_privat_del(); break;
                 case 'ashow_files': ashow_files(); break;
-                case 'adm_info': adm_info(); break;
+                case 'adm_info': echo getAdminInfo(); break;
             }
         } else {
             die('Illegal file access');

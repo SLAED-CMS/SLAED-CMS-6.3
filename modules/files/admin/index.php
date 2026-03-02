@@ -305,7 +305,7 @@ function saveconf(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 'files', 0).'</div>';
+    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

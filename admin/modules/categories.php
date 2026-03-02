@@ -66,13 +66,13 @@ function add(): void {
     .'</div>'
     .'<div id="tabcs1" class="tabcont">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', '', '').'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', '', '').'</td></tr></table>'
+    .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', '', 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', '', 0).'</td></tr></table>'
     .'</div>'
     .'<div id="tabcs2" class="tabcont">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', '', '').'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', '', '').'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', '', 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', '', 0).'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_edit', 'sl_form', '', 1).'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_delete', 'sl_form', '', 1).'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', '', 2).'</td></tr></table>'
@@ -105,7 +105,7 @@ function subadd(): void {
         .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'"></textarea></td></tr>';
         if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="language" class="sl_form">'.language().'</select></td></tr>';
         $cont .= '<tr><td>'._MODUL.':</td><td>'.cat_modul('modul', 'sl_form', $modul).'</td></tr>'
-        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, '', 'cid', 'sl_form').'</td></tr>'
+        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, 0, 'cid', 'sl_form').'</td></tr>'
         .'<tr><td>'._IMG.':</td><td><select name="imgcat" id="img_replace" class="sl_form">'
         .'<option value="'.$path.'no.png">'._NO.'</option>';
         $files = scandir($path);
@@ -120,13 +120,13 @@ function subadd(): void {
         .'</div>'
         .'<div id="tabcs1" class="tabcont">'
         .'<table class="sl_table_form">'
-        .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', '', '').'</td></tr>'
-        .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', '', '').'</td></tr></table>'
+        .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', '', 0).'</td></tr>'
+        .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', '', 0).'</td></tr></table>'
         .'</div>'
         .'<div id="tabcs2" class="tabcont">'
         .'<table class="sl_table_form">'
-        .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', '', '').'</td></tr>'
-        .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', '', '').'</td></tr>'
+        .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', '', 0).'</td></tr>'
+        .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', '', 0).'</td></tr>'
         .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_edit', 'sl_form', '', 1).'</td></tr>'
         .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_delete', 'sl_form', '', 1).'</td></tr>'
         .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', '', 2).'</td></tr></table>'
@@ -155,7 +155,7 @@ function addedit(): void {
     if ($db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_form"><form action="'.$afile.'.php" method="post">'
-        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, '', 'cid', 'sl_form').'</td></tr>'
+        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, 0, 'cid', 'sl_form').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="edit"><input type="submit" value="'._EDIT.'" class="sl_but_blue"></td></tr></form></table>';
         $cont .= setTemplateBasic('close');
     } else {
@@ -205,13 +205,13 @@ function edit(): void {
     .'</div>'
     .'<div id="tabcs1" class="tabcont">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', $auth_view, '').'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', $auth_read, '').'</td></tr></table>'
+    .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', $auth_view, 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', $auth_read, 0).'</td></tr></table>'
     .'</div>'
     .'<div id="tabcs2" class="tabcont">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', $auth_post, '').'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', $auth_reply, '').'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', $auth_post, 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', $auth_reply, 0).'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_edit', 'sl_form', $auth_edit, 1).'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_delete', 'sl_form', $auth_delete, 1).'</td></tr>'
     .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', $auth_mod, 2).'</td></tr></table>'
@@ -303,7 +303,7 @@ function del(): void {
 
 function info(): void {
     head();
-    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'categories').'</div>';
+    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     foot();
 }
 

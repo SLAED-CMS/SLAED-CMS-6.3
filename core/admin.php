@@ -756,7 +756,7 @@ function fav_aliste(int $obj = 0): string {
             }
             $cont .= "</tbody></table>";
             $numpages = ceil($fav_num / $newlistnum);
-            $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, "0", "5", "fav_aliste", "fav_aliste", "", "", "");
+            $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, "0", 5, "fav_aliste", "fav_aliste", 0, "", "");
         } else {
             $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
         }
@@ -803,7 +803,7 @@ function ajax_privat(int $obj = 0): string {
         }
         $cont .= "</tbody></table>";
         $numpages = ceil($fav_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, "0", "5", "ajax_privat", "ajax_privat", "", "", "");
+        $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, "0", 5, "ajax_privat", "ajax_privat", 0, "", "");
     } else {
         $cont = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
     }
@@ -875,7 +875,7 @@ function ashow_files(): void {
         for ($i = $offset; $i < $tnum; $i++) {
             if (!empty($contents[$i])) $cont .= $contents[$i];
         }
-        $contnum = ($a > $connum) ? num_ajax("pagenum", $a, $numpages, $connum, "", $num, "0", "5", "ashow_files", "f".$id, $id, "", $dir) : "";
+        $contnum = ($a > $connum) ? num_ajax("pagenum", $a, $numpages, $connum, 8, $num, "0", 5, "ashow_files", "f".$id, $id, "", $dir) : "";
         $content = ($cont) ? "<table class=\"sl_table_list\"><thead><tr><th>".cutstr(_IMG, 4, 1)."</th><th>"._FILE."</th><th>"._DATE."</th><th>"._SIZE."</th><th>"._WIDTH." x "._HEIGHT."</th><th>"._FUNCTIONS."</th></tr></thead><tbody>".$cont."</tbody></table>".$contnum : "";
     } else {
         $content = setTemplateWarning('warn', array('time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO));
@@ -931,21 +931,22 @@ function edit_list(string $modul, string $name, string $extraClass = ''): string
     $cont .= "</optgroup><optgroup label=\""._COMMENTS."\" class=\"sl_label\">";
     $coms = [_DEACTIVATE => "c0", _APOSTMOD => "c1", _APOSTNOMOD => "c2"];
     foreach ($coms as $var_n => $var_v) $cont .= "<option value=\"".$var_v."\">".$var_n."</option>";
-    $cont .= "</optgroup><optgroup label=\""._MOVETO."\" class=\"sl_label\">".getcat($modul, "", "", "", "", "1")."</optgroup>";
+    $cont .= "</optgroup><optgroup label=\""._MOVETO."\" class=\"sl_label\">".getcat($modul, 0, "", "", "", "1")."</optgroup>";
     $cont .= "</select>";
     return $cont;
 }
 
-# DELETE OLD / View and edit info
-function adm_info(int $obj = 0, string $modArg = '', string $fileArg = ''): string {
- global $locale, $conf;
+function getAdminInfo(): string {
+    global $locale, $conf;
     $id   = getVar('post', 'id', 'num', 0);
     $cont = "";
     if ($conf['adminfo'] && $id) {
-        $mod     = var_filter(getVar('post', 'mod',  'text', ''));
+        $type    = getVar('post', 'type', 'num', 0);
         $name    = var_filter(getVar('post', 'name', 'text', ''));
         $content = save_text(trim(getVar('post', 'text', 'raw', '')));
-        $fpdir   = $mod."admin/info/".$name.".html";
+        $fpdir   = $type
+            ? "modules/{$name}/admin/info/{$locale}.html"
+            : "admin/info/{$name}/{$locale}.html";
         if ($content) {
             $fp = fopen($fpdir, "wb");
             fwrite($fp, $content);
@@ -953,12 +954,21 @@ function adm_info(int $obj = 0, string $modArg = '', string $fileArg = ''): stri
         }
         $thefile = (file_exists($fpdir)) ? file_get_contents($fpdir) : _NO_INFO;
     } else {
-        $mod     = $modArg  ? "modules/".$modArg."/" : "";
-        $file    = $fileArg ? $fileArg."-" : "";
-        $name    = $file.$locale;
-        $dir     = $mod."admin/info/".$name.".html";
-        $thefile = (file_exists($dir)) ? file_get_contents($dir) : _NO_INFO;
-        if ($conf['adminfo']) {
+        $name    = var_filter(getVar('get', 'name', 'text', ''));
+        $modPath = "modules/{$name}/admin/info/{$locale}.html";
+        $admPath = "admin/info/{$name}/{$locale}.html";
+        if (file_exists($modPath)) {
+            $dir  = $modPath;
+            $type = 1;
+        } elseif (file_exists($admPath)) {
+            $dir  = $admPath;
+            $type = 0;
+        } else {
+            $dir  = '';
+            $type = 0;
+        }
+        $thefile = $dir ? file_get_contents($dir) : _NO_INFO;
+        if ($conf['adminfo'] && $dir) {
             $cont .= checkPerms(BASE_DIR.'/'.$dir);
         }
     }
@@ -967,11 +977,9 @@ function adm_info(int $obj = 0, string $modArg = '', string $fileArg = ''): stri
     if ($conf['adminfo']) {
         $cont .= "<hr><form name=\"post\" id=\"formadm_info\" method=\"post\"><table class=\"sl_table_edit\">"
         ."<tr><td>".textarea("1", "text", $thefile, "info", "25")."</td></tr>"
-        ."<tr><td class=\"sl_center\"><input type=\"submit\" OnClick=\"AjaxLoad('POST', '1', 'adm_info', 'go=5&amp;op=adm_info&amp;id=1&amp;mod=".$mod."&amp;name=".$name."', { 'text':'"._CERROR1."' }); return false;\" value=\""._SAVECHANGES."\" title=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr>"
+        ."<tr><td class=\"sl_center\"><input type=\"submit\" OnClick=\"AjaxLoad('POST', '1', 'adm_info', 'go=5&amp;op=adm_info&amp;id=1&amp;type=".$type."&amp;name=".$name."', { 'text':'"._CERROR1."' }); return false;\" value=\""._SAVECHANGES."\" title=\""._SAVECHANGES."\" class=\"sl_but_blue\"></td></tr>"
         ."</table></form>";
     }
     $cont .= setTemplateBasic('close');
-    if ($obj) { return $cont; }
-    echo $cont;
-    return '';
+    return $cont;
 }

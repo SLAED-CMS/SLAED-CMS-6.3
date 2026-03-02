@@ -67,7 +67,7 @@ function save(): void {
 
 function info(): void {
     head();
-    echo navi(0, 2, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'privat').'</div>';
+    echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     foot();
 }
 

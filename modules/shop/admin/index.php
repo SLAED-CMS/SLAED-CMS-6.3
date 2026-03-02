@@ -138,6 +138,7 @@ function clientsadd(): void {
         $cregdate = date('Y-m-d H:i:s', $cregdate);
         $cenddate = ($cenddate) ? date('Y-m-d H:i:s', $cenddate) : date('Y-m-d H:i:s');
     } else {
+        $cid = 0;
         $partner = getVar('post', 'partner', 'num');
         $uid = getVar('post', 'uid', 'num');
         $product = getVar('post', 'product', 'num');
@@ -155,6 +156,7 @@ function clientsadd(): void {
     $cont = navi(0, 0, 1, 3);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     $cont .= setTemplateBasic('open');
+    $cppi = 0;
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     if ($partner) {
         if (!$proz) {
@@ -297,7 +299,7 @@ function products(): void {
             $vote = ($pvote) ? '<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$pvote.'" title="'._EDITVOTE.'">'._EDITVOTE.'</a>||' : '';
             $typ = ($pactive) ? '0' : '1';
             $cont .= '<tr><td>'.$pid.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime, _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span></td>'
+            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime ?? '', _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span></td>'
             .'<td>'.$ppreis.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.ad_status('', $active).'</td>'
             .'<td>'.add_menu($view.$vote.ad_status($afile.'.php?name=shop&op=productsadmin&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive).'||<a href="'.$afile.'.php?name=shop&op=productsadd&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=productsadmin&amp;typ=d&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$ptitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
@@ -346,7 +348,7 @@ function productsadd(): void {
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.' / '._PRODUCT.':</td><td><input type="text" name="ptitle" value="'.$ptitle.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._CATEGORY.':</td><td>'.getcat('shop', $pcid, 'pcid', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>';
-    $result2 = $db->sql_query('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'shop" ORDER BY parentid, title');
+    $result2 = $db->sql_query('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parentid, title', ['modul' => 'shop']);
     if ($db->sql_numrows($result2) > 0) {
         $cont .= '<tr><td>'._ASSOTOPIC.':<div class="sl_small">'._ASSOTOPICI.'</div></td><td><table class="sl_form"><tr>';
         while ([$id, $title] = $db->sql_fetchrow($result2)) {
@@ -514,6 +516,7 @@ function partnersadd(): void {
         [$paid, $uid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive, $nick] = $db->sql_fetchrow($result);
         $paregdate = ($paregdate) ? date('Y-m-d H:i:s', $paregdate) : date('Y-m-d H:i:s');
     } else {
+        $paid = 0;
         $uid = getVar('post', 'uid', 'num');
         $paname = getVar('post', 'paname', 'text');
         $paadres = getVar('post', 'paadres', 'text');
@@ -760,7 +763,7 @@ function shop(): void {
     $cont .= checkPerms(CONFIG_DIR.'/shop.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['shop']['defis']).'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
+    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['shop']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
     .'<tr><td>'._C_0.':</td><td><input type="number" name="clients" value="'.$conf['shop']['clients'].'" class="sl_conf" placeholder="'._C_0.'" required></td></tr>'
     .'<tr><td>'._C_1.':</td><td><input type="number" name="proz" value="'.$conf['shop']['proz'].'" class="sl_conf" placeholder="'._C_1.'" required></td></tr>'
     .'<tr><td>'._C_2.':</td><td><input type="number" name="clients1" value="'.$conf['shop']['clients1'].'" class="sl_conf" placeholder="'._C_2.'" required></td></tr>'
@@ -861,7 +864,7 @@ function save(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 'shop', 0).'</div>';
+    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

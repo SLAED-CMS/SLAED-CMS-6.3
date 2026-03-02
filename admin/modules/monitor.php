@@ -342,7 +342,7 @@ function getMonitor(): void {
 
 function getInfo(): void {
     head();
-    echo getMonitorTabs(0, 1, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'monitor').'</div>';
+    echo getMonitorTabs(0, 1, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     foot();
 }
 

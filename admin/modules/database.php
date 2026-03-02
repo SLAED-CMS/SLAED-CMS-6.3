@@ -282,7 +282,7 @@ function dump(): void {
 
 function info(): void {
     head();
-    echo navi(0, 4, 0, 0).'<div id="repadm_info">'.adm_info(1, 0, 'database').'</div>';
+    echo navi(0, 4, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     foot();
 }
 

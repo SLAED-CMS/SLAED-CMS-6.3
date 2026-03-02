@@ -333,7 +333,7 @@ function confsave(): void {
 
 function info(): void {
     head();
-    echo navi(0, 4, 0, 0, 'security').'<div id="repadm_info">'.adm_info(1, 0, 'security').'</div>';
+    echo navi(0, 4, 0, 0, 'security').'<div id="repadm_info">'.getAdminInfo().'</div>';
     foot();
 }
 

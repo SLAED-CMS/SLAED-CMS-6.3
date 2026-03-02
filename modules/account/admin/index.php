@@ -137,7 +137,7 @@ function add(): void {
     .'<tr><td>'._EMAIL.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required></td></tr>'
     .'<tr><td>'._SITEURL.':</td><td><input type="url" name="site" value="'.$site.'" maxlength="255" class="sl_form" placeholder="'._SITEURL.'"></td></tr>';
     if ($avatar) $cont .= '<tr><td>'._AVATAR.':</td><td><input type="text" name="avatar" value="'.$avatar.'" maxlength="255" class="sl_form" placeholder="'._AVATAR.'"></td></tr>';
-    $cont .= '<tr><td>'._REG.':</td><td>'.datetime(1, 'reg', $reg, 16, 'sl_form').'</td></tr>'
+    $cont .= '<tr><td>'._REG.':</td><td>'.datetime(1, 'reg', $reg ?? '', 16, 'sl_form').'</td></tr>'
     .'<tr><td>'._OCCUPATION.':</td><td><input type="text" name="occ" value="'.$occ.'" maxlength="100" class="sl_form" placeholder="'._OCCUPATION.'"></td></tr>'
     .'<tr><td>'._LOCATION.':</td><td><input type="text" name="from" value="'.$from.'" maxlength="100" class="sl_form" placeholder="'._LOCATION.'"></td></tr>'
     .'<tr><td>'._INTERESTS.':</td><td><input type="text" name="inter" value="'.$inter.'" maxlength="150" class="sl_form" placeholder="'._INTERESTS.'"></td></tr>'
@@ -446,7 +446,7 @@ function del(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.adm_info(1, 'account', 0).'</div>';
+    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
