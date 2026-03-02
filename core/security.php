@@ -27,8 +27,8 @@ setLang();
 
 # Database connection using unified config
 require_once BASE_DIR.'/core/classes/pdo.php';
-$db = new sql_db($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
-if ($conf['db']['sync']) $db->sql_query("SET LOCAL time_zone = '".date('P')."'");
+$db = new Database($conf['db']['host'], $conf['db']['uname'], $conf['db']['pass'], $conf['db']['name'], $conf['db']['charset']);
+if ($conf['db']['sync']) $db->getSqlQuery("SET LOCAL time_zone = '".date('P')."'");
 define('PREFIX_DB', $conf['db']['prefix']);
 
 # Security and routing aliases
@@ -633,7 +633,7 @@ function is_admin_god() {
             $pwd = htmlspecialchars(substr($admin[2], 0, 40));
             $ip = getIp();
             if ($id && $name && $pwd && $ip) {
-                list($aname, $apwd, $aip) = $db->sql_fetchrow($db->sql_query("SELECT name, pwd, ip FROM ".PREFIX_DB."_admins WHERE id = :id AND super = '1'", ['id' => $id]));
+                list($aname, $apwd, $aip) = $db->getSqlRow($db->getSqlQuery("SELECT name, pwd, ip FROM ".PREFIX_DB."_admins WHERE id = :id AND super = '1'", ['id' => $id]));
                 if ($aname == $name && $aname != '' && $apwd == $pwd && $apwd != '' && $aip == $ip && $aip != '') {
                     $godtrue = 1;
                     return $godtrue;

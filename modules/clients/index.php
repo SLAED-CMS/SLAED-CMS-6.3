@@ -16,15 +16,15 @@ function clients(): void {
     $cont .= navi();
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($info) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
-    $result = $db->sql_query('SELECT id, title, infotext, url, num, hits, prod_id FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT id, title, infotext, url, num, hits, prod_id FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');
+    if ($db->getSqlRowCount($result) > 0) {
         $uid = (int)($user[0] ?? 0);
         $conts = '';
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CLOADS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
         $i = 0;
         $a = 1;
-        while ([$id, $title, $infotext, $url, $num, $hits, $prod] = $db->sql_fetchrow($result)) {
+        while ([$id, $title, $infotext, $url, $num, $hits, $prod] = $db->getSqlRow($result)) {
             $tpath = 'uploads/clients/thumb/'.$id.'_'.$uid.'.zip';
             $dtitle = (file_exists($tpath)) ? _CDOWN : _GZIPGEN;
             $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=clients_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
@@ -52,10 +52,10 @@ function clients(): void {
 function download(): void {
     global $db, $user, $stop, $info;
     $uid = (int)($user[0] ?? 0);
-    $result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $uid]);
-    if (is_user() && $db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $uid]);
+    if (is_user() && $db->getSqlRowCount($result) > 0) {
         $id = getVar('get', 'id', 'num');
-        [$pid, $url, $num] = $db->sql_fetchrow($db->sql_query('SELECT id, url, num FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
+        [$pid, $url, $num] = $db->getSqlRow($db->getSqlQuery('SELECT id, url, num FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
         $tpath = 'uploads/clients/thumb/'.$pid.'_'.$uid.'.zip';
         if (!file_exists($tpath)) {
             $ipath = 'uploads/clients/images';
@@ -84,7 +84,7 @@ function download(): void {
                 clients();
             }
         } else {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_clients_down SET hits = hits+1 WHERE id = :id', ['id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET hits = hits+1 WHERE id = :id', ['id' => $id]);
             stream($tpath, date('d.m.Y').'_'.str_replace(' ', '_', $num).'.zip');
         }
     } else {
@@ -112,14 +112,14 @@ function hidden(string $path, string $ipath, string $code): void {
 function generator(string $path = ''): void {
     global $db, $user, $stop;
     $uid = (int)($user[0] ?? 0);
-    $result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $uid]);
-    if (is_user() && $db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $uid]);
+    if (is_user() && $db->getSqlRowCount($result) > 0) {
         $domains = [];
         $code = '';
-        while ([$domain] = $db->sql_fetchrow($result)) $domains[] = $domain;
+        while ([$domain] = $db->getSqlRow($result)) $domains[] = $domain;
         $domains = preg_replace('#https?://|www\.#i', '', implode(',', $domains));
         $id = getVar('get', 'id', 'num');
-        [$pass] = $db->sql_fetchrow($db->sql_query('SELECT code FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
+        [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT code FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
         $massiv = explode(',', $domains);
         foreach ($massiv as $val) {
             if ($val != '') {

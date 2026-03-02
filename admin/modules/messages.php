@@ -16,12 +16,12 @@ function messages(): void {
     global $db, $conf, $afile;
     head();
     $cont = navi(0, 0);
-    $result = $db->sql_query('SELECT mid, title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message ORDER BY mid');
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT mid, title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message ORDER BY mid');
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._PURCHASED.'</th><th>'._VIEW.'</th><th>'._LANGUAGE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$mid, $title, $content, $expire, $active, $view, $mlanguage] = $db->sql_fetchrow($result)) {
-            if (($expire && $expire < time()) || (!$active && $expire)) $db->sql_query('UPDATE '.PREFIX_DB.'_message SET active = :active, expire = :expire WHERE mid = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
+        while ([$mid, $title, $content, $expire, $active, $view, $mlanguage] = $db->getSqlRow($result)) {
+            if (($expire && $expire < time()) || (!$active && $expire)) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET active = :active, expire = :expire WHERE mid = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
             $act = ($active) ? '0' : '1';
             if ($view == 1) {
                 $mview = _MVALL;
@@ -55,7 +55,7 @@ function add(): void {
     global $db, $conf, $afile, $stop;
     $mid = getVar('req', 'id', 'num');
     if ($mid) {
-        [$title, $content, $expire, $active, $view, $mlanguage] = $db->sql_fetchrow($db->sql_query('SELECT title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $mid]));
+        [$title, $content, $expire, $active, $view, $mlanguage] = $db->getSqlRow($db->getSqlQuery('SELECT title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $mid]));
     } else {
         $mid = getVar('post', 'mid', 'num');
         $title = getVar('post', 'title', 'title');
@@ -118,9 +118,9 @@ function save(): void {
     if (!$content) $stop[] = _CERROR1;
     if (!$stop && $posttype == 'save') {
         if ($mid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_message SET title = :title, content = :content, expire = :expire, active = :active, view = :view, mlanguage = :mlanguage WHERE mid = :mid', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, content = :content, expire = :expire, active = :active, view = :view, mlanguage = :mlanguage WHERE mid = :mid', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage, 'mid' => $mid]);
         } else {
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_message (mid, title, content, expire, active, view, mlanguage) VALUES (NULL, :title, :content, :expire, :active, :view, :mlanguage)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (mid, title, content, expire, active, view, mlanguage) VALUES (NULL, :title, :content, :expire, :active, :view, :mlanguage)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage]);
         }
         setRedirect($afile.'.php?name=messages');
     } elseif ($posttype == 'delete') {
@@ -134,14 +134,14 @@ function status(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num');
-    if ($id) $db->sql_query('UPDATE '.PREFIX_DB.'_message SET active = :active WHERE mid = :mid', ['active' => $act, 'mid' => $id]);
+    if ($id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET active = :active WHERE mid = :mid', ['active' => $act, 'mid' => $id]);
     setRedirect($afile.'.php?name=messages');
 }
 
 function del(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $id]);
+    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $id]);
     setRedirect($afile.'.php?name=messages');
 }
 

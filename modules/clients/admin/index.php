@@ -17,11 +17,11 @@ function clients(): void {
     setHead();
     $cont = navi(0, 0, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _CERROR]);
-    $result = $db->sql_query('SELECT id, title, infotext, url, num, hits, prod_id, status FROM '.PREFIX_DB.'_clients_down');
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT id, title, infotext, url, num, hits, prod_id, status FROM '.PREFIX_DB.'_clients_down');
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CDATE.'</th><th>'._ID.'</th><th>'._CLOADS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $title, $infotext, $url, $num, $hits, $prod, $status] = $db->sql_fetchrow($result)) {
+        while ([$id, $title, $infotext, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
             $cont .= '<tr>'
@@ -50,8 +50,8 @@ function add(): void {
     global $db, $afile, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->sql_query('SELECT id, title, infotext, url, num, code, prod_id, status FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
-        [$cid, $title, $infotext, $url, $num, $code, $prod, $status] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT id, title, infotext, url, num, code, prod_id, status FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
+        [$cid, $title, $infotext, $url, $num, $code, $prod, $status] = $db->getSqlRow($result);
     } else {
         $cid = getVar('post', 'cid', 'num');
         $title = getVar('post', 'title', 'title', '');
@@ -100,9 +100,9 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'var', '');
     if (!$stop && $posttype === 'save') {
         if ($cid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_clients_down SET title = :title, infotext = :infotext, url = :url, num = :num, code = :code, prod_id = :prod_id, status = :status WHERE id = :id', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'prod_id' => $prod, 'status' => $status, 'id' => $cid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET title = :title, infotext = :infotext, url = :url, num = :num, code = :code, prod_id = :prod_id, status = :status WHERE id = :id', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'prod_id' => $prod, 'status' => $status, 'id' => $cid]);
         } else {
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_clients_down (title, infotext, url, num, code, hits, prod_id, status) VALUES (:title, :infotext, :url, :num, :code, :hits, :prod_id, :status)', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'hits' => 0, 'prod_id' => $prod, 'status' => $status]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients_down (title, infotext, url, num, code, hits, prod_id, status) VALUES (:title, :infotext, :url, :num, :code, :hits, :prod_id, :status)', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'hits' => 0, 'prod_id' => $prod, 'status' => $status]);
         }
         setRedirect($afile.'.php?name=clients');
     } elseif ($posttype === 'delete') {
@@ -115,7 +115,7 @@ function save(): void {
 function del(int $id = 0): void {
     global $db, $afile;
     if (!$id) $id = getVar('req', 'id', 'num');
-    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
+    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=clients');
 }
 
@@ -123,7 +123,7 @@ function status(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num');
-    if ($id) $db->sql_query('UPDATE '.PREFIX_DB.'_clients_down SET status = :status WHERE id = :id', ['status' => $act, 'id' => $id]);
+    if ($id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET status = :status WHERE id = :id', ['status' => $act, 'id' => $id]);
     setRedirect($afile.'.php?name=clients');
 }
 

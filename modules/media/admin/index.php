@@ -36,11 +36,11 @@ function media(): void {
         $refer = '';
         $cont = navi(0, 0, 0, 0);
     }
-    $result = $db->sql_query('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, m.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.status = :status ORDER BY m.date DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, m.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.status = :status ORDER BY m.date DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $cid, $uname, $title, $subtitle, $date, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+        while ([$id, $cid, $uname, $title, $subtitle, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $title = ($subtitle) ? $title.' / '.$subtitle : $title;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
@@ -75,8 +75,8 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $mid = $id;
     if ($mid) {
-        $result = $db->sql_query('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.ihome, m.acomm, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE id = :id', ['id' => $mid]);
-        [$cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $mdate, $ihome, $acomm, $nick] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.ihome, m.acomm, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE id = :id', ['id' => $mid]);
+        [$cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $mdate, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
         $links = explode(',', $links);
     } else {
@@ -201,16 +201,16 @@ function save(): void {
     if (!$title) $stop[] = _CERROR;
     if (!$description) $stop[] = _CERROR1;
     if (!$postname) $stop[] = _CERROR3;
-    if (!$mid && $db->sql_numrows($db->sql_query('SELECT title, subtitle FROM '.PREFIX_DB.'_media WHERE title = :title AND subtitle = :subtitle', ['title' => $title, 'subtitle' => $subtitle])) > 0) $stop[] = _MEDIAEXIST;
+    if (!$mid && $db->getSqlRowCount($db->getSqlQuery('SELECT title, subtitle FROM '.PREFIX_DB.'_media WHERE title = :title AND subtitle = :subtitle', ['title' => $title, 'subtitle' => $subtitle])) > 0) $stop[] = _MEDIAEXIST;
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
         if ($mid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_media SET cid = :cid, uid = :uid, name = :name, title = :title, subtitle = :subtitle, year = :year, director = :director, roles = :roles, description = :description, createdby = :createdby, duration = :duration, lang = :lang, note = :note, format = :format, quality = :quality, size = :size, released = :released, links = :links, date = :date, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :mid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'date' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET cid = :cid, uid = :uid, name = :name, title = :title, subtitle = :subtitle, year = :year, director = :director, roles = :roles, description = :description, createdby = :createdby, duration = :duration, lang = :lang, note = :note, format = :format, quality = :quality, size = :size, released = :released, links = :links, date = :date, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :mid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'date' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'mid' => $mid]);
         } else {
             $ip = getip();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ihome, acomm, ip_sender, status) VALUES (NULL, :cid, :uid, :name, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, :date, :ihome, :acomm, :ip, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'date' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ihome, acomm, ip_sender, status) VALUES (NULL, :cid, :uid, :name, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, :date, :ihome, :acomm, :ip, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'date' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
         }
         setRedirect($afile.'.php?name=media');
     } elseif ($posttype === 'delete') {
@@ -224,9 +224,9 @@ function del(int $did = 0): void {
     global $db, $afile;
     $id = $did ? $did : getVar('req', 'id', 'num', 0);
     if ($id) {
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'media\'', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'media\'', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_media WHERE id = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'media\'', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'media\'', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_media WHERE id = :id', ['id' => $id]);
     }
     setRedirect($afile.'.php?name=media');
 }
@@ -234,7 +234,7 @@ function del(int $did = 0): void {
 function ignore(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
-    if ($id) $db->sql_query('UPDATE '.PREFIX_DB.'_media SET status = \'1\' WHERE id = :id', ['id' => $id]);
+    if ($id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET status = \'1\' WHERE id = :id', ['id' => $id]);
 	setRedirect($afile.'.php?name=media&status=2');
 }
 

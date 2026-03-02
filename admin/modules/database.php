@@ -27,9 +27,9 @@ function database(): void {
     }
 
     // Tabelleninfos einmal einlesen
-    $result = $db->sql_query('SHOW TABLE STATUS FROM `'.$dbname.'`');
+    $result = $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
     $tables = [];
-    while ($info = $db->sql_fetchrow($result)) {
+    while ($info = $db->getSqlRow($result)) {
         $tables[] = $info;
     }
 
@@ -60,10 +60,10 @@ function database(): void {
         // --- Exakte Zeilenzahl per COUNT(*) (MyISAM & InnoDB) ---
         $rows = (int) $info['Rows']; // Fallback
 
-        $res = $db->sql_query(
+        $res = $db->getSqlQuery(
             'SELECT COUNT(*) AS cnt FROM `'.$conf['db']['name'].'`.`'.$name.'`'
         );
-        if ($res && $row = $db->sql_fetchrow($res)) {
+        if ($res && $row = $db->getSqlRow($res)) {
             $rows = (int) $row['cnt'];
         }
         $total_rows += $rows;
@@ -89,8 +89,8 @@ function database(): void {
             continue;
         }
         if ($type === 'optimize') {
-            $db->sql_query('ANALYZE TABLE `'.$dbname.'`.`'.$name.'`');
-            $oresult = $db->sql_query('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
+            $db->getSqlQuery('ANALYZE TABLE `'.$dbname.'`.`'.$name.'`');
+            $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
 
             if (!$oresult) {
                 $ftitletd = '<div class="sl_red">'._ERROR.'</div>';
@@ -106,7 +106,7 @@ function database(): void {
             if ($tabeng === 'InnoDB') {
                 $ftitletd = '<div class="sl_hidden">'._NO.'</div>';
             } else {
-                $rresult  = $db->sql_query('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
+                $rresult  = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
                 $ftitletd = $rresult
                     ? '<div class="sl_green">'._OK.'</div>'
                     : '<div class="sl_red">'._ERROR.'</div>';
@@ -157,11 +157,11 @@ function database(): void {
 
     // After OPTIMIZE: Totals to recalculate info box
     if ($type === 'optimize') {
-        $result    = $db->sql_query('SHOW TABLE STATUS FROM `'.$dbname.'`');
+        $result    = $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
         $total     = 0;
         $totalfree = 0;
 
-        while ($info = $db->sql_fetchrow($result)) {
+        while ($info = $db->getSqlRow($result)) {
             $tabsize  = (int) $info['Data_length'] + (int) $info['Index_length'];
             $tabfree  = (int) ($info['Data_free'] ?: 0);
 
@@ -189,7 +189,7 @@ function database(): void {
         ]);
 
     } elseif ($type === 'optimize') {
-        $db->sql_query('FLUSH TABLES');
+        $db->getSqlQuery('FLUSH TABLES');
         $cont = navi(0, 1, 0, 0);
 
         $info = _OPTIMIZE.': '.$conf['db']['name']
@@ -239,14 +239,14 @@ function dump(): void {
         foreach ($queries as $query) {
             $stringdb = str_replace(array_keys($replacements), array_values($replacements), $query);
             $stringdb = stripslashes($stringdb);
-            $result = $db->sql_query($stringdb);
+            $result = $db->getSqlQuery($stringdb);
             if (preg_match('#^\s*(ALTER|ANALYZE|CREATE|DELETE|DROP|INSERT|OPTIMIZE|RENAME|REPAIR|REPLACE|SET|TRUNCATE|UPDATE)\s#i', $stringdb, $matches)) {
                 $tablename = '';
                 if (preg_match('#`([^`]+)`#', $stringdb, $tablematch)) $tablename = $tablematch[1];
                 if ($result) {
                     $status = '<span class="sl_green">'._OK.'</span>';
                 } else {
-                    $error = $db->sql_error();
+                    $error = $db->getSqlError();
                     $errmsg = htmlspecialchars($error['message']);
                     $errinfo = $error['sqlstate'].' / '.$error['code'];
                     $status = '<span class="sl_red">'._ERROR.' - '.$errinfo.' - '.$errmsg.'</span>';
@@ -292,9 +292,9 @@ function del(): void {
     $id = getVar('get', 'id', 'num');
     $tb = preg_match('#^[a-zA-Z0-9_]+$#', (string)$tb) ? $tb : '';
     if ($tb && $id == 1) {
-        $db->sql_query('TRUNCATE TABLE `'.$tb.'`');
+        $db->getSqlQuery('TRUNCATE TABLE `'.$tb.'`');
     } elseif ($tb && $id == 2) {
-        $db->sql_query('DROP TABLE `'.$tb.'`');
+        $db->getSqlQuery('DROP TABLE `'.$tb.'`');
     }
     setRedirect($afile.'.php?name=database');
 }

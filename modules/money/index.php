@@ -110,7 +110,7 @@ function send(): void {
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             $status = ($conf['money']['pr']) ? '0' : '1';
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :binfo, :com, :ip, :agent, NOW(), :status)', ['sum' => $sum, 'mail' => $mail, 'binfo' => $binfo, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :binfo, :com, :ip, :agent, NOW(), :status)', ['sum' => $sum, 'mail' => $mail, 'binfo' => $binfo, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
             if ($conf['money']['ad']) {
                 $form = explode(',', $conf['money']['form']);
                 $sinfo = '';

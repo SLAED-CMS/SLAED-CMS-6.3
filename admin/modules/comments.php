@@ -24,8 +24,8 @@ function edit(): void {
     $id = getVar('get', 'id', 'num');
     head();
     $cont = navi(0, 0, 0, 0);
-    $result = $db->sql_query('SELECT id, modul, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
-    [$id, $modul, $com_text] = $db->sql_fetchrow($result);
+    $result = $db->getSqlQuery('SELECT id, modul, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
+    [$id, $modul, $com_text] = $db->getSqlRow($result);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._COMMENT.':</td><td>'.textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1').'</td></tr>'
@@ -39,7 +39,7 @@ function editsave(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num');
     $com_text = getVar('post', 'comment', 'text', '');
-    $db->sql_query('UPDATE '.PREFIX_DB.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
     setRedirect($afile.'.php?name=comments');
 }
 
@@ -129,9 +129,9 @@ function act(): void {
     if (is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
-                [$cid, $mod, $uid, $status] = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
+                [$cid, $mod, $uid, $status] = $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
                 if (!$status && $cid && $mod) {
-                    $db->sql_query('UPDATE '.PREFIX_DB.'_comment SET status = \'1\' WHERE id = :id', ['id' => $val]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = \'1\' WHERE id = :id', ['id' => $val]);
                     numcom($cid, $mod, 0, $uid);
                 }
             }
@@ -148,9 +148,9 @@ function del(): void {
     if (is_array($id)) {
         foreach ($id as $val) {
             if (intval($val)) {
-                [$cid, $mod, $uid, $status] = $db->sql_fetchrow($db->sql_query('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
+                [$cid, $mod, $uid, $status] = $db->getSqlRow($db->getSqlQuery('SELECT cid, modul, uid, status FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]));
                 if ($cid && $mod) {
-                    $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]);
+                    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $val]);
                     if ($status) numcom($cid, $mod, 1, $uid);
                 }
             }

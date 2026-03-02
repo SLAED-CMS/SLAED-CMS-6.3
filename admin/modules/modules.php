@@ -157,7 +157,7 @@ function modules(): void {
         
 
         if ($group != 0) {
-            $grp = $db->sql_fetchrow($db->sql_query('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
+            $grp = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
             $group_name = $grp['name'];
         } else {
             $group_name = _NONE;
@@ -171,7 +171,7 @@ function modules(): void {
                 $string = str_replace('{prefix}', PREFIX_DB, $stringdump[$i]);
                 if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
                     $table = explode('`', $string);
-                    $install = $db->sql_fetchrow($db->sql_query('SELECT Count(*) FROM '.$table[1]));
+                    $install = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.$table[1]));
                 }
             }
             if ($install) {
@@ -260,11 +260,11 @@ function edit(): void {
         $cont .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
     }
     $cont .= '</select></td></tr>';
-    $numrow = $db->sql_numrows($db->sql_query('SELECT * FROM '.PREFIX_DB.'_groups'));
+    $numrow = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
         $cont .= '<tr><td>'._UGROUP.':</td><td><select name="group" class="sl_conf">';
-        $result2 = $db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_groups');
-        while ([$gid, $gname] = $db->sql_fetchrow($result2)) {
+        $result2 = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups');
+        while ([$gid, $gname] = $db->getSqlRow($result2)) {
             $gsel = ($gid == $group) ? ' selected' : '';
             if (empty($none)) {
                 $ggsel = ($group == 0) ? ' selected' : '';
@@ -348,10 +348,10 @@ function add(): void {
         $stringdump = explode(';', $filename);
         for ($i = 0; $i < count($stringdump); $i++) {
             $string = str_replace('{prefix}', PREFIX_DB, $stringdump[$i]);
-            if ($id != 1) $ident = $db->sql_query(stripslashes($string));
+            if ($id != 1) $ident = $db->getSqlQuery(stripslashes($string));
             if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
                 $table = explode('`', $string);
-                if ($id == 1) $ident = $db->sql_query('DROP TABLE '.$table[1]);
+                if ($id == 1) $ident = $db->getSqlQuery('DROP TABLE '.$table[1]);
                 $info .= _TABLE.': '.$table[1].' - '._STATUS.': '.(($ident) ? '<span class="sl_green">'._OK.'</span>' : '<span class="sl_red">'._ERROR.'</span>').'<br>';
             }
         }

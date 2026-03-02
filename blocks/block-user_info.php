@@ -17,8 +17,8 @@ if (is_user()) {
 	$user_avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['user_avatar'])) ? $userinfo['user_avatar'] : 'default/00.gif';
 	$content = '<span class="sl_pos_center"><a title="'.$uname.'" class="sl_avatar" style="background-image: url('.$conf['users']['adirectory'].'/'.$user_avatar.');"></a><br><b>'._HELLO.',<br>'.$uname.'</b></span>';
 	if ($conf['privat']['act']) {
-		list($prin) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin='".$user_id."' AND status = '0'"));
-		list($prout) = $db->sql_fetchrow($db->sql_query("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidout='".$user_id."' AND status = '0'"));
+		list($prin) = $db->getSqlRow($db->getSqlQuery("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidin='".$user_id."' AND status = '0'"));
+		list($prout) = $db->getSqlRow($db->getSqlQuery("SELECT COUNT(id) FROM ".PREFIX_DB."_privat WHERE uidout='".$user_id."' AND status = '0'"));
 		if ($prin > 0) {
 			$content .= '<audio src="sound/privat-'.$locale.'.mp3" autoplay="autoplay" preload="auto"></audio>
 			<script src="plugins/jquery/tinycon.js"></script>

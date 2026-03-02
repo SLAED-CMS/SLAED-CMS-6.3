@@ -36,11 +36,11 @@ function files(): void {
         $refer = '';
         $cont = navi(0, 0, 0, 0);
     }
-    $result = $db->sql_query('SELECT f.lid, f.cid, f.name, f.title, f.date, f.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.status = :status ORDER BY f.date DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT f.lid, f.cid, f.name, f.title, f.date, f.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.status = :status ORDER BY f.date DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $cid, $uname, $title, $date, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+        while ([$id, $cid, $uname, $title, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
@@ -74,8 +74,8 @@ function add(): void {
     $fid = $id;
     $fid = $id;
     if ($fid) {
-        $result = $db->sql_query('SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.date, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE lid = :id', ['id' => $fid]);
-        [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $homepage, $ihome, $acomm, $nick] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.date, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE lid = :id', ['id' => $fid]);
+        [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $homepage, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
@@ -156,7 +156,7 @@ function save(): void {
     if (!$title) $stop[] = _CERROR;
     if (!$description) $stop[] = _CERROR1;
     if (!$postname) $stop[] = _CERROR3;
-    if (!$fid && $db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
+    if (!$fid && $db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
     $filename = upload(1, $conf['files']['path'] ?? 'uploads/files', $conf['files']['typefile'] ?? 'zip,rar', $conf['files']['max_size'] ?? 1048576, 'files', '1600', '1600', '1');
     $url = ($filename) ? ($conf['files']['path'] ?? 'uploads/files').'/'.$filename : $url;
     $filesize = ($filename) ? filesize($url) : $filesize;
@@ -176,10 +176,10 @@ function save(): void {
                     $url = $path.'/'.$filel[0];
                 }
             }
-            $db->sql_query('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, description = :description, bodytext = :bodytext, url = :url, date = :date, filesize = :filesize, version = :version, email = :email, homepage = :homepage, ihome = :ihome, acomm = :acomm, status = :status WHERE lid = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1', 'id' => $fid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, description = :description, bodytext = :bodytext, url = :url, date = :date, filesize = :filesize, version = :version, email = :email, homepage = :homepage, ihome = :ihome, acomm = :acomm, status = :status WHERE lid = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1', 'id' => $fid]);
         } else {
             $ip = getip();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :description, :bodytext, :url, :date, :filesize, :version, :email, :homepage, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :description, :bodytext, :url, :date, :filesize, :version, :email, :homepage, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'date' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
         }
         setRedirect($afile.'.php?name=files');
     } elseif ($posttype === 'delete') {
@@ -193,11 +193,11 @@ function del(int $fid = 0): void {
     global $db, $afile;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     if ($id) {
-        [$url] = $db->sql_fetchrow($db->sql_query('SELECT url FROM '.PREFIX_DB.'_files WHERE lid = :id', ['id' => $id]));
+        [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_files WHERE lid = :id', ['id' => $id]));
         if (file_exists($url)) unlink($url);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_files WHERE lid = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = :modul', ['id' => $id, 'modul' => 'files']);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_files WHERE lid = :id', ['id' => $id]);
     }
     $refer = getVar('get', 'refer', 'num', 0) ? '&status=1' : '';
     setRedirect($afile.'.php?name=files'.$refer);
@@ -207,7 +207,7 @@ function ignore(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
     if ($id) {
-        $db->sql_query('UPDATE '.PREFIX_DB.'_files SET status = :status WHERE lid = :id', ['status' => '1', 'id' => $id]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET status = :status WHERE lid = :id', ['status' => '1', 'id' => $id]);
     }
     setRedirect($afile.'.php?name=files&status=2');
 }

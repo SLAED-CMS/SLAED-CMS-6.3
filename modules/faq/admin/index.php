@@ -30,11 +30,11 @@ function faq(): void {
         $refer = '';
         $cont = navi(0, 0, 0, 0);
     }
-    $result = $db->sql_query('SELECT f.fid, f.catid, f.name, f.title, f.time, f.ip_sender, t.title, u.user_name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.catid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT f.fid, f.catid, f.name, f.title, f.time, f.ip_sender, t.title, u.user_name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.catid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._QUESTION.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$fid, $catid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+        while ([$fid, $catid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($catid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
@@ -66,8 +66,8 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $fid = $id;
     if ($fid) {
-        $result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.ihome, s.acomm, u.user_name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE fid = :fid', ['fid' => $fid]);
-        [$cat, $uname, $subject, $time, $hometext, $ihome, $acomm, $nick] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.ihome, s.acomm, u.user_name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE fid = :fid', ['fid' => $fid]);
+        [$cat, $uname, $subject, $time, $hometext, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
@@ -118,10 +118,10 @@ function save(): void {
         $postid = (is_user_id($postname)) ? is_user_id($postname) : 0;
         $postname = (!is_user_id($postname)) ? text_filter(substr($postname, 0, 25)) : '';
         if ($fid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_faq SET catid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, hometext = :hometext, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE fid = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET catid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, hometext = :hometext, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE fid = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
         } else {
             $ip = getip();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_faq (catid, uid, name, title, time, hometext, ihome, acomm, ip_sender, status) VALUES (:cat, :postid, :postname, :subject, :time, :hometext, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_faq (catid, uid, name, title, time, hometext, ihome, acomm, ip_sender, status) VALUES (:cat, :postid, :postname, :subject, :time, :hometext, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
         }
         setRedirect($afile.'.php?name=faq');
     } elseif ($posttype == 'delete') {
@@ -135,9 +135,9 @@ function del(int $fid = 0): void {
     global $db, $afile;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     if ($id) {
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'faq\'', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'faq\'', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_faq WHERE fid = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'faq\'', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'faq\'', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_faq WHERE fid = :id', ['id' => $id]);
     }
     $refer = getVar('get', 'refer', 'num', 0) ? '&status=1' : '';
     setRedirect($afile.'.php?name=faq'.$refer);

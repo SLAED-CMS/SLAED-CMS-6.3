@@ -44,13 +44,13 @@ function jokes(): void {
     } elseif ($ncat) {
         $field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
         $orderby = ($op) ? (($op == 'best') ? 'IFNULL((j.rating/NULLIF(j.ratingtot,0)),0) DESC' : 'IFNULL((j.ratingtot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.date)),0)),0) DESC') : 'j.date DESC';
-        [$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+        [$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
         $order = "WHERE (j.cat = :ncat1 OR c.parentid = :ncat2) AND j.date <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat2' => $ncat];
         $catid = [];
-        $result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-        while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+        while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
         unset($result);
         if (isArray($catid)) {
             $caton = 1;
@@ -78,9 +78,9 @@ function jokes(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, j.rating, j.ratingtot, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
-    if ($db->sql_numrows($result) > 0) {
-        while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, j.rating, j.ratingtot, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    if ($db->getSqlRowCount($result) > 0) {
+        while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $title = '<a href="#'.$id.'" title="'.$jtitle.'">'.search_color($jtitle, $word).'</a> '.new_graphic($time);
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
             $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
@@ -144,11 +144,11 @@ function send(): void {
         if (!$joke) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-        if ($db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
+        if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
         if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
             $postid = (is_user()) ? intval($user[0]) : '';
             $uname = (!is_user()) ? $postname : '';
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
             update_points(19);
             $puname = (is_user()) ? $user[1] : $postname;
             addmail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);

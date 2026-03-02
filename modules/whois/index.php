@@ -78,9 +78,9 @@ function mwhois(): void {
 	$cont .= setTemplateBasic('open');
 	$cont .= $licensopt;
 	if ($option == 'licens' && !namecheck($domainlicens)) {
-		$result = $db->sql_query('SELECT website FROM '.PREFIX_DB.'_clients WHERE active != \'2\'');
+		$result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE active != \'2\'');
 		$list = [];
-		while ([$website] = $db->sql_fetchrow($result)) $list[] = $website;
+		while ([$website] = $db->getSqlRow($result)) $list[] = $website;
 		$list = implode(',', $list);
 		$mass = explode(',', $list);
 		$licens = false;
@@ -171,11 +171,11 @@ function send(): void {
 		if (!$postname && !is_user()) $stop[] = _CERROR3;
 		if (!$domain) $stop[] = _CERROR4;
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-		if ($db->sql_numrows($db->sql_query('SELECT domain FROM '.PREFIX_DB.'_whois WHERE domain = :domain', ['domain' => $domain])) > 0) $stop[] = _LINKEXIST;
+		if ($db->getSqlRowCount($db->getSqlQuery('SELECT domain FROM '.PREFIX_DB.'_whois WHERE domain = :domain', ['domain' => $domain])) > 0) $stop[] = _LINKEXIST;
 		if (!$stop) {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :hometext, \'0\', \'0\', \'0\', \'0\')', ['uid' => $postid, 'name' => $uname, 'ip' => getIp(), 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
+			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :hometext, \'0\', \'0\', \'0\', \'0\')', ['uid' => $postid, 'name' => $uname, 'ip' => getIp(), 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addmail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
 			setHead(['title' => _WHOIS_LICENS_SEND]);

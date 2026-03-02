@@ -44,13 +44,13 @@ function shop(): void {
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
 			$orderby = ($op) ? (($op == 'best') ? 'IFNULL((p.totalvotes/NULLIF(p.votes,0)),0) DESC' : 'IFNULL((p.count/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC') : 'p.fix DESC, p.time DESC';
-		[$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+		[$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (p.cid = :ncat1 OR p.assoc REGEXP :ncat_re OR c.parentid = :ncat2) AND p.time <= NOW() AND p.active != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$params = ['ncat1' => $ncat, 'ncat_re' => '[[:<:]]'.$ncat.'[[:>:]]', 'ncat2' => $ncat];
 		$catid = [];
-		$result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-		while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
+		$result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+		while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
 		unset($result);
 		if (isArray($catid)) {
 			$caton = 1;
@@ -81,13 +81,13 @@ function shop(): void {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
-	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.acomm, p.com, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
-	if ($db->sql_numrows($result) > 0) {
+	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.acomm, p.com, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+	if ($db->getSqlRowCount($result) > 0) {
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
 		$width = 100 / $conf['shop']['bascol'];
 		$i = 1;
 		$cont .= '<table>';
-		while ([$id, $cid, $time, $stitle, $text, $bodytext, $ppreis, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $time, $stitle, $text, $bodytext, $ppreis, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -152,13 +152,13 @@ function liste(): void {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
-	$result = $db->sql_query('SELECT p.id, p.cid, p.time, p.title, p.preis, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
+	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.preis, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
 	setHead(['title' => _LIST]);
 	$cont = navigate(_LIST);
-	if ($db->sql_numrows($result) > 0) {
+	if ($db->getSqlRowCount($result) > 0) {
 		$letter = ($conf['shop']['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _PREIS, '{%date%}' => _DATE]);
-		while ([$id, $cid, $time, $title, $preis, $ctitle, $cdesc] = $db->sql_fetchrow($result)) {
+		while ([$id, $cid, $time, $title, $preis, $ctitle, $cdesc] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
@@ -182,10 +182,10 @@ function view(): void {
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$result = $db->sql_query('SELECT p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.vote, p.assoc, p.acomm, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.active != \'0\' '.$cwhere, ['id' => $id]);
-	if ($db->sql_numrows($result) == 1) {
-		$db->sql_query('UPDATE '.PREFIX_DB.'_products SET count = count+1 WHERE id = :id', ['id' => $id]);
-		[$cid, $time, $title, $text, $bodytext, $ppreis, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->sql_fetchrow($result);
+	$result = $db->getSqlQuery('SELECT p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.vote, p.assoc, p.acomm, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.active != \'0\' '.$cwhere, ['id' => $id]);
+	if ($db->getSqlRowCount($result) == 1) {
+		$db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET count = count+1 WHERE id = :id', ['id' => $id]);
+		[$cid, $time, $title, $text, $bodytext, $ppreis, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
@@ -240,12 +240,12 @@ function view(): void {
 		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting, '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 		if ($conf['shop']['assoc']) {
 			$limit = intval($conf['shop']['assocnum']);
-			[$count] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\'', ['id' => $id]));
+			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\'', ['id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->sql_query('SELECT id, time, title, text, bodytext FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
+				$result = $db->getSqlQuery('SELECT id, time, title, text, bodytext FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
 				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _ASPROD]);
-				while ([$aid, $time, $title, $hometext, $bodytext] = $db->sql_fetchrow($result)) {
+				while ([$aid, $time, $title, $hometext, $bodytext] = $db->getSqlRow($result)) {
 					$date = ($conf['shop']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
 					$text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
@@ -310,8 +310,8 @@ function kasse(): void {
 		if (!$stop) {
 			$preistotal = 0;
 			$content = '';
-			$result = $db->sql_query('SELECT id, title, preis FROM '.PREFIX_DB.'_products WHERE id IN ('.$cookies.')');
-			while([$id, $title, $preis] = $db->sql_fetchrow($result)) {
+			$result = $db->getSqlQuery('SELECT id, title, preis FROM '.PREFIX_DB.'_products WHERE id IN ('.$cookies.')');
+			while([$id, $title, $preis] = $db->getSqlRow($result)) {
 				$massiv = explode(',', $cookies);
 				$i = 0;
 				foreach ($massiv as $val) {
@@ -357,7 +357,7 @@ function kasse(): void {
 			foreach ($massiv as $val) {
 				if ($val != '') {
 					$sreg = time();
-					$db->sql_query('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :sender_id, :val, :id_partner, \'0\', :sender_name, :sender_adr, :sender_tel, :sender_email, :sender_dom, :sender_regdate, \'0\', \'0\', \'2\')', ['sender_id' => $sid, 'val' => $val, 'id_partner' => $idPartner, 'sender_name' => $sname, 'sender_adr' => $sadr, 'sender_tel' => $stel, 'sender_email' => $smail, 'sender_dom' => $sdom, 'sender_regdate' => $sreg]);
+					$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :sender_id, :val, :id_partner, \'0\', :sender_name, :sender_adr, :sender_tel, :sender_email, :sender_dom, :sender_regdate, \'0\', \'0\', \'2\')', ['sender_id' => $sid, 'val' => $val, 'id_partner' => $idPartner, 'sender_name' => $sname, 'sender_adr' => $sadr, 'sender_tel' => $stel, 'sender_email' => $smail, 'sender_dom' => $sdom, 'sender_regdate' => $sreg]);
 				}
 			}
 			setcookie('shop', false);
@@ -390,11 +390,11 @@ function clients(): void {
 		setHead(['title' => _CLIENTINFO]);
 		$cont = navigate(_CLIENTINFO);
 		$cont .= navi();
-		$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_user = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
-		if ($db->sql_numrows($result) > 0) {
+		$result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_user = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
+		if ($db->getSqlRowCount($result) > 0) {
 			$cont .= setTemplateBasic('open');
 			$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._L_DATE.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
-			while([$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $ppreis] = $db->sql_fetchrow($result)) {
+			while([$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $ppreis] = $db->getSqlRow($result)) {
 				$website = ($cwebsite) ? '<br>'._SITE.': '.$cwebsite : '';
 				$note = ($cinfo) ? '<br>'._NOTE.' : '.$cinfo : '';
 				$cenddate = ($cenddate != '0') ? rest_time($cenddate) : _NO;
@@ -422,9 +422,9 @@ function rech(): void {
 	if (is_user() && is_active('shop')) {
 		$defis = urldecode($conf['defis']);
 		$id = getVar('get', 'id', 'num');
-		$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.text, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
-		if ($db->sql_numrows($result) > 0) {
-			[$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $ppreis] = $db->sql_fetchrow($result);
+		$result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.text, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
+		if ($db->getSqlRowCount($result) > 0) {
+			[$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $ppreis] = $db->getSqlRow($result);
 			$cont = '<!doctype html>'."\n";
 			$cont .= '<html>'."\n";
 			$cont .= '<head>'."\n";
@@ -463,19 +463,19 @@ function partners(): void {
 		setHead(['title' => _PARTNERINFO]);
 		$cont = navigate(_PARTNERINFO);
 		$cont .= navi();
-		$result = $db->sql_query('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id_user = :user_id', ['user_id' => $uid]);
-		if ($db->sql_numrows($result) > 0) {
-			[$paid, $puid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->sql_fetchrow($result);
+		$result = $db->getSqlQuery('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id_user = :user_id', ['user_id' => $uid]);
+		if ($db->getSqlRowCount($result) > 0) {
+			[$paid, $puid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
 			if ($paactive == 2) {
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PARTNERADD_W]);
 			} elseif ($paactive == 0) {
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _PARTNER_AUS]);
 			} else {
-				$result = $db->sql_query('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_partner = :user_id AND c.active != 2 ORDER BY c.id ASC', ['user_id' => $uid]);
+				$result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_partner = :user_id AND c.active != 2 ORDER BY c.id ASC', ['user_id' => $uid]);
 				$partsum = $partsumges = $a = 0;
-				if ($db->sql_numrows($result) > 0) {
+				if ($db->getSqlRowCount($result) > 0) {
 					$content = '';
-					while([$cid, $cuid, $cprod, $cpart, $proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $ppreis] = $db->sql_fetchrow($result)) {
+					while([$cid, $cuid, $cprod, $cpart, $proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $ppreis] = $db->getSqlRow($result)) {
 						$partsum = $ppreis / 100 * $proz;
 						$partsumges += $partsum;
 						$content .= '<tr id="'.$cid.'">'
@@ -535,7 +535,7 @@ function partners_send(): void {
 		checkemail($paemail);
 		if (!$paname || !$paadres || !$paphone) $stop[] = _ERROR_ALL;
 		if (!$stop) {
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :puid, :paname, :paadres, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['puid' => $puid, 'paname' => $paname, 'paadres' => $paadres, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
+			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :puid, :paname, :paadres, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['puid' => $puid, 'paname' => $paname, 'paadres' => $paadres, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
 			setRedirect('index.php?name='.$conf['name'].'&op=partners');
 		} else {
 			partners();

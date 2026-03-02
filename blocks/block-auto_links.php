@@ -11,8 +11,8 @@ if (!defined("BLOCK_FILE")) {
 
 global $db;
 $content = "";
-$result = $db->sql_query("SELECT id, sitename, description FROM ".PREFIX_DB."_auto_links WHERE hits != '0' ORDER BY hits DESC LIMIT 0,".intval($conf['auto_links']['limit'])."");
-while(list($a_id, $a_site, $a_description) = $db->sql_fetchrow($result)) {
+$result = $db->getSqlQuery("SELECT id, sitename, description FROM ".PREFIX_DB."_auto_links WHERE hits != '0' ORDER BY hits DESC LIMIT 0,".intval($conf['auto_links']['limit'])."");
+while(list($a_id, $a_site, $a_description) = $db->getSqlRow($result)) {
 	$a_site = cutstr($a_site, $conf['auto_links']['strip']);
 	$title = text_filter(cutstr(bb_decode($a_description, ""), 250), 1);
 	$content .= "<table class=\"sl_table_block\"><tr><td><a href=\"index.php?name=auto_links&amp;op=view&amp;id=".$a_id."\" target=\"_blank\" title=\"".$title."\" >".$a_site."</a></td></tr></table>";

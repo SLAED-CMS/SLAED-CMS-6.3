@@ -30,12 +30,12 @@ function news(): void {
         $refer = '';
         $cont = navi(0, 0, 0, 0);
     }
-    $result = $db->sql_query('SELECT s.sid, s.catid, s.name, s.title, s.time, s.vote, s.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT s.sid, s.catid, s.name, s.title, s.time, s.vote, s.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" action="'.$afile.'.php" method="post"><input type="hidden" name="name" value="news"><input type="hidden" name="op" value="admin"><input type="hidden" name="refer" value="1">'
         .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th><th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th></tr></thead><tbody>';
-        while ([$sid, $catid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+        while ([$sid, $catid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($catid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
@@ -72,8 +72,8 @@ function add(): void {
     $sid = $id;
     $sid = $id;
     if ($sid) {
-        $result = $db->sql_query('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.ihome, s.acomm, s.associated, s.fix, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE sid = :sid', ['sid' => $sid]);
-        [$cat, $uname, $subject, $time, $hometext, $bodytext, $field, $vote, $ihome, $acomm, $associated, $fix, $nick] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.ihome, s.acomm, s.associated, s.fix, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE sid = :sid', ['sid' => $sid]);
+        [$cat, $uname, $subject, $time, $hometext, $bodytext, $field, $vote, $ihome, $acomm, $associated, $fix, $nick] = $db->getSqlRow($result);
         $associated = explode(',', $associated);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
@@ -102,11 +102,11 @@ function add(): void {
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._CATEGORY.':</td><td>'.getcat('news', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>';
-    $result2 = $db->sql_query('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parentid, title');
-    if ($db->sql_numrows($result2) > 0) {
+    $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parentid, title');
+    if ($db->getSqlRowCount($result2) > 0) {
         $cont .= '<tr><td>'._ASSOTOPIC.':<div class="sl_small">'._ASSOTOPICI.'</div></td><td><table class="sl_form"><tr>';
         $a = 0;
-        while ([$cid, $ctitle] = $db->sql_fetchrow($result2)) {
+        while ([$cid, $ctitle] = $db->getSqlRow($result2)) {
             if ($a == 2) {
                 $cont .= '</tr><tr>';
                 $a = 0;
@@ -161,10 +161,10 @@ function save(): void {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
         if ($sid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_news SET catid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, field = :field, vote = :vote, ihome = :ihome, acomm = :acomm, associated = :associated, fix = :fix, status = \'1\' WHERE sid = :sid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'fix' => $fix, 'sid' => $sid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET catid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, field = :field, vote = :vote, ihome = :ihome, acomm = :acomm, associated = :associated, fix = :fix, status = \'1\' WHERE sid = :sid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'fix' => $fix, 'sid' => $sid]);
         } else {
             $ip = getip();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_news (sid, catid, uid, name, title, time, hometext, bodytext, field, vote, comments, counter, ihome, acomm, score, ratings, associated, ip_sender, fix, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, :field, :vote, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :associated, :ip, :fix, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'ip' => $ip, 'fix' => $fix]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_news (sid, catid, uid, name, title, time, hometext, bodytext, field, vote, comments, counter, ihome, acomm, score, ratings, associated, ip_sender, fix, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, :field, :vote, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :associated, :ip, :fix, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'ip' => $ip, 'fix' => $fix]);
         }
         setRedirect($afile.'.php?name=news');
     } elseif ($posttype === 'delete') {
@@ -198,21 +198,21 @@ function admin(int|array $ids = 0, string $vtyp = ''): void {
         }
         $in = implode(', ', $keys);
         if ($typ[0] === 'a') {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_news SET status = :typ WHERE sid IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET status = :typ WHERE sid IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
         } elseif ($typ[0] === 'f') {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_news SET fix = :typ WHERE sid IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET fix = :typ WHERE sid IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
         } elseif ($typ[0] === 'h') {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_news SET ihome = :typ WHERE sid IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET ihome = :typ WHERE sid IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
         } elseif ($typ[0] === 't') {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_news SET time = NOW() WHERE sid IN ('.$in.')', $pars);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET time = NOW() WHERE sid IN ('.$in.')', $pars);
         } elseif ($typ[0] === 'c') {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_news SET acomm = :typ WHERE sid IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET acomm = :typ WHERE sid IN ('.$in.')', ['typ' => (int)substr($typ, 1)] + $pars);
         } elseif ($typ[0] === 'd') {
-            $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.$in.') AND modul = \'news\'', $pars);
-            $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$in.') AND modul = \'news\'', $pars);
-            $db->sql_query('DELETE FROM '.PREFIX_DB.'_news WHERE sid IN ('.$in.')', $pars);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid IN ('.$in.') AND modul = \'news\'', $pars);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid IN ('.$in.') AND modul = \'news\'', $pars);
+            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_news WHERE sid IN ('.$in.')', $pars);
         } elseif (is_numeric($typ)) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_news SET catid = :typ WHERE sid IN ('.$in.')', ['typ' => (int)$typ] + $pars);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET catid = :typ WHERE sid IN ('.$in.')', ['typ' => (int)$typ] + $pars);
         }
     }
     setRedirect($afile.'.php?name=news'.$refer);

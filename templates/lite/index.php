@@ -118,8 +118,8 @@ function setTemplateForum() {
     $bwhere = ($bclos) ? "catid NOT IN (".$bclos.") AND" : "";
     $ordern = (is_moder("forum")) ? "" : "AND time <= now() AND status > '1'";
     $buffer = "";
-    $result = $db->sql_query("SELECT id, title, l_time, l_uid, l_name, l_id, l_time, status FROM ".PREFIX_DB."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
-    while (list($id, $title, $time, $l_uid, $l_name, $l_id, $l_time, $status) = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery("SELECT id, title, l_time, l_uid, l_name, l_id, l_time, status FROM ".PREFIX_DB."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
+    while (list($id, $title, $time, $l_uid, $l_name, $l_id, $l_time, $status) = $db->getSqlRow($result)) {
         $lposter = ($l_uid) ? user_info($l_name) : $l_name;
         $class = ($status <= 1 || $time > date("Y-m-d H:i:s")) ? " class=\"sl_hidden\"" : "";
         $buffer .= "<li".$class."><a href=\"index.php?name=forum&amp;op=view&amp;id=".$id."&amp;last#".$l_id."\" title=\"".$title."\">".cutstr($title, 50)."</a><ul><li title=\""._POSTEDBY."\" class=\"sl_post\">".$lposter."</li><li title=\""._DATE.": ".format_time($l_time, _TIMESTRING)."\" class=\"ico i_date\">".format_time($l_time)."</li></ul></li>";
@@ -159,10 +159,10 @@ function setTemplateHead($sub, $val = '') {
     $mname = ($conf['name']) ? deflmconst($conf['name']) : '';
     $fcat = (isset($_GET['cat'])) ? intval($_GET['cat']) : 0;
     $cname = ($fcat && !empty($conf['files'])) ? catlink($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
-    list($count) = $db->sql_fetchrow($db->sql_query("SELECT Count(fid) FROM ".PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
+    list($count) = $db->getSqlRow($db->getSqlQuery("SELECT Count(fid) FROM ".PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
     $random = mt_rand(0, $count);
-    $result = $db->sql_query("SELECT fid, title FROM ".PREFIX_DB."_faq ORDER BY fid DESC LIMIT ".$random.", 1");
-    list($fid, $title) = $db->sql_fetchrow($result);
+    $result = $db->getSqlQuery("SELECT fid, title FROM ".PREFIX_DB."_faq ORDER BY fid DESC LIMIT ".$random.", 1");
+    list($fid, $title) = $db->getSqlRow($result);
     $faq = '<a class="ico i_fav" href="index.php?name=faq&amp;op=view&amp;id='.$fid.'" title="'.$title.'">'.$title.'</a>';
     $value = array('{%login%}' => $cont, '{%theme%}' => $theme, '{%lang%}' => substr(_LOCALE, 0, 2), '{%sitename%}' => $conf['sitename'], '{%logo%}' => $conf['site_logo'], '{%homeurl%}' => $conf['homeurl'], '{%slogan%}' => $conf['slogan'], '{%home%}' => _HOME, '{%account%}' => _ACCOUNT, '{%album%}' => _ALBUM, '{%alinks%}' => _A_LINKS, '{%feedback%}' => _FEEDBACK, '{%content%}' => _CONTENT, '{%faq%}' => _FAQ, '{%files%}' => _FILES, '{%forum%}' => _FORUM, '{%help%}' => _HELP, '{%radio%}' => _RADIO, '{%jokes%}' => _JOKES, '{%links%}' => _LINKS, '{%media%}' => _MEDIA, '{%users%}' => _USERS, '{%news%}' => _NEWS, '{%order%}' => _ORDER, '{%pages%}' => _PAGES, '{%recommend%}' => _RECOMMEND, '{%rss%}' => _RSS, '{%search%}' => _SEARCH, '{%shop%}' => _SHOP, '{%topusers%}' => _TOPUSERS, '{%voting%}' => _VOTING, '{%favorites%}' => _S_FAVORITEN, '{%homepage%}' => _S_STARTSEITE, '{%season%}' => setTemplateSeason(), '{%modul%}' => $conf['name'], '{%menu%}' => setTemplateMenu(), '{%modulname%}' => $mname, '{%catname%}' => $cname, '{%faqtitle%}' => $faq);
     $value = is_array($val) ? array_merge($value, $val) : $value;

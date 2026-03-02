@@ -70,11 +70,11 @@ function account(): void {
     $params['offset'] = $offset;
     $params['limit'] = $conf['users']['anum'];
     $sql = 'SELECT u.user_id, u.user_name, u.user_email, u.user_website, u.user_regdate, u.user_lastvisit, u.user_points, u.user_last_ip, u.user_gender, u.user_agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.user_group) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
-    $res = $db->sql_query($sql,$params);
-    if ($db->sql_numrows($res) > 0) {
+    $res = $db->getSqlQuery($sql,$params);
+    if ($db->getSqlRowCount($res) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._EMAIL.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->sql_fetchrow($res)) {
+        while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->getSqlRow($res)) {
             $sgroup = $gname ? '<span style="color: '.$gcolor.'">'.$gname.'</span>' : _NO;
             $web = $site ? domain($site, 40) : _NO;
             $cont .= '<tr><td>'.filterTextHighlight($uid, $chng).'</td>'
@@ -96,8 +96,8 @@ function add(): void {
     global $db, $afile, $conf, $stop;
         $id = getVar('req', 'id', 'num');
     if (is_numeric($id)) {
-        $result = $db->sql_query('SELECT user_id, user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $id]);
-        [$uid, $uname, $rank, $email, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $pass, $story, $blockon, $block, $theme, $news, $lang, $point, $warn, $access, $group, $birth, $gender, $field] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT user_id, user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $id]);
+        [$uid, $uname, $rank, $email, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $pass, $story, $blockon, $block, $theme, $news, $lang, $point, $warn, $access, $group, $birth, $gender, $field] = $db->getSqlRow($result);
         $warn = ($warn) ? explode('|', $warn) : [];
     } else {
         $uid = getVar('post', 'uid', 'num');
@@ -185,8 +185,8 @@ function add(): void {
     .'<tr><td>'._UACESS.'</td><td>'.radio_form($access, 'access').'</td></tr>'
     .'<tr><td>'._SPEC_GROUP.':</td><td><select name="group" class="sl_form">'
     .'<option value="0">'._NO.'</option>';
-    $result = $db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
-    while ([$grid, $grname] = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
+    while ([$grid, $grname] = $db->getSqlRow($result)) {
         $sel = ($grid == $group) ? ' selected' : '';
         $cont .= '<option value="'.$grid.'"'.$sel.'>'.$grname.'</option>';
     }
@@ -240,11 +240,11 @@ function addsave(): void {
 
     if (!$uid && (!$uname || !$email || !$pass || !$pass2)) $stop[] = _ERROR_ALL;
     if ($uname) {
-        [$existId, $existName] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $uname]));
-        [$tempId, $tempName] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_name FROM '.PREFIX_DB.'_users_temp WHERE user_name = :name', ['name' => $uname]));
+        [$existId, $existName] = $db->getSqlRow($db->getSqlQuery('SELECT user_id, user_name FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $uname]));
+        [$tempId, $tempName] = $db->getSqlRow($db->getSqlQuery('SELECT user_id, user_name FROM '.PREFIX_DB.'_users_temp WHERE user_name = :name', ['name' => $uname]));
         if (($uid != $existId && $uname == $existName) || ($uid != $tempId && $uname == $tempName)) $stop[] = _USEREXIST;
-        [$emailId, $existEmail] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.PREFIX_DB.'_users WHERE user_email = :email', ['email' => $email]));
-        [$tempEmailId, $tempEmail] = $db->sql_fetchrow($db->sql_query('SELECT user_id, user_email FROM '.PREFIX_DB.'_users_temp WHERE user_email = :email', ['email' => $email]));
+        [$emailId, $existEmail] = $db->getSqlRow($db->getSqlQuery('SELECT user_id, user_email FROM '.PREFIX_DB.'_users WHERE user_email = :email', ['email' => $email]));
+        [$tempEmailId, $tempEmail] = $db->getSqlRow($db->getSqlQuery('SELECT user_id, user_email FROM '.PREFIX_DB.'_users_temp WHERE user_email = :email', ['email' => $email]));
         if (($uid != $emailId && $email == $existEmail) || ($uid != $tempEmailId && $email == $tempEmail)) $stop[] = _ERROR_EMAIL;
     } else {
         $stop[] = _ERROR_ALL;
@@ -256,17 +256,17 @@ function addsave(): void {
         if ($uid) {
             if ($pass && $pass == $pass2) {
                 $saltpass = md5_salt($pass);
-                $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_name = :name, user_rank = :rank, user_email = :email, user_website = :website, user_avatar = :avatar, user_regdate = :regdate, user_occ = :occ, user_from = :from, user_interests = :interests, user_sig = :sig, user_viewemail = :viewemail, user_password = :password, user_storynum = :storynum, user_blockon = :blockon, user_block = :block, user_theme = :theme, user_newsletter = :newsletter, user_lang = :lang, user_points = :points, user_warnings = :warnings, user_acess = :acess, user_group = :group, user_birthday = :birthday, user_gender = :gender, user_field = :field WHERE user_id = :id', [
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_name = :name, user_rank = :rank, user_email = :email, user_website = :website, user_avatar = :avatar, user_regdate = :regdate, user_occ = :occ, user_from = :from, user_interests = :interests, user_sig = :sig, user_viewemail = :viewemail, user_password = :password, user_storynum = :storynum, user_blockon = :blockon, user_block = :block, user_theme = :theme, user_newsletter = :newsletter, user_lang = :lang, user_points = :points, user_warnings = :warnings, user_acess = :acess, user_group = :group, user_birthday = :birthday, user_gender = :gender, user_field = :field WHERE user_id = :id', [
                     'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warn, 'acess' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
                 ]);
             } else {
-                $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_name = :name, user_rank = :rank, user_email = :email, user_website = :website, user_avatar = :avatar, user_regdate = :regdate, user_occ = :occ, user_from = :from, user_interests = :interests, user_sig = :sig, user_viewemail = :viewemail, user_storynum = :storynum, user_blockon = :blockon, user_block = :block, user_theme = :theme, user_newsletter = :newsletter, user_lang = :lang, user_points = :points, user_warnings = :warnings, user_acess = :acess, user_group = :group, user_birthday = :birthday, user_gender = :gender, user_field = :field WHERE user_id = :id', [
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_name = :name, user_rank = :rank, user_email = :email, user_website = :website, user_avatar = :avatar, user_regdate = :regdate, user_occ = :occ, user_from = :from, user_interests = :interests, user_sig = :sig, user_viewemail = :viewemail, user_storynum = :storynum, user_blockon = :blockon, user_block = :block, user_theme = :theme, user_newsletter = :newsletter, user_lang = :lang, user_points = :points, user_warnings = :warnings, user_acess = :acess, user_group = :group, user_birthday = :birthday, user_gender = :gender, user_field = :field WHERE user_id = :id', [
                     'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warn, 'acess' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid
                 ]);
             }
         } else {
             $saltpass = md5_salt($pass);
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_users (user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, :storynum, :blockon, :block, :theme, :newsletter, :lang, :points, :warnings, :acess, :group, :birthday, :gender, :field)', [
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (user_name, user_rank, user_email, user_website, user_avatar, user_regdate, user_occ, user_from, user_interests, user_sig, user_viewemail, user_password, user_storynum, user_blockon, user_block, user_theme, user_newsletter, user_lang, user_points, user_warnings, user_acess, user_group, user_birthday, user_gender, user_field) VALUES (:name, :rank, :email, :website, :avatar, :regdate, :occ, :from, :interests, :sig, :viewemail, :password, :storynum, :blockon, :block, :theme, :newsletter, :lang, :points, :warnings, :acess, :group, :birthday, :gender, :field)', [
                 'name' => $uname, 'rank' => $rank, 'email' => $email, 'website' => $site, 'avatar' => $avatar, 'regdate' => $reg, 'occ' => $occ, 'from' => $from, 'interests' => $inter, 'sig' => $sig, 'viewemail' => $view, 'password' => $saltpass, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newsletter' => $news, 'lang' => $lang, 'points' => $point, 'warnings' => $warn, 'acess' => $access, 'group' => $group, 'birthday' => $birth, 'gender' => $gender, 'field' => $field
             ]);
         }
@@ -289,11 +289,11 @@ function newuser(): void {
     $cont = navi(0, 2, 0, 0);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $conf['users']['anum'];
-    $result = $db->sql_query('SELECT user_id, user_name, user_email, user_password, user_regdate, check_num FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $conf['users']['anum']]);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT user_id, user_name, user_email, user_password, user_regdate, check_num FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $conf['users']['anum']]);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._EMAIL.'</th><th>'._PASSWORD.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$uid, $name, $mail, $pass, $reg, $check] = $db->sql_fetchrow($result)) {
+        while ([$uid, $name, $mail, $pass, $reg, $check] = $db->getSqlRow($result)) {
             $cont .= '<tr><td>'.$uid.'</td>'
             .'<td>'.$name.'</td>'
             .'<td>'.$mail.'</td>'
@@ -333,10 +333,10 @@ function nullsave(): void {
     $votes = getVar('post', 'votes', 'num');
     $warnings = getVar('post', 'warnings', 'num');
     $sig = getVar('post', 'sig', 'num');
-    if ($points == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_points = :zero', ['zero' => '0']);
-    if ($votes == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_votes = :zero, user_totalvotes = :zero', ['zero' => '0']);
-    if ($warnings == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_warnings = :zero', ['zero' => '0']);
-    if ($sig == 1) $db->sql_query('UPDATE '.PREFIX_DB.'_users SET user_sig = :empty', ['empty' => '']);
+    if ($points == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_points = :zero', ['zero' => '0']);
+    if ($votes == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_votes = :zero, user_totalvotes = :zero', ['zero' => '0']);
+    if ($warnings == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_warnings = :zero', ['zero' => '0']);
+    if ($sig == 1) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_sig = :empty', ['empty' => '']);
     setRedirect($afile.'.php?name=account');
 }
 
@@ -429,7 +429,7 @@ function save(): void {
 function newdel(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_users_temp WHERE user_id = :id', ['id' => $id]);
+    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE user_id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=account', true);
 }
 
@@ -437,9 +437,9 @@ function del(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     if ($id) {
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
-        # $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE uid = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE uid = :id', ['id' => $id]);
+        # $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE uid = :id', ['id' => $id]);
     }
     setRedirect($afile.'.php?name=account', true);
 }

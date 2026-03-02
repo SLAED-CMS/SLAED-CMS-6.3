@@ -25,15 +25,15 @@ function users(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $lim;
     $count = ($num) ? $offset + 1 : 1;
-        $result = $db->sql_query('SELECT user_id, user_name, user_website, user_regdate, user_from, user_lastvisit, user_points, user_last_ip, user_gender, user_votes, user_totalvotes FROM '.PREFIX_DB.'_users ORDER BY user_points DESC LIMIT '.$offset.', '.$lim);
-        if ($db->sql_numrows($result) > 0) {
+        $result = $db->getSqlQuery('SELECT user_id, user_name, user_website, user_regdate, user_from, user_lastvisit, user_points, user_last_ip, user_gender, user_votes, user_totalvotes FROM '.PREFIX_DB.'_users ORDER BY user_points DESC LIMIT '.$offset.', '.$lim);
+        if ($db->getSqlRowCount($result) > 0) {
             $con = explode('|', (string)($conf['rating']['account'] ?? '0|0|0'));
             $rate = !empty($con[1]);
             $head = (is_moder($conf['name'])) ? _IP : _REG;
             $sort = $rate ? _RATING : _LOCALITYLANG;
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'.$head.'</th><th>'._GENDER.'</th><th>'.$sort.'</th><th>'._POINTS.'</th></tr></thead><tbody class="sl_table_list_body">';
-        while ([$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total] = $db->sql_fetchrow($result)) {
+        while ([$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total] = $db->getSqlRow($result)) {
             $site = ($site) ? '<br>'._SITE.': '.$site : '';
                 $info = (is_moder($conf['name'])) ? user_geo_ip($ip, 4) : format_time($reg);
                 $rating = $rate ? '<div class="min-rate"><div class="rate-like-box">'.ajax_rating(1, $id, 'account', $votes, $total, '', 1).'</div></div>' : cutstr((string)$from, 30);
@@ -80,17 +80,17 @@ function stats(): void {
     global $db, $conf;
     setHead(['title' => _TU_STATS]);
     $cont = navigate(_TOPUSERS);
-    $result = $db->sql_query('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points');
+    $result = $db->getSqlQuery('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points');
     if ($result) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._RANK.'</th><th>'._DESCRIPTION.'</th><th>'._POINTS.'</th><th>'._TU_USERSCOUNT.'</th><th>'.cutstr(_SPEC, 4, 1).'</th></tr></thead><tbody class="sl_table_list_body">';
-        while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->sql_fetchrow($result)) {
+        while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
             if (intval($extra)) {
                 $extra = _YES;
-                [$total] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]));
+                [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]));
             } else {
                 $extra = _NO;
-                [$total] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]));
+                [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]));
             }
             $trank = ($grname) ? _GROUP.': '.$grname : _RANK;
             $cont .= '<tr>'

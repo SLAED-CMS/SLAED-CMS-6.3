@@ -103,7 +103,7 @@ function getCrypt(string $pass): string {
     return $crypt;
 }
 
-function executeSqlFile(string $file, string $prefix, string $engine, string $charset, string $collate, $db): string {
+function getSqlFile(string $file, string $prefix, string $engine, string $charset, string $collate, $db): string {
     $file = BASE_DIR.'/'.$file;
     if (!file_exists($file)) return '';
 
@@ -120,7 +120,7 @@ function executeSqlFile(string $file, string $prefix, string $engine, string $ch
 
         if (empty($query)) continue;
 
-        $result = $db->sql_query($query);
+        $result = $db->getSqlQuery($query);
 
         if (preg_match('#CREATE|ALTER|DELETE|DROP|RENAME|UPDATE#i', $query)) {
             preg_match('#`([^`]+)`#', $query, $match);
@@ -354,49 +354,49 @@ function save(): void {
     setConfigFile('db.php', $conf['db'], $cont);
 
     require_once 'core/classes/pdo.php';
-    $db = new sql_db($xhost, $xuname, $xpass, $xname, $xcharset);
+    $db = new Database($xhost, $xuname, $xpass, $xname, $xcharset);
     
     $bodytext = '';
     if ($setup == 'new') {
         $title = _SAVE_NEW;
-        $bodytext .= executeSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
-        $bodytext .= executeSqlFile('setup/sql/insert.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/insert.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update4_1') {
         $title = _SAVE_UPDATE;
-        $bodytext .= executeSqlFile('setup/sql/table_update4_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table_update4_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update4_2') {
         $title = _SAVE_UPDATE;
-        $bodytext .= executeSqlFile('setup/sql/table_update4_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table_update4_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update4_3') {
         $title = _SAVE_UPDATE;
-        $bodytext .= executeSqlFile('setup/sql/table_update4_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table_update4_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update5_0') {
         $title = _SAVE_UPDATE;
-        $result = $db->sql_query('SELECT id, pwd FROM '.$xprefix.'_admins');
-        while (list($a_id, $a_pwd) = $db->sql_fetchrow($result)) {
+        $result = $db->getSqlQuery('SELECT id, pwd FROM '.$xprefix.'_admins');
+        while (list($a_id, $a_pwd) = $db->getSqlRow($result)) {
             $pwd_hash = getCrypt($a_pwd);
-            $db->sql_query('UPDATE '.$xprefix.'_admins SET pwd = :pwd WHERE id = :id', ['pwd' => $pwd_hash, 'id' => $a_id]);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET pwd = :pwd WHERE id = :id', ['pwd' => $pwd_hash, 'id' => $a_id]);
         }
         $bodytext .= getInfo($xprefix.'_admins', $result);
-        $result = $db->sql_query('SELECT user_id, user_password FROM '.$xprefix.'_users');
-        while (list($user_id, $user_password) = $db->sql_fetchrow($result)) {
+        $result = $db->getSqlQuery('SELECT user_id, user_password FROM '.$xprefix.'_users');
+        while (list($user_id, $user_password) = $db->getSqlRow($result)) {
             $pwd_hash = getCrypt($user_password);
-            $db->sql_query('UPDATE '.$xprefix.'_users SET user_password = :pwd WHERE user_id = :uid', ['pwd' => $pwd_hash, 'uid' => $user_id]);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_users SET user_password = :pwd WHERE user_id = :uid', ['pwd' => $pwd_hash, 'uid' => $user_id]);
         }
         $bodytext .= getInfo($xprefix.'_users', $result);
-        $bodytext .= executeSqlFile('setup/sql/table_update5_0.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table_update5_0.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update5_1') {
         $title = _SAVE_UPDATE;
-        $bodytext .= executeSqlFile('setup/sql/table_update5_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table_update5_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
 
-        $result = $db->sql_query('SELECT poll_id, poll_date, poll_title, poll_questions, poll_answer_1, poll_answer_2, poll_answer_3, poll_answer_4, poll_answer_5, poll_answer_6, poll_answer_7, poll_answer_8, poll_answer_9, poll_answer_10, poll_answer_11, poll_answer_12, pool_comments, planguage, acomm FROM '.$xprefix.'_voting_temp');
-        while (list($poll_id, $poll_date, $poll_title, $poll_questions, $poll_answer_1, $poll_answer_2, $poll_answer_3, $poll_answer_4, $poll_answer_5, $poll_answer_6, $poll_answer_7, $poll_answer_8, $poll_answer_9, $poll_answer_10, $poll_answer_11, $poll_answer_12, $pool_comments, $planguage, $acomm) = $db->sql_fetchrow($result)) {
+        $result = $db->getSqlQuery('SELECT poll_id, poll_date, poll_title, poll_questions, poll_answer_1, poll_answer_2, poll_answer_3, poll_answer_4, poll_answer_5, poll_answer_6, poll_answer_7, poll_answer_8, poll_answer_9, poll_answer_10, poll_answer_11, poll_answer_12, pool_comments, planguage, acomm FROM '.$xprefix.'_voting_temp');
+        while (list($poll_id, $poll_date, $poll_title, $poll_questions, $poll_answer_1, $poll_answer_2, $poll_answer_3, $poll_answer_4, $poll_answer_5, $poll_answer_6, $poll_answer_7, $poll_answer_8, $poll_answer_9, $poll_answer_10, $poll_answer_11, $poll_answer_12, $pool_comments, $planguage, $acomm) = $db->getSqlRow($result)) {
             $questions = substr($poll_questions, 0, -1);
             $array_answ = [$poll_answer_1, $poll_answer_2, $poll_answer_3, $poll_answer_4, $poll_answer_5, $poll_answer_6, $poll_answer_7, $poll_answer_8, $poll_answer_9, $poll_answer_10, $poll_answer_11, $poll_answer_12];
             $answ = [];
             foreach ($array_answ as $val) if (!empty($val)) $answ[] = trim($val);
             $answ = implode('|', $answ);
-            $db->sql_query('INSERT INTO '.$xprefix.'_voting (id, modul, title, questions, answer, date, enddate, multi, comments, language, acomm, ip, typ, status) VALUES (:id, \'\', :title, :questions, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
+            $db->getSqlQuery('INSERT INTO '.$xprefix.'_voting (id, modul, title, questions, answer, date, enddate, multi, comments, language, acomm, ip, typ, status) VALUES (:id, \'\', :title, :questions, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
                 'id' => $poll_id,
                 'title' => $poll_title,
                 'questions' => $questions,
@@ -407,12 +407,12 @@ function save(): void {
                 'acomm' => $acomm,
                 'ip' => getIp()
             ]);
-            $db->sql_query('DROP TABLE '.$xprefix.'_voting_temp');
+            $db->getSqlQuery('DROP TABLE '.$xprefix.'_voting_temp');
         }
         $bodytext .= getInfo($xprefix.'_voting', $result);
 
-        $result = $db->sql_query('SELECT sid, associated FROM '.$xprefix.'_news');
-        while (list($id, $associated) = $db->sql_fetchrow($result)) {
+        $result = $db->getSqlQuery('SELECT sid, associated FROM '.$xprefix.'_news');
+        while (list($id, $associated) = $db->getSqlRow($result)) {
             $associated = explode('-', $associated);
             if (is_array($associated)) {
                 $assoc = [];
@@ -423,12 +423,12 @@ function save(): void {
             } else {
                 $assoc = '';
             }
-            $db->sql_query('UPDATE '.$xprefix.'_news SET associated = :assoc WHERE sid = :id', ['assoc' => $assoc, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_news SET associated = :assoc WHERE sid = :id', ['assoc' => $assoc, 'id' => $id]);
         }
         $bodytext .= getInfo($xprefix.'_news', $result);
 
-        $result = $db->sql_query('SELECT id, assoc FROM '.$xprefix.'_products');
-        while (list($id, $associated) = $db->sql_fetchrow($result)) {
+        $result = $db->getSqlQuery('SELECT id, assoc FROM '.$xprefix.'_products');
+        while (list($id, $associated) = $db->getSqlRow($result)) {
             $associated = explode('-', $associated);
             if (is_array($associated)) {
                 $assoc = [];
@@ -439,15 +439,15 @@ function save(): void {
             } else {
                 $assoc = '';
             }
-            $db->sql_query('UPDATE '.$xprefix.'_products SET assoc = :assoc WHERE id = :id', ['assoc' => $assoc, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_products SET assoc = :assoc WHERE id = :id', ['assoc' => $assoc, 'id' => $id]);
         }
         $bodytext .= getInfo($xprefix.'_products', $result);
     } elseif ($setup == 'update6_0') {
         $title = _SAVE_UPDATE;
-        $bodytext .= executeSqlFile('setup/sql/table_update6_0.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table_update6_0.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_2') {
         $title = _SAVE_UPDATE;
-        $bodytext .= executeSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
         $cont = [];
         $admin_path = BASE_DIR.'/admin/modules';
@@ -491,12 +491,12 @@ function save(): void {
         }
         $has_modules = false;
         $tbl = $xprefix.'_modules';
-        $tbl_res = $db->sql_query('SHOW TABLES LIKE :tbl', ['tbl' => $tbl]);
-        if ($tbl_res && $db->sql_numrows($tbl_res) > 0) $has_modules = true;
+        $tbl_res = $db->getSqlQuery('SHOW TABLES LIKE :tbl', ['tbl' => $tbl]);
+        if ($tbl_res && $db->getSqlRowCount($tbl_res) > 0) $has_modules = true;
         if ($has_modules) {
             $map = [];
-            $result = $db->sql_query('SELECT mid, title, active, view, inmenu, mod_group, blocks, blocks_c FROM '.$tbl);
-            while ($row = $db->sql_fetchrow($result)) {
+            $result = $db->getSqlQuery('SELECT mid, title, active, view, inmenu, mod_group, blocks, blocks_c FROM '.$tbl);
+            while ($row = $db->getSqlRow($result)) {
                 $title = $row['title'];
                 $map[(string)$row['mid']] = $title;
                 if (!isset($cont[$title])) {
@@ -520,8 +520,8 @@ function save(): void {
                 $cont[$title]['top'] = $row['blocks_c'];
             }
             if (!empty($map)) {
-                $result = $db->sql_query('SELECT id, modules FROM '.$xprefix.'_admins');
-                while ($row = $db->sql_fetchrow($result)) {
+                $result = $db->getSqlQuery('SELECT id, modules FROM '.$xprefix.'_admins');
+                while ($row = $db->getSqlRow($result)) {
                     $modules = $row['modules'] ?? '';
                     $list = array_filter(array_map('trim', explode(',', $modules)), 'strlen');
                     $names = [];
@@ -535,7 +535,7 @@ function save(): void {
                     $names = array_values(array_unique($names));
                     $new_modules = implode(',', $names);
                     if ($new_modules !== $modules) {
-                        $db->sql_query('UPDATE '.$xprefix.'_admins SET modules = :modules WHERE id = :id', [
+                        $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET modules = :modules WHERE id = :id', [
                             'modules' => $new_modules,
                             'id' => $row['id'],
                         ]);
@@ -545,7 +545,7 @@ function save(): void {
         }
         setConfigFile('modules.php', $cont);
         $title = _SAVE_UPDATE;
-        $bodytext .= executeSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
+        $bodytext .= getSqlFile('setup/sql/table_update6_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     }
     setHead();
     echo '<table class="sl_table">'.$bodytext.'</table>'

@@ -28,9 +28,9 @@ function contact(): void {
             $wlang = 'AND (lang = :locale OR lang = \'\')';
             $params['locale'] = $locale;
         }
-        $result = $db->sql_query('SELECT id, name, title FROM '.PREFIX_DB.'_admins WHERE smail = \'1\' '.$wlang.' ORDER BY id', $params);
-        if ($db->sql_numrows($result) > 0) {
-            while ([$id, $aname, $atitle] = $db->sql_fetchrow($result)) {
+        $result = $db->getSqlQuery('SELECT id, name, title FROM '.PREFIX_DB.'_admins WHERE smail = \'1\' '.$wlang.' ORDER BY id', $params);
+        if ($db->getSqlRowCount($result) > 0) {
+            while ([$id, $aname, $atitle] = $db->getSqlRow($result)) {
                 $aname = substr($aname, 0, 25);
                 $atitle = substr($atitle, 0, 50);
                 $asend .= '<option value="'.$id.'">'.$aname.' - '.$atitle.'</option>';
@@ -65,7 +65,7 @@ function contact(): void {
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             if ($conf['contact']['admins'] && $id) {
-                [$adminmail] = $db->sql_fetchrow($db->sql_query('SELECT email FROM '.PREFIX_DB.'_admins WHERE id = :id AND smail = \'1\'', ['id' => $id]));
+                [$adminmail] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_admins WHERE id = :id AND smail = \'1\'', ['id' => $id]));
                 $to = $adminmail;
             } else {
                 $to = $conf['adminmail'];

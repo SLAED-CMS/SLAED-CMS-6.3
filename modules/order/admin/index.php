@@ -21,15 +21,15 @@ function order(): void {
     $anum = $conf['order']['anum'] ?? 25;
     $anump = $conf['order']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
-    $result = $db->sql_query('SELECT id, mail, info, com, ip, agent, date, status FROM '.PREFIX_DB.'_order ORDER BY date DESC LIMIT '.$offset.', '.$anum);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT id, mail, info, com, ip, agent, date, status FROM '.PREFIX_DB.'_order ORDER BY date DESC LIMIT '.$offset.', '.$anum);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
-        [$numstories] = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_order'));
+        [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_order'));
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $mail, $info, $com, $ip, $agent, $date, $status] = $db->sql_fetchrow($result)) {
+        while ([$id, $mail, $info, $com, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $infos = fields_out($info, 'order');
             $cont .= '<tr><td>'.$id.'</td>'
@@ -56,8 +56,8 @@ function add(): void {
     $mid = $id;
     $mid = $id;
     if ($mid) {
-        $result = $db->sql_query('SELECT mail, info, com, date FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
-        [$mail, $field, $com, $date] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT mail, info, com, date FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
+        [$mail, $field, $com, $date] = $db->getSqlRow($result);
     } else {
         $mid = getVar('post', 'mid', 'num', 0);
         $mail = getVar('post', 'mail', 'text', '');
@@ -92,11 +92,11 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         if ($mid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['mail' => $mail, 'info' => $field, 'com' => $com, 'date' => $date, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['mail' => $mail, 'info' => $field, 'com' => $com, 'date' => $date, 'mid' => $mid]);
         } else {
             $ip = getip();
             $agent = getagent();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
         }
         setRedirect($afile.'.php?name=order');
     } elseif ($posttype === 'delete') {
@@ -109,7 +109,7 @@ function save(): void {
 function del(int $did = 0): void {
     global $db, $afile;
     $id = $did ? $did : getVar('req', 'id', 'num', 0);
-    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
+    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=order');
 }
 
@@ -117,9 +117,9 @@ function active(): void {
     global $db, $afile, $conf;
         $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
-    $db->sql_query('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
     if ($act) {
-        [$mail] = $db->sql_fetchrow($db->sql_query('SELECT mail FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
+        [$mail] = $db->getSqlRow($db->getSqlQuery('SELECT mail FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
         $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._ORDER;
         $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';

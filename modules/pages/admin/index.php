@@ -30,11 +30,11 @@ function pages(): void {
         $refer = '';
         $cont = navi(0, 0, 0, 0);
     }
-    $result = $db->sql_query('SELECT p.pid, p.catid, p.name, p.title, p.time, p.ip_sender, t.title, u.user_name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.catid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.user_id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT p.pid, p.catid, p.name, p.title, p.time, p.ip_sender, t.title, u.user_name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.catid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.user_id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$pid, $catid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+        while ([$pid, $catid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($catid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
@@ -66,8 +66,8 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $pid = $id;
     if ($pid) {
-        $result = $db->sql_query('SELECT p.catid, p.name, p.title, p.time, p.hometext, p.bodytext, p.ihome, p.acomm, u.user_name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.user_id) WHERE pid = :pid', ['pid' => $pid]);
-        [$cat, $uname, $subject, $time, $hometext, $bodytext, $ihome, $acomm, $nick] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT p.catid, p.name, p.title, p.time, p.hometext, p.bodytext, p.ihome, p.acomm, u.user_name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.user_id) WHERE pid = :pid', ['pid' => $pid]);
+        [$cat, $uname, $subject, $time, $hometext, $bodytext, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
         $pid = getVar('post', 'pid', 'num', 0);
@@ -121,10 +121,10 @@ function save(): void {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
         if ($pid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_pages SET catid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE pid = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET catid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE pid = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
         } else {
             $ip = getip();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_pages (pid, catid, uid, name, title, time, hometext, bodytext, comments, counter, ihome, acomm, score, ratings, ip_sender, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :ip, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (pid, catid, uid, name, title, time, hometext, bodytext, comments, counter, ihome, acomm, score, ratings, ip_sender, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :ip, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
         }
         setRedirect($afile.'.php?name=pages');
     } elseif ($posttype === 'delete') {
@@ -138,9 +138,9 @@ function del(int $did = 0): void {
     global $db, $afile;
     $id = $did ? $did : getVar('req', 'id', 'num', 0);
     if ($id) {
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'pages\'', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'pages\'', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_pages WHERE pid = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_comment WHERE cid = :id AND modul = \'pages\'', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'pages\'', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_pages WHERE pid = :id', ['id' => $id]);
     }
     $refer = getVar('req', 'refer', 'num', 0) ? '&status=1' : '';
     setRedirect($afile.'.php?name=pages'.$refer);

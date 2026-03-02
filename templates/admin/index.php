@@ -39,7 +39,7 @@ function setTemplateHead($sub, $val = '') {
 		}
 		$blocks = getAdminPanelBlocks().admininfo().adminblock();
 	} else {
-		$login = ($db->sql_numrows($db->sql_query("SELECT * FROM ".PREFIX_DB."_admins")) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
+		$login = ($db->getSqlRowCount($db->getSqlQuery("SELECT * FROM ".PREFIX_DB."_admins")) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
 	}
 	$value = array('{%langs%}' => $langs, '{%menu%}' => $menu, '{%blocks%}' => $blocks, '{%login%}' => $login, '{%theme%}' => $theme, '{%lang%}' => substr(_LOCALE, 0, 2));
 	$value = is_array($val) ? array_merge($value, $val) : $value;

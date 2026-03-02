@@ -49,14 +49,14 @@ function referers(): void {
     $count = $sortmap[$sort][0] ?? 'date';
     $ordby = $sortmap[$sort][1] ?? 'date';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    $result = $db->sql_query('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, date FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
+    $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, date FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     head();
     $cont = navi(0, 0, 0, 0);
-    if ($db->sql_numrows($result) > 0) {
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $a = 0;
         $massiv = [];
-        while ([$hits, $uid, $name, $ip, $referer, $link, $date] = $db->sql_fetchrow($result)) {
+        while ([$hits, $uid, $name, $ip, $referer, $link, $date] = $db->getSqlRow($result)) {
             $massiv[] = [$hits, $uid, $name, $ip, $referer, $link, $date];
             $a++;
         }
@@ -117,7 +117,7 @@ function save(): void {
 
 function del(): void {
     global $db, $afile;
-    $db->sql_query('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = 0');
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = 0');
     setRedirect($afile.'.php?name=referers');
 }
 

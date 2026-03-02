@@ -195,15 +195,15 @@ function getMonitor(): void {
     $diskpct = ($disk_total > 0) ? round(($disk_used / $disk_total) * 100, 1) : 0;
     $net = getNetworkStats();
 
-    $userson = $db->sql_numrows($db->sql_query('SELECT id FROM '.PREFIX_DB.'_session'));
+    $userson = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session'));
 
     // DB Stats
     $dbsize = 0;
     $dbtabs = 0;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname !== '') {
-        $db_result = $db->sql_query('SHOW TABLE STATUS FROM `'.$dbname.'`');
-        while ($row = $db->sql_fetchrow($db_result)) {
+        $db_result = $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
+        while ($row = $db->getSqlRow($db_result)) {
             $dbsize += $row['Data_length'] + $row['Index_length'];
             $dbtabs++;
         }
@@ -217,16 +217,16 @@ function getMonitor(): void {
 
     // Detailed Info Logic
     $gd = function_exists('gd_info') ? gd_info() : ['GD Version' => 'N/A'];
-    $verq = $db->sql_query('SELECT VERSION()');
-    $verrow = $db->sql_fetchrow($verq);
+    $verq = $db->getSqlQuery('SELECT VERSION()');
+    $verrow = $db->getSqlRow($verq);
     $mysql = $verrow[0];
 
     $status_on = '<span style="color:#21c45d">On</span>';
     $status_off = '<span style="color:#ef4444">Off</span>';
 
     // Counts for Overview Strip
-    $cntfile = $db->sql_numrows($db->sql_query('SELECT lid FROM '.PREFIX_DB.'_files WHERE status != \'0\''));
-    $cntnews = $db->sql_numrows($db->sql_query('SELECT sid FROM '.PREFIX_DB.'_news WHERE status != \'0\''));
+    $cntfile = $db->getSqlRowCount($db->getSqlQuery('SELECT lid FROM '.PREFIX_DB.'_files WHERE status != \'0\''));
+    $cntnews = $db->getSqlRowCount($db->getSqlQuery('SELECT sid FROM '.PREFIX_DB.'_news WHERE status != \'0\''));
 
     // Calculate dashboard metrics
     $load_p = min($load[0] * 10, 100);

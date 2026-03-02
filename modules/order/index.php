@@ -51,7 +51,7 @@ function send(): void {
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
 		if (!$stop) {
 			$status = ($conf['order']['pr']) ? '0' : '1';
-			$db->sql_query('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, NOW(), :status)', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
+			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, NOW(), :status)', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
 			if ($conf['order']['ad']) {
 				$infos = fields_out($field, $conf['name']);
 				$amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];

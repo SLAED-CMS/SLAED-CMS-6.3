@@ -16,11 +16,11 @@ function newsletter(): void {
     global $db, $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0);
-    $result = $db->sql_query('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._NLEND.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $title, $mails, $sended, $time, $endtime] = $db->sql_fetchrow($result)) {
+        while ([$id, $title, $mails, $sended, $time, $endtime] = $db->getSqlRow($result)) {
             $sendtime = ($endtime > $time) ? strtotime($endtime) - strtotime($time) : 0;
             $active = ($mails && $sended && $conf['newsletter']) ? 1 : 0;
             $cont .= '<tr>'
@@ -43,8 +43,8 @@ function add(): void {
     global $db, $afile, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->sql_query('SELECT title, content, mails FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]);
-        [$nid, $title, $content, $mails] = [$id, ...$db->sql_fetchrow($result)];
+        $result = $db->getSqlQuery('SELECT title, content, mails FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]);
+        [$nid, $title, $content, $mails] = [$id, ...$db->getSqlRow($result)];
     } else {
         $nid = getVar('post', 'nid', 'num', '');
         $title = getVar('post', 'title', 'title', '');
@@ -57,19 +57,19 @@ function add(): void {
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($content) $cont .= preview($title, $content, '', '', 'all');
-    [$num] = $db->sql_fetchrow($db->sql_query('SELECT Count(user_id) FROM '.PREFIX_DB.'_users'));
+    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(user_id) FROM '.PREFIX_DB.'_users'));
     $sel = ($mails == 1) ? ' selected' : '';
     $option = '<option value="1"'.$sel.'>'._MASSMAIL.' - '.$num.'</option>';
-    [$num2] = $db->sql_fetchrow($db->sql_query('SELECT Count(user_id) FROM '.PREFIX_DB.'_users WHERE user_newsletter = 1'));
+    [$num2] = $db->getSqlRow($db->getSqlQuery('SELECT Count(user_id) FROM '.PREFIX_DB.'_users WHERE user_newsletter = 1'));
     $sel = ($mails == 2) ? ' selected' : '';
     $option .= '<option value="2"'.$sel.'>'._ANEWSLETTER.' - '.$num2.'</option>';
-    $result3 = $db->sql_query('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra = 1 ORDER BY id');
-    if ($db->sql_numrows($result3) > 0) {
-        while ([$grid, $grname, $points] = $db->sql_fetchrow($result3)) {
-            $result4 = $db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]);
+    $result3 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra = 1 ORDER BY id');
+    if ($db->getSqlRowCount($result3) > 0) {
+        while ([$grid, $grname, $points] = $db->getSqlRow($result3)) {
+            $result4 = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]);
             $email3 = '';
             $num3 = 0;
-            while ([$user_email] = $db->sql_fetchrow($result4)) {
+            while ([$user_email] = $db->getSqlRow($result4)) {
                 $email3 .= $user_email.',';
                 $num3++;
             }
@@ -77,13 +77,13 @@ function add(): void {
             $option .= '<option value="'.$email3.'"'.$sel.'>'._SPEC_GROUP.' "'.$grname.'" - '.$num3.'</option>';
         }
     }
-    $result5 = $db->sql_query('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 ORDER BY id');
-    if ($db->sql_numrows($result5) > 0) {
-        while ([$grid, $grname, $points] = $db->sql_fetchrow($result5)) {
-            $result6 = $db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]);
+    $result5 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 ORDER BY id');
+    if ($db->getSqlRowCount($result5) > 0) {
+        while ([$grid, $grname, $points] = $db->getSqlRow($result5)) {
+            $result6 = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]);
             $email4 = '';
             $num4 = 0;
-            while ([$user_email] = $db->sql_fetchrow($result6)) {
+            while ([$user_email] = $db->getSqlRow($result6)) {
                 $email4 .= $user_email.',';
                 $num4++;
             }
@@ -92,10 +92,10 @@ function add(): void {
         }
     }
     if (is_active('money')) {
-        $result7 = $db->sql_query('SELECT mail FROM '.PREFIX_DB.'_money WHERE status = 1');
-        if ($db->sql_numrows($result7) > 0) {
+        $result7 = $db->getSqlQuery('SELECT mail FROM '.PREFIX_DB.'_money WHERE status = 1');
+        if ($db->getSqlRowCount($result7) > 0) {
             $aemail = [];
-            while ([$user_email] = $db->sql_fetchrow($result7)) $aemail[] = $user_email;
+            while ([$user_email] = $db->getSqlRow($result7)) $aemail[] = $user_email;
             $aemail = array_unique($aemail);
             $email5 = '';
             $num5 = 0;
@@ -110,10 +110,10 @@ function add(): void {
         }
     }
     if (is_active('order')) {
-        $result8 = $db->sql_query('SELECT mail FROM '.PREFIX_DB.'_order WHERE status = 1');
-        if ($db->sql_numrows($result8) > 0) {
+        $result8 = $db->getSqlQuery('SELECT mail FROM '.PREFIX_DB.'_order WHERE status = 1');
+        if ($db->getSqlRowCount($result8) > 0) {
             $aemail = [];
-            while ([$user_email] = $db->sql_fetchrow($result8)) $aemail[] = $user_email;
+            while ([$user_email] = $db->getSqlRow($result8)) $aemail[] = $user_email;
             $aemail = array_unique($aemail);
             $email6 = '';
             $num6 = 0;
@@ -128,10 +128,10 @@ function add(): void {
         }
     }
     if (is_active('shop')) {
-        $result9 = $db->sql_query('SELECT email FROM '.PREFIX_DB.'_clients');
-        if ($db->sql_numrows($result9) > 0) {
+        $result9 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients');
+        if ($db->getSqlRowCount($result9) > 0) {
             $aemail = [];
-            while ([$user_email] = $db->sql_fetchrow($result9)) $aemail[] = $user_email;
+            while ([$user_email] = $db->getSqlRow($result9)) $aemail[] = $user_email;
             $aemail = array_unique($aemail);
             $email7 = '';
             $num7 = 0;
@@ -144,10 +144,10 @@ function add(): void {
             $sel = ($email7 == $mails) ? ' selected' : '';
             $option .= '<option value="'.$email7.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7.'</option>';
         }
-        $result10 = $db->sql_query('SELECT email FROM '.PREFIX_DB.'_clients WHERE active = 1');
-        if ($db->sql_numrows($result10) > 0) {
+        $result10 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE active = 1');
+        if ($db->getSqlRowCount($result10) > 0) {
             $aemail = [];
-            while ([$user_email] = $db->sql_fetchrow($result10)) $aemail[] = $user_email;
+            while ([$user_email] = $db->getSqlRow($result10)) $aemail[] = $user_email;
             $aemail = array_unique($aemail);
             $email8 = '';
             $num8 = 0;
@@ -160,10 +160,10 @@ function add(): void {
             $sel = ($email8 == $mails) ? ' selected' : '';
             $option .= '<option value="'.$email8.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8.'</option>';
         }
-        $result11 = $db->sql_query('SELECT email FROM '.PREFIX_DB.'_clients WHERE active = 0');
-        if ($db->sql_numrows($result11) > 0) {
+        $result11 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE active = 0');
+        if ($db->getSqlRowCount($result11) > 0) {
             $aemail = [];
-            while ([$user_email] = $db->sql_fetchrow($result11)) $aemail[] = $user_email;
+            while ([$user_email] = $db->getSqlRow($result11)) $aemail[] = $user_email;
             $aemail = array_unique($aemail);
             $email9 = '';
             $num9 = 0;
@@ -209,25 +209,25 @@ function save(): void {
     if (!$content) $stop[] = _CERROR1;
     if (!$stop && getVar('post', 'posttype') == 'save') {
         if ($mails == 1) {
-            $result = $db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users');
+            $result = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users');
             $emails = [];
-            while ([$user_email] = $db->sql_fetchrow($result)) $emails[] = $user_email;
+            while ([$user_email] = $db->getSqlRow($result)) $emails[] = $user_email;
             $emails = implode(',', array_unique($emails));
         } elseif ($mails == 2) {
-            $result = $db->sql_query('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_newsletter = 1');
+            $result = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_newsletter = 1');
             $emails = [];
-            while ([$user_email] = $db->sql_fetchrow($result)) $emails[] = $user_email;
+            while ([$user_email] = $db->getSqlRow($result)) $emails[] = $user_email;
             $emails = implode(',', array_unique($emails));
         } else {
             $emails = $mails;
         }
         $emails = ($send) ? $emails : '';
         if ($nid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_newsletter SET title = :title, content = :content, mails = :mails, send = 0, time = now(), endtime = 0 WHERE id = :id', [
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET title = :title, content = :content, mails = :mails, send = 0, time = now(), endtime = 0 WHERE id = :id', [
                 'title' => $title, 'content' => $content, 'mails' => $emails, 'id' => $nid
             ]);
         } else {
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_newsletter (title, content, mails, send, time, endtime) VALUES (:title, :content, :mails, 0, now(), 0)', [
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_newsletter (title, content, mails, send, time, endtime) VALUES (:title, :content, :mails, 0, now(), 0)', [
                 'title' => $title, 'content' => $content, 'mails' => $emails
             ]);
         }
@@ -241,7 +241,7 @@ function save(): void {
 
 function del(): void {
     global $db, $afile, $id;
-    $db->sql_query('DELETE FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]);
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=newsletter');
 }
 

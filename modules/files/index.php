@@ -44,13 +44,13 @@ function files(): void {
     } elseif ($ncat) {
         $field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
         $orderby = ($op) ? (($op == 'best') ? 'IFNULL((f.totalvotes/NULLIF(f.votes,0)),0) DESC' : 'IFNULL((f.hits/NULLIF((TO_DAYS(NOW()) - TO_DAYS(f.date)),0)),0) DESC') : 'f.date DESC';
-        [$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+        [$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
         $order = "WHERE (f.cid = :ncat1 OR c.parentid = :ncat2) AND f.date <= NOW() AND f.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat2' => $ncat];
         $catid = [];
-        $result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-        while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+        while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
         unset($result);
         if (isArray($catid)) {
             $caton = 1;
@@ -80,9 +80,9 @@ function files(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->sql_query('SELECT f.lid, f.cid, f.name, f.title, f.description, f.bodytext, f.date, f.counter, f.acomm, f.votes, f.totalvotes, f.totalcomments, f.hits, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
-    if ($db->sql_numrows($result) > 0) {
-        while ([$id, $cid, $uname, $stitle, $description, $bodytext, $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery('SELECT f.lid, f.cid, f.name, f.title, f.description, f.bodytext, f.date, f.counter, f.acomm, f.votes, f.totalvotes, f.totalcomments, f.hits, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    if ($db->getSqlRowCount($result) > 0) {
+        while ([$id, $cid, $uname, $stitle, $description, $bodytext, $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -126,13 +126,13 @@ function liste(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $listnum;
     $offset = intval($offset);
-    $result = $db->sql_query('SELECT f.lid, f.cid, f.name, f.title, f.date, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) '.$order.' '.$cwhere.' ORDER BY date DESC LIMIT '.$offset.', '.$listnum, $params);
+    $result = $db->getSqlQuery('SELECT f.lid, f.cid, f.name, f.title, f.date, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) '.$order.' '.$cwhere.' ORDER BY date DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
     $cont = navigate(_LIST);
-    if ($db->sql_numrows($result) > 0) {
+    if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['files']['letter']) ? letter($conf['name']) : '';
         $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
-        while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->sql_fetchrow($result)) {
+        while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
@@ -156,10 +156,10 @@ function view(): void {
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $cwhere = catmids($conf['name'], 'f.cid');
-    $result = $db->sql_query('SELECT f.cid, f.name, f.title, f.url, f.description, f.bodytext, f.date, f.filesize, f.version, f.email, f.homepage, f.counter, f.acomm, f.votes, f.totalvotes, f.hits, f.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.lid = :id AND f.date <= NOW() AND f.status != '0' ".$cwhere, ['id' => $id]);
-    if ($db->sql_numrows($result) == 1) {
-        $db->sql_query('UPDATE '.PREFIX_DB."_files SET counter = counter+1 WHERE lid = :id", ['id' => $id]);
-        [$cid, $uname, $title, $url, $description, $bodytext, $date, $fsize, $fversion, $aemail, $ahomepage, $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result);
+    $result = $db->getSqlQuery('SELECT f.cid, f.name, f.title, f.url, f.description, f.bodytext, f.date, f.filesize, f.version, f.email, f.homepage, f.counter, f.acomm, f.votes, f.totalvotes, f.hits, f.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.lid = :id AND f.date <= NOW() AND f.status != '0' ".$cwhere, ['id' => $id]);
+    if ($db->getSqlRowCount($result) == 1) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET counter = counter+1 WHERE lid = :id", ['id' => $id]);
+        [$cid, $uname, $title, $url, $description, $bodytext, $date, $fsize, $fversion, $aemail, $ahomepage, $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result);
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
         $seotitle = $title;
         $seoctitle = $ctitle;
@@ -209,12 +209,12 @@ function view(): void {
         $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '', '{%size%}' => $size, '{%version%}' => $version, '{%download%}' => $download, '{%broken%}' => $broken, '{%email%}' => $email, '{%home%}' => $home]);
         if ($conf['files']['link']) {
             $limit = intval($conf['files']['linknum']);
-            [$count] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(lid) FROM '.PREFIX_DB."_files WHERE cid = :cid AND lid != :id AND date <= NOW() AND status != '0'", ['cid' => $cid, 'id' => $id]));
+            [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(lid) FROM '.PREFIX_DB."_files WHERE cid = :cid AND lid != :id AND date <= NOW() AND status != '0'", ['cid' => $cid, 'id' => $id]));
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
-                $result = $db->sql_query('SELECT lid, title, description, bodytext, date FROM '.PREFIX_DB."_files WHERE cid = :cid AND lid != :id AND date <= NOW() AND status != '0' ORDER BY date DESC LIMIT ".$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
+                $result = $db->getSqlQuery('SELECT lid, title, description, bodytext, date FROM '.PREFIX_DB."_files WHERE cid = :cid AND lid != :id AND date <= NOW() AND status != '0' ORDER BY date DESC LIMIT ".$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
                 $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
-                while([$aid, $title, $hometext, $bodytext, $time] = $db->sql_fetchrow($result)) {
+                while([$aid, $title, $hometext, $bodytext, $time] = $db->getSqlRow($result)) {
                     $date = ($conf['files']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
                     $text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
                     $img = getImgText($hometext);
@@ -305,7 +305,7 @@ function send(): void {
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         checkemail($mail);
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-        if ($db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB."_files WHERE title = :title", ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
+        if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_files WHERE title = :title", ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
         $userid = isset($user[0]) ? intval($user[0]) : '0';
         $filename = upload(1, $conf['files']['temp'], $conf['files']['typefile'], $conf['files']['max_size'], 'files', '1600', '1600', $userid);
         $url = ($filename) ? $conf['files']['temp'].'/'.$filename : $url;
@@ -318,7 +318,7 @@ function send(): void {
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = (is_user()) ? intval($user[0]) : '';
             $uname = (!is_user()) ? $postname : '';
-            $db->sql_query('INSERT INTO '.PREFIX_DB."_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :description, :bodytext, :url, NOW(), :fsize, :fversion, :mail, :home, :ip_sender, '0')", ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'fsize' => $fsize, 'fversion' => $fversion, 'mail' => $mail, 'home' => $home, 'ip_sender' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :description, :bodytext, :url, NOW(), :fsize, :fversion, :mail, :home, :ip_sender, '0')", ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'fsize' => $fsize, 'fversion' => $fversion, 'mail' => $mail, 'home' => $home, 'ip_sender' => getIp()]);
             update_points(9);
             $puname = (is_user()) ? $user[1] : $postname;
             addmail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
@@ -337,7 +337,7 @@ function broken(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num');
     if ($conf['files']['broc'] == '1' && $id) {
-        $db->sql_query('UPDATE '.PREFIX_DB."_files SET status = '2' WHERE lid = :id AND status != '0'", ['id' => $id]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET status = '2' WHERE lid = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCFILE]);
         echo navigate(_BROCFILE).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTE]);
         setFoot();
@@ -350,8 +350,8 @@ function loading(): void {
     global $db, $conf;
     $id = getVar('post', 'id', 'num');
     if (($id && is_user()) || ($id && $conf['files']['down'] == '1')) {
-        $db->sql_query('UPDATE '.PREFIX_DB."_files SET hits = hits+1 WHERE lid = :id", ['id' => $id]);
-        [$stitle, $url] = $db->sql_fetchrow($db->sql_query('SELECT title, url FROM '.PREFIX_DB."_files WHERE lid = :id", ['id' => $id]));
+        $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET hits = hits+1 WHERE lid = :id", ['id' => $id]);
+        [$stitle, $url] = $db->getSqlRow($db->getSqlQuery('SELECT title, url FROM '.PREFIX_DB."_files WHERE lid = :id", ['id' => $id]));
         update_points(11);
         if ($conf['files']['stream'] == 2) {
             $type = strtolower(substr(strrchr($url, '.'), 1));

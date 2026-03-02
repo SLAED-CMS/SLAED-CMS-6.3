@@ -19,8 +19,8 @@ $bclos = '97, 98';
 $bwhere = ($bclos) ? "catid NOT IN (".$bclos.") AND" : "";
 $ordern = (is_moder("forum")) ? "" : "AND time <= now() AND status > '1'";
 $buffer = '';
-$result = $db->sql_query("SELECT id, uid, name, title, time, hometext, comments, counter, l_uid, l_name, l_id, l_time, status FROM ".PREFIX_DB."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
-while (list($id, $uid, $uname, $title, $time, $hometext, $comments, $counter, $l_uid, $l_name, $l_id, $l_time, $status) = $db->sql_fetchrow($result)) {
+$result = $db->getSqlQuery("SELECT id, uid, name, title, time, hometext, comments, counter, l_uid, l_name, l_id, l_time, status FROM ".PREFIX_DB."_forum WHERE ".$bwhere." pid = '0' ".$ordern." ORDER BY l_time DESC LIMIT 0, ".$blimit);
+while (list($id, $uid, $uname, $title, $time, $hometext, $comments, $counter, $l_uid, $l_name, $l_id, $l_time, $status) = $db->getSqlRow($result)) {
 	$thref = getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'title' => $title]);
 	if (!($conf['rewrite'] ?? false)) $thref .= '&amp;last';
 	$post = ($uid) ? user_info($uname) : $uname;

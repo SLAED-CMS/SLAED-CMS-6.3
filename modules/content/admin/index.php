@@ -20,11 +20,11 @@ function content(): void {
     $anum = $conf['content']['anum'] ?? 10;
     $anump = $conf['content']['anump'] ?? 10;
     $offset = ($num - 1) * $anum;
-    $result = $db->sql_query('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content ORDER BY id DESC LIMIT '.$offset.', '.$anum);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content ORDER BY id DESC LIMIT '.$offset.', '.$anum);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._DATE.'</th><th>'.cutstr(_READS, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $title, $time, $counter] = $db->sql_fetchrow($result)) {
+        while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             if (time() >= strtotime($time)) {
                 $view = '<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
@@ -53,8 +53,8 @@ function add(): void {
     global $db, $afile, $stop;
     $id = getVar('req', 'id', 'num', 0);
     if ($id) {
-        $result = $db->sql_query('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
-        [$cid, $title, $text, $field, $url, $time, $refresh] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
+        [$cid, $title, $text, $field, $url, $time, $refresh] = $db->getSqlRow($result);
     } else {
         $cid = getVar('post', 'cid', 'num', 0);
         $title = getVar('post', 'title', 'title', '');
@@ -115,9 +115,9 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype == 'save') {
         if ($cid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_content SET title = :title, text = :text, field = :field, url = :url, time = :time, refresh = :refresh WHERE id = :cid', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh, 'cid' => $cid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET title = :title, text = :text, field = :field, url = :url, time = :time, refresh = :refresh WHERE id = :cid', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh, 'cid' => $cid]);
         } else {
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_content (title, text, field, url, time, refresh, counter) VALUES (:title, :text, :field, :url, :time, :refresh, \'0\')', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_content (title, text, field, url, time, refresh, counter) VALUES (:title, :text, :field, :url, :time, :refresh, \'0\')', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh]);
         }
         setRedirect($afile.'.php?name=content');
     } elseif ($posttype == 'delete') {
@@ -130,7 +130,7 @@ function save(): void {
 function del(int $cid = 0): void {
     global $db, $afile;
     $id = $cid ? $cid : getVar('req', 'id', 'num', 0);
-    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
+    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=content');
 }
 

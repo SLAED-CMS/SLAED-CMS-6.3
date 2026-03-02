@@ -270,74 +270,74 @@ function admininfo() {
         if ($panel) {
             $n_cont = "<table class=\"sl_tab_bl\">";
             if (is_active("account") && is_admin_modul("account")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT user_id FROM ".PREFIX_DB."_users_temp"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT user_id FROM ".PREFIX_DB."_users_temp"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=users_new\" title=\""._NEW_USER."\">"._USERS."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("album") && is_admin_modul("album")) {
-                #$num = $db->sql_numrows($db->sql_query("SELECT pid FROM ".PREFIX_DB."_album_pictures_newpicture"));
+                #$num = $db->getSqlRowCount($db->getSqlQuery("SELECT pid FROM ".PREFIX_DB."_album_pictures_newpicture"));
                 #$num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 #$n_cont .= "<tr><td><a href=\"".$afile.".php?op=album&amp;do=validnew&amp;type=checknew\" title=\""._ALBUM."\">"._ALBUM."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("faq") && is_admin_modul("faq")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT fid FROM ".PREFIX_DB."_faq WHERE status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT fid FROM ".PREFIX_DB."_faq WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=faq&amp;status=1\" title=\""._FAQ."\">"._FAQ."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("files") && is_admin_modul("files")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT lid FROM ".PREFIX_DB."_files WHERE status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT lid FROM ".PREFIX_DB."_files WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=files&amp;status=1\" title=\""._FILES."\">"._FILES."</a>:</td><td>".$num."</td></tr>";
-                $num = $db->sql_numrows($db->sql_query("SELECT lid FROM ".PREFIX_DB."_files WHERE status = '2'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT lid FROM ".PREFIX_DB."_files WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=files&amp;status=2\" title=\""._BROCFILES."\">"._BROCFILES."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("help") && is_admin_modul("help")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT sid FROM ".PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT sid FROM ".PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=help\" title=\""._HELP."\">"._HELP."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("jokes") && is_admin_modul("jokes")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT jokeid FROM ".PREFIX_DB."_jokes WHERE status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT jokeid FROM ".PREFIX_DB."_jokes WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=jokes&amp;status=1\" title=\""._JOKES."\">"._JOKES."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("links") && is_admin_modul("links")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT lid FROM ".PREFIX_DB."_links WHERE status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT lid FROM ".PREFIX_DB."_links WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=links&amp;status=1\" title=\""._LINKS."\">"._LINKS."</a>:</td><td>".$num."</td></tr>";
-                $num = $db->sql_numrows($db->sql_query("SELECT lid FROM ".PREFIX_DB."_links WHERE status = '2'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT lid FROM ".PREFIX_DB."_links WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=links&amp;status=2\" title=\""._BROCLINKS."\">"._BROCLINKS."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("media") && is_admin_modul("media")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_media WHERE status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT id FROM ".PREFIX_DB."_media WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=media&amp;status=1\" title=\""._MEDIA."\">"._MEDIA."</a>:</td><td>".$num."</td></tr>";
-                $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_media WHERE status = '2'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT id FROM ".PREFIX_DB."_media WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=media&amp;status=2\" title=\""._BROCMFILES."\">"._BROCMFILES."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("news") && is_admin_modul("news")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT sid FROM ".PREFIX_DB."_news WHERE status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT sid FROM ".PREFIX_DB."_news WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=news&amp;status=1\" title=\""._NEWS."\">"._NEWS."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("pages") && is_admin_modul("pages")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT pid FROM ".PREFIX_DB."_pages WHERE status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT pid FROM ".PREFIX_DB."_pages WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=page&amp;status=1\" title=\""._PAGES."\">"._PAGES."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("shop") && is_admin_modul("shop")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_clients WHERE active = '2'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT id FROM ".PREFIX_DB."_clients WHERE active = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=shop_clients\" title=\""._CLIENTS."\">"._CLIENTS."</a>:</td><td>".$num."</td></tr>";
-                $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_partners WHERE active = '2'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT id FROM ".PREFIX_DB."_partners WHERE active = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=shop_partners\" title=\""._PARTNERS."\">"._PARTNERS."</a>:</td><td>".$num."</td></tr>";
             }
             if (is_active("whois") && is_admin_modul("whois")) {
-                $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_whois WHERE status = '0'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery("SELECT id FROM ".PREFIX_DB."_whois WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
                 $n_cont .= "<tr><td><a href=\"".$afile.".php?op=whois&amp;status=1\" title=\""._WHOIS."\">"._WHOIS."</a>:</td><td>".$num."</td></tr>";
             }
@@ -345,7 +345,7 @@ function admininfo() {
             $ablocks = setTemplateBlock('block-left', array('{%title%}' => _NEW, '{%content%}' => $n_cont, '{%id%}' => '3'));
             
             $w_cont = "<table class=\"sl_tab_bl\">";
-            $num = $db->sql_numrows($db->sql_query("SELECT id FROM ".PREFIX_DB."_comment WHERE status = '0'"));
+            $num = $db->getSqlRowCount($db->getSqlQuery("SELECT id FROM ".PREFIX_DB."_comment WHERE status = '0'"));
             $num = (is_numeric($num)) ? (($num >= 1) ? "<span class=\"sl_red\">".$num."</span>" : "<span class=\"sl_green\">".$num."</span>") : "-";
             $w_cont .= "<tr><td><a href=\"".$afile.".php?op=comm_show&amp;status=1\" title=\""._COMMENTS."\">"._COMMENTS."</a>:</td><td>".$num."</td></tr>";
             $w_cont .= "</table>";
@@ -359,7 +359,7 @@ function admininfo() {
                 $server = getenv('SERVER_SOFTWARE');
                 $gdver = php_gd();
                 
-                list($dbtime) = $db->sql_fetchrow($db->sql_query("SELECT NOW()"));
+                list($dbtime) = $db->getSqlRow($db->getSqlQuery("SELECT NOW()"));
                 $dbtime = format_time($dbtime, _TIMESTRING);
                 $phptime = date(_TIMESTRING);
                 
@@ -367,8 +367,8 @@ function admininfo() {
                 $dbtotal = $dbfree = 0;
                 $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
                 if ($dbname !== '') {
-                    $dbresult = $db->sql_query("SHOW TABLE STATUS FROM `".$dbname."`");
-                    while ($row = $db->sql_fetchrow($dbresult)) {
+                    $dbresult = $db->getSqlQuery("SHOW TABLE STATUS FROM `".$dbname."`");
+                    while ($row = $db->getSqlRow($dbresult)) {
                         $dbtotal += $row['Data_length'] + $row['Index_length'];
                         $dbfree += ($row['Data_free']) ? $row['Data_free'] : 0;
                     }
@@ -453,7 +453,7 @@ function php_gd() {
 
 function db_version() {
  global $db;
-    list($dbv) = $db->sql_fetchrow($db->sql_query('SELECT VERSION()'));
+    list($dbv) = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
     return $dbv;
 }
 
@@ -463,9 +463,9 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
     $where   = ($modul) ? 'WHERE a.modul = :modul' : '';
     $params  = ($modul) ? ['modul' => $modul] : [];
     $modlink = ($modul) ? "&amp;modul=".$modul : "";
-    $result  = $db->sql_query('SELECT a.id, a.modul, a.title, a.description, a.img, a.language, a.parentid, a.ordern, a.cstatus, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
-    if ($db->sql_numrows($result) > 0) {
-        while (list($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2) = $db->sql_fetchrow($result)) {
+    $result  = $db->getSqlQuery('SELECT a.id, a.modul, a.title, a.description, a.img, a.language, a.parentid, a.ordern, a.cstatus, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
+    if ($db->getSqlRowCount($result) > 0) {
+        while (list($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2) = $db->getSqlRow($result)) {
             $massiv[$id] = array($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2);
             unset($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2);
         }
@@ -487,27 +487,27 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
             $modul2 = $val[13];
             $order2 = $val[14];
             if ($modul == "faq") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(fid) FROM '.PREFIX_DB.'_faq WHERE catid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(fid) FROM '.PREFIX_DB.'_faq WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "files") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(lid) FROM '.PREFIX_DB.'_files WHERE cid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(lid) FROM '.PREFIX_DB.'_files WHERE cid = :id', ['id' => $id]));
             } elseif ($modul == "forum") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE catid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "help") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(sid) FROM '.PREFIX_DB.'_help WHERE catid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(sid) FROM '.PREFIX_DB.'_help WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "jokes") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(jokeid) FROM '.PREFIX_DB.'_jokes WHERE cat = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(jokeid) FROM '.PREFIX_DB.'_jokes WHERE cat = :id', ['id' => $id]));
             } elseif ($modul == "links") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(lid) FROM '.PREFIX_DB.'_links WHERE cid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(lid) FROM '.PREFIX_DB.'_links WHERE cid = :id', ['id' => $id]));
             } elseif ($modul == "media") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :id', ['id' => $id]));
             } elseif ($modul == "news") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(sid) FROM '.PREFIX_DB.'_news WHERE catid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(sid) FROM '.PREFIX_DB.'_news WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "pages") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(pid) FROM '.PREFIX_DB.'_pages WHERE catid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(pid) FROM '.PREFIX_DB.'_pages WHERE catid = :id', ['id' => $id]));
             } elseif ($modul == "shop") {
-                list($pnum) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid = :id', ['id' => $id]));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid = :id', ['id' => $id]));
             }
-            list($ispid) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_categories WHERE parentid = :id', ['id' => $id]));
+            list($ispid) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_categories WHERE parentid = :id', ['id' => $id]));
             $ordernm = $ordern - 1;
             $ordernp = $ordern + 1;
             $active = ($parentid) ? "<div class=\"sl_green\">"._YES."</div>" : "<div class=\"sl_red\">"._NO."</div>";
@@ -549,8 +549,8 @@ function cat_order(): void {
         $ordern = getVar('get', 'ordern', 'num', 0);
         $id     = getVar('get', 'id',     'num', 0);
         $cid    = getVar('get', 'cid',    'num', 0);
-        $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET ordern = :typ    WHERE id = :id',  ['typ' => $typ,    'id' => $id]);
-        $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :cid', ['ordern' => $ordern, 'cid' => $cid]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :typ    WHERE id = :id',  ['typ' => $typ,    'id' => $id]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :cid', ['ordern' => $ordern, 'cid' => $cid]);
     }
     ajax_cat($modul, 0);
 }
@@ -574,8 +574,8 @@ function catacess(string $name, string $class, string $selected, int $limit): st
         $where  = "WHERE extra = '1'";
         $params = [];
     }
-    $result = $db->sql_query('SELECT id, name, extra FROM '.PREFIX_DB.'_groups '.$where.' ORDER BY extra, points', $params);
-    while (list($id, $gname, $extra) = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery('SELECT id, name, extra FROM '.PREFIX_DB.'_groups '.$where.' ORDER BY extra, points', $params);
+    while (list($id, $gname, $extra) = $db->getSqlRow($result)) {
         $sel = "";
         if ($gids[0] == 2) {
             $massiv = explode(",", $gids[1]);
@@ -615,13 +615,13 @@ function scatacess($auth) {
 function ajax_block(): string {
  global $db, $conf, $afile;
     $fcont  = "";
-    $result = $db->sql_query('SELECT a.bid, a.bkey, a.title, a.url, a.bposition, a.weight, a.active, a.blanguage, a.blockfile, a.view, a.expire, a.action, b.bid, b.bposition, b.weight, c.bid, c.bposition, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bposition = a.bposition AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bposition = a.bposition AND c.weight = a.weight+1) ORDER BY a.bposition, a.weight');
-    while (list($bid, $bkey, $title, $url, $bposition, $weight, $active, $blanguage, $blockfile, $view, $expire, $action, $con1, $bposition1, $weight1, $con2, $bposition2, $weight2) = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery('SELECT a.bid, a.bkey, a.title, a.url, a.bposition, a.weight, a.active, a.blanguage, a.blockfile, a.view, a.expire, a.action, b.bid, b.bposition, b.weight, c.bid, c.bposition, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bposition = a.bposition AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bposition = a.bposition AND c.weight = a.weight+1) ORDER BY a.bposition, a.weight');
+    while (list($bid, $bkey, $title, $url, $bposition, $weight, $active, $blanguage, $blockfile, $view, $expire, $action, $con1, $bposition1, $weight1, $con2, $bposition2, $weight2) = $db->getSqlRow($result)) {
         if (($expire && $expire < time()) || (!$active && $expire)) {
             if ($action == "d") {
-                $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET active = 0, expire = 0 WHERE bid = :bid', ['bid' => $bid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET active = 0, expire = 0 WHERE bid = :bid', ['bid' => $bid]);
             } elseif ($action == "r") {
-                $db->sql_query('DELETE FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]);
+                $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]);
             }
         }
         $weight_minus = $weight - 1;
@@ -676,8 +676,8 @@ function blocks_order(): void {
     $ordern = getVar('get', 'ordern', 'num', 0);
     $id     = getVar('get', 'id',     'num', 0);
     $cid    = getVar('get', 'cid',    'num', 0);
-    $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :typ    WHERE bid = :id',  ['typ' => $typ,    'id' => $id]);
-    $db->sql_query('UPDATE '.PREFIX_DB.'_blocks SET weight = :ordern WHERE bid = :cid', ['ordern' => $ordern, 'cid' => $cid]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :typ    WHERE bid = :id',  ['typ' => $typ,    'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :ordern WHERE bid = :cid', ['ordern' => $ordern, 'cid' => $cid]);
     echo ajax_block();
 }
 
@@ -688,10 +688,10 @@ function fav_aliste(int $obj = 0): string {
     $cid = getVar('get', 'cid', 'num', 1);
     $offset = ($cid-1) * $newlistnum;
     $offset = intval($offset);
-    list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
+    list($fav_num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites'));
     
-    $result = $db->sql_query('SELECT id, modul FROM '.PREFIX_DB.'_favorites ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum));
-    while (list($id, $modul) = $db->sql_fetchrow($result)) $fmassiv[$modul][] = $id;
+    $result = $db->getSqlQuery('SELECT id, modul FROM '.PREFIX_DB.'_favorites ORDER BY id DESC LIMIT '.intval($offset).', '.intval($newlistnum));
+    while (list($id, $modul) = $db->getSqlRow($result)) $fmassiv[$modul][] = $id;
     
     if (is_array($fmassiv)) {
         foreach ($fmassiv as $key => $val) {
@@ -707,36 +707,36 @@ function fav_aliste(int $obj = 0): string {
             $in = implode(', ', $pp);
             $numl = count($val);
             if ($key == "faq") {
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_faq AS n ON (f.fid = n.fid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_faq AS n ON (f.fid = n.fid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "files") {
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_files AS n ON (f.fid = n.lid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_files AS n ON (f.fid = n.lid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "forum") {
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "help") {
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_help AS n ON (f.fid = n.sid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_help AS n ON (f.fid = n.sid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "links") {
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid = n.lid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid = n.lid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "media") {
                 $conf['media'] = $conf['media'] ?? [];
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, n.subtitle, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_media AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $subtitle, $uname) = $db->sql_fetchrow($result)) {
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, n.subtitle, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_media AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $subtitle, $uname) = $db->getSqlRow($result)) {
                     $title = ($subtitle) ? $title." ".urldecode($conf['media']['mdefis'])." ".$subtitle : $title;
                     $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
                 }
             } elseif ($key == "news") {
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_news AS n ON (f.fid = n.sid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_news AS n ON (f.fid = n.sid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "pages") {
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_pages AS n ON (f.fid = n.pid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_pages AS n ON (f.fid = n.pid) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             } elseif ($key == "shop") {
-                $result = $db->sql_query('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
-                while (list($id, $fid, $modul, $title, $uname) = $db->sql_fetchrow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title, u.user_name FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid = n.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                while (list($id, $fid, $modul, $title, $uname) = $db->getSqlRow($result)) $ffmassiv[] = array($id, $fid, $modul, $title, $uname);
             }
         }
         if ($ffmassiv) {
@@ -772,7 +772,7 @@ function fav_aliste(int $obj = 0): string {
 function fav_adel(): void {
  global $db;
     $id = getVar('get', 'id', 'num', 0);
-    $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
     fav_aliste(0);
 }
 
@@ -782,12 +782,12 @@ function ajax_privat(int $obj = 0): string {
     $newlistnum = intval($conf['privat']['anum']);
     $cid    = getVar('get', 'cid', 'num', 1);
     $offset = intval(($cid - 1) * $newlistnum);
-    list($fav_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat'));
+    list($fav_num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat'));
 
-    $result = $db->sql_query('SELECT p.id, p.title, p.content, p.date, p.status, i.user_name, o.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.user_id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.user_id) ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum));
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT p.id, p.title, p.content, p.date, p.status, i.user_name, o.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.user_id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.user_id) ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum));
+    if ($db->getSqlRowCount($result) > 0) {
         $cont = "<table class=\"sl_table_list\"><thead><tr><th>"._ID."</th><th>"._TITLE."</th><th>"._PRSE."</th><th>"._PRRE."</th><th>"._DATE."</th><th>"._STATUS."</th><th>"._FUNCTIONS."</th></tr></thead><tbody>";
-        while (list($id, $title, $content, $date, $status, $user_re, $user_se) = $db->sql_fetchrow($result)) {
+        while (list($id, $title, $content, $date, $status, $user_re, $user_se) = $db->getSqlRow($result)) {
             $unre = ($user_re) ? user_info($user_re) : _ANONYM;
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
@@ -816,7 +816,7 @@ function ajax_privat(int $obj = 0): string {
 function ajax_privat_del(): void {
  global $db;
     $id = getVar('get', 'id', 'num', 0);
-    $db->sql_query('DELETE FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $id]);
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $id]);
     ajax_privat(0);
 }
 
@@ -909,9 +909,9 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
         $where  = "modul = :modul AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
     }
     $cont   = "<select name=\"".$selectName."\" class=\"".$class."\"><option value=\"0\">"._NO."</option>";
-    $result = $db->sql_query('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $params);
-    if ($db->sql_numrows($result) > 0) {
-        while (list($id, $title) = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $params);
+    if ($db->getSqlRowCount($result) > 0) {
+        while (list($id, $title) = $db->getSqlRow($result)) {
             $sel   = ($selectedId == $id) ? " selected" : "";
             $cont .= "<option value=\"".$id."\"".$sel.">".$title."</option>";
         }

@@ -19,8 +19,8 @@ function admins(): void {
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._URL.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE.'</th><th>'._IP.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-    $result = $db->sql_query('SELECT id, name, title, url, email, lang, ip, regdate, lastvisit FROM '.PREFIX_DB.'_admins ORDER BY id');
-    while ([$id, $name, $title, $url, $email, $lang, $ip, $regdate, $lastvisit] = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery('SELECT id, name, title, url, email, lang, ip, regdate, lastvisit FROM '.PREFIX_DB.'_admins ORDER BY id');
+    while ([$id, $name, $title, $url, $email, $lang, $ip, $regdate, $lastvisit] = $db->getSqlRow($result)) {
         $lang = (!$lang) ? _ALL : $lang;
         $cont .= '<tr><td>'.title_tip(_REG.': '.format_time($regdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($lastvisit, _TIMESTRING)).$name.'</td><td>'.$title.'</td><td>'.domain($url).'</td><td>'.mailto($email).'</td><td>'.deflang($lang).'</td><td>'.user_geo_ip($ip, 4).'</td>'
         .'<td>'.add_menu('<a href="'.$afile.'.php?name=admins&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=admins&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
@@ -35,13 +35,13 @@ function add(): void {
     global $db, $afile, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->sql_query('SELECT id, name, title, url, email, super, editor, smail, modules, lang FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
-        [$aid, $name, $title, $url, $email, $super, $editor, $smail, $modules, $lang] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT id, name, title, url, email, super, editor, smail, modules, lang FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
+        [$aid, $name, $title, $url, $email, $super, $editor, $smail, $modules, $lang] = $db->getSqlRow($result);
         $modules = $modules ?? '';
         $names = getAdminModuleNames($modules);
         $new_modules = implode(',', $names);
         if ($new_modules !== $modules) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_admins SET modules = :modules WHERE id = :id', ['modules' => $new_modules, 'id' => $aid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET modules = :modules WHERE id = :id', ['modules' => $new_modules, 'id' => $aid]);
             $modules = $new_modules;
         }
     } else {
@@ -127,9 +127,9 @@ function save(): void {
     $send = '';
     if (!$aid && !$pwd && !$pwd2) $stop[] = _NOPASS;
     if ($name) {
-        [$adid, $adname] = $db->sql_fetchrow($db->sql_query('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name]));
+        [$adid, $adname] = $db->getSqlRow($db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_admins WHERE name = :name', ['name' => $name]));
         if ($aid != $adid && $name == $adname) $stop[] = _USEREXIST;
-        [$adid, $ademail] = $db->sql_fetchrow($db->sql_query('SELECT id, email FROM '.PREFIX_DB.'_admins WHERE email = :email', ['email' => $email]));
+        [$adid, $ademail] = $db->getSqlRow($db->getSqlQuery('SELECT id, email FROM '.PREFIX_DB.'_admins WHERE email = :email', ['email' => $email]));
         if ($aid != $adid && $email == $ademail) $stop[] = _ERROR_EMAIL;
     } else {
         $stop[] = _ERROR_ALL;
@@ -141,17 +141,17 @@ function save(): void {
         if ($aid) {
             if ($pwd && $pwd == $pwd2) {
                 $newpass = md5_salt($pwd);
-                $db->sql_query('UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, pwd = :pwd, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, pwd = :pwd, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
                     'name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pwd' => $newpass, 'super' => $super, 'editor' => $editor, 'smail' => $smail, 'modules' => $modules, 'lang' => $lang, 'id' => $aid
                 ]);
             } else {
-                $db->sql_query('UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, super = :super, editor = :editor, smail = :smail, modules = :modules, lang = :lang WHERE id = :id', [
                     'name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'super' => $super, 'editor' => $editor, 'smail' => $smail, 'modules' => $modules, 'lang' => $lang, 'id' => $aid
                 ]);
             }
         } else {
             $password = md5_salt($pwd);
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_admins (name, title, url, email, pwd, super, editor, smail, modules, lang, regdate) VALUES (:name, :title, :url, :email, :pwd, :super, :editor, :smail, :modules, :lang, now())', [
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_admins (name, title, url, email, pwd, super, editor, smail, modules, lang, regdate) VALUES (:name, :title, :url, :email, :pwd, :super, :editor, :smail, :modules, :lang, now())', [
                 'name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pwd' => $password, 'super' => $super, 'editor' => $editor, 'smail' => $smail, 'modules' => $modules, 'lang' => $lang
             ]);
         }
@@ -172,7 +172,7 @@ function del(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
     if ($id) {
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id]);
     }
     setRedirect($afile.'.php?name=admins');
 }

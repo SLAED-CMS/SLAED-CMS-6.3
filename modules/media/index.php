@@ -44,13 +44,13 @@ function media(): void {
     } elseif ($ncat) {
         $field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
             $orderby = ($op) ? (($op == 'best') ? 'IFNULL((m.totalvotes/NULLIF(m.votes,0)),0) DESC' : 'IFNULL((m.hits/NULLIF((TO_DAYS(NOW()) - TO_DAYS(m.date)),0)),0) DESC') : 'm.date DESC';
-        [$ctitle] = $db->sql_fetchrow($db->sql_query('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
+        [$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
         $order = "WHERE (m.cid = :ncat1 OR c.parentid = :ncat2) AND m.date <= NOW() AND m.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat2' => $ncat];
         $catid = [];
-        $result = $db->sql_query('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
-        while ([$caid] = $db->sql_fetchrow($result)) $catid[] = $caid;
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+        while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
         unset($result);
         if (isArray($catid)) {
             $caton = 1;
@@ -80,9 +80,9 @@ function media(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->sql_query('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.description, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.totalcom, m.hits, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
-    if ($db->sql_numrows($result) > 0) {
-        while([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result)) {
+    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.description, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.totalcom, m.hits, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    if ($db->getSqlRowCount($result) > 0) {
+        while([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $cdesc = ($cdesc) ? $cdesc : $ctitle;
             $ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
             $cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
@@ -124,13 +124,13 @@ function liste(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num-1) * $listnum;
     $offset = intval($offset);
-    $result = $db->sql_query('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, c.title, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid=u.user_id) '.$order.' '.$cwhere.' ORDER BY date DESC LIMIT '.$offset.', '.$listnum, $params);
+    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, c.title, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid=u.user_id) '.$order.' '.$cwhere.' ORDER BY date DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
     $cont = navigate(_LIST);
-    if ($db->sql_numrows($result) > 0) {
+    if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['media']['letter']) ? letter($conf['name']) : '';
         $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
-        while([$id, $cid, $uname, $title, $subtitle, $time, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+        while([$id, $cid, $uname, $title, $subtitle, $time, $ctitle, $nick] = $db->getSqlRow($result)) {
             $stitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
             $title = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" title="'.$stitle.'">'.cutstr($stitle, 40).'</a> '.new_graphic($time);
             $ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$ctitle.'">'.cutstr($ctitle, 15).'</a>' : _NO;
@@ -152,10 +152,10 @@ function view(): void {
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'text');
     $cwhere = catmids($conf['name'], 'm.cid');
-    $result = $db->sql_query('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.hits, m.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.id = :id AND m.date <= NOW() AND m.status != \'0\' '.$cwhere, ['id' => $id]);
-    if ($db->sql_numrows($result) == 1) {
-        $db->sql_query('UPDATE '.PREFIX_DB.'_media SET hits = hits+1 WHERE id = :id', ['id' => $id]);
-        [$cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $date, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick] = $db->sql_fetchrow($result);
+    $result = $db->getSqlQuery('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.hits, m.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.id = :id AND m.date <= NOW() AND m.status != \'0\' '.$cwhere, ['id' => $id]);
+    if ($db->getSqlRowCount($result) == 1) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET hits = hits+1 WHERE id = :id', ['id' => $id]);
+        [$cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $date, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result);
         $ptitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
         $seotitle = $ptitle;
         $seoctitle = $ctitle;
@@ -227,12 +227,12 @@ function view(): void {
         $cont .= setTemplateBasic('basic-media-view', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => search_color($ptitle, $word), '{%hits%}' => '', '{%reads%}' => $reads, '{%post%}' => $post, '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%cimg%}' => $cimg, '{%text%}' => search_color(bb_decode($description, $conf['name']), $word), '{%year%}' => $year, '{%director%}' => $director, '{%roles%}' => $roles, '{%createdby%}' => $createdby, '{%duration%}' => $duration, '{%lang%}' => $lang, '{%format%}' => $format, '{%quality%}' => $quality, '{%size%}' => $size, '{%released%}' => $released, '{%note%}' => $note, '{%links_label%}' => ($mlinks ?? '') ? _MURLS : '', '{%mlinks%}' => $mlinks ?? '', '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%download%}' => '', '{%broken%}' => $broc]);
         if ($conf['media']['link']) {
             $limit = intval($conf['media']['linknum']);
-            [$count] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
+            [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
-                $result = $db->sql_query('SELECT id, title, subtitle, description, date FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\' ORDER BY date DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
+                $result = $db->getSqlQuery('SELECT id, title, subtitle, description, date FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\' ORDER BY date DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
                 $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
-                while([$aid, $title, $subtitle, $hometext, $time] = $db->sql_fetchrow($result)) {
+                while([$aid, $title, $subtitle, $hometext, $time] = $db->getSqlRow($result)) {
                     $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
                     $adate = ($conf['media']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
                     $atext = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
@@ -380,11 +380,11 @@ function send(): void {
         if (!$description) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-        if ($db->sql_numrows($db->sql_query('SELECT title, subtitle FROM '.PREFIX_DB.'_media WHERE title = :title AND subtitle = :subtitle', ['title' => $title, 'subtitle' => $subtitle])) > 0) $stop[] = _MEDIAEXIST;
+        if ($db->getSqlRowCount($db->getSqlQuery('SELECT title, subtitle FROM '.PREFIX_DB.'_media WHERE title = :title AND subtitle = :subtitle', ['title' => $title, 'subtitle' => $subtitle])) > 0) $stop[] = _MEDIAEXIST;
         if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
             $postid = (is_user()) ? intval($user[0]) : '';
             $uname = (!is_user()) ? $postname : '';
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
             update_points(25);
             $puname = (is_user()) ? $user[1] : $postname;
             addmail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
@@ -403,7 +403,7 @@ function broken(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num');
     if ($conf['media']['broc'] == '1' && $id) {
-        $db->sql_query('UPDATE '.PREFIX_DB.'_media SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCMEDIA]);
         echo navigate(_BROCMEDIA).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEM]);
         setFoot();

@@ -21,16 +21,16 @@ function money(): void {
     $anum = $conf['money']['anum'] ?? 25;
     $anump = $conf['money']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
-    $result = $db->sql_query('SELECT id, sum, mail, info, com, ip, agent, date, status FROM '.PREFIX_DB.'_money ORDER BY date DESC LIMIT '.$offset.', '.$anum);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT id, sum, mail, info, com, ip, agent, date, status FROM '.PREFIX_DB.'_money ORDER BY date DESC LIMIT '.$offset.', '.$anum);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
-        [$numstories] = $db->sql_fetchrow($db->sql_query('SELECT Count(id) FROM '.PREFIX_DB.'_money'));
+        [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_money'));
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._SUM.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         $form = explode(',', $conf['money']['form'] ?? '');
-        while ([$id, $sum, $mail, $info, $com, $ip, $agent, $date, $status] = $db->sql_fetchrow($result)) {
+        while ([$id, $sum, $mail, $info, $com, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $info = explode('|', $info);
             $i = 0;
@@ -65,8 +65,8 @@ function add(): void {
         $id = getVar('req', 'id', 'num', 0);
     $mid = $id;
     if ($mid) {
-        $result = $db->sql_query('SELECT sum, mail, info, com, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $mid]);
-        [$sum, $mail, $info, $com, $date] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT sum, mail, info, com, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $mid]);
+        [$sum, $mail, $info, $com, $date] = $db->getSqlRow($result);
         $info = explode('|', $info);
     } else {
         $mid = getVar('post', 'mid', 'num', 0);
@@ -124,11 +124,11 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         if ($mid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_money SET sum = :sum, mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['sum' => $sum, 'mail' => $mail, 'info' => $list, 'com' => $com, 'date' => $date, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_money SET sum = :sum, mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['sum' => $sum, 'mail' => $mail, 'info' => $list, 'com' => $com, 'date' => $date, 'mid' => $mid]);
         } else {
             $ip = getip();
             $agent = getagent();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['sum' => $sum, 'mail' => $mail, 'info' => $list, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['sum' => $sum, 'mail' => $mail, 'info' => $list, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
         }
         setRedirect($afile.'.php?name=money');
     } elseif ($posttype === 'delete') {
@@ -141,7 +141,7 @@ function save(): void {
 function del(int $did = 0): void {
     global $db, $afile;
     $id = $did ? $did : getVar('req', 'id', 'num', 0);
-    if ($id) $db->sql_query('DELETE FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]);
+    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=money');
 }
 
@@ -171,7 +171,7 @@ function billing(string $title, string $autor, string $infos, string $num, strin
 function rechn(): void {
     global $db, $conf;
         $id = getVar('get', 'id', 'num', 0);
-    [$sum, $mail, $info, $com, $ip, $agent, $date] = $db->sql_fetchrow($db->sql_query('SELECT sum, mail, info, com, ip, agent, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
+    [$sum, $mail, $info, $com, $ip, $agent, $date] = $db->getSqlRow($db->getSqlQuery('SELECT sum, mail, info, com, ip, agent, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
     setThemeInclude();
     $defis = urldecode($conf['defis'] ?? '%3E');
     $title = _RECHN.' '.$defis.' '._MONEY.' '.$defis.' '.($conf['sitename'] ?? '');
@@ -197,9 +197,9 @@ function active(): void {
     global $db, $afile, $conf;
         $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
-    $db->sql_query('UPDATE '.PREFIX_DB.'_money SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_money SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
     if ($act) {
-        [$mail] = $db->sql_fetchrow($db->sql_query('SELECT mail FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
+        [$mail] = $db->getSqlRow($db->getSqlQuery('SELECT mail FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
         $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._MONEY;
         $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';

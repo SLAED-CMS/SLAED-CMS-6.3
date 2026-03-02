@@ -16,10 +16,10 @@ function voting(): void {
 	$offset = ($num - 1) * $conf['voting']['num'];
 	setHead(['title' => _VOTING]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _VOTING]);
-	$result = $db->sql_query('SELECT id, title, answer, date, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
-	if ($db->sql_numrows($result) > 0) {
+	$result = $db->getSqlQuery('SELECT id, title, answer, date, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
+	if ($db->getSqlRowCount($result) > 0) {
 		$cont .= setTemplateBasic('voting-home-open', ['{%id%}' => _ID, '{%title%}' => _TITLE, '{%comm%}' => cutstr(_COMMENTS, 4, 1), '{%votes%}' => cutstr(_VOTES, 3, 1)]);
-		while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ] = $db->sql_fetchrow($result)) {
+		while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ] = $db->getSqlRow($result)) {
 			$title = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle]).'" title="'.htmlspecialchars($stitle, ENT_QUOTES).'">'.cutstr($stitle, 60).'</a> '.new_graphic($date);
 			$comm = ($acomm && $comm) ? $comm : _NO;
 			$vote = array_sum(explode('|', $answer));
@@ -40,9 +40,9 @@ function voting(): void {
 function view(): void {
 	global $db, $conf;
 	$id = getVar('get', 'id', 'num');
-	$result = $db->sql_query('SELECT title, date, acomm FROM '.PREFIX_DB.'_voting WHERE id = :id AND modul = \'\' AND date <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
-	if ($db->sql_numrows($result) > 0) {
-		[$title, $date, $acomm] = $db->sql_fetchrow($result);
+	$result = $db->getSqlQuery('SELECT title, date, acomm FROM '.PREFIX_DB.'_voting WHERE id = :id AND modul = \'\' AND date <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
+	if ($db->getSqlRowCount($result) > 0) {
+		[$title, $date, $acomm] = $db->getSqlRow($result);
 		setHead([
 			'title' => $title,
 			'ctitle' => _VOTING,

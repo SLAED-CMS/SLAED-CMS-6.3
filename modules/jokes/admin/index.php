@@ -30,11 +30,11 @@ function jokes(): void {
         $refer = '';
         $cont = navi(0, 0, 0, 0);
     }
-    $result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.status = :status ORDER BY j.date DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.ip_sender, c.title, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.status = :status ORDER BY j.date DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$jokeid, $uname, $date, $title, $cat, $ip, $ctitle, $nick] = $db->sql_fetchrow($result)) {
+        while ([$jokeid, $uname, $date, $title, $cat, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cat) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
@@ -66,8 +66,8 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $jokeid = $id;
     if ($jokeid) {
-        $result = $db->sql_query('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.jokeid = :jokeid', ['jokeid' => $jokeid]);
-        [$jokeid, $uname, $date, $title, $cat, $joke, $nick] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.jokeid = :jokeid', ['jokeid' => $jokeid]);
+        [$jokeid, $uname, $date, $title, $cat, $joke, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
         $jokeid = getVar('post', 'jokeid', 'num', 0);
@@ -106,16 +106,16 @@ function save(): void {
     if (!$title) $stop[] = _CERROR;
     if (!$joke) $stop[] = _CERROR1;
     if (!$postname) $stop[] = _CERROR3;
-    if (!$jokeid && $db->sql_numrows($db->sql_query('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
+    if (!$jokeid && $db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_jokes WHERE title = :title', ['title' => $title])) > 0) $stop[] = _JOKEEXIST;
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
         if ($jokeid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, date = :date, title = :title, cat = :cat, joke = :joke, status = \'1\' WHERE jokeid = :jokeid', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, date = :date, title = :title, cat = :cat, joke = :joke, status = \'1\' WHERE jokeid = :jokeid', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
         } else {
             $ip = getip();
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_jokes (uid, name, date, title, cat, joke, ip_sender, status) VALUES (:uid, :name, :date, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (uid, name, date, title, cat, joke, ip_sender, status) VALUES (:uid, :name, :date, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);
         }
         setRedirect($afile.'.php?name=jokes');
     } elseif ($posttype === 'delete') {
@@ -129,8 +129,8 @@ function del(int $fid = 0): void {
     global $db, $afile;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     if ($id) {
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'jokes\'', ['id' => $id]);
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_jokes WHERE jokeid = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'jokes\'', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_jokes WHERE jokeid = :id', ['id' => $id]);
     }
     setRedirect($afile.'.php?name=jokes');
 }

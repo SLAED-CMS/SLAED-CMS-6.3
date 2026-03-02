@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-class sql_db {
+class Database {
     public ?PDO $sqlconnid = null;
     public PDOStatement|false|null $qresult = null;
     public array $qrow = [];
@@ -30,7 +30,7 @@ class sql_db {
     }
 
     # Universal SQL Interpolator. Named (:name) and positional (?) placeholders
-    private function sql_interpol(string $query, array $params): string {
+    private function filterSqlQuery(string $query, array $params): string {
         if (empty($params) || !$query) return $query;
         if (preg_match_all('/:[a-zA-Z0-9_]+/', $query, $matches)) {
             $norm = [];
@@ -41,21 +41,21 @@ class sql_db {
             uksort($norm, function($a, $b) { return strlen($b) <=> strlen($a); });
             foreach ($norm as $ph => $val) {
                 $pattern = '/'.preg_quote($ph, '/').'(?![a-zA-Z0-9_])/u';
-                $query = preg_replace($pattern, $this->sql_quote($val), $query, 1);
+                $query = preg_replace($pattern, $this->filterSqlValue($val), $query, 1);
             }
         }
         if (strpos($query, '?') !== false) {
             $vals = array_values($params);
             foreach ($vals as $v) {
                 if (strpos($query, '?') === false) break;
-                $query = preg_replace('/\?/', $this->sql_quote($v), $query, 1);
+                $query = preg_replace('/\?/', $this->filterSqlValue($v), $query, 1);
             }
         }
         return $query;
     }
 
     # Quote value for SQL output
-    private function sql_quote(mixed $value): string {
+    private function filterSqlValue(mixed $value): string {
         if (is_null($value)) return 'NULL';
         if (is_bool($value)) return $value ? '1' : '0';
         if (is_int($value) || is_float($value)) return (string)$value;
@@ -67,19 +67,19 @@ class sql_db {
     }
 
     # Public wrapper for safe SQL value quoting (used outside this class, e.g. backup)
-    public function sql_value(mixed $value): string {
-        return $this->sql_quote($value);
+    public function getSqlValue(mixed $value): string {
+        return $this->filterSqlValue($value);
     }
 
     # Closes the connection
-    function sql_close(): bool {
+    function getSqlClose(): bool {
         $this->sqlconnid = null;
         return true;
     }
 
     # Executes SQL query (raw or with parameters)
     # Supports: Named (:name) or Positional (?) placeholders
-    function sql_query(string $query = '', array $params = []): PDOStatement|false {
+    function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
  global $conf;
         if ($this->qresult) unset($this->qresult);
         if (!$query) return false;
@@ -110,7 +110,7 @@ class sql_db {
         $cvar = explode(',', $conf['variables']);
         if ($cvar[8]) {
             $color = ($ttime > 0.01) ? 'sl_red' : 'sl_green';
-            $iquery = htmlspecialchars($this->sql_interpol($query, $params));
+            $iquery = htmlspecialchars($this->filterSqlQuery($query, $params));
             $this->qtime .= '<span class="'.$color.'">'.$ttime.'</span> '._SEC.'. - ['.$type.'] - '.$iquery.';';
         }
         if ($this->qresult) {
@@ -120,13 +120,13 @@ class sql_db {
             return $this->qresult;
         } else {
             if ($conf['security']['error_log']) {
-                $error = $this->sql_error();
+                $error = $this->getSqlError();
                 $errmsg = htmlspecialchars($error['message']);
                 $errinfo = $error['sqlstate'].' / '.$error['code'];
                 $this->qtime .= ' <span class="sl_red">'._ERROR.': '.$errinfo.' - '.$errmsg.'</span><br>';
                 if (function_exists('error_sql_log')) {
                     $loginfo = $ttime.' '._SEC.'. - ['.$type.'] - '.$error['sqlstate'].'/'.$error['code'];
-                    error_sql_log($loginfo, $error['message'], $this->sql_interpol($query, $params));
+                    error_sql_log($loginfo, $error['message'], $this->filterSqlQuery($query, $params));
                 }
             }
             return false;
@@ -134,38 +134,38 @@ class sql_db {
     }
 
     # Returns the number of rows (not reliable for SELECT with MySQL)
-    function sql_numrows(PDOStatement|int $query_id = 0): int|false {
+    function getSqlRowCount(PDOStatement|int $query_id = 0): int|false {
         if (!$query_id) $query_id = $this->qresult;
         return ($query_id) ? $query_id->rowCount() : false;
     }
 
     # Returns number of affected rows (INSERT/UPDATE/DELETE)
-    function sql_affectedrows(): int|false {
+    function getSqlAffected(): int|false {
         return ($this->qresult) ? $this->qresult->rowCount() : false;
     }
 
     # Returns number of columns
-    function sql_numfields(PDOStatement|int $query_id = 0): int|false {
+    function getSqlFieldCount(PDOStatement|int $query_id = 0): int|false {
         if (!$query_id) $query_id = $this->qresult;
         return ($query_id) ? $query_id->columnCount() : false;
     }
 
     # Returns column name by offset
-    function sql_fieldname(int $offset, PDOStatement|int $query_id = 0): string|false {
+    function getSqlFieldName(int $offset, PDOStatement|int $query_id = 0): string|false {
         if (!$query_id) $query_id = $this->qresult;
         $meta = $query_id->getColumnMeta($offset);
         return $meta['name'] ?? false;
     }
 
     # Returns column type
-    function sql_fieldtype(int $offset, PDOStatement|int $query_id = 0): string {
+    function getSqlFieldType(int $offset, PDOStatement|int $query_id = 0): string {
         if (!$query_id) $query_id = $this->qresult;
         $meta = $query_id->getColumnMeta($offset);
         return $meta['native_type'] ?? 'unknown';
     }
 
     # Fetches a single row
-    function sql_fetchrow(PDOStatement|int $query_id = 0): array|false {
+    function getSqlRow(PDOStatement|int $query_id = 0): array|false {
         if (!$query_id) $query_id = $this->qresult;
         if ($query_id) {
             $this->qrow[$this->qid] = $query_id->fetch(PDO::FETCH_BOTH);
@@ -175,7 +175,7 @@ class sql_db {
     }
 
     # Fetches all rows
-    function sql_fetchrowset(PDOStatement|int $query_id = 0): array|false {
+    function getSqlRows(PDOStatement|int $query_id = 0): array|false {
         if (!$query_id) $query_id = $this->qresult;
         if ($query_id) {
             $result = $query_id->fetchAll(PDO::FETCH_BOTH);
@@ -186,7 +186,7 @@ class sql_db {
     }
 
     # Fetches a single field from a query result. Safer: avoids unexpected cursor moves
-    function sql_fetchfield(string|int $field, int $rownum = 0, PDOStatement|int $query_id = 0): mixed {
+    function getSqlField(string|int $field, int $rownum = 0, PDOStatement|int $query_id = 0): mixed {
         if (!$query_id) $query_id = $this->qresult;
         if (!$query_id) return false;
         if ($rownum === 0 && !empty($this->qrow[$this->qid])) return $this->qrow[$this->qid][$field] ?? false;
@@ -201,17 +201,17 @@ class sql_db {
     }
 
     # Rowseek (PDO does not support direct seek)
-    function sql_rowseek(int $rownum, PDOStatement|int $query_id = 0): bool {
+    function getSqlSeek(int $rownum, PDOStatement|int $query_id = 0): bool {
         return false;
     }
 
     # Last insert ID
-    function sql_nextid(): string|false {
+    function getSqlLastId(): string|false {
         return ($this->sqlconnid) ? $this->sqlconnid->lastInsertId() : false;
     }
 
     # Free result memory
-    function sql_freeresult(PDOStatement|int $query_id = 0): bool {
+    function getSqlFree(PDOStatement|int $query_id = 0): bool {
         if (!$query_id) $query_id = $this->qresult;
         if ($query_id && $query_id instanceof PDOStatement) {
             unset($this->qrow[$this->qid], $this->qrowset[$this->qid]);
@@ -223,7 +223,7 @@ class sql_db {
     }
 
     # Last error information (robust)
-    function sql_error(): array {
+    function getSqlError(): array {
         if ($this->laste instanceof PDOException) {
             $ei = $this->laste->errorInfo ?? null;
             if (is_array($ei) && isset($ei[0])) {

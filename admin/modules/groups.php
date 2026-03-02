@@ -16,18 +16,18 @@ function groups(): void {
     global $db, $afile, $conf;
     head();
     $cont = navi(0, 0, 0, 0);
-    $result = $db->sql_query('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
-    if ($db->sql_numrows($result) > 0) {
+    $result = $db->getSqlQuery('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
+    if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th class="{sorter: false}">'._RANK.'</th><th>'._GROUP.'</th><th>'._POINTS.'</th><th>'.cutstr(_USERSCOUNT, 5, 1).'</th><th>'.cutstr(_SPEC, 4, 1).'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->sql_fetchrow($result)) {
+        while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
             if (intval($extra)) {
                 $extra = _YES;
-                [$users_num] = $db->sql_fetchrow($db->sql_query('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]));
+                [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]));
                 $userlink = $afile.'.php?op=users_show&amp;search=6&amp;chng_user='.$grid;
             } else {
                 $extra = _NO;
-                [$users_num] = $db->sql_fetchrow($db->sql_query('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]));
+                [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]));
                 $userlink = $afile.'.php?op=users_show&amp;search=7&amp;chng_user='.$points;
             }
             $cont .= '<tr>'
@@ -52,8 +52,8 @@ function add(): void {
     global $db, $afile, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->sql_query('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
-        [$gid, $grname, $description, $points, $extra, $rank, $color] = $db->sql_fetchrow($result);
+        $result = $db->getSqlQuery('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
+        [$gid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result);
         $check = ($extra) ? ' checked' : '';
     } else {
         $gid = getVar('post', 'gid', 'num');
@@ -109,9 +109,9 @@ function save(): void {
         $points = ($grextra == '1') ? '0' : $points;
         $rank = str_replace('templates/'.$conf['theme'].'/images/ranks/', '', $rank);
         if ($gid) {
-            $db->sql_query('UPDATE '.PREFIX_DB.'_groups SET name = :name, description = :description, points = :points, extra = :extra, rank = :rank, color = :color WHERE id = :id', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $gid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_groups SET name = :name, description = :description, points = :points, extra = :extra, rank = :rank, color = :color WHERE id = :id', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $gid]);
         } else {
-            $db->sql_query('INSERT INTO '.PREFIX_DB.'_groups (name, description, points, extra, rank, color) VALUES (:name, :description, :points, :extra, :rank, :color)', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_groups (name, description, points, extra, rank, color) VALUES (:name, :description, :points, :extra, :rank, :color)', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
         }
         setRedirect($afile.'.php?name=groups');
     } else {
@@ -155,7 +155,7 @@ function del(): void {
     global $db, $afile, $conf;
     $id = getVar('get', 'id', 'num');
     if ($id) {
-        $db->sql_query('DELETE FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
         $changed = false;
         foreach ($conf['modules'] as $name => $info) {
             if ((int)($info['group'] ?? 0) === $id) {

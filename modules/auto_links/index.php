@@ -41,12 +41,12 @@ function autolink(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->sql_query('SELECT id, sitename, description, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
+    $result = $db->getSqlQuery('SELECT id, sitename, description, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home) $cont .= navigate($ntitle);
-    if ($db->sql_numrows($result) > 0) {
-        while ([$id, $sitename, $description, $hits, $outs, $time] = $db->sql_fetchrow($result)) {
+    if ($db->getSqlRowCount($result) > 0) {
+        while ([$id, $sitename, $description, $hits, $outs, $time] = $db->getSqlRow($result)) {
             $title = search_color($sitename, $word).' '.new_graphic($time);
             $read = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" target="_blank" title="'.$sitename.'" class="sl_but_read">'._DOWNLLINK.'</a>';
             $date = '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>';
@@ -67,11 +67,11 @@ function view(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num');
     if ($id) {
-        [$link] = $db->sql_fetchrow($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
+        [$link] = $db->getSqlRow($db->getSqlQuery('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
         if (!$link) {
             setRedirect('index.php?name='.$conf['name']);
         }
-        $db->sql_query('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
         update_points(4);
         setRedirect($link);
     } else {
@@ -125,11 +125,11 @@ function send(): void {
     if (!$site) $stop[] = _CERROR4;
     checkemail($mail);
     if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-    if ($db->sql_numrows($db->sql_query('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE link = :sitelink', ['sitelink' => $site])) > 0) $stop[] = _LINKEXIST;
+    if ($db->getSqlRowCount($db->getSqlQuery('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE link = :sitelink', ['sitelink' => $site])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         setHead(['title' => _ADD]);
         $cont = navigate(_ADD);
-        $db->sql_query('INSERT INTO '.PREFIX_DB.'_auto_links VALUES (NULL, :sitename, :description, :sitelink, :adminemail, 0, 0, NOW())', ['sitename' => $name, 'description' => $desc, 'sitelink' => $site, 'adminemail' => $mail]);
+        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_auto_links VALUES (NULL, :sitename, :description, :sitelink, :adminemail, 0, 0, NOW())', ['sitename' => $name, 'description' => $desc, 'sitelink' => $site, 'adminemail' => $mail]);
         $puname = (is_user()) ? $user[1] : '';
         addmail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_OK]);
