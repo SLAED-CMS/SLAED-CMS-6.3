@@ -170,9 +170,8 @@ function billing(string $title, string $autor, string $infos, string $num, strin
 
 function rechn(): void {
     global $db, $conf;
-        $id = getVar('get', 'id', 'num', 0);
+    $id = getVar('get', 'id', 'num', 0);
     [$sum, $mail, $info, $com, $ip, $agent, $date] = $db->getSqlRow($db->getSqlQuery('SELECT sum, mail, info, com, ip, agent, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
-    setThemeInclude();
     $defis = urldecode($conf['defis'] ?? '%3E');
     $title = _RECHN.' '.$defis.' '._MONEY.' '.$defis.' '.($conf['sitename'] ?? '');
     $form = explode(',', $conf['money']['form'] ?? '');
