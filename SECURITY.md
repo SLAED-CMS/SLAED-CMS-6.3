@@ -1,7 +1,7 @@
 # Security Policy
 
 > **SLAED CMS Security Information**
-> *Last updated: February 2026*
+> *Last updated: March 2026*
 
 ---
 
@@ -63,7 +63,7 @@ All database queries use **prepared statements** with named placeholders:
 
 ```php
 // Safe - Using prepared statements
-$db->sql_query(
+$db->getSqlQuery(
     'SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id',
     ['id' => $id]
 );
@@ -201,6 +201,9 @@ location /storage {
 - [x] Updated to PHP 8.4 security features
 - [x] Deprecated insecure functions removed (99 functions)
 - [x] 1282 legacy code constructs updated
+- [x] `adm_info()` replaced by `getAdminInfo()` — no params, auto-detects info file from `$_GET['name']`
+- [x] Admin info file structure: flat `admin/info/{module}-{locale}.html` → subdirectory `admin/info/{module}/{locale}.html`
+- [x] Database class `sql_db` renamed to `Database`; all 15 methods renamed to `getSql*` prefix (`getSqlQuery()`, `getSqlRow()`, `getSqlRowCount()`, …)
 
 **Logging & Error Handling Hardening (`core/security.php`):**
 

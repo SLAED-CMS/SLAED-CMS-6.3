@@ -1,7 +1,7 @@
 # Upgrading SLAED CMS
 
 > **Migration Guide for SLAED CMS**
-> *Last updated: February 2026*
+> *Last updated: March 2026*
 
 This document provides instructions for upgrading SLAED CMS between versions.
 
@@ -233,18 +233,22 @@ setRedirect($afile.'.php?name=modules');
 
 ##### Admin Help Files
 
-Per-module info files have been moved to per-module subdirectories:
+Admin panel info files were reorganized from flat filenames to subdirectories:
 
 | Old path | New path |
 |----------|----------|
-| `modules/news/admin/info/en.html` | `modules/news/admin/info/english.html` |
-| `modules/news/admin/info/de.html` | `modules/news/admin/info/german.html` |
-| `modules/news/admin/info/fr.html` | `modules/news/admin/info/french.html` |
-| `modules/news/admin/info/pl.html` | `modules/news/admin/info/polish.html` |
-| `modules/news/admin/info/ru.html` | `modules/news/admin/info/russian.html` |
-| `modules/news/admin/info/uk.html` | `modules/news/admin/info/ukrainian.html` |
+| `admin/info/news/news-en.html` | `admin/info/news/en.html` |
+| `admin/info/news/news-de.html` | `admin/info/news/de.html` |
+| `admin/info/news/news-fr.html` | `admin/info/news/fr.html` |
+| `admin/info/news/news-pl.html` | `admin/info/news/pl.html` |
+| `admin/info/news/news-ru.html` | `admin/info/news/ru.html` |
+| `admin/info/news/news-uk.html` | `admin/info/news/uk.html` |
 
-The same rename pattern applies to all modules under `modules/*/admin/info/`.
+The pattern applies to all admin module info files under `admin/info/*/`.
+Locale codes remain 2-letter (`en`, `de`, `fr`, `pl`, `ru`, `uk`).
+
+The helper `getAdminInfo()` auto-detects the correct path from `$_GET['name']` and also checks
+`modules/{name}/admin/info/{locale}.html` for frontend module admin areas.
 
 #### SQL Query Changes
 
@@ -252,10 +256,10 @@ All SQL queries now require prepared statements:
 
 ```php
 // Old (6.2.x) - INSECURE
-$db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
+// $db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
 
 // New (6.3.x) - SECURE
-$db->sql_query('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
+$db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
 ```
 
 #### Input Validation
@@ -294,6 +298,42 @@ Calls with these names are silently ignored.
 
 `getConfig()` explicitly skips: `system.php`, `header.php`, `chmod.php`, `local.php`.
 These files are loaded separately by the system and must not return config arrays.
+
+##### Renamed: Database class and all SQL methods
+
+The PDO wrapper class `sql_db` has been renamed to `Database`.
+All public methods now use the `getSql*` prefix:
+
+| Old method (6.2.x) | New method (6.3.x) |
+|--------------------|---------------------|
+| `new sql_db(...)` | `new Database(...)` |
+| `$db->sql_query($sql, $params)` | `$db->getSqlQuery($sql, $params)` |
+| `$db->sql_fetchrow($r)` | `$db->getSqlRow($r)` |
+| `$db->sql_fetchrowset($r)` | `$db->getSqlRows($r)` |
+| `$db->sql_fetchfield($f, $n)` | `$db->getSqlField($f, $n)` |
+| `$db->sql_numrows($r)` | `$db->getSqlRowCount($r)` |
+| `$db->sql_affectedrows()` | `$db->getSqlAffected()` |
+| `$db->sql_numfields($r)` | `$db->getSqlFieldCount($r)` |
+| `$db->sql_fieldname($i)` | `$db->getSqlFieldName($i)` |
+| `$db->sql_fieldtype($i)` | `$db->getSqlFieldType($i)` |
+| `$db->sql_nextid()` | `$db->getSqlLastId()` |
+| `$db->sql_error()` | `$db->getSqlError()` |
+| `$db->sql_value($v)` | `$db->getSqlValue($v)` |
+| `$db->sql_rowseek($n)` | `$db->getSqlSeek($n)` |
+| `$db->sql_close()` | `$db->getSqlClose()` |
+| `$db->sql_freeresult($r)` | `$db->getSqlFree($r)` |
+
+##### Renamed: `adm_info()` → `getAdminInfo()`
+
+The admin info helper has been refactored:
+
+| Old (6.2.x) | New (6.3.x) |
+|-------------|-------------|
+| `adm_info(1, 0, 'name')` | `getAdminInfo()` |
+| `adm_info(1, 'mod', 0)` | `getAdminInfo()` |
+
+`getAdminInfo(): string` — takes no parameters; auto-detects the info file path from `$_GET['name']`
+and checks both `admin/info/{name}/{locale}.html` and `modules/{name}/admin/info/{locale}.html`.
 
 ---
 
@@ -342,7 +382,10 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 - [ ] Replace `header('Location: ...') + exit;` with `setRedirect(...)`
 - [ ] Remove `&op=show` from navigation URLs
 - [ ] Extract inline switch-cases into separate functions
-- [ ] Rename admin info files: `en.html` → `english.html`, `de.html` → `german.html`, etc.
+- [ ] Rename admin info files: `admin/info/{module}/{module}-{locale}.html` → `admin/info/{module}/{locale}.html`
+- [ ] Replace `new sql_db(` → `new Database(`
+- [ ] Replace all `$db->sql_*()` calls with `$db->getSql*()` equivalents (see breaking changes)
+- [ ] Replace `adm_info(...)` calls with `getAdminInfo()`
 
 > [!TIP]
 > Refer to `.rules/refactoring-rules.md` for detailed migration patterns and examples.
@@ -353,15 +396,15 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 
 ### Common Issues
 
-#### Error: "Class 'sql_db' not found"
+#### Error: "Class 'Database' not found"
 
-**Cause:** PDO driver not loaded.
+**Cause:** `core/classes/pdo.php` not included, or you are referencing the old class name `sql_db`.
 
 **Solution:**
-```php
-// config/db.php
-$confdb['type'] = 'mysqli'; // or 'pdo'
-```
+
+- Ensure `core/classes/pdo.php` is loaded by the bootstrap.
+- Replace all occurrences of `new sql_db(` with `new Database(` in your custom code.
+- Replace all `$db->sql_*()` calls with the new `getSql*()` equivalents (see breaking changes below).
 
 #### Error: "Undefined constant _CONSTANT_NAME"
 
@@ -446,7 +489,7 @@ rm -rf storage/cache/*
 
 ### 6.3.0 (In Development - 2025/2026)
 
-**Status:** Active Development (~80% Complete as of February 2026)
+**Status:** Active Development (~85% Complete as of March 2026)
 
 **Major Changes:**
 - PHP 8.4 compatibility (8.1+ minimum)
@@ -460,7 +503,9 @@ rm -rf storage/cache/*
 - `setRedirect()` introduced — replaces inline `header() + exit;` in admin modules
 - `filterMarkdown()` added — safe Markdown→HTML parser with user/admin modes
 - `setHead()` enhanced — new `[headline]` and `[author]` SEO placeholders
-- Admin help files renamed: 2-letter locale codes → full language names (`en.html` → `english.html`)
+- Admin info files reorganized: `admin/info/{module}/{module}-{locale}.html` → `admin/info/{module}/{locale}.html`
+- `adm_info()` replaced by `getAdminInfo()` — auto-detects info path from `$_GET['name']`, no parameters
+- Database class `sql_db` renamed to `Database`; all methods renamed to `getSql*` prefix
 - Removed `core/classes/module.php` (centralized in core)
 - Config file naming: removed `config_` prefix
 - Language constant `_ANONYM` replaces configurable `$confu['anonym']`
@@ -485,12 +530,7 @@ rm -rf storage/cache/*
 - `core/classes/module.php`
 
 **Renamed Files:**
-- `modules/news/admin/info/en.html` → `english.html`
-- `modules/news/admin/info/de.html` → `german.html`
-- `modules/news/admin/info/fr.html` → `french.html`
-- `modules/news/admin/info/pl.html` → `polish.html`
-- `modules/news/admin/info/ru.html` → `russian.html`
-- `modules/news/admin/info/uk.html` → `ukrainian.html`
+- `admin/info/{module}/{module}-{locale}.html` → `admin/info/{module}/{locale}.html` (all admin modules)
 - `storage/logs/log.txt` → `log.log`
 - `storage/logs/error_site.txt` → `error_site.log`
 - `storage/logs/error_sql.txt` → `error_sql.log`

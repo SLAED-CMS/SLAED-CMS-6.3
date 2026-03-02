@@ -1,7 +1,7 @@
 # Contributing to SLAED CMS
 
 > **Contribution Guidelines for SLAED CMS 6.3**
-> *Last updated: February 2026*
+> *Last updated: March 2026*
 
 Thank you for your interest in contributing to SLAED CMS! This document provides guidelines and standards for contributing to the project.
 
@@ -186,13 +186,13 @@ $html = '<div class="' . $cls . '">' . $text . '</div>';
 
 ```php
 // Correct - Safe
-$db->sql_query(
+$db->getSqlQuery(
     'SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id AND status = :status',
     ['id' => $id, 'status' => $active]
 );
 
 // Wrong - SQL Injection vulnerability!
-$db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
+$db->getSqlQuery("SELECT * FROM users WHERE id = '".$id."'");
 ```
 
 ### Input Validation
@@ -261,6 +261,45 @@ The following `config/` files are **reserved** and must not be used as module co
 
 Do **not** create module config files with these names.
 
+### Global Configuration: `$conf`
+
+The `$conf` array is the merged global configuration loaded from all `config/*.php` files. It is available in every module via `global $conf;`.
+
+**Common top-level keys:**
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `$conf['sitename']` | `string` | Site title |
+| `$conf['homeurl']` | `string` | Base URL (no trailing slash) |
+| `$conf['slogan']` | `string` | Site slogan / default meta description |
+| `$conf['language']` | `string` | Default locale code (e.g. `'en'`) |
+| `$conf['name']` | `string` | Active module name (value of `$_GET['name']`) |
+| `$conf['multilingual']` | `int` | `1` if multilingual mode is active |
+| `$conf['rewrite']` | `int` | `1` if clean URLs (mod_rewrite) are enabled |
+
+**Module config** is nested under the module name:
+
+```php
+// Module-specific settings (loaded from config/{module}.php)
+$conf['news']['num']        // items per page
+$conf['news']['add']        // registered users may add news (1 = yes)
+$conf['news']['rate']       // ratings enabled
+```
+
+**Usage in a module:**
+
+```php
+function list(): void {
+    global $conf;
+    $num = (int)($conf['mymodule']['num'] ?? 10);
+    // ...
+}
+```
+
+> [!NOTE]
+> Never write directly to `$conf`. Use `setConfigFile()` to persist config changes.
+> `$conf['name']` always matches the filtered `$_GET['name']` value set by the routing layer.
+
 ### Admin Module Conventions
 
 When working on admin modules, follow these specific conventions:
@@ -324,7 +363,7 @@ Extract inline code into separate functions:
 // ✅ Correct
 function status(): void {
     global $db, $afile, $act, $id;
-    $db->sql_query('UPDATE '.PREFIX_DB.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
     header('Location: '.$afile.'.php?name=categories');
     exit;
 }
@@ -335,6 +374,32 @@ switch ($op) {
     case 'edit': edit(); break;
 }
 ```
+
+#### Help Info Files
+
+Admin modules display a contextual help tab via `getAdminInfo()`. It is called automatically by the admin core — no parameters are needed in module code.
+
+**Signature:**
+
+```php
+getAdminInfo(): string
+```
+
+- Reads `$_GET['name']` to determine which module's info to display.
+- Checks `modules/{name}/admin/info/{locale}.html` first (module-specific help).
+- Falls back to `admin/info/{name}/{locale}.html` (core admin module help).
+- When `adminfo` is enabled in config, also renders an in-page editor form.
+
+**Info file locations:**
+
+| Path | Purpose |
+|------|---------|
+| `modules/{name}/admin/info/{locale}.html` | Module-specific help (e.g. `modules/news/admin/info/en.html`) |
+| `admin/info/{name}/{locale}.html` | Core admin module help (e.g. `admin/info/categories/en.html`) |
+
+> [!NOTE]
+> Info files use 2-letter locale codes (`en`, `de`, `fr`, `pl`, `ru`, `uk`).
+> Content is parsed with `bb_decode()`.
 
 ### Template Functions
 
@@ -351,6 +416,162 @@ $cont .= tpl_eval('open');
 $cont .= tpl_warn('warn', $text, '', '', 'info');
 $cont .= tpl_func('open');
 ```
+
+### Content Parsing
+
+Use `filterMarkdown()` to render Markdown content as HTML. It is self-contained in `core/system.php`.
+
+**Signature:**
+
+```php
+filterMarkdown(string $src, string $mod = '', bool $safe = true): string
+```
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$src` | `string` | — | Markdown source text |
+| `$mod` | `string` | `''` | Reserved for mode switching (`'bb'`/`'md'`/`'mixed'`) — currently unused |
+| `$safe` | `bool` | `true` | `true` = user mode (HTML escaped, URL allowlist); `false` = admin mode (raw HTML allowed) |
+
+**Usage:**
+
+```php
+// User content — safe mode (default): HTML escaped, no javascript: URLs
+echo filterMarkdown($comment['text']);
+
+// Admin content — raw HTML blocks allowed
+echo filterMarkdown($article['text'], '', false);
+
+// Format-based switch alongside bb_decode()
+echo $article['format'] === 'md'
+    ? filterMarkdown($article['text'], '', false)
+    : bb_decode($article['text'], $conf['name']);
+```
+
+**Supported Markdown elements** (both modes):
+`# H1–H6`, `**bold**`, `*italic*`, `~~strike~~`, `==highlight==`, `` `code` ``, ` ``` `, `> blockquote`,
+`- list`, `1. list`, `- [x] task`, `| table |`, `[link](url)`, `![img](src)`, `<https://auto>`
+
+**Raw HTML blocks** (`<div>`, `<section>`, `<article>`, etc.) — only when `$safe = false`.
+
+> [!IMPORTANT]
+> Always use `safe=true` (default) for user-submitted content.
+> `safe=false` is intended for admin-authored content only.
+> `filterMarkdown()` contains no `eval()` and executes no PHP.
+
+---
+
+### Language Loading
+
+Use `getLang()` to load a module's language file and get the active locale. `setLang()` is a bootstrap function — never call it from within a module.
+
+**`getLang()` signature:**
+
+```php
+getLang(string $module = '', bool $admin = false): string
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `$module` | `string` | `''` | Module name, `'admin'` for the admin panel, or `''` to return the active locale without loading any file |
+| `$admin` | `bool` | `false` | `true` loads the admin language variant (`modules/{module}/admin/language/`) |
+
+**Returns:** The active locale string (e.g. `'en'`, `'de'`).
+
+**Usage:**
+
+```php
+// Load front-end module language file — call at the top of every module
+$locale = getLang('news');           // loads modules/news/language/{locale}.php
+
+// Load admin language variant
+$locale = getLang('news', true);     // loads modules/news/admin/language/{locale}.php
+
+// Load admin panel base language
+$locale = getLang('admin');          // loads admin/language/{locale}.php
+
+// Return active locale without loading any file
+$locale = getLang();
+```
+
+> [!NOTE]
+> `getLang()` uses a static cache — loading the same module/context/locale pair twice has no overhead.
+> If the locale file is not readable, it falls back to the default language from config.
+
+**`setLang()` signature:**
+
+```php
+setLang(): void
+```
+
+Called once per request from bootstrap (`index.php` / `admin.php`). Sets the global `$locale` from, in order: the `newlang` request parameter → the language cookie → the config default. Also loads the main `language/{locale}.php` file.
+
+> [!CAUTION]
+> Never call `setLang()` from within a module or admin module. It is a bootstrap function and must run exactly once per request.
+
+---
+
+### Page Lifecycle — setHead() and setFoot()
+
+Every front-end module follows this request lifecycle:
+
+```
+getLang() → build $cont → setHead($seo) → echo $cont → setFoot()
+```
+
+**`setHead()` signature:**
+
+```php
+setHead(array $seo = []): void
+```
+
+Outputs the HTML `<head>` section, handles session tracking, referer logging, and statistics. Must be called exactly once per request, after the content is ready.
+
+**`$seo` array keys:**
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `'title'` | `string` | `$conf['sitename']` | Page `<title>` and OG title |
+| `'ctitle'` | `string` | `''` | Sub-title appended to `<title>` when `$conf['ltitle']` is enabled |
+| `'desc'` | `string` | `$conf['slogan']` | `<meta name="description">` and OG description |
+| `'img'` | `string` | site logo URL | OG image URL |
+| `'time'` | `string` | current time | Article publish time (ISO 8601 or MySQL datetime) |
+| `'author'` | `string` | `$conf['sitename']` | OG article author |
+
+**`setFoot()` signature:**
+
+```php
+setFoot(): void
+```
+
+Outputs the page footer template, inserts sidebar blocks, writes the page cache if enabled, flushes output buffers, and terminates the request with `exit;`. Must be called exactly once, after all content has been echoed.
+
+**Full module page flow:**
+
+```php
+function list(): void {
+    global $db, $conf;
+
+    $locale = getLang('news');
+
+    // ... build content ...
+    $cont  = setTemplateBasic('open');
+    $cont .= '<p>Content here</p>';
+    $cont .= setTemplateBasic('close');
+
+    setHead(['title' => _NEWS, 'desc' => _NEWSDESC]);
+    echo $cont;
+    setFoot();
+}
+```
+
+> [!CAUTION]
+> `setFoot()` calls `exit;` internally — do not place any code after it.
+> `setHead()` and `setFoot()` are for front-end modules only. Admin modules do not call them; the admin panel manages its own page lifecycle.
+
+---
 
 ### File Structure
 

@@ -9,6 +9,8 @@
 
 **Modern, Secure, High-Performance Content Management System**
 
+> *Last updated: March 2026*
+
 SLAED CMS is a powerful, modular content management system built with modern PHP 8.4 standards, featuring comprehensive security, multi-language support, and extensive customization options.
 
 ---
@@ -101,10 +103,11 @@ Tests must be run after about 100 changed lines and before merging into `master`
 ## 🎯 Tech Stack
 
 - **Backend:** PHP 8.4 with strict types and type declarations
-- **Database:** PDO with prepared statements (SQL injection prevention)
+- **Database:** `Database` class (PDO) with prepared statements; methods via `getSql*` prefix
 - **Frontend:** jQuery 3.x + jQuery UI
 - **Editors:** CKEditor 4, TinyMCE, CodeMirror
-- **Security:** XSS filtering, CSRF tokens, prepared statements, `filterMarkdown()` (safe Markdown parser)
+- **Content Parsing:** `filterMarkdown(string $src, string $mod = '', bool $safe = true): string` — self-contained Markdown→HTML parser (no `eval()`, no dependencies); user mode escapes HTML, admin mode allows raw HTML blocks
+- **Security:** XSS filtering, CSRF tokens, prepared statements, URL allowlist in `filterMarkdown()`
 - **Caching:** Multi-level (pages, blocks, CSS, JS)
 - **Languages:** 6 languages out-of-the-box (EN, FR, DE, PL, RU, UA)
 
@@ -192,7 +195,7 @@ slaed-cms/
 
 > [!NOTE]
 > SLAED CMS 6.3 is undergoing a major modernization to PHP 8.4 standards.
-> **Progress: ~80% Complete** (as of February 2026)
+> **Progress: ~85% Complete** (as of March 2026)
 
 ### ✅ Completed
 
@@ -211,6 +214,9 @@ slaed-cms/
 - `tpl_eval()` and `tpl_func()` removed (used `eval()`, security risk)
 - `setRedirect()` replaces inline `header() + exit;` in admin modules
 - `filterMarkdown()` — self-contained Markdown→HTML parser added to `core/system.php`
+- `adm_info()` → `getAdminInfo()`: auto-detects info file from `$_GET['name']`, no parameters
+- Admin info file structure: `admin/info/{module}-{locale}.html` → `admin/info/{module}/{locale}.html`
+- Database class: `sql_db` → `Database`; all methods renamed to `getSql*` prefix (`getSqlQuery()`, `getSqlRow()`, `getSqlRowCount()`, etc.)
 
 **Modernized Admin Modules (23/23 - 100%):**
 - `admins.php` - Administrator management
@@ -316,7 +322,7 @@ $name = getVar('post', 'name', 'name', '');
 $url = getVar('post', 'url', 'url', 'https://');
 
 // ✅ SQL prepared statements
-$db->sql_query('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
+$db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
 
 // ✅ Output escaping
 echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');
@@ -326,7 +332,7 @@ echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');
 > **Never concatenate user input directly into SQL queries!**
 > ```php
 > // ❌ NEVER do this - SQL injection vulnerability
-> $db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
+> $db->getSqlQuery("SELECT * FROM users WHERE id = '".$id."'");
 > ```
 
 **Code Style:**
