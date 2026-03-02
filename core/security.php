@@ -1146,7 +1146,7 @@ function doHackReport($msg) {
     if ($conf['security']['block']) {
         $btime = time() + 86400;
         $cont = ['blocker_ip' => $conf['security']['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||'];
-        doConfig('config/security.php', 'confs', $cont, $conf['security'], '');
+        setConfigFile('security.php', $cont, $conf['security']);
         setCookies($conf['security']['blocker_cookie'], $btime, 'block');
     }
     if ($conf['security']['mail']) {
