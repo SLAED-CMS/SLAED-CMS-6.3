@@ -274,7 +274,7 @@ function view(): void {
             [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $last, $lang, $point, $ip, $warn, $birth, $gender, $votes, $total, $field, $agent, $gname, $grank, $gcolor] = $db->sql_fetchrow($result);
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
-            $seodesc   = cutstr(trim(strip_tags(bb_decode($sig, $conf['name']))), 160);
+            $seodesc   = cutstr(trim(strip_tags(bb_decode($sig ?? '', $conf['name']))), 160);
             $seoimg    = ($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['homeurl'].'/'.$conf['users']['adirectory'].'/'.$avatar : '';
             $seotime   = $last;
             $seoauthor = $nick ?: ($uname ?: $conf['sitename']);

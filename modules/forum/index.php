@@ -70,7 +70,7 @@ function forum(): void {
                         $post = ($val[18]) ? user_info($val[19]) : $val[19];
                         $post = _POSTER.': '.$post;
                         $lid = ($val[20]) ? $val[20] : $val[9];
-                        $lpost = ($val[5]) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$val[9].'&amp;last#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
+                        $lpost = ($val[5]) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$val[9].'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
                     } else {
                         $data = _NO_INFO;
                         $topic = $post = $lpost = '';
@@ -99,7 +99,7 @@ function forum(): void {
                                 $post = ($val2[18]) ? user_info($val2[19]) : $val2[19];
                                 $post = _POSTER.': '.$post;
                                 $lid = ($val2[20]) ? $val2[20] : $val2[9];
-                                $lpost = ($val2[5]) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$val2[9].'&amp;last#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
+                                $lpost = ($val2[5]) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$val2[9].'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
                             } else {
                                 $data = _NO_INFO;
                                 $topic = $post = $lpost = '';
@@ -142,13 +142,13 @@ function forum(): void {
                             if (!$status && is_moder($conf['name'])) {
                                 $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICM.'" class="sl_t_clos_m"></span></a>';
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
                                 $view = 1;
                             } elseif ($status == 1) {
                                 if (is_moder($conf['name'])) {
                                     $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICA.'" class="sl_t_clos_a"></span></a>';
                                     $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                    $lpost = '<a href="'.$thref.'&amp;last#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                    $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
                                 } else {
                                     $timg = '<span title="'._TOPICA.'" class="sl_t_clos_a"></span>';
                                     $tlink = $title;
@@ -158,7 +158,7 @@ function forum(): void {
                             } elseif ($status == 2) {
                                 $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICN.'" class="sl_t_clos_n"></span></a>';
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
                                 $view = 1;
                             } elseif ($status == 3 && $time <= date('Y-m-d H:i:s')) {
                                 if ($ltime > $ulastvisit) {
@@ -167,17 +167,17 @@ function forum(): void {
                                     $timg = ($comments > $conf['forum']['pop']) ? '<a href="'.$thref.'" title="'.$title.'"><span title="'._TPOP.'" class="sl_t_pold"></span></a>' : '<a href="'.$thref.'" title="'.$title.'"><span title="'._NONEWPOST.'" class="sl_t_old"></span></a>';
                                 }
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
                                 $view = 1;
                             } elseif ($status == 3 && $time > date('Y-m-d H:i:s') && is_moder($conf['name'])) {
                                 $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICP.'" class="sl_t_clos_p"></span></a>';
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
                                 $view = 1;
                             } elseif ($status == 4 || $status == 5) {
                                 $timg = ($status == 4) ? '<a href="'.$thref.'" title="'.$title.'"><span title="'._THOT.'" class="sl_t_hot"></span></a>' : '<a href="'.$thref.'" title="'.$title.'"><span title="'._TANNOUN.'" class="sl_t_announ"></span></a>';
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
                                 $view = 1;
                             }
                             $ldata = _DATE.': '.format_time($ltime, _TIMESTRING);
@@ -235,7 +235,7 @@ function view(): void {
     $where = [];
     $umassiv = [];
     $id = getVar('req', 'id', 'num');
-    $last = getVar('get', 'last', 'num') ? 1 : 0;
+    $last = (filter_input(INPUT_GET, 'last', FILTER_DEFAULT) !== null) ? 1 : 0;
     $ordern = (is_moder($conf['name'])) ? 'WHERE (id = :id1 OR pid = :id2)' : "WHERE (id = :id1 OR pid = :id2) AND time <= NOW() AND status != '0'";
     $orderparams = ['id1' => $id, 'id2' => $id];
     [$numfor] = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum '.$ordern, $orderparams));
@@ -675,7 +675,7 @@ function send(): void {
                     }
                 }
             }
-            $lid = ($fpid) ? $fpid : (($pid) ? $pid.'&last#'.$lpid : '');
+            $lid = ($fpid) ? $fpid : (($pid) ? $pid.'&last=1#'.$lpid : '');
             $link = ($lid) ? '&op=view&id='.$lid : '&cat='.$catid;
             setRedirect('index.php?name='.$conf['name'].$link);
         } else {
@@ -755,7 +755,7 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
             
         }
         
-        $lid = ($pid) ? $pid.'&last#'.$lid : '';
+        $lid = ($pid) ? $pid.'&last=1#'.$lid : '';
         $link = ($lid) ? '&op=view&id='.$lid : '&cat='.$catid;
         if (!$hasargs) setRedirect('index.php?name='.$conf['name'].$link);
     } else {

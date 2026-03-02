@@ -27,7 +27,7 @@ function getAdminMenu(string $url, string $title, string $image, string $class =
 }
 
 function getAdminPanelBlocks(): string {
- global $panel, $afile;
+ global $panel, $afile, $conf;
     if (!$panel) {
         $cont = '';
         if (is_admin_god()) {
