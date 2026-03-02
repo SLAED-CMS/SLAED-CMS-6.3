@@ -344,7 +344,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", "1", "prmess", "prmessin", "", "1", "");
+        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", 1, "prmess", "prmessin", 0, "1", "");
     } elseif ($typ == 2) {
         $result = $db->sql_query('SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.user_id) WHERE p.uidout = :uid AND p.status <= 1 ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->sql_numrows($result) > 0) {
@@ -371,7 +371,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
         }
         list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidout = :uid AND status <= 1', ['uid' => $uid]));
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", "1", "prmess", "prmessou", "", "2", "");
+        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", 1, "prmess", "prmessou", 0, "2", "");
     } elseif ($typ == 3) {
         list($pr_num) = $db->sql_fetchrow($db->sql_query('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status = 2', ['uid' => $uid]));
         $fstatus = '';
@@ -399,7 +399,7 @@ function prmess(int $obj = 0, string $stop = '', string $info = '', int $typ = 0
             $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
         }
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", "1", "prmess", "prmesssa", "", "3", "");
+        $cont .= num_ajax("pagenum", $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, "0", 1, "prmess", "prmesssa", 0, "3", "");
     } elseif ($typ == 4) {
         if ($stop) {
             $cont .= setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
@@ -691,7 +691,7 @@ function favorliste(int $obj = 0): string {
         }
         $cont .= "</tbody></table>";
         $numpages = ceil($fav_num / $newlistnum);
-        $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, "0", "1", "favorliste", "favorliste", "", "", "");
+        $cont .= num_ajax("pagenum", $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, "0", 1, "favorliste", "favorliste", 0, "", "");
     } else {
         $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }

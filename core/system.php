@@ -955,7 +955,7 @@ function doSitemap(): void {
                     $buffer .= '</li>';
                 }
                 $buffer .= '</ol>';
-                file_put_contents('config/sitemap/sitemap.txt', $buffer);
+                file_put_contents(SITEMAP_DIR.'/sitemap.txt', $buffer);
             }
             if ($conf['sitemap']['gen_h']) {
                 $map_h = '<url><loc>'.$conf['homeurl'].'/index.php</loc>';
@@ -977,7 +977,7 @@ function doSitemap(): void {
                     $urls = '';
                     foreach ($sitemap as $val) $urls .= empty($val) ? '' : $val."\n";
                     $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-                    $cont .= ($conf['sitemap']['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
+                    $cont .= ($conf['sitemap']['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
                     $cont .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$urls.'</urlset>';
                     if ($conf['rewrite']) {
                         $cont = str_replace($conf['homeurl'].'/', '', $cont);
@@ -1001,7 +1001,7 @@ function doSitemap(): void {
                 $set = '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$map.'</urlset>';
             }
             $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-            $cont .= ($conf['sitemap']['xsl'] && file_exists('config/sitemap/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n".$set : $set;
+            $cont .= ($conf['sitemap']['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n".$set : $set;
             if ($conf['rewrite']) {
                 $cont = str_replace($conf['homeurl'].'/', '', $cont);
                 $cont = preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
@@ -2001,7 +2001,7 @@ function show_files(): void {
     for ($i = $offset; $i < $tnum; $i++) {
         if ($contents[$i] != "") $cont .= $contents[$i];
     }
-    $contnum = ($a > $connum) ? num_ajax("pagenum", $a, $numpages, $connum, "", $num, "0", "1", "show_files", "f".$id, $id, "", $dir) : "";
+    $contnum = ($a > $connum) ? num_ajax("pagenum", $a, $numpages, $connum, 8, $num, "0", 1, "show_files", "f".$id, $id, "", $dir) : "";
     $content = ($cont) ? "<table class=\"sl_table_ajax\"><thead class=\"sl_table_ajax_head\"><tr><th>".cutstr(_IMG, 4, 1)."</th><th>"._FILE."</th><th>"._SIZE."</th><th>"._FUNCTIONS."</th></tr></thead><tbody class=\"sl_table_ajax_body\">".$cont."</tbody></table>".$contnum : "";
     echo $content;
 }
@@ -2646,7 +2646,7 @@ function setHead(array $seo = []): void {
             if (is_active('auto_links')) {
                 list($exist) = $db->sql_fetchrow($db->sql_query("SELECT ip FROM ".PREFIX_DB."_referer WHERE ip = :ip AND lid != :lid", ['ip' => $ip, 'lid' => 0]));
                 if ($exist) {
-                    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
+                    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, referer, link, date, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
                 } else {
                     $result = $db->sql_query("SELECT link FROM ".PREFIX_DB."_auto_links");
                     while(list($slink) = $db->sql_fetchrow($result)) {
@@ -2660,13 +2660,13 @@ function setHead(array $seo = []): void {
                     if ($islink) {
                         $db->sql_query("UPDATE ".PREFIX_DB."_auto_links SET hits = hits + 1 WHERE link = :link", ['link' => $slink]);
                         list($lid) = $db->sql_fetchrow($db->sql_query("SELECT id FROM ".PREFIX_DB."_auto_links WHERE link = :link", ['link' => $slink]));
-                        $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => $lid]);
+                        $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, referer, link, date, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => $lid]);
                     } else {
-                        if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
+                        if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, referer, link, date, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
                     }
                 }
             } else {
-                if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, refer, page, date, lid) VALUES (:uid, :name, :ip, :refer, :page, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'refer' => $referer, 'page' => $link, 'lid' => 0]);
+                if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->sql_query("INSERT INTO ".PREFIX_DB."_referer (uid, name, ip, referer, link, date, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)", ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
             }
         }
     }
@@ -4361,7 +4361,7 @@ function checkemail(string $mail): array {
     if ((!$mail) || ($mail=="") || (!preg_match("#^[_\.a-z0-9-]+@([a-z0-9_-]+\.)+[a-z]{2,6}$#", $mail))) $stop[] = _ERROR1."<br>"._ERROR2." (<b>email@domain.com</b>)";
     if ((strlen($mail) >= 4) && (substr($mail, 0, 4) == "www.")) $stop[] = _ERROR1."<br>"._ERROR3." (<b>www.</b>)";
     if (strrpos($mail, " ") > 0) $stop[] = _ERROR1."<br>"._ERROR4.".";
-    return $stop;
+    return $stop ?? [];
 }
 
 # Format add block
@@ -4806,7 +4806,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
                     <div id=\"i-form-".$id."\" class=\"sl_drop-form\">"._INFO_BB." ".$conf['version']."</div>
                 </div>
             </div>";
-            if ((defined("ADMIN_FILE") && $con[10] == 1) || (is_user() && $con[10] == 1) || (!is_user() && $con[11] == 1)) $code .= "<span OnClick=\"HideShow('af-form-".$id."', 'slide', 'up', 500); AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id."&amp;dir=".$mod."', ''); return false;\" class=\"sl_bb_file\" title=\""._EUPLOAD."\"></span>";
+            if ((defined("ADMIN_FILE") && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) $code .= "<span OnClick=\"HideShow('af-form-".$id."', 'slide', 'up', 500); AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id."&amp;dir=".$mod."', ''); return false;\" class=\"sl_bb_file\" title=\""._EUPLOAD."\"></span>";
             $code .= "<div class=\"sl_drop\">
                 <span OnClick=\"HideShow('s-form-".$id."', 'blind', 'up', 500);\" class=\"sl_bb_smile\" title=\""._ESMILIE."\"></span>
                 <div id=\"s-form-".$id."\" class=\"sl_drop-form\">";
@@ -4875,7 +4875,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
             if ($op == "faq_add" || $op == "news_add" || $op == "page_add" || $conf['name'] == "faq" || $conf['name'] == "news" || $conf['name'] == "page") $code .= "<span OnClick=\"InsertCode('pagebreak', '', '', '', '".$id."')\" class=\"sl_bb_break\" title=\""._EBREAK."\"></span>";
         }
         $code .= "</div>";
-        if ((defined("ADMIN_FILE") && $con[10] == 1) || (is_user() && $con[10] == 1) || (!is_user() && $con[11] == 1)) {
+        if ((defined("ADMIN_FILE") && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) {
             $code .= "<div id=\"af-form-".$id."\" class=\"sl_bbup-panel sl_none\">";
             if ($id == 1) {
                 $uinfo = '<div class="ico sl_info sl_left"><b>'._UPLOADINFO.'</b><br>'._FTYPE.': '.str_replace(',', ', ', $con[0]).'<br>'._FSIZEALL.': '.files_size($con[1]).'<br>'._FSIZE.': '.files_size($con[2]).'<br>'._AWIDTH.': '.$con[3].' px<br>'._AHEIGHT.': '.$con[4].' px<br>'._FILEUP.': '.$con[5].'<br>'.'</div>';
@@ -4890,7 +4890,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
                         }
                         form_data.append('token', '".md5_salt($conf['sitekey'])."');
                         $.ajax({
-                            url: 'index.php?go=4&mod=".$mod."&userid=".intval($user[0])."',
+                            url: 'index.php?go=4&mod=".$mod."&userid=".intval($user[0] ?? 0)."',
                             type: 'POST',
                             dataType: 'text',
                             data: form_data,
@@ -5101,7 +5101,7 @@ function textarea_code(string $id, string $name, string $style, string $mode, st
 }
 
 # Format nummer page for Ajax
-function num_ajax(string $tpl, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', int $id = 0, int $cid = 0, string $typ = '', string $mod = ''): string {
+function num_ajax(string $tpl, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', string $id = '', int $cid = 0, string $typ = '', string $mod = ''): string {
  global $afile;
     $nnum = $mnum + 1;
     if ($pages > 1) {
