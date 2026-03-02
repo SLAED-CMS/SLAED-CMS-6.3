@@ -244,7 +244,6 @@ define("_HOMEPROBLEMUSER","Das Modul das auf der Startseite verwendet wird ist n
 define("_HOUR","Stunde");
 define("_ID","№");
 define("_IMG","Bild");
-define("_IN","In");
 define("_INFO","Information");
 define("_INFO_BB","BB-Editor");
 define("_INPUT","Eingang");
@@ -276,7 +275,6 @@ define("_MAN","Mann");
 define("_MEDIA","Media");
 define("_MEDIAEXIST","Media mit solcher Bezeichnung existiert schon in unserem Katalog!");
 define("_MEML","Arbeitsspeicher");
-define("_MENU","Menü");
 define("_MENUCONF","Persönliche Munü");
 define("_MENUFOR","Menü für");
 define("_MENUINFO","Aktivieren Sie diese Option und der folgende Text wird auf der Startseite erscheinen. Sie kцnnen auch BB Code einfügen, wie z.B. Weblinks.");

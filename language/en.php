@@ -244,7 +244,6 @@ define("_HOMEPROBLEMUSER","Not found the module used on the home page. He may ha
 define("_HOUR","hour");
 define("_ID","No.");
 define("_IMG","Image");
-define("_IN","in");
 define("_INFO","Information");
 define("_INFO_BB","BB Editor");
 define("_INPUT","Enter");
@@ -276,7 +275,6 @@ define("_MAN","Man");
 define("_MEDIA","Media");
 define("_MEDIAEXIST","The Media with such name already exists in our catalogue of medias!");
 define("_MEML","The amount of memory used");
-define("_MENU","Menu");
 define("_MENUCONF","Home Menu");
 define("_MENUFOR","Menu for");
 define("_MENUINFO","Check this option and the following text will appear in the Home. You can use BB code to put links, for example.");

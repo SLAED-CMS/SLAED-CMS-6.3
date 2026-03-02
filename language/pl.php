@@ -244,7 +244,6 @@ define("_HOMEPROBLEMUSER","Nie znaleziono modułu używane na stronie głównej.
 define("_HOUR","godzina");
 define("_ID","Nr");
 define("_IMG","Obraz");
-define("_IN","w");
 define("_INFO","Informacje");
 define("_INFO_BB","BB Edytor");
 define("_INPUT","Wejście");
@@ -276,7 +275,6 @@ define("_MAN","Mężczyzna");
 define("_MEDIA","Katalog mediów");
 define("_MEDIAEXIST","Plik o tej nazwie już istnieje w naszym katalogu!");
 define("_MEML","Pamięć");
-define("_MENU","Menu");
 define("_MENUCONF","Własne menu");
 define("_MENUFOR","Własne menu");
 define("_MENUINFO","Własne menu będą widoczne w bloku z prawej lub z lewej strony na wszystkich strona witryny. Należy użyć kodu BB do określania adresu lub linki.");

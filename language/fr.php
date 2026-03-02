@@ -244,7 +244,6 @@ define("_HOMEPROBLEMUSER","N'est pas trouvé module utilisé sur la page d'accue
 define("_HOUR","heure");
 define("_ID","№");
 define("_IMG","Image");
-define("_IN","dans");
 define("_INFO","Informations");
 define("_INFO_BB","BB Éditeur");
 define("_INPUT","Entrée");
@@ -276,7 +275,6 @@ define("_MAN","Homme");
 define("_MEDIA","Catalogue de médias");
 define("_MEDIAEXIST","Un fichier de ce nom existe déjà dans notre répertoire!");
 define("_MEML","Utilisation de la mémoire");
-define("_MENU","À la carte");
 define("_MENUCONF","Propre à la carte");
 define("_MENUFOR","Propre à la carte");
 define("_MENUINFO","Propre menu sera reflété dans le bloc de droite ou à gauche de tous les page de votre site. Vous devez utiliser le BB code pour spécifier les adresses ou un lien.");
