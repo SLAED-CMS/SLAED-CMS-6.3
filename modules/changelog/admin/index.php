@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 # Author: Eduard Laas
 # Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
@@ -364,6 +364,7 @@ function gitfetch(string $gitdir, array $filters, int $limit): array {
     $cmd = escapeshellarg($gitexe).' log --pretty="format:'.$format.'" --date="format:'.$dateformat.'" --numstat'.$gitfilt.' -'.$limit.' 2>&1';
 
     $gitlog = [];
+    $retcode = 0;
     gitexec($cmd, $gitlog, $retcode);
     chdir($olddir);
 
@@ -643,6 +644,7 @@ function export(): void {
     global $conf;
 
     $id = getVar('get', 'id', 'var');
+    $format = getVar('get', 'format', 'var', 'txt');
     $source = $conf['changelog']['source'] ?? 'local';
     $limit = clamp($conf['changelog']['limit'] ?? 50, 10, 500);
 
