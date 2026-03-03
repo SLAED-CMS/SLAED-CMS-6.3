@@ -397,7 +397,7 @@ function profil(): void {
     if (is_user()) {
         setHead(['title' => _THISISYOURPAGE]);
         $cont = setTemplateBasic('title', ['{%title%}' => _THISISYOURPAGE]);
-        $cont .= navi();
+        $cont .= getUserNav();
         $title[] = _COMMENTS;
         $text[] = last($user[0], 'comm');
         if (is_active('faq')) {
@@ -559,7 +559,7 @@ function privat(): void {
         ]);
         $title = ["<span OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;typ=1', ''); return false;\">"._PRIN.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;typ=2', ''); return false;\">"._PROUT.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;typ=3', ''); return false;\">"._PRSAVE.'</span>', _SEND];
         $text = ['<div id="repprmessin">'.getPmView(1, 0, 0, 1).'</div>', '<div id="repprmessou">'.getPmView(1, 0, 0, 2).'</div>', '<div id="repprmesssa">'.getPmView(1, 0, 0, 3).'</div>', '<div id="repprmessfo">'.getPmView(1, 0, 0, 4).'</div>'];
-        $cont = setTemplateBasic('title', ['{%title%}' => _PRIVAT]).navi().getNaviTabs(0, 'tab', $title, $text);
+        $cont = setTemplateBasic('title', ['{%title%}' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
         setFoot();
     } else {
@@ -573,7 +573,7 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo setTemplateBasic('title', ['{%title%}' => _FAVORITES]).navi().setTemplateBasic('open').'<div id="repfavorliste">'.getFavorList(1).'</div>'.setTemplateBasic('close');
+        echo setTemplateBasic('title', ['{%title%}' => _FAVORITES]).getUserNav().setTemplateBasic('open').'<div id="repfavorliste">'.getFavorList(1).'</div>'.setTemplateBasic('close');
         setFoot();
     } else {
         account();
@@ -786,7 +786,7 @@ function edithome(): void {
         } else {
             $psetup = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NETWORKPASS]);
         }
-        echo setTemplateBasic('title', ['{%title%}' => _CHANGE]).navi().$cont.getNaviTabs(0, 'tab', [_CHANGE, _AVATARSETUP, _PASSSETUP], [$change, $asetup, $psetup]);
+        echo setTemplateBasic('title', ['{%title%}' => _CHANGE]).getUserNav().$cont.getNaviTabs(0, 'tab', [_CHANGE, _AVATARSETUP, _PASSSETUP], [$change, $asetup, $psetup]);
         setFoot();
     } else {
         account();

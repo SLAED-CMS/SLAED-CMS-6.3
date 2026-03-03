@@ -13,7 +13,7 @@ function clients(): void {
     global $db, $conf, $afile, $user, $stop, $info;
     setHead(['title' => _PRODUCTSINFO]);
     $cont = setTemplateBasic('title', ['{%title%}' => _PRODUCTSINFO]);
-    $cont .= navi();
+    $cont .= getUserNav();
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($info) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
     $result = $db->getSqlQuery('SELECT id, title, infotext, url, num, hits, prod_id FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');

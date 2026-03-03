@@ -389,7 +389,7 @@ function clients(): void {
 		$uid = intval($user[0]);
 		setHead(['title' => _CLIENTINFO]);
 		$cont = navigate(_CLIENTINFO);
-		$cont .= navi();
+		$cont .= getUserNav();
 		$result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_user = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
 			$cont .= setTemplateBasic('open');
@@ -462,7 +462,7 @@ function partners(): void {
 		$sdom = $userinfo['user_website'];
 		setHead(['title' => _PARTNERINFO]);
 		$cont = navigate(_PARTNERINFO);
-		$cont .= navi();
+		$cont .= getUserNav();
 		$result = $db->getSqlQuery('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id_user = :user_id', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
 			[$paid, $puid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);

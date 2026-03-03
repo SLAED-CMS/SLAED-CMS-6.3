@@ -6,7 +6,7 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-# Show comments and form
+# Render the comment list and submission form for an item
 function setComShow(int $id = 0, int $cid = 0): string {
     global $conf, $user;
     $cont = '<a id="comm"></a><div id="repcsave">'.ashowcom($id, $conf['name']).'</div>';
@@ -30,7 +30,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
     return $cont;
 }
 
-# Showing messages on the home page
+# Render the active site message box for the current language and user role
 function setMessageShow(): string {
     global $db, $afile, $conf, $currentlang;
     if ($conf['message'] == 1) {
@@ -67,81 +67,47 @@ function setMessageShow(): string {
     return '';
 }
 
-# User account navigation
-function navi() {
+# Render the user account navigation menu with icon links
+function getUserNav(): string {
     global $conf;
-    $userinfo = getUserInfo();
-    $uid = intval($userinfo['user_id']);
-    if ($conf['name'] != 'account') getLang('account');
-    
-    $title[] = _HOME;
-    $ititle[] = _RETURNACCOUNT;
-    $link[] = 'index.php?name=account';
-    $img[] = 'account/home.png';
-    
+    $uid = intval((getUserInfo() ?? [])['user_id'] ?? 0);
+    if ($conf['name'] !== 'account') getLang('account');
+
+    $navs = [[_HOME, _RETURNACCOUNT, 'index.php?name=account', 'account/home.png']];
+
     if ($conf['privat']['act']) {
-        $title[] = _MESSAGES;
-        $ititle[] = _PRIVAT;
-        $link[] = 'index.php?name=account&amp;op=privat';
-        $img[] = 'account/messages.png';
+        $navs[] = [_MESSAGES, _PRIVAT, 'index.php?name=account&amp;op=privat', 'account/messages.png'];
     }
     if (is_active('clients') && isModGroup('clients')) {
         getLang('clients');
-        $title[] = _PRODUCTS;
-        $ititle[] = _PRODUCTSINFO;
-        $link[] = 'index.php?name=clients';
-        $img[] = 'account/product.png';
+        $navs[] = [_PRODUCTS, _PRODUCTSINFO, 'index.php?name=clients', 'account/product.png'];
     }
     if (is_active('shop')) {
         getLang('shop');
-        $title[] = _CLIENT;
-        $ititle[] = _CLIENTINFO;
-        $link[] = 'index.php?name=shop&amp;op=clients';
-        $img[] = 'account/clients.png';
-        $conf['shop'] = $conf['shop'] ?? [];
-        if ($conf['shop']['part'] == 1) {
-            $title[] = _PARTNER;
-            $ititle[] = _PARTNERINFO;
-            $link[] = 'index.php?name=shop&amp;op=partners';
-            $img[] = 'account/partners.png';
+        $navs[] = [_CLIENT, _CLIENTINFO, 'index.php?name=shop&amp;op=clients', 'account/clients.png'];
+        if (($conf['shop']['part'] ?? 0) === 1) {
+            $navs[] = [_PARTNER, _PARTNERINFO, 'index.php?name=shop&amp;op=partners', 'account/partners.png'];
         }
     }
     if (is_active('help') && isModGroup('help')) {
         getLang('help');
-        $title[] = _HELP;
-        $ititle[] = _HELPINFO;
-        $link[] = 'index.php?name=help';
-        $img[] = 'account/help.png';
+        $navs[] = [_HELP, _HELPINFO, 'index.php?name=help', 'account/help.png'];
     }
     if ($conf['favorites']['favact']) {
-        $title[] = _FAVORITES;
-        $ititle[] = _FAVORITES;
-        $link[] = 'index.php?name=account&amp;op=favorites';
-        $img[] = 'account/favorites.png';
+        $navs[] = [_FAVORITES, _FAVORITES, 'index.php?name=account&amp;op=favorites', 'account/favorites.png'];
     }
-    $title[] = _INFO;
-    $ititle[] = _PERSONALINFO;
-    $link[] = 'index.php?name=account&amp;op=view&amp;id='.$uid;
-    $img[] = 'account/account.png';
-    
-    $title[] = _CHANGE;
-    $ititle[] = _CHANGE;
-    $link[] = 'index.php?name=account&amp;op=edithome';
-    $img[] = 'account/preferences.png';
-    
-    $title[] = _LOGOUT;
-    $ititle[] = _LOGOUT;
-    $link[] = 'index.php?name=account&amp;op=logout';
-    $img[] = 'account/exit.png';
-    
+    $navs[] = [_INFO,   _PERSONALINFO, 'index.php?name=account&amp;op=view&amp;id='.$uid, 'account/account.png'];
+    $navs[] = [_CHANGE, _CHANGE,       'index.php?name=account&amp;op=edithome',           'account/preferences.png'];
+    $navs[] = [_LOGOUT, _LOGOUT,       'index.php?name=account&amp;op=logout',             'account/exit.png'];
+
     $cont = '';
-    foreach ($title as $key => $val) {
-        $cont .= '<div class="sl_catflex-box"><a href="'.$link[$key].'" title="'.$ititle[$key].'"><img src="'.img_find($img[$key]).'" alt="'.$ititle[$key].'" title="'.$ititle[$key].'"><br>'.$title[$key].'</a></div>';
+    foreach ($navs as [$titl, $itit, $link, $icon]) {
+        $cont .= '<div class="sl_catflex-box"><a href="'.$link.'" title="'.$itit.'"><img src="'.img_find($icon).'" alt="'.$itit.'" title="'.$itit.'"><br>'.$titl.'</a></div>';
     }
     return setTemplateBasic('open', []).'<div class="sl_catflex-cont">'.$cont.'</div>'.setTemplateBasic('close', []);
 }
 
-# Check group
+# Check if the logged-in user meets the group or points requirement for a module
 function isModGroup(string $name): int {
     global $db, $user;
     if (is_user()) {
@@ -167,7 +133,7 @@ function isModGroup(string $name): int {
     return 0;
 }
 
-# Get user info
+# Fetch the full database record for the currently logged-in user
 function getUserInfo() {
     global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
@@ -177,7 +143,7 @@ function getUserInfo() {
     }
 }
 
-# Show user block
+# Render the user's custom sidebar block if enabled
 function getUserBlock(): string {
     global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
@@ -190,7 +156,7 @@ function getUserBlock(): string {
     return '';
 }
 
-# Save comments
+# Validate and save a new comment; echoes the updated comment list on success
 function addComment() {
     global $db, $user, $conf;
     $id       = getVar('post', 'id',   'num',  0);
@@ -240,7 +206,7 @@ function addComment() {
     }
 }
 
-# Save edit forum post
+# Validate and update an existing forum post in-place
 function updatePost() {
     global $db, $user, $conf;
     $conf['forum'] = $conf['forum'] ?? [];
@@ -293,7 +259,7 @@ function updatePost() {
     }
 }
 
-# Private messages input view
+# Render the private-message inbox, outbox, saved or detail view
 function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ = 0): string {
     global $db, $user, $conf;
     $typ = $typ ?: getVar('get', 'typ', 'num', 0);
@@ -478,7 +444,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
     return '';
 }
 
-# Private message send and save
+# Validate and send a new private message; returns the updated inbox view
 function addPmMsg() {
     global $db, $user, $conf;
     $postname = filterText(substr(getVar('post', 'name',  'raw', ''), 0, 25));
@@ -536,7 +502,7 @@ function addPmMsg() {
     }
 }
 
-# Private message save to user
+# Move a received private message to the user's saved folder
 function setPmSaved() {
     global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -555,7 +521,7 @@ function setPmSaved() {
     return getPmView(0, $stop, $info, 1);
 }
 
-# Private message delete
+# Delete a private message from inbox or outbox and return the updated view
 function deletePmMsg() {
     global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -565,7 +531,7 @@ function deletePmMsg() {
     return getPmView(0, 0, 0, $typ);
 }
 
-# Favorites view
+# Render the favorites toggle button for an item (on/off/limit-reached state)
 function getFavorBtn(int $fid, string $mod) {
     global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -586,7 +552,7 @@ function getFavorBtn(int $fid, string $mod) {
     }
 }
 
-# Favorites add
+# Add an item to the user's favorites list and echo the updated toggle button
 function addFavor() {
     global $db, $conf, $user;
     $id = getVar('get', 'id',  'num',  0);
@@ -604,7 +570,7 @@ function addFavor() {
     echo getFavorBtn($id, $mod);
 }
 
-# Favorites liste view
+# Render the paginated favorites list for the logged-in user
 function getFavorList(int $obj = 0): string {
     global $db, $conf, $user;
     $uid = intval($user[0]);
@@ -700,7 +666,7 @@ function getFavorList(int $obj = 0): string {
     return '';
 }
 
-# Favorites delete
+# Delete a favorite entry and return the refreshed favorites list
 function deleteFavor(): string {
     global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -709,7 +675,7 @@ function deleteFavor(): string {
     return getFavorList(0);
 }
 
-# RSS Channel
+# Output the RSS 2.0 feed for the specified module and optional category
 function getRssChannel() {
     global $db, $conf;
     header_remove('X-Content-Type-Options');
@@ -819,7 +785,7 @@ function getRssChannel() {
     return $content;
 }
 
-# Open search
+# Output the OpenSearch description XML for browser search integration
 function getOpenSearch() {
     global $conf;
     header('Content-Type: application/opensearchdescription+xml');
@@ -838,7 +804,7 @@ function getOpenSearch() {
     ."</OpenSearchDescription>\n";
 }
 
-# Open xsl template
+# Return the processed sitemap XSL template with localized placeholder strings
 function getOpenXsl(): string {
     global $conf;
     if (file_exists('config/sitemap/sitemap.xsl')) {
