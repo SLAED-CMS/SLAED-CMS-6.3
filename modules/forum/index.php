@@ -12,7 +12,7 @@ if (!defined('MODULE_FILE')) {
 function forum(): void {
     global $db, $conf, $locale;
     $massiv = [];
-    $mod = ($conf['name']) ? analyze($conf['name']) : 0;
+    $mod = ($conf['name']) ? filterVar($conf['name']) : 0;
     $cat = getVar('req', 'cat', 'num');
     $id = $cat;
     $params = ['mod' => $mod];
@@ -240,7 +240,7 @@ function view(): void {
     $orderparams = ['id1' => $id, 'id2' => $id];
     [$numfor] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum '.$ordern, $orderparams));
     if ($id && $numfor > 0) {
-        $fornum = user_news($user[3] ?? 0, $conf['forum']['num']);
+        $fornum = getUserNews($conf['forum']['num']);
         $numpages = ceil($numfor / $fornum);
         $num = getVar('req', 'num', 'num') ?: 1;
         $num = ($last && $conf['forum']['sort']) ? $numpages : $num;
@@ -484,10 +484,10 @@ function add(): void {
         }
         $oldsubject = $subject;
         $subject = getVar('post', 'subject', 'text');
-        $subject = ($subject) ? save_text($subject, 1) : $oldsubject;
+        $subject = ($subject) ? filterHtml($subject, 1) : $oldsubject;
         $oldhometext = $hometext;
         $hometext = getVar('post', 'hometext', 'text');
-        $hometext = ($hometext) ? save_text($hometext) : $oldhometext;
+        $hometext = ($hometext) ? filterHtml($hometext) : $oldhometext;
 
     } elseif ($conf['forum']['add'] && ($istopic || $isreply)) {
         $fid = getVar('post', 'fid', 'num');
@@ -505,12 +505,12 @@ function add(): void {
         }
 
         $subject = getVar('post', 'subject', 'text');
-        $subject = (!empty($ftitle)) ? $ftitle : ($subject ? save_text($subject, 1) : '');
+        $subject = (!empty($ftitle)) ? $ftitle : ($subject ? filterHtml($subject, 1) : '');
         $hometext = getVar('post', 'hometext', 'text');
-        $hometext = ($qid && $ftext) ? '[quote]'.$ftext.'[/quote]' : ($hometext ? save_text($hometext) : '');
+        $hometext = ($qid && $ftext) ? '[quote]'.$ftext.'[/quote]' : ($hometext ? filterHtml($hometext) : '');
         $field = getVar('post', 'field', 'field');
         $status = getVar('post', 'status', 'num', 3);
-        $time = save_datetime(1, 'time');
+        $time = getVar('req', 'time', 'time');
         $info = (!empty($ftext)) ? _PUBLICIN.': '.$ftitle : _PUBLICIN.': '.$ctitle;
         $pagetitle = _FORUM.' '.$ctitle.' '.$info;
         
@@ -584,18 +584,18 @@ function send(): void {
         $fid = getVar('post', 'fid', 'num');
         $id = $fid;
         $pid = getVar('post', 'pid', 'num');
-        $postname = text_filter(substr(getVar('post', 'postname', 'text'), 0, 25));
+        $postname = filterText(substr(getVar('post', 'postname', 'text'), 0, 25));
         $subject = getVar('post', 'subject', 'text');
         $hometext = getVar('post', 'hometext', 'text');
 
         $checks = str_replace(["\n", "\r", "\t"], ' ', $hometext);
         $e = explode(' ', $checks);
         for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
-        $hometext = save_text($hometext);
+        $hometext = filterHtml($hometext);
         $status = getVar('post', 'status', 'num', 0);
         
         $field = getVar('post', 'field', 'field');
-        $time = ($ismod) ? save_datetime(1, 'time') : save_datetime(1);
+        $time = ($ismod) ? getVar('req', 'time', 'time') : date('Y-m-d H:i:s');
         $postid = (is_user()) ? intval($user[0]) : '';
         $ip = getIp();
         
@@ -660,7 +660,7 @@ function send(): void {
                                     $link = '<a href="'.$finishlink.'">'.$finishlink.'</a>';
                                     $subject = $conf['sitename'].' - '._FORUM;
                                     $message = str_replace('[text]', sprintf(_ADDMAILF, $postname, $link), $conf['mtemp']);
-                                    mail_send($mail, $conf['adminmail'], $subject, $message, 0, 3);
+                                    addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
                                 }
                             }
                         }

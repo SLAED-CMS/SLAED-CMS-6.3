@@ -10,7 +10,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 if (!function_exists('getTemplateVars')) {
     function getTemplateVars(): array {
         static $cache = [];
- global $conf;
+        global $conf;
         $theme = getTheme();
         if (isset($cache[$theme])) return $cache[$theme];
         return $cache[$theme] = [
@@ -99,7 +99,7 @@ if (!function_exists('setTemplateIf')) {
 # Set template of head
 if (!function_exists('setTemplateHead')) {
     function setTemplateHead(string $sub, array $val = []): string {
- global $user, $conf;
+        global $user, $conf;
         if (is_user()) {
             $uname = htmlspecialchars(substr((string)$user[1], 0, 25), ENT_QUOTES, 'UTF-8');
             $userinfo = getusrinfo();
@@ -152,7 +152,7 @@ if (!function_exists('setTemplateBasic')) {
 # Set template of block
 if (!function_exists('setTemplateBlock')) {
     function setTemplateBlock(string $tpl, array $val = []): string {
- global $pos, $blockfile, $b_id;
+        global $pos, $blockfile, $b_id;
         $flags = [];
         if (isset($val['if_flag']) && is_array($val['if_flag'])) {
             $flags = $val['if_flag'];

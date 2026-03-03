@@ -26,7 +26,7 @@ function help(): void {
     global $db, $user, $conf, $home, $op;
     $cwhere = catmids($conf['name'], 's.catid');
     $uid = intval($user[0]);
-    $unum = user_news($user[3] ?? 0, $conf['help']['num']);
+    $unum = getUserNews($conf['help']['num']);
     $cat = getVar('get', 'cat', 'num');
     $ncat = $cat;
     $params = ['uid' => $uid];

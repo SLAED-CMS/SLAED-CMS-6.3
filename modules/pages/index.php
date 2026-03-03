@@ -26,7 +26,7 @@ function navigate(string $title, string|int $cat=''): string {
 function pages(): void {
 	global $db, $afile, $user, $conf, $home, $op;
 	$cwhere = catmids($conf['name'], 's.catid');
-	$unum = user_news($user[3] ?? 0, $conf['pages']['num']);
+	$unum = getUserNews($conf['pages']['num']);
 	$cat = getVar('get', 'cat', 'num');
 	$ncat = $cat;
 	$params = [];
@@ -243,7 +243,7 @@ function add(): void {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
 		if (is_user()) {
-			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.text_filter(substr($user[1], 0, 25)).'</td></tr>';
+			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
 		} else {
 			$postname = ($postname) ? $postname : _ANONYM;
 			$cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
@@ -300,4 +300,3 @@ switch($op) {
 	case 'add': add(); break;
 	case 'send': send(); break;
 }
-

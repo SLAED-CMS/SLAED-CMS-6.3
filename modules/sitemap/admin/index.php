@@ -33,7 +33,7 @@ function sitemap(): void {
             fclose($handle);
         }
         $size = filesize($cfile);
-        $acont .= _FILE.': '.$cfile .'<br>'._DATE.': '.date(_TIMESTRING, filemtime($cfile)).'<br>'._SIZE.': '.files_size($size).'<br>'._URLS.': '.$n.'<br><br>';
+        $acont .= _FILE.': '.$cfile.'<br>'._DATE.': '.date(_TIMESTRING, filemtime($cfile)).'<br>'._SIZE.': '.files_size($size).'<br>'._URLS.': '.$n.'<br><br>';
         $f++;
         $asize += $size;
     }
@@ -73,7 +73,7 @@ function xslsave(): void {
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $template = getVar('post', 'template', 'raw', '');
     if ($template !== '') {
-        file_put_contents($file, $template); 
+        file_put_contents($file, $template);
     }
     setRedirect($afile.'.php?name=sitemap&op=xsl');
 }

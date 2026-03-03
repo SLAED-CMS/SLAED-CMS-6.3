@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 require_once CONFIG_DIR.'/fields.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
@@ -15,7 +15,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 
 function fields(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0, 'fields');
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
@@ -68,7 +68,7 @@ function fields(): void {
     </script>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -94,9 +94,9 @@ function save(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(1, 6, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

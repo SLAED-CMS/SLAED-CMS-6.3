@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=privat', 'name=privat&amp;op=conf', 'name=privat&amp;op=info'];
@@ -13,14 +13,14 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function privat(): void {
-    head();
+    setHead();
     echo navi(0, 0, 0, 0).setTemplateBasic('open').'<div id="repajax_privat">'.ajax_privat(1).'</div>'.setTemplateBasic('close');
-    foot();
+    setFoot();
 }
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $cont .= setTemplateBasic('open');
@@ -41,7 +41,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="privat"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -66,9 +66,9 @@ function save(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

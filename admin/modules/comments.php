@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'];
@@ -13,16 +13,16 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 }
 
 function comments(): void {
-    head();
+    setHead();
     $status = getVar('get', 'status', 'num') ? 1 : 0;
     echo navi(0, $status, 0, 0).ashowcom();
-    foot();
+    setFoot();
 }
 
 function edit(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $result = $db->getSqlQuery('SELECT id, modul, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
@@ -32,7 +32,7 @@ function edit(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="editsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function editsave(): void {
@@ -45,7 +45,7 @@ function editsave(): void {
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $cont .= setTemplateBasic('open');
@@ -95,7 +95,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -160,9 +160,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 3, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

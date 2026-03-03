@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     global $afile;
@@ -20,9 +20,9 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 
 function categories(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
-    head();
+    setHead();
     echo navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INFOCATDEL]).setTemplateBasic('open').'<div id="repajax_cat">'.ajax_cat($modul, 1).'</div>'.setTemplateBasic('close');
-    foot();
+    setFoot();
 }
 
 function fix(): void {
@@ -41,7 +41,7 @@ function add(): void {
     global $db, $conf, $afile;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
-    head();
+    setHead();
     $cont = navi(0, 1, 1, 0, 'add');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
@@ -86,14 +86,14 @@ function add(): void {
     .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
     
 function subadd(): void {
     global $db, $conf, $afile;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
-    head();
+    setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont = navi(0, 2, 1, 0, 'subadd');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
@@ -144,13 +144,13 @@ function subadd(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, deflmconst($modul))]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function addedit(): void {
     global $db, $afile;
     $modul = getVar('get', 'modul', 'var', 'forum');
-    head();
+    setHead();
     $cont = navi(0, 3, 0, 0);
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont .= setTemplateBasic('open');
@@ -162,7 +162,7 @@ function addedit(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, deflmconst($modul))]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function edit(): void {
@@ -171,7 +171,7 @@ function edit(): void {
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     $result = $db->getSqlQuery('SELECT modul, title, description, img, language, parentid, cstatus, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
     [$modul, $title, $description, $imgcat, $language, $parentid, $cstatus, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod] = $db->getSqlRow($result);
-    head();
+    setHead();
     $cont = navi(0, 3, 1, 0, 'edit');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
@@ -225,7 +225,7 @@ function edit(): void {
     .'<table class="sl_table_form"><tr><td class="sl_center"><input type="hidden" name="id" value="'.$cid.'"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function addsave(): void {
@@ -302,9 +302,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 5, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

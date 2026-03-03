@@ -69,8 +69,8 @@ function add(): void {
         $title = getVar('post', 'title', 'text', '');
         $questions = getVar('post', 'questions', 'array', []);
         $answer = getVar('post', 'answer', 'array', []);
-        $date = save_datetime(1, 'date');
-        $enddate = save_datetime(1, 'enddate');
+        $date = getVar('req', 'date', 'time');
+        $enddate = getVar('req', 'enddate', 'time');
         $multi = getVar('post', 'multi', 'num', 0);
         $language = getVar('post', 'language', 'text', '');
         $acomm = getVar('post', 'acomm', 'num', 0);
@@ -100,7 +100,7 @@ function add(): void {
         $question = $questions[$i] ?? '';
         $ansval = $answer[$i] ?? '';
         $class = ($i != 0 && $question == '') ? ' class="sl_none"' : '';
-        $cont .= '<table id="vot'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'vot'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._POLLEACH.' - '.$a.':</a></td><td class="sl_form"><input type="text" name="questions[]" value="'.text_filter($question).'" style="width: 375px;" class="sl_field" placeholder="'._POLLEACH.' - '.$a.'"> '._VOTES.': <input type="text" name="answer[]" value="'.text_filter($ansval).'" style="width: 40px;" class="sl_field" placeholder="'._VOTES.'"></td></tr></table>';
+        $cont .= '<table id="vot'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'vot'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._POLLEACH.' - '.$a.':</a></td><td class="sl_form"><input type="text" name="questions[]" value="'.filterText($question).'" style="width: 375px;" class="sl_field" placeholder="'._POLLEACH.' - '.$a.'"> '._VOTES.': <input type="text" name="answer[]" value="'.filterText($ansval).'" style="width: 40px;" class="sl_field" placeholder="'._VOTES.'"></td></tr></table>';
         $i++;
     }
     $cont .= '</td></tr>'
@@ -134,7 +134,7 @@ function add(): void {
 function save(): void {
     global $db, $afile, $stop;
     $id = getVar('post', 'id', 'num', 0);
-    $modul = analyze(getVar('post', 'modul', 'text', ''));
+    $modul = filterVar(getVar('post', 'modul', 'text', ''));
     $title = getVar('post', 'title', 'text', '');
     $questions = getVar('post', 'questions', 'array', []);
     $answer = getVar('post', 'answer', 'array', []);
@@ -148,8 +148,8 @@ function save(): void {
     }
     $quest = is_array($quest) ? implode('|', $quest) : '';
     $answ = is_array($answ) ? implode('|', $answ) : '';
-    $date = save_datetime(1, 'date');
-    $enddate = save_datetime(1, 'enddate');
+    $date = getVar('req', 'date', 'time');
+    $enddate = getVar('req', 'enddate', 'time');
     $multi = getVar('post', 'multi', 'num', 0);
     $language = getVar('post', 'language', 'text', '');
     $acomm = ($modul) ? '0' : getVar('post', 'acomm', 'num', 0);

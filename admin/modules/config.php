@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 require_once CONFIG_DIR.'/global.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
@@ -15,7 +15,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 
 function config(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0, 'config');
     $cont .= checkPerms(CONFIG_DIR.'/global.php');
     $cont .= setTemplateBasic('open');
@@ -277,7 +277,7 @@ function config(): void {
     .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="config"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -318,7 +318,7 @@ function save(): void {
         'site_logo' => $xsite_logo,
         'slogan' => getVar('post', 'slogan', 'text'),
         'admininfo' => getVar('post', 'admininfo', 'text'),
-        'startdate' => save_datetime(1, 'startdate'),
+        'startdate' => getVar('req', 'startdate', 'time'),
         'adminmail' => getVar('post', 'adminmail', 'text'),
         'user_c' => $xuser_c,
         'admin_c' => $xadmin_c,
@@ -404,9 +404,9 @@ function save(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(1, 8, 0, 0, '').'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

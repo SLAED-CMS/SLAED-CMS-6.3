@@ -52,7 +52,7 @@ function send(): void {
     if (!$stop) {
         $subject = $conf['sitename'].' - '._INTSITE;
         $message = _HELLO.' '.$fname.'!<br><br>'._YOURFRIEND.' '.$sname.' '._OURSITE.' '.$conf['sitename'].' '._INTSENT.'<br><br>'._SITENAME.': '.$conf['sitename'].' '.urldecode($conf['defis']).' '.$conf['slogan'].'<br>'._SITEURL.': <a href="'.$conf['homeurl'].'" target="_blank" title="'.$conf['sitename'].'">'.$conf['homeurl'].'</a>';
-        mail_send($femail, $semail, $subject, $message, 0, 3);
+        addMail($femail, $semail, $subject, $message, 0, 3);
         update_points(38);
         setHead(['title' => _RECOMMTITLE]);
         echo setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _FREFERENCE.' '.$fname.'.<br>'._THANKSREC]);

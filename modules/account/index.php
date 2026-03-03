@@ -67,9 +67,9 @@ function newuser(): void {
         } else {
             $unkey = md5_salt($conf['sitekey']);
             $nick = getVar('post', $unkey, 'text');
-            $nick = ($nick) ? text_filter(substr($nick, 0, 25)) : '';
+            $nick = ($nick) ? filterText(substr($nick, 0, 25)) : '';
             $mail = getVar('post', 'mail', 'text');
-            $mail = ($mail) ? text_filter($mail) : '';
+            $mail = ($mail) ? filterText($mail) : '';
             $captcha = ($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
             $cont .= setTemplateBasic('open');
             $cont .= '<form action="index.php?name='.$conf['name'].'" method="post">'
@@ -119,8 +119,8 @@ function finnewuser(): void {
             $check = md5(getPass(10));
             $time = time();
             $finishlink = $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=activate&amp;user='.urlencode($nick).'&amp;num='.$check;
-            $nick = text_filter($nick);
-            $mail = text_filter($mail);
+            $nick = filterText($nick);
+            $mail = filterText($mail);
             $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_users_temp (user_id, user_name, user_email, user_password, user_regdate, check_num, time) VALUES (NULL, :user_name, :user_email, :user_password, NOW(), :check_num, :time)',
                 ['user_name' => $nick, 'user_email' => $mail, 'user_password' => $pass, 'check_num' => $check, 'time' => $time]
@@ -140,7 +140,7 @@ function finnewuser(): void {
                 $link = '<a href="'.$finishlink.'" target="_blank" title="'._ACTIVATIONSUB.'">'.str_replace('&amp;', '&', $finishlink).'</a>';
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
-                mail_send($mail, $conf['adminmail'], $subject, $message, 0, 3);
+                addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
                 $cont = setTemplateBasic('title', ['{%title%}' => _ACCOUNTCREATED]).setTemplateWarning('warn', ['time' => '30', 'url' => '', 'id' => 'info', 'text' => _YOUAREREGISTERED.'<br><br>'._FINISHUSERCONF.'<br><br>'._THANKSUSER]);
             }
             echo $cont;
@@ -259,7 +259,7 @@ function activate(): void {
 
 function view(): void {
     global $db, $conf, $afile;
-    if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || is_admin()) {
+    if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
         if ($uname) {
@@ -286,7 +286,7 @@ function view(): void {
                 'time' => $seotime,
                 'author' => $seoauthor,
             ]);
-            if (is_admin()) {
+            if (isAdmin()) {
                 $id = [_ID, $uid];
                 $regdate = [_REG, format_time($reg, _TIMESTRING)];
                 $lastvisit = [_LAST_VISIT, format_time($last, _TIMESTRING)];
@@ -301,13 +301,13 @@ function view(): void {
             }
             $name = [_NICKNAME, $nick];
             $urank = ($rank) ? [_URANK, $rank] : [_URANK, ''];
-            $mail = ((is_admin() || $view) && $mail) ? [_EMAIL, anti_spam($mail)] : [_EMAIL, _HIDE];
-            $site = ($site) ? ((is_admin() || is_user()) ? [_SITEURL, domain($site)] : [_SITEURL, _HIDE]) : [_SITEURL, _NO_INFO];
+            $mail = ((isAdmin() || $view) && $mail) ? [_EMAIL, anti_spam($mail)] : [_EMAIL, _HIDE];
+            $site = ($site) ? ((isAdmin() || is_user()) ? [_SITEURL, domain($site)] : [_SITEURL, _HIDE]) : [_SITEURL, _NO_INFO];
             $avatar = ($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif';
             $occup = ($occ) ? [_OCCUPATION, $occ] : [_OCCUPATION, _NO_INFO];
             $from = ($from) ? [_LOCALITYLANG, $from] : [_LOCALITYLANG, _NO_INFO];
             $inter = ($inter) ? [_INTERESTS, $inter] : [_INTERESTS, _NO_INFO];
-            $sign = ((is_admin() || is_user()) && $sig) ? '<hr>'.bb_decode($sig, $conf['name']) : '';
+            $sign = ((isAdmin() || is_user()) && $sig) ? '<hr>'.bb_decode($sig, $conf['name']) : '';
             $lang = ($lang) ? [_LANGUAGE, deflang($lang)] : [_LANGUAGE, deflang($conf['language'])];
             $points = ($conf['users']['point'] && $point) ? [_POINTS, $point] : [_POINTS, _NO_INFO];
             $warn = [_UWARNS, warnings($warn)];
@@ -339,7 +339,7 @@ function view(): void {
             }
             $trank = ($gname) ? _GROUP.': '.$gname : ((is_array($rgroup)) ? _USER_GROUPS.': '.implode(', ', $rgroup) : _RANK);
             $rank = ($grank && file_exists(img_find('ranks/'.$grank))) ? [_RANK, '<img src="'.img_find('ranks/'.$grank).'" alt="'.$trank.'" title="'.$trank.'">'] : ['', ''];
-            $admin = (is_admin()) ? add_menu('<a href="'.$afile.'.php?op=users_add&amp;id='.$uid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=security_block&amp;new_ip='.$ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?op=users_del&amp;id='.$uid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$nick.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+            $admin = (isAdmin()) ? add_menu('<a href="'.$afile.'.php?op=users_add&amp;id='.$uid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=security_block&amp;new_ip='.$ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?op=users_del&amp;id='.$uid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$nick.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
             $privat = (($conf['privat']['act'] ?? 0) && $nick) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]).'" title="'._SENDMES.'" class="sl_but_green">'._MESSAGE.'</a>' : '';
             $profil = (is_user() && $uname == $nick) ? '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._ACCOUNT.'" class="sl_but">'._ACCOUNT.'</a>' : '';
             $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
@@ -451,7 +451,7 @@ function profil(): void {
 function last(int|string $uid, string $modul): string {
     global $db, $conf, $user;
     $uid = intval($uid);
-    $num = user_news($user[3] ?? 0, 25);
+    $num = getUserNews(25);
     $limit = intval($num);
     $cont = '';
     if ($modul == 'comm') {
@@ -459,7 +459,7 @@ function last(int|string $uid, string $modul): string {
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
             while([$id, $cid, $modul, $date, $comment] = $db->getSqlRow($result)) {
-                $comment = cutstr(str_replace([_QUOTE, _CODE], '', text_filter(bb_decode($comment, $conf['name']))), 70);
+                $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText(bb_decode($comment, $conf['name']))), 70);
                 $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.': '.format_time($date, _TIMESTRING).'" class="sl_date">'.format_time($date).'</time></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id.'" title="'.$comment.'" class="sl_last">'.$comment.'</a></td></tr>';
             }
             $cont .= '</table>';
@@ -634,7 +634,7 @@ function passmail(): void {
             $link = '<a href="'.$conf['homeurl'].'/index.php?name='.$conf['name'].'">'.$conf['homeurl'].'/index.php?name='.$conf['name'].'</a>';
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
-            mail_send($mail, $conf['adminmail'], $subject, $message, 0, 3);
+            addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
             setHead([
                 'title' => _PASSWORDLOST,
             ]);
@@ -644,7 +644,7 @@ function passmail(): void {
             $link = '<a href="'.$conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email.'">'.$conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email.'</a>';
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
-            mail_send($mail, $conf['adminmail'], $subject, $message, 0, 3);
+            addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
             setRedirect('index.php?name='.$conf['name'].'&op=passlost&email='.$email);
         }
     } else {
@@ -816,7 +816,7 @@ function savehome(): void {
             $news = getVar('post', 'news', 'num');
             $fsmail = getVar('post', 'fsmail', 'num');
             $psmail = getVar('post', 'psmail', 'num');
-            $birth = save_datetime(2, 'user_birthday');
+            $birth = getVar('req', 'user_birthday', 'date');
             $gender = getVar('post', 'gender', 'num');
             $field = getVar('post', 'field', 'field');
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_email = :user_email, user_website = :user_website, user_viewemail = :user_viewemail, user_occ = :user_occ, user_from = :user_from, user_interests = :user_interests, user_sig = :user_sig, user_storynum = :user_storynum, user_blockon = :user_blockon, user_block = :user_block, user_theme = :user_theme, user_newsletter = :user_newsletter, user_fsmail = :user_fsmail, user_psmail = :user_psmail, user_birthday = :user_birthday, user_gender = :user_gender, user_field = :user_field WHERE user_id = :user_id', ['user_email' => $mail, 'user_website' => $site, 'user_viewemail' => $view, 'user_occ' => $occ, 'user_from' => $from, 'user_interests' => $inter, 'user_sig' => $sig, 'user_storynum' => $story, 'user_blockon' => $blockon, 'user_block' => $block, 'user_theme' => $theme, 'user_newsletter' => $news, 'user_fsmail' => $fsmail, 'user_psmail' => $psmail, 'user_birthday' => $birth, 'user_gender' => $gender, 'user_field' => $field, 'user_id' => $uid]);
@@ -842,7 +842,7 @@ function saveavatar(): void {
             $avatar = (preg_match("#(\.gif|\.png|\.jpg|\.jpeg)$#is", $avatar) && !preg_match("#(\b0\.gif\b|\b00\.gif\b)$#i", $avatar) && file_exists($conf['users']['adirectory'].'/default/'.$avatar)) ? 'default/'.$avatar : '';
         }
         if (!$stop && $avatar) {
-            $avatar = text_filter($avatar);
+            $avatar = filterText($avatar);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_avatar = :user_avatar WHERE user_id = :user_id', ['user_avatar' => $avatar, 'user_id' => $uid]);
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
         } else {
@@ -871,7 +871,7 @@ function savepass(): void {
                     $link = '<a href="'.$conf['homeurl'].'/index.php?name='.$conf['name'].'">'.$conf['homeurl'].'/index.php?name='.$conf['name'].'</a>';
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
-                    mail_send($mail, $conf['adminmail'], $subject, $message, 0, 3);
+                    addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
                     $newpass = md5_salt($newpass);
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_password = :user_password WHERE user_id = :user_id', ['user_password' => $newpass, 'user_id' => $uid]);
                     setRedirect('index.php?name='.$conf['name']);

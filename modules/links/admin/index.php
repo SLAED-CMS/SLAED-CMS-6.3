@@ -84,7 +84,7 @@ function add(): void {
         $description = getVar('post', 'description', 'text', '');
         $bodytext = getVar('post', 'bodytext', 'text', '');
         $site = getVar('post', 'site', 'url', 'http://');
-        $date = save_datetime(1, 'date');
+        $date = getVar('req', 'date', 'time');
         $ihome = getVar('post', 'ihome', 'num', 0);
         $acomm = getVar('post', 'acomm', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');
@@ -121,7 +121,7 @@ function save(): void {
     $description = getVar('post', 'description', 'text', '');
     $bodytext = getVar('post', 'bodytext', 'text', '');
     $site = getVar('post', 'site', 'url', '');
-    $date = save_datetime(1, 'date');
+    $date = getVar('req', 'date', 'time');
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
@@ -134,7 +134,7 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
+        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($fid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET cid = :cid, uid = :uid, name = :name, title = :title, description = :description, bodytext = :bodytext, url = :url, date = :date, email = :email, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE lid = :fid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $site, 'date' => $date, 'email' => $email, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
         } else {

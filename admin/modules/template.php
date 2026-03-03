@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $afile, $conf;
@@ -32,7 +32,7 @@ function template(): void {
     global $afile, $conf;
     $templ = getVar('post', 'templ', 'var', '');
     if ($templ === '') $templ = getVar('get', 'templ', 'var', $conf['theme']);
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $dir = 'templates/'.$templ;
     if (is_dir($dir)) {
@@ -60,13 +60,13 @@ function template(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function style(): void {
     global $afile, $conf;
     $templ = getVar('get', 'templ', 'var', $conf['theme']);
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     $dir = is_dir('templates/'.$templ.'/css') ? 'templates/'.$templ.'/css' : 'templates/'.$templ;
     if (is_dir($dir)) {
@@ -94,7 +94,7 @@ function style(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -126,9 +126,9 @@ function stylesave(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

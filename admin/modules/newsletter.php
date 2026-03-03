@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=info'];
@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function newsletter(): void {
     global $db, $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $result = $db->getSqlQuery('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
@@ -25,7 +25,7 @@ function newsletter(): void {
             $active = ($mails && $sended && $conf['newsletter']) ? 1 : 0;
             $cont .= '<tr>'
             .'<td>'.$id.'</td>'
-            .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.display_time($sendtime)).$title.'</td>'
+            .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.getDuration($sendtime)).$title.'</td>'
             .'<td>'.$sended.' '._NLUSER.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
             .'<td>'.add_menu('<a href="'.$afile.'.php?name=newsletter&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
@@ -36,7 +36,7 @@ function newsletter(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -53,7 +53,7 @@ function add(): void {
     }
     $count = getVar('post', 'count', 'num', '');
     $send = getVar('post', 'send', '', '');
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($content) $cont .= preview($title, $content, '', '', 'all');
@@ -194,7 +194,7 @@ function add(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="nid" value="'.$nid.'"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -246,9 +246,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

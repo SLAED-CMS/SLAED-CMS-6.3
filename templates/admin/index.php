@@ -9,7 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 function setTemplateHead($sub, $val = '') {
 	global $theme, $user, $conf, $db, $blocks, $admin, $afile;
 	$langs = $menu = $blocks = $login = '';
-	if (is_admin()) {
+	if (isAdmin()) {
 		if ($conf['multilingual'] == 1) {
 			$dir = opendir('language');
 			while (false !== ($file = readdir($dir))) {
@@ -21,7 +21,7 @@ function setTemplateHead($sub, $val = '') {
 			}
 			closedir($dir);
 		}
-		if (!is_admin_god()) {
+		if (!isAdmin(true)) {
 			$uname = _HELLO.', '.substr($admin[1], 0, 25).'!';
 			$menu = '<li class="sl_first"><a href="#" title="'.$uname.'"><b>'.$uname.'</b></a></li>'
 			.'<li><a href="'.$afile.'.php" title="'._ADMINMENU.'"><b>'._HOME.'</b></a></li>'
@@ -39,9 +39,9 @@ function setTemplateHead($sub, $val = '') {
 		}
 		$blocks = getAdminPanelBlocks().admininfo().adminblock();
 	} else {
-		$login = ($db->getSqlRowCount($db->getSqlQuery("SELECT * FROM ".PREFIX_DB."_admins")) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
+		$login = ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
 	}
-	$value = array('{%langs%}' => $langs, '{%menu%}' => $menu, '{%blocks%}' => $blocks, '{%login%}' => $login, '{%theme%}' => $theme, '{%lang%}' => substr(_LOCALE, 0, 2));
+	$value = ['{%langs%}' => $langs, '{%menu%}' => $menu, '{%blocks%}' => $blocks, '{%login%}' => $login, '{%theme%}' => $theme, '{%lang%}' => substr(_LOCALE, 0, 2)];
 	$value = is_array($val) ? array_merge($value, $val) : $value;
 	return str_replace(array_keys($value), array_values($value), $sub);
 }
@@ -54,15 +54,14 @@ function setTemplateBlock($tpl, $val = '') {
 		$cont = getThemeFile($argc);
 		if ($cont) $cach = file_get_contents($cont);
 	}
-	$value = array('{%close%}' => _OPCL);
+	$value = ['{%close%}' => _OPCL];
 	$value = is_array($val) ? array_merge($value, $val) : $value;
 	return str_replace(array_keys($value), array_values($value), $cach);
 }
 
 function setTemplateFoot($sub, $val = '') {
 	global $theme, $user, $conf;
-	$value = array('{%upper%}' => _PAGETOP);
+	$value = ['{%upper%}' => _PAGETOP];
 	$value = is_array($val) ? array_merge($value, $val) : $value;
 	return str_replace(array_keys($value), array_values($value), $sub);
 }
-?>

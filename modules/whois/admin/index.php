@@ -130,7 +130,7 @@ function save(): void {
     if (!$stop && $posttype == 'save') {
         $postid = is_user_id($postname);
         $uid = $postid ? $postid : '';
-        $name = $postid ? '' : text_filter(substr($postname, 0, 25));
+        $name = $postid ? '' : filterText(substr($postname, 0, 25));
         if ($wid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB."_whois SET uid = :uid, name = :name, domain = :domain, host = :host, dc = :dc, hometext = :hometext, status = '1' WHERE id = :id", ['uid' => $uid, 'name' => $name, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext, 'id' => $wid]);
         } else {

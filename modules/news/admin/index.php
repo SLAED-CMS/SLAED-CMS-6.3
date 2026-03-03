@@ -86,7 +86,7 @@ function add(): void {
         $bodytext = getVar('post', 'bodytext', 'text', '');
         $field = getVar('post', 'field', 'field');
         $vote = getVar('post', 'vote', 'num', 0);
-        $time = save_datetime(1, 'time');
+        $time = getVar('req', 'time', 'time');
         $ihome = getVar('post', 'ihome', 'num', 0);
         $acomm = getVar('post', 'acomm', 'num', 0);
         $fix = getVar('post', 'fix', 'num', 0);
@@ -150,7 +150,7 @@ function save(): void {
     $vote = getVar('post', 'vote', 'num', 0);
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
-    $time = save_datetime(1, 'time');
+    $time = getVar('req', 'time', 'time');
     $fix = getVar('post', 'fix', 'num', 0);
     $stop = [];
     if (!$subject) $stop[] = _CERROR;
@@ -159,7 +159,7 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
+        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($sid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET catid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, field = :field, vote = :vote, ihome = :ihome, acomm = :acomm, associated = :associated, fix = :fix, status = \'1\' WHERE sid = :sid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'fix' => $fix, 'sid' => $sid]);
         } else {

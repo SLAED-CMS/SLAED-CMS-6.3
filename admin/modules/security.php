@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 require_once CONFIG_DIR.'/security.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
@@ -17,7 +17,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 
 function security(): void {
     global $afile;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0, 'security');
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= setTemplateBasic('open');
@@ -39,12 +39,12 @@ function security(): void {
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function fileview(): void {
     global $afile;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0, 'security');
     $file = getVar('get', 'file', 'var');
     if ($file) {
@@ -58,7 +58,7 @@ function fileview(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function block(): void {
@@ -68,7 +68,7 @@ function block(): void {
     $hash = getVar('req', 'hash', 'text');
     $ip_mask = getVar('req', 'ip_mask', 'num');
     
-    head();
+    setHead();
     $cont = navi(0, 1, 1, 0, 'security');
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
@@ -84,7 +84,7 @@ function block(): void {
                 $cont .= '<tr><td>'.title_tip(_BANN_REAS.': '.$binfo[4]).user_geo_ip($binfo[0], 4).'</td>'
                 .'<td>'.$mask.'</td>'
                 .'<td>'.$binfo[2].'</td>'
-                .'<td>'.rest_time($binfo[3]).'</td>'
+                .'<td>'.getTimeLeft($binfo[3]).'</td>'
                 .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=blocksave&amp;ip='.$binfo[0].'&amp;ip_mask='.$binfo[1].'&amp;hash='.$binfo[2].'&amp;time='.$binfo[3].'&amp;id=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             }
         }
@@ -94,7 +94,7 @@ function block(): void {
     $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
     .'<tr><td>'._IP.':</td><td><input type="text" name="ip" value="'.$ip.'" maxlength="255" class="sl_form" placeholder="'._IP.'" required></td></tr>'
     .'<tr><td>'._IP_MASK.':</td><td><select name="ip_mask" class="sl_form">'
-    . '<option value="4"'.(($ip_mask == 4) ? ' selected' : '').'>255.255.255.255</option>'
+    .'<option value="4"'.(($ip_mask == 4) ? ' selected' : '').'>255.255.255.255</option>'
     .'<option value="3"'.(($ip_mask == 3) ? ' selected' : '').'>255.255.255.***</option>'
     .'<option value="2"'.(($ip_mask == 2) ? ' selected' : '').'>255.255.***.***</option>'
     .'<option value="1"'.(($ip_mask == 1) ? ' selected' : '').'>255.***.***.***</option>'
@@ -113,7 +113,7 @@ function block(): void {
                 $binfo = explode('|', $val);
                 $cont .= '<tr><td>'.user_info($binfo[0]).'</td>'
                 .'<td>'.$binfo[2].'</td>'
-                .'<td>'.rest_time($binfo[1]).'</td>'
+                .'<td>'.getTimeLeft($binfo[1]).'</td>'
                 .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=blocksave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             }
         }
@@ -138,7 +138,7 @@ function block(): void {
     </script>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function blocksave(): void {
@@ -172,8 +172,8 @@ function blocksave(): void {
         if ($mail) {
             [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
             $subject = $conf['sitename'].' - '._SECURITY;
-            $msg = nl2br(bb_decode(str_replace('[time]', rest_time($time), str_replace('[info]', $info, $mailtext)), 'all'), false);
-            mail_send($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);
+            $msg = nl2br(bb_decode(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), 'all'), false);
+            addMail($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
     }
@@ -183,7 +183,7 @@ function blocksave(): void {
 
 function pass(): void {
     global $conf, $afile;
-    head();
+    setHead();
     $cont = navi(0, 2, 0, 0, 'security');
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$conf['security']['login'] || !$conf['security']['password']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEC_AUTH_INFO]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEC_AUTH_OK]);
@@ -204,7 +204,7 @@ function pass(): void {
     $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="passsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function passsave(): void {
@@ -231,20 +231,20 @@ function passsave(): void {
 
 function conf(): void {
     global $conf, $afile;
-    head();
+    setHead();
     $cont = navi(0, 3, 0, 0, 'security');
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._SFLOOD.':</td><td><select name="flood" class="sl_conf">'
-    . '<option value="0"'.(($conf['security']['flood'] == 0) ? ' selected' : '').'>'._NO.'</option>'
+    .'<option value="0"'.(($conf['security']['flood'] == 0) ? ' selected' : '').'>'._NO.'</option>'
     .'<option value="1"'.(($conf['security']['flood'] == 1) ? ' selected' : '').'>'._SFLOOD_1.'</option>'
     .'<option value="2"'.(($conf['security']['flood'] == 2) ? ' selected' : '').'>'._SFLOOD_2.'</option>'
     .'<option value="3"'.(($conf['security']['flood'] == 3) ? ' selected' : '').'>'._SFLOOD_3.'</option>'
     .'</select></td></tr>'
     .'<tr><td>'._SEC_VIEW.':</td><td><select name="error" class="sl_conf">'
-    . '<option value="0"'.(($conf['security']['error'] == 0) ? ' selected' : '').'>'._NO.'</option>'
+    .'<option value="0"'.(($conf['security']['error'] == 0) ? ' selected' : '').'>'._NO.'</option>'
     .'<option value="1"'.(($conf['security']['error'] == 1) ? ' selected' : '').'>'._SEC_VIEW_1.'</option>'
     .'<option value="2"'.(($conf['security']['error'] == 2) ? ' selected' : '').'>'._SEC_VIEW_2.'</option>'
     .'</select></td></tr>'
@@ -273,7 +273,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function confsave(): void {
@@ -332,9 +332,9 @@ function confsave(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 4, 0, 0, 'security').'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 function down(): void {

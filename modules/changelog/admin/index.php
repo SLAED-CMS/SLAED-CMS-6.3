@@ -383,7 +383,7 @@ function gitexec(string $cmd, array &$out, int &$code): void {
     $out = [];
     $code = 1;
     if (!function_exists('exec')) return;
-    if (strpbrk($cmd, "`0`r`n") !== false) return;
+    if (strpbrk($cmd, '`0`r`n') !== false) return;
     if (stripos($cmd, 'git') === false || stripos($cmd, ' log ') === false) return;
     exec($cmd, $out, $code);
 }
@@ -665,12 +665,12 @@ function export(): void {
 
     if ($format === 'md') {
         echo "# SLAED CMS Changelog\n\n";
-        echo "Generiert am: ".date('Y-m-d H:i:s')."\n\n---\n\n";
+        echo 'Generiert am: '.date('Y-m-d H:i:s')."\n\n---\n\n";
         foreach ($commits as $c) {
-            echo "## ".$c['subject']."\n\n";
-            echo "**Commit:** `".$c['hash']."`  \n";
-            echo "**Autor:** ".$c['author']."  \n";
-            echo "**Datum:** ".$c['date']."  \n\n";
+            echo '## '.$c['subject']."\n\n";
+            echo '**Commit:** `'.$c['hash']."`  \n";
+            echo '**Autor:** '.$c['author']."  \n";
+            echo '**Datum:** '.$c['date']."  \n\n";
             if (!empty($c['body']) && $c['body'] !== COMMIT_END) {
                 echo $c['body']."\n\n";
             }
@@ -678,10 +678,10 @@ function export(): void {
         }
     } else {
         echo "SLAED CMS Changelog\n===================\n\n";
-        echo "Generiert am: ".date('Y-m-d H:i:s')."\n\n";
+        echo 'Generiert am: '.date('Y-m-d H:i:s')."\n\n";
         foreach ($commits as $c) {
             echo $c['subject']."\n";
-            echo "Commit: ".$c['hash']." | Autor: ".$c['author']." | Datum: ".$c['date']."\n";
+            echo 'Commit: '.$c['hash'].' | Autor: '.$c['author'].' | Datum: '.$c['date']."\n";
             if (!empty($c['body']) && $c['body'] !== COMMIT_END) {
                 echo $c['body']."\n";
             }

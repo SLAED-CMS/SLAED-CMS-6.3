@@ -136,7 +136,7 @@ function add(): void {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
 		if (is_user()) {
-			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.text_filter(substr($user[1], 0, 25)).'</td></tr>';
+			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
 		} else {
 			$postname = getVar('post', 'postname', 'name');
 			$postname = ($postname) ? $postname : _ANONYM;

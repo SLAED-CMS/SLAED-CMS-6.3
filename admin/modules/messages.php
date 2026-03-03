@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $tab = 0, int $subtab = 0): string {
     $ops = ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'];
@@ -14,7 +14,7 @@ function navi(int $tab = 0, int $subtab = 0): string {
 
 function messages(): void {
     global $db, $conf, $afile;
-    head();
+    setHead();
     $cont = navi(0, 0);
     $result = $db->getSqlQuery('SELECT mid, title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message ORDER BY mid');
     if ($db->getSqlRowCount($result) > 0) {
@@ -34,7 +34,7 @@ function messages(): void {
             }
             $mlanguage = (!$mlanguage) ? _ALL : $mlanguage;
             $exp = intval($expire - time());
-            $exp = ($exp > 0) ? display_time($exp) : _UNLIMITED;
+            $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
             $cont .= '<tr><td>'.$mid.'</td>'
                .'<td><span title="'.$title.'" class="sl_note">'.cutstr($title, 35).'</span></td>'
                .'<td>'.$exp.'</td>'
@@ -48,7 +48,7 @@ function messages(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -67,7 +67,7 @@ function add(): void {
         $view = getVar('post', 'view', 'num');
         $mlanguage = getVar('post', 'mlanguage', 'var');
     }
-    head();
+    setHead();
     $cont = navi(1, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($content) $cont .= preview($title, $content, '', '', 'all');
@@ -81,7 +81,7 @@ function add(): void {
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = '<input type="hidden" name="expire" value="'.$oldexpire.'">'._PURCHASED.': '.display_time($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = '<input type="hidden" name="expire" value="'.$oldexpire.'">'._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
         $expire_text = '<input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required>';
@@ -99,7 +99,7 @@ function add(): void {
        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="mid" value="'.$mid.'"><input type="hidden" name="name" value="messages"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"><input type="hidden" name="newexpire" value="'.$newexpire.'"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -146,9 +146,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(2, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

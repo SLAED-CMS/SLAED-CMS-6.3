@@ -125,20 +125,20 @@ function main(): void {
         <div class="grid col-block">
             <h3 title="'._NEWS.'" class="font heading-1">Новости</h3>
             <ul class="ms-list">';
-            $result = $db->getSqlQuery("SELECT s.sid, s.catid, s.title, s.time, s.hometext, c.title, c.description FROM ".PREFIX_DB."_news AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.catid=c.id) WHERE time <= now() AND status!='0' ORDER BY time DESC LIMIT 3");
+            $result = $db->getSqlQuery('SELECT s.sid, s.catid, s.title, s.time, s.hometext, c.title, c.description FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB."_categories AS c ON (s.catid=c.id) WHERE time <= now() AND status!='0' ORDER BY time DESC LIMIT 3");
             while([$sid, $catid, $title, $time, $hometext, $ctitle, $cdesc] = $db->getSqlRow($result)) {
                 $linkstrip = cutstr($title, 45);
                 if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
-                    $img = "uploads/news/thumb/".trim($match[1]);
+                    $img = 'uploads/news/thumb/'.trim($match[1]);
                 } else {
                     preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
-                    $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : "");
+                    $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
                 }
                 $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
-                $ntext = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, "news"))), ENT_QUOTES), 60);
+                $ntext = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, 'news'))), ENT_QUOTES), 60);
                 $cont .= '<li><a href="index.php?name=news&amp;op=view&amp;id='.$sid.'" title="'.$title.'" class="ms-img" style="background-image: url('.$img.');"></a>
                     <b><a href="index.php?name=news&amp;op=view&amp;id='.$sid.'" title="'.$title.'">'.$linkstrip.'</a></b>
-                    <p>'.$ntext .'</p>
+                    <p>'.$ntext.'</p>
                     <ul class="grey">
                         <li><a href="index.php?name=news&amp;cat='.$catid.'" title="'.$cdesc.'" class="sl_cat"><b>'.$ctitle.'</b></a></li>
                         <li title="'._DATE.'" class="ico i_date">'.format_time($time, _TIMESTRING).'</li>
@@ -151,20 +151,20 @@ function main(): void {
         <div class="grid col-block">
             <h3 title="'._FILES.'" class="font heading-1">Файлы</h3>
             <ul class="ms-list">';
-            $result = $db->getSqlQuery("SELECT s.lid, s.cid, s.title, s.description, s.date, c.title, c.description FROM ".PREFIX_DB."_files AS s LEFT JOIN ".PREFIX_DB."_categories AS c ON (s.cid=c.id) WHERE date <= now() AND status!='0' ORDER BY date DESC LIMIT 3");
+            $result = $db->getSqlQuery('SELECT s.lid, s.cid, s.title, s.description, s.date, c.title, c.description FROM '.PREFIX_DB.'_files AS s LEFT JOIN '.PREFIX_DB."_categories AS c ON (s.cid=c.id) WHERE date <= now() AND status!='0' ORDER BY date DESC LIMIT 3");
             while([$sid, $catid, $title, $hometext, $time, $ctitle, $cdesc] = $db->getSqlRow($result)) {
                 $linkstrip = cutstr($title, 45);
                 if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
-                    $img = "uploads/files/thumb/".trim($match[1]);
+                    $img = 'uploads/files/thumb/'.trim($match[1]);
                 } else {
                     preg_match("#\[img=(.*?)\](.*)\[/img\]#si", $hometext, $match);
-                    $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : "");
+                    $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
                 }
                 $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
-                $ntext = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, "files"))), ENT_QUOTES), 60);
+                $ntext = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, 'files'))), ENT_QUOTES), 60);
                 $cont .= '<li><a href="index.php?name=files&amp;op=view&amp;id='.$sid.'" title="'.$title.'" class="ms-img" style="background-image: url('.$img.');"></a>
                     <b><a href="index.php?name=files&amp;op=view&amp;id='.$sid.'" title="'.$title.'">'.$linkstrip.'</a></b>
-                    <p>'.$ntext .'</p>
+                    <p>'.$ntext.'</p>
                     <ul class="grey">
                         <li><a href="index.php?name=files&amp;cat='.$catid.'" title="'.$cdesc.'" class="sl_cat"><b>'.$ctitle.'</b></a></li>
                         <li title="'._DATE.'" class="ico i_date">'.format_time($time, _TIMESTRING).'</li>

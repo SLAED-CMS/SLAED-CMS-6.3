@@ -124,9 +124,9 @@ class Database {
                 $errmsg = htmlspecialchars($error['message']);
                 $errinfo = $error['sqlstate'].' / '.$error['code'];
                 $this->qtime .= ' <span class="sl_red">'._ERROR.': '.$errinfo.' - '.$errmsg.'</span><br>';
-                if (function_exists('error_sql_log')) {
+                if (function_exists('addSqlLog')) {
                     $loginfo = $ttime.' '._SEC.'. - ['.$type.'] - '.$error['sqlstate'].'/'.$error['code'];
-                    error_sql_log($loginfo, $error['message'], $this->filterSqlQuery($query, $params));
+                    addSqlLog($loginfo, $error['message'], $this->filterSqlQuery($query, $params));
                 }
             }
             return false;

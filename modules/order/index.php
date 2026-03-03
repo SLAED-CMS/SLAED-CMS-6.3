@@ -57,14 +57,14 @@ function send(): void {
 				$amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._ORDER;
 				$msg = $conf['sitename'].' - '._ORDER.'<br><br><b>'._PERSONALINFO.'</b><br><br>'._OR_2.': '.$mail.'<br>'.$infos.'<br>'._OR_3.': '.$com;
-				mail_send($amail, $mail, $subject, $msg, 1, 1);
+				addMail($amail, $mail, $subject, $msg, 1, 1);
 			}
 			if (!$conf['order']['pr']) {
 				$amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._ORDER;
 				$msg = $conf['sitename'].' - '._ORDER.'<br><br>';
 				$msg .= bb_decode($conf['order']['sendinfo'], 'all');
-				mail_send($mail, $amail, $subject, $msg, 0, 3);
+				addMail($mail, $amail, $subject, $msg, 0, 3);
 			}
 			update_points(34);
 			setHead(['title' => _ORDER]);

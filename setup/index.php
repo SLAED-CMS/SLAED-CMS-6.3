@@ -24,8 +24,8 @@ if ($conf['security']['error'] == 2) {
 if (function_exists('set_time_limit')) set_time_limit(1800);
 $host = getenv('HTTP_HOST') ? getenv('HTTP_HOST') : getenv('SERVER_NAME');
 $url = getProtocol().'://'.$host;
-$clang = isset($_COOKIE[$conf['user_c'].'-language']) ? isVar($_COOKIE[$conf['user_c'].'-language']) : 'en';
-$op = (isset($_REQUEST['op'])) ? isVar($_REQUEST['op']) : '';
+$clang = isset($_COOKIE[$conf['user_c'].'-language']) ? filterVar($_COOKIE[$conf['user_c'].'-language']) : 'en';
+$op = (isset($_REQUEST['op'])) ? filterVar($_REQUEST['op']) : '';
 
 require_once BASE_DIR.'/language/'.$clang.'.php';
 require_once BASE_DIR.'/setup/language/'.$clang.'.php';
@@ -225,9 +225,8 @@ function setExit(string $msg, string $typ = ''): never {
     die($cont);
 }
 
-function isVar(string $v): string {
-    $v = (preg_match('#[^a-zA-Z0-9_\-]#', $v)) ? '' : $v;
-    return $v;
+function filterVar(string $v): string {
+    return preg_match('#[^a-zA-Z0-9_\-]#', $v) ? '' : $v;
 }
 
 function checkWritableConfig(string $file): void {
@@ -276,7 +275,7 @@ function lang(): void {
     $lang = (preg_match('#[^a-zA-Z0-9_]#', $_GET['id'])) ? 'en' : $_GET['id'];
     $url = parse_url($url);
     $sec = ($url['scheme'] == 'http') ? false : true;
-    $options = array('expires' => $time, 'path' => '/', 'domain' => $url['host'], 'secure' => $sec, 'httponly' => true, 'samesite' => 'Lax');
+    $options = ['expires' => $time, 'path' => '/', 'domain' => $url['host'], 'secure' => $sec, 'httponly' => true, 'samesite' => 'Lax'];
     setcookie($conf['user_c'].'-language', $lang, $options);
     header('Location: setup.php');
 }
@@ -333,7 +332,7 @@ function save(): void {
     $xsync = (isset($_POST['xsync'])) ? $_POST['xsync'] : '1';
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
 
-    $cont = array('language' => $clang, 'homeurl' => $url);
+    $cont = ['language' => $clang, 'homeurl' => $url];
     setConfigFile('global.php', $conf, $cont);
     require_once BASE_DIR.'/config/global.php';
 
@@ -345,12 +344,12 @@ function save(): void {
     } else {
         $xafile = file_exists($xafile.'.php') ? $xafile : $tafile;
     }
-    $cont = array('afile' => $xafile);
+    $cont = ['afile' => $xafile];
     setConfigFile('security.php', $conf['security'], $cont);
     require_once BASE_DIR.'/config/security.php';
     
     require_once BASE_DIR.'/config/db.php';
-    $cont = array('host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync);
+    $cont = ['host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync];
     setConfigFile('db.php', $conf['db'], $cont);
 
     require_once 'core/classes/pdo.php';

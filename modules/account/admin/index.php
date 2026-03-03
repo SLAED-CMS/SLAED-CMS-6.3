@@ -178,7 +178,7 @@ function add(): void {
         $a = $i + 1;
         $warnv = empty($warn[$i]) ? '' : $warn[$i];
         $class = (empty($warnv) && $i != 0) ? ' class="sl_none"' : '';
-        $cont .= '<table id="warn'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'warn'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._UWARN.' - '.$a.':</a></td><td><input type="text" name="warn[]" value="'.text_filter($warnv).'" class="sl_form" placeholder="'._UWARN.' - '.$a.'"></td></tr></table>';
+        $cont .= '<table id="warn'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'warn'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._UWARN.' - '.$a.':</a></td><td><input type="text" name="warn[]" value="'.filterText($warnv).'" class="sl_form" placeholder="'._UWARN.' - '.$a.'"></td></tr></table>';
         $i++;
     }
     $cont .= '</td></tr>'
@@ -215,7 +215,7 @@ function addsave(): void {
     $email = getVar('post', 'email');
     $site = getVar('post', 'site', 'url');
     $avatar = getVar('post', 'avatar', '', 'default/00.gif');
-    $reg = save_datetime(1, 'reg');
+    $reg = getVar('req', 'reg', 'time');
     $occ = getVar('post', 'occ');
     $from = getVar('post', 'from');
     $inter = getVar('post', 'inter');
@@ -230,10 +230,10 @@ function addsave(): void {
     $news = getVar('post', 'news', 'num');
     $lang = getVar('post', 'lang');
     $point = getVar('post', 'point', 'num');
-    $warn = isArray(getVar('post', 'warn[]', 'num')) ? text_filter(implode('|', str_replace('|', '', getVar('post', 'warn[]', 'num')))) : 0;
+    $warn = isArray(getVar('post', 'warn[]', 'num')) ? filterText(implode('|', str_replace('|', '', getVar('post', 'warn[]', 'num')))) : 0;
     $access = getVar('post', 'access', 'num');
     $group = getVar('post', 'group');
-    $birth = save_datetime(2, 'birth');
+    $birth = getVar('req', 'birth', 'date');
     $gender = getVar('post', 'gender');
     $field = getVar('post', 'field', 'field');
     $mail = getVar('post', 'mail', 'num');
@@ -274,7 +274,7 @@ function addsave(): void {
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
             $mailtext = getVar('post', 'mailtext', 'text');
             $msg = nl2br(bb_decode(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), 'account'), false);
-            mail_send($email, $conf['adminmail'], $subject, $msg, 0, 3);
+            addMail($email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
         setRedirect($afile.'.php?name=account'.$send);

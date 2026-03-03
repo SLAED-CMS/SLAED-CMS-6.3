@@ -72,7 +72,7 @@ function add(): void {
     } else {
         $jokeid = getVar('post', 'jokeid', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');
-        $date = save_datetime(1, 'date');
+        $date = getVar('req', 'date', 'time');
         $title = getVar('post', 'title', 'title', '');
         $cat = getVar('post', 'cat', 'num', 0);
         $joke = getVar('post', 'joke', 'text', '');
@@ -98,7 +98,7 @@ function save(): void {
     global $db, $afile, $stop;
     $jokeid = getVar('post', 'jokeid', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
-    $date = save_datetime(1, 'date');
+    $date = getVar('req', 'date', 'time');
     $title = getVar('post', 'title', 'title', '');
     $cat = getVar('post', 'cat', 'num', 0);
     $joke = getVar('post', 'joke', 'text', '');
@@ -110,7 +110,7 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
+        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($jokeid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, date = :date, title = :title, cat = :cat, joke = :joke, status = \'1\' WHERE jokeid = :jokeid', ['uid' => $postid, 'name' => $postname, 'date' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
         } else {

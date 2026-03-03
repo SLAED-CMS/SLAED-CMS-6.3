@@ -76,7 +76,7 @@ function add(): void {
         $cat = getVar('post', 'cat', 'num', 0);
         $hometext = getVar('post', 'hometext', 'text', '');
         $bodytext = getVar('post', 'bodytext', 'text', '');
-        $time = save_datetime(1, 'time');
+        $time = getVar('req', 'time', 'time');
         $acomm = getVar('post', 'acomm', 'num', 0);
         $ihome = getVar('post', 'ihome', 'num', 0);
     }
@@ -111,7 +111,7 @@ function save(): void {
     $bodytext = getVar('post', 'bodytext', 'text', '');
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
-    $time = save_datetime(1, 'time');
+    $time = getVar('req', 'time', 'time');
     $stop = [];
     if (!$subject) $stop[] = _CERROR;
     if (!$hometext) $stop[] = _CERROR1;
@@ -119,7 +119,7 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
+        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($pid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET catid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE pid = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
         } else {

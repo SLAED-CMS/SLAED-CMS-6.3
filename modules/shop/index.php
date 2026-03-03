@@ -25,7 +25,7 @@ function navigate(string $title, string|int $cat=''): string {
 function shop(): void {
 	global $db, $conf, $afile, $home, $user, $op;
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$unum = user_news($user[3] ?? 0, $conf['shop']['num']);
+	$unum = getUserNews($conf['shop']['num']);
 	$cat = getVar('get', 'cat', 'num');
 	$ncat = $cat;
 	$params = [];
@@ -335,7 +335,7 @@ function kasse(): void {
 				$msg .= _C_MAIL.': '.$smail.'<br>';
 				$msg .= _SITEURL.': '.$sdom.'<br>';
 				$msg .= _C_MESSAGE.': '.$smsg;
-				mail_send($amail, $smail, $subject, $msg, 1, 1);
+				addMail($amail, $smail, $subject, $msg, 1, 1);
 			}
 			if ($conf['shop']['mailuser']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
@@ -351,7 +351,7 @@ function kasse(): void {
 				$msg .= _C_MAIL.': '.$smail.'<br>';
 				$msg .= _SDOM.': '.$sdom.'<br>';
 				$msg .= _C_MESSAGE.': '.$smsg;
-				mail_send($smail, $amail, $subject, $msg, 0, 3);
+				addMail($smail, $amail, $subject, $msg, 0, 3);
 			}
 			$massiv = explode(',', $cookies);
 			foreach ($massiv as $val) {
@@ -397,7 +397,7 @@ function clients(): void {
 			while([$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $ppreis] = $db->getSqlRow($result)) {
 				$website = ($cwebsite) ? '<br>'._SITE.': '.$cwebsite : '';
 				$note = ($cinfo) ? '<br>'._NOTE.' : '.$cinfo : '';
-				$cenddate = ($cenddate != '0') ? rest_time($cenddate) : _NO;
+				$cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _NO;
 				$rechn = add_menu('<a href="index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid.'" target="_blank" title="'._RECHN_B.'">'._RECHN_B.'</a>');
 				$cont .= '<tr id="'.$cid.'">'
 				.'<td><a href="#'.$cid.'" title="'.$cid.'" class="sl_pnum">'.$cid.'</a></td>'
@@ -556,5 +556,3 @@ switch($op) {
 	case 'partners': partners(); break;
 	case 'partners_send': partners_send(); break;
 }
-
-

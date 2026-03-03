@@ -25,7 +25,7 @@ function jokes(): void {
     global $db, $afile, $user, $conf, $home, $op;
     $cwhere = catmids($conf['name'], 'j.cat');
     $word = getVar('get', 'word', 'word');
-    $unum = user_news($user[3] ?? 0, $conf['jokes']['num']);
+    $unum = getUserNews($conf['jokes']['num']);
     $cat = getVar('get', 'cat', 'num');
     $ncat = $cat;
     $params = [];
@@ -106,7 +106,7 @@ function add(): void {
         $title = getVar('post', 'title', 'text');
         $cid = getVar('post', 'cid', 'num');
         $joke = getVar('post', 'joke', 'text');
-        $postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
+        $postname = filterText(substr(getVar('post', 'postname', 'name'), 0, 25));
         setHead(['title' => _ADD]);
         $cont = navigate(_ADD);
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
@@ -115,7 +115,7 @@ function add(): void {
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
         if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.text_filter(substr($user[1], 0, 25)).'</td></tr>';
+            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
         } else {
             $postname = ($postname) ? $postname : _ANONYM;
             $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
@@ -135,7 +135,7 @@ function add(): void {
 function send(): void {
     global $db, $user, $conf, $stop;
     if ($conf['jokes']['add'] == '1') {
-        $postname = text_filter(substr(getVar('post', 'postname', 'name'), 0, 25));
+        $postname = filterText(substr(getVar('post', 'postname', 'name'), 0, 25));
         $title = getVar('post', 'title', 'text');
         $cid = getVar('post', 'cid', 'num');
         $joke = getVar('post', 'joke', 'text');

@@ -66,10 +66,10 @@ function download(): void {
             $input = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S' ,'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '='];
             $output = ['{', '©', '"', '§', '$', 'Ц', '&', '/', '(', '', '№', 'Ў', '<', '%', '‹', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'е', 'B', 'ш', 'D', 'E', 'я', 'G', 'д', 'I', 'J', 'K', 'L', '‡', 'Ш', 'O', 'Ж', 'Q', '·', 'В' ,'!', 'U', '†', '¶', 'X', 'Y', 'Z', 'ї'];
             $sourse = str_replace($input, $output, $code);
-            if (file_exists($path."/html/templates/admin/images/admin/admins.png")) hidden($path."/html/templates/admin/images/admin/admins.png", $ipath."/admins.png", $sourse."IEND®B`‚");
-            if (file_exists($path."/html/templates/admin/images/admin/forum.png")) hidden($path."/html/templates/admin/images/admin/forum.png", $ipath."/forum.png", $code);
-            if (file_exists($path."/html/templates/admin/images/language/german.png")) hidden($path."/html/templates/admin/images/language/german.png", $ipath."/german.png", $code);
-            if (file_exists($path."/html/templates/admin/images/admin/menu.png")) hidden($path."/html/templates/admin/images/admin/menu.png", $ipath."/menu.png", $sourse."IEND®B`‚".$code);
+            if (file_exists($path.'/html/templates/admin/images/admin/admins.png')) hidden($path.'/html/templates/admin/images/admin/admins.png', $ipath.'/admins.png', $sourse.'IEND®B`‚');
+            if (file_exists($path.'/html/templates/admin/images/admin/forum.png')) hidden($path.'/html/templates/admin/images/admin/forum.png', $ipath.'/forum.png', $code);
+            if (file_exists($path.'/html/templates/admin/images/language/german.png')) hidden($path.'/html/templates/admin/images/language/german.png', $ipath.'/german.png', $code);
+            if (file_exists($path.'/html/templates/admin/images/admin/menu.png')) hidden($path.'/html/templates/admin/images/admin/menu.png', $ipath.'/menu.png', $sourse.'IEND®B`‚'.$code);
 
             if (file_exists($path.'/html/config/license.txt')) generator($path.'/html/config');
             if (file_exists($path.'/setup/config/license.txt')) generator($path.'/setup/config');

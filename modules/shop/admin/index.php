@@ -92,7 +92,7 @@ function clients(): void {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._SITE.'</th><th>'._NICKNAME.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while([$cid, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $nick, $ptitle] = $db->getSqlRow($result)) {
-            $cenddate = ($cenddate != '0') ? rest_time($cenddate) : _UNLIMITED;
+            $cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _UNLIMITED;
             $cinfo = ($cinfo) ? $cinfo : _NO;
             if ($nick) {
                 $name = $nick;
@@ -332,7 +332,7 @@ function productsadd(): void {
         $pbodytext = getVar('post', 'pbodytext', 'text');
         $ppreis = getVar('post', 'ppreis', 'text');
         $vote = getVar('post', 'vote', 'num');
-        $ptime = save_datetime(1, 'ptime');
+        $ptime = getVar('req', 'ptime', 'time');
         $associated = getVar('post', 'associated', 'array');
         $ihome = getVar('post', 'ihome', 'num');
         $acomm = getVar('post', 'acomm', 'num');
@@ -392,7 +392,7 @@ function productssave(): void {
     $acomm = getVar('post', 'acomm', 'num');
     $fix = getVar('post', 'fix', 'num');
     $pactive = getVar('post', 'pactive', 'num');
-    $ptime = save_datetime(1, 'ptime');
+    $ptime = getVar('req', 'ptime', 'time');
     $stop = [];
     if (!$ptitle || !$ptext || !$ppreis) $stop[] = _ERROR_ALL;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
@@ -423,7 +423,7 @@ function productsadmin(int|array $id = 0, string $vtyp = ''): void {
     $id = (is_array($ids) && $ids !== []) ? implode(',', $ids) : 0;
     $typ = getVar('post', 'typ', 'text');
     if (!$typ) $typ = getVar('get', 'typ', 'text');
-    $vtyp = ($typ) ? analyze($typ) : $vtyp;
+    $vtyp = ($typ) ? filterVar($typ) : $vtyp;
     $typ = (is_numeric($vtyp[0])) ? intval($vtyp) : intval(substr($vtyp, 1));
     if ($id) {
         if ($vtyp[0] == 'a') {

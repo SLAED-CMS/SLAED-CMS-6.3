@@ -74,7 +74,7 @@ function add(): void {
         $mail = getVar('post', 'mail', 'text', '');
         $info = getVar('post', 'info', 'array', []);
         $com = getVar('post', 'com', 'text', '');
-        $date = save_datetime(1, 'date');
+        $date = getVar('req', 'date', 'time');
     }
     setHead();
     $cont = navi(0, 1, 0, 0);
@@ -117,9 +117,9 @@ function save(): void {
     $sum = getVar('post', 'sum', 'num', 0);
     $mail = getVar('post', 'mail', 'text', '');
     $info = getVar('post', 'info', 'array', []);
-    $list = (!empty($info)) ? text_filter(implode('|', $info)) : '';
+    $list = (!empty($info)) ? filterText(implode('|', $info)) : '';
     $com = getVar('post', 'com', 'text', '');
-    $date = save_datetime(1, 'date');
+    $date = getVar('req', 'date', 'time');
     checkemail($mail);
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
@@ -203,7 +203,7 @@ function active(): void {
         $subject = ($conf['sitename'] ?? '').' - '._MONEY;
         $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
         $msg .= bb_decode($conf['money']['sendinfo'] ?? '', 'all');
-        mail_send($mail, $amail, $subject, $msg, 0, 3);
+        addMail($mail, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=money&send=1');
     }
     setRedirect($afile.'.php?name=money');

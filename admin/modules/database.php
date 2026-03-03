@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
@@ -20,9 +20,9 @@ function database(): void {
 
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
-        head();
+        setHead();
         echo navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _ERROR]);
-        foot();
+        setFoot();
         return;
     }
 
@@ -40,16 +40,16 @@ function database(): void {
 
     $content  = '<table class="sl_table_list_sort">';
     $content .= '<thead><tr>'
-              . '<th>'._ID.'</th>'
-              . '<th>'._TABLE.'</th>'
-              . '<th>'._TYPE.'</th>'
-              . '<th>'._DBCOLL.'</th>'
-              . '<th>'._ROWS.'</th>'
-              . '<th>'._DATE.'</th>'
-              . '<th>'._SIZE.'</th>'
-              . '<th>'._DBFREE.'</th>'
-              . '<th class="{sorter: false}">'.$ftitleth.'</th>'
-              . '</tr></thead><tbody>';
+              .'<th>'._ID.'</th>'
+              .'<th>'._TABLE.'</th>'
+              .'<th>'._TYPE.'</th>'
+              .'<th>'._DBCOLL.'</th>'
+              .'<th>'._ROWS.'</th>'
+              .'<th>'._DATE.'</th>'
+              .'<th>'._SIZE.'</th>'
+              .'<th>'._DBFREE.'</th>'
+              .'<th class="{sorter: false}">'.$ftitleth.'</th>'
+              .'</tr></thead><tbody>';
 
     foreach ($tables as $info) {
         $name    = $info['Name'];
@@ -128,30 +128,30 @@ function database(): void {
         $i++;
 
         $content .= '<tr>'
-                  . '<td>'.$i.'</td>'
-                  . '<td>'.$name.'</td>'
-                  . '<td>'.$tabeng.'</td>'
-                  . '<td>'.$tabloc.'</td>'
-                  . '<td>'.$rows.'</td>'
-                  . '<td>'.format_time($crtime, _TIMESTRING).'</td>'
-                  . '<td>'.files_size($tabsize).'</td>'
-                  . '<td>'.$tabsizefrc.'</td>'
-                  . '<td>'.$ftitletd.'</td>'
-                  . '</tr>';
+                  .'<td>'.$i.'</td>'
+                  .'<td>'.$name.'</td>'
+                  .'<td>'.$tabeng.'</td>'
+                  .'<td>'.$tabloc.'</td>'
+                  .'<td>'.$rows.'</td>'
+                  .'<td>'.format_time($crtime, _TIMESTRING).'</td>'
+                  .'<td>'.files_size($tabsize).'</td>'
+                  .'<td>'.$tabsizefrc.'</td>'
+                  .'<td>'.$ftitletd.'</td>'
+                  .'</tr>';
     }
 
     // --- Gesamtzeile wie in phpMyAdmin ---
     $content .= '<tr>'
-              . '<td><strong>'.$i.'</strong></td>'
-              . '<td>&nbsp;</td>'
-              . '<td>&nbsp;</td>'
-              . '<td>&nbsp;</td>'
-              . '<td><strong>'.$total_rows.'</strong></td>'
-              . '<td>&nbsp;</td>'
-              . '<td><strong>'.files_size($total).'</strong></td>'
-              . '<td><strong>'.files_size($totalfree).'</strong></td>'
-              . '<td>&nbsp;</td>'
-              . '</tr>';
+              .'<td><strong>'.$i.'</strong></td>'
+              .'<td>&nbsp;</td>'
+              .'<td>&nbsp;</td>'
+              .'<td>&nbsp;</td>'
+              .'<td><strong>'.$total_rows.'</strong></td>'
+              .'<td>&nbsp;</td>'
+              .'<td><strong>'.files_size($total).'</strong></td>'
+              .'<td><strong>'.files_size($totalfree).'</strong></td>'
+              .'<td>&nbsp;</td>'
+              .'</tr>';
 
     $content .= '</tbody></table>';
 
@@ -170,7 +170,7 @@ function database(): void {
         }
     }
 
-    head();
+    setHead();
 
     // Navigation + Info-Boxen
     if (empty($type)) {
@@ -193,8 +193,8 @@ function database(): void {
         $cont = navi(0, 1, 0, 0);
 
         $info = _OPTIMIZE.': '.$conf['db']['name']
-                  . '<br>'._TOTALSPACE.': '.files_size($total)
-                  . '<br>'._TOTALFREE.': '.files_size($totalfree);
+                  .'<br>'._TOTALSPACE.': '.files_size($total)
+                  .'<br>'._TOTALFREE.': '.files_size($totalfree);
 
         $cont .= setTemplateWarning('warn', [
             'time' => '',
@@ -207,8 +207,8 @@ function database(): void {
         $cont = navi(0, 2, 0, 0);
 
         $info = _REPAIR.': '.$conf['db']['name']
-                  . '<br>'._TOTALSPACE.': '.files_size($total)
-                  . '<br>'._TOTALFREE.': '.files_size($totalfree);
+                  .'<br>'._TOTALSPACE.': '.files_size($total)
+                  .'<br>'._TOTALFREE.': '.files_size($totalfree);
 
         $cont .= setTemplateWarning('warn', [
             'time' => '',
@@ -219,18 +219,18 @@ function database(): void {
     }
 
     echo $cont
-       . setTemplateBasic('open')
-       . $content
-       . setTemplateBasic('close');
+       .setTemplateBasic('open')
+       .$content
+       .setTemplateBasic('close');
 
-    foot();
+    setFoot();
 }
 
 function dump(): void {
     global $db, $conf, $afile;
     $type = getVar('post', 'type', 'var', '');
     $pstring = filter_input(INPUT_POST, 'string', FILTER_UNSAFE_RAW) ?? '';
-    head();
+    setHead();
     $cont = navi(0, 3, 0, 0);
     if ($type === 'dump' && !empty($pstring)) {
         $replacements = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
@@ -277,13 +277,13 @@ function dump(): void {
     </form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 4, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 function del(): void {

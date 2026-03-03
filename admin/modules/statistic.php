@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 require_once CONFIG_DIR.'/statistic.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
@@ -35,7 +35,7 @@ function statistic(): void {
     global $afile;
     $file = getVar('post', 'file', 'text');
     $pfile = $file ? '&amp;file='.$file : '';
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
@@ -81,7 +81,7 @@ function statistic(): void {
     $cont .= '<tr><th>'._ALL.'</th><th>'.$unique.'</th><th>'.$today.'</th><th>'.$homepage.'</th><th>'.$sites.'</th><th>'.$engines.'</th><th>'.$auditory.'</th><th>'.$regusers.'</th></tr></tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -90,7 +90,7 @@ function add(): void {
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $cont .= setTemplateBasic('open');
@@ -101,7 +101,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="statistic"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -116,9 +116,9 @@ function save(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

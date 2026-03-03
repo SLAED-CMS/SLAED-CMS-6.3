@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     global $afile;
@@ -21,7 +21,7 @@ function modules(): void {
     global $conf, $db, $afile, $infos;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     if (isset($infos)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $infos]);
 
@@ -217,7 +217,7 @@ function modules(): void {
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function edit(): void {
@@ -234,7 +234,7 @@ function edit(): void {
     $group = $conf['modules'][$mod]['group'];
     $side = $conf['modules'][$mod]['side'];
     $top = $conf['modules'][$mod]['top'];
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -296,7 +296,7 @@ function edit(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="mod" value="'.$mod.'"><input type="hidden" name="name" value="modules"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function status(): void {
@@ -361,9 +361,9 @@ function add(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 1, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

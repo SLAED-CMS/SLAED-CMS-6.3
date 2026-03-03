@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 require_once CONFIG_DIR.'/lang.php';
 
 function navi(int $tab = 0, int $subtab = 0): string {
@@ -36,7 +36,7 @@ function lang(): void {
         }
     }
 
-    head();
+    setHead();
     $cont = navi(0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -70,12 +70,12 @@ function lang(): void {
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function editfile(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 0);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
@@ -160,7 +160,7 @@ function editfile(): void {
 
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -217,7 +217,7 @@ function save(): void {
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     checkPerms(CONFIG_DIR.'/lang.php');
     $cont = navi(1, 0);
     $cont .= setTemplateBasic('open');
@@ -229,7 +229,7 @@ function conf(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="lang"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function confsave(): void {
@@ -245,9 +245,9 @@ function confsave(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(2, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

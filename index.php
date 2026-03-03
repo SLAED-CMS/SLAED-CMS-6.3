@@ -9,7 +9,7 @@ $sgtime = microtime(true);
 define('BASE_DIR', str_replace('\\', '/', __DIR__));
 require_once BASE_DIR.'/core/system.php';
 
-if (!defined('ADMIN_FILE') && $conf['close'] && !is_admin()) setExit(_CLOSE_TEXT);
+if (!defined('ADMIN_FILE') && $conf['close'] && !isAdmin()) setExit(_CLOSE_TEXT);
 if (isset($_GET['error'])) setExit(sprintf(_ERROR404, $_GET['error'], $conf['homeurl']), 1);
 
 $go = getVar('req', 'go', 'var');
@@ -62,17 +62,17 @@ if (empty($go)) {
                     $gname = $grp['name'] ?? '';
                 }
                 if ($gname) $info .= _ADDITIONALYGRP.': '.$gname;
-                head();
-                echo setTemplateBasic('title', array('{%title%}' => _ACCESSDENIED)).setTemplateWarning('warn', array('time' => '15', 'url' => '?name=account&op=newuser', 'id' => 'info', 'text' => $info));
-                foot();
+                setHead();
+                echo setTemplateBasic('title', ['{%title%}' => _ACCESSDENIED]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name=account&op=newuser', 'id' => 'info', 'text' => $info]);
+                setFoot();
                 exit;
             } elseif ($view == 2 && is_moder($name) && file_exists($path)) {
                 getLang($name);
                 require_once $path;
             } elseif ($view == 2 && !is_moder($name)) {
-                head();
-                echo setTemplateBasic('title', array('{%title%}' => _ACCESSDENIED)).setTemplateWarning('warn', array('time' => '5', 'url' => '', 'id' => 'info', 'text' => _MODULESADMINS));
-                foot();
+                setHead();
+                echo setTemplateBasic('title', ['{%title%}' => _ACCESSDENIED]).setTemplateWarning('warn', ['time' => '5', 'url' => '', 'id' => 'info', 'text' => _MODULESADMINS]);
+                setFoot();
                 exit;
             } else {
                 header('Location: index.php');
@@ -86,8 +86,8 @@ if (empty($go)) {
         $home = 1;
         if (empty($conf['module'])) {
             $conf['name'] = '';
-            head();
-            foot();
+            setHead();
+            setFoot();
             exit;
         } else {
             $hmodul = explode(',', $conf['module']);
@@ -100,16 +100,16 @@ if (empty($go)) {
                 require_once $path;
                 exit;
             } else {
-                head();
+                setHead();
                 echo setTemplateWarning('warn', ['text' => _HOMEPROBLEMUSER, 'url' => '', 'time' => 0, 'id' => 'warn']);
-                foot();
+                setFoot();
                 exit;
             }
         }
     }
 } elseif (is_numeric($go)) {
     $fdsize = isset($_FILES['file']['size']) ? $_FILES['file']['size'] : '';
-    if (!intval($fdsize) && !stristr(getenv('HTTP_REFERER'), get_host())) die('Illegal file access');
+    if (!intval($fdsize) && !stristr(getenv('HTTP_REFERER'), getHost())) die('Illegal file access');
     if ($go == 1) {
         setCache('0');
         switch($op) {
@@ -165,7 +165,7 @@ if (empty($go)) {
             die('Illegal file access');
         }
     } elseif ($go == 5) {
-        if (is_admin_god()) {
+        if (isAdmin(true)) {
             define('ADMIN_FILE', true);
             getLang('admin');
             setCache('0');

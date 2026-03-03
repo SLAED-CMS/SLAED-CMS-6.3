@@ -25,7 +25,7 @@ function navigate(string $title, string|int $cat = ''): string {
 function media(): void {
     global $db, $afile, $user, $conf, $home, $op;
     $cwhere = catmids($conf['name'], 'm.cid');
-    $unum = user_news($user[3] ?? 0, $conf['media']['num']);
+    $unum = getUserNews($conf['media']['num']);
     $cat = getVar('get', 'cat', 'num');
     $ncat = $cat;
     $params = [];
@@ -288,7 +288,7 @@ function add(): void {
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
         if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.text_filter(substr($user[1], 0, 25)).'</td></tr>';
+            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
         } else {
             $postname = ($postname) ? $postname : _ANONYM;
             $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
@@ -341,7 +341,7 @@ function add(): void {
             $a = $i + 1;
             $link = isset($links[$i]) ? $links[$i] : '';
             $display = ($i != 0 && $link == '') ? ' sl_none' : '';
-            $cont .= '<table id="med'.$i.'" class="sl_table_form'.$display."\"><tr><td><a OnClick=\"HideShow('med".$a."', 'slide', 'up', 500);\" title=\""._ADD.'" class="sl_plus">'._URL.' - '.$a.':</a></td><td><input type="text" name="links[]" value="'.text_filter($link).'" class="sl_field '.$conf['style'].'"></td></tr></table>';
+            $cont .= '<table id="med'.$i.'" class="sl_table_form'.$display."\"><tr><td><a OnClick=\"HideShow('med".$a."', 'slide', 'up', 500);\" title=\""._ADD.'" class="sl_plus">'._URL.' - '.$a.':</a></td><td><input type="text" name="links[]" value="'.filterText($link).'" class="sl_field '.$conf['style'].'"></td></tr></table>';
             $i++;
         }
         $cont .= '</td></tr>'
@@ -374,7 +374,7 @@ function send(): void {
         $size = getVar('post', 'size', 'text');
         $released = getVar('post', 'released', 'text');
         $links = getVar('post', 'links', 'array');
-        $links = ($links) ? text_filter(implode(',', str_replace(',', '.', $links))) : '';
+        $links = ($links) ? filterText(implode(',', str_replace(',', '.', $links))) : '';
         $stop = [];
         if (!$title) $stop[] = _CERROR;
         if (!$description) $stop[] = _CERROR1;

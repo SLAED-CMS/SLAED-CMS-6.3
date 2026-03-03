@@ -25,7 +25,7 @@ function navigate(string $title, string|int $cat = ''): string {
 function files(): void {
     global $db, $afile, $user, $conf, $home, $op;
     $cwhere = catmids($conf['name'], 'f.cid');
-    $unum = user_news($user[3] ?? 0, $conf['files']['num']);
+    $unum = getUserNews($conf['files']['num']);
     $cat = getVar('get', 'cat', 'num');
     $ncat = $cat;
     $params = [];
@@ -158,7 +158,7 @@ function view(): void {
     $cwhere = catmids($conf['name'], 'f.cid');
     $result = $db->getSqlQuery('SELECT f.cid, f.name, f.title, f.url, f.description, f.bodytext, f.date, f.filesize, f.version, f.email, f.homepage, f.counter, f.acomm, f.votes, f.totalvotes, f.hits, f.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB."_users AS u ON (f.uid = u.user_id) WHERE f.lid = :id AND f.date <= NOW() AND f.status != '0' ".$cwhere, ['id' => $id]);
     if ($db->getSqlRowCount($result) == 1) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET counter = counter+1 WHERE lid = :id", ['id' => $id]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET counter = counter+1 WHERE lid = :id', ['id' => $id]);
         [$cid, $uname, $title, $url, $description, $bodytext, $date, $fsize, $fversion, $aemail, $ahomepage, $counter, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result);
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
         $seotitle = $title;
@@ -262,7 +262,7 @@ function add(): void {
         $cont .= setTemplateBasic('open');
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
         if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.text_filter(substr($user[1], 0, 25)).'</td></tr>';
+            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
         } else {
             $postname = ($postname) ? $postname : _ANONYM;
             $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
@@ -305,7 +305,7 @@ function send(): void {
         if (!$postname && !is_user()) $stop[] = _CERROR3;
         checkemail($mail);
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-        if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_files WHERE title = :title", ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
+        if ($db->getSqlRowCount($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_files WHERE title = :title', ['title' => $title])) > 0) $stop[] = _MEDIAEXIST;
         $userid = isset($user[0]) ? intval($user[0]) : '0';
         $filename = upload(1, $conf['files']['temp'], $conf['files']['typefile'], $conf['files']['max_size'], 'files', '1600', '1600', $userid);
         $url = ($filename) ? $conf['files']['temp'].'/'.$filename : $url;
@@ -350,8 +350,8 @@ function loading(): void {
     global $db, $conf;
     $id = getVar('post', 'id', 'num');
     if (($id && is_user()) || ($id && $conf['files']['down'] == '1')) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET hits = hits+1 WHERE lid = :id", ['id' => $id]);
-        [$stitle, $url] = $db->getSqlRow($db->getSqlQuery('SELECT title, url FROM '.PREFIX_DB."_files WHERE lid = :id", ['id' => $id]));
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET hits = hits+1 WHERE lid = :id', ['id' => $id]);
+        [$stitle, $url] = $db->getSqlRow($db->getSqlQuery('SELECT title, url FROM '.PREFIX_DB.'_files WHERE lid = :id', ['id' => $id]));
         update_points(11);
         if ($conf['files']['stream'] == 2) {
             $type = strtolower(substr(strrchr($url, '.'), 1));
@@ -381,4 +381,3 @@ switch($op) {
     case 'broken': broken(); break;
     case 'loading': loading(); break;
 }
-

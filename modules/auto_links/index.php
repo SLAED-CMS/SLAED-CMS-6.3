@@ -20,7 +20,7 @@ function navigate(string $title): string {
 
 function autolink(): void {
     global $db, $afile, $user, $conf, $home, $op;
-    $unum = intval(user_news($user[3] ?? 0, $conf['auto_links']['num']));
+    $unum = intval(getUserNews($conf['auto_links']['num']));
     if ($unum < 1) $unum = 1;
     $word = getVar('get', 'word', 'word');
     if ($op) {

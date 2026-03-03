@@ -72,7 +72,7 @@ function contact(): void {
             }
             $subject = $conf['sitename'].' - '._FEEDBACK;
             $msg = $conf['sitename'].' - '._FEEDBACK.'<br><br>'._SENDERNAME.': '.$sname.'<br>'._SENDEREMAIL.': '.$semail.'<br><br>'._MESSAGE.': '.$message;
-            mail_send($to, $semail, $subject, $msg, 1, 1);
+            addMail($to, $semail, $subject, $msg, 1, 1);
             update_points(5);
             $cont .= setTemplateWarning('warn', ['time' => '5', 'url' => '', 'id' => 'info', 'text' => _FBMAILSENT]);
         } else {

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright (c) 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -99,7 +99,7 @@ function add(): void {
         $released = getVar('post', 'released', 'text', '');
         $links = getVar('post', 'links', 'array', []);
         $links = ($links && is_array($links)) ? $links : [];
-        $mdate = save_datetime(1, 'mdate');
+        $mdate = getVar('req', 'mdate', 'time');
         $ihome = getVar('post', 'ihome', 'num', 0);
         $acomm = getVar('post', 'acomm', 'num', 0);
     }
@@ -160,7 +160,7 @@ function add(): void {
         $a = $i + 1;
         $link = $links[$i] ?? '';
         $class = ($i != 0 && $link == '') ? ' class="sl_none"' : '';
-        $cont .= '<table id="med'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._URL.' - '.$a.':</a></td><td><input type="text" name="links[]" value="'.text_filter($link).'" class="sl_form" placeholder="'._URL.' - '.$a.'"></td></tr></table>';
+        $cont .= '<table id="med'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._URL.' - '.$a.':</a></td><td><input type="text" name="links[]" value="'.filterText($link).'" class="sl_form" placeholder="'._URL.' - '.$a.'"></td></tr></table>';
         $i++;
     }
     $cont .= '</td></tr>'
@@ -193,8 +193,8 @@ function save(): void {
     $size = getVar('post', 'size', 'text', '');
     $released = getVar('post', 'released', 'text', '');
     $links = getVar('post', 'links', 'array', []);
-    $links = text_filter(implode(',', str_replace(',', '.', is_array($links) ? $links : [])));
-    $mdate = save_datetime(1, 'mdate');
+    $links = filterText(implode(',', str_replace(',', '.', is_array($links) ? $links : [])));
+    $mdate = getVar('req', 'mdate', 'time');
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
     $stop = [];
@@ -205,7 +205,7 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
+        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($mid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET cid = :cid, uid = :uid, name = :name, title = :title, subtitle = :subtitle, year = :year, director = :director, roles = :roles, description = :description, createdby = :createdby, duration = :duration, lang = :lang, note = :note, format = :format, quality = :quality, size = :size, released = :released, links = :links, date = :date, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :mid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'date' => $mdate, 'ihome' => $ihome, 'acomm' => $acomm, 'mid' => $mid]);
         } else {

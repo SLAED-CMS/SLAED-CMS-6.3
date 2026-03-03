@@ -71,7 +71,7 @@ function money(): void {
         $i = 0;
         foreach ($form as $val) {
             if ($val != '') {
-                $cont .= '<tr><td>'.$val.':</td><td><input type="text" name="info[]" value="'.save_text($info[$i] ?? '', 1).'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'.$val.'" required></td></tr>';
+                $cont .= '<tr><td>'.$val.':</td><td><input type="text" name="info[]" value="'.filterHtml($info[$i] ?? '', 1).'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'.$val.'" required></td></tr>';
                 $i++;
             }
         }
@@ -95,10 +95,10 @@ function send(): void {
         foreach ($info as $val) {
             if ($val != '') {
                 if ($i == 0) {
-                    $binfo = save_text($val, 1);
+                    $binfo = filterHtml($val, 1);
                     $i++;
                 } else {
-                    $binfo .= '|'.save_text($val, 1);
+                    $binfo .= '|'.filterHtml($val, 1);
                 }
             } else {
                 $stop[] = _ERROR_ALL;
@@ -117,7 +117,7 @@ function send(): void {
                 $i = 0;
                 foreach ($form as $val) {
                     if ($val != '') {
-                        $sinfo .= $val.': '.save_text($info[$i] ?? '', 1).'<br>';
+                        $sinfo .= $val.': '.filterHtml($info[$i] ?? '', 1).'<br>';
                         $i++;
                     }
                 }
@@ -129,14 +129,14 @@ function send(): void {
                 $msg .= _MO_8.': '.$mail.'<br>';
                 $msg .= $sinfo.'<br>';
                 $msg .= _MO_9.': '.$com;
-                mail_send($amail, $mail, $subject, $msg, 1, 1);
+                addMail($amail, $mail, $subject, $msg, 1, 1);
             }
             if (!$conf['money']['pr']) {
                 $amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._MONEY;
                 $msg = $conf['sitename'].' - '._MONEY.'<br><br>';
                 $msg .= bb_decode($conf['money']['sendinfo'], 'all');
-                mail_send($mail, $amail, $subject, $msg, 0, 3);
+                addMail($mail, $amail, $subject, $msg, 0, 3);
             }
             setHead(['title' => _MONEY]);
             echo setTemplateBasic('title', ['{%title%}' => _MONEY]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => bb_decode($conf['money']['info'], 'all')]);

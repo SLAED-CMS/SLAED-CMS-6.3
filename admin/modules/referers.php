@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 require_once CONFIG_DIR.'/referers.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
@@ -50,7 +50,7 @@ function referers(): void {
     $ordby = $sortmap[$sort][1] ?? 'date';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
     $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, date FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
@@ -81,12 +81,12 @@ function referers(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
     $cont .= setTemplateBasic('open');
@@ -99,7 +99,7 @@ function conf(): void {
        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -122,9 +122,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 3, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

@@ -35,11 +35,10 @@ define('PREFIX_DB', $conf['db']['prefix']);
 $afile = $conf['security']['afile'];
 
 # Report PHP errors
-$emode = (int)($conf['security']['error'] ?? 0);
-if ($emode === 2) {
+if ($conf['security']['error'] === 2) {
     ini_set('display_errors', '1');
     error_reporting(E_ALL);
-} elseif ($emode === 1) {
+} elseif ($conf['security']['error'] === 1) {
     ini_set('display_errors', '1');
     error_reporting(E_ALL & ~E_NOTICE);
 } else {
@@ -55,9 +54,9 @@ if (!defined('ADMIN_FILE') && $conf['security']['flood']) {
     $ctime = time();
     $ftime = $ctime - intval($conf['security']['flood_t']);
     $flood = (isset($_SESSION['flood']) && $_SESSION['flood'] > $ftime) ? 1 : 0;
-    if ($conf['security']['flood'] == 3 && $flood) doWarnReport('Flood attack');
-    if ($conf['security']['flood'] == 2 && isset($_GET) && $flood) doWarnReport('Flood in GET - '.print_r($_GET, true));
-    if (isset($_POST) && $flood) doWarnReport('Flood in POST - '.print_r($_POST, true));
+    if ($conf['security']['flood'] == 3 && $flood) addWarnReport('Flood attack');
+    if ($conf['security']['flood'] == 2 && isset($_GET) && $flood) addWarnReport('Flood in GET - '.print_r($_GET, true));
+    if (isset($_POST) && $flood) addWarnReport('Flood in POST - '.print_r($_POST, true));
     unset($_SESSION['flood']);
     $_SESSION['flood'] = $ctime;
 }
@@ -66,7 +65,7 @@ if (!defined('ADMIN_FILE') && $conf['security']['flood']) {
 $admin = (($tmp = base64_decode($_SESSION[$conf['admin_c']] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 
 # Format user variable
-$user  = (($tmp = base64_decode($_COOKIE[$conf['user_c'].'-account'] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
+$user = (($tmp = base64_decode($_COOKIE[$conf['user_c'].'-account'] ?? '', true)) && $tmp !== '') ? explode(':', $tmp) : [];
 
 # Analyzer of variables
 function getVariablesInfo(): string {
@@ -78,60 +77,38 @@ function getVariablesInfo(): string {
     return implode(PHP_EOL, $cont);
 }
 
-# Add log report entry
-function log_report(): bool {
+# Add security log entry (IP, user, URL, agent; auto-rotates on size limit)
+function addLog(): bool {
     global $user, $conf;
-
     $ip = getIp();
     $agent = getAgent();
-    $url = text_filter((string)getenv('REQUEST_URI'));
-    $refer = get_referer();
+    $url = filterText((string)getenv('REQUEST_URI'));
+    $refer = getReferer();
     $ref = $refer ? PHP_EOL._REFERER.': '.$refer : '';
-
-    // Safe user name (avoid undefined key and substr(null,...))
     if (is_array($user) && isset($user[1]) && $user[1] !== null) {
         $luser = substr((string)$user[1], 0, 25);
     } else {
         $luser = substr(_ANONYM, 0, 25);
     }
-
     $log = LOGS_DIR.'/log.log';
-    $max = $conf['security']['log_size'] ?? 10485760; // fallback 10 MB
-
+    $max = $conf['security']['log_size'] ?? 10485760;
     $fhandle = fopen($log, 'ab');
-    if ($fhandle === false) {
-        return false;
-    }
-
-    // Ensure up-to-date file size information
+    if ($fhandle === false) return false;
     clearstatcache(true, $log);
     if (filesize($log) >= $max) {
-        // rotate
         fclose($fhandle);
         $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
         addCompress(dirname($log), $log, $safe, 'auto', true, true);
-
-        // recreate log file
         $fhandle = fopen($log, 'ab');
-        if ($fhandle === false) {
-            return false;
-        }
+        if ($fhandle === false) return false;
     }
-
-    $entry = getVariablesInfo()._IP.': '.$ip.PHP_EOL.
-        _USER.': '.$luser.PHP_EOL.
-        _URL.': '.$url.$ref.PHP_EOL.
-        _BROWSER.': '.$agent.PHP_EOL.
-        _DATE.': '.date(_TIMESTRING).PHP_EOL.
-        '----'.PHP_EOL;
-
+    $vars = getVariablesInfo();
+    $entry = ($vars ? $vars.PHP_EOL : '')._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.date(_TIMESTRING).PHP_EOL.'----'.PHP_EOL;
     fwrite($fhandle, $entry);
     fclose($fhandle);
-
     return true;
 }
-
-if ($conf['security']['log']) log_report();
+if ($conf['security']['log']) addLog();
 
 # Security cookies blocker or ip blocker and member blocker
 $bcookie = getCookies($conf['security']['blocker_cookie']);
@@ -140,13 +117,14 @@ if ($bcookie == 'block') {
 } else {
     $bip = explode('||', $conf['security']['blocker_ip']);
     if ($bip) {
+        $iptbase = getIp();
+        $uagt = md5(getAgent());
         foreach ($bip as $val) {
             if ($val != '') {
                 $binfo = explode('|', $val);
                 if (time() <= $binfo[3]) {
-                    $ipt = getIp();
+                    $ipt = $iptbase;
                     $ipb = $binfo[0];
-                    $uagt = md5(getAgent());
                     if ($binfo[1] <= 3) {
                         $ipt = substr($ipt, 0, strrpos($ipt, '.'));
                         $ipb = substr($ipb, 0, strrpos($ipb, '.'));
@@ -161,7 +139,7 @@ if ($bcookie == 'block') {
                     }
                     if ((!$binfo[2] && $ipt == $ipb) || ($binfo[2] && $ipt == $ipb && $uagt == $binfo[2])) {
                         setCookies($conf['security']['blocker_cookie'], $binfo[3], 'block');
-                        $btext = _BANN_INFO.'<br>'._BANN_TERM.': '.rest_time($binfo[3]).'<br>'._BANN_REAS.': '.$binfo[4];
+                        $btext = _BANN_INFO.'<br>'._BANN_TERM.': '.getTimeLeft($binfo[3]).'<br>'._BANN_REAS.': '.$binfo[4];
                         setExit($btext);
                     }
                 }
@@ -177,7 +155,7 @@ if ($bcookie == 'block') {
                 if (time() <= $uinfo[1]) {
                     if ($tus == $uinfo[0]) {
                         setCookies($conf['security']['blocker_cookie'], $uinfo[1], 'block');
-                        $utext = _BANN_INFO.'<br>'._BANN_TERM.': '.rest_time($uinfo[1]).'<br>'._BANN_REAS.': '.$uinfo[2];
+                        $utext = _BANN_INFO.'<br>'._BANN_TERM.': '.getTimeLeft($uinfo[1]).'<br>'._BANN_REAS.': '.$uinfo[2];
                         setExit($utext);
                     }
                 }
@@ -186,16 +164,8 @@ if ($bcookie == 'block') {
     }
 }
 
-$conf['security']['error_log'] = 1;
-# Error reporting log — NDJSON (one JSON object per line, AI-ready schema)
 if ($conf['security']['error_log']) {
-    # --- Inline helpers (closures only, no new named functions) ---
-
-    // Sanitize: strip log-injection chars (\r \n \0), trim, truncate
-    $ls = fn(string $s, int $max = 2048): string =>
-        substr(str_replace(["\r", "\n", "\0"], ' ', trim($s)), 0, $max);
-
-    // Redact keys matching sensitive patterns
+    $ls = fn(string $s, int $max = 2048): string => substr(str_replace(["\r", "\n", "\0"], ' ', trim($s)), 0, $max);
     $lredact = function(array $arr): array {
         foreach (array_keys($arr) as $k) {
             if (preg_match('/(pass|token|auth|secret|key|session|csrf)/i', (string)$k)) {
@@ -213,9 +183,9 @@ if ($conf['security']['error_log']) {
         }
         foreach ($arr as $k => $v) {
             if (is_string($v) && strlen($v) > 1024) {
-                $arr[$k] = substr($v, 0, 1024) . '[...]';
+                $arr[$k] = substr($v, 0, 1024).'[...]';
             } elseif (is_array($v)) {
-                $arr[$k] = '[array:' . count($v) . ']';
+                $arr[$k] = '[array:'.count($v).']';
             }
         }
         return $lredact($arr);
@@ -243,7 +213,7 @@ if ($conf['security']['error_log']) {
     $lreq = function() use ($ls): array {
         $ua = $ls($_SERVER['HTTP_USER_AGENT'] ?? '', 512);
         $url = $ls($_SERVER['REQUEST_URI'] ?? (string)getenv('REQUEST_URI'), 2048);
-        $ref = $ls(get_referer() ?: '', 2048);
+        $ref = $ls(getReferer() ?: '', 2048);
         return [
             'req_id' => $_SERVER['HTTP_X_REQUEST_ID'] ?? $_SERVER['UNIQUE_ID'] ?? null,
             'ip' => getIp(),
@@ -263,23 +233,23 @@ if ($conf['security']['error_log']) {
     // Stable fingerprint: type|file|line|msg-normalized — no errno (unstable for exceptions)
     $lfp = function(string $type, string $file, string $line, string $msg): string {
         $norm = preg_replace(['/\d+/', '/\s+/'], ['#', ' '], substr($msg, 0, 200));
-        return substr(sha1($type . '|' . $file . '|' . $line . '|' . $norm), 0, 8);
+        return substr(sha1($type.'|'.$file.'|'.$line.'|'.$norm), 0, 8);
     };
 
     // Rotation guard (prevents parallel-worker double-rotate) + atomic append
     $lwrite = function(string $log, string $line) use ($conf): void {
         $max = (int)($conf['security']['log_size'] ?? 10485760);
         clearstatcache(true, $log);
-        $sz = @filesize($log);
+        $sz = filesize($log);
         if ($sz !== false && $sz >= $max) {
-            $guard = $log . '.rotating';
-            if (@file_put_contents($guard, '1', LOCK_EX) !== false) {
-                $safe = pathinfo($log, PATHINFO_FILENAME) . '_' . date('Y-m-d_H-i-s');
+            $guard = $log.'.rotating';
+            if (file_put_contents($guard, '1', LOCK_EX) !== false) {
+                $safe = pathinfo($log, PATHINFO_FILENAME).'_'.date('Y-m-d_H-i-s');
                 addCompress(dirname($log), $log, $safe, 'auto', true, true);
-                @unlink($guard);
+                unlink($guard);
             }
         }
-        file_put_contents($log, $line . PHP_EOL, FILE_APPEND | LOCK_EX);
+        file_put_contents($log, $line.PHP_EOL, FILE_APPEND | LOCK_EX);
     };
 
     # HTTP error → error_site.log
@@ -328,7 +298,7 @@ if ($conf['security']['error_log']) {
         ];
         $httpmsg = $http[$error] ?? null;
         if ($httpmsg) {
-            $log = LOGS_DIR . '/error_site.log';
+            $log = LOGS_DIR.'/error_site.log';
             $fp = $lfp('site', '', '', $httpmsg);
             $row = array_merge([
                 'ts' => date('c'),
@@ -344,13 +314,12 @@ if ($conf['security']['error_log']) {
             if ($line !== false) { $lwrite($log, $line); }
         }
         unset($http, $httpmsg);
-        setExit('Error ' . $error, 1);
+        setExit('Error '.$error, 1);
     }
 
     # PHP errors → error_php.log
-    function error_reporting_log($errno, $errmsg, $errfile, $errline) {
+    function addPhpLog($errno, $errmsg, $errfile, $errline) {
         global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
-        // level: error|warning|notice  php_err: human label
         $levelmap = [
             1 => ['error', 'ERROR'],
             2 => ['warning', 'WARNING'],
@@ -363,13 +332,13 @@ if ($conf['security']['error_log']) {
             256 => ['error', 'USER_ERROR'],
             512 => ['warning', 'USER_WARNING'],
             1024 => ['notice', 'USER_NOTICE'],
-            2048 => ['notice', 'STRICT'], // notice — not warning
+            2048 => ['notice', 'STRICT'],
             4096 => ['error', 'RECOVERABLE_ERROR'],
-            8192 => ['notice', 'DEPRECATED'], // notice — not warning
-            16384 => ['notice', 'USER_DEPRECATED'], // notice — not warning
+            8192 => ['notice', 'DEPRECATED'],
+            16384 => ['notice', 'USER_DEPRECATED'],
         ];
         [$level, $phperr] = $levelmap[$errno] ?? ['error', 'UNKNOWN'];
-        $log = LOGS_DIR . '/error_php.log';
+        $log = LOGS_DIR.'/error_php.log';
         $fp = $lfp('php', $errfile, (string)$errline, (string)$errmsg);
         $row = array_merge([
             'ts' => date('c'),
@@ -384,16 +353,16 @@ if ($conf['security']['error_log']) {
         ], $lreq(), $lctx(), $lmem());
         $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
         if ($line !== false) { $lwrite($log, $line); }
-        return true; // suppress PHP's built-in handler (prevents double-logging via log_errors)
+        return true;
     }
-    set_error_handler('error_reporting_log');
+    set_error_handler('addPhpLog');
 
     // Guard: exception handler sets this flag so shutdown handler skips the same event
     $lexcepted = false;
 
     set_exception_handler(function(Throwable $e) use ($ls, $lctx, $lreq, $lmem, $lwrite, $lfp, &$lexcepted) {
-        $log = LOGS_DIR . '/error_php.log';
-        $msg = get_class($e) . ': ' . $e->getMessage();
+        $log = LOGS_DIR.'/error_php.log';
+        $msg = get_class($e).': '.$e->getMessage();
         $fp = $lfp('php', $e->getFile(), (string)$e->getLine(), $msg);
         $row = array_merge([
             'ts' => date('c'),
@@ -417,7 +386,7 @@ if ($conf['security']['error_log']) {
         if ($lexcepted) return;
         $e = error_get_last();
         if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
-            $log = LOGS_DIR . '/error_php.log';
+            $log = LOGS_DIR.'/error_php.log';
             $ua = $ls($_SERVER['HTTP_USER_AGENT'] ?? '', 512);
             $url = $ls((string)($_SERVER['REQUEST_URI'] ?? ''), 2048);
             $fp = $lfp('php', $e['file'], (string)$e['line'], $e['message']);
@@ -446,17 +415,17 @@ if ($conf['security']['error_log']) {
     });
 
     # SQL errors → error_sql.log
-    function error_sql_log($errno, $error, $sql) {
+    function addSqlLog($errno, $error, $sql) {
         global $ls, $lctx, $lreq, $lmem, $lwrite, $lfp;
-        $log = LOGS_DIR . '/error_sql.log';
+        $log = LOGS_DIR.'/error_sql.log';
         $sqlorig = (string)$sql;
         $sqlbytes = strlen($sqlorig);
         $sqlhash = hash('sha256', $sqlorig);
         // Redact quoted string literals, then truncate
         $sqlsafe = preg_replace("/'[^']{0,256}'/u", "'?'", $sqlorig);
         $tr = strlen($sqlsafe) > 2000;
-        $sqlsafe = substr($sqlsafe, 0, 2000) . ($tr ? ' [TRUNCATED]' : '');
-        $msg = 'SQL error ' . $errno . ': ' . $ls((string)$error, 256);
+        $sqlsafe = substr($sqlsafe, 0, 2000).($tr ? ' [TRUNCATED]' : '');
+        $msg = 'SQL error '.$errno.': '.$ls((string)$error, 256);
         $fp = $lfp('sql', '', '', (string)$error);
         $row = array_merge([
             'ts' => date('c'),
@@ -476,11 +445,9 @@ if ($conf['security']['error_log']) {
 }
 
 # Checking URL, GET, POST, COOKIE, FILES variables for safety
-if (!is_admin_god()) {
-    # Checking URL length
+if (!isAdmin(true)) {
     $ruri = mb_strlen($_SERVER['REQUEST_URI'], 'utf-8');
-    if ($ruri > 2048) doWarnReport('Spam in URL - '.$ruri.' > 2048');
-    # Checking GET variable for safety
+    if ($ruri > 2048) addWarnReport('Spam in URL - '.$ruri.' > 2048');
     if (isset($_GET)) {
         function checkGet($name, $val) {
             global $conf;
@@ -491,12 +458,12 @@ if (!is_admin_god()) {
             $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if ($conf['security']['url_get']) if (preg_match($links, $val)) doWarnReport('URL in GET - '.$name.' = '. $val);
-            if (preg_match($script, urldecode($val)) || preg_match($char, $val)) doWarnReport('HTML in GET - '.$name.' = '. $val);
-            if (preg_match($quote, $val)) doHackReport('Hack in GET - '.$name.' = '. $val);
-            if (preg_match($string, $val)) doHackReport('XSS in GET - '.$name.' = '. $val);
-            if (preg_match($string, $decode)) doHackReport('XSS base64 in GET - '.$name.' = '. $val);
-            if (preg_match($string, $slash)) doHackReport('XSS slash in GET - '.$name.' = '. $val);
+            if ($conf['security']['url_get']) if (preg_match($links, $val)) addWarnReport('URL in GET - '.$name.' = '.$val);
+            if (preg_match($script, urldecode($val)) || preg_match($char, $val)) addWarnReport('HTML in GET - '.$name.' = '.$val);
+            if (preg_match($quote, $val)) addHackReport('Hack in GET - '.$name.' = '.$val);
+            if (preg_match($string, $val)) addHackReport('XSS in GET - '.$name.' = '.$val);
+            if (preg_match($string, $decode)) addHackReport('XSS base64 in GET - '.$name.' = '.$val);
+            if (preg_match($string, $slash)) addHackReport('XSS slash in GET - '.$name.' = '.$val);
         }
         function getGet($in) {
             if (is_array($in)) {
@@ -513,11 +480,9 @@ if (!is_admin_god()) {
         }
         getGet($_GET);
     }
-    # Checking POST variable for safety
     if (isset($_POST)) {
         function checkPost($name, $val) {
             global $conf, $admin;
-            #$val = is_array($val) ? fields_save($val) : $val;
             $flag = is_array($admin) ? ($admin[3] ?? '') : '';
             $editor = (int)substr($flag, 0, 1);
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
@@ -525,12 +490,12 @@ if (!is_admin_god()) {
             $string = '#'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if ($conf['security']['ref_post'] && isset($_FILES['file']['size'])) if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), get_host())) doWarnReport('POST from referer - '.$name.' = '. $val);
-            if ($conf['security']['url_post']) if (preg_match($links, $val)) doWarnReport('URL in POST - '.$name.' = '. $val);
-            if (((defined('ADMIN_FILE') && $editor != 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] != 1)) && preg_match($script, urldecode($val))) doWarnReport('HTML in POST - '.$name.' = '. $val);
-            if (preg_match($string, $val)) doHackReport('XSS in POST - '.$name.' = '. $val);
-            if (preg_match($string, $decode)) doHackReport('XSS base64 in POST - '.$name.' = '. $val);
-            if (preg_match($string, $slash)) doHackReport('XSS slash in POST - '.$name.' = '. $val);
+            if ($conf['security']['ref_post'] && isset($_FILES['file']['size'])) if (!intval($_FILES['file']['size']) && !stristr(getenv('HTTP_REFERER'), getHost())) addWarnReport('POST from referer - '.$name.' = '.$val);
+            if ($conf['security']['url_post']) if (preg_match($links, $val)) addWarnReport('URL in POST - '.$name.' = '.$val);
+            if (((defined('ADMIN_FILE') && $editor != 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] != 1)) && preg_match($script, urldecode($val))) addWarnReport('HTML in POST - '.$name.' = '.$val);
+            if (preg_match($string, $val)) addHackReport('XSS in POST - '.$name.' = '.$val);
+            if (preg_match($string, $decode)) addHackReport('XSS base64 in POST - '.$name.' = '.$val);
+            if (preg_match($string, $slash)) addHackReport('XSS slash in POST - '.$name.' = '.$val);
         }
         function getPost($in) {
             if (is_array($in)) {
@@ -547,7 +512,6 @@ if (!is_admin_god()) {
         }
         getPost($_POST);
     }
-    # Checking COOKIE variable for safety
     if (isset($_COOKIE)) {
         function checkCookie($name, $val) {
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
@@ -555,11 +519,11 @@ if (!is_admin_god()) {
             $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
-            if (preg_match($links, $val)) doHackReport('URL in COOKIE - '.$name.' = '. $val);
-            if (preg_match($script, $val)) doHackReport('HTML in COOKIE - '.$name.' = '. $val);
-            if (preg_match($string, $val)) doHackReport('XSS in COOKIE - '.$name.' = '. $val);
-            if (preg_match($string, $decode)) doHackReport('XSS base64 in COOKIE - '.$name.' = '. $val);
-            if (preg_match($string, $slash)) doHackReport('XSS slash in COOKIE - '.$name.' = '. $val);
+            if (preg_match($links, $val)) addHackReport('URL in COOKIE - '.$name.' = '.$val);
+            if (preg_match($script, $val)) addHackReport('HTML in COOKIE - '.$name.' = '.$val);
+            if (preg_match($string, $val)) addHackReport('XSS in COOKIE - '.$name.' = '.$val);
+            if (preg_match($string, $decode)) addHackReport('XSS base64 in COOKIE - '.$name.' = '.$val);
+            if (preg_match($string, $slash)) addHackReport('XSS slash in COOKIE - '.$name.' = '.$val);
         }
         function getCookie($in) {
             if (is_array($in)) {
@@ -576,27 +540,26 @@ if (!is_admin_god()) {
         }
         getCookie($_COOKIE);
     }
-    # Checking FILES variable for safety
     if (isset($_FILES)) {
         function checkFiles($name, $val) {
             $type = '#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i';
             if (isset($_FILES['userfile'])) {
                 $val = strtolower(substr(strrchr($_FILES['userfile']['name'], '.'), 1));
-                if (preg_match($type, $val)) doHackReport('Hack in FILES - '.$name.' = '. $val);
+                if (preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
             } elseif (isset($_FILES['file'])) {
                 if (is_array($_FILES['file'])) {
                     $files = count($_FILES['file']['name']);
                     for ($i = 0; $i < $files; $i++) {
                         $val = strtolower(substr(strrchr($_FILES['file']['name'][$i], '.'), 1));
-                        if (preg_match($type, $val)) doHackReport('Hack in FILES - '.$name.' = '. $val);
+                        if (preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
                     }
                 } else {
                     $val = strtolower(substr(strrchr($_FILES['file']['name'], '.'), 1));
-                    if (preg_match($type, $val)) doHackReport('Hack in FILES - '.$name.' = '. $val);
+                    if (preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
                 }
             } else {
                 $val = strtolower(substr(strrchr($_FILES[$name]['name'], '.'), 1));
-                if (preg_match($type, $val)) doHackReport('Hack in FILES - '.$name.' = '. $val);
+                if (preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
             }
         }
         function getFiles($in) {
@@ -616,37 +579,26 @@ if (!is_admin_god()) {
     }
 }
 
-# Reset all variables
-reset($_GET);
-reset($_POST);
-reset($_COOKIE);
-reset($_FILES);
-
-# Check super admin
-function is_admin_god() {
+# Return true if the current session has valid admin credentials (result cached per request)
+function isAdmin(bool $super = false): bool {
     global $db, $admin;
-    static $godtrue;
-    if (!empty($admin)) {
-        if (!isset($godtrue)) {
-            $id = intval(substr($admin[0], 0, 11));
-            $name = htmlspecialchars(substr($admin[1], 0, 25));
-            $pwd = htmlspecialchars(substr($admin[2], 0, 40));
-            $ip = getIp();
-            if ($id && $name && $pwd && $ip) {
-                list($aname, $apwd, $aip) = $db->getSqlRow($db->getSqlQuery("SELECT name, pwd, ip FROM ".PREFIX_DB."_admins WHERE id = :id AND super = '1'", ['id' => $id]));
-                if ($aname == $name && $aname != '' && $apwd == $pwd && $apwd != '' && $aip == $ip && $aip != '') {
-                    $godtrue = 1;
-                    return $godtrue;
-                }
-            }
-            $godtrue = 0;
-            return $godtrue;
-        } else {
-            return $godtrue;
+    static $cache = [];
+    $key = (int)$super;
+    if (isset($cache[$key])) return $cache[$key];
+    if (empty($admin)) return $cache[0] = $cache[1] = false;
+    $id = intval(substr($admin[0], 0, 11));
+    $name = substr($admin[1], 0, 25);
+    $pwd = substr($admin[2], 0, 40);
+    $ip = getIp();
+    if ($id && $name && $pwd && $ip) {
+        [$aname, $apwd, $aip, $asuper] = $db->getSqlRow($db->getSqlQuery('SELECT name, pwd, ip, super FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id])) ?? ['', '', '', '0'];
+        if ($aname !== '' && $aname === $name && $apwd !== '' && hash_equals($apwd, $pwd) && $aip !== '' && $aip === $ip) {
+            $cache[0] = true;
+            $cache[1] = ($asuper === '1');
+            return $cache[$key];
         }
-    } else {
-        return 0;
     }
+    return $cache[0] = $cache[1] = false;
 }
 
 # Format exit and displaying information
@@ -673,7 +625,7 @@ function setExit(string $msg, string $typ = ''): never {
 # Cookie set
 function setCookies(string $name, int $time, string|array $value): void {
     global $conf;
-    $info = is_array($value) ? base64_encode($value[0].':'.$value[1].':'.$value[2].':'.$value[3].':'.$value[4].':'.$value[5]) : $value;
+    $info = is_array($value) ? base64_encode(implode(':', array_slice($value, 0, 6))) : $value;
     $url = parse_url($conf['homeurl']);
     $sec = ($url['scheme'] == 'http') ? false : true;
     $options = ['expires' => $time, 'path' => '/', 'domain' => $url['host'], 'secure' => $sec, 'httponly' => true, 'samesite' => 'Lax'];
@@ -689,7 +641,7 @@ function setCookiesDelete(string $name): void {
 # Get cookie
 function getCookies(string $name): string {
     global $conf;
-    $cookie = isset($_COOKIE[$conf['user_c'].'-'.$name]) ? analyze($_COOKIE[$conf['user_c'].'-'.$name]) : '';
+    $cookie = isset($_COOKIE[$conf['user_c'].'-'.$name]) ? filterVar($_COOKIE[$conf['user_c'].'-'.$name]) : '';
     return $cookie;
 }
 
@@ -708,39 +660,34 @@ function getIp(): string {
 
 # Get user agent
 function getAgent(): string {
-    if (getenv('HTTP_USER_AGENT') && strcasecmp(getenv('HTTP_USER_AGENT'), 'unknown')) {
-        return text_filter(getenv('HTTP_USER_AGENT'));
+    $uagt = getenv('HTTP_USER_AGENT');
+    if ($uagt && strcasecmp($uagt, 'unknown')) {
+        return filterText($uagt);
     } elseif (!empty($_SERVER['HTTP_USER_AGENT']) && strcasecmp($_SERVER['HTTP_USER_AGENT'], 'unknown')) {
-        return text_filter($_SERVER['HTTP_USER_AGENT']);
+        return filterText($_SERVER['HTTP_USER_AGENT']);
     }
     return 'unknown';
 }
 
-# Get host
-function get_host(): string {
-    $host = (getenv('HTTP_HOST')) ? getenv('HTTP_HOST') : getenv('SERVER_NAME');
-    return $host;
+# Return current HTTP host name (HTTP_HOST with SERVER_NAME fallback)
+function getHost(): string {
+    return getenv('HTTP_HOST') ?: getenv('SERVER_NAME') ?: '';
 }
 
-# Get referer
-function get_referer(): string {
-    $referer = text_filter(getenv('HTTP_REFERER'));
-    if (!empty($referer) && $referer != '' && !preg_match('#^unknown#i', $referer) && !preg_match('#^bookmark#i', $referer) && !stristr($referer, get_host())) {
-        $refer = $referer;
-    } else {
-        $refer = '';
+# Return external HTTP referer URL, or empty string if internal/invalid/unknown
+function getReferer(): string {
+    $referer = filterText(getenv('HTTP_REFERER'));
+    if (!empty($referer) && !preg_match('#^unknown#i', $referer) && !preg_match('#^bookmark#i', $referer) && !stristr($referer, getHost())) {
+        return $referer;
     }
-    return $refer;
+    return '';
 }
 
-# Determine active locale, load main language file, set language cookie.
-# Called once per request from bootstrap — never call from modules.
+# Determine active locale, load main language file, set language cookie
 function setLang(): void {
     global $locale, $conf;
-
     $mlang = (string)($conf['language'] ?? 'en');
-    $mult  = ((int)($conf['multilingual'] ?? 0) === 1);
-
+    $mult = ((int)($conf['multilingual'] ?? 0) === 1);
     if ($mult) {
         $newlang = getVar('req', 'newlang', 'var', '');
         $clang = getCookies('language');
@@ -757,25 +704,18 @@ function setLang(): void {
     } else {
         $locale = $mlang;
     }
-
     $file = 'language/'.$locale.'.php';
     require_once is_readable($file) ? $file : 'language/'.$mlang.'.php';
 }
 
-# Load module language file and return the active locale.
-# $module — module name ('news', 'admin', etc.) or '' to just return locale.
-# $admin  — true loads modules/{module}/admin/language/ instead of modules/{module}/language/
+# Load module language file and return the active locale
 function getLang(string $module = '', bool $admin = false): string {
     global $locale, $conf;
-
-    static $lmods = [];  // module load cache (module|ctx|lang => bool)
-
+    static $lmods = [];
     if ($module === '') return $locale;
-
     $mlang = (string)($conf['language'] ?? 'en');
-    $ctx   = $admin ? 'a' : 'f';
-    $key   = $module.'|'.$ctx.'|'.$locale;
-
+    $ctx = $admin ? 'a' : 'f';
+    $key = $module.'|'.$ctx.'|'.$locale;
     if (!array_key_exists($key, $lmods)) {
         if ($module === 'admin') {
             $list = ['admin/language/'.$locale.'.php', 'admin/language/'.$mlang.'.php'];
@@ -800,157 +740,79 @@ function getLang(string $module = '', bool $admin = false): string {
         }
         $lmods[$key] = $done;
     }
-
     return $locale;
 }
 
-# Zip check
-function zip_check() {
-    if (function_exists('gzopen')) {
-        return 2;
-    } elseif (function_exists('bzopen')) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-# Zip compress
-function zip_compress($src, $dst) {
-    $check = zip_check();
-    if ($check) {
-        $fp = @fopen($src, 'rb');
-        if ($fp === false) {
-            return false;
-        }
-
-        $filesize = @filesize($src);
-        if ($filesize === false || $filesize === 0) {
-            fclose($fp);
-            return false;
-        }
-
-        $data = fread($fp, $filesize);
-        fclose($fp);
-
-        if ($check == 2) {
-            $zp = @gzopen($dst.'.gz', 'wb5');
-            if ($zp === false) {
-                return false;
-            }
-            gzwrite($zp, $data);
-            gzclose($zp);
-        } else {
-            $zp = @bzopen($dst.'.bz2', 'w');
-            if ($zp === false) {
-                return false;
-            }
-            bzwrite($zp, $data);
-            bzclose($zp);
-        }
-        return true;
-    }
-    return false;
-}
-
 # Clean access to POST, GET or Request parameters
-/**
- * Clean access to POST, GET or Request parameters
- *
- * @param string $var     'post', 'get' or 'req'
- * @param string $key     Parameter name (bracket notation: field[0], field[])
- * @param string $type    Filter type: num, let, word, name, title, text, field, url, var, bool, raw
- * @param mixed  $default Default value if parameter is missing
- * @return mixed Filtered value or default / false
- */
 function getVar(string $var, string $key, string $type = '', mixed $default = ''): mixed {
-    // Bracket-Notation parsen: field[0] oder field[]
-    $array_index = null;
-    $is_array_all = false;
-
+    $arridx = null;
+    $allarr = false;
     if (preg_match('/^([^\[]+)\[(\d*)\]$/', $key, $matches)) {
-        $key = $matches[1];  // field
+        $key = $matches[1];
         if ($matches[2] === '') {
-            $is_array_all = true;  // field[] → whole array
+            $allarr = true;
         } else {
-            $array_index = (int)$matches[2];  // field[0] → index
+            $arridx = (int)$matches[2];
         }
     }
-
-    // Filter definitions (once for single values and arrays)
     $filters = [
-        'num'   => fn($v) => num_filter($v),
-        'let'   => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
-        'word'  => fn($v) => is_string($v) ? var_filter(urldecode(trim($v))) : $v,
-        'name'  => fn($v) => is_string($v) ? text_filter(mb_substr(trim($v), 0, 25, 'utf-8')) : $v,
-        'title' => fn($v) => is_string($v) ? save_text(trim($v), 1) : $v,
-        'text'  => fn($v) => is_string($v) ? save_text(trim($v)) : $v,
-        'field' => fn($v) => is_string($v) ? fields_save(trim($v)) : $v,
-        'url'   => fn($v) => is_string($v) ? url_filter(trim($v)) : $v,
-        'var'   => fn($v) => is_string($v) ? isVar($v) : $v,
-        'bool'  => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),
+        'num' => fn($v) => filterNum($v),
+        'let' => fn($v) => is_string($v) ? mb_substr(trim($v), 0, 1, 'utf-8') : $v,
+        'word' => fn($v) => is_string($v) ? filterWord(urldecode(trim($v))) : $v,
+        'name' => fn($v) => is_string($v) ? filterText(mb_substr(trim($v), 0, 25, 'utf-8')) : $v,
+        'title' => fn($v) => is_string($v) ? filterHtml(trim($v), 1) : $v,
+        'text' => fn($v) => is_string($v) ? filterHtml(trim($v)) : $v,
+        'field' => fn($v) => is_string($v) ? filterFields(trim($v)) : $v,
+        'url' => fn($v) => is_string($v) ? filterUrl(trim($v)) : $v,
+        'var' => fn($v) => is_string($v) ? filterVar($v) : $v,
+        'bool' => fn($v) => filter_var($v, FILTER_VALIDATE_BOOLEAN),
         'defis' => fn($v) => is_string($v) ? (($v = trim($v)) !== '' ? urlencode($v) : '') : $v,
-        'raw'   => fn($v) => $v,
+        'time' => function($v) {
+            $v = is_string($v) ? trim($v) : '';
+            $ts = strtotime($v);
+            return ($ts !== false && date('Y-m-d H:i', $ts) === $v) ? $v.':00' : date('Y-m-d H:i:s');
+        },
+        'date' => function($v) {
+            $v = is_string($v) ? trim($v) : '';
+            $ts = strtotime($v);
+            return ($ts !== false && date('Y-m-d', $ts) === $v) ? $v : date('Y-m-d');
+        },
+        'raw' => fn($v) => $v,
     ];
-
-    // Ganzes Array mit Element-Filterung: field[] + type
-    if ($is_array_all) {
+    if ($allarr) {
         $p = $_POST[$key] ?? [];
         $g = $_GET[$key] ?? [];
-
         $value = match(strtolower($var)) {
             'post' => $p,
-            'get'  => $g,
-            'req'  => (!empty($p)) ? $p : $g,
+            'get' => $g,
+            'req' => (!empty($p)) ? $p : $g,
             default => [],
         };
-
-        if (!is_array($value)) {
-            return $default ?: [];
-        }
-
-        // Element-Filterung anwenden
+        if (!is_array($value)) return $default ?: [];
         if ($type) {
             $filtered = [];
             foreach ($value as $item) {
                 $lt = strtolower($type);
-                if (isset($filters[$lt])) {
-                    $item = $filters[$lt]($item);
-                }
-                if ($item !== false && $item !== null && $item !== '') {
-                    $filtered[] = $item;
-                }
+                if (isset($filters[$lt])) $item = $filters[$lt]($item);
+                if ($item !== false && $item !== null && $item !== '') $filtered[] = $item;
             }
             return $filtered;
         }
-
-        // Ohne Filterung: Rohes Array
         return $value;
     }
-
-    // Array-Index-Zugriff: field[0]
-    if ($array_index !== null) {
-        $p = $_POST[$key][$array_index] ?? '';
-        $g = $_GET[$key][$array_index] ?? '';
+    if ($arridx !== null) {
+        $p = $_POST[$key][$arridx] ?? '';
+        $g = $_GET[$key][$arridx] ?? '';
     } else {
-        // Normaler Einzelwert
         $p = filter_input(INPUT_POST, $key, FILTER_DEFAULT) ?? '';
         $g = filter_input(INPUT_GET, $key, FILTER_DEFAULT) ?? '';
     }
-
-    // Rewrite-URL Parsing placeholder (getUrlMeta removed)
-
-    // Select source: POST / GET / REQ
     $value = match(strtolower($var)) {
         'post' => $p,
-        'get'  => $g,
-        // Strenger Check: nur wenn nicht null/leer, sonst GET
-        'req'  => ($p !== null && $p !== '') ? $p : $g,
+        'get' => $g,
+        'req' => ($p !== null && $p !== '') ? $p : $g,
         default => null,
     };
-
-    // Special handling: keep default untouched (already encoded),
-    // encode only real input values.
     if (strtolower($type) === 'defis') {
         if ($value === null || $value === '') {
             return ($default !== '' && $default !== null) ? $default : false;
@@ -958,124 +820,115 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
         $value = $filters['defis']($value);
         return ($value !== '' && $value !== null) ? $value : (($default !== '' && $default !== null) ? $default : false);
     }
-
-    // Falls Wert leer, Default nutzen
     $value = ($value !== null && $value !== '') ? $value : $default;
-
-    // Typfilter anwenden
     $lt = strtolower($type);
     if ($lt && isset($filters[$lt])) {
         $value = $filters[$lt]($value);
     } else {
-        // If no type, trim for strings
         if (is_string($value)) $value = trim($value);
     }
-
-    // empty values → false
     return ($value !== '' && $value !== null) ? $value : false;
 }
 
-# Strict variable analyzer
-function isVar($var) {
-    if (is_array($var)) {
-        $out = (preg_grep('#[^a-zA-Z0-9_\-]#', $var)) ? '' : $var;
-    } else {
-        $out = (preg_match('#[^a-zA-Z0-9_\-]#', $var)) ? '' : $var;
+# Is there any content in the array
+function isArray(mixed $arr): bool {
+    if (!is_array($arr)) return !empty($arr);
+    foreach ($arr as $a) {
+        if (isArray($a)) return true;
     }
-    return $out;
+    return false;
 }
 
-# Strict variable analyzer
-# Duble from isVar()!
-# DELETE
-function analyze($var) {
-    $var = (preg_match('#[^a-zA-Z0-9_\-]#', $var)) ? '' : $var;
-    return $var;
+# Filter string or array: return value unchanged if only [a-zA-Z0-9_-], else return ''
+function filterVar(string|array $var): string|array {
+    if (is_array($var)) return preg_grep('#[^a-zA-Z0-9_\-]#', $var) ? [] : $var;
+    return preg_match('#[^a-zA-Z0-9_\-]#', $var) ? '' : $var;
 }
 
-# URL filter
-function url_filter($url) {
+# Normalize URL: ensure http(s) prefix, lowercase, run through text_filter; return '' if bare protocol
+function filterUrl(string $url): string {
     $url = strtolower($url);
-    $url = (preg_match('#http\:\/\/|https\:\/\/#i', $url)) ? $url : 'http://'.$url;
-    $url = ($url == 'http://') ? '' : text_filter($url);
-    return $url;
+    $url = preg_match('#https?://#i', $url) ? $url : 'http://'.$url;
+    return ($url === 'http://') ? '' : filterText($url);
 }
 
-# Number filter
-function num_filter($var) {
-    $con = preg_replace('#[^0-9]#', '', $var);
-    return intval($con);
+# Strip non-digits and return as integer
+function filterNum(mixed $var): int {
+    return intval(preg_replace('#[^0-9]#', '', (string)$var));
 }
 
-# Variables filter
-function var_filter($var) {
-    $con = preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var);
-    return $con;
+# Strip chars outside [Unicode letters, digits, whitespace, %&/|.:;&_+-=]
+function filterWord(string $var): string {
+    return preg_replace('#[^\pL0-9\s%&/|.:;&_+\-=]#siu', '', $var);
 }
 
-# HTML and word filter
-function text_filter($message, $type='') {
+# Strip tags, HTML-encode, apply censor; $type=2 skips strip_tags (HTML allowed), $type=1 skips censor
+function filterText(string|array $message, int $type = 0): string {
     global $conf;
-    if (!is_admin()) while (preg_match('#\[(usehtml|/usehtml)\]|\[(usephp|/usephp)\]#si', $message)) $message = preg_replace('#\[(usehtml|/usehtml)\]|\[(usephp|/usephp)\]#si', '', $message);
-    $message = is_array($message) ? fields_save($message) : $message;
-    if (intval($type) == 2) {
+    if (is_array($message)) $message = filterFields($message);
+    if (!isAdmin()) {
+        while (preg_match('#\[(usehtml|/usehtml)\]|\[(usephp|/usephp)\]#si', $message)) {
+            $message = preg_replace('#\[(usehtml|/usehtml)\]|\[(usephp|/usephp)\]#si', '', $message);
+        }
+    }
+    if ($type === 2) {
         $message = htmlspecialchars(trim($message), ENT_QUOTES);
     } else {
-        $message = strip_tags(urldecode($message ?? ''));
-        $message = htmlspecialchars(trim($message), ENT_QUOTES);
+        $message = htmlspecialchars(trim(strip_tags(urldecode($message ?? ''))), ENT_QUOTES);
     }
-    if (!is_admin() && $conf['censor'] && intval($type != 1)) {
-        $censor_l = explode(',', $conf['censor_l']);
-        foreach ($censor_l as $val) $message = preg_replace('#'.$val.'#i', $conf['censor_r'], $message);
+    if (!isAdmin() && $conf['censor'] && $type !== 1) {
+        foreach (explode(',', $conf['censor_l']) as $val) {
+            $message = preg_replace('#'.$val.'#i', $conf['censor_r'], $message);
+        }
     }
     return $message;
 }
 
 # Length center filter
-function cutstrc($linkstrip, $strip) {
+function filterCut(string $linkstrip, int $strip): string {
     if (strlen($linkstrip) > $strip) $linkstrip = substr($linkstrip, 0, $strip - 19).'...'.substr($linkstrip, -16);
     return $linkstrip;
 }
 
 # Format ed2k links
-function ed2k_link($m) {
+function getEd2kLink(array $m): string {
     $href = 'url='.$m[2];
     $fname = rawurldecode($m[3]);
     $fname = str_replace(['&#038;', '&amp;'], '&', $fname);
     $size = files_size($m[4]);
-    $cont = ' eMule/eDonkey: ['.$href.']'.cutstrc($fname, 50).'[/url] - '._SIZE.': '.$size;
-    return $cont;
+    return ' eMule/eDonkey: ['.$href.']'.filterCut($fname, 50).'[/url] - '._SIZE.': '.$size;
 }
 
-# Make clickable url
-function url_clickable($text) {
+# Convert plain URLs, ed2k links and email addresses in text to BBCode tags
+function filterClickable(string $text): string {
+    $ret = $text;
     if (!preg_match("#\[php\](.*)\[/php\]|\[code\](.*)\[/code\]#si", $text)) {
-        $ret = preg_replace_callback("#([\n ])(?<=[^\w\"'])(ed2k://\|file\|([^\\/\|:<>\*\?\"]+?)\|(\d+?)\|([a-f0-9]{32})\|(.*?)/?)(?![\"'])(?=([,\.]*?[\s<\[])|[,\.]*?$)#i", "ed2k_link", " ".$text);
-        $ret = preg_replace("#([\n ])(?<=[^\w\"'])(ed2k://\|server\|([\d\.]+?)\|(\d+?)\|/?)#i", "ed2k Server: [url=\\2]\\3[/url] - Port: \\4", $ret);
-        $ret = preg_replace("#([\n ])(?<=[^\w\"'])(ed2k://\|friend\|([^\\/\|:<>\*\?\"]+?)\|([\d\.]+?)\|(\d+?)\|/?)#i", "Friend: [url=\\2]\\3[/url]", $ret);
-        $ret = preg_replace("#([\n ])([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", "\\1[url=\\2]\\2[/url]", $ret);
-        $ret = preg_replace("#([\n ])((www|ftp)\.[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", "\\1[url=http://\\2]\\2[/url]", $ret);
-        $ret = preg_replace("#([\n ])([a-z0-9&\-_.]+?)@([\w\-]+\.([\w\-\.]+\.)*[\w]+)#i", "\\1[mail=\\2@\\3]\\2@\\3[/mail]", $ret);
+        $ret = preg_replace_callback("#([\n ])(?<=[^\w\"'])(ed2k://\|file\|([^\\/\|:<>\*\?\"]+?)\|(\d+?)\|([a-f0-9]{32})\|(.*?)/?)(?![\"'])(?=([,\.]*?[\s<\[])|[,\.]*?$)#i", 'getEd2kLink', ' '.$text);
+        $ret = preg_replace("#([\n ])(?<=[^\w\"'])(ed2k://\|server\|([\d\.]+?)\|(\d+?)\|/?)#i", 'ed2k Server: [url=\\2]\\3[/url] - Port: \\4', $ret);
+        $ret = preg_replace("#([\n ])(?<=[^\w\"'])(ed2k://\|friend\|([^\\/\|:<>\*\?\"]+?)\|([\d\.]+?)\|(\d+?)\|/?)#i", 'Friend: [url=\\2]\\3[/url]', $ret);
+        $ret = preg_replace("#([\n ])([\w]+?://[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", '\\1[url=\\2]\\2[/url]', $ret);
+        $ret = preg_replace("#([\n ])((www|ftp)\.[\w\#$%&~/.\-;:=,?@\[\]+]*)#is", '\\1[url=http://\\2]\\2[/url]', $ret);
+        $ret = preg_replace("#([\n ])([a-z0-9&\-_.]+?)@([\w\-]+\.([\w\-\.]+\.)*[\w]+)#i", '\\1[mail=\\2@\\3]\\2@\\3[/mail]', $ret);
         $ret = substr($ret, 1);
     } else {
         if (preg_match('#(.*)\[php\](.*)\[/php\](.*)#si', $text, $matches)) {
-            $ret = url_clickable($matches[1]).'[php]'.$matches[2].'[/php]'.url_clickable($matches[3]);
+            $ret = filterClickable($matches[1]).'[php]'.$matches[2].'[/php]'.filterClickable($matches[3]);
         } elseif (preg_match('#(.*)\[code(.*)\](.*)\[/code\](.*)#si', $text, $matches)) {
-            $ret = url_clickable($matches[1]).'[code'.$matches[2].']'.$matches[3].'[/code]'.url_clickable($matches[4]);
+            $ret = filterClickable($matches[1]).'[code'.$matches[2].']'.$matches[3].'[/code]'.filterClickable($matches[4]);
         }
     }
     return $ret;
 }
 
-# Save text
-function save_text($text, $id=''): string {
+# Convert raw user text to HTML-safe output; applies nl2br, escaping and URL linking; skips URL auto-linking when $id === 1
+function filterHtml(string $text, mixed $id = ''): string {
     global $admin, $conf;
     if ($text) {
         $flag = is_array($admin) ? ($admin[3] ?? '') : '';
         $editor = (int)substr($flag, 0, 1);
         if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
-            $text = ($conf['clickable'] && $id != 1) ? url_clickable($text) : $text;
-            $out = nl2br(str_replace(['$', '\\'], ['&#036;', '&#092;'], stripslashes(text_filter($text, 2))), false);
+            $text = ($conf['clickable'] && $id != 1) ? filterClickable($text) : $text;
+            $out = nl2br(str_replace(['$', '\\'], ['&#036;', '&#092;'], stripslashes(filterText($text, 2))), false);
         } else {
             $out = str_replace(['"', '$', '\'', '\\'], ['&#034;', '&#036;', '&#039;', '&#092;'], stripslashes($text));
         }
@@ -1084,65 +937,61 @@ function save_text($text, $id=''): string {
     return '';
 }
 
-# Fields save
-function fields_save($field): string {
-    if (isArray($field)) {
-        $fields = stripslashes(text_filter(implode('|', $field), 2));
-        return $fields;
-    }
+# Filter and join an array of custom fields into a pipe-separated string
+function filterFields(mixed $field): string {
+    if (isArray($field)) return stripslashes(filterText(implode('|', $field), 2));
     return '';
 }
 
-# Display Time filter
-function display_time($sec) {
+# Format a duration in seconds as human-readable hours/minutes/seconds
+function getDuration(int $sec): string {
     $min = floor($sec / 60);
     $hours = floor($min / 60);
     $seconds = $sec % 60;
     $minutes = $min % 60;
-    $cont = ($hours == 0) ? (($min == 0) ? $seconds.' '._SEC.'.' : $min.' '._MIN.'. '.$seconds.' '._SEC.'.') : $hours.' '._HOUR.'. '.$minutes.' '._MIN.'. '.$seconds.' '._SEC.'.';
-    return $cont;
+    return ($hours == 0) ? (($min == 0) ? $seconds.' '._SEC.'.' : $min.' '._MIN.'. '.$seconds.' '._SEC.'.') : $hours.' '._HOUR.'. '.$minutes.' '._MIN.'. '.$seconds.' '._SEC.'.';
 }
 
-# Rest time
-function rest_time($time) {
+# Return HTML span showing remaining time until a Unix timestamp expires
+function getTimeLeft(int $time): string {
+    $now = time();
     $end = date(_DATESTRING, $time);
-    $expire = $time - time();
+    $expire = $time - $now;
     $days = round($expire / 86400, 3).' '._DAYS;
-    $date = (time() < $time) ? '<span title="'.display_time($expire).'" class="sl_green sl_note">'.$days.' - '.$end.'</span>' : '<span class="sl_red">'.$end.' - '._END.'</span>';
-    return $date;
+    return ($now < $time) ? '<span title="'.getDuration($expire).'" class="sl_green sl_note">'.$days.' - '.$end.'</span>' : '<span class="sl_red">'.$end.' - '._END.'</span>';
 }
 
-# Mail send
-function mail_send($email, $smail, $subject, $message, $id='', $pr='') {
+# Add an outgoing HTML email (base64-encoded); appends IP/browser info when $id is truthy
+function addMail(string $email, string $smail, string $subject, string $message, int $id = 0, int $pr = 0): void {
     global $conf;
-    $email = text_filter($email);
-    $smail = text_filter($smail);
-    $subject = '=?'._CHARSET.'?b?'.base64_encode(text_filter($subject)).'?=';
-    $id = intval($id);
-    $pr = (!$pr) ? '3' : intval($pr);
-    $message = (!$id) ? $message : $message.'<br><br>'._IP.': '.getIp().'<br>'._BROWSER.': '.getAgent().'<br>'._HASH.': '.md5(getAgent());
+    $email = filterText($email);
+    $smail = filterText($smail);
+    $subject = '=?'._CHARSET.'?b?'.base64_encode(filterText($subject)).'?=';
+    $pr = $pr ?: 3;
+    $agent = getAgent();
+    $message = (!$id) ? $message : $message.'<br><br>'._IP.': '.getIp().'<br>'._BROWSER.': '.$agent.'<br>'._HASH.': '.md5($agent);
     $mheader = "MIME-Version: 1.0\n"
-    ."Content-Type: text/html; charset="._CHARSET."\n"
+    .'Content-Type: text/html; charset='._CHARSET."\n"
     ."Content-Transfer-Encoding: base64\n"
-    ."From: \"=?"._CHARSET."?b?".base64_encode($conf['sitename'])."?=\" <".$smail.">\n"
-    ."Reply-To: \"".$smail."\" <".$smail.">\n"
-    ."Return-Path: <".$smail.">\n"
-    ."X-Priority: ".$pr."\n"
+    .'From: "=?'._CHARSET.'?b?'.base64_encode($conf['sitename']).'?=" <'.$smail.">\n"
+    .'Reply-To: "'.$smail.'" <'.$smail.">\n"
+    .'Return-Path: <'.$smail.">\n"
+    .'X-Priority: '.$pr."\n"
     ."X-Mailer: SLAED CMS\n";
     mail($email, $subject, base64_encode($message), $mheader);
 }
 
-# Hack report
-function doHackReport($msg) {
+# Log a hack attempt: block IP, send alert email, append to hack.log, then exit
+function addHackReport(string $msg): void {
     global $user, $conf;
-    $msg = text_filter(substr($msg, 0, 500));
-    $url = text_filter(getenv('REQUEST_URI'));
-    $refer = get_referer();
+    $msg = filterText(substr($msg, 0, 500));
+    $url = filterText(getenv('REQUEST_URI'));
+    $refer = getReferer();
     $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
     $ip = getIp();
     $agent = getAgent();
-    $date_time = date(_TIMESTRING);
-    $user = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
+    $dtime = date(_TIMESTRING);
+    $luser = is_array($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
     if ($conf['security']['block']) {
         $btime = time() + 86400;
         $cont = ['blocker_ip' => $conf['security']['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||'];
@@ -1151,8 +1000,8 @@ function doHackReport($msg) {
     }
     if ($conf['security']['mail']) {
         $subject = $conf['sitename'].' - '._SECURITY;
-        $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._HACK.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$user.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$date_time;
-        mail_send($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
+        $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._HACK.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$luser.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$dtime;
+        addMail($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
     }
     if ($conf['security']['write_h']) {
         $log = LOGS_DIR.'/hack.log';
@@ -1167,7 +1016,7 @@ function doHackReport($msg) {
                 $fhandle = fopen($log, 'ab');
             }
             if ($fhandle !== false) {
-                fwrite($fhandle, _HACK.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$user.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$date_time.PHP_EOL.'----'.PHP_EOL);
+                fwrite($fhandle, _HACK.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime.PHP_EOL.'----'.PHP_EOL);
                 fclose($fhandle);
             }
         }
@@ -1175,21 +1024,21 @@ function doHackReport($msg) {
     setExit(_HACK.'!', 1);
 }
 
-# Warn report
-function doWarnReport($msg) {
+# Log a security warning: send alert email, append to warn.log, then exit
+function addWarnReport(string $msg): void {
     global $user, $conf;
-    $msg = text_filter(substr($msg, 0, 500));
-    $url = text_filter(getenv('REQUEST_URI'));
-    $refer = get_referer();
-    $ref = ($refer) ? PHP_EOL._REFERER.": ".$refer : "";
+    $msg = filterText(substr($msg, 0, 500));
+    $url = filterText(getenv('REQUEST_URI'));
+    $refer = getReferer();
+    $ref = ($refer) ? PHP_EOL._REFERER.': '.$refer : '';
     $ip = getIp();
     $agent = getAgent();
-    $date_time = date(_TIMESTRING);
-    $user = ($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
+    $dtime = date(_TIMESTRING);
+    $luser = is_array($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
     if ($conf['security']['mail_w']) {
         $subject = $conf['sitename'].' - '._SECURITY;
-        $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._WARN.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$user.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$date_time;
-        mail_send($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
+        $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._WARN.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$luser.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$dtime;
+        addMail($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
     }
     if ($conf['security']['write_w']) {
         $log = LOGS_DIR.'/warn.log';
@@ -1204,7 +1053,7 @@ function doWarnReport($msg) {
                 $fhandle = fopen($log, 'ab');
             }
             if ($fhandle !== false) {
-                fwrite($fhandle, _WARN.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$user.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$date_time.PHP_EOL.'----'.PHP_EOL);
+                fwrite($fhandle, _WARN.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime.PHP_EOL.'----'.PHP_EOL);
                 fclose($fhandle);
             }
         }

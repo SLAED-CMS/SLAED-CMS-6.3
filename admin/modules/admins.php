@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'];
@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function admins(): void {
     global $db, $afile;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
@@ -28,7 +28,7 @@ function admins(): void {
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -57,7 +57,7 @@ function add(): void {
         $smail = getVar('post', 'smail', 'bool', 0) ? 1 : 0;
         $lang = getVar('post', 'lang', '', $conf['language']);
     }
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
@@ -104,7 +104,7 @@ function add(): void {
     .'</td></tr><tr><td colspan="2" class="sl_center"><input type="hidden" name="aid" value="'.$aid.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -159,7 +159,7 @@ function save(): void {
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$name;
             $mailtext = getVar('post', 'mailtext', 'text');
             $msg = nl2br(bb_decode(str_replace('[pass]', $pwd, str_replace('[login]', $name, $mailtext)), 'account'), false);
-            mail_send($email, $conf['adminmail'], $subject, $msg, 0, 3);
+            addMail($email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
         setRedirect($afile.'.php?name=admins'.$send);
@@ -178,9 +178,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

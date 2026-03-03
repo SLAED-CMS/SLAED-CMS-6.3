@@ -121,7 +121,7 @@ function add(): void {
         $pid = getVar('post', 'pid', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');
         $subject = getVar('post', 'subject', 'title', '');
-        $time = save_datetime(1, 'time');
+        $time = getVar('req', 'time', 'time');
         $cat = getVar('post', 'cat', 'num', 0);
         $hometext = getVar('post', 'hometext', 'text', '');
         $field = getVar('post', 'field', 'field');
@@ -155,7 +155,7 @@ function save(): void {
     $cat = getVar('post', 'cat', 'num', 0);
     $hometext = getVar('post', 'hometext', 'text', '');
     $field = getVar('post', 'field', 'field');
-    $time = save_datetime(1, 'time');
+    $time = getVar('req', 'time', 'time');
     $status = getVar('post', 'status', 'num', 0);
     $umail = getVar('post', 'umail', 'text', '');
     $stop = [];
@@ -181,7 +181,7 @@ function save(): void {
                     $link = '<a href="'.$finishlink.'">'.$finishlink.'</a>';
                     $subject = ($conf['sitename'] ?? '').' - '._HELP;
                     $message = str_replace('[text]', sprintf(_ADDMAILU, substr($admin[1] ?? '', 0, 25), _HELP, $link), $conf['mtemp'] ?? '');
-                    mail_send($mail, $conf['adminmail'] ?? '', $subject, $message, 0, 3);
+                    addMail($mail, $conf['adminmail'] ?? '', $subject, $message, 0, 3);
                 }
             }
             setRedirect($afile.'.php?name=help');

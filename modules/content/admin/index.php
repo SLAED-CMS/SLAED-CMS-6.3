@@ -61,7 +61,7 @@ function add(): void {
         $text = getVar('post', 'text', 'text', '');
         $field = getVar('post', 'field', 'field');
         $url = getVar('post', 'url', 'text', '');
-        $time = save_datetime(1, 'time');
+        $time = getVar('req', 'time', 'time');
         $refresh = getVar('post', 'refresh', 'num', 0);
     }
     setHead();
@@ -107,7 +107,7 @@ function save(): void {
     $text = getVar('post', 'text', 'text', '');
     $text = ($url) ? rss_read($url, 1) : $text;
     $field = getVar('post', 'field', 'field');
-    $time = save_datetime(1, 'time');
+    $time = getVar('req', 'time', 'time');
     $refresh = getVar('post', 'refresh', 'num', 0);
     if (!$title) $stop[] = _CERROR;
     if (!$text && !$url) $stop[] = _CERROR1;

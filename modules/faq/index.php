@@ -25,7 +25,7 @@ function navigate(string $title, string|int $cat = ''): string {
 function faq(): void {
 	global $db, $afile, $user, $conf, $home, $op;
 	$cwhere = catmids($conf['name'], 's.catid');
-	$unum = user_news($user[3] ?? 0, $conf['faq']['num']);
+	$unum = getUserNews($conf['faq']['num']);
 	$cat = getVar('get', 'cat', 'num');
 	$ncat = $cat;
 	$word = getVar('get', 'word', 'word');
@@ -251,7 +251,7 @@ function add(): void {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
 		if (is_user()) {
-			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.text_filter(substr($user[1], 0, 25)).'</td></tr>';
+			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
 		} else {
 			$postname = ($postname) ? $postname : _ANONYM;
 			$cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
@@ -305,4 +305,3 @@ switch($op) {
 	case 'add': add(); break;
 	case 'send': send(); break;
 }
-

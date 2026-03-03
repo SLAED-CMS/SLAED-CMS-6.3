@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'];
@@ -27,14 +27,14 @@ function getBlockModules(): array {
 }
 
 function blocks(): void {
-    head();
+    setHead();
     echo navi(0, 0, 0, 0).setTemplateBasic('open').'<div id="repajax_block">'.ajax_block().'</div>'.setTemplateBasic('close');
-    foot();
+    setFoot();
 }
 
 function add(): void {
     global $db, $conf, $afile;
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post">'
@@ -95,12 +95,12 @@ function add(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function fileadd(): void {
     global $afile;
-    head();
+    setHead();
     $cont = navi(0, 2, 0, 0);
     $cont .= checkPerms(BASE_DIR.'/blocks/');
     $cont .= setTemplateBasic('open');
@@ -110,12 +110,12 @@ function fileadd(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function fileedit(): void {
     global $db, $afile;
-    head();
+    setHead();
     $cont = navi(0, 3, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
@@ -130,7 +130,7 @@ function fileedit(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode"><input type="submit" value="'._EDITBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function fix(): void {
@@ -176,9 +176,9 @@ function addsave(): void {
         $content = rss_read($url, 1);
     }
     if (($content == '') && ($blockfile == '')) {
-        head();
+        setHead();
         echo navi(0, 1, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _RSSFAIL]).setTemplateBasic('open').'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.setTemplateBasic('close');
-        foot();
+        setFoot();
     } else {
         if ($expire == '' || $expire == 0) {
             $expire = 0;
@@ -219,7 +219,7 @@ function filecode(): void {
                 unset($out[0]);
             }
         }
-        head();
+        setHead();
         $cont = navi(0, 3, 0, 0);
         $cont .= checkPerms(BASE_DIR.'/blocks/');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _BLOCK.': '.$bf]);
@@ -238,7 +238,7 @@ function filecode(): void {
         .'<input type="submit" value="'._SAVE.'" class="sl_but_blue"> '._GOBACK.'</td></tr></table></form>';
         $cont .= setTemplateBasic('close');
         echo $cont;
-        foot();
+        setFoot();
     } else {
         setRedirect($afile.'.php?name=blocks&op=file');
     }
@@ -266,7 +266,7 @@ function filecodesave(): void {
 
 function edit(): void {
     global $db, $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     $bid = getVar('get', 'bid', 'num');
     [$bkey, $title, $content, $url, $bposition, $weight, $active, $refresh, $blanguage, $blockfile, $view, $expire, $action, $which] = $db->getSqlRow($db->getSqlQuery('SELECT bkey, title, content, url, bposition, weight, active, refresh, blanguage, blockfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]));
@@ -359,7 +359,7 @@ function edit(): void {
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = '<input type="hidden" name="expire" value="'.$oldexpire.'">'._PURCHASED.': '.display_time($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = '<input type="hidden" name="expire" value="'.$oldexpire.'">'._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
         $expire_text = '<input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required>';
@@ -389,7 +389,7 @@ function edit(): void {
     .'<input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function editsave(): void {
@@ -527,9 +527,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 5, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

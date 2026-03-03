@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getMonitorTabs(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ['name=monitor', 'name=monitor&op=info'];
@@ -181,7 +181,7 @@ function isModuleActive(string $mod): bool {
 
 function getMonitor(): void {
     global $db, $conf;
-    head();
+    setHead();
     $cont = getMonitorTabs(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
     
@@ -337,13 +337,13 @@ function getMonitor(): void {
     ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function getInfo(): void {
-    head();
+    setHead();
     echo getMonitorTabs(0, 1, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 require_once CONFIG_DIR.'/uploads.php';
 
@@ -35,7 +35,7 @@ function uploads(): void {
     global $afile, $conf, $stop;
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
-    head();
+    setHead();
     $cont = navi(0, 0, 1, 0, 'uploads');
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
@@ -101,7 +101,7 @@ function uploads(): void {
         countries.init()
     </script>';
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function uploadsave(): void {
@@ -118,7 +118,7 @@ function uploadsave(): void {
 function templconf(): void {
     global $afile, $conf;
     require_once CONFIG_DIR.'/filetype.php';
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0, 'templconf');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
@@ -130,7 +130,7 @@ function templconf(): void {
     }
     $cont .= setTemplateBasic('open').'<form action="'.$afile.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="templsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function templsave(): void {
@@ -145,7 +145,7 @@ function templsave(): void {
 
 function conf(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(1, 2, 1, 0, 'conf');
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $handle = opendir('uploads');
@@ -203,7 +203,7 @@ function conf(): void {
     .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function confsave(): void {
@@ -256,9 +256,9 @@ function confsave(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 3, 0, 0, '').'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

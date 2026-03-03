@@ -85,7 +85,7 @@ function add(): void {
         $bodytext = getVar('post', 'bodytext', 'text', '');
         $url = getVar('post', 'url', 'text', '');
         $path = getVar('post', 'path', 'name', '');
-        $date = save_datetime(1, 'date');
+        $date = getVar('req', 'date', 'time');
         $ihome = getVar('post', 'ihome', 'num', 0);
         $acomm = getVar('post', 'acomm', 'num', 0);
         $filesize = getVar('post', 'filesize', 'num', 0);
@@ -145,7 +145,7 @@ function save(): void {
     $bodytext = getVar('post', 'bodytext', 'text', '');
     $url = getVar('post', 'url', 'text', '');
     $path = getVar('post', 'path', 'name', '');
-    $date = save_datetime(1, 'date');
+    $date = getVar('req', 'date', 'time');
     $ihome = getVar('post', 'ihome', 'num', 0);
     $acomm = getVar('post', 'acomm', 'num', 0);
     $filesize = getVar('post', 'filesize', 'num', 0);
@@ -166,7 +166,7 @@ function save(): void {
     }
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
-        $postname = !is_user_id($postname) ? text_filter(substr($postname, 0, 25)) : '';
+        $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($fid) {
             if ($path) {
                 $filel = array_reverse(explode('/', $url));

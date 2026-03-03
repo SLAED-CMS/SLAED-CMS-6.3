@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'];
@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function groups(): void {
     global $db, $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $result = $db->getSqlQuery('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
     if ($db->getSqlRowCount($result) > 0) {
@@ -45,7 +45,7 @@ function groups(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function add(): void {
@@ -67,7 +67,7 @@ function add(): void {
         $check = ($grextra) ? ' checked' : '';
     }
     $rank = empty($rank) ? 'rank_1.png' : $rank;
-    head();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _GROUPSI]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
@@ -91,7 +91,7 @@ function add(): void {
        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="gid" value="'.$gid.'"><input type="hidden" name="name" value="groups"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -121,7 +121,7 @@ function save(): void {
 
 function points(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 2, 0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post">'
@@ -137,7 +137,7 @@ function points(): void {
     $cont .= '</tbody></table><table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="groups"><input type="hidden" name="op" value="pointssave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function pointssave(): void {
@@ -169,9 +169,9 @@ function del(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 3, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

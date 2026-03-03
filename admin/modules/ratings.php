@@ -4,7 +4,7 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-if (!defined('ADMIN_FILE') || !is_admin_god()) die('Illegal file access');
+if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 require_once CONFIG_DIR.'/ratings.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
@@ -15,7 +15,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function ratings(): void {
     global $afile, $conf;
-    head();
+    setHead();
     $cont = navi(0, 0, 0, 0);
     $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
     $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
@@ -35,7 +35,7 @@ function ratings(): void {
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'.$content.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="ratings"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function save(): void {
@@ -56,9 +56,9 @@ function save(): void {
 }
 
 function info(): void {
-    head();
+    setHead();
     echo navi(0, 1, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
-    foot();
+    setFoot();
 }
 
 switch ($op) {

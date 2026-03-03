@@ -30,7 +30,7 @@ function getAdminPanelBlocks(): string {
  global $panel, $afile, $conf;
     if (!$panel) {
         $cont = '';
-        if (is_admin_god()) {
+        if (isAdmin(true)) {
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) {
                     $class = (!$mod['active']) ? ' sl_hidden' : '';
@@ -47,7 +47,7 @@ function getAdminPanelBlocks(): string {
         }
         foreach ($conf['modules'] as $name => $mod) {
             if (($mod['type'] ?? 1) == 1) {
-                if (is_admin_god() || is_admin_modul($name)) {
+                if (isAdmin(true) || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
                     if (file_exists($path.'/index.php')) {
                         $class = (!$mod['active']) ? ' sl_hidden' : '';
@@ -70,7 +70,7 @@ function getAdminPanelBlocks(): string {
 
 function getAdminPanel(): void {
  global $conf, $panel, $count, $afile, $class;
-    head();
+    setHead();
     $content = '';
     $minver = '8.1.0';
     $info = sprintf(_PHPSETUP, $minver);
@@ -79,7 +79,7 @@ function getAdminPanel(): void {
     if ($conf['admininfo']) $content .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $conf['admininfo']]);
     if ($panel) {
         $count = 1;
-        if (is_admin_god()) {
+        if (isAdmin(true)) {
             $cont = '';
             foreach ($conf['modules'] as $name => $mod) {
                 if (($mod['type'] ?? 1) == 0) {
@@ -98,7 +98,7 @@ function getAdminPanel(): void {
         $cont = '';
         foreach ($conf['modules'] as $name => $mod) {
             if (($mod['type'] ?? 1) == 1) {
-                if (is_admin_god() || is_admin_modul($name)) {
+                if (isAdmin(true) || is_admin_modul($name)) {
                     $path = BASE_DIR.'/modules/'.$name.'/admin';
                     if (file_exists($path.'/index.php')) {
                         $class = (!$mod['active']) ? ' sl_hidden' : '';
@@ -116,7 +116,7 @@ function getAdminPanel(): void {
         $content .= setTemplateBasic('panel-modul', ['{%title%}' => _MODULESADMIN, '{%content%}' => $cont]);
     }
     echo $content;
-    foot();
+    setFoot();
 }
 
 # OLD FUNCTIONS - REFAKTORING NEEDED
@@ -124,7 +124,7 @@ function add_admin() {
  global $db, $afile, $conf, $stop;
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $aname = $_POST['aname'];
-        $aurl = url_filter($_POST['aurl']);
+        $aurl = filterUrl($_POST['aurl']);
         $aemail = $_POST['aemail'];
         $apwd = md5_salt($_POST['apwd']);
         $apwd2 = md5_salt($_POST['apwd2']);
@@ -180,17 +180,17 @@ function check_admin() {
 
 function login() {
  global $db, $afile, $conf, $stop;
-    head();
+    setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
-        $cont .= setTemplateBasic('registration', ['{%route%}' => $afile, '{%nickname%}' => _NICKNAME, '{%aname%}' => $_POST['aname'], '{%homepage%}' => _HOMEPAGE, '{%host%}' => get_host(), '{%email%}' => _EMAIL, '{%aemail%}' => $_POST['aemail'], '{%password%}' => _PASSWORD, '{%retype%}' => _RETYPEPASSWORD, '{%createuserdata%}' => _CREATEUSERDATA, '{%yes%}' => _YES, '{%no%}' => _NO, '{%send%}' => _SEND]);
+        $cont .= setTemplateBasic('registration', ['{%route%}' => $afile, '{%nickname%}' => _NICKNAME, '{%aname%}' => $_POST['aname'], '{%homepage%}' => _HOMEPAGE, '{%host%}' => getHost(), '{%email%}' => _EMAIL, '{%aemail%}' => $_POST['aemail'], '{%password%}' => _PASSWORD, '{%retype%}' => _RETYPEPASSWORD, '{%createuserdata%}' => _CREATEUSERDATA, '{%yes%}' => _YES, '{%no%}' => _NO, '{%send%}' => _SEND]);
     } else {
         $captcha = ($conf['gfx_chk'] == 1 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
         $cont .= setTemplateBasic('login', ['{%route%}' => $afile, '{%nickname%}' => _NICKNAME, '{%password%}' => _PASSWORD, '{%captcha%}' => $captcha, '{%login%}' => _LOGIN]);
     }
     echo $cont;
-    foot();
+    setFoot();
 }
 
 function changeeditor() {
@@ -207,13 +207,13 @@ function changeeditor() {
 
 function logout() {
  global $db, $admin, $afile, $conf;
-    $aname = text_filter(substr($admin[1], 0, 25), 1);
+    $aname = filterText(substr($admin[1], 0, 25), 1);
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_session WHERE uname = '".$aname."' AND guest = '3'");
     unset($_SESSION[$conf['admin_c']], $admin);
     header('Location: '.$afile.'.php');
 }
 
-if (is_admin()) {
+if (isAdmin()) {
     $name = getVar('req', 'name', 'var');
     $op = getVar('req', 'op', 'var', 'show');
     $panel = (empty($name)) ? 1 : 0;
@@ -227,12 +227,12 @@ if (is_admin()) {
     } elseif ($panel) {
         getAdminPanel();
     } else {
-        if (is_admin_god()) {
+        if (isAdmin(true)) {
             $module_file = BASE_DIR.'/admin/modules/'.$name.'.php';
             if (file_exists($module_file)) require_once $module_file;
         }
         if (isset($conf['modules'][$name])) {
-            if (is_admin_god() || is_admin_modul($name)) {
+            if (isAdmin(true) || is_admin_modul($name)) {
                 $path = BASE_DIR.'/modules/'.$name.'/admin';
                 if (file_exists($path.'/index.php')) {
                     getLang($name, true);
