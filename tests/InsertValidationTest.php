@@ -24,7 +24,7 @@ class InsertValidationTest extends TestCase
      */
     private static function parseTableSchema(): void
     {
-        $sqlFile = self::$basePath . '/setup/sql/table.sql';
+        $sqlFile = self::$basePath.'/setup/sql/table.sql';
         $content = file_get_contents($sqlFile);
 
         preg_match_all('/CREATE TABLE [`\']?\{prefix\}_(\w+)[`\']?\s*\((.*?)\)\s*ENGINE/is', $content, $matches, PREG_SET_ORDER);
@@ -103,7 +103,7 @@ class InsertValidationTest extends TestCase
                 }, $columns);
 
                 self::$inserts[] = [
-                    'file' => str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $path),
+                    'file' => str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $path),
                     'line' => $lineNumber,
                     'table' => $tableName,
                     'columns' => $columns
@@ -143,7 +143,7 @@ class InsertValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Найдены INSERT запросы без обязательных полей:\n" . implode("\n", $errors)
+            "Найдены INSERT запросы без обязательных полей:\n".implode("\n", $errors)
         );
     }
 
@@ -152,7 +152,7 @@ class InsertValidationTest extends TestCase
      */
     public function testTableSchemaExists(): void
     {
-        $sqlFile = self::$basePath . '/setup/sql/table.sql';
+        $sqlFile = self::$basePath.'/setup/sql/table.sql';
         $this->assertFileExists($sqlFile, 'Файл table.sql не найден');
         $this->assertNotEmpty(self::$tableSchema, 'Схема таблиц пуста');
     }

@@ -26,16 +26,16 @@ class LanguageValidationTest extends TestCase
     private static function scanLanguageFiles(): void
     {
         $directories = [
-            self::$basePath . '/language',
-            self::$basePath . '/admin/language',
+            self::$basePath.'/language',
+            self::$basePath.'/admin/language',
         ];
 
         // Добавляем языковые директории модулей
-        $modulesDir = self::$basePath . '/modules';
+        $modulesDir = self::$basePath.'/modules';
         if (is_dir($modulesDir)) {
             foreach (scandir($modulesDir) as $module) {
                 if ($module === '.' || $module === '..') continue;
-                $langDir = $modulesDir . '/' . $module . '/language';
+                $langDir = $modulesDir.'/'.$module.'/language';
                 if (is_dir($langDir)) {
                     $directories[] = $langDir;
                 }
@@ -46,12 +46,12 @@ class LanguageValidationTest extends TestCase
             if (!is_dir($dir)) continue;
 
             foreach (self::$languages as $lang) {
-                $file = $dir . '/' . $lang . '.php';
+                $file = $dir.'/'.$lang.'.php';
                 if (file_exists($file)) {
                     self::$languageFiles[] = [
                         'path' => $file,
                         'lang' => $lang,
-                        'dir' => str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $dir)
+                        'dir' => str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $dir)
                     ];
                 }
             }
@@ -75,7 +75,7 @@ class LanguageValidationTest extends TestCase
                 $offset = $match[0][1];
                 $line = substr_count(substr($content, 0, $offset), "\n") + 1;
 
-                $key = $fileInfo['dir'] . '/' . $fileInfo['lang'];
+                $key = $fileInfo['dir'].'/'.$fileInfo['lang'];
 
                 if (!isset(self::$constants[$key])) {
                     self::$constants[$key] = [];
@@ -105,7 +105,7 @@ class LanguageValidationTest extends TestCase
                 if (preg_match('/% \d+\\\?\$[sdf]/', $value)) {
                     $errors[] = sprintf(
                         "%s:%d - константа '%s' содержит некорректный плейсхолдер (пробел после %%)",
-                        str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $info['file']),
+                        str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $info['file']),
                         $info['line'],
                         $name
                     );
@@ -123,7 +123,7 @@ class LanguageValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Найдены ошибки в плейсхолдерах sprintf:\n" . implode("\n", $errors)
+            "Найдены ошибки в плейсхолдерах sprintf:\n".implode("\n", $errors)
         );
     }
 
@@ -177,12 +177,12 @@ class LanguageValidationTest extends TestCase
         if (count($errors) > 20) {
             $total = count($errors);
             $errors = array_slice($errors, 0, 20);
-            $errors[] = "... и ещё " . ($total - 20) . " проблем";
+            $errors[] = '... и ещё '.($total - 20).' проблем';
         }
 
         $this->assertEmpty(
             $errors,
-            "Найдены неполные переводы:\n" . implode("\n", $errors)
+            "Найдены неполные переводы:\n".implode("\n", $errors)
         );
     }
 
@@ -196,12 +196,12 @@ class LanguageValidationTest extends TestCase
         foreach (self::$languageFiles as $fileInfo) {
             $output = [];
             $returnCode = 0;
-            exec('php -l "' . $fileInfo['path'] . '" 2>&1', $output, $returnCode);
+            exec('php -l "'.$fileInfo['path'].'" 2>&1', $output, $returnCode);
 
             if ($returnCode !== 0) {
                 $errors[] = sprintf(
-                    "%s - синтаксическая ошибка: %s",
-                    str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $fileInfo['path']),
+                    '%s - синтаксическая ошибка: %s',
+                    str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $fileInfo['path']),
                     implode(' ', $output)
                 );
             }
@@ -209,7 +209,7 @@ class LanguageValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Найдены синтаксические ошибки:\n" . implode("\n", $errors)
+            "Найдены синтаксические ошибки:\n".implode("\n", $errors)
         );
     }
 
@@ -222,7 +222,7 @@ class LanguageValidationTest extends TestCase
 
         foreach (self::$languageFiles as $fileInfo) {
             $content = file_get_contents($fileInfo['path']);
-            $relative = str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $fileInfo['path']);
+            $relative = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $fileInfo['path']);
 
             if (!mb_check_encoding($content, 'UTF-8')) {
                 $errors[] = "$relative - некорректная кодировка (не UTF-8)";
@@ -235,7 +235,7 @@ class LanguageValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Проблемы с кодировкой:\n" . implode("\n", $errors)
+            "Проблемы с кодировкой:\n".implode("\n", $errors)
         );
     }
 
@@ -260,7 +260,7 @@ class LanguageValidationTest extends TestCase
         foreach ($directories as $dir => $presentLangs) {
             $missing = array_diff(self::$languages, $presentLangs);
             foreach ($missing as $lang) {
-                $errors[] = sprintf("%s/%s.php - файл отсутствует", $dir, $lang);
+                $errors[] = sprintf('%s/%s.php - файл отсутствует', $dir, $lang);
             }
         }
 
@@ -268,12 +268,12 @@ class LanguageValidationTest extends TestCase
         if (count($errors) > 20) {
             $total = count($errors);
             $errors = array_slice($errors, 0, 20);
-            $errors[] = "... и ещё " . ($total - 20) . " отсутствующих файлов";
+            $errors[] = '... и ещё '.($total - 20).' отсутствующих файлов';
         }
 
         $this->assertEmpty(
             $errors,
-            "Отсутствуют языковые файлы:\n" . implode("\n", $errors)
+            "Отсутствуют языковые файлы:\n".implode("\n", $errors)
         );
     }
 

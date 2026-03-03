@@ -16,7 +16,7 @@ final class TemplateIfTest extends TestCase
     protected function setUp(): void
     {
         if (!function_exists('setTemplateIf')) {
-            require_once BASE_DIR . '/core/template.php';
+            require_once BASE_DIR.'/core/template.php';
         }
     }
 

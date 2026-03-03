@@ -16,7 +16,7 @@ class ModuleStructureTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         self::$basePath = dirname(__DIR__);
-        self::$modulesPath = self::$basePath . '/modules';
+        self::$modulesPath = self::$basePath.'/modules';
         self::scanModules();
     }
 
@@ -30,7 +30,7 @@ class ModuleStructureTest extends TestCase
         foreach (scandir(self::$modulesPath) as $module) {
             if ($module === '.' || $module === '..') continue;
 
-            $modulePath = self::$modulesPath . '/' . $module;
+            $modulePath = self::$modulesPath.'/'.$module;
             if (is_dir($modulePath)) {
                 self::$modules[$module] = $modulePath;
             }
@@ -45,14 +45,14 @@ class ModuleStructureTest extends TestCase
         $errors = [];
 
         foreach (self::$modules as $name => $path) {
-            if (!file_exists($path . '/index.php')) {
+            if (!file_exists($path.'/index.php')) {
                 $errors[] = "modules/$name - отсутствует index.php";
             }
         }
 
         $this->assertEmpty(
             $errors,
-            "Модули без index.php:\n" . implode("\n", $errors)
+            "Модули без index.php:\n".implode("\n", $errors)
         );
     }
 
@@ -65,13 +65,13 @@ class ModuleStructureTest extends TestCase
 
         foreach (self::$modules as $name => $path) {
             // Некоторые модули могут не требовать языковых файлов
-            if (!is_dir($path . '/language')) {
+            if (!is_dir($path.'/language')) {
                 $warnings[] = "modules/$name - отсутствует директория language/";
             }
         }
 
         // Это предупреждение, не ошибка
-        $this->assertTrue(true, count($warnings) . " модулей без директории language/");
+        $this->assertTrue(true, count($warnings).' модулей без директории language/');
     }
 
     /**
@@ -82,7 +82,7 @@ class ModuleStructureTest extends TestCase
         $errors = [];
 
         foreach (self::$modules as $name => $path) {
-            $langPath = $path . '/language';
+            $langPath = $path.'/language';
             if (!is_dir($langPath)) continue;
 
             $presentLangs = [];
@@ -105,12 +105,12 @@ class ModuleStructureTest extends TestCase
         if (count($errors) > 30) {
             $total = count($errors);
             $errors = array_slice($errors, 0, 30);
-            $errors[] = "... и ещё " . ($total - 30) . " отсутствующих файлов";
+            $errors[] = '... и ещё '.($total - 30).' отсутствующих файлов';
         }
 
         $this->assertEmpty(
             $errors,
-            "Отсутствуют языковые файлы:\n" . implode("\n", $errors)
+            "Отсутствуют языковые файлы:\n".implode("\n", $errors)
         );
     }
 
@@ -122,16 +122,16 @@ class ModuleStructureTest extends TestCase
         $errors = [];
 
         foreach (self::$modules as $name => $path) {
-            $indexFile = $path . '/index.php';
+            $indexFile = $path.'/index.php';
             if (!file_exists($indexFile)) continue;
 
             $output = [];
             $returnCode = 0;
-            exec('php -l "' . $indexFile . '" 2>&1', $output, $returnCode);
+            exec('php -l "'.$indexFile.'" 2>&1', $output, $returnCode);
 
             if ($returnCode !== 0) {
                 $errors[] = sprintf(
-                    "modules/%s/index.php - синтаксическая ошибка",
+                    'modules/%s/index.php - синтаксическая ошибка',
                     $name
                 );
             }
@@ -139,7 +139,7 @@ class ModuleStructureTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Синтаксические ошибки в модулях:\n" . implode("\n", $errors)
+            "Синтаксические ошибки в модулях:\n".implode("\n", $errors)
         );
     }
 
@@ -151,7 +151,7 @@ class ModuleStructureTest extends TestCase
         $errors = [];
 
         foreach (self::$modules as $name => $path) {
-            $indexFile = $path . '/index.php';
+            $indexFile = $path.'/index.php';
             if (!file_exists($indexFile)) continue;
 
             $content = file_get_contents($indexFile);
@@ -164,7 +164,7 @@ class ModuleStructureTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Модули без защиты от прямого доступа:\n" . implode("\n", $errors)
+            "Модули без защиты от прямого доступа:\n".implode("\n", $errors)
         );
     }
 
@@ -176,11 +176,11 @@ class ModuleStructureTest extends TestCase
         $errors = [];
 
         foreach (self::$modules as $name => $path) {
-            $adminPath = $path . '/admin';
+            $adminPath = $path.'/admin';
             if (!is_dir($adminPath)) continue;
 
             // Проверяем наличие index.php в admin
-            if (!file_exists($adminPath . '/index.php')) {
+            if (!file_exists($adminPath.'/index.php')) {
                 $errors[] = "modules/$name/admin - отсутствует index.php";
             }
 
@@ -189,7 +189,7 @@ class ModuleStructureTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Проблемы в admin структуре:\n" . implode("\n", $errors)
+            "Проблемы в admin структуре:\n".implode("\n", $errors)
         );
     }
 
@@ -215,7 +215,7 @@ class ModuleStructureTest extends TestCase
         $allowedDuplicates = ['add', 'view', 'send', 'liste', 'navigate', 'edit', 'save', 'delete', 'search', 'broken', 'loading'];
 
         foreach (self::$modules as $name => $path) {
-            $indexFile = $path . '/index.php';
+            $indexFile = $path.'/index.php';
             if (!file_exists($indexFile)) continue;
 
             $content = file_get_contents($indexFile);
@@ -237,7 +237,7 @@ class ModuleStructureTest extends TestCase
 
         $this->assertEmpty(
             $duplicates,
-            "Дублирующиеся функции (не стандартные):\n" . implode("\n", $duplicates)
+            "Дублирующиеся функции (не стандартные):\n".implode("\n", $duplicates)
         );
     }
 }

@@ -22,7 +22,7 @@ final class PasswordHashTest extends TestCase
      */
     private function md5SaltLocal(string $pass, string $salt): string
     {
-        return md5(md5($salt) . md5($pass));
+        return md5(md5($salt).md5($pass));
     }
 
     #[Test]
@@ -66,7 +66,7 @@ final class PasswordHashTest extends TestCase
     {
         $pass = 'mypassword';
         $salt = 'test_salt_key';
-        $expected = md5(md5($salt) . md5($pass));
+        $expected = md5(md5($salt).md5($pass));
 
         $this->assertSame($expected, $this->md5SaltLocal($pass, $salt));
     }
@@ -107,7 +107,7 @@ final class PasswordHashTest extends TestCase
         ];
 
         foreach ($cases as $c) {
-            $expected = md5(md5($c['salt']) . md5($c['pass']));
+            $expected = md5(md5($c['salt']).md5($c['pass']));
             $this->assertSame($expected, $this->md5SaltLocal($c['pass'], $c['salt']));
         }
     }

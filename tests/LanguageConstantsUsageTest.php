@@ -63,7 +63,7 @@ final class LanguageConstantsUsageTest extends TestCase
             }
 
             $path = $file->getPathname();
-            $rel = str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $path);
+            $rel = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $path);
             $parts = preg_split('#[/\\\\]+#', $rel);
             if (array_intersect($skipDirs, $parts)) {
                 continue;
@@ -105,7 +105,7 @@ final class LanguageConstantsUsageTest extends TestCase
                     continue;
                 }
 
-                $defs[$name][] = str_replace('\\', '/', $rel) . ':' . $tokens[$j][2];
+                $defs[$name][] = str_replace('\\', '/', $rel).':'.$tokens[$j][2];
             }
         }
 
@@ -169,7 +169,7 @@ final class LanguageConstantsUsageTest extends TestCase
 
         $body = substr($raw, 1, -1);
         if ($q === "'") {
-            return str_replace(["\\'", "\\\\"], ["'", "\\"], $body);
+            return str_replace(["\\'", '\\\\'], ["'", '\\'], $body);
         }
 
         return stripcslashes($body);

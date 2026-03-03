@@ -55,11 +55,11 @@ final class UnusedCodeAuditTest extends TestCase
 
     private static function collectFunctionUsageStats(): array
     {
-        $core_dir = self::$base_path . DIRECTORY_SEPARATOR . 'core';
+        $core_dir = self::$base_path.DIRECTORY_SEPARATOR.'core';
         $defs = []; // name => list of file:line
         $core_names = [];
 
-        foreach (glob($core_dir . DIRECTORY_SEPARATOR . '*.php') as $file) {
+        foreach (glob($core_dir.DIRECTORY_SEPARATOR.'*.php') as $file) {
             $tokens = token_get_all((string) file_get_contents($file));
             $n = count($tokens);
             $brace_depth = 0;
@@ -113,8 +113,8 @@ final class UnusedCodeAuditTest extends TestCase
                         if (str_starts_with($name, '__')) {
                             break; // skip magic methods from function-usage audit
                         }
-                        $rel = str_replace(self::$base_path . DIRECTORY_SEPARATOR, '', $file);
-                        $defs[$name][] = str_replace('\\', '/', $rel) . ':' . $x[2];
+                        $rel = str_replace(self::$base_path.DIRECTORY_SEPARATOR, '', $file);
+                        $defs[$name][] = str_replace('\\', '/', $rel).':'.$x[2];
                         $core_names[$name] = true;
                     }
                     break;
@@ -251,7 +251,7 @@ final class UnusedCodeAuditTest extends TestCase
                         if ($in_function && $depth < $func_depth) {
                             foreach ($vars as $name => $st) {
                                 if ($st['writes'] > 0 && $st['reads'] === 0) {
-                                    $rel = str_replace(self::$base_path . DIRECTORY_SEPARATOR, '', $path);
+                                    $rel = str_replace(self::$base_path.DIRECTORY_SEPARATOR, '', $path);
                                     $rel_norm = str_replace('\\', '/', $rel);
                                     $fp_key = $rel_norm.'|'.$func_name.'|'.$name;
                                     if (isset($known_false_pos[$fp_key])) {
@@ -361,7 +361,7 @@ final class UnusedCodeAuditTest extends TestCase
             }
 
             $path = $f->getPathname();
-            $rel = str_replace(self::$base_path . DIRECTORY_SEPARATOR, '', $path);
+            $rel = str_replace(self::$base_path.DIRECTORY_SEPARATOR, '', $path);
             $normalized = str_replace('\\', '/', $rel);
             if ($normalized === 'modules/clients/pclzip.lib.php') {
                 continue; // Third-party library, excluded from local-unused heuristics.
@@ -433,7 +433,7 @@ final class UnusedCodeAuditTest extends TestCase
         }
         $body = substr($raw, 1, -1);
         if ($q === "'") {
-            return str_replace(["\\'", "\\\\"], ["'", "\\"], $body);
+            return str_replace(["\\'", '\\\\'], ["'", '\\'], $body);
         }
         return stripcslashes($body);
     }

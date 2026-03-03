@@ -55,8 +55,8 @@ class SecurityValidationTest extends TestCase
                 // Ищем SQL запросы с прямым использованием суперглобальных переменных
                 if (preg_match('/sql_query\s*\([^)]*\$_(GET|POST|REQUEST)\s*\[/', $line)) {
                     $errors[] = sprintf(
-                        "%s:%d - прямое использование \$_%s в SQL запросе",
-                        str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file),
+                        '%s:%d - прямое использование $_%s в SQL запросе',
+                        str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file),
                         $lineNum + 1,
                         preg_match('/\$_(GET|POST|REQUEST)/', $line, $m) ? $m[1] : 'SUPERGLOBAL'
                     );
@@ -66,7 +66,7 @@ class SecurityValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Найдено небезопасное использование суперглобальных переменных в SQL:\n" . implode("\n", $errors)
+            "Найдено небезопасное использование суперглобальных переменных в SQL:\n".implode("\n", $errors)
         );
     }
 
@@ -85,8 +85,8 @@ class SecurityValidationTest extends TestCase
                 // Ищем include/require с прямым использованием $_GET/$_POST
                 if (preg_match('/(include|require)(_once)?\s*\(?[^;]*\$_(GET|POST|REQUEST)\s*\[/', $line)) {
                     $errors[] = sprintf(
-                        "%s:%d - пользовательские данные в include/require",
-                        str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file),
+                        '%s:%d - пользовательские данные в include/require',
+                        str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file),
                         $lineNum + 1
                     );
                 }
@@ -95,7 +95,7 @@ class SecurityValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Найдены потенциальные LFI уязвимости:\n" . implode("\n", $errors)
+            "Найдены потенциальные LFI уязвимости:\n".implode("\n", $errors)
         );
     }
 
@@ -114,8 +114,8 @@ class SecurityValidationTest extends TestCase
                 // Ищем eval с переменными
                 if (preg_match('/\beval\s*\(\s*\$/', $line)) {
                     $errors[] = sprintf(
-                        "%s:%d - использование eval() с переменной",
-                        str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file),
+                        '%s:%d - использование eval() с переменной',
+                        str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file),
                         $lineNum + 1
                     );
                 }
@@ -124,7 +124,7 @@ class SecurityValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Найдено небезопасное использование eval():\n" . implode("\n", $errors)
+            "Найдено небезопасное использование eval():\n".implode("\n", $errors)
         );
     }
 
@@ -143,8 +143,8 @@ class SecurityValidationTest extends TestCase
                 // Ищем shell функции с суперглобальными переменными
                 if (preg_match('/(shell_exec|exec|system|passthru|popen)\s*\([^)]*\$_(GET|POST|REQUEST)\s*\[/', $line)) {
                     $errors[] = sprintf(
-                        "%s:%d - пользовательские данные в shell команде",
-                        str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file),
+                        '%s:%d - пользовательские данные в shell команде',
+                        str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file),
                         $lineNum + 1
                     );
                 }
@@ -153,7 +153,7 @@ class SecurityValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Найдены потенциальные Command Injection уязвимости:\n" . implode("\n", $errors)
+            "Найдены потенциальные Command Injection уязвимости:\n".implode("\n", $errors)
         );
     }
 
@@ -175,8 +175,8 @@ class SecurityValidationTest extends TestCase
                     // Проверяем есть ли экранирование
                     if (!preg_match('/htmlspecialchars|htmlentities|text_filter|var_filter/', $line)) {
                         $warnings[] = sprintf(
-                            "%s:%d - вывод пользовательских данных без экранирования",
-                            str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file),
+                            '%s:%d - вывод пользовательских данных без экранирования',
+                            str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file),
                             $lineNum + 1
                         );
 
@@ -187,7 +187,7 @@ class SecurityValidationTest extends TestCase
         }
 
         // Это информационное - не фейлим тест
-        $this->assertTrue(true, "Информация: " . count($warnings) . " мест требуют ручной проверки на XSS");
+        $this->assertTrue(true, 'Информация: '.count($warnings).' мест требуют ручной проверки на XSS');
     }
 
     /**
@@ -213,8 +213,8 @@ class SecurityValidationTest extends TestCase
                     $line = substr_count(substr($content, 0, $offset), "\n") + 1;
 
                     $warnings[] = sprintf(
-                        "%s:%d - SQL запрос с переменными без параметризации",
-                        str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file),
+                        '%s:%d - SQL запрос с переменными без параметризации',
+                        str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file),
                         $line
                     );
 
@@ -227,11 +227,11 @@ class SecurityValidationTest extends TestCase
         if (count($warnings) > $maxWarnings) {
             $total = count($warnings);
             $warnings = array_slice($warnings, 0, $maxWarnings);
-            $warnings[] = "... и ещё " . ($total - $maxWarnings) . " подобных случаев";
+            $warnings[] = '... и ещё '.($total - $maxWarnings).' подобных случаев';
         }
 
         // Это информационное - не фейлим тест
-        $this->assertTrue(true, "Информация: " . count($warnings) . " SQL запросов требуют ручной проверки");
+        $this->assertTrue(true, 'Информация: '.count($warnings).' SQL запросов требуют ручной проверки');
     }
 
     /**
@@ -285,8 +285,8 @@ class SecurityValidationTest extends TestCase
 
                 if ($inFunction && in_array($id, [T_REQUIRE, T_REQUIRE_ONCE, T_INCLUDE, T_INCLUDE_ONCE], true)) {
                     $row = sprintf(
-                        "%s:%d - %s внутри функции %s()",
-                        str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file),
+                        '%s:%d - %s внутри функции %s()',
+                        str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file),
                         $line,
                         strtolower($text),
                         $funcName
@@ -303,12 +303,12 @@ class SecurityValidationTest extends TestCase
         $total = count($warnings);
         if ($total > $maxWarnings) {
             $warnings = array_slice($warnings, 0, $maxWarnings);
-            $warnings[] = "... и ещё " . ($total - $maxWarnings) . " подобных случаев";
+            $warnings[] = '... и ещё '.($total - $maxWarnings).' подобных случаев';
         }
 
         fwrite(
             STDERR,
-            "Include/require inside functions audit: найдено {$total} случаев\n" . implode("\n", $warnings) . "\n"
+            "Include/require inside functions audit: найдено {$total} случаев\n".implode("\n", $warnings)."\n"
         );
 
         // Informational only: in legacy SLAED these patterns are common and require staged migration.
@@ -366,7 +366,7 @@ class SecurityValidationTest extends TestCase
         foreach (self::$phpFiles as $file) {
             $content = file_get_contents($file);
             $tokens = token_get_all($content);
-            $rel = str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file);
+            $rel = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
             $count = count($tokens);
 
             for ($i = 0; $i < $count; $i++) {
@@ -425,12 +425,12 @@ class SecurityValidationTest extends TestCase
         if (count($errors) > $maxErrors) {
             $total = count($errors);
             $errors = array_slice($errors, 0, $maxErrors);
-            $errors[] = "... и ещё " . ($total - $maxErrors) . " подобных случаев";
+            $errors[] = '... и ещё '.($total - $maxErrors).' подобных случаев';
         }
 
         $this->assertEmpty(
             $errors,
-            "Найдены устаревшие API/переменные:\n" . implode("\n", $errors)
+            "Найдены устаревшие API/переменные:\n".implode("\n", $errors)
         );
     }
 
@@ -475,7 +475,7 @@ class SecurityValidationTest extends TestCase
 
         $body = substr($text, 1, -1);
         if ($quote === "'") {
-            return str_replace(["\\'", "\\\\"], ["'", "\\"], $body);
+            return str_replace(["\\'", '\\\\'], ["'", '\\'], $body);
         }
 
         return stripcslashes($body);

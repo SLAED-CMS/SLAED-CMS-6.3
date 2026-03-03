@@ -15,7 +15,7 @@ class BlockValidationTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         self::$basePath = dirname(__DIR__);
-        self::$blocksPath = self::$basePath . '/blocks';
+        self::$blocksPath = self::$basePath.'/blocks';
         self::scanBlockFiles();
     }
 
@@ -29,7 +29,7 @@ class BlockValidationTest extends TestCase
         foreach (scandir(self::$blocksPath) as $file) {
             if ($file === '.' || $file === '..') continue;
             if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
-                self::$blockFiles[] = self::$blocksPath . '/' . $file;
+                self::$blockFiles[] = self::$blocksPath.'/'.$file;
             }
         }
     }
@@ -44,11 +44,11 @@ class BlockValidationTest extends TestCase
         foreach (self::$blockFiles as $file) {
             $output = [];
             $returnCode = 0;
-            exec('php -l "' . $file . '" 2>&1', $output, $returnCode);
+            exec('php -l "'.$file.'" 2>&1', $output, $returnCode);
 
             if ($returnCode !== 0) {
                 $errors[] = sprintf(
-                    "blocks/%s - синтаксическая ошибка",
+                    'blocks/%s - синтаксическая ошибка',
                     basename($file)
                 );
             }
@@ -56,7 +56,7 @@ class BlockValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Синтаксические ошибки в блоках:\n" . implode("\n", $errors)
+            "Синтаксические ошибки в блоках:\n".implode("\n", $errors)
         );
     }
 
@@ -78,7 +78,7 @@ class BlockValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Проблемы с именованием блоков:\n" . implode("\n", $errors)
+            "Проблемы с именованием блоков:\n".implode("\n", $errors)
         );
     }
 
@@ -106,7 +106,7 @@ class BlockValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Потенциально опасный код в блоках:\n" . implode("\n", $errors)
+            "Потенциально опасный код в блоках:\n".implode("\n", $errors)
         );
     }
 
@@ -134,7 +134,7 @@ class BlockValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Проблемы с кодировкой:\n" . implode("\n", $errors)
+            "Проблемы с кодировкой:\n".implode("\n", $errors)
         );
     }
 
@@ -159,7 +159,7 @@ class BlockValidationTest extends TestCase
         }
 
         // Это информационное сообщение
-        $this->assertTrue(true, count($warnings) . " блоков с нестандартным форматом вывода");
+        $this->assertTrue(true, count($warnings).' блоков с нестандартным форматом вывода');
     }
 
     /**
@@ -203,7 +203,7 @@ class BlockValidationTest extends TestCase
 
             if ($size > $maxSize) {
                 $warnings[] = sprintf(
-                    "blocks/%s - большой размер файла (%s KB)",
+                    'blocks/%s - большой размер файла (%s KB)',
                     $fileName,
                     round($size / 1024, 1)
                 );
@@ -211,6 +211,6 @@ class BlockValidationTest extends TestCase
         }
 
         // Это предупреждение, не ошибка
-        $this->assertTrue(true, count($warnings) . " блоков с большим размером файла");
+        $this->assertTrue(true, count($warnings).' блоков с большим размером файла');
     }
 }

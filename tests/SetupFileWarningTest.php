@@ -15,7 +15,7 @@ class SetupFileWarningTest extends TestCase
             return;
         }
 
-        $setupFile = dirname(__DIR__) . '/setup.php';
+        $setupFile = dirname(__DIR__).'/setup.php';
         $this->assertFileDoesNotExist($setupFile, 'setup.php must be removed in production');
     }
 }

@@ -44,7 +44,7 @@ class PhpFileFormatTest extends TestCase
 
         foreach (self::$phpFiles as $file) {
             $content = file_get_contents($file);
-            $relative = str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file);
+            $relative = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
 
             if (!mb_check_encoding($content, 'UTF-8')) {
                 $errors[] = "$relative - некорректная кодировка (не UTF-8)";
@@ -57,7 +57,7 @@ class PhpFileFormatTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Проблемы с кодировкой:\n" . implode("\n", $errors)
+            "Проблемы с кодировкой:\n".implode("\n", $errors)
         );
     }
 
@@ -69,7 +69,7 @@ class PhpFileFormatTest extends TestCase
     public function testPhpFilesLineEndings(): void
     {
         $this->markTestSkipped(
-            'Проверка окончаний строк отключена. ' .
+            'Проверка окончаний строк отключена. '.
             'Для нормализации используйте: git add --renormalize . && git commit'
         );
     }

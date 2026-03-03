@@ -6,15 +6,15 @@ declare(strict_types=1);
  */
 
 // Autoloader
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 // Konstanten für Tests
 define('MODULE_FILE', true);
 define('FUNC_FILE', true);
 define('BASE_DIR', dirname(__DIR__));
-define('CONFIG_DIR', BASE_DIR . '/config');
-define('CACHE_DIR', BASE_DIR . '/storage/cache');
-define('LOGS_DIR', BASE_DIR . '/storage/logs');
+define('CONFIG_DIR', BASE_DIR.'/config');
+define('CACHE_DIR', BASE_DIR.'/storage/cache');
+define('LOGS_DIR', BASE_DIR.'/storage/logs');
 
 // Test-Konfiguration laden
 $GLOBALS['conf'] = [

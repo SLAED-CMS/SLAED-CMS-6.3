@@ -16,7 +16,7 @@ class TemplateValidationTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         self::$basePath = dirname(__DIR__);
-        self::$templatesPath = self::$basePath . '/templates';
+        self::$templatesPath = self::$basePath.'/templates';
         self::loadKnownPlaceholders();
         self::scanTemplates();
     }
@@ -26,7 +26,7 @@ class TemplateValidationTest extends TestCase
      */
     private static function loadKnownPlaceholders(): void
     {
-        $templateFile = self::$basePath . '/core/template.php';
+        $templateFile = self::$basePath.'/core/template.php';
         if (!file_exists($templateFile)) return;
 
         $content = file_get_contents($templateFile);
@@ -74,7 +74,7 @@ class TemplateValidationTest extends TestCase
 
         foreach (self::$templates as $file) {
             $content = file_get_contents($file);
-            $relativePath = str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file);
+            $relativePath = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
 
             // Считаем открывающие и закрывающие теги
             preg_match_all('/\{%\s*if\s+\w+\s*%\}/', $content, $ifMatches);
@@ -85,7 +85,7 @@ class TemplateValidationTest extends TestCase
 
             if ($ifCount !== $endifCount) {
                 $errors[] = sprintf(
-                    "%s - несбалансированные if/endif (%d if, %d endif)",
+                    '%s - несбалансированные if/endif (%d if, %d endif)',
                     $relativePath,
                     $ifCount,
                     $endifCount
@@ -95,7 +95,7 @@ class TemplateValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Ошибки в условных конструкциях:\n" . implode("\n", $errors)
+            "Ошибки в условных конструкциях:\n".implode("\n", $errors)
         );
     }
 
@@ -115,7 +115,7 @@ class TemplateValidationTest extends TestCase
             if (preg_match('/(^|-)(open|close)\.html$/', $fileName)) continue;
 
             $content = file_get_contents($file);
-            $relativePath = str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file);
+            $relativePath = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
 
             // Проверяем незакрытые теги (базовая проверка)
             $openTags = [];
@@ -144,7 +144,7 @@ class TemplateValidationTest extends TestCase
             foreach ($criticalTags as $tag) {
                 if (isset($openTags[$tag]) && $openTags[$tag] !== 0) {
                     $errors[] = sprintf(
-                        "%s - несбалансированный тег <%s> (разница: %d)",
+                        '%s - несбалансированный тег <%s> (разница: %d)',
                         $relativePath,
                         $tag,
                         $openTags[$tag]
@@ -157,12 +157,12 @@ class TemplateValidationTest extends TestCase
         if (count($errors) > 20) {
             $total = count($errors);
             $errors = array_slice($errors, 0, 20);
-            $errors[] = "... и ещё " . ($total - 20) . " проблем";
+            $errors[] = '... и ещё '.($total - 20).' проблем';
         }
 
         $this->assertEmpty(
             $errors,
-            "Проблемы HTML структуры:\n" . implode("\n", $errors)
+            "Проблемы HTML структуры:\n".implode("\n", $errors)
         );
     }
 
@@ -177,7 +177,7 @@ class TemplateValidationTest extends TestCase
         $themes = [];
         foreach (scandir(self::$templatesPath) as $item) {
             if ($item === '.' || $item === '..') continue;
-            if (is_dir(self::$templatesPath . '/' . $item)) {
+            if (is_dir(self::$templatesPath.'/'.$item)) {
                 $themes[] = $item;
             }
         }
@@ -189,10 +189,10 @@ class TemplateValidationTest extends TestCase
             // Пропускаем admin тему
             if ($theme === 'admin') continue;
 
-            $themePath = self::$templatesPath . '/' . $theme;
+            $themePath = self::$templatesPath.'/'.$theme;
 
             foreach ($required as $template) {
-                if (!file_exists($themePath . '/' . $template)) {
+                if (!file_exists($themePath.'/'.$template)) {
                     $errors[] = "templates/$theme/$template - отсутствует";
                 }
             }
@@ -200,7 +200,7 @@ class TemplateValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Отсутствуют обязательные шаблоны:\n" . implode("\n", $errors)
+            "Отсутствуют обязательные шаблоны:\n".implode("\n", $errors)
         );
     }
 
@@ -213,7 +213,7 @@ class TemplateValidationTest extends TestCase
 
         foreach (self::$templates as $file) {
             $content = file_get_contents($file);
-            $relativePath = str_replace(self::$basePath . DIRECTORY_SEPARATOR, '', $file);
+            $relativePath = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
 
             // Проверяем на невалидный UTF-8
             if (!mb_check_encoding($content, 'UTF-8')) {
@@ -228,7 +228,7 @@ class TemplateValidationTest extends TestCase
 
         $this->assertEmpty(
             $errors,
-            "Проблемы с кодировкой:\n" . implode("\n", $errors)
+            "Проблемы с кодировкой:\n".implode("\n", $errors)
         );
     }
 

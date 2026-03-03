@@ -53,12 +53,12 @@ final class InputFilterTest extends TestCase
     private function urlFilterLocal(string $url): string
     {
         $url = strtolower($url);
-        $url = (preg_match('#http\:\/\/|https\:\/\/#i', $url)) ? $url : 'http://' . $url;
+        $url = (preg_match('#http\:\/\/|https\:\/\/#i', $url)) ? $url : 'http://'.$url;
         $url = ($url == 'http://') ? '' : $this->textFilterLocal($url);
         return $url;
     }
 
-    private function saveTextLocal(string $text): ?string
+    private function filterHtmlLocal(string $text): ?string
     {
         if ($text) {
             // Non-editor mode (redaktor=0): escape special chars
@@ -257,35 +257,35 @@ final class InputFilterTest extends TestCase
         $this->assertSame('', $this->urlFilterLocal(''));
     }
 
-    // --- save_text tests ---
+    // --- filterHtml tests ---
 
     #[Test]
-    public function saveTextEscapesDollarSign(): void
+    public function filterHtmlEscapesDollarSign(): void
     {
-        $result = $this->saveTextLocal('$var');
+        $result = $this->filterHtmlLocal('$var');
         $this->assertStringContainsString('&#036;', $result);
     }
 
     #[Test]
-    public function saveTextEscapesBackslash(): void
+    public function filterHtmlEscapesBackslash(): void
     {
         // Input with literal backslash (double-escaped in PHP source)
-        // stripslashes() in save_text removes one level of escaping
-        $result = $this->saveTextLocal('\\\\path');
+        // stripslashes() in filterHtml removes one level of escaping
+        $result = $this->filterHtmlLocal('\\\\path');
         $this->assertStringContainsString('&#092;', $result);
     }
 
     #[Test]
-    public function saveTextEscapesQuotes(): void
+    public function filterHtmlEscapesQuotes(): void
     {
-        $result = $this->saveTextLocal('He said "hello" and \'bye\'');
+        $result = $this->filterHtmlLocal('He said "hello" and \'bye\'');
         $this->assertStringContainsString('&#034;', $result);
         $this->assertStringContainsString('&#039;', $result);
     }
 
     #[Test]
-    public function saveTextReturnsNullForEmpty(): void
+    public function filterHtmlReturnsNullForEmpty(): void
     {
-        $this->assertNull($this->saveTextLocal(''));
+        $this->assertNull($this->filterHtmlLocal(''));
     }
 }
