@@ -99,7 +99,7 @@ Isolated tests for core functions. No database or HTTP required.
 | `TemplateTest.php` | 3 | `setTemplateBasic()`, `setTemplateWarning()`, `getTemplateVars()` |
 | `TemplateIfTest.php` | 12 | `setTemplateIf()` conditional logic: true/false, else, nesting, coercion |
 | `PasswordHashTest.php` | 11 | `md5_salt()` algorithm + bcrypt readiness for password migration |
-| `InputFilterTest.php` | 19 | `num_filter`, `var_filter`, `isVar`, `text_filter`, `url_filter`, `save_text` |
+| `InputFilterTest.php` | 19 | `filterNum`, `filterWord`, `filterVar`, `filterText`, `filterUrl`, `filterHtml` |
 
 ### Validation (`tests/` excluding `Unit/`)
 

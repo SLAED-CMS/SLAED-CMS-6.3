@@ -1,7 +1,7 @@
 # Template System Documentation
 
 > **SLAED CMS Template Guide**
-> *Last updated: February 2026*
+> *Last updated: March 2026*
 
 This document describes the SLAED CMS template system, including conditional rendering, variable substitution, and best practices.
 

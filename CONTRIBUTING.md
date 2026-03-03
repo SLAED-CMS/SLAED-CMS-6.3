@@ -207,15 +207,15 @@ $text = getVar('post', 'content', 'text', '');
 ```
 
 **Available types:**
-- `'num'` - Integer only
+- `'num'` - Integer only (`filterNum`)
 - `'let'` - First letter only (1 char, UTF-8)
-- `'word'` - Word/slug characters only (`var_filter`)
+- `'word'` - Word/slug characters only (`filterWord`)
 - `'name'` - Username (max 25 chars, safe characters)
-- `'title'` - Title with `save_text` (linkify disabled)
-- `'text'` - Text with full `save_text` processing (HTML filtering)
-- `'field'` - Custom field data (`fields_save`)
-- `'url'` - Valid URL
-- `'var'` - Alphanumeric/underscore/dash only (`[a-zA-Z0-9_\-]`)
+- `'title'` - Title with `filterHtml` (linkify disabled)
+- `'text'` - Text with full `filterHtml` processing (HTML filtering)
+- `'field'` - Custom field data (`filterFields`)
+- `'url'` - Valid URL (`filterUrl`)
+- `'var'` - Alphanumeric/underscore/dash only (`filterVar`, `[a-zA-Z0-9_\-]`)
 - `'bool'` - Boolean value
 - `'raw'` - No filtering — returns raw value (use carefully)
 

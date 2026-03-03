@@ -205,6 +205,33 @@ location /storage {
 - [x] Admin info file structure: flat `admin/info/{module}-{locale}.html` → subdirectory `admin/info/{module}/{locale}.html`
 - [x] Database class `sql_db` renamed to `Database`; all 15 methods renamed to `getSql*` prefix (`getSqlQuery()`, `getSqlRow()`, `getSqlRowCount()`, …)
 
+**Renamed Functions (`core/security.php`):**
+
+All legacy snake_case function names have been replaced with camelCase `VerbNoun` equivalents:
+
+| Old name (6.2.x) | New name (6.3.x) | Notes |
+|------------------|------------------|-------|
+| `is_admin_god()` | `isAdminSuper(): bool` | Cached per request |
+| `get_host()` | `getHost(): string` | |
+| `get_referer()` | `getReferer(): string` | |
+| `isVar()` / `analyze()` | `filterVar(string\|array): string\|array` | |
+| `url_filter()` | `filterUrl(string): string` | |
+| `num_filter()` | `filterNum(mixed): int` | |
+| `var_filter()` | `filterWord(string): string` | |
+| `text_filter()` | `filterText(string\|array, int): string` | |
+| `save_text()` | `filterHtml(string, mixed): string` | |
+| `fields_save()` | `filterFields(mixed): string` | |
+| `url_clickable()` | `filterClickable(string): string` | |
+| `cutstrc()` | `filterCut(string, int): string` | |
+| `display_time()` | `getDuration(int): string` | |
+| `rest_time()` | `getTimeLeft(int): string` | |
+| `ed2k_link()` | `getEd2kLink(array): string` | |
+| `mail_send()` | `addMail(...): void` | |
+| `doHackReport()` | `addHackReport(string): void` | Logs, blocks IP, sends email, exits |
+| `doWarnReport()` | `addWarnReport(string): void` | Logs, sends email, exits |
+| `zip_check()` | `checkCompress(): array` | Returns `['zip'=>bool,'gz'=>bool,'bz2'=>bool]` |
+| `zip_compress()` | `addCompress(...): bool` | |
+
 **Logging & Error Handling Hardening (`core/security.php`):**
 
 - [x] `set_exception_handler()` added — catches all uncaught exceptions, logs to `error_php.log`

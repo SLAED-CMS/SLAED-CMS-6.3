@@ -197,6 +197,33 @@ return [
 
 #### Function Changes
 
+##### Security and Utility Functions (`core/security.php`)
+
+All legacy snake_case function names have been replaced with camelCase `VerbNoun` equivalents. Any remaining calls to the old names will cause a fatal error:
+
+| Old name (6.2.x) | New name (6.3.x) | Notes |
+|------------------|------------------|-------|
+| `is_admin_god()` | `isAdminSuper(): bool` | Cached per request |
+| `get_host()` | `getHost(): string` | |
+| `get_referer()` | `getReferer(): string` | |
+| `isVar()` / `analyze()` | `filterVar(string\|array): string\|array` | |
+| `url_filter()` | `filterUrl(string): string` | |
+| `num_filter()` | `filterNum(mixed): int` | |
+| `var_filter()` | `filterWord(string): string` | |
+| `text_filter()` | `filterText(string\|array, int): string` | |
+| `save_text()` | `filterHtml(string, mixed): string` | |
+| `fields_save()` | `filterFields(mixed): string` | |
+| `url_clickable()` | `filterClickable(string): string` | |
+| `cutstrc()` | `filterCut(string, int): string` | |
+| `display_time()` | `getDuration(int): string` | |
+| `rest_time()` | `getTimeLeft(int): string` | |
+| `ed2k_link()` | `getEd2kLink(array): string` | |
+| `mail_send()` | `addMail(...): void` | |
+| `doHackReport()` | `addHackReport(string): void` | Logs, blocks IP, sends email, exits |
+| `doWarnReport()` | `addWarnReport(string): void` | Logs, sends email, exits |
+| `zip_check()` | `checkCompress(): array` | Returns `['zip'=>bool,'gz'=>bool,'bz2'=>bool]` |
+| `zip_compress()` | `addCompress(...): bool` | In `core/system.php` |
+
 ##### Template Functions
 
 `tpl_eval()`, `tpl_func()`, and `tpl_warn()` have been **fully removed**. Any existing calls will cause a fatal error:
@@ -375,6 +402,29 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 - [ ] Use `checkPerms()` instead of `end_chmod()` for config permissions
 - [ ] Rename config files: remove `config_` prefix where applicable
 
+### Security Functions
+
+- [ ] Replace `is_admin_god()` with `isAdminSuper()`
+- [ ] Replace `get_host()` with `getHost()`
+- [ ] Replace `get_referer()` with `getReferer()`
+- [ ] Replace `isVar()` / `analyze()` with `filterVar()`
+- [ ] Replace `url_filter()` with `filterUrl()`
+- [ ] Replace `num_filter()` with `filterNum()`
+- [ ] Replace `var_filter()` with `filterWord()`
+- [ ] Replace `text_filter()` with `filterText()`
+- [ ] Replace `save_text()` with `filterHtml()`
+- [ ] Replace `fields_save()` with `filterFields()`
+- [ ] Replace `url_clickable()` with `filterClickable()`
+- [ ] Replace `cutstrc()` with `filterCut()`
+- [ ] Replace `display_time()` with `getDuration()`
+- [ ] Replace `rest_time()` with `getTimeLeft()`
+- [ ] Replace `ed2k_link()` with `getEd2kLink()`
+- [ ] Replace `mail_send()` with `addMail()`
+- [ ] Replace `doHackReport()` with `addHackReport()`
+- [ ] Replace `doWarnReport()` with `addWarnReport()`
+- [ ] Replace `zip_check()` with `checkCompress()`
+- [ ] Replace `zip_compress()` with `addCompress()`
+
 ### Admin Modules
 
 - [ ] Rename navigation function to `navi()`
@@ -506,6 +556,9 @@ rm -rf storage/cache/*
 - Admin info files reorganized: `admin/info/{module}/{module}-{locale}.html` → `admin/info/{module}/{locale}.html`
 - `adm_info()` replaced by `getAdminInfo()` — auto-detects info path from `$_GET['name']`, no parameters
 - Database class `sql_db` renamed to `Database`; all methods renamed to `getSql*` prefix
+- All 20 snake_case functions in `core/security.php` renamed to camelCase `VerbNoun` (see Breaking Changes above)
+- `checkCompress()` and `addCompress()` replace `zip_check()` and `zip_compress()` in `core/system.php`
+- `LOGS_DIR` constant = `BASE_DIR.'/storage/logs'`
 - Removed `core/classes/module.php` (centralized in core)
 - Config file naming: removed `config_` prefix
 - Language constant `_ANONYM` replaces configurable `$confu['anonym']`
