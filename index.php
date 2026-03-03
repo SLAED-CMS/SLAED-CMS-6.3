@@ -22,17 +22,17 @@ if (empty($go)) {
         $userip = user_geo_ip(getip(), 2);
         if ($userip != '?' && !is_bot() && empty(getCookies('language'))) {
             if ($userip == 'United Kingdom' || $userip == 'United States of America' || $userip == 'Canada' || $userip == 'Australia') {
-                header('Location: index.php?newlang=en');
+                setRedirect('index.php?newlang=en');
             } elseif ($userip == 'France') {
-                header('Location: index.php?newlang=fr');
+                setRedirect('index.php?newlang=fr');
             } elseif ($userip == 'Germany') {
-                header('Location: index.php?newlang=de');
+                setRedirect('index.php?newlang=de');
             } elseif ($userip == 'Poland') {
-                header('Location: index.php?newlang=pl');
+                setRedirect('index.php?newlang=pl');
             } elseif ($userip == 'Russian Federation') {
-                header('Location: index.php?newlang=ru');
+                setRedirect('index.php?newlang=ru');
             } elseif ($userip == 'Ukraine') {
-                header('Location: index.php?newlang=uk');
+                setRedirect('index.php?newlang=uk');
             }
         }
     }
@@ -75,12 +75,10 @@ if (empty($go)) {
                 setFoot();
                 exit;
             } else {
-                header('Location: index.php');
-                exit;
+                setRedirect('index.php');
             }
         } else {
-            header('Location: index.php');
-            exit;
+            setRedirect('index.php');
         }
     } else {
         $home = 1;
