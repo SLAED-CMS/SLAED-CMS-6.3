@@ -32,7 +32,7 @@ define('_CHLOG_ERR_GH_REQ', 'Erreur lors de la construction de la requête Graph
 define('_CHLOG_ERR_GH_JSON', 'Erreur de décodage de la réponse GraphQL.');
 define('_CHLOG_ERR_GH_CONNECT', 'API GitHub : connexion échouée.');
 define('_CHLOG_ERR_GH_API', "Erreur de l'API GitHub : HTTP %1$s");
-define('_CHLOG_ERR_GH_API_JSON', "API GitHub : JSON invalide.");
+define('_CHLOG_ERR_GH_API_JSON', 'API GitHub : JSON invalide.');
 define('_CHLOG_ERR_GIT_MISSING', 'Dépôt Git introuvable : %1$s');
 define('_CHLOG_ERR_GIT_CHDIR', 'Impossible de changer de répertoire : %1$s');
 define('_CHLOG_ERR_GIT_CMD', 'Commande Git échouée (code : %1$s)');
