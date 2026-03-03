@@ -43,7 +43,7 @@ function forum(): void {
         $isedit = is_acess($massiv[0][14]);
         $isdelete = is_acess($massiv[0][15]);
         $ismod = is_acess($massiv[0][16]);
-        $userinfo = getusrinfo();
+        $userinfo = getUserInfo();
         $ulastvisit = (is_array($userinfo) && !empty($userinfo['user_lastvisit'])) ? intval($userinfo['user_lastvisit']) : 0;
         $pagetitle = ($id) ? _FORUM.' '.$massiv[0][1] : _FORUM;
         setHead(['title' => $pagetitle]);
@@ -295,7 +295,7 @@ function view(): void {
             $atopic = (is_moder($conf['name']) || $istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$cmassiv[0][2].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
             $areply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$cmassiv[0][2].'&amp;pid='.$id.'" title="'._TOPICREPLY.'" class="sl_but">'._REPLY.'</a>' : '<span title="'.sprintf(_ACINFOP, _NOTCAN).'" class="sl_but sl_hidden">'._REPLY.'</span>';
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$id.'&', $conf['forum']['pnum'], $num);
-            $favor = favorview($id, $conf['name']);
+            $favor = getFavorBtn($id, $conf['name']);
             $cont = setTemplateBasic('forum-view-open', ['{%atopic%}' => $atopic, '{%areply%}' => $areply, '{%title%}' => search_color($cmassiv[0][5], $word), '{%favor%}' => $favor]);
             foreach ($cmassiv as $val) {
                 $fid = $val[0];
@@ -520,7 +520,7 @@ function add(): void {
         $cont = ($stop) ? setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']) : '';
         $psubject = (!$subh) ? $subject : '';
         if ($hometext) $cont .= preview($psubject, $hometext, '', $field, $conf['name']);
-        $userinfo = getusrinfo();
+        $userinfo = getUserInfo();
         if ($userinfo['user_acess'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= setTemplateWarning('warn', ['text' => _POSTNOTE, 'url' => '', 'time' => 0, 'id' => 'warn']);
         $cont .= setTemplateBasic('forum-all-open', ['{%title%}' => $info]);
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
@@ -623,11 +623,11 @@ function send(): void {
             
             } else {
                 if ($ismod) {
-                    $userinfo = getusrinfo();
+                    $userinfo = getUserInfo();
                     $postname = ($userinfo['user_name']) ? $userinfo['user_name'] : $postname;
                     $status = ($status) ? $status : (($pid) ? 1 : 3);
                 } elseif (is_user()) {
-                    $userinfo = getusrinfo();
+                    $userinfo = getUserInfo();
                     $postname = $userinfo['user_name'];
                     $status = ($userinfo['user_acess']) ? 0 : (($pid) ? 1 : 3);
                 } else {

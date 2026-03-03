@@ -244,7 +244,7 @@ function getBlocks(string $side, string $fly = ''): void {
                     echo adminblock();
                     break;
                     case 'userbox':
-                    echo userblock();
+                    echo getUserBlock();
                     break;
                     default:
                     if ($view == 0) {
@@ -2928,6 +2928,44 @@ function getTimeLoads(): string {
     return $cont;
 }
 
+# Notify subscribed admins by email on new content or comment submission
+function addAdminMail(bool $enab, string $mod, string $username = '', string $title = '', bool $iscmt = false, string $text = ''): void {
+    global $db, $conf, $locale;
+    $mod = filterVar($mod);
+    if ($enab && $mod) {
+        $subject = $iscmt ? $conf['sitename'].' - '.$title.' - '._COMMENT : $conf['sitename'].' - '.$title;
+        $puname  = $username ? filterText(substr($username, 0, 25)) : _ANONYM;
+        $message = $iscmt
+            ? str_replace('[text]', sprintf(_ADDMAILC, $puname, $title, $text), $conf['mtemp'])
+            : str_replace('[text]', sprintf(_ADDMAIL, $puname, $title), $conf['mtemp']);
+        $params = [];
+        $where = " WHERE smail = '1'";
+        if ($conf['multilingual']) {
+            $where .= " AND (lang = :lang OR lang = '')";
+            $params['lang'] = $locale;
+        }
+        $result = $db->getSqlQuery('SELECT id, email, super, modules FROM '.PREFIX_DB.'_admins'.$where.' ORDER BY id', $params);
+        while ($row = $db->getSqlRow($result)) {
+            [$id, $email, $super, $modules] = $row;
+            if ($super) {
+                addMail($email, $conf['adminmail'], $subject, $message, 1, 1);
+            } else {
+                $amid = getAdminModuleNames($modules);
+                $nmods = implode(',', $amid);
+                if ($nmods !== $modules) {
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET modules = :modules WHERE id = :id', ['modules' => $nmods, 'id' => $id]);
+                }
+                foreach ($amid as $val) {
+                    if ($val !== '' && $val === $mod) {
+                        addMail($email, $conf['adminmail'], $subject, $message, 1, 1);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
 ####
 # OLD FUNCTIONS (for backward compatibility, not recommended for use in new code)
 ####
@@ -4347,41 +4385,6 @@ function search_replace(string $sourse, string $mod): string {
         }
     }
     return $sourse;
-}
-
-# Notify subscribed admins by email on new content or comment submission
-function addAdminMail(int $id, string $mod, string $username = '', string $title = '', bool $isComment = false, string $text = ''): void {
- global $db, $conf, $locale;
-    $mod = filterVar($mod);
-    if ($id && $mod) {
-        $subject = $isComment ? $conf['sitename'].' - '.$title.' - '._COMMENT : $conf['sitename'].' - '.$title;
-        $puname  = $username ? filterText(substr($username, 0, 25)) : _ANONYM;
-        $message = $isComment ? str_replace('[text]', sprintf(_ADDMAILC, $puname, $title, $text), $conf['mtemp']) : str_replace('[text]', sprintf(_ADDMAIL, $puname, $title), $conf['mtemp']);
-        $params = [];
-        $where = ' WHERE smail = \'1\'';
-        if ($conf['multilingual']) {
-            $where .= ' AND (lang = :lang OR lang = \'\')';
-            $params['lang'] = $locale;
-        }
-        $result = $db->getSqlQuery('SELECT id, email, super, modules FROM '.PREFIX_DB.'_admins'.$where.' ORDER BY id', $params);
-        while (list($id, $email, $super, $modules) = $db->getSqlRow($result)) {
-            if ($super) {
-                addMail($email, $conf['adminmail'], $subject, $message, 1, 1);
-            } else {
-                $amid = getAdminModuleNames($modules);
-                $new_modules = implode(',', $amid);
-                if ($new_modules !== $modules) {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_admins SET modules = :modules WHERE id = :id', ['modules' => $new_modules, 'id' => $id]);
-                }
-                foreach ($amid as $val) {
-                    if ($val != '' && $val == $mod) {
-                        addMail($email, $conf['adminmail'], $subject, $message, 1, 1);
-                        break;
-                    }
-                }
-            }
-        }
-    }
 }
 
 # Mail check

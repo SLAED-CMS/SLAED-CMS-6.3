@@ -50,7 +50,7 @@ if (empty($go)) {
             if ($view == 0 && file_exists($path)) {
                 getLang($name);
                 require_once $path;
-            } elseif (($view == 1 && (is_user() && is_mod_group($name)) || is_moder($name)) && file_exists($path)) {
+            } elseif (($view == 1 && (is_user() && isModGroup($name)) || is_moder($name)) && file_exists($path)) {
                 getLang($name);
                 require_once $path;
             } elseif ($view == 1 && !is_moder($name)) {
@@ -119,16 +119,16 @@ if (empty($go)) {
             case 'user_sinfo': user_sinfo(); break;
             case 'get_user': get_user(); break;
             case 'editcom': editcom(); break;
-            case 'savecom': savecom(); break;
+            case 'savecom': addComment(); break;
             case 'closecom': closecom(); break;
-            case 'editpost': editpost(); break;
-            case 'prmess': prmess(); break;
-            case 'prmesssend': prmesssend(); break;
-            case 'prmesssave': prmesssave(); break;
-            case 'prmessdel': prmessdel(); break;
-            case 'favoradd': favoradd(); break;
-            case 'favorliste': favorliste(); break;
-            case 'favordel': favordel(); break;
+            case 'editpost': updatePost(); break;
+            case 'prmess': getPmView(); break;
+            case 'prmesssend': addPmMsg(); break;
+            case 'prmesssave': setPmSaved(); break;
+            case 'prmessdel': deletePmMsg(); break;
+            case 'favoradd': addFavor(); break;
+            case 'favorliste': getFavorList(); break;
+            case 'favordel': deleteFavor(); break;
             case 'avoting_view': getVoting(); break;
             case 'avoting_save': avoting_save(); break;
         }
@@ -190,13 +190,13 @@ if (empty($go)) {
     if (!$cvar[0] && is_moder()) echo getVariables();
 } elseif ($go == 'rss') {
     setCache('0');
-    echo rss_channel();
+    echo getRssChannel();
 } elseif ($go == 'search') {
     setCache('1');
-    echo open_search();
+    echo getOpenSearch();
 } elseif ($go == 'xsl') {
     setCache('1');
-    echo open_xsl();
+    echo getOpenXsl();
 } elseif ($go == 'css') {
     setCache('1');
     setCss();

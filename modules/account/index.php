@@ -558,7 +558,7 @@ function privat(): void {
             'title' => _PRIVAT,
         ]);
         $title = ["<span OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;typ=1', ''); return false;\">"._PRIN.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;typ=2', ''); return false;\">"._PROUT.'</span>', "<span OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;typ=3', ''); return false;\">"._PRSAVE.'</span>', _SEND];
-        $text = ['<div id="repprmessin">'.prmess(1, 0, 0, 1).'</div>', '<div id="repprmessou">'.prmess(1, 0, 0, 2).'</div>', '<div id="repprmesssa">'.prmess(1, 0, 0, 3).'</div>', '<div id="repprmessfo">'.prmess(1, 0, 0, 4).'</div>'];
+        $text = ['<div id="repprmessin">'.getPmView(1, 0, 0, 1).'</div>', '<div id="repprmessou">'.getPmView(1, 0, 0, 2).'</div>', '<div id="repprmesssa">'.getPmView(1, 0, 0, 3).'</div>', '<div id="repprmessfo">'.getPmView(1, 0, 0, 4).'</div>'];
         $cont = setTemplateBasic('title', ['{%title%}' => _PRIVAT]).navi().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
         setFoot();
@@ -573,7 +573,7 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo setTemplateBasic('title', ['{%title%}' => _FAVORITES]).navi().setTemplateBasic('open').'<div id="repfavorliste">'.favorliste(1).'</div>'.setTemplateBasic('close');
+        echo setTemplateBasic('title', ['{%title%}' => _FAVORITES]).navi().setTemplateBasic('open').'<div id="repfavorliste">'.getFavorList(1).'</div>'.setTemplateBasic('close');
         setFoot();
     } else {
         account();
@@ -695,7 +695,7 @@ function edithome(): void {
         setHead([
             'title' => _CHANGE,
         ]);
-        $userinfo = getusrinfo();
+        $userinfo = getUserInfo();
         $userinfo['user_theme'] = (!$userinfo['user_theme']) ? $conf['theme'] : $userinfo['user_theme'];
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]) : '';
         $change = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
@@ -820,7 +820,7 @@ function savehome(): void {
             $gender = getVar('post', 'gender', 'num');
             $field = getVar('post', 'field', 'field');
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_email = :user_email, user_website = :user_website, user_viewemail = :user_viewemail, user_occ = :user_occ, user_from = :user_from, user_interests = :user_interests, user_sig = :user_sig, user_storynum = :user_storynum, user_blockon = :user_blockon, user_block = :user_block, user_theme = :user_theme, user_newsletter = :user_newsletter, user_fsmail = :user_fsmail, user_psmail = :user_psmail, user_birthday = :user_birthday, user_gender = :user_gender, user_field = :user_field WHERE user_id = :user_id', ['user_email' => $mail, 'user_website' => $site, 'user_viewemail' => $view, 'user_occ' => $occ, 'user_from' => $from, 'user_interests' => $inter, 'user_sig' => $sig, 'user_storynum' => $story, 'user_blockon' => $blockon, 'user_block' => $block, 'user_theme' => $theme, 'user_newsletter' => $news, 'user_fsmail' => $fsmail, 'user_psmail' => $psmail, 'user_birthday' => $birth, 'user_gender' => $gender, 'user_field' => $field, 'user_id' => $uid]);
-            $userinfo = getusrinfo();
+            $userinfo = getUserInfo();
             setCookies('account', time() + intval($conf['user_c_t']), [$userinfo['user_id'], $userinfo['user_name'], $userinfo['user_password'], $userinfo['user_storynum'], $userinfo['user_blockon'], $userinfo['user_theme']]);
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
         }
@@ -865,7 +865,7 @@ function savepass(): void {
             [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT user_password FROM '.PREFIX_DB.'_users WHERE user_id = :user_id AND user_network = :network', ['user_id' => $uid, 'network' => '']));
             if (!empty($pass) && $pass == $oldpass) {
                 if ($newpass == $newpass2) {
-                    $userinfo = getusrinfo();
+                    $userinfo = getUserInfo();
                     $mail = $userinfo['user_email'];
                     $nick = $userinfo['user_name'];
                     $link = '<a href="'.$conf['homeurl'].'/index.php?name='.$conf['name'].'">'.$conf['homeurl'].'/index.php?name='.$conf['name'].'</a>';

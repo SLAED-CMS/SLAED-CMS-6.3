@@ -184,7 +184,7 @@ function view(): void {
         $reads = ($conf['media']['read']) ? '<span title="'._READS.'" class="sl_views">'.$hits.'</span>' : '';
         $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
         $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=media_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=media_delete&amp;id='.$id."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$ptitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-        $favorites = favorview($id, $conf['name']);
+        $favorites = getFavorBtn($id, $conf['name']);
         $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
         $broc = ($conf['media']['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCMEDIA.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
         

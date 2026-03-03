@@ -11,7 +11,7 @@ if (!defined('BLOCK_FILE')) {
 
 global $db, $locale, $conf;
 if (is_user()) {
-	$userinfo = getusrinfo();
+	$userinfo = getUserInfo();
 	$uname = $userinfo['user_name'];
 	$user_id = intval($userinfo['user_id']);
 	$user_avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['user_avatar'])) ? $userinfo['user_avatar'] : 'default/00.gif';

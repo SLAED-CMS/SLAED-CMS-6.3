@@ -13,7 +13,7 @@ function recommend(): void {
     global $conf, $stop;
     $unkey = md5_salt($conf['sitekey']);
     if (is_user()) {
-        $userinfo = getusrinfo();
+        $userinfo = getUserInfo();
         $sname = getVar('post', $unkey, 'name', $userinfo['user_name']);
         $semail = getVar('post', 'semail', 'text', $userinfo['user_email']);
     } else {

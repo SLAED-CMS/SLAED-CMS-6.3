@@ -102,7 +102,7 @@ if (!function_exists('setTemplateHead')) {
         global $user, $conf;
         if (is_user()) {
             $uname = htmlspecialchars(substr((string)$user[1], 0, 25), ENT_QUOTES, 'UTF-8');
-            $userinfo = getusrinfo();
+            $userinfo = getUserInfo();
             $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.$userinfo['user_avatar'];
             $avatar = (!empty($userinfo['user_avatar']) && is_file($avpath)) ? $userinfo['user_avatar'] : 'default/00.gif';
             $login = setTemplateBasic('login-logged', [

@@ -224,7 +224,7 @@ function view(): void {
 		$reads = ($conf['shop']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=shop_products_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-		$favorites = favorview($id, $conf['name']);
+		$favorites = getFavorBtn($id, $conf['name']);
 		$goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
 		$voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVoting($vote, $conf['name']).'</div><hr>' : '';
 		
@@ -266,7 +266,7 @@ function view(): void {
 function kasse(): void {
 	global $db, $conf, $stop;
 	if (is_user()) {
-		$userinfo = getusrinfo();
+		$userinfo = getUserInfo();
 		$sid = $userinfo['user_id'];
 		$slogin = $userinfo['user_name'];
 		$smail = getVar('post', 'smail', 'text', $userinfo['user_email']);
@@ -456,7 +456,7 @@ function rech(): void {
 function partners(): void {
 	global $db, $conf, $stop;
 	if (is_user() && is_active('shop')) {
-		$userinfo = getusrinfo();
+		$userinfo = getUserInfo();
 		$uid = intval($userinfo['user_id']);
 		$smail = $userinfo['user_email'];
 		$sdom = $userinfo['user_website'];

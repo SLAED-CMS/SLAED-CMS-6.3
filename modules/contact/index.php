@@ -12,7 +12,7 @@ if (!defined('MODULE_FILE')) {
 function contact(): void {
     global $db, $conf, $locale, $stop;
     if (is_user()) {
-        $userinfo = getusrinfo();
+        $userinfo = getUserInfo();
         $sname = getVar('post', 'sname', 'name', $userinfo['user_name']);
         $semail = getVar('post', 'semail', 'text', $userinfo['user_email']);
     } else {

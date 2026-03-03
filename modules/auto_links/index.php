@@ -82,7 +82,7 @@ function view(): void {
 function add(): void {
     global $stop, $conf;
     if (is_user()) {
-        $userinfo = getusrinfo();
+        $userinfo = getUserInfo();
         $mail = getVar('post', 'mail', 'var');
         $mail = ($mail) ? $mail : $userinfo['user_email'];
         $site = getVar('post', 'site', 'url');

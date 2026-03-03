@@ -132,7 +132,7 @@ function setTemplateHead($sub, $val = '') {
  global $theme, $user, $conf, $db;
     if (is_user()) {
         $uname = htmlspecialchars(substr($user[1], 0, 25));
-        $userinfo = getusrinfo();
+        $userinfo = getUserInfo();
         $uavatar = (is_array($userinfo) && !empty($userinfo['user_avatar'])) ? $userinfo['user_avatar'] : '';
         $avatar = ($uavatar && file_exists($conf['users']['adirectory'].'/'.$uavatar)) ? $uavatar : 'default/00.gif';
         $cont = setTemplateBasic('login-logged', [

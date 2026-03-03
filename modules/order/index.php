@@ -12,7 +12,7 @@ if (!defined('MODULE_FILE')) {
 function order(): void {
 	global $conf, $stop;
 	if (is_user()) {
-		$userinfo = getusrinfo();
+		$userinfo = getUserInfo();
 		$mail = getVar('post', 'mail', 'text', $userinfo['user_email']);
 	} else {
 		$mail = getVar('post', 'mail', 'text');

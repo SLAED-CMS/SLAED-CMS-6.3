@@ -201,7 +201,7 @@ function view(): void {
                 $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
                 $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
                 $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-                $favorites = favorview($hid, $conf['name']);
+                $favorites = getFavorBtn($hid, $conf['name']);
                 $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
             } else {
                 $reads = $ctitle = $cimg = $favorites = $goback = '';

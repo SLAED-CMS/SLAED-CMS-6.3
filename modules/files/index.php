@@ -191,7 +191,7 @@ function view(): void {
         $hits = ($conf['files']['hits']) ? '<span title="'._FILEHITS.'" class="sl_down">'.$hits.'</span>' : '';
         $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
         $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=files_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=files_delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-        $favorites = favorview($id, $conf['name']);
+        $favorites = getFavorBtn($id, $conf['name']);
         $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
         $size = _SIZE.': '.files_size($fsize);
         $version = _VERSION.': '.$fversion;
@@ -241,7 +241,7 @@ function add(): void {
         $bodytext = getVar('post', 'bodytext', 'text');
         $postname = getVar('post', 'postname', 'name');
         if (is_user()) {
-            $userinfo = getusrinfo();
+            $userinfo = getUserInfo();
             $mail = getVar('post', 'mail', 'text', $userinfo['user_email']);
             $home = getVar('post', 'home', 'url', $userinfo['user_website']);
         } else {
