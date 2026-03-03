@@ -1254,7 +1254,7 @@ function setHead(array $seo = []): void {
         $ip = getIp();
         $url = urlencode($request);
         $guest = 0;
-        if (is_admin()) {
+        if (isAdmin()) {
             $uname = filterText(substr($admin[1], 0, 25), 1);
             $guest = 3;
         } elseif (!defined('ADMIN_FILE') && is_user()) {
@@ -1415,7 +1415,7 @@ function setHead(array $seo = []): void {
                 $match = ($url == 'index.php' || strstr($url, 'index.php?name='.$name)) ? 1 : 0;
             }
         }
-        if ($match && !is_user() && !is_admin()) {
+        if ($match && !is_user() && !isAdmin()) {
             $cacheurl = 'config/cache/'.md5($url).'.txt';
             if (file_exists($cacheurl) && filesize($cacheurl) != 0 && ($ctime - $conf['cache_t']) < filemtime($cacheurl)) {
                 readfile($cacheurl);
@@ -1576,7 +1576,7 @@ function setFoot(): void {
             }
         }
         $cont = ob_get_contents();
-        if ($cont && $match && !is_user() && !is_admin()) {
+        if ($cont && $match && !is_user() && !isAdmin()) {
             $cont = ($conf['cache_c']) ? getCompressHtml($cont) : $cont;
             $fp = fopen($dir.md5($url).'.txt', 'wb');
             fwrite($fp, $cont);
@@ -3117,7 +3117,7 @@ function user_sinfo(string $id = ''): string {
 # User information for admin
 function user_sainfo(string $id = ''): string {
  global $db, $conf;
-    if ($conf['session'] && is_admin()) {
+    if ($conf['session'] && isAdmin()) {
         $a = $b = $m = $u = $i = 0;
         $who_online = ['0' => '', '1' => '', '2' => '', '3' => ''];
         $content_who = '';
@@ -3149,7 +3149,7 @@ function user_sainfo(string $id = ''): string {
             $who_online[$guest] .= $title_who;
             $i++;
         }
-        $content_who .= (isAdminSuper()) ? "<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('ad-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._ADMINS.':</a></td><td class="sl_right">'.$a.'</td></tr></table><table id="ad-block" class="sl_table_block sl_none">'.$who_online[3].'</table>' : '';
+        $content_who .= (isAdmin(true)) ? "<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('ad-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._ADMINS.':</a></td><td class="sl_right">'.$a.'</td></tr></table><table id="ad-block" class="sl_table_block sl_none">'.$who_online[3].'</table>' : '';
         $content_who .= "<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('us-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._BMEM.':</a></td><td class="sl_right">'.$m.'</td></tr></table><table id="us-block" class="sl_table_block sl_none">'.$who_online[2].'</table>'
         ."<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('bo-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._BOTS.':</a></td><td class="sl_right">'.$b.'</td></tr></table><table id="bo-block" class="sl_table_block sl_none">'.$who_online[1].'</table>'
         ."<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('an-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._BVIS.':</a></td><td class="sl_right">'.$u.'</td></tr></table><table id="an-block" class="sl_table_block sl_none">'.$who_online[0].'</table>'
@@ -3162,10 +3162,10 @@ function user_sainfo(string $id = ''): string {
 # Format admin block
 function adminblock(): string {
  global $db, $afile;
-    if (is_admin()) {
+    if (isAdmin()) {
         $cont = '<table class="sl_table_block"><tr><td><a href="'.$afile.'.php" title="'._ADMINMENU.'">'._ADMINMENU.'</a></td></tr>'
         .'<tr><td><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'">'._LOGOUT.'</a></td></tr></table>';
-        if (isAdminSuper()) {
+        if (isAdmin(true)) {
             list($title, $content) = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
             $cont .= '<hr>'.$content;
         }
@@ -3201,7 +3201,7 @@ function updateNewsletter(): void {
 function user_info(string $name): string {
     global $conf;
     if ($name) {
-        $link = ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || is_admin()) ? '<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($name).'" title="'._PERSONALINFO.'">'.$name.'</a>' : $name;
+        $link = ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) ? '<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($name).'" title="'._PERSONALINFO.'">'.$name.'</a>' : $name;
     } else {
         $link = '';
     }
@@ -3854,7 +3854,7 @@ function is_admin_modul(string $modul): int {
     $aid = intval(substr($admin[0], 0, 11));
     $modul = addslashes(trim(substr($modul, 0, 25)));
     if ($modul == '') return 0;
-    if (isAdminSuper()) return 1;
+    if (isAdmin(true)) return 1;
     static $amodules = [];
     if (!isset($amodules[$aid])) {
         list($modules) = $db->getSqlRow($db->getSqlQuery('SELECT modules FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $aid]));
@@ -3872,7 +3872,7 @@ function is_admin_modul(string $modul): int {
 # Check moderator
 function is_moder(string $modul = ''): int {
     $modul = ($modul) ? addslashes(trim(substr($modul, 0, 25))) : 0;
-    if ((is_admin() && isAdminSuper()) || ($modul && is_admin() && is_admin_modul($modul))) {
+    if ((isAdmin() && isAdmin(true)) || ($modul && isAdmin() && is_admin_modul($modul))) {
         return 1;
     } else {
         return 0;
@@ -4456,7 +4456,7 @@ function addblocks(string $str): string {
             break;
             case 'v':
             $cvar = explode(',', $conf['variables']);
-            $blk[1][$i] = (!$cvar[0] && ($conf['var_view'] || (is_admin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '';
+            $blk[1][$i] = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '';
             break;
             default:
             $telo = explode(',', $telo);
@@ -4749,7 +4749,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
             <span OnClick=\"HideShow('c-form-".$id."', 'blind', 'up', 500);\" class=\"sl_bb_code\" title=\""._CODE.'"></span>
             <div id="c-form-'.$id."\" class=\"sl_drop-form\"><ul><li><select name=\"code\" OnChange=\"InsertCode('code', this.options[this.selectedIndex].value, '', '', '".$id."'); this.selectedIndex=0;\" class=\"sl_field\" multiple>".$fcodes.'</select></li></ul></div>
         </div>';
-        if (is_admin()) {
+        if (isAdmin()) {
             $code .= '<div class="sl_bb_sep"></div>'
             ."<span OnClick=\"InsertCode('usehtml', '', '', '', '".$id."')\" class=\"sl_bb_html\" title=\""._EUSEHTML.'"></span>'
             ."<span OnClick=\"InsertCode('usephp', '', '', '', '".$id."')\" class=\"sl_bb_php\" title=\""._EUSEPHP.'"></span>';
@@ -5049,7 +5049,7 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
             } else {
                 $type = strtolower(substr(strrchr($_FILES['userfile']['name'], '.'), 1));
                 if (!check_file($type, $typefile) && !check_size($_FILES['userfile']['tmp_name'], $width, $height)) {
-                    if (is_admin() && !is_user()) {
+                    if (isAdmin() && !is_user()) {
                         $newname = ($namefile) ? $namefile.'-'.getPass(10).'.'.$type : getPass(15).'.'.$type;
                     } else {
                         $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
@@ -5085,7 +5085,7 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
                 } else {
                     $type = strtolower(substr(strrchr($_FILES['file']['name'][$i], '.'), 1));
                     if (!check_file($type, $typefile) && !check_size($_FILES['file']['tmp_name'][$i], $width, $height)) {
-                        if (is_admin() && !is_user()) {
+                        if (isAdmin() && !is_user()) {
                             $newname = ($namefile) ? $namefile.'-'.getPass(10).'.'.$type : getPass(15).'.'.$type;
                         } else {
                             $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
@@ -5121,7 +5121,7 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
                 $stop = _ERROR_DOWN;
                 return 0;
             } else {
-                if (is_admin() && !is_user()) {
+                if (isAdmin() && !is_user()) {
                     $newname = ($namefile) ? $namefile.'-'.getPass(10).'.'.$type : getPass(15).'.'.$type;
                 } else {
                     $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
@@ -5168,7 +5168,7 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
         if (!$result) return 0;
         preg_match('#Content-Type: \w+(\/)(?<value>\w+)#', $result, $value);
         $type = ($value['value'] == 'jpeg') ? 'jpg' : $value['value'];
-        if (is_admin() && !is_user()) {
+        if (isAdmin() && !is_user()) {
             $newname = ($namefile) ? $namefile.'-'.getPass(10).'.'.$type : getPass(15).'.'.$type;
         } else {
             $uname = (is_user()) ? intval($user[0]) : (($userid) ? intval($userid) : '0');
