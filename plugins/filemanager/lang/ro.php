@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Selectează',
 	'Erase' => 'Șterge',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'Permisiuni fișier',
 	'File_Permission_Not_Allowed' => 'Modificare permisiunilor pentru %s nu este permisă.', // %s = files or folders
 	'File_Permission_Recursive' => 'Execută în mod recursiv?',
-	'File_Permission_Wrong_Mode' => "Permisiunea furnizată nu este permisă.",
+	'File_Permission_Wrong_Mode' => 'Permisiunea furnizată nu este permisă.',
 	'User' => 'Utilizator',
 	'Group' => 'Grup',
 	'Yes' => 'Da',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'Fisierul nu poate fi găsit.',
 	'File_Open_Edit_Not_Allowed' => 'Nu aveți permisiuni pentru a %s acest fișier.', // %s = open or edit
 	'Edit' => 'Editare',
-	'Edit_File' => "Editare conținut fișier",
-	'File_Save_OK' => "Fișierul a fost salvat cu succes.",
-	'File_Save_Error' => "A intervenit o eroare la salvarea fișierului.",
+	'Edit_File' => 'Editare conținut fișier',
+	'File_Save_OK' => 'Fișierul a fost salvat cu succes.',
+	'File_Save_Error' => 'A intervenit o eroare la salvarea fișierului.',
 	'New_File' => 'Fișier nou',
 	'No_Extension' => 'Este necesar să adăugați o extensie validă la fișier.',
 	'Valid_Extensions' => 'Extensii valide: %s', // %s = txt,log etc.
-	'Upload_message' => "Drag & drop la fișiere pentru upload",
+	'Upload_message' => 'Drag & drop la fișiere pentru upload',
 
-	'SERVER ERROR' => "EROARE SERVER",
-	'forbiden' => "Interzis",
-	'wrong path' => "Cale incorectă",
-	'wrong name' => "Denumire incorectă",
-	'wrong extension' => "Extensie incorectă",
-	'wrong option' => "Opțiune incorectă",
-	'wrong data' => "Data incorectă",
-	'wrong action' => "Acțiune incorectă",
-	'wrong sub-action' => "Subacțiune incorectă",
-	'no action passed' => "Nici o acțiune nu s-a finalizat",
-	'no path' => "Cale inexistentă",
-	'no file' => "Fișier inexistent",
-	'view type number missing' => "Lipsă număr tip de vizualizare",
-	'Not enought Memory' => "Memorie insuficientă",
-	'max_size_reached' => "Folderul de imagini a atins dimensiunea maximă de %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Dimensiune totată",
-);
+	'SERVER ERROR' => 'EROARE SERVER',
+	'forbiden' => 'Interzis',
+	'wrong path' => 'Cale incorectă',
+	'wrong name' => 'Denumire incorectă',
+	'wrong extension' => 'Extensie incorectă',
+	'wrong option' => 'Opțiune incorectă',
+	'wrong data' => 'Data incorectă',
+	'wrong action' => 'Acțiune incorectă',
+	'wrong sub-action' => 'Subacțiune incorectă',
+	'no action passed' => 'Nici o acțiune nu s-a finalizat',
+	'no path' => 'Cale inexistentă',
+	'no file' => 'Fișier inexistent',
+	'view type number missing' => 'Lipsă număr tip de vizualizare',
+	'Not enought Memory' => 'Memorie insuficientă',
+	'max_size_reached' => 'Folderul de imagini a atins dimensiunea maximă de %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Dimensiune totată',
+];

@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'בחר',
 	'Erase' => 'מחק',
@@ -42,7 +42,7 @@ return array(
 	'Upload_url' => 'URL',
 	'Upload_java' => 'JAVA (לקבצים גדולים)',
 	'Upload_java_help' => "אם אפליקצית הJAVA לא נטענת , 1. וודא שJAVA מותקנת במחשבך , אחר <a href='http://java.com/en/download/'>לחץ להורדה</a>   2. וודא שהכל מאופשר בחומת האש .",
-	'Upload_base_help' => "גרור ושחרר את הקבוצים אשר הינך מעוניין לעלות . בסיום יש ללחוץ על \"חזור אל רשימת קבצים\"",
+	'Upload_base_help' => 'גרור ושחרר את הקבוצים אשר הינך מעוניין לעלות . בסיום יש ללחוץ על "חזור אל רשימת קבצים"',
 	'Type_dir' => 'תיקיה',
 	'Type' => 'סוג',
 	'Dimension' => 'מימדים',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission', 'הראשות קובץ',
 	'File_Permission_Not_Allowed', 'שינוי %s הראשות לא ניתנת לעריכה.', // %s = files or folders
 	'File_Permission_Recursive', 'החל רקורסיביות?',
-	'File_Permission_Wrong_Mode', "הרשאות שנתנו אינן חוקיות.",
+	'File_Permission_Wrong_Mode', 'הרשאות שנתנו אינן חוקיות.',
 	'User', 'משתמשים',
 	'Group', 'קבוצות',
 	'Yes', 'כן',
@@ -91,34 +91,34 @@ return array(
 	'File_Not_Found', 'לא ניתן לאתר את הקובץ המבוקש.',
 	'File_Open_Edit_Not_Allowed', 'אינך מורשה ל%s את הקובץ.', // %s = open or edit
 	'Edit', 'ערוך',
-	'Edit_File', "ערוך את תוכן הקובץ",
-	'File_Save_OK', "הקובץ נשמר בהצלחה .",
-	'File_Save_Error', "שגיאה בעת שמירת הקובץ.",
+	'Edit_File', 'ערוך את תוכן הקובץ',
+	'File_Save_OK', 'הקובץ נשמר בהצלחה .',
+	'File_Save_Error', 'שגיאה בעת שמירת הקובץ.',
 	'New_File' => 'קובץ חדש',
-	'No_Extension' => 'חובה לציין את סיומת הקובץ.', 
+	'No_Extension' => 'חובה לציין את סיומת הקובץ.',
 	'Valid_Extensions' => 'סיומות חוקיות: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];
 

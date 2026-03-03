@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Selecteren',
 	'Erase' => 'Verwijderen',
@@ -43,7 +43,7 @@ return array(
 	'Upload_url' => 'URL',
 	'Upload_java' => 'JAVA upload (voor grote bestanden)',
 	'Upload_java_help' => "Als de Java Applet niet laadt: 1. Heeft u JAVA geinstalleerd? Zo niet, download het hier: <a href='http://java.com/en/download/'>java.com/en/download/</a> 2. Wees er zeker van dat de firewall deze actie accepteert",
-	'Upload_base_help' => "Klik en sleep (meerdere) bestanden vanaf uw computer naar het \"Drop files\" vlak hierboven om bestanden toe te voegen.<br/> Ook is het mogelijk om in een dialoogvenster (meerdere) bestanden te selecteren, klik hiervoor op \"Drop files\"<br/><br/><i>Als alle uploads voltooid zijn kunt u terugkeren met de knop \"Terug naar bestanden\"</i>",
+	'Upload_base_help' => 'Klik en sleep (meerdere) bestanden vanaf uw computer naar het "Drop files" vlak hierboven om bestanden toe te voegen.<br/> Ook is het mogelijk om in een dialoogvenster (meerdere) bestanden te selecteren, klik hiervoor op "Drop files"<br/><br/><i>Als alle uploads voltooid zijn kunt u terugkeren met de knop "Terug naar bestanden"</i>',
 	'Type_dir' => 'map',
 	'Type' => 'Type',
 	'Dimension' => 'Afmetingen',
@@ -82,7 +82,7 @@ return array(
 	'File_Permission' => 'Rechten',
 	'File_Permission_Not_Allowed' => 'Aanpassen van de rechten van %s is niet toegestaan.', // %s = files or folders
 	'File_Permission_Recursive' => 'Toepassen voor alles binnen deze map?',
-	'File_Permission_Wrong_Mode' => "De gewenste rechten zijn niet juist.",
+	'File_Permission_Wrong_Mode' => 'De gewenste rechten zijn niet juist.',
 	'User' => 'Gebruiker',
 	'Group' => 'Groep',
 	'Yes' => 'Ja',
@@ -92,32 +92,32 @@ return array(
 	'File_Not_Found' => 'Kan het bestand niet vinden.',
 	'File_Open_Edit_Not_Allowed' => 'Je bent niet bevoegd dit bestand te %s.', // %s = open or edit
 	'Edit' => 'Bewerken',
-	'Edit_File' => "Bewerkt de inhoud van dit bestand",
-	'File_Save_OK' => "Bestand is opgeslagen.",
-	'File_Save_Error' => "Er is een fout opgetreden tijdens het opslaan van het bestand.",
+	'Edit_File' => 'Bewerkt de inhoud van dit bestand',
+	'File_Save_OK' => 'Bestand is opgeslagen.',
+	'File_Save_Error' => 'Er is een fout opgetreden tijdens het opslaan van het bestand.',
 	'No_Extension' => 'Je moet een bestands-extensie toevoegen.',
 	'Valid_Extensions' => 'Geldige extensies: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

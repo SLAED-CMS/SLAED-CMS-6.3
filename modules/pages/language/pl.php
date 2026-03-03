@@ -4,4 +4,4 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_INP","stron w");
+define('_INP','stron w');

@@ -4,5 +4,5 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_POLLEACH","Variant of the answer");
-define("_POLLTITLE","Poll");
+define('_POLLEACH','Variant of the answer');
+define('_POLLTITLE','Poll');

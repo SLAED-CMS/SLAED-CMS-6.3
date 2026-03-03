@@ -5,7 +5,7 @@ extract($config, EXTR_OVERWRITE);
 
 include 'include/utils.php';
 
-if ($_SESSION['RF']["verify"] != "RESPONSIVEfilemanager")
+if ($_SESSION['RF']['verify'] != 'RESPONSIVEfilemanager')
 {
 	response(trans('forbiden').AddErrorLocation())->send();
 	exit;
@@ -21,11 +21,11 @@ if (strpos($_POST['path'],'/')===0
 	exit;
 }
 
-if (isset($_SESSION['RF']['language']) && file_exists('lang/' . basename($_SESSION['RF']['language']) . '.php'))
+if (isset($_SESSION['RF']['language']) && file_exists('lang/'.basename($_SESSION['RF']['language']).'.php'))
 {
 	$languages = include 'lang/languages.php';
 	if(array_key_exists($_SESSION['RF']['language'],$languages)){
-		include 'lang/' . basename($_SESSION['RF']['language']) . '.php';
+		include 'lang/'.basename($_SESSION['RF']['language']).'.php';
 	}else{
 		response(trans('Lang_Not_Found').AddErrorLocation())->send();
 		exit;
@@ -49,12 +49,12 @@ while($cycle && $i<$max_cycles)
 	$i++;
 	if ($path == $base)  $cycle=FALSE;
 
-	if (file_exists($path."config.php"))
+	if (file_exists($path.'config.php'))
 	{
-		require_once $path."config.php";
+		require_once $path.'config.php';
 		$cycle = FALSE;
 	}
-	$path = fix_dirname($path)."/";
+	$path = fix_dirname($path).'/';
 }
 
 $path = $current_path.$_POST['path'];
@@ -90,8 +90,8 @@ if (isset($_GET['action']))
 			if ($delete_files){
 				if($ftp){
 					try{
-						$ftp->delete("/".$path);
-						@$ftp->delete("/".$path_thumb);
+						$ftp->delete('/'.$path);
+						@$ftp->delete('/'.$path_thumb);
 					}catch(FtpClient\FtpException $e){
 						return;
 					}
@@ -107,11 +107,11 @@ if (isset($_GET['action']))
 				if (!$ftp && $relative_image_creation){
 					foreach($relative_path_from_current_pos as $k=>$path)
 					{
-						if ($path!="" && $path[strlen($path)-1]!="/") $path.="/";
+						if ($path!='' && $path[strlen($path)-1]!='/') $path.='/';
 
-						if (file_exists($info['dirname']."/".$path.$relative_image_creation_name_to_prepend[$k].$info['filename'].$relative_image_creation_name_to_append[$k].".".$info['extension']))
+						if (file_exists($info['dirname'].'/'.$path.$relative_image_creation_name_to_prepend[$k].$info['filename'].$relative_image_creation_name_to_append[$k].'.'.$info['extension']))
 						{
-							unlink($info['dirname']."/".$path.$relative_image_creation_name_to_prepend[$k].$info['filename'].$relative_image_creation_name_to_append[$k].".".$info['extension']);
+							unlink($info['dirname'].'/'.$path.$relative_image_creation_name_to_prepend[$k].$info['filename'].$relative_image_creation_name_to_append[$k].'.'.$info['extension']);
 						}
 					}
 				}
@@ -120,12 +120,12 @@ if (isset($_GET['action']))
 				{
 					foreach($fixed_path_from_filemanager as $k=>$path)
 					{
-						if ($path!="" && $path[strlen($path)-1] != "/") $path.="/";
+						if ($path!='' && $path[strlen($path)-1] != '/') $path.='/';
 
-						$base_dir=$path.substr_replace($info['dirname']."/", '', 0, strlen($current_path));
-						if (file_exists($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].".".$info['extension']))
+						$base_dir=$path.substr_replace($info['dirname'].'/', '', 0, strlen($current_path));
+						if (file_exists($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].'.'.$info['extension']))
 						{
-							unlink($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].".".$info['extension']);
+							unlink($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].'.'.$info['extension']);
 						}
 					}
 				}
@@ -149,7 +149,7 @@ if (isset($_GET['action']))
 						if ($fixed_image_creation)
 						{
 							foreach($fixed_path_from_filemanager as $k=>$paths){
-								if ($paths!="" && $paths[strlen($paths)-1] != "/") $paths.="/";
+								if ($paths!='' && $paths[strlen($paths)-1] != '/') $paths.='/';
 
 								$base_dir=$paths.substr_replace($path, '', 0, strlen($current_path));
 								if (is_dir($base_dir)) deleteDir($base_dir);
@@ -183,7 +183,7 @@ if (isset($_GET['action']))
 					rename_folder($path_thumb,$name,$ftp,$config);
 					if (!$ftp && $fixed_image_creation){
 						foreach($fixed_path_from_filemanager as $k=>$paths){
-							if ($paths!="" && $paths[strlen($paths)-1] != "/") $paths.="/";
+							if ($paths!='' && $paths[strlen($paths)-1] != '/') $paths.='/';
 
 							$base_dir=$paths.substr_replace($path, '', 0, strlen($current_path));
 							rename_folder($base_dir,$name,$ftp,$config);
@@ -202,7 +202,7 @@ if (isset($_GET['action']))
 			}
 
 			if (!isset($editable_text_file_exts) || !is_array($editable_text_file_exts)){
-				$editable_text_file_exts = array();
+				$editable_text_file_exts = [];
 			}
 
 			// check if user supplied extension
@@ -232,7 +232,7 @@ if (isset($_GET['action']))
 			if($ftp){
 				$tmp = time().$name;
 				file_put_contents($tmp, $content);
-				$ftp->put("/".$path.$name, $tmp, FTP_BINARY);
+				$ftp->put('/'.$path.$name, $tmp, FTP_BINARY);
 				unlink($tmp);
 				response(trans('File_Save_OK'))->send();
 			}else{
@@ -278,12 +278,12 @@ if (isset($_GET['action']))
 
 						foreach($fixed_path_from_filemanager as $k=>$paths)
 						{
-							if ($paths!="" && $paths[strlen($paths)-1] != "/") $paths.="/";
+							if ($paths!='' && $paths[strlen($paths)-1] != '/') $paths.='/';
 
-							$base_dir = $paths.substr_replace($info['dirname']."/", '', 0, strlen($current_path));
-							if (file_exists($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].".".$info['extension']))
+							$base_dir = $paths.substr_replace($info['dirname'].'/', '', 0, strlen($current_path));
+							if (file_exists($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].'.'.$info['extension']))
 							{
-								rename_file($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].".".$info['extension'],$fixed_image_creation_name_to_prepend[$k].$name.$fixed_image_creation_to_append[$k],$ftp,$config);
+								rename_file($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].'.'.$info['extension'],$fixed_image_creation_name_to_prepend[$k].$name.$fixed_image_creation_to_append[$k],$ftp,$config);
 							}
 						}
 					}
@@ -316,13 +316,13 @@ if (isset($_GET['action']))
 						$info=pathinfo($path);
 						foreach($fixed_path_from_filemanager as $k=>$paths)
 						{
-							if ($paths!="" && $paths[strlen($paths)-1] != "/") $paths.= "/";
+							if ($paths!='' && $paths[strlen($paths)-1] != '/') $paths.= '/';
 
-							$base_dir=$paths.substr_replace($info['dirname']."/", '', 0, strlen($current_path));
+							$base_dir=$paths.substr_replace($info['dirname'].'/', '', 0, strlen($current_path));
 
-							if (file_exists($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].".".$info['extension']))
+							if (file_exists($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].'.'.$info['extension']))
 							{
-								duplicate_file($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].".".$info['extension'],$fixed_image_creation_name_to_prepend[$k].$name.$fixed_image_creation_to_append[$k]);
+								duplicate_file($base_dir.$fixed_image_creation_name_to_prepend[$k].$info['filename'].$fixed_image_creation_to_append[$k].'.'.$info['extension'],$fixed_image_creation_name_to_prepend[$k].$name.$fixed_image_creation_to_append[$k]);
 							}
 						}
 					}
@@ -347,7 +347,7 @@ if (isset($_GET['action']))
 
 
 			if($ftp){
-				if($_POST['path']!=""){
+				if($_POST['path']!=''){
 					$path.=DIRECTORY_SEPARATOR;
 					$path_thumb.=DIRECTORY_SEPARATOR;
 				}
@@ -441,7 +441,7 @@ if (isset($_GET['action']))
 		case 'chmod':
 			$mode = $_POST['new_mode'];
 			$rec_option = $_POST['is_recursive'];
-			$valid_options = array('none', 'files', 'folders', 'both');
+			$valid_options = ['none', 'files', 'folders', 'both'];
 			$chmod_perm = ($_POST['folder'] ? $chmod_dirs : $chmod_files);
 
 			// check perm
@@ -450,13 +450,13 @@ if (isset($_GET['action']))
 				exit;
 			}
 			// check mode
-			if (!preg_match("/^[0-7]{3}$/", $mode)){
+			if (!preg_match('/^[0-7]{3}$/', $mode)){
 				response(trans('File_Permission_Wrong_Mode').AddErrorLocation())->send();
 				exit;
 			}
 			// check recursive option
 			if (!in_array($rec_option, $valid_options)){
-				response(trans("wrong option").AddErrorLocation())->send();
+				response(trans('wrong option').AddErrorLocation())->send();
 				exit;
 			}
 			// check if server disabled chmod
@@ -465,10 +465,10 @@ if (isset($_GET['action']))
 				exit;
 			}
 
-			$mode = "0".$mode;
+			$mode = '0'.$mode;
 			$mode = octdec($mode);
 			if($ftp){
-				$ftp->chmod($mode, "/".$path);
+				$ftp->chmod($mode, '/'.$path);
 			}else{
 				rchmod($path, $mode, $rec_option);
 			}
@@ -483,7 +483,7 @@ if (isset($_GET['action']))
 				$tmp = time();
 				file_put_contents($tmp, $content);
 				try{
-					$ftp->put("/".$path, $tmp, FTP_BINARY);
+					$ftp->put('/'.$path, $tmp, FTP_BINARY);
 				}catch(FtpClient\FtpException $e){
 					echo $e->getMessage();
 				}
@@ -521,4 +521,3 @@ if (isset($_GET['action']))
 			exit;
 	}
 }
-?>

@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Seleccionar',
 	'Erase' => 'Eliminar',
@@ -42,7 +42,7 @@ return array(
 	'Upload_url' => 'URL',
 	'Upload_java' => 'Envio via JAVA (ficheiros grandes)',
 	'Upload_java_help' => "Se o Java não carrega 1. Certifique-se que tem o Java instalado, caso contrário <a href='http://java.com/en/download/'>[descarregue aqui]</a> 2. Certifique-se que não tem nenhuma firewall a bloquear",
-	'Upload_base_help' => "Arraste & Largue ficheiros dentro da área acima ou clique-a (para browsers modernos) caso contrário escolha o ficheiro e clique no botão. Quando o envio terminar, clique no botão de regresso acima.",
+	'Upload_base_help' => 'Arraste & Largue ficheiros dentro da área acima ou clique-a (para browsers modernos) caso contrário escolha o ficheiro e clique no botão. Quando o envio terminar, clique no botão de regresso acima.',
 	'Type_dir' => 'dir',
 	'Type' => 'Tipo',
 	'Dimension' => 'Dimensão',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'Permissão do Ficheiro',
 	'File_Permission_Not_Allowed' => 'Mudar as permissões dos %s não é permitido.', // %s = files or folders
 	'File_Permission_Recursive' => 'AAplicar de forma recursiva?',
-	'File_Permission_Wrong_Mode' => "O modo de permissão fornecido está incorreto.",
+	'File_Permission_Wrong_Mode' => 'O modo de permissão fornecido está incorreto.',
 	'User' => 'Utilizador',
 	'Group' => 'Grupo',
 	'Yes' => 'Sim',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'Não foi possível encontrar o arquivo.',
 	'File_Open_Edit_Not_Allowed' => 'Não tem permissão para %s este ficheiro.', // %s = open or edit
 	'Edit' => 'Editar',
-	'Edit_File' => "Editar conteúdo do ficheiro",
-	'File_Save_OK' => "Ficheiro gravado com sucesso.",
-	'File_Save_Error' => "Ocorreu um erro durante a gravação do ficheiro.",
+	'Edit_File' => 'Editar conteúdo do ficheiro',
+	'File_Save_OK' => 'Ficheiro gravado com sucesso.',
+	'File_Save_Error' => 'Ocorreu um erro durante a gravação do ficheiro.',
 	'New_File' => 'Novo ficheiro',
 	'No_Extension' => 'Tem de adicionar uma extensão ao ficheiro.',
 	'Valid_Extensions' => 'Extensões válidas: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

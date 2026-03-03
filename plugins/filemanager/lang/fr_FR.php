@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Sélectionner',
 	'Erase' => 'Effacer',
@@ -97,27 +97,27 @@ return array(
 	'New_File' => 'Nouveau fichier',
 	'No_Extension' => 'Vous devez ajouter une extension au fichier.',
 	'Valid_Extensions' => 'Extensions valides: %s', // %s = txt,log etc.
-	'Upload_message' => "Glissez les fichier ici pour les ajouter",
+	'Upload_message' => 'Glissez les fichier ici pour les ajouter',
 
-	'SERVER ERROR' => "ERREUR SERVEUR",
-	'forbiden' => "Interdit",
-	'wrong path' => "Chemin invalide",
-	'wrong name' => "Nom invalide",
-	'wrong extension' => "Extension invalide",
-	'wrong option' => "Option invalide",
-	'wrong data' => "Données invalides",
-	'wrong action' => "Action invalide",
-	'wrong sub-action' => "Sous-action invalide",
-	'no action passed' => "Aucune action demandée",
-	'no path' => "Chemin manquant",
-	'no file' => "Fichier manquant",
-	'view type number missing' => "Type de vue manquant",
-	'Not enought Memory' => "Mémoire insuffisante",
+	'SERVER ERROR' => 'ERREUR SERVEUR',
+	'forbiden' => 'Interdit',
+	'wrong path' => 'Chemin invalide',
+	'wrong name' => 'Nom invalide',
+	'wrong extension' => 'Extension invalide',
+	'wrong option' => 'Option invalide',
+	'wrong data' => 'Données invalides',
+	'wrong action' => 'Action invalide',
+	'wrong sub-action' => 'Sous-action invalide',
+	'no action passed' => 'Aucune action demandée',
+	'no path' => 'Chemin manquant',
+	'no file' => 'Fichier manquant',
+	'view type number missing' => 'Type de vue manquant',
+	'Not enought Memory' => 'Mémoire insuffisante',
 	'max_size_reached' => "Votre répertoire d'image a déjà atteind sa taille maximale de %d mo.", //%d = max overall size
-	'B' => "o",
-	'KB' => "ko",
-	'MB' => "mo",
-	'GB' => "go",
-	'TB' => "to",
-	'total size' => "Taille totale",
-);
+	'B' => 'o',
+	'KB' => 'ko',
+	'MB' => 'mo',
+	'GB' => 'go',
+	'TB' => 'to',
+	'total size' => 'Taille totale',
+];

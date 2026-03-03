@@ -4,4 +4,4 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_INP","pages");
+define('_INP','pages');

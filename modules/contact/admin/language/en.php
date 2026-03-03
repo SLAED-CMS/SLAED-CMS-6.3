@@ -4,5 +4,5 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_CONTACTALL","Contact to all managers?");
-define("_CONTACTINFO","The contact information");
+define('_CONTACTALL','Contact to all managers?');
+define('_CONTACTINFO','The contact information');

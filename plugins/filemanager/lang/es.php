@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Seleccionar',
 	'Erase' => 'Eliminar',
@@ -42,7 +42,7 @@ return array(
 	'Upload_url' => 'URL',
 	'Upload_java' => 'Subida de archivos JAVA (para archivos pesados)',
 	'Upload_java_help' => "Si el applet no carga: 1. Asegúrate de tener Java instalado; sino descárgalo e instálalo <a href='http://java.com/en/download/'>desde aquí</a> 2. Asegúrate que tu firewall no esté bloqueando nada.",
-	'Upload_base_help' => "Arrastra y suelta los archivos dentro de esta área o haga clic en ella (para navegadores modernos) de lo contrario, seleccione el archivo y haga clic en el botón. Cuando finalice la subida, haga clic en el botón superior para regresar.",
+	'Upload_base_help' => 'Arrastra y suelta los archivos dentro de esta área o haga clic en ella (para navegadores modernos) de lo contrario, seleccione el archivo y haga clic en el botón. Cuando finalice la subida, haga clic en el botón superior para regresar.',
 	'Type_dir' => 'Carpeta',
 	'Type' => 'Tipo',
 	'Dimension' => 'Dimensiones',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'File permission',
 	'File_Permission_Not_Allowed' => 'Changing %s permissions are not allowed.', // %s = files or folders
 	'File_Permission_Recursive' => 'Apply recursively?',
-	'File_Permission_Wrong_Mode' => "The supplied permission mode is incorrect.",
+	'File_Permission_Wrong_Mode' => 'The supplied permission mode is incorrect.',
 	'User' => 'User',
 	'Group' => 'Group',
 	'Yes' => 'Yes',
@@ -92,32 +92,32 @@ return array(
 	'File_Open_Edit_Not_Allowed' => 'You are not allowed to %s this file.', // %s = open or edit
 	'Edit' => 'Edit',
 	'Edit_File' => "Edit file's content",
-	'File_Save_OK' => "File successfully saved.",
-	'File_Save_Error' => "There was an error while saving the file.",
+	'File_Save_OK' => 'File successfully saved.',
+	'File_Save_Error' => 'There was an error while saving the file.',
 	'New_File' => 'New File',
 	'No_Extension' => 'You have to add a file extension.',
 	'Valid_Extensions' => 'Valid extensions: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

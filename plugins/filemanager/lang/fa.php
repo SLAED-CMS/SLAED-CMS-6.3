@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'انتخاب',
 	'Erase' => 'حذف',
@@ -41,7 +41,7 @@ return array(
 	'Upload_base' => 'آپلودر اصلی',
 	'Upload_java' => 'آپلودر جاوا (فایلهای حجیم)',
 	'Upload_java_help' => "اگر اپلت های جاوا لود نشد , 1. مطمئن شوید که جاوا نصب شده است ، در غیر این صورت از<a href='http://java.com/en/download/'>[لینک وبسایت مرجع]</a> دریافت کنید .   2. مطمئن شوید که توسط فایروال بلاک نشده باشد .",
-	'Upload_base_help' => "فایلها را از سیستم خود بکشید و اینجا رها کنید یا اینجا کلیک کنید و فایل انتخاب کنید و هنگامی که آپلود تمام شد، روی کلید \"برگشت به لیست فایلها\" کلیک کنید.",
+	'Upload_base_help' => 'فایلها را از سیستم خود بکشید و اینجا رها کنید یا اینجا کلیک کنید و فایل انتخاب کنید و هنگامی که آپلود تمام شد، روی کلید "برگشت به لیست فایلها" کلیک کنید.',
 	'Type_dir' => 'مسیر',
 	'Type' => 'نوع',
 	'Dimension' => 'بعد',
@@ -80,7 +80,7 @@ return array(
 	'File_Permission' => 'دسترسی فایل',
 	'File_Permission_Not_Allowed' => 'تغییر دسترسی %s مجاز نمی باشد .', // %s = files or folders
 	'File_Permission_Recursive' => 'اعمال بازگشتی بودن؟',
-	'File_Permission_Wrong_Mode' => "دسترسی اعمال شده اشتباه است .",
+	'File_Permission_Wrong_Mode' => 'دسترسی اعمال شده اشتباه است .',
 	'User' => 'کاربر',
 	'Group' => 'گروه',
 	'Yes' => 'بله',
@@ -90,33 +90,33 @@ return array(
 	'File_Not_Found' => 'نتوانست فایل را پیدا کند .',
 	'File_Open_Edit_Not_Allowed' => 'شما نمیتوانید این فایل را %s کنید.', // %s = open or edit
 	'Edit' => 'ویرایش',
-	'Edit_File' => "ویرایش محتوای فایل",
-	'File_Save_OK' => "فایل با موفقیت ذخیره شد .",
-	'File_Save_Error' => "خطایی در هنگام ذخیره فایل رخ داده است .",
+	'Edit_File' => 'ویرایش محتوای فایل',
+	'File_Save_OK' => 'فایل با موفقیت ذخیره شد .',
+	'File_Save_Error' => 'خطایی در هنگام ذخیره فایل رخ داده است .',
 	'New_File' => 'فایل جدید',
 	'No_Extension' => 'شما باید پسوند وارد کنید .',
 	'Valid_Extensions' => 'پسوند های مجاز : %s', // %s = txt,log etc.
-	'Upload_message' => "فایل ها را اینجا بکشید تا آپلود شوند ",
+	'Upload_message' => 'فایل ها را اینجا بکشید تا آپلود شوند ',
 
-	'SERVER ERROR' => "خطای سرور",
-	'forbiden' => "ممنوع",
-	'wrong path' => "مسیر اشتباه",
-	'wrong name' => "نام غیر مجاز",
-	'wrong extension' => "پسوند غیر مجاز",
-	'wrong option' => "گزینه های غیر مجاز",
-	'wrong data' => "دیتا اشتباه",
-	'wrong action' => "عمل اشتباه",
-	'wrong sub-action' => "خطای زیر دستور",
-	'no action passed' => "بدون دستور",
-	'no path' => "بدون مسیر",
-	'no file' => "بدون فایل",
-	'view type number missing' => "نمایش تعداد نوع های غیر مجاز",
-	'Not enought Memory' => "نبود فضای کافی",
-	'max_size_reached' => "پوشه تصویر شما به حداکثر اندازه خود [%d MB] رسیده است .", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "حجم کلی",
-);
+	'SERVER ERROR' => 'خطای سرور',
+	'forbiden' => 'ممنوع',
+	'wrong path' => 'مسیر اشتباه',
+	'wrong name' => 'نام غیر مجاز',
+	'wrong extension' => 'پسوند غیر مجاز',
+	'wrong option' => 'گزینه های غیر مجاز',
+	'wrong data' => 'دیتا اشتباه',
+	'wrong action' => 'عمل اشتباه',
+	'wrong sub-action' => 'خطای زیر دستور',
+	'no action passed' => 'بدون دستور',
+	'no path' => 'بدون مسیر',
+	'no file' => 'بدون فایل',
+	'view type number missing' => 'نمایش تعداد نوع های غیر مجاز',
+	'Not enought Memory' => 'نبود فضای کافی',
+	'max_size_reached' => 'پوشه تصویر شما به حداکثر اندازه خود [%d MB] رسیده است .', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'حجم کلی',
+];

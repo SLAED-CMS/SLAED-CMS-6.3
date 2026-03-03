@@ -4,5 +4,5 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_ASSTORY","Look also connected stories");
-define("_INN","stories in");
+define('_ASSTORY','Look also connected stories');
+define('_INN','stories in');

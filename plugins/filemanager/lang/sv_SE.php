@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Välj', // Select
 	'Erase' => 'Radera', // Erase
@@ -114,10 +114,10 @@ return array(
 	'view type number missing' => 'Vytypsnummer saknas', // "View type number missing",
 	'Not enought Memory' => 'Inte tillräckligt med minne', // "Not enought Memory",
 	'max_size_reached' => 'Din bildkatalog har nått den maximala storleken av %d MB', // "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
 	'total size' => 'Total storlek', // "Total size",
-);
+];

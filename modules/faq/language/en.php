@@ -4,4 +4,4 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_INFA","questions and answers in");
+define('_INFA','questions and answers in');

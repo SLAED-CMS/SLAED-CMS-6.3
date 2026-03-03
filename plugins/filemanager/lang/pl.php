@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Wybierz',
 	'Erase' => 'Usuń',
@@ -42,7 +42,7 @@ return array(
 	'Upload_url' => 'URL',
 	'Upload_java' => 'Wgrywanie przez skrypty JS (dla dużych plików)',
 	'Upload_java_help' => "Jeżeli ten aplet JS nie powoduje wgrywania 1. Sprawdź czy masz pobraną i uruchomioną obsługę skryptów w JAVA na stronie JAVA <a href='http://java.com/en/download/'>[pobierz]</a> 2. Upewnij się, że nie jest to blokada wynikająca z ustawień zapory firewall",
-	'Upload_base_help' => "Zastosuj metodę Przeciągnij & Upuść w obszar powyżej, lub kliknij tam (opcja dotyczy tylko najnowszych przeglądarek). Wybierz plik i kliknij Otwórz. Kiedy zakończy się proces wgrywania, kliknij Powrót do listy plików na górze, by zakończyć.",
+	'Upload_base_help' => 'Zastosuj metodę Przeciągnij & Upuść w obszar powyżej, lub kliknij tam (opcja dotyczy tylko najnowszych przeglądarek). Wybierz plik i kliknij Otwórz. Kiedy zakończy się proces wgrywania, kliknij Powrót do listy plików na górze, by zakończyć.',
 	'Type_dir' => 'FLD',
 	'Type' => 'Roz.',
 	'Dimension' => 'Rozmiar',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'Uprawnienia pliku',
 	'File_Permission_Not_Allowed' => 'Zmiana uprawnień dla %s jest niedozwolona.', // %s = files or folders
 	'File_Permission_Recursive' => 'Zastosować rekursywnie?',
-	'File_Permission_Wrong_Mode' => "Zastosowane uprawnienia są niepoprawne.",
+	'File_Permission_Wrong_Mode' => 'Zastosowane uprawnienia są niepoprawne.',
 	'User' => 'Użytkownik',
 	'Group' => 'Grupa',
 	'Yes' => 'Tak',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'Nie można znaleźć pliku.',
 	'File_Open_Edit_Not_Allowed' => 'Nie masz uprawnien do pliku %s.', // %s = open or edit
 	'Edit' => 'Edytuj',
-	'Edit_File' => "Edytuj zawartość pliku",
-	'File_Save_OK' => "Plik został zapisany.",
-	'File_Save_Error' => "Wystąpił błąd podczas zapisywania pliku.",
+	'Edit_File' => 'Edytuj zawartość pliku',
+	'File_Save_OK' => 'Plik został zapisany.',
+	'File_Save_Error' => 'Wystąpił błąd podczas zapisywania pliku.',
 	'New_File' => 'Utwórz plik',
 	'No_Extension' => 'Musisz dodać rozszerzenie do pliku.',
 	'Valid_Extensions' => 'Poprawne rozszerzenia: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

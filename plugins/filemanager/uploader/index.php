@@ -8,7 +8,7 @@ if ( ! $java_upload)
 {
 	die('forbidden');
 }
-if ($_SESSION['RF']["verify"] != "RESPONSIVEfilemanager")
+if ($_SESSION['RF']['verify'] != 'RESPONSIVEfilemanager')
 {
 	die('forbidden');
 }
@@ -17,7 +17,7 @@ if ($_SESSION['RF']["verify"] != "RESPONSIVEfilemanager")
 include 'jupload.php';
 include '../include/utils.php';
 
-$path = $current_path . $_GET['path'];
+$path = $current_path.$_GET['path'];
 $cycle = true;
 $max_cycles = 50;
 $i = 0;
@@ -29,15 +29,15 @@ while ($cycle && $i < $max_cycles)
 		$cycle = false;
 	}
 
-	if (file_exists($path . "config.php"))
+	if (file_exists($path.'config.php'))
 	{
-		require_once $path . "config.php";
+		require_once $path.'config.php';
 		$cycle = false;
 	}
-	$path = fix_dirname($path) . "/";
+	$path = fix_dirname($path).'/';
 }
 
-$path = "../" . $current_path . $_GET['path'];
+$path = '../'.$current_path.$_GET['path'];
 
 if (strpos($_GET['path'], '../') !== false || strpos($_GET['path'], './') !== false || strpos($_GET['path'], '/') === 0)
 {
@@ -65,8 +65,8 @@ function handle_uploaded_files($juploadPhpSupportClass, $files)
 {
 	return
 		"<P>We are in the 'handle_uploaded_files' callback function, in the index.php script. To avoid double coding, we "
-		. "just call the default behavior of the JUpload PHP class. Just replace this by your code...</P>"
-		. $juploadPhpSupportClass->defaultAfterUploadManagement();;
+		.'just call the default behavior of the JUpload PHP class. Just replace this by your code...</P>'
+		.$juploadPhpSupportClass->defaultAfterUploadManagement();;
 
 }
 
@@ -82,9 +82,9 @@ function handle_uploaded_files($juploadPhpSupportClass, $files)
 // You can use all applet parameters in this array.
 // see all details http://jupload.sourceforge.net/howto-customization.html
 //
-$appletParameters = array(
+$appletParameters = [
 	//Default value is ... maximum size for a file on the current FS. 2G is problably too much already.
-	'maxFileSize'           => $JAVAMaxSizeUpload . 'G',
+	'maxFileSize'           => $JAVAMaxSizeUpload.'G',
 	//
 	//In the sourceforge project structure, the applet jar file is one folder below. Default
 	//configuration is ok, if wjhk.jupload.jar is in the same folder as the script containing this call.
@@ -99,7 +99,7 @@ $appletParameters = array(
 	//
 	//Default afterUploadURL displays the list of uploaded files above the applet (in the <!--JUPLOAD_FILES--> markers, see below)
 	//You can use any page you want, to manage the uploaded files. Here is a sample, that also only shows the list of files.
-	'afterUploadURL'        => 'success.php?path=' . $_GET['path'],
+	'afterUploadURL'        => 'success.php?path='.$_GET['path'],
 	//
 	//This demo expects the md5sum to be sent by the applet. But the parameter is not mandatory
 	//This value should be set to false (or the line commented), for big files, as md5 calculation
@@ -107,17 +107,17 @@ $appletParameters = array(
 	'sendMD5Sum'            => 'false',
 	//
 	'debugLevel'            => 0 // 100 disables redirect after upload, so we keep it below. This still gives a lot of information, in case of problem.
-);
+];
 
 // for htaccess protected folders
 if ((isset($_SERVER['PHP_AUTH_USER']) && $_SERVER['PHP_AUTH_USER'] != '') && $_SERVER['PHP_AUTH_USER'] != '' && $_SERVER['PHP_AUTH_USER'] != '')
 {
-	$appletParameters['specificHeaders'] = 'Authorization: Basic ' . base64_encode($_SERVER['PHP_AUTH_USER'] . ":" . $_SERVER['PHP_AUTH_PW']);
+	$appletParameters['specificHeaders'] = 'Authorization: Basic '.base64_encode($_SERVER['PHP_AUTH_USER'].':'.$_SERVER['PHP_AUTH_PW']);
 }
 
 //
 //Then: the jupload PHP class parameters
-$classParameters = array(
+$classParameters = [
 	//Files won't be stored on the server. Useful for first tests of the applet behavior ... and sourceforge demo site !
 	'demo_mode'     => false,
 	//
@@ -131,7 +131,7 @@ $classParameters = array(
 	//I work on windows. The default configuration is /var/tmp/jupload_test
 	'destdir'       => $path  //Where to store the files on the web
 	//'errormail' => 'me@my.domain.org',
-);
+];
 if ( ! empty($convert_spaces))
 {
 	$classParameters['convert_spaces'] = true;

@@ -5,11 +5,11 @@ Class FTPClient
 	// *** Class variables
 	private $connectionId;
 	private $loginOk = false;
-	private $messageArray = array();
+	private $messageArray = [];
 
 	public function __construct() { }
 
-	private function logMessage($message) 
+	private function logMessage($message)
 	{
 		$this->messageArray[] = $message;
 	}
@@ -34,10 +34,10 @@ Class FTPClient
 		// *** Check connection
 		if ((!$this->connectionId) || (!$loginResult)) {
 			$this->logMessage('FTP connection has failed!');
-			$this->logMessage('Attempted to connect to ' . $server . ' for user ' . $ftpUser, true);
+			$this->logMessage('Attempted to connect to '.$server.' for user '.$ftpUser, true);
 			return false;
 		} else {
-			$this->logMessage('Connected to ' . $server . ', for user ' . $ftpUser);
+			$this->logMessage('Connected to '.$server.', for user '.$ftpUser);
 			$this->loginOk = true;
 			return true;
 		}
@@ -47,13 +47,13 @@ Class FTPClient
 		// *** If creating a directory is successful...
 		if (ftp_mkdir($this->connectionId, $directory)) {
 
-			$this->logMessage('Directory "' . $directory . '" created successfully');
+			$this->logMessage('Directory "'.$directory.'" created successfully');
 			return true;
 
 		} else {
 
 			// *** ...Else, FAIL.
-			$this->logMessage('Failed creating directory "' . $directory . '"');
+			$this->logMessage('Failed creating directory "'.$directory.'"');
 			return false;
 		}
 	}
@@ -61,9 +61,9 @@ Class FTPClient
 	public function changeDir($directory)
 	{
 	    if (ftp_chdir($this->connectionId, $directory)) {
-	        $this->logMessage('Current directory is now: ' . ftp_pwd($this->connectionId));
+	        $this->logMessage('Current directory is now: '.ftp_pwd($this->connectionId));
 	        return true;
-	    } else { 
+	    } else {
 	        $this->logMessage('Couldn\'t change directory');
 	        return false;
 	    }
@@ -72,7 +72,7 @@ Class FTPClient
 	public function getDirListing($directory = '.', $parameters = '-la')
 	{
 	    // get contents of the current directory
-	    $contentsArray = ftp_rawlist($this->connectionId, $parameters . '  ' . $directory);
+	    $contentsArray = ftp_rawlist($this->connectionId, $parameters.'  '.$directory);
 	    return $contentsArray;
 	}
 }

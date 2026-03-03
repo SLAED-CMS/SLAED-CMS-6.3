@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Chọn',
 	'Erase' => 'Xóa',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'File permission',
 	'File_Permission_Not_Allowed' => 'Đổi permissions của %s không được chấp nhận.', // %s = files or folders
 	'File_Permission_Recursive' => 'Apply recursively?',
-	'File_Permission_Wrong_Mode' => "Các permission bạn chọn không chính xác.",
+	'File_Permission_Wrong_Mode' => 'Các permission bạn chọn không chính xác.',
 	'User' => 'User',
 	'Group' => 'Group',
 	'Yes' => 'Yes',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'Không tìm thấy file.',
 	'File_Open_Edit_Not_Allowed' => 'Bạn không được phép để %s file này.', // %s = open or edit
 	'Edit' => 'Sửa',
-	'Edit_File' => "Sửa nội dung file",
-	'File_Save_OK' => "File được lưu thành công.",
-	'File_Save_Error' => "Đã có lỗi khi lưu file.",
+	'Edit_File' => 'Sửa nội dung file',
+	'File_Save_OK' => 'File được lưu thành công.',
+	'File_Save_Error' => 'Đã có lỗi khi lưu file.',
 	'New_File' => 'Tạo File mới',
 	'No_Extension' => 'You have to add a file extension.',
 	'Valid_Extensions' => 'Extension được chấp nhận: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

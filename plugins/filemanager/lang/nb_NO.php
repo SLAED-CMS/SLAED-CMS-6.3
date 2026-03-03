@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Velg',
 	'Erase' => 'Slett',
@@ -42,7 +42,7 @@ return array(
 	'Upload_url' => 'URL',
 	'Upload_java' => 'Java-opplasting (store filer)',
 	'Upload_java_help' => "Hvis java-appleten ikke lastes: 1. Sjekk om Java er installert, hvis ikke <a href='http://java.com/en/download/'>last ned Java</a> 2. Sjekk brannmur-innstillingene.",
-	'Upload_base_help' => "Dra og slipp filen(e) i området over eller klikk (virker for moderne nettlesere). Ved bruk av gammel nettleser: Velg filen og klikk på knappen. Når opplastingen er ferdig, klikk på tilbake-knappen øverst.",
+	'Upload_base_help' => 'Dra og slipp filen(e) i området over eller klikk (virker for moderne nettlesere). Ved bruk av gammel nettleser: Velg filen og klikk på knappen. Når opplastingen er ferdig, klikk på tilbake-knappen øverst.',
 	'Type_dir' => 'Mappe',
 	'Type' => 'Type',
 	'Dimension' => 'Dimensjoner',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'Filrettigheter',
 	'File_Permission_Not_Allowed' => 'Forandring av %s rettigheter er ikke tillatt.', // %s = files or folders
 	'File_Permission_Recursive' => 'Utfør rekursivt?',
-	'File_Permission_Wrong_Mode' => "Filrettigheten er feil.",
+	'File_Permission_Wrong_Mode' => 'Filrettigheten er feil.',
 	'User' => 'Bruker',
 	'Group' => 'Gruppe',
 	'Yes' => 'Ja',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'Fant ikke filen.',
 	'File_Open_Edit_Not_Allowed' => 'Du har ikke tillatelse til å %s denne filen.', // %s = open or edit
 	'Edit' => 'Rediger',
-	'Edit_File' => "Rediger filens innhold",
-	'File_Save_OK' => "Filen ble lagret.",
-	'File_Save_Error' => "Det oppstod en feil når filen ble lagret.",
+	'Edit_File' => 'Rediger filens innhold',
+	'File_Save_OK' => 'Filen ble lagret.',
+	'File_Save_Error' => 'Det oppstod en feil når filen ble lagret.',
 	'New_File' => 'Ny fil',
 	'No_Extension' => 'Du må legge til et fil-etternavn.',
 	'Valid_Extensions' => 'Gyldige fil-etternavn: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

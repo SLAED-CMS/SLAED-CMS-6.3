@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Vælg',
 	'Erase' => 'Slet',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'Fil tilladelser',
 	'File_Permission_Not_Allowed' => 'Det er ikke tilladt at ændre tilladelsen for %s.', // %s = files or folders
 	'File_Permission_Recursive' => 'Gøres ved alle mapper og filer (rekursivt)?',
-	'File_Permission_Wrong_Mode' => "Den anvendte indstilling for tilladelse er ikke korrekt.",
+	'File_Permission_Wrong_Mode' => 'Den anvendte indstilling for tilladelse er ikke korrekt.',
 	'User' => 'Bruger',
 	'Group' => 'Gruppe',
 	'Yes' => 'Ja',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'Det var ikke muligt at finde filen.',
 	'File_Open_Edit_Not_Allowed' => 'Du har ikke tiladelse til at %s denne fil.', // %s = open or edit
 	'Edit' => 'Redigér',
-	'Edit_File' => "Redigér filens indhold",
-	'File_Save_OK' => "Filen blev gemt.",
-	'File_Save_Error' => "Der opstod en fejl i forsøget på at gemme filen.",
+	'Edit_File' => 'Redigér filens indhold',
+	'File_Save_OK' => 'Filen blev gemt.',
+	'File_Save_Error' => 'Der opstod en fejl i forsøget på at gemme filen.',
 	'New_File' => 'Opret ny fil',
 	'No_Extension' => 'Husk at tilføje filtype.',
 	'Valid_Extensions' => 'Gyldige filtyper er: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

@@ -4,6 +4,6 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_CONTACT","Контактная информация");
-define("_FBMAILSENT","Спасибо, сообщение отправлено!");
-define("_TO","Кому");
+define('_CONTACT','Контактная информация');
+define('_FBMAILSENT','Спасибо, сообщение отправлено!');
+define('_TO','Кому');

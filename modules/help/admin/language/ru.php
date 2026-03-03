@@ -4,5 +4,5 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_HELPADD","Разрешить создавать новые темы и сообщения?");
-define("_HELPGLOS","Закрыть тему?");
+define('_HELPADD','Разрешить создавать новые темы и сообщения?');
+define('_HELPGLOS','Закрыть тему?');

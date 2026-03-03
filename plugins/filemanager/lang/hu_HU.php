@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Tallózás',
 	'Erase' => 'Törlés',
@@ -42,7 +42,7 @@ return array(
 	'Upload_url' => 'URL',
 	'Upload_java' => 'JAVA feltöltő (nagyméretű fájlokhoz)',
 	'Upload_java_help' => "Ha a Java Applet nem töltődik be: 1. ellenőrizze, hogy a JAVA telepítve van-e, ha nincs: <a href='http://java.com/en/download/'>[letöltés]</a> 2. ellenőrizze, hogy a tűzfal nem blokkolja-e",
-	'Upload_base_help' => "Fogd meg és húzd az ablakba a fájlt vagy kattints bele és válaszd ki majd nyomd meg a megnyitás gombot (modern böngészők). Amikor a feltöltés befejeződött kattints a fenti gombra a visszatéréshez.",
+	'Upload_base_help' => 'Fogd meg és húzd az ablakba a fájlt vagy kattints bele és válaszd ki majd nyomd meg a megnyitás gombot (modern böngészők). Amikor a feltöltés befejeződött kattints a fenti gombra a visszatéréshez.',
 	'Type_dir' => 'Mappa',
 	'Type' => 'Típus',
 	'Dimension' => 'Felbontás',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'Engedélyek',
 	'File_Permission_Not_Allowed' => 'A %s jogainak a megváltoztatása nem engedélyezett.', // %s = files or folders
 	'File_Permission_Recursive' => 'Rekurzív beállítás az almappákra?',
-	'File_Permission_Wrong_Mode' => "A beírt engedély nem megfelelő.",
+	'File_Permission_Wrong_Mode' => 'A beírt engedély nem megfelelő.',
 	'User' => 'Felhasználó',
 	'Group' => 'Csoport',
 	'Yes' => 'Igen',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'A fájl nem található.',
 	'File_Open_Edit_Not_Allowed' => 'Nincs jogod %s a fájlt.', // %s = open or edit
 	'Edit' => 'Szerkesztés',
-	'Edit_File' => "Fájl szerkesztése",
-	'File_Save_OK' => "Fájl sikeresen mentve.",
-	'File_Save_Error' => "Hiba történt a fájl mentése közben.",
+	'Edit_File' => 'Fájl szerkesztése',
+	'File_Save_OK' => 'Fájl sikeresen mentve.',
+	'File_Save_Error' => 'Hiba történt a fájl mentése közben.',
 	'New_File' => 'Új fájl',
 	'No_Extension' => 'Meg kell adnod a fájl kiterjesztését.',
 	'Valid_Extensions' => 'Elfogadott kiterjesztések: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

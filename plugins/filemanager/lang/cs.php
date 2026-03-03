@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Vybrat',
 	'Erase' => 'Smazat',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'Práva souboru',
 	'File_Permission_Not_Allowed' => 'Změna oprávnění pro %s není povolena.', // %s = files or folders
 	'File_Permission_Recursive' => 'Použít rekurzivně?',
-	'File_Permission_Wrong_Mode' => "Zadaný kód oprávnění není platný.",
+	'File_Permission_Wrong_Mode' => 'Zadaný kód oprávnění není platný.',
 	'User' => 'Uživatel',
 	'Group' => 'Skupina',
 	'Yes' => 'Ano',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'Soubor nebyl nalezen.',
 	'File_Open_Edit_Not_Allowed' => 'Nemáte oprávnění %s tento soubor.', // %s = open or edit
 	'Edit' => 'Upravit',
-	'Edit_File' => "Upravit obsah souboru",
-	'File_Save_OK' => "Soubor byl úspěšně uložen.",
-	'File_Save_Error' => "Došlo k chybě při ukládání souboru.",
+	'Edit_File' => 'Upravit obsah souboru',
+	'File_Save_OK' => 'Soubor byl úspěšně uložen.',
+	'File_Save_Error' => 'Došlo k chybě při ukládání souboru.',
 	'New_File' => 'Nový soubor',
 	'No_Extension' => 'Musíte doplnit příponu souboru.',
 	'Valid_Extensions' => 'Povolené přípony: %s', // %s = txt,log etc.
-	'Upload_message' => "Pro nahrání přetáhněte soubor(y) sem",
+	'Upload_message' => 'Pro nahrání přetáhněte soubor(y) sem',
 
-	'SERVER ERROR' => "CHYBA SERVERU",
-	'forbiden' => "Zakázáno",
-	'wrong path' => "Neplatná cesta",
-	'wrong name' => "Neplatná název",
-	'wrong extension' => "Neplatná přípona",
-	'wrong option' => "Neplatná volba",
-	'wrong data' => "Neplatná data",
-	'wrong action' => "Neplatná akce",
-	'wrong sub-action' => "Neplatná podakce",
-	'no action passed' => "Nebyla předána žádná akce",
-	'no path' => "Žádná cesta",
-	'no file' => "Žádný soubor",
-	'view type number missing' => "Chybí číslo typu pro zobrazení",
-	'Not enought Memory' => "Nedostatek paměti",
-	'max_size_reached' => "Vaše složka s obrázky dosáhla maximální velikosti %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Celková velikost",
-);
+	'SERVER ERROR' => 'CHYBA SERVERU',
+	'forbiden' => 'Zakázáno',
+	'wrong path' => 'Neplatná cesta',
+	'wrong name' => 'Neplatná název',
+	'wrong extension' => 'Neplatná přípona',
+	'wrong option' => 'Neplatná volba',
+	'wrong data' => 'Neplatná data',
+	'wrong action' => 'Neplatná akce',
+	'wrong sub-action' => 'Neplatná podakce',
+	'no action passed' => 'Nebyla předána žádná akce',
+	'no path' => 'Žádná cesta',
+	'no file' => 'Žádný soubor',
+	'view type number missing' => 'Chybí číslo typu pro zobrazení',
+	'Not enought Memory' => 'Nedostatek paměti',
+	'max_size_reached' => 'Vaše složka s obrázky dosáhla maximální velikosti %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Celková velikost',
+];

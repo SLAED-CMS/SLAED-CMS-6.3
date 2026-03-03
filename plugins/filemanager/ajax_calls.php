@@ -6,17 +6,17 @@ extract($config, EXTR_OVERWRITE);
 
 require_once 'include/utils.php';
 
-if ($_SESSION['RF']["verify"] != "RESPONSIVEfilemanager")
+if ($_SESSION['RF']['verify'] != 'RESPONSIVEfilemanager')
 {
 	response(trans('forbiden').AddErrorLocation())->send();
 	exit;
 }
 $languages = include 'lang/languages.php';
 
-if (isset($_SESSION['RF']['language']) && file_exists('lang/' . basename($_SESSION['RF']['language']) . '.php'))
+if (isset($_SESSION['RF']['language']) && file_exists('lang/'.basename($_SESSION['RF']['language']).'.php'))
 {
 	if(array_key_exists($_SESSION['RF']['language'],$languages)){
-		include 'lang/' . basename($_SESSION['RF']['language']) . '.php';
+		include 'lang/'.basename($_SESSION['RF']['language']).'.php';
 	}else{
 		response(trans('Lang_Not_Found').AddErrorLocation())->send();
 		exit;
@@ -32,7 +32,7 @@ if(isset($_GET['action']))
 	switch($_GET['action'])
 	{
 		case 'new_file_form':
-			echo trans('Filename') . ': <input type="text" id="create_text_file_name" style="height:30px"> <select id="create_text_file_extension" style="margin:0;width:100px;">';
+			echo trans('Filename').': <input type="text" id="create_text_file_name" style="height:30px"> <select id="create_text_file_extension" style="margin:0;width:100px;">';
 			foreach($config['editable_text_file_exts'] as $ext){
 				echo '<option value=".'.$ext.'">.'.$ext.'</option>';
 			}
@@ -41,7 +41,7 @@ if(isset($_GET['action']))
 		case 'view':
 			if(isset($_GET['type']))
 			{
-				$_SESSION['RF']["view_type"] = $_GET['type'];
+				$_SESSION['RF']['view_type'] = $_GET['type'];
 			}
 			else
 			{
@@ -54,7 +54,7 @@ if(isset($_GET['action']))
 			{
 				if (isset($remember_text_filter) && $remember_text_filter)
 				{
-					$_SESSION['RF']["filter"] = $_GET['type'];
+					$_SESSION['RF']['filter'] = $_GET['type'];
 				}
 			}
 			else {
@@ -65,12 +65,12 @@ if(isset($_GET['action']))
 		case 'sort':
 			if (isset($_GET['sort_by']))
 			{
-				$_SESSION['RF']["sort_by"] = $_GET['sort_by'];
+				$_SESSION['RF']['sort_by'] = $_GET['sort_by'];
 			}
 
 			if (isset($_GET['descending']))
 			{
-				$_SESSION['RF']["descending"] = $_GET['descending'];
+				$_SESSION['RF']['descending'] = $_GET['descending'];
 			}
 			break;
 		case 'image_size': // not used
@@ -92,7 +92,7 @@ if(isset($_GET['action']))
 				|| strpos($_POST['path'], './') === 0
 				|| (strpos($_POST['url'], 'http://s3.amazonaws.com/feather') !== 0 && strpos($_POST['url'], 'https://s3.amazonaws.com/feather') !== 0)
 				|| $_POST['name'] != fix_filename($_POST['name'], $config)
-				|| ! in_array(strtolower($info['extension']), array( 'jpg', 'jpeg', 'png' ))
+				|| ! in_array(strtolower($info['extension']), [ 'jpg', 'jpeg', 'png' ])
 			)
 			{
 				response(trans('wrong data').AddErrorLocation())->send();
@@ -113,19 +113,19 @@ if(isset($_GET['action']))
 
 				$temp = tempnam('/tmp','RF');
 				unlink($temp);
-				$temp .=".".substr(strrchr($_POST['url'],'.'),1);
+				$temp .='.'.substr(strrchr($_POST['url'],'.'),1);
 				file_put_contents($temp,$image_data);
 
-				$ftp->put($ftp_base_folder.$upload_dir . $_POST['path'] . $_POST['name'], $temp, FTP_BINARY);
+				$ftp->put($ftp_base_folder.$upload_dir.$_POST['path'].$_POST['name'], $temp, FTP_BINARY);
 
 				create_img($temp,$temp,122,91);
-				$ftp->put($ftp_base_folder.$ftp_thumbs_dir. $_POST['path'] . $_POST['name'], $temp, FTP_BINARY);
+				$ftp->put($ftp_base_folder.$ftp_thumbs_dir.$_POST['path'].$_POST['name'], $temp, FTP_BINARY);
 
 				unlink($temp);
 			}else{
 
-				file_put_contents($current_path . $_POST['path'] . $_POST['name'],$image_data);
-				create_img($current_path . $_POST['path'] . $_POST['name'], $thumbs_base_path.$_POST['path'].$_POST['name'], 122, 91);
+				file_put_contents($current_path.$_POST['path'].$_POST['name'],$image_data);
+				create_img($current_path.$_POST['path'].$_POST['name'], $thumbs_base_path.$_POST['path'].$_POST['name'], 122, 91);
 				// TODO something with this function cause its blowing my mind
 				new_thumbnails_creation(
 					$current_path.$_POST['path'],
@@ -150,9 +150,9 @@ if(isset($_GET['action']))
 			}
 			break;
 		case 'extract':
-			if (	strpos($_POST['path'], '/') === 0 
-				|| strpos($_POST['path'], '../') !== false 
-				|| strpos($_POST['path'], '..\\') !== false 
+			if (	strpos($_POST['path'], '/') === 0
+				|| strpos($_POST['path'], '../') !== false
+				|| strpos($_POST['path'], '..\\') !== false
 				|| strpos($_POST['path'], './') === 0)
 			{
 				response(trans('wrong path'.AddErrorLocation()))->send();
@@ -160,11 +160,11 @@ if(isset($_GET['action']))
 			}
 
 			if($ftp){
-				$path = $ftp_base_url.$upload_dir . $_POST['path'];
-				$base_folder = $ftp_base_url.$upload_dir . fix_dirname($_POST['path']) . "/";
+				$path = $ftp_base_url.$upload_dir.$_POST['path'];
+				$base_folder = $ftp_base_url.$upload_dir.fix_dirname($_POST['path']).'/';
 			}else{
-				$path = $current_path . $_POST['path'];
-				$base_folder = $current_path . fix_dirname($_POST['path']) . "/";
+				$path = $current_path.$_POST['path'];
+				$base_folder = $current_path.fix_dirname($_POST['path']).'/';
 			}
 
 			$info = pathinfo($path);
@@ -173,19 +173,19 @@ if(isset($_GET['action']))
 				$tempDir = tempdir();
 				$temp = tempnam($tempDir,'RF');
 				unlink($temp);
-				$temp .=".".$info['extension'];
-				$handle = fopen($temp, "w");
+				$temp .='.'.$info['extension'];
+				$handle = fopen($temp, 'w');
 				fwrite($handle, file_get_contents($path));
 				fclose($handle);
 				$path = $temp;
-				$base_folder = $tempDir."/";
+				$base_folder = $tempDir.'/';
 			}
 
 			$info = pathinfo($path);
 
 			switch ($info['extension'])
 			{
-				case "zip":
+				case 'zip':
 					$zip = new ZipArchive;
 					if ($zip->open($path) === true)
 					{
@@ -206,9 +206,9 @@ if(isset($_GET['action']))
 						{
 							$OnlyFileName = $zip->getNameIndex($i);
 							$FullFileName = $zip->statIndex($i);
-							if (substr($FullFileName['name'], -1, 1) == "/")
+							if (substr($FullFileName['name'], -1, 1) == '/')
 							{
-								create_folder($base_folder . $FullFileName['name']);
+								create_folder($base_folder.$FullFileName['name']);
 							}
 						}
 						//unzip into the folders
@@ -217,12 +217,12 @@ if(isset($_GET['action']))
 							$OnlyFileName = $zip->getNameIndex($i);
 							$FullFileName = $zip->statIndex($i);
 
-							if ( ! (substr($FullFileName['name'], -1, 1) == "/"))
+							if ( ! (substr($FullFileName['name'], -1, 1) == '/'))
 							{
 								$fileinfo = pathinfo($OnlyFileName);
 								if (in_array(strtolower($fileinfo['extension']), $ext))
 								{
-									copy('zip://' . $path . '#' . $OnlyFileName, $base_folder . $FullFileName['name']);
+									copy('zip://'.$path.'#'.$OnlyFileName, $base_folder.$FullFileName['name']);
 								}
 							}
 						}
@@ -234,19 +234,19 @@ if(isset($_GET['action']))
 
 					break;
 
-				case "gz":
+				case 'gz':
 					// No resulting size pre-control available
 					$p = new PharData($path);
 					$p->decompress(); // creates files.tar
 
 					break;
 
-				case "tar":
+				case 'tar':
 					// No resulting size pre-control available
 					// unarchive from the tar
 					$phar = new PharData($path);
 					$phar->decompressFiles();
-					$files = array();
+					$files = [];
 					check_files_extensions_on_phar($phar, $files, '', $ext);
 					$phar->extractTo($base_folder, $files, true);
 
@@ -259,7 +259,7 @@ if(isset($_GET['action']))
 
 			if($ftp){
 				unlink($path);
-				$ftp->putAll($base_folder, "/".$ftp_base_folder . $upload_dir . fix_dirname($_POST['path']), FTP_BINARY);
+				$ftp->putAll($base_folder, '/'.$ftp_base_folder.$upload_dir.fix_dirname($_POST['path']), FTP_BINARY);
 				deleteDir($base_folder);
 			}
 
@@ -267,9 +267,9 @@ if(isset($_GET['action']))
 			break;
 		case 'media_preview':
 			if($ftp){
-				$preview_file = $ftp_base_url.$upload_dir . $_GET['file'];
+				$preview_file = $ftp_base_url.$upload_dir.$_GET['file'];
 			}else{
-				$preview_file = $current_path . $_GET["file"];
+				$preview_file = $current_path.$_GET['file'];
 			}
 			$info = pathinfo($preview_file);
 			ob_start();
@@ -385,7 +385,7 @@ if(isset($_GET['action']))
 			}
 
 			if (strpos($_POST['path'],'../') !== FALSE
-				|| strpos($_POST['path'],'./') !== FALSE 
+				|| strpos($_POST['path'],'./') !== FALSE
 				|| strpos($_POST['path'],'..\\') !== FALSE
 				|| strpos($_POST['path'],'.\\') !== FALSE )
 			{
@@ -400,7 +400,7 @@ if(isset($_GET['action']))
 			}
 
 			$msg_sub_action = ($_POST['sub_action'] == 'copy' ? trans('Copy') : trans('Cut'));
-			$path = $current_path . $_POST['path'];
+			$path = $current_path.$_POST['path'];
 
 			if (is_dir($path))
 			{
@@ -452,22 +452,22 @@ if(isset($_GET['action']))
 			break;
 		case 'chmod':
 			if($ftp){
-				$path = $ftp_base_url . $upload_dir . $_POST['path'];
+				$path = $ftp_base_url.$upload_dir.$_POST['path'];
 				if (
 					($_POST['folder']==1 && $chmod_dirs === false)
 					|| ($_POST['folder']==0 && $chmod_files === false)
-					|| (is_function_callable("chmod") === false) )
+					|| (is_function_callable('chmod') === false) )
 				{
 					response(sprintf(trans('File_Permission_Not_Allowed'), (is_dir($path) ? trans('Folders') : trans('Files')), 403).AddErrorLocation())->send();
 					exit;
 				}
 				$info = $_POST['permissions'];
 			}else{
-				$path = $current_path . $_POST['path'];
+				$path = $current_path.$_POST['path'];
 				if (
 					(is_dir($path) && $chmod_dirs === false)
 					|| (is_file($path) && $chmod_files === false)
-					|| (is_function_callable("chmod") === false) )
+					|| (is_function_callable('chmod') === false) )
 				{
 					response(sprintf(trans('File_Permission_Not_Allowed'), (is_dir($path) ? trans('Folders') : trans('Files')), 403).AddErrorLocation())->send();
 					exit;
@@ -515,21 +515,21 @@ if(isset($_GET['action']))
 					<tbody>
 						<tr>
 							<td>'.trans('User').'</td>
-							<td><input id="u_4" type="checkbox" data-value="4" data-group="user" '.(substr($info, 1,1)=='r' ? " checked" : "").'></td>
-							<td><input id="u_2" type="checkbox" data-value="2" data-group="user" '.(substr($info, 2,1)=='w' ? " checked" : "").'></td>
-							<td><input id="u_1" type="checkbox" data-value="1" data-group="user" '.(substr($info, 3,1)=='x' ? " checked" : "").'></td>
+							<td><input id="u_4" type="checkbox" data-value="4" data-group="user" '.(substr($info, 1,1)=='r' ? ' checked' : '').'></td>
+							<td><input id="u_2" type="checkbox" data-value="2" data-group="user" '.(substr($info, 2,1)=='w' ? ' checked' : '').'></td>
+							<td><input id="u_1" type="checkbox" data-value="1" data-group="user" '.(substr($info, 3,1)=='x' ? ' checked' : '').'></td>
 						</tr>
 						<tr>
 							<td>'.trans('Group').'</td>
-							<td><input id="g_4" type="checkbox" data-value="4" data-group="group" '.(substr($info, 4,1)=='r' ? " checked" : "").'></td>
-							<td><input id="g_2" type="checkbox" data-value="2" data-group="group" '.(substr($info, 5,1)=='w' ? " checked" : "").'></td>
-							<td><input id="g_1" type="checkbox" data-value="1" data-group="group" '.(substr($info, 6,1)=='x' ? " checked" : "").'></td>
+							<td><input id="g_4" type="checkbox" data-value="4" data-group="group" '.(substr($info, 4,1)=='r' ? ' checked' : '').'></td>
+							<td><input id="g_2" type="checkbox" data-value="2" data-group="group" '.(substr($info, 5,1)=='w' ? ' checked' : '').'></td>
+							<td><input id="g_1" type="checkbox" data-value="1" data-group="group" '.(substr($info, 6,1)=='x' ? ' checked' : '').'></td>
 						</tr>
 						<tr>
 							<td>'.trans('All').'</td>
-							<td><input id="a_4" type="checkbox" data-value="4" data-group="all" '.(substr($info, 7,1)=='r' ? " checked" : "").'></td>
-							<td><input id="a_2" type="checkbox" data-value="2" data-group="all" '.(substr($info, 8,1)=='w' ? " checked" : "").'></td>
-							<td><input id="a_1" type="checkbox" data-value="1" data-group="all" '.(substr($info, 9,1)=='x' ? " checked" : "").'></td>
+							<td><input id="a_4" type="checkbox" data-value="4" data-group="all" '.(substr($info, 7,1)=='r' ? ' checked' : '').'></td>
+							<td><input id="a_2" type="checkbox" data-value="2" data-group="all" '.(substr($info, 8,1)=='w' ? ' checked' : '').'></td>
+							<td><input id="a_1" type="checkbox" data-value="1" data-group="all" '.(substr($info, 9,1)=='x' ? ' checked' : '').'></td>
 						</tr>
 						<tr>
 							<td></td>
@@ -575,7 +575,7 @@ if(isset($_GET['action']))
 			$ret = '<select id="new_lang_select">';
 			foreach ($languages as $code => $name)
 			{
-				$ret .= '<option value="' . $code . '"' . ($code == $curr ? ' selected' : '') . '>' . $name . '</option>';
+				$ret .= '<option value="'.$code.'"'.($code == $curr ? ' selected' : '').'>'.$name.'</option>';
 			}
 			$ret .= '</select>';
 
@@ -584,10 +584,10 @@ if(isset($_GET['action']))
 
 			break;
 		case 'change_lang':
-			$choosen_lang = (!empty($_POST['choosen_lang']))? $_POST['choosen_lang']:"en_EN";
+			$choosen_lang = (!empty($_POST['choosen_lang']))? $_POST['choosen_lang']:'en_EN';
 
 			if(array_key_exists($choosen_lang,$languages)){
-				if ( ! file_exists('lang/' . $choosen_lang . '.php'))
+				if ( ! file_exists('lang/'.$choosen_lang.'.php'))
 				{
 					response(trans('Lang_Not_Found').AddErrorLocation())->send();
 					exit;
@@ -599,9 +599,9 @@ if(isset($_GET['action']))
 			break;
 		case 'cad_preview':
 			if($ftp){
-				$selected_file = $ftp_base_url.$upload_dir . $_GET['file'];
+				$selected_file = $ftp_base_url.$upload_dir.$_GET['file'];
 			}else{
-				$selected_file = $current_path . $_GET['file'];
+				$selected_file = $current_path.$_GET['file'];
 
 				if ( ! file_exists($selected_file))
 				{
@@ -612,17 +612,17 @@ if(isset($_GET['action']))
 			if($ftp){
 				$url_file = $selected_file;
 			}else{
-				$url_file = $base_url . $upload_dir . str_replace($current_path, '', $_GET["file"]);
+				$url_file = $base_url.$upload_dir.str_replace($current_path, '', $_GET['file']);
 			}
 
 			$cad_url = urlencode($url_file);
-			$cad_html = "<iframe src=\"//sharecad.org/cadframe/load?url=" . $url_file . "\" class=\"google-iframe\" scrolling=\"no\"></iframe>";
+			$cad_html = '<iframe src="//sharecad.org/cadframe/load?url='.$url_file.'" class="google-iframe" scrolling="no"></iframe>';
 			$ret = $cad_html;
 			response($ret)->send();
 			break;
 		case 'get_file': // preview or edit
 			$sub_action = $_GET['sub_action'];
-			$preview_mode = $_GET["preview_mode"];
+			$preview_mode = $_GET['preview_mode'];
 
 			if ($sub_action != 'preview' && $sub_action != 'edit')
 			{
@@ -631,9 +631,9 @@ if(isset($_GET['action']))
 			}
 
 			if($ftp){
-				$selected_file = ($sub_action == 'preview' ? $ftp_base_url.$upload_dir . $_GET['file'] : $ftp_base_url.$upload_dir . $_POST['path']);
+				$selected_file = ($sub_action == 'preview' ? $ftp_base_url.$upload_dir.$_GET['file'] : $ftp_base_url.$upload_dir.$_POST['path']);
 			}else{
-				$selected_file = ($sub_action == 'preview' ? $current_path . $_GET['file'] : $current_path . $_POST['path']);
+				$selected_file = ($sub_action == 'preview' ? $current_path.$_GET['file'] : $current_path.$_POST['path']);
 
 				if ( ! file_exists($selected_file))
 				{
@@ -658,7 +658,7 @@ if(isset($_GET['action']))
 
 			if ( ! isset($allowed_file_exts) || ! is_array($allowed_file_exts))
 			{
-				$allowed_file_exts = array();
+				$allowed_file_exts = [];
 			}
 
 			if ( ! in_array($info['extension'], $allowed_file_exts)
@@ -692,11 +692,11 @@ if(isset($_GET['action']))
 					if($ftp){
 						$url_file = $selected_file;
 					}else{
-						$url_file = $base_url . $upload_dir . str_replace($current_path, '', $_GET["file"]);
+						$url_file = $base_url.$upload_dir.str_replace($current_path, '', $_GET['file']);
 					}
 
 					$googledoc_url = urlencode($url_file);
-					$googledoc_html = "<iframe src=\"https://docs.google.com/viewer?url=" . $url_file . "&embedded=true\" class=\"google-iframe\"></iframe>";
+					$googledoc_html = '<iframe src="https://docs.google.com/viewer?url='.$url_file.'&embedded=true" class="google-iframe"></iframe>';
 					$ret = $googledoc_html;
 				}
 			} else {

@@ -4,5 +4,5 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_ASSTORY","Смотрите также похожие новости");
-define("_INN","новостей в");
+define('_ASSTORY','Смотрите также похожие новости');
+define('_INN','новостей в');

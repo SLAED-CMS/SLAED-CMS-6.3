@@ -1,6 +1,6 @@
 <?php
 
-return array(
+return [
 
 	'Select' => 'Vybrať',
 	'Erase' => 'Odstrániť',
@@ -81,7 +81,7 @@ return array(
 	'File_Permission' => 'Povolenia súborov',
 	'File_Permission_Not_Allowed' => 'Zmena povolení súborov alebo adresárov nie je povolená.', // %s = files or folders
 	'File_Permission_Recursive' => 'Použiť na vnorené súbory a adresáre?',
-	'File_Permission_Wrong_Mode' => "Nesprávny mód povolenia",
+	'File_Permission_Wrong_Mode' => 'Nesprávny mód povolenia',
 	'User' => 'Užívateľ',
 	'Group' => 'Skupina',
 	'Yes' => 'Áno',
@@ -91,33 +91,33 @@ return array(
 	'File_Not_Found' => 'Súbor sa nenašiel.',
 	'File_Open_Edit_Not_Allowed' => 'Nemáte právo otvoriť alebo upravovať tento súbor.', // %s = open or edit
 	'Edit' => 'Upraviť',
-	'Edit_File' => "Upraviť obsah súboru",
-	'File_Save_OK' => "Súbor bol uložený.",
-	'File_Save_Error' => "Nastala chyba! Súbor nebol uložený.",
+	'Edit_File' => 'Upraviť obsah súboru',
+	'File_Save_OK' => 'Súbor bol uložený.',
+	'File_Save_Error' => 'Nastala chyba! Súbor nebol uložený.',
 	'New_File' => 'Nový súbor',
 	'No_Extension' => 'Musíte pridať príponu súboru.',
 	'Valid_Extensions' => 'Povolené prípony: %s', // %s = txt,log etc.
-	'Upload_message' => "Drop file here to upload",
+	'Upload_message' => 'Drop file here to upload',
 
-	'SERVER ERROR' => "SERVER ERROR",
-	'forbiden' => "Forbiden",
-	'wrong path' => "Wrong path",
-	'wrong name' => "Wrong name",
-	'wrong extension' => "Wrong extension",
-	'wrong option' => "Wrong option",
-	'wrong data' => "Wrong data",
-	'wrong action' => "Wrong action",
-	'wrong sub-action' => "Wrong sub-actio",
-	'no action passed' => "No action passed",
-	'no path' => "No path",
-	'no file' => "No file",
-	'view type number missing' => "View type number missing",
-	'Not enought Memory' => "Not enought Memory",
-	'max_size_reached' => "Your image folder has reach its maximale size of %d MB.", //%d = max overall size
-	'B' => "B",
-	'KB' => "KB",
-	'MB' => "MB",
-	'GB' => "GB",
-	'TB' => "TB",
-	'total size' => "Total size",
-);
+	'SERVER ERROR' => 'SERVER ERROR',
+	'forbiden' => 'Forbiden',
+	'wrong path' => 'Wrong path',
+	'wrong name' => 'Wrong name',
+	'wrong extension' => 'Wrong extension',
+	'wrong option' => 'Wrong option',
+	'wrong data' => 'Wrong data',
+	'wrong action' => 'Wrong action',
+	'wrong sub-action' => 'Wrong sub-actio',
+	'no action passed' => 'No action passed',
+	'no path' => 'No path',
+	'no file' => 'No file',
+	'view type number missing' => 'View type number missing',
+	'Not enought Memory' => 'Not enought Memory',
+	'max_size_reached' => 'Your image folder has reach its maximale size of %d MB.', //%d = max overall size
+	'B' => 'B',
+	'KB' => 'KB',
+	'MB' => 'MB',
+	'GB' => 'GB',
+	'TB' => 'TB',
+	'total size' => 'Total size',
+];

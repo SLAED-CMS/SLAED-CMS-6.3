@@ -4,5 +4,5 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_POLLEACH","Варіант відповіді");
-define("_POLLTITLE","Питання");
+define('_POLLEACH','Варіант відповіді');
+define('_POLLTITLE','Питання');

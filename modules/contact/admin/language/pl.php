@@ -4,5 +4,5 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_CONTACTALL","Kontakt ze wszystkimi wykonawcami?");
-define("_CONTACTINFO","Informacje kontaktowe");
+define('_CONTACTALL','Kontakt ze wszystkimi wykonawcami?');
+define('_CONTACTINFO','Informacje kontaktowe');

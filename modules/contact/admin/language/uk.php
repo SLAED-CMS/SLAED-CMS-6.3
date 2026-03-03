@@ -4,5 +4,5 @@
 # License: GNU GPL 3
 # Website: slaed.net
 
-define("_CONTACTALL","Контакт зі всіма адміністраторами?");
-define("_CONTACTINFO","Контактна інформація");
+define('_CONTACTALL','Контакт зі всіма адміністраторами?');
+define('_CONTACTINFO','Контактна інформація');
