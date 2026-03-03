@@ -81,7 +81,7 @@ class Database {
     # Supports: Named (:name) or Positional (?) placeholders
     function getSqlQuery(string $query = '', array $params = []): PDOStatement|false {
  global $conf;
-        if ($this->qresult) unset($this->qresult);
+        $this->qresult = null;
         if (!$query) return false;
         $this->qid = uniqid('', true);
         $stime = microtime(true);
