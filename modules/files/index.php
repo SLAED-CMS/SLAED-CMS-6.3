@@ -321,7 +321,7 @@ function send(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_files (lid, cid, uid, name, title, description, bodytext, url, date, filesize, version, email, homepage, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :description, :bodytext, :url, NOW(), :fsize, :fversion, :mail, :home, :ip_sender, '0')", ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'fsize' => $fsize, 'fversion' => $fversion, 'mail' => $mail, 'home' => $home, 'ip_sender' => getIp()]);
             update_points(9);
             $puname = (is_user()) ? $user[1] : $postname;
-            addmail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
+            addAdminMail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
             setHead(['title' => _ADD]);
             echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISH]);
             setFoot();

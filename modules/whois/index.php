@@ -177,7 +177,7 @@ function send(): void {
 			$uname = (!is_user()) ? $postname : '';
 			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :hometext, \'0\', \'0\', \'0\', \'0\')', ['uid' => $postid, 'name' => $uname, 'ip' => getIp(), 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
 			$puname = (is_user()) ? $user[1] : $postname;
-			addmail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
+			addAdminMail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
 			setHead(['title' => _WHOIS_LICENS_SEND]);
 			echo navigate(_WHOIS_LICENS_SEND).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ABTEXT]);
 			setFoot();

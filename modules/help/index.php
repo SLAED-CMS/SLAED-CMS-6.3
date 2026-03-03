@@ -279,7 +279,7 @@ function send(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (sid, pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (NULL, :pid, :cid, :postid, :postid, :title, NOW(), :hometext, :field, :ip, \'0\')', ['pid' => $pid, 'cid' => $cid, 'postid' => $postid, 'title' => $title, 'hometext' => $hometext, 'field' => $field, 'ip' => getIp()]);
             if ($pid) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE sid = :pid', ['status' => $status, 'pid' => $pid]);
             $puname = (is_user()) ? $user[1] : '';
-            addmail($conf['help']['addmail'], $conf['name'], $puname, _HELP);
+            addAdminMail($conf['help']['addmail'], $conf['name'], $puname, _HELP);
             setHead(['title' => _ADD]);
             echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _HSUBTEXT]);
             setFoot();

@@ -309,7 +309,7 @@ function send(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_news (sid, catid, uid, name, title, time, hometext, bodytext, field, associated, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :hometext, :bodytext, :field, \'\', :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'ip' => getIp()]);
             update_points(31);
             $puname = (is_user()) ? $user[1] : $postname;
-            addmail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);
+            addAdminMail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);
             setHead(['title' => _ADD]);
             echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT]);
             setFoot();

@@ -4349,8 +4349,8 @@ function search_replace(string $sourse, string $mod): string {
     return $sourse;
 }
 
-# Admin mail add info
-function addmail(int $id, string $mod, string $username = '', string $title = '', bool $isComment = false, string $text = ''): void {
+# Notify subscribed admins by email on new content or comment submission
+function addAdminMail(int $id, string $mod, string $username = '', string $title = '', bool $isComment = false, string $text = ''): void {
  global $db, $conf, $locale;
     $mod = filterVar($mod);
     if ($id && $mod) {

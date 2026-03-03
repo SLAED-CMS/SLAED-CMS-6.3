@@ -281,7 +281,7 @@ function send(): void {
 			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (pid, catid, uid, name, title, time, hometext, bodytext, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :hometext, :bodytext, :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ip' => getIp()]);
 			update_points(35);
 			$puname = (is_user()) ? $user[1] : $postname;
-			addmail($conf['pages']['addmail'], $conf['name'], $puname, _PAGES);
+			addAdminMail($conf['pages']['addmail'], $conf['name'], $puname, _PAGES);
 			setHead(['title' => _ADD]);
 			echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT]);
 			setFoot();

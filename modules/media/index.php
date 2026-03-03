@@ -387,7 +387,7 @@ function send(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
             update_points(25);
             $puname = (is_user()) ? $user[1] : $postname;
-            addmail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
+            addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
             setHead(['title' => _MEDIA.' '._ADD, 'desc' => _UPLOADFINISHM]);
             echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHM]);
             setFoot();

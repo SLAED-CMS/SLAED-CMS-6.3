@@ -151,7 +151,7 @@ function send(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
             update_points(19);
             $puname = (is_user()) ? $user[1] : $postname;
-            addmail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
+            addAdminMail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
             setHead(['title' => _JOKES.' '._ADD, 'desc' => _UPLOADFINISHJ]);
             echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHJ]);
             setFoot();

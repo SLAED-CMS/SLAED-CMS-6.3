@@ -286,7 +286,7 @@ function send(): void {
 			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_faq (fid, catid, uid, name, title, time, hometext, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :hometext, :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'hometext' => $hometext, 'ip' => getIp()]);
 			update_points(6);
 			$puname = (is_user()) ? $user[1] : $postname;
-			addmail($conf['faq']['addmail'], $conf['name'], $puname, _FAQ);
+			addAdminMail($conf['faq']['addmail'], $conf['name'], $puname, _FAQ);
 			setHead(['title' => _ADD]);
 			echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT]);
 			setFoot();

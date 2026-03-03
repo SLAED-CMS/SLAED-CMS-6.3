@@ -131,7 +131,7 @@ function send(): void {
         $cont = navigate(_ADD);
         $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_auto_links VALUES (NULL, :sitename, :description, :sitelink, :adminemail, 0, 0, NOW())', ['sitename' => $name, 'description' => $desc, 'sitelink' => $site, 'adminemail' => $mail]);
         $puname = (is_user()) ? $user[1] : '';
-        addmail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
+        addAdminMail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_OK]);
         $cont .= setTemplateBasic('open');
         $code = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['slogan'].'&quot;>'.$conf['sitename'].'</a>';

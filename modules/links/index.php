@@ -296,7 +296,7 @@ function send(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_links (lid, cid, uid, name, title, description, bodytext, url, date, email, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :description, :bodytext, :site, NOW(), :mail, :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'site' => $site, 'mail' => $mail, 'ip' => getIp()]);
             update_points(21);
             $puname = (is_user()) ? $user[1] : $postname;
-            addmail($conf['links']['addmail'], $conf['name'], $puname, _LINKS);
+            addAdminMail($conf['links']['addmail'], $conf['name'], $puname, _LINKS);
             setHead(['title' => _ADD]);
             echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHL]);
             setFoot();

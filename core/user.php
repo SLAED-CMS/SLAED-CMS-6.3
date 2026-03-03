@@ -232,7 +232,7 @@ function savecom() {
         list($lcom_id) = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1', ['cid' => $id, 'uid' => $postid]));
         $finishlink = $conf['homeurl'].'/index.php?name='.$mod.'&amp;op=view&amp;id='.$id.'#'.$lcom_id;
         $clink = '<a href="'.$finishlink.'">'.$finishlink.'</a>';
-        addmail($conf['comments']['addmail'], $mod, $postname, deflmconst($mod), 1, $clink);
+        addAdminMail($conf['comments']['addmail'], $mod, $postname, deflmconst($mod), 1, $clink);
         echo ashowcom($id, $mod);
     } else {
         $stop = ($stop) ? $stop : _ERROR;
