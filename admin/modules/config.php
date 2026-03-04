@@ -5,7 +5,6 @@
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
-require_once CONFIG_DIR.'/global.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ($opt == 1) ? ['name=config', 'name=config', 'name=config', 'name=config', 'name=config', 'name=config&amp;op=show', 'name=config', 'name=config', 'name=config&amp;op=info'] : ['', '', '', '', '', '', '', '', 'name=config&amp;op=info'];

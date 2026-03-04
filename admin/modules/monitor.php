@@ -1,12 +1,12 @@
 <?php
 # Author: Eduard Laas
-# Copyright (c) 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function getMonitorTabs(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
+function getMonitorTabs(int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ['name=monitor', 'name=monitor&op=info'];
     $lang = [_HOME, _INFO];
     return getAdminTabs('System Monitor', 'statistic.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
@@ -17,7 +17,7 @@ function isWindows(): bool {
 }
 
 function getServerSoftware(): string {
-    return (string)($_SERVER['SERVER_SOFTWARE'] ?? getenv('SERVER_SOFTWARE') ?: '');
+    return $_SERVER['SERVER_SOFTWARE'] ?? getenv('SERVER_SOFTWARE') ?: '';
 }
 
 function getServerLoadData(): array {
@@ -172,17 +172,12 @@ function getNetworkStats(): array {
     return ['rx' => $rx, 'tx' => $tx];
 }
 
-function isModuleActive(string $mod): bool {
-    global $conf;
-    if (function_exists('is_active')) return is_active($mod);
-    $info = $conf['modules'][$mod] ?? [];
-    return !empty($info['active']);
-}
+
 
 function getMonitor(): void {
     global $db, $conf;
     setHead();
-    $cont = getMonitorTabs(0, 0, 0, 0);
+    $cont = getMonitorTabs();
     $cont .= setTemplateBasic('open');
     
 
@@ -217,9 +212,7 @@ function getMonitor(): void {
 
     // Detailed Info Logic
     $gd = function_exists('gd_info') ? gd_info() : ['GD Version' => 'N/A'];
-    $verq = $db->getSqlQuery('SELECT VERSION()');
-    $verrow = $db->getSqlRow($verq);
-    $mysql = $verrow[0];
+    $mysql = db_version();
 
     $status_on = '<span style="color:#21c45d">On</span>';
     $status_off = '<span style="color:#ef4444">Off</span>';
@@ -237,8 +230,7 @@ function getMonitor(): void {
     $ram_used_mb = round($mem['used'] / 1024 / 1024);
     $ram_total_mb = round($mem['total'] / 1024 / 1024);
     $disk_p = $diskpct;
-    $dash_d = 2 * pi() * 45;
-    $off_d = $dash_d - ($dash_d * $disk_p / 100);
+    $off_d = $dash - ($dash * $disk_p / 100);
     $disk_used_fmt = getFormattedBytes($disk_used);
     $disk_total_fmt = getFormattedBytes($disk_total);
     $disk_free_fmt = getFormattedBytes($disk_free);
@@ -251,8 +243,8 @@ function getMonitor(): void {
     $phpver = PHP_VERSION;
     $phpsapi = php_sapi_name();
     $osname = php_uname('s');
-    $servfull = getServerSoftware();
-    $gdver = (string)($gd['GD Version'] ?? 'N/A');
+    $servfull = $servsw;
+    $gdver = $gd['GD Version'] ?? 'N/A';
     $post_max = ini_get('post_max_size');
     $file_up = ini_get('file_uploads') ? $status_on : $status_off;
     $up_max = ini_get('upload_max_filesize');
@@ -263,12 +255,12 @@ function getMonitor(): void {
     $zip_ld = extension_loaded('zip') ? $status_on : $status_off;
     $php_time = date('H:i:s');
     $op_mode = !($conf['close'] ?? 0) ? $status_on : $status_off;
-    $stat_act = isModuleActive('stat') ? $status_on : $status_off;
-    $refer_act = isModuleActive('referers') ? $status_on : $status_off;
+    $stat_act = is_active('stat') ? $status_on : $status_off;
+    $refer_act = is_active('referers') ? $status_on : $status_off;
     $newslet = ($conf['newsletter'] ?? 0) ? $status_on : $status_off;
     $cache = ($conf['cache'] ?? 0) ? $status_on : $status_off;
     $rewrite = ($conf['rewrite'] ?? 0) ? $status_on : $status_off;
-    $cms_ver = (string)($conf['version'] ?? '');
+    $cms_ver = $conf['version'] ?? '';
 
     // SVG paths for traffic chart
     $path_up = 'M0,220 ';
@@ -296,7 +288,7 @@ function getMonitor(): void {
         '{%ram_p%}' => $ram_p,
         '{%ramumb%}' => $ram_used_mb,
         '{%ramtmb%}' => $ram_total_mb,
-        '{%dash_d%}' => $dash_d,
+        '{%dash_d%}' => $dash,
         '{%off_d%}' => $off_d,
         '{%disk_p%}' => $disk_p,
         '{%diskused%}' => $disk_used_fmt,
@@ -350,5 +342,3 @@ switch ($op) {
     default: getMonitor(); break;
     case 'info': getInfo(); break;
 }
-
-

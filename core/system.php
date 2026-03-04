@@ -4028,7 +4028,7 @@ function write_log(mixed $log, string $file): bool {
     global $conf;
     if ($fp = fopen($file, 'ab')) {
         if (filesize($file) > $conf['security']['log_size']) {
-            addCompress(LOGS_DIR, $file, 'dump_log_'.date('Y-m-d_H-i').'.txt', 'auto', true);
+            addCompress(LOGS_DIR, $file, 'dump_log_'.date('Y-m-d_H-i').'.log', 'auto', true);
         }
         $log = ($log) ? implode("\n", $log) : _NO;
         flock($fp, 2);
@@ -4048,10 +4048,11 @@ function diff_dump(array $dump, array $old): array|false {
     foreach ($new as $location => $md5) {
         if (!isset($dump[$location])) $log[] = _D_DEL.': '.$location;
     }
-    $filedump = dirname($_SERVER['PHP_SELF']).'/config/logs/dump.txt';
-    $filelog = dirname($_SERVER['PHP_SELF']).'/config/logs/dump_log.txt';
+    $filedump = 'storage/logs/dump.log';
+    $filelog = 'storage/logs/dump_log.log';
     foreach ($dump as $location => $md5) {
-        if (strpos($filedump, substr($location, 2)) !== false || strpos($filelog, substr($location, 2))) continue;
+        $relative = ltrim(str_replace('\\', '/', $location), './');
+        if ($relative === $filedump || $relative === $filelog) continue;
         if (!isset($new[$location])) {
             $log[] = _D_NEW.': '.$location;
         } elseif ($new[$location] != $dump[$location]) {
@@ -4078,13 +4079,15 @@ function filereport(): void {
 
             $dump = [];
             create_dump('./', $dump);
-            if (file_exists('config/logs/dump.txt') && filesize('config/logs/dump.txt') != 0) {
-                if ($log = diff_dump($dump, file('config/logs/dump.txt'))) sort($log);
+            $dumpPath = LOGS_DIR.'/dump.log';
+            $dumpLogPath = LOGS_DIR.'/dump_log.log';
+            if (file_exists($dumpPath) && filesize($dumpPath) != 0) {
+                if ($log = diff_dump($dump, file($dumpPath))) sort($log);
             } else {
                 $log = false;
             }
-            write_log($log, 'config/logs/dump_log.txt');
-            write_dump($dump, 'config/logs/dump.txt');
+            write_log($log, $dumpLogPath);
+            write_dump($dump, $dumpPath);
             if ($conf['security']['mail_d']) {
                 $log = ($log) ? implode('<br>', $log) : _NO;
                 $subject = $conf['sitename'].' - '._SECURITY;
@@ -4108,10 +4111,10 @@ function login_report(mixed $id, mixed $typ, mixed $login, mixed $pass): void {
         $url = filterText(getenv('REQUEST_URI'));
         $ladmin = ($admin) ? "\n"._ADMIN.': '.substr($admin[1], 0, 25) : '';
         $luser = ($user) ? "\n"._USER.': '.substr($user[1], 0, 25) : '';
-        $path = 'config/logs/log_'.$id.'.txt';
+        $path = LOGS_DIR.'/log_'.$id.'.log';
         if ($fhandle = fopen($path, 'ab')) {
             if (filesize($path) > $conf['security']['log_size']) {
-                addCompress(LOGS_DIR, $path, 'log_'.$id.'_'.date('Y-m-d_H-i').'.txt', 'auto', true);
+                addCompress(LOGS_DIR, $path, 'log_'.$id.'_'.date('Y-m-d_H-i').'.log', 'auto', true);
             }
             fwrite($fhandle, _INPUT.': '.$typ."\n"._IP.': '.$ip.$login.$lpass.$ladmin.$luser."\n"._URL.': '.$url."\n"._BROWSER.': '.$agent."\n"._DATE.': '.date(_TIMESTRING)."\n---\n");
             fclose($fhandle);

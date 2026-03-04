@@ -114,9 +114,11 @@ Static analysis tests that scan all project PHP files for patterns.
 | `TemplateValidationTest.php` | — | Checks template HTML files |
 | `SetupFileWarningTest.php` | — | Verifies setup file access guards |
 | `LanguageValidationTest.php` | — | Checks language file completeness |
+| `LanguageConstantsUsageTest.php` | — | Verifies language constant usage across codebase |
 | `PhpFileFormatTest.php` | — | PHP file format (BOM, tags, encoding) |
 | `ModuleStructureTest.php` | — | Module directory structure validation |
 | `SchemaUpdateValidationTest.php` | — | DB schema migration file checks |
+| `UnusedCodeAuditTest.php` | — | Detects unused functions and dead code |
 
 ### Running a Single Suite
 

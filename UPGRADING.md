@@ -438,7 +438,7 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 - [ ] Replace `adm_info(...)` calls with `getAdminInfo()`
 
 > [!TIP]
-> Refer to `.rules/refactoring-rules.md` for detailed migration patterns and examples.
+> Refer to [CONTRIBUTING.md](CONTRIBUTING.md) for detailed migration patterns and examples.
 
 ---
 

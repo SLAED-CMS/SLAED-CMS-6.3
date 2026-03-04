@@ -5,7 +5,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
-![Migration](https://img.shields.io/badge/Migration-80%25%20Complete-purple.svg)
+![Migration](https://img.shields.io/badge/Migration-85%25%20Complete-purple.svg)
 
 **Modern, Secure, High-Performance Content Management System**
 
@@ -22,7 +22,6 @@ SLAED CMS is a powerful, modular content management system built with modern PHP
 git clone https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
 
 # 2. Configure database
-cp config/db.php.example config/db.php
 # Edit config/db.php with your database credentials
 
 # 3. Import database schema
@@ -116,7 +115,7 @@ Tests must be run after about 100 changed lines and before merging into `master`
 ## ✨ Features
 
 ### Core Functionality
-- 🎨 **27+ Modules** - News, forum, shop, gallery, files, and more
+- 🎨 **26 Modules** - News, forum, shop, media, files, and more
 - 🌍 **Multi-language** - Full support for 6 languages
 - 👥 **User Management** - Groups, permissions, roles
 - 🔒 **Security** - XSS, CSRF, SQL injection protection
@@ -166,7 +165,7 @@ slaed-cms/
 │   ├── en.php
 │   ├── de.php
 │   └── ...
-├── modules/              # Frontend modules (27+)
+├── modules/              # Frontend modules (26)
 │   ├── news/            # News module
 │   ├── forum/           # Forum module
 │   ├── shop/            # E-commerce module

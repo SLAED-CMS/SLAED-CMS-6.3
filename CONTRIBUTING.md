@@ -308,7 +308,7 @@ When working on admin modules, follow these specific conventions:
 
 ```php
 // Always use navi() - not moduleNavi() or similar
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $extra = ''): string {
+function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ['name=modules', 'name=modules&amp;op=info'];
     $lang = [_HOME, _INFO];
     return getAdminTabs(_MODULES, 'modules.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
@@ -320,12 +320,12 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
 ```php
 // ✅ Correct - use $afile
 global $afile;
-header('Location: '.$afile.'.php?name=modules');
-exit;
+setRedirect($afile.'.php?name=modules');
 
 // ❌ Wrong - deprecated
 global $admin_file;
 header('Location: '.$admin_file.'.php?name=modules');
+exit;
 ```
 
 #### Header Redirects
@@ -364,8 +364,7 @@ Extract inline code into separate functions:
 function status(): void {
     global $db, $afile, $act, $id;
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
-    header('Location: '.$afile.'.php?name=categories');
-    exit;
+    setRedirect($afile.'.php?name=categories');
 }
 
 switch ($op) {
@@ -659,7 +658,7 @@ All commits should use:
 
 3. **Check coding standards:**
    ```bash
-   ./vendor/bin/phpcs --standard=PSR12 src/
+   ./vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no --config=.php-cs-fixer.dist.php
    ```
 
 ### PR Requirements

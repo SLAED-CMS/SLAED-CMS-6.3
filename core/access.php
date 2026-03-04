@@ -54,23 +54,55 @@ function setExit(string $msg, string $typ = ''): never {
 }
 
 if ($conf['security']['admin_ip'] != '') {
+    $cidr = static function(string $cidr): string|false {
+        $cidr = trim($cidr);
+        if ($cidr === '') return false;
+        if (!str_contains($cidr, '/')) {
+            if (!filter_var($cidr, FILTER_VALIDATE_IP)) return false;
+            $pack = inet_pton($cidr);
+            if ($pack === false) return false;
+            $ip = inet_ntop($pack);
+            if ($ip === false) return false;
+            $pre = (str_contains($ip, ':')) ? 128 : 32;
+            return $ip.'/'.$pre;
+        }
+        [$ip, $pre] = explode('/', $cidr, 2);
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) return false;
+        if (!preg_match('#^\d+$#', $pre)) return false;
+        $pre = (int)$pre;
+        $pack = inet_pton($ip);
+        if ($pack === false) return false;
+        $ip = inet_ntop($pack);
+        if ($ip === false) return false;
+        $max = (str_contains($ip, ':')) ? 128 : 32;
+        if ($pre < 0 || $pre > $max) return false;
+        return $ip.'/'.$pre;
+    };
+    $match = static function(string $ip, string $rule) use ($cidr): bool {
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) return false;
+        $rcidr = $cidr($rule);
+        if ($rcidr === false) return false;
+        [$rip, $pre] = explode('/', $rcidr, 2);
+        $pre = (int)$pre;
+        $ipp = inet_pton($ip);
+        $rpp = inet_pton($rip);
+        if ($ipp === false || $rpp === false) return false;
+        if (strlen($ipp) !== strlen($rpp)) return false;
+        $bytes = intdiv($pre, 8);
+        $rest = $pre % 8;
+        if ($bytes > 0 && substr($ipp, 0, $bytes) !== substr($rpp, 0, $bytes)) return false;
+        if ($rest === 0) return true;
+        $mbyte = (0xFF << (8 - $rest)) & 0xFF;
+        $ibyte = ord($ipp[$bytes]);
+        $rbyte = ord($rpp[$bytes]);
+        return ($ibyte & $mbyte) === ($rbyte & $mbyte);
+    };
+
     $admin_ip = explode(',', $conf['security']['admin_ip']);
+    $temp_ip = getIp();
     foreach ($admin_ip as $val) {
-        $temp_ip = getIp();
-        $admin_ip = $val;
-        if ($conf['security']['admin_mask'] <= 3) {
-            $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
-            $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
-        }
-        if ($conf['security']['admin_mask'] <= 2) {
-            $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
-            $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
-        }
-        if ($conf['security']['admin_mask'] == 1) {
-            $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
-            $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
-        }
-        if ($admin_ip == $temp_ip) {
+        $ruleIp = trim($val);
+        if ($ruleIp !== '' && $match($temp_ip, $ruleIp)) {
             $ip_check = true;
             break;
         } else {

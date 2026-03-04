@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright (c) 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -14,10 +14,8 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function database(): void {
     global $db, $conf, $afile;
-
-    $type     = getVar('get', 'type', 'var'); // '', 'optimize', 'repair'
+    $type = getVar('get', 'type', 'var');
     $ftitleth = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
-
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
         setHead();
@@ -25,20 +23,18 @@ function database(): void {
         setFoot();
         return;
     }
-
-    // Tabelleninfos einmal einlesen
     $result = $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
     $tables = [];
     while ($info = $db->getSqlRow($result)) {
         $tables[] = $info;
     }
 
-    $total       = 0; // Summe Data + Index
-    $totalfree   = 0; // Summe Data_free
-    $total_rows  = 0; // Summe aller COUNT(*)
-    $i           = 0;
+    $total = 0;
+    $totalfree = 0;
+    $total_rows = 0;
+    $i = 0;
 
-    $content  = '<table class="sl_table_list_sort">';
+    $content = '<table class="sl_table_list_sort">';
     $content .= '<thead><tr>'
               .'<th>'._ID.'</th>'
               .'<th>'._TABLE.'</th>'
@@ -52,20 +48,13 @@ function database(): void {
               .'</tr></thead><tbody>';
 
     foreach ($tables as $info) {
-        $name    = $info['Name'];
-        $tabeng  = $info['Engine'];
-        $tabloc  = $info['Collation'];
-        $crtime  = $info['Create_time'];
-
-        // --- Exakte Zeilenzahl per COUNT(*) (MyISAM & InnoDB) ---
-        $rows = (int) $info['Rows']; // Fallback
-
-        $res = $db->getSqlQuery(
-            'SELECT COUNT(*) AS cnt FROM `'.$conf['db']['name'].'`.`'.$name.'`'
-        );
-        if ($res && $row = $db->getSqlRow($res)) {
-            $rows = (int) $row['cnt'];
-        }
+        $name = $info['Name'];
+        $tabeng = $info['Engine'];
+        $tabloc = $info['Collation'];
+        $crtime = $info['Create_time'];
+        $rows = (int) $info['Rows'];
+        $res = $db->getSqlQuery('SELECT COUNT(*) AS cnt FROM `'.$conf['db']['name'].'`.`'.$name.'`');
+        if ($res && $row = $db->getSqlRow($res)) $rows = (int) $row['cnt'];
         $total_rows += $rows;
 
         // --- Table  und free space size ---
@@ -305,4 +294,3 @@ switch ($op) {
     case 'del': del(); break;
     case 'info': info(); break;
 }
-

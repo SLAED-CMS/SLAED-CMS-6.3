@@ -1,12 +1,10 @@
 <?php
 # Author: Eduard Laas
-# Copyright (c) 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
-
-require_once CONFIG_DIR.'/uploads.php';
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     global $afile, $conf;
@@ -270,4 +268,3 @@ switch ($op) {
     case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
-

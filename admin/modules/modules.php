@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright (c) 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -24,13 +24,10 @@ function modules(): void {
     setHead();
     $cont = navi(0, 0, 0, 0);
     if (isset($infos)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $infos]);
-
     $config = false;
     $modlist = [];
     $new = [];
     $removed = [];
-
-    // Scan admin modules (admin/modules/*.php) - type 0
     $handle = opendir('admin/modules');
     while (false !== ($file = readdir($handle))) {
         if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) {
@@ -38,15 +35,15 @@ function modules(): void {
             $modlist[] = $module;
             if (!isset($conf['modules'][$module])) {
                 $conf['modules'][$module] = [
-                    'lang'   => '_'.strtoupper($module),
-                    'img'    => strtolower($module).'.png',
+                    'lang' => '_'.strtoupper($module),
+                    'img' => strtolower($module).'.png',
                     'active' => 1,
-                    'view'   => 0,
-                    'menu'   => 1,
-                    'group'  => 0,
-                    'side'   => 0,
-                    'top'    => 0,
-                    'type'   => 0,
+                    'view' => 0,
+                    'menu' => 1,
+                    'group' => 0,
+                    'side' => 0,
+                    'top' => 0,
+                    'type' => 0,
                 ];
                 $config = true;
                 $new[] = $module;
@@ -54,23 +51,21 @@ function modules(): void {
         }
     }
     closedir($handle);
-
-    // Scan custom modules (modules/*/) - type 1
     $handle = opendir('modules');
     while (false !== ($file = readdir($handle))) {
         if (!preg_match("/\./", $file) && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) {
             $modlist[] = $file;
             if (!isset($conf['modules'][$file])) {
                 $conf['modules'][$file] = [
-                    'lang'   => '_'.strtoupper($file),
-                    'img'    => strtolower($file).'.png',
+                    'lang' => '_'.strtoupper($file),
+                    'img' => strtolower($file).'.png',
                     'active' => 0,
-                    'view'   => 0,
-                    'menu'   => 1,
-                    'group'  => 0,
-                    'side'   => 0,
-                    'top'    => 0,
-                    'type'   => 1,
+                    'view' => 0,
+                    'menu' => 1,
+                    'group' => 0,
+                    'side' => 0,
+                    'top' => 0,
+                    'type' => 1,
                 ];
                 $config = true;
                 $new[] = $file;
@@ -78,20 +73,15 @@ function modules(): void {
         }
     }
     closedir($handle);
-
-    // Check for duplicate module names
     $duplicates = array_diff_assoc($modlist, array_unique($modlist));
     if (!empty($duplicates)) {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MODULES_DUPLICATE.': '.implode(', ', array_unique($duplicates))]);
     }
-
     if (!empty($new)) {
         $new = array_values(array_unique($new));
         sort($new, SORT_NATURAL | SORT_FLAG_CASE);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODULES_NEW.': '.implode(', ', $new)]);
     }
-
-    // Remove modules from config that no longer exist in filesystem
     foreach (array_keys($conf['modules']) as $module) {
         if (!in_array($module, $modlist, true)) {
             unset($conf['modules'][$module]);
@@ -99,19 +89,12 @@ function modules(): void {
             $config = true;
         }
     }
-
     if (!empty($removed)) {
         $removed = array_values(array_unique($removed));
         sort($removed, SORT_NATURAL | SORT_FLAG_CASE);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODULES_DELETED.': '.implode(', ', $removed)]);
     }
-
-    // Save config if changed
-    if ($config) {
-        setConfigFile('modules.php', $conf['modules']);
-    }
-
-    // Filter modules by type
+    if ($config) setConfigFile('modules.php', $conf['modules']);
     $mods = [];
     foreach ($conf['modules'] as $mname => $mdata) {
         $type = (int)($mdata['type'] ?? 1);
@@ -119,20 +102,14 @@ function modules(): void {
             $mods[$mname] = $mdata;
         }
     }
-
-    // Sort modules by type (Admins=0, Users=1) then name
     uksort($mods, function ($a, $b) use (&$mods) {
         $ta = (int)($mods[$a]['type'] ?? 1);
         $tb = (int)($mods[$b]['type'] ?? 1);
-        if ($ta === $tb) {
-            return strnatcasecmp($a, $b);
-        }
+        if ($ta === $tb) return strnatcasecmp($a, $b);
         return $ta <=> $tb;
     });
-
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-
     $a = 1;
     foreach ($mods as $title => $mod) {
         $lang = (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']);
@@ -141,9 +118,7 @@ function modules(): void {
         $menu = $mod['menu'];
         $group = $mod['group'];
         $type = $mod['type'];
-
         $act = $active ? 0 : 1;
-
         if ($view == 0) {
             $who_view = _MVALL;
         } elseif ($view == 1) {
@@ -151,18 +126,14 @@ function modules(): void {
         } elseif ($view == 2) {
             $who_view = _MVADMIN;
         }
-
         $typel = ($type == 0) ? 'tools' : 'people-fill';
         $titlel = ($menu == 0) ? title_tip(_NO_SICHT).$lang : $lang;
-        
-
         if ($group != 0) {
             $grp = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
             $group_name = $grp['name'];
         } else {
             $group_name = _NONE;
         }
-
         if (file_exists('modules/'.$title.'/sql/table.sql')) {
             $filename = file_get_contents('modules/'.$title.'/sql/table.sql');
             $stringdump = explode(';', $filename);
@@ -185,7 +156,6 @@ function modules(): void {
             $dbc = '';
             $sqlimg = '';
         }
-
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
             $dbu = '<i class="bi bi-database-fill-gear bi-green" title="'._DB_UPDATE.'"></i> ';
             $sqluimg = '||<a href="'.$afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3" OnClick="return DelCheck(this, \''._DB_UPDATE.' &quot;'.$title.'&quot;?\');" title="'._DB_UPDATE.'">'._DB_UPDATE.'</a>';
@@ -193,7 +163,6 @@ function modules(): void {
             $dbu = '';
             $sqluimg = '';
         }
-
         $cont .= '<tr><td>'.$a.'</td><td><i class="bi bi-'.$typel.'"></i> '.$titlel.'</td><td>'.$title.'</td><td>'.$who_view.'</td><td>'.$group_name.'</td><td>'.$dbc.$dbu.'  
         
         
@@ -223,9 +192,7 @@ function modules(): void {
 function edit(): void {
     global $conf, $db, $afile;
     $mod = getVar('get', 'mod', 'var');
-    if (!isset($conf['modules'][$mod])) {
-        setRedirect($afile.'.php?name=modules');
-    }
+    if (!isset($conf['modules'][$mod])) setRedirect($afile.'.php?name=modules');
     $lang = $conf['modules'][$mod]['lang'] ?? '_'.strtoupper($mod);
     $img = $conf['modules'][$mod]['img'] ?? $mod.'.png';
     $active = $conf['modules'][$mod]['active'];
@@ -318,15 +285,15 @@ function save(): void {
         $img = str_replace('templates/admin/images/admin/', '', getVar('post', 'img', 'text'));
         $type = $conf['modules'][$mod]['type'] ?? 1;
         $conf['modules'][$mod] = [
-            'lang'   => getVar('post', 'lang', 'var', '_'.strtoupper($mod)),
-            'img'    => $img ?: strtolower($mod).'.png',
+            'lang' => getVar('post', 'lang', 'var', '_'.strtoupper($mod)),
+            'img' => $img ?: strtolower($mod).'.png',
             'active' => getVar('post', 'active', 'num'),
-            'view'   => $view,
-            'menu'   => getVar('post', 'menu', 'num'),
-            'group'  => ($view == 1) ? getVar('post', 'group', 'num') : 0,
-            'side'   => getVar('post', 'side', 'num'),
-            'top'    => getVar('post', 'top', 'num'),
-            'type'   => $type,
+            'view' => $view,
+            'menu' => getVar('post', 'menu', 'num'),
+            'group' => ($view == 1) ? getVar('post', 'group', 'num') : 0,
+            'side' => getVar('post', 'side', 'num'),
+            'top' => getVar('post', 'top', 'num'),
+            'type' => $type,
         ];
         setConfigFile('modules.php', $conf['modules']);
     }
@@ -374,4 +341,3 @@ switch ($op) {
     case 'add': add(); break;
     case 'info': info(); break;
 }
-

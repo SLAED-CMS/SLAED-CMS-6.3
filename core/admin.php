@@ -163,22 +163,10 @@ function checkAccess() {
     global $conf;
     if ($conf['security']['admin_ip'] != '') {
         $admin_ip = explode(',', $conf['security']['admin_ip']);
+        $temp_ip = getIp();
         foreach ($admin_ip as $val) {
-            $temp_ip = getip();
-            $admin_ip = $val;
-            if ($conf['security']['admin_mask'] <= 3) {
-                $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
-                $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
-            }
-            if ($conf['security']['admin_mask'] <= 2) {
-                $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
-                $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
-            }
-            if ($conf['security']['admin_mask'] == 1) {
-                $temp_ip = substr($temp_ip, 0, strrpos($temp_ip, '.'));
-                $admin_ip = substr($admin_ip, 0, strrpos($admin_ip, '.'));
-            }
-            if ($admin_ip == $temp_ip) {
+            $ruleIp = trim($val);
+            if ($ruleIp !== '' && getIpMatch($temp_ip, $ruleIp)) {
                 $ip_check = true;
                 break;
             } else {

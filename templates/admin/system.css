@@ -31,7 +31,7 @@
 .sl_blue { color: #0000ff; }
 
 /* Вспомогательный текст */
-.sl_small { margin: 5px; text-align: justify; font-style: italic; }
+.sl_small { margin: 5px; font-style: italic; }
 
 /* Оформление label в optgroup */
 .sl_label { font-weight: bold; }

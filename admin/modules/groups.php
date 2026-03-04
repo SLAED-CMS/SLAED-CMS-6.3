@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright (c) 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -183,4 +183,3 @@ switch ($op) {
     case 'pointssave': pointssave(); break;
     case 'info': info(); break;
 }
-

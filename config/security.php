@@ -7,7 +7,6 @@
 return [
     'security' => [
         'admin_ip'       => '',
-        'admin_mask'     => '4',
         'afile'          => 'admin',
         'block'          => '1',
         'blocker_cookie' => 'banned',

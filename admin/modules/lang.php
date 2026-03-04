@@ -1,11 +1,10 @@
 <?php
 # Author: Eduard Laas
-# Copyright (c) 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
-require_once CONFIG_DIR.'/lang.php';
 
 function navi(int $tab = 0, int $subtab = 0): string {
     $ops = ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
@@ -40,11 +39,9 @@ function lang(): void {
     $cont = navi(0, 0);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-
     $sys_admin = '<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
     $sys_modul = '<a href="'.$afile.'.php?name=lang&amp;op=editfile" title="'._FULLEDIT.'">'._MODUL.'</a>';
     $cont .= '<tr><td>1</td><td>'._SYSTEM.'</td><td>'._ALL.'</td><td>'._MVALL.'</td><td>'.ad_status('', 1).'</td><td>'.add_menu($sys_admin.'||'.$sys_modul).'</td></tr>';
-
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
     foreach ($files as $file) {
@@ -112,13 +109,10 @@ function editfile(): void {
     $cnst_arr = array_diff($cnst_arr, $gl_tmp);
     unset($gl_tmp, $sch_tmp, $cnst_tmp);
     sort($cnst_arr);
-
-    // Pagination
     $total = count($cnst_arr);
     $total_pages = max(1, (int)ceil($total / $per_page));
     $page = max(1, min($page, $total_pages));
     $offset = ($page - 1) * $per_page;
-
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     $ci = min($per_page, $total - $offset);
@@ -153,11 +147,8 @@ function editfile(): void {
     $cont .= '<input type="hidden" name="op" value="save">';
     $cont .= '<input type="hidden" name="refer" value="1">';
     $cont .= '<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-
-    // Pagination via setPageNumbers()
     $url = 'name=lang&op=editfile&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
     $cont .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');
-
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
@@ -176,8 +167,6 @@ function save(): void {
     for ($j = 0; $j < $cj; $j++) {
         $lng_cnj = $lng_cn[$j];
         $lng_src = $lang_path.'/'.$lng_cnj.'.php';
-
-        // Read existing constants from file
         $existing = [];
         if (file_exists($lng_src)) {
             $lng = file_get_contents($lng_src);
@@ -187,8 +176,6 @@ function save(): void {
                 $existing[$matches[1][$k]] = $matches[2][$k];
             }
         }
-
-        // Update with submitted constants
         $ci = count($cnst);
         for ($i = 0; $i < $ci; $i++) {
             if (empty($cnst[$i])) continue;
@@ -199,8 +186,6 @@ function save(): void {
             $cont = trim(str_replace($in, $ou, $lng[$lng_cnj][$i]));
             $existing[$cons] = $cont;
         }
-
-        // Write all constants back (submitted + existing)
         $lng_str = '<?php'.PHP_EOL.'# Author: Eduard Laas'.PHP_EOL.'# Copyright (c) 2005 - '.date('Y').' SLAED'.PHP_EOL.'# License: GNU GPL 3'.PHP_EOL.'# Website: slaed.net'.PHP_EOL.PHP_EOL;
         foreach ($existing as $cons => $cont) {
             $cons_esc = str_replace("'", "\\'", $cons);
@@ -258,4 +243,3 @@ switch ($op) {
     case 'confsave': confsave(); break;
     case 'info': info(); break;
 }
-

@@ -85,11 +85,7 @@ function addLog(): bool {
     $url = filterText((string)getenv('REQUEST_URI'));
     $refer = getReferer();
     $ref = $refer ? PHP_EOL._REFERER.': '.$refer : '';
-    if (is_array($user) && isset($user[1]) && $user[1] !== null) {
-        $luser = substr((string)$user[1], 0, 25);
-    } else {
-        $luser = substr(_ANONYM, 0, 25);
-    }
+    $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
     $log = LOGS_DIR.'/log.log';
     $max = $conf['security']['log_size'] ?? 10485760;
     $fhandle = fopen($log, 'ab');
@@ -121,25 +117,14 @@ if ($bcookie == 'block') {
         $uagt = md5(getAgent());
         foreach ($bip as $val) {
             if ($val != '') {
-                $binfo = explode('|', $val);
-                if (time() <= $binfo[3]) {
-                    $ipt = $iptbase;
-                    $ipb = $binfo[0];
-                    if ($binfo[1] <= 3) {
-                        $ipt = substr($ipt, 0, strrpos($ipt, '.'));
-                        $ipb = substr($ipb, 0, strrpos($ipb, '.'));
-                    }
-                    if ($binfo[1] <= 2) {
-                        $ipt = substr($ipt, 0, strrpos($ipt, '.'));
-                        $ipb = substr($ipb, 0, strrpos($ipb, '.'));
-                    }
-                    if ($binfo[1] == 1) {
-                        $ipt = substr($ipt, 0, strrpos($ipt, '.'));
-                        $ipb = substr($ipb, 0, strrpos($ipb, '.'));
-                    }
-                    if ((!$binfo[2] && $ipt == $ipb) || ($binfo[2] && $ipt == $ipb && $uagt == $binfo[2])) {
-                        setCookies($conf['security']['blocker_cookie'], $binfo[3], 'block');
-                        $btext = _BANN_INFO.'<br>'._BANN_TERM.': '.getTimeLeft($binfo[3]).'<br>'._BANN_REAS.': '.$binfo[4];
+                $binfo = explode('|', $val, 4);
+                if (count($binfo) < 4) continue;
+                $cidr = getIpCidr($binfo[0]);
+                if ($cidr === false) continue;
+                if (time() <= (int)$binfo[2]) {
+                    if ((!$binfo[1] && getIpMatch($iptbase, $cidr)) || ($binfo[1] && getIpMatch($iptbase, $cidr) && $uagt == $binfo[1])) {
+                        setCookies($conf['security']['blocker_cookie'], $binfo[2], 'block');
+                        $btext = _BANN_INFO.'<br>'._BANN_TERM.': '.getTimeLeft($binfo[2]).'<br>'._BANN_REAS.': '.$binfo[3];
                         setExit($btext);
                     }
                 }
@@ -150,9 +135,10 @@ if ($bcookie == 'block') {
     if ($bus && $user) {
         foreach ($bus as $val) {
             if ($val != '') {
-                $tus = substr($user[1], 0, 25);
+                $tus = isset($user[1]) ? substr((string)$user[1], 0, 25) : '';
                 $uinfo = explode('|', $val);
-                if (time() <= $uinfo[1]) {
+                if (count($uinfo) < 3) continue;
+                if (time() <= (int)$uinfo[1]) {
                     if ($tus == $uinfo[0]) {
                         setCookies($conf['security']['blocker_cookie'], $uinfo[1], 'block');
                         $utext = _BANN_INFO.'<br>'._BANN_TERM.': '.getTimeLeft($uinfo[1]).'<br>'._BANN_REAS.': '.$uinfo[2];
@@ -166,17 +152,9 @@ if ($bcookie == 'block') {
 
 if ($conf['security']['error_log']) {
     $ls = fn(string $s, int $max = 2048): string => substr(str_replace(["\r", "\n", "\0"], ' ', trim($s)), 0, $max);
-    $lredact = function(array $arr): array {
-        foreach (array_keys($arr) as $k) {
-            if (preg_match('/(pass|token|auth|secret|key|session|csrf)/i', (string)$k)) {
-                $arr[$k] = '[REDACTED]';
-            }
-        }
-        return $arr;
-    };
 
-    // Bound array: max 50 keys, string values max 1024 chars, then redact
-    $lbound = function(array $arr) use ($lredact): array {
+    // Bound array: max 50 keys, string values max 1024 chars
+    $lbound = function(array $arr): array {
         if (count($arr) > 50) {
             $arr = array_slice($arr, 0, 50, true);
             $arr['*_truncated'] = true;
@@ -188,7 +166,7 @@ if ($conf['security']['error_log']) {
                 $arr[$k] = '[array:'.count($v).']';
             }
         }
-        return $lredact($arr);
+        return $arr;
     };
 
     // Bounded request context (structured, no raw superglobal dumps)
@@ -388,7 +366,7 @@ if ($conf['security']['error_log']) {
         if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
             $log = LOGS_DIR.'/error_php.log';
             $ua = $ls($_SERVER['HTTP_USER_AGENT'] ?? '', 512);
-            $url = $ls((string)($_SERVER['REQUEST_URI'] ?? ''), 2048);
+            $url = $ls($_SERVER['REQUEST_URI'] ?? '', 2048);
             $fp = $lfp('php', $e['file'], (string)$e['line'], $e['message']);
             $row = [
                 'ts' => date('c'),
@@ -454,7 +432,7 @@ if (!isAdmin(true)) {
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
             $char = '#\([^>]*\"?[^)]*\)#';
-            $quote = '#\"|\'|\.\.\/|\*#';
+            $quote = '#\'|\.\.\/#';
             $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);
@@ -544,22 +522,26 @@ if (!isAdmin(true)) {
         function checkFiles($name, $val) {
             $type = '#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i';
             if (isset($_FILES['userfile'])) {
-                $val = strtolower(substr(strrchr($_FILES['userfile']['name'], '.'), 1));
-                if (preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
+                $dot = strrchr($_FILES['userfile']['name'], '.');
+                $val = ($dot !== false) ? strtolower(substr($dot, 1)) : '';
+                if ($val !== '' && preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
             } elseif (isset($_FILES['file'])) {
-                if (is_array($_FILES['file'])) {
+                if (is_array($_FILES['file']['name'])) {
                     $files = count($_FILES['file']['name']);
                     for ($i = 0; $i < $files; $i++) {
-                        $val = strtolower(substr(strrchr($_FILES['file']['name'][$i], '.'), 1));
-                        if (preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
+                        $dot = strrchr($_FILES['file']['name'][$i], '.');
+                        $val = ($dot !== false) ? strtolower(substr($dot, 1)) : '';
+                        if ($val !== '' && preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
                     }
                 } else {
-                    $val = strtolower(substr(strrchr($_FILES['file']['name'], '.'), 1));
-                    if (preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
+                    $dot = strrchr($_FILES['file']['name'], '.');
+                    $val = ($dot !== false) ? strtolower(substr($dot, 1)) : '';
+                    if ($val !== '' && preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
                 }
-            } else {
-                $val = strtolower(substr(strrchr($_FILES[$name]['name'], '.'), 1));
-                if (preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
+            } elseif (isset($_FILES[$name]['name'])) {
+                $dot = strrchr($_FILES[$name]['name'], '.');
+                $val = ($dot !== false) ? strtolower(substr($dot, 1)) : '';
+                if ($val !== '' && preg_match($type, $val)) addHackReport('Hack in FILES - '.$name.' = '.$val);
             }
         }
         function getFiles($in) {
@@ -594,7 +576,7 @@ function isAdmin(bool $super = false): bool {
         [$aname, $apwd, $aip, $asuper] = $db->getSqlRow($db->getSqlQuery('SELECT name, pwd, ip, super FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id])) ?? ['', '', '', '0'];
         if ($aname !== '' && $aname === $name && $apwd !== '' && hash_equals($apwd, $pwd) && $aip !== '' && $aip === $ip) {
             $cache[0] = true;
-            $cache[1] = ($asuper === '1');
+            $cache[1] = ((int)$asuper === 1);
             return $cache[$key];
         }
     }
@@ -658,6 +640,82 @@ function getIp(): string {
     return '0.0.0.0';
 }
 
+# Return IP family: 4, 6 or 0 (invalid)
+function getIpFamily(string $ip): int {
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) return 4;
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) return 6;
+    return 0;
+}
+
+# Normalize IP to canonical text representation
+function getIpNorm(string $ip): string|false {
+    $fam = getIpFamily($ip);
+    if (!$fam) return false;
+    $pack = inet_pton($ip);
+    if ($pack === false) return false;
+    $norm = inet_ntop($pack);
+    return $norm === false ? false : $norm;
+}
+
+# Normalize CIDR (accepts "ip" and converts to host prefix)
+function getIpCidr(string $cidr): string|false {
+    $cidr = trim($cidr);
+    if ($cidr === '') return false;
+
+    if (!str_contains($cidr, '/')) {
+        $ip = getIpNorm($cidr);
+        if ($ip === false) return false;
+        $fam = getIpFamily($ip);
+        $pre = ($fam === 4) ? 32 : 128;
+        return $ip.'/'.$pre;
+    }
+
+    [$ip, $pre] = explode('/', $cidr, 2);
+    $ip = getIpNorm($ip);
+    if ($ip === false) return false;
+    if (!preg_match('#^\d+$#', $pre)) return false;
+    $pre = (int)$pre;
+    $fam = getIpFamily($ip);
+    $max = ($fam === 4) ? 32 : 128;
+    if ($pre < 0 || $pre > $max) return false;
+    return $ip.'/'.$pre;
+}
+
+# Match IP against CIDR
+function getIpMatch(string $ip, string $cidr): bool {
+    $ip = getIpNorm($ip);
+    $cidr = getIpCidr($cidr);
+    if ($ip === false || $cidr === false) return false;
+
+    [$rip, $pre] = explode('/', $cidr, 2);
+    $pre = (int)$pre;
+    $fam = getIpFamily($ip);
+    if (!$fam || $fam !== getIpFamily($rip)) return false;
+
+    $ipp = inet_pton($ip);
+    $rpp = inet_pton($rip);
+    if ($ipp === false || $rpp === false) return false;
+
+    $bytes = intdiv($pre, 8);
+    $rest = $pre % 8;
+    if ($bytes > 0 && substr($ipp, 0, $bytes) !== substr($rpp, 0, $bytes)) return false;
+    if ($rest === 0) return true;
+
+    $mbyte = (0xFF << (8 - $rest)) & 0xFF;
+    $ibyte = ord($ipp[$bytes]);
+    $rbyte = ord($rpp[$bytes]);
+    return ($ibyte & $mbyte) === ($rbyte & $mbyte);
+}
+
+# Return host CIDR for an IP (/32 or /128)
+function getIpHostCidr(string $ip): string|false {
+    $ip = getIpNorm($ip);
+    if ($ip === false) return false;
+    $fam = getIpFamily($ip);
+    $pre = ($fam === 4) ? 32 : 128;
+    return $ip.'/'.$pre;
+}
+
 # Get user agent
 function getAgent(): string {
     $uagt = getenv('HTTP_USER_AGENT');
@@ -686,7 +744,7 @@ function getReferer(): string {
 # Determine active locale, load main language file, set language cookie
 function setLang(): void {
     global $locale, $conf;
-    $mlang = (string)($conf['language'] ?? 'en');
+    $mlang = $conf['language'] ?? 'en';
     $mult = ((int)($conf['multilingual'] ?? 0) === 1);
     if ($mult) {
         $newlang = getVar('req', 'newlang', 'var', '');
@@ -713,7 +771,7 @@ function getLang(string $module = '', bool $admin = false): string {
     global $locale, $conf;
     static $lmods = [];
     if ($module === '') return $locale;
-    $mlang = (string)($conf['language'] ?? 'en');
+    $mlang = $conf['language'] ?? 'en';
     $ctx = $admin ? 'a' : 'f';
     $key = $module.'|'.$ctx.'|'.$locale;
     if (!array_key_exists($key, $lmods)) {
@@ -878,7 +936,9 @@ function filterText(string|array $message, int $type = 0): string {
     }
     if (!isAdmin() && $conf['censor'] && $type !== 1) {
         foreach (explode(',', $conf['censor_l']) as $val) {
-            $message = preg_replace('#'.$val.'#i', $conf['censor_r'], $message);
+            $val = trim($val);
+            if ($val === '') continue;
+            $message = preg_replace('#' . preg_quote($val, '#') . '#i', $conf['censor_r'], $message);
         }
     }
     return $message;
@@ -991,11 +1051,14 @@ function addHackReport(string $msg): void {
     $ip = getIp();
     $agent = getAgent();
     $dtime = date(_TIMESTRING);
-    $luser = is_array($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
+    $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
     if ($conf['security']['block']) {
         $btime = time() + 86400;
-        $cont = ['blocker_ip' => $conf['security']['blocker_ip'].$ip.'|4|'.md5($agent).'|'.$btime.'|'._HACK.'||'];
-        setConfigFile('security.php', $cont, $conf['security']);
+        $cidr = getIpHostCidr($ip);
+        if ($cidr !== false) {
+            $cont = ['blocker_ip' => $conf['security']['blocker_ip'].$cidr.'|'.md5($agent).'|'.$btime.'|'._HACK.'||'];
+            setConfigFile('security.php', $cont, $conf['security']);
+        }
         setCookies($conf['security']['blocker_cookie'], $btime, 'block');
     }
     if ($conf['security']['mail']) {
@@ -1034,7 +1097,7 @@ function addWarnReport(string $msg): void {
     $ip = getIp();
     $agent = getAgent();
     $dtime = date(_TIMESTRING);
-    $luser = is_array($user) ? substr($user[1], 0, 25) : substr(_ANONYM, 0, 25);
+    $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
     if ($conf['security']['mail_w']) {
         $subject = $conf['sitename'].' - '._SECURITY;
         $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._WARN.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$luser.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$dtime;
