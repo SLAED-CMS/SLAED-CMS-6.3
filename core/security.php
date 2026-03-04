@@ -938,7 +938,7 @@ function filterText(string|array $message, int $type = 0): string {
         foreach (explode(',', $conf['censor_l']) as $val) {
             $val = trim($val);
             if ($val === '') continue;
-            $message = preg_replace('#' . preg_quote($val, '#') . '#i', $conf['censor_r'], $message);
+            $message = preg_replace('#'.preg_quote($val, '#').'#i', $conf['censor_r'], $message);
         }
     }
     return $message;
@@ -955,7 +955,7 @@ function getEd2kLink(array $m): string {
     $href = 'url='.$m[2];
     $fname = rawurldecode($m[3]);
     $fname = str_replace(['&#038;', '&amp;'], '&', $fname);
-    $size = files_size($m[4]);
+    $size = filterSize($m[4]);
     return ' eMule/eDonkey: ['.$href.']'.filterCut($fname, 50).'[/url] - '._SIZE.': '.$size;
 }
 

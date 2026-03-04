@@ -33,11 +33,11 @@ function sitemap(): void {
             fclose($handle);
         }
         $size = filesize($cfile);
-        $acont .= _FILE.': '.$cfile.'<br>'._DATE.': '.date(_TIMESTRING, filemtime($cfile)).'<br>'._SIZE.': '.files_size($size).'<br>'._URLS.': '.$n.'<br><br>';
+        $acont .= _FILE.': '.$cfile.'<br>'._DATE.': '.date(_TIMESTRING, filemtime($cfile)).'<br>'._SIZE.': '.filterSize($size).'<br>'._URLS.': '.$n.'<br><br>';
         $f++;
         $asize += $size;
     }
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.files_size($asize)]);
+    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add"><input type="submit" value="'._UPDATE.'" class="sl_but_blue"></td></tr></table></form>';

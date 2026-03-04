@@ -43,7 +43,7 @@ function security(): void {
             $path = LOGS_DIR.'/'.$file;
             $filesize = filesize($path);
             $cont .= '<tr><td>'.title_tip(_FILE.': storage/logs/'.$file).$title.'</td>'
-            .'<td>'.files_size($filesize).'</td>'
+            .'<td>'.filterSize($filesize).'</td>'
             .'<td>'.date(_TIMESTRING, filemtime($path)).'</td>'
             .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=file&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>||<a href="'.$afile.'.php?name=security&amp;op=down&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>||<a href="'.$afile.'.php?name=security&amp;op=del&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
@@ -83,7 +83,7 @@ function block(): void {
     $time = getVar('req', 'time', 'num');
     $info = getVar('req', 'info', 'text');
     $hash = getVar('req', 'hash', 'text');
-    $cidr = getVar('req', 'cidr', 'text');    
+    $cidr = getVar('req', 'cidr', 'text');
     setHead();
     $cont = navi(0, 1, 1, 0, 'security');
     $cont .= checkPerms(CONFIG_DIR.'/security.php');

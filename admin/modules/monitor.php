@@ -12,6 +12,44 @@ function navi(int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): 
     return getAdminTabs('System Monitor', 'statistic.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
+function isPathAllowed(string $path): bool {
+    $obase = ini_get('open_basedir');
+    if ($obase === false || $obase === '') {
+        return true;
+    }
+
+    $npath = str_replace('\\', '/', $path);
+    foreach (explode(PATH_SEPARATOR, $obase) as $base) {
+        $base = trim((string)$base);
+        if ($base === '' || $base === '.') {
+            continue;
+        }
+
+        $cbase = rtrim(str_replace('\\', '/', $base), '/');
+        if ($cbase === '') {
+            continue;
+        }
+
+        if ($npath === $cbase || str_starts_with($npath, $cbase.'/')) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function getFileSafe(string $path): string|false {
+    if (!isPathAllowed($path)) {
+        return false;
+    }
+    if (!is_file($path) || !is_readable($path)) {
+        return false;
+    }
+
+    $content = file_get_contents($path);
+    return ($content === false) ? false : $content;
+}
+
 function getMemoryInfo(): array {
     $free = 0;
     $total = 0;
@@ -64,7 +102,7 @@ function getMemoryInfo(): array {
             }
         }
     } else {
-        $data = file_exists('/proc/meminfo') ? file_get_contents('/proc/meminfo') : false;
+        $data = getFileSafe('/proc/meminfo');
         if ($data) {
             $data = explode("\n", $data);
             $meminfo = [];
@@ -127,12 +165,10 @@ function getCpuCores(): int {
             if ($envCores !== false && is_numeric($envCores)) $cores = (int)$envCores;
         }
     } else {
-        if (file_exists('/proc/cpuinfo')) {
-            $info = file_get_contents('/proc/cpuinfo');
-            if ($info !== false) {
-                preg_match_all('/^processor\s*:/m', $info, $matches);
-                if (!empty($matches[0])) $cores = count($matches[0]);
-            }
+        $info = getFileSafe('/proc/cpuinfo');
+        if ($info !== false) {
+            preg_match_all('/^processor\s*:/m', $info, $matches);
+            if (!empty($matches[0])) $cores = count($matches[0]);
         }
         if ($cores <= 0 && function_exists('exec')) {
             $out = [];
@@ -216,7 +252,7 @@ function getNetworkStats(): array {
             }
         }
     } else {
-        $data = file_exists('/proc/net/dev') ? file_get_contents('/proc/net/dev') : false;
+        $data = getFileSafe('/proc/net/dev');
         if ($data) {
             $lines = explode("\n", $data);
             foreach ($lines as $line) {
@@ -311,7 +347,7 @@ function getTrafficMetrics(): array {
 function getDiskIoTotals(): array {
     if (str_starts_with(strtoupper(PHP_OS), 'WIN')) return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
     $file = '/proc/diskstats';
-    if (!is_file($file) || !is_readable($file)) return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
+    if (!isPathAllowed($file) || !is_file($file) || !is_readable($file)) return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
     $read = 0.0;
     $write = 0.0;
     $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -373,7 +409,7 @@ function getDiskIoMetrics(): array {
 
 function getUptimeInfo(): string {
     if (!str_starts_with(strtoupper(PHP_OS), 'WIN')) {
-        $data = is_file('/proc/uptime') ? file_get_contents('/proc/uptime') : false;
+        $data = getFileSafe('/proc/uptime');
         if ($data !== false) {
             $sec = (int)floatval(explode(' ', trim($data))[0] ?? 0);
             if ($sec > 0) return formatUptime($sec);
@@ -417,7 +453,7 @@ function getCpuDetails(): array {
             }
         }
     } else {
-        $cpuinfo = is_file('/proc/cpuinfo') ? file_get_contents('/proc/cpuinfo') : false;
+        $cpuinfo = getFileSafe('/proc/cpuinfo');
         if ($cpuinfo !== false) {
             preg_match_all('/^physical id\s*:\s*(\d+)/m', $cpuinfo, $physIds);
             preg_match_all('/^core id\s*:\s*(\d+)/m', $cpuinfo, $coreIds);
@@ -469,6 +505,13 @@ function getDbHealth(object $db): array {
     return ['connections' => $connections, 'slow' => $slow];
 }
 
+function getUsageColor(float $pct): string {
+    if ($pct > 95) return '#ef4444';
+    if ($pct > 75) return '#f97316';
+    if ($pct > 50) return '#3b82f6';
+    return '#22c55e';
+}
+
 function monitor(): void {
     global $db, $conf, $afile;
     setHead();
@@ -500,8 +543,8 @@ function monitor(): void {
 
     // Usage Stats
     $userson = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session'));
-    $cntfile = $db->getSqlRowCount($db->getSqlQuery("SELECT lid FROM ".PREFIX_DB."_files WHERE status != '0'"));
-    $cntnews = $db->getSqlRowCount($db->getSqlQuery("SELECT sid FROM ".PREFIX_DB."_news WHERE status != '0'"));
+    $cntfile = $db->getSqlRowCount($db->getSqlQuery('SELECT lid FROM '.PREFIX_DB."_files WHERE status != '0'"));
+    $cntnews = $db->getSqlRowCount($db->getSqlQuery('SELECT sid FROM '.PREFIX_DB."_news WHERE status != '0'"));
 
     // DB Size
     $dbsize = 0;
@@ -535,6 +578,9 @@ function monitor(): void {
     $off_load = $dash - ($dash * $cpu_p / 100);
     $off_r = $dash - ($dash * $mem['percent'] / 100);
     $off_d = $dash - ($dash * $diskpct / 100);
+    $cpucolor = getUsageColor((float)$cpu_p);
+    $ramcolor = getUsageColor((float)$mem['percent']);
+    $diskcolor = getUsageColor((float)$diskpct);
 
     $uptime = getUptimeInfo();
     $dbhealth = getDbHealth($db);
@@ -549,21 +595,25 @@ function monitor(): void {
         '{%dash%}'      => $dash,
         '{%off%}'       => $off_load,
         '{%load_0%}'    => $cpu_p,
+        '{%cpucolor%}'  => $cpucolor,
         '{%cpuuse%}'    => $cpu_p,
         '{%cpucores%}'  => $cpu['logical'],
         '{%cpuphys%}'   => $cpu['physical'],
         '{%cpufreq%}'   => $cpu['freq'],
         '{%loadstr%}'   => $cpu_info,
+        '{%dash_r%}'    => $dash,
         '{%off_r%}'     => $off_r,
+        '{%ramcolor%}'  => $ramcolor,
         '{%ram_p%}'     => $mem['percent'],
-        '{%ramumb%}'    => round($mem['used'] / 1048576),
-        '{%ramtmb%}'    => round($mem['total'] / 1048576),
-        '{%ramavailmb%}' => round($mem['free'] / 1048576),
+        '{%ramumb%}'    => filterSize($mem['used']),
+        '{%ramtmb%}'    => filterSize($mem['total']),
+        '{%ramavailmb%}' => filterSize($mem['free']),
         '{%dash_d%}'    => $dash,
         '{%off_d%}'     => $off_d,
+        '{%diskcolor%}' => $diskcolor,
         '{%disk_p%}'    => $diskpct,
-        '{%diskused%}'  => files_size($disk_used),
-        '{%disktot%}'   => files_size($disk_total),
+        '{%diskused%}'  => filterSize($disk_used),
+        '{%disktot%}'   => filterSize($disk_total),
         '{%cntnews%}'   => $cntnews,
         '{%cntfile%}'   => $cntfile,
         '{%dbtabs%}'    => $dbtabs,
@@ -575,10 +625,10 @@ function monitor(): void {
         '{%phpver%}'    => PHP_VERSION,
         '{%path_up%}'   => $path_up,
         '{%path_down%}' => $path_down,
-        '{%nettx%}'     => files_size($net['tx_total']),
-        '{%netrx%}'     => files_size($net['rx_total']),
-        '{%nettxrate%}' => files_size($net['tx_rate']).'/s',
-        '{%netrxrate%}' => files_size($net['rx_rate']).'/s',
+        '{%nettx%}'     => filterSize($net['tx_total']),
+        '{%netrx%}'     => filterSize($net['rx_total']),
+        '{%nettxrate%}' => filterSize($net['tx_rate']).'/s',
+        '{%netrxrate%}' => filterSize($net['rx_rate']).'/s',
         '{%opmode%}'    => $statusOn(!($conf['close'] ?? 0)),
         '{%statact%}'   => $statusOn(is_active('stat')),
         '{%referact%}'  => $statusOn(is_active('referers')),
@@ -593,7 +643,7 @@ function monitor(): void {
         '{%fwclass%}'   => ($firewall['on'] === null) ? 'sw-status-gray' : ($firewall['on'] ? 'sw-status-green' : 'sw-status-red'),
         '{%phpsapi%}'   => php_sapi_name(),
         '{%gdver%}'     => $gd['GD Version'] ?? 'N/A',
-        '{%dbszfmt%}'   => files_size($dbsize),
+        '{%dbszfmt%}'   => filterSize($dbsize),
         '{%postmax%}'   => ini_get('post_max_size'),
         '{%fileup%}'    => $statusOn((bool)ini_get('file_uploads')),
         '{%upmax%}'     => ini_get('upload_max_filesize'),
@@ -603,12 +653,12 @@ function monitor(): void {
         '{%gzipld%}'    => $statusOn(extension_loaded('zlib')),
         '{%zipld%}'     => $statusOn(extension_loaded('zip')),
         '{%phptime%}'   => date('H:i:s'),
-        '{%diskfree%}'  => files_size($disk_free),
+        '{%diskfree%}'  => filterSize($disk_free),
         '{%uptime%}'    => $uptime,
         '{%dbconn%}'    => $dbhealth['connections'],
         '{%dbslow%}'    => $dbhealth['slow'],
-        '{%dskread%}'   => ($diskio['read_rate'] === null) ? 'N/A' : files_size((int)$diskio['read_rate']).'/s',
-        '{%dskwrite%}'  => ($diskio['write_rate'] === null) ? 'N/A' : files_size((int)$diskio['write_rate']).'/s',
+        '{%dskread%}'   => ($diskio['read_rate'] === null) ? 'N/A' : filterSize((int)$diskio['read_rate']).'/s',
+        '{%dskwrite%}'  => ($diskio['write_rate'] === null) ? 'N/A' : filterSize((int)$diskio['write_rate']).'/s',
         '{%diskwarn%}'  => $diskwarn,
         '{%quicklinks%}' => $quick,
     ]);

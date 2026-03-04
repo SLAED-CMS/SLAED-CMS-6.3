@@ -749,7 +749,7 @@ function edithome(): void {
         .'</table></form>';
         $asetup = '<table class="sl_table_form">';
         $avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['user_avatar'])) ? $userinfo['user_avatar'] : 'default/00.gif';
-        $asetup .= '<tr><td>'._AVATAR.':<div class="sl_small">'.sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], files_size($conf['users']['amaxsize'])).'</div></td><td><img src="'.$conf['users']['adirectory'].'/'.$avatar.'" alt="'._AVATAR.'" title="'._AVATAR.'" class="sl_avatar"></td></tr>';
+        $asetup .= '<tr><td>'._AVATAR.':<div class="sl_small">'.sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize'])).'</div></td><td><img src="'.$conf['users']['adirectory'].'/'.$avatar.'" alt="'._AVATAR.'" title="'._AVATAR.'" class="sl_avatar"></td></tr>';
         $asetup .= '</table>';
         if ($conf['users']['aupload']) {
             $asetup .= '<hr><form enctype="multipart/form-data" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'

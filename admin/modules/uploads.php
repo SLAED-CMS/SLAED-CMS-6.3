@@ -63,7 +63,7 @@ function uploads(): void {
             }
             closedir($handle);
         }
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.deflmconst($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.files_size($affilesize)]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.deflmconst($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -86,7 +86,7 @@ function uploads(): void {
             }
             closedir($handle);
         }
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.deflmconst($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.files_size($atfilesize)]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.deflmconst($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }

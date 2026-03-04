@@ -231,7 +231,7 @@ function config(): void {
         $f++;
         $asize += $size;
     }
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _DIR.': config/cache<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.files_size($asize)]);
+    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _DIR.': config/cache<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
     $cont .= '<table class="sl_table_conf">'
     .'<tr><td>'._CACHE.':</td><td>'
     .'<select name="cache" class="sl_conf">'

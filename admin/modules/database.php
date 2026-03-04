@@ -66,11 +66,11 @@ function database(): void {
 
         // Darstellung Data_free
         if ($tabeng === 'InnoDB') {
-            $tabsizefrc = '<div class="sl_hidden">'.files_size($tabsizefr).'</div>';
+            $tabsizefrc = '<div class="sl_hidden">'.filterSize($tabsizefr).'</div>';
         } else {
             $tabsizefrc = $tabsizefr
-                ? '<div class="sl_red">'.files_size($tabsizefr).'</div>'
-                : '<div class="sl_green">'.files_size($tabsizefr).'</div>';
+                ? '<div class="sl_red">'.filterSize($tabsizefr).'</div>'
+                : '<div class="sl_green">'.filterSize($tabsizefr).'</div>';
         }
 
         // --- Status / Actions depending on mode ---
@@ -123,7 +123,7 @@ function database(): void {
                   .'<td>'.$tabloc.'</td>'
                   .'<td>'.$rows.'</td>'
                   .'<td>'.format_time($crtime, _TIMESTRING).'</td>'
-                  .'<td>'.files_size($tabsize).'</td>'
+                  .'<td>'.filterSize($tabsize).'</td>'
                   .'<td>'.$tabsizefrc.'</td>'
                   .'<td>'.$ftitletd.'</td>'
                   .'</tr>';
@@ -137,8 +137,8 @@ function database(): void {
               .'<td>&nbsp;</td>'
               .'<td><strong>'.$total_rows.'</strong></td>'
               .'<td>&nbsp;</td>'
-              .'<td><strong>'.files_size($total).'</strong></td>'
-              .'<td><strong>'.files_size($totalfree).'</strong></td>'
+              .'<td><strong>'.filterSize($total).'</strong></td>'
+              .'<td><strong>'.filterSize($totalfree).'</strong></td>'
               .'<td>&nbsp;</td>'
               .'</tr>';
 
@@ -182,8 +182,8 @@ function database(): void {
         $cont = navi(0, 1, 0, 0);
 
         $info = _OPTIMIZE.': '.$conf['db']['name']
-                  .'<br>'._TOTALSPACE.': '.files_size($total)
-                  .'<br>'._TOTALFREE.': '.files_size($totalfree);
+                  .'<br>'._TOTALSPACE.': '.filterSize($total)
+                  .'<br>'._TOTALFREE.': '.filterSize($totalfree);
 
         $cont .= setTemplateWarning('warn', [
             'time' => '',
@@ -196,8 +196,8 @@ function database(): void {
         $cont = navi(0, 2, 0, 0);
 
         $info = _REPAIR.': '.$conf['db']['name']
-                  .'<br>'._TOTALSPACE.': '.files_size($total)
-                  .'<br>'._TOTALFREE.': '.files_size($totalfree);
+                  .'<br>'._TOTALSPACE.': '.filterSize($total)
+                  .'<br>'._TOTALFREE.': '.filterSize($totalfree);
 
         $cont .= setTemplateWarning('warn', [
             'time' => '',

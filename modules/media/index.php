@@ -209,7 +209,7 @@ function view(): void {
                     if ($val != '') {
                         if (substr($val, 0, 4) == 'ed2k') {
                             $esize = explode('|', $val);
-                            $size = ($esize[3]) ? _SIZE.': '.files_size($esize[3]) : '';
+                            $size = ($esize[3]) ? _SIZE.': '.filterSize($esize[3]) : '';
                             $elink = '<a href="'.$val.'" target="_blank" title="'._URL.' '.$e.' - '.$size.'" class="sl_ed2k">'._URL.' '.$e.' - '.$size.'</a>';
                             $mlinks .= (!$i) ? $elink : '<br>'.$elink;
                             $e++;

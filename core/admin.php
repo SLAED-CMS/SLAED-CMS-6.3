@@ -852,7 +852,7 @@ function ashow_files(): void {
                 }
                 $show = (in_array(true, checkCompress(), true)) ? "||<a OnClick=\"AjaxLoad('GET', '0', 'f".$id."', 'go=5&amp;op=ashow_files&amp;id=".$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1]."', ''); return false;\" title=\""._ZIP.'">'._ZIP.'</a>' : '';
                 $show .= "||<a OnClick=\"AjaxLoad('GET', '0', 'f".$id."', 'go=5&amp;op=ashow_files&amp;id=".$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1]."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>';
-                $contents[] = '<tr><td>'.$img.'</td><td>'.$dirfile.'</td><td>'.date(_TIMESTRING, $entry[0]).'</td><td>'.files_size($filesize).'</td><td>'.$isize.'</td><td>'.add_menu($show).'</td></tr>';
+                $contents[] = '<tr><td>'.$img.'</td><td>'.$dirfile.'</td><td>'.date(_TIMESTRING, $entry[0]).'</td><td>'.filterSize($filesize).'</td><td>'.$isize.'</td><td>'.add_menu($show).'</td></tr>';
                 $a++;
             }
         }

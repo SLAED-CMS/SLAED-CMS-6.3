@@ -193,7 +193,7 @@ function view(): void {
         $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=files_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=files_delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
         $favorites = getFavorBtn($id, $conf['name']);
         $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
-        $size = _SIZE.': '.files_size($fsize);
+        $size = _SIZE.': '.filterSize($fsize);
         $version = _VERSION.': '.$fversion;
         if (is_user() || $conf['files']['down'] == '1') {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
@@ -252,7 +252,7 @@ function add(): void {
         $fversion = getVar('post', 'fversion', 'text');
         $fsize = getVar('post', 'fsize', 'num');
         $info = _ADDFNOTE;
-        if ($conf['files']['upload'] == 1) $info .= sprintf(_ADDFNOTE2, str_replace(',', ', ', $conf['files']['typefile']), files_size($conf['files']['max_size']));
+        if ($conf['files']['upload'] == 1) $info .= sprintf(_ADDFNOTE2, str_replace(',', ', ', $conf['files']['typefile']), filterSize($conf['files']['max_size']));
         $info .= ' '._ADDFNOTE3;
         setHead(['title' => _ADD]);
         $cont = navigate(_ADD);

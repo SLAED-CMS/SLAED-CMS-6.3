@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -2484,7 +2484,7 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
 
 # Transliteration
 function getTranslit(string $st, string $lo = ''): string {
-    $st = strtr($st, ['а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ж' => 'g', 'з' => 'z', 'и' => 'i', 'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f', 'ы' => 'i', 'э' => 'e', 'А' => 'A', 'Б' => 'B', 'В' => 'V', 'Г' => 'G', 'Д' => 'D', 'Е' => 'E', 'Ж' => 'G', 'З' => 'Z', 'И' => 'I', 'Й' => 'Y', 'К' => 'K', 'Л' => 'L', 'М' => 'M', 'Н' => 'N', 'О' => 'O', 'П' => 'P', 'Р' => 'R', 'С' => 'S', 'Т' => 'T', 'У' => 'U', 'Ф' => 'F', 'Ы' => 'I', 'Э' => 'E', 'ё' => 'yo', 'х' => 'h', 'ц' => 'ts', 'ч' => 'ch', 'ш' => 'sh', 'щ' => 'shch', 'ъ' => '', 'ь' => '', 'ю' => 'yu', 'я' => 'ya', 'Ё' => 'Yo', 'Х' => 'H', 'Ц' => 'Ts', 'Ч' => 'Ch', 'Ш' => 'Sh', 'Щ' => 'Shch', 'Ъ' => '', 'Ь' => '', 'Ю' => 'Yu', 'Я' => 'Ya']);
+    $st = strtr($st, ['Ð°' => 'a', 'Ð±' => 'b', 'Ð²' => 'v', 'Ð³' => 'g', 'Ð´' => 'd', 'Ðµ' => 'e', 'Ð¶' => 'g', 'Ð·' => 'z', 'Ð¸' => 'i', 'Ð¹' => 'y', 'Ðº' => 'k', 'Ð»' => 'l', 'Ð¼' => 'm', 'Ð½' => 'n', 'Ð¾' => 'o', 'Ð¿' => 'p', 'Ñ€' => 'r', 'Ñ' => 's', 'Ñ‚' => 't', 'Ñƒ' => 'u', 'Ñ„' => 'f', 'Ñ‹' => 'i', 'Ñ' => 'e', 'Ð' => 'A', 'Ð‘' => 'B', 'Ð’' => 'V', 'Ð“' => 'G', 'Ð”' => 'D', 'Ð•' => 'E', 'Ð–' => 'G', 'Ð—' => 'Z', 'Ð˜' => 'I', 'Ð™' => 'Y', 'Ðš' => 'K', 'Ð›' => 'L', 'Ðœ' => 'M', 'Ð' => 'N', 'Ðž' => 'O', 'ÐŸ' => 'P', 'Ð ' => 'R', 'Ð¡' => 'S', 'Ð¢' => 'T', 'Ð£' => 'U', 'Ð¤' => 'F', 'Ð«' => 'I', 'Ð­' => 'E', 'Ñ‘' => 'yo', 'Ñ…' => 'h', 'Ñ†' => 'ts', 'Ñ‡' => 'ch', 'Ñˆ' => 'sh', 'Ñ‰' => 'shch', 'ÑŠ' => '', 'ÑŒ' => '', 'ÑŽ' => 'yu', 'Ñ' => 'ya', 'Ð' => 'Yo', 'Ð¥' => 'H', 'Ð¦' => 'Ts', 'Ð§' => 'Ch', 'Ð¨' => 'Sh', 'Ð©' => 'Shch', 'Ðª' => '', 'Ð¬' => '', 'Ð®' => 'Yu', 'Ð¯' => 'Ya']);
     $st = empty($lo) ? $st : mb_strtolower($st);
     $st = preg_replace('#[^a-zA-Z0-9]#', '', $st);
     $st = trim($st);
@@ -2524,7 +2524,7 @@ function getHint(mixed $val, int $typ = 0, int $mod = 0, int $flg = 0, int $cut 
     $red = $ok ? 'sl_red sl_note'   : 'sl_green sl_note';
     $r5  = $ok ? _RATE5 : _RATE1;
     $r1  = $ok ? _RATE1 : _RATE5;
-    $acon = $usef ? files_size((string)$val) : $val;
+    $acon = $usef ? filterSize((string)$val) : $val;
     if ($cut > 0) $acon = cutstr((string)$acon, $cut);
     $info = !empty($tit) ? ' - '.$tit : '';
     switch ($typ) {
@@ -2687,6 +2687,31 @@ function getCpuLoad(int $tcache = 2): array {
     static $cache = ['time' => 0, 'cpu' => _NO_INFO, 'info' => _NO_INFO];
     if (time() - $cache['time'] < $tcache) return [$cache['cpu'], $cache['info']];
     $percent = null;
+    $allow = static function (string $path): bool {
+        $obase = ini_get('open_basedir');
+        if ($obase === false || $obase === '') return true;
+
+        $npath = str_replace('\\', '/', $path);
+        foreach (explode(PATH_SEPARATOR, $obase) as $base) {
+            $base = trim((string)$base);
+            if ($base === '' || $base === '.') continue;
+
+            $cbase = rtrim(str_replace('\\', '/', $base), '/');
+            if ($cbase === '') continue;
+
+            if ($npath === $cbase || str_starts_with($npath, $cbase.'/')) {
+                return true;
+            }
+        }
+        return false;
+    };
+    $rfile = static function (string $path) use ($allow): string|false {
+        if (!$allow($path)) return false;
+        if (!is_file($path) || !is_readable($path)) return false;
+
+        $content = file_get_contents($path);
+        return ($content === false) ? false : $content;
+    };
     if (stristr(PHP_OS, 'WIN')) {
         $out = [];
         $cmd = 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | Measure-Object -Property LoadPercentage -Average).Average"';
@@ -2713,17 +2738,16 @@ function getCpuLoad(int $tcache = 2): array {
             $tmp = sys_getloadavg();
             if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
         }
-        if (!isset($raw) && file_exists('/proc/loadavg')) {
-            $tmp = explode(' ', file_get_contents('/proc/loadavg'));
+        $loadavg = $rfile('/proc/loadavg');
+        if (!isset($raw) && $loadavg !== false) {
+            $tmp = explode(' ', $loadavg);
             if (isset($tmp[0]) && is_numeric($tmp[0])) $raw = (float)$tmp[0];
         }
         $nproc = 0;
-        if (file_exists('/proc/cpuinfo')) {
-            $info = file_get_contents('/proc/cpuinfo');
-            if ($info !== false) {
-                preg_match_all('/^processor\s*:/m', $info, $matches);
-                if (!empty($matches[0])) $nproc = count($matches[0]);
-            }
+        $info = $rfile('/proc/cpuinfo');
+        if ($info !== false) {
+            preg_match_all('/^processor\s*:/m', $info, $matches);
+            if (!empty($matches[0])) $nproc = count($matches[0]);
         }
         if ($nproc <= 0) $nproc = 1;
         if (isset($raw) && is_numeric($raw)) $percent = ($raw / $nproc) * 10.0;
@@ -2748,7 +2772,7 @@ function getVariables(): string {
     if ($cvar[1]) {
         list($cpu, $info) = getCpuLoad(4);
         $cpucont = _PLOAD.': '.getHint($cpu, 0, 0, 0, 0, 0, 50, 80, $info).' % <progress max="100" value="'.$cpu.'">'.$cpu.' %</progress>';
-        $memcont = _MEML.': '.getHint(memory_get_usage(), 0, 0, 0, 0, 1, 10485760, 20971520, 0).' <progress max="'.(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024).'" value="'.memory_get_usage().'">'.files_size(memory_get_usage()).'</progress>';
+        $memcont = _MEML.': '.getHint(memory_get_usage(), 0, 0, 0, 0, 1, 10485760, 20971520, 0).' <progress max="'.(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024).'" value="'.memory_get_usage().'">'.filterSize(memory_get_usage()).'</progress>';
         $cont .= '<fieldset class="sl_sys_var"><legend style="color: darkgreen;">'._SYSTEM_INFO.'</legend>'.$cpucont.'<br>'.$memcont.'<br>'.getTimeLoads().'</fieldset>';
     }
     if ($cvar[2] && $_POST) $cont .= '<fieldset class="sl_sys_var"><legend style="color: green;">'._AVARIABLES.': POST</legend>'.htmlspecialchars(print_r($_POST, true)).'</fieldset>';
@@ -2840,16 +2864,16 @@ function getSeoUrl(array $params): string {
 function filterSlug(string $text, string $sep = '-'): string {
     $text = trim($text);
     static $rus = [
-        'А' => 'A',  'Б' => 'B',  'В' => 'V',  'Г' => 'G',  'Д' => 'D',  'Е' => 'E',  'Ё' => 'E',  'Ж' => 'Zh',
-        'З' => 'Z',  'И' => 'I',  'Й' => 'I',  'К' => 'K',  'Л' => 'L',  'М' => 'M',  'Н' => 'N',  'О' => 'O',
-        'П' => 'P',  'Р' => 'R',  'С' => 'S',  'Т' => 'T',  'У' => 'U',  'Ф' => 'F',  'Х' => 'Kh', 'Ц' => 'Ts',
-        'Ч' => 'Ch', 'Ш' => 'Sh', 'Щ' => 'Shch', 'Ы' => 'Y', 'Э' => 'E', 'Ю' => 'Yu', 'Я' => 'Ya',
-        'Ъ' => '',   'Ь' => '',
-        'а' => 'a',  'б' => 'b',  'в' => 'v',  'г' => 'g',  'д' => 'd',  'е' => 'e',  'ё' => 'e',  'ж' => 'zh',
-        'з' => 'z',  'и' => 'i',  'й' => 'i',  'к' => 'k',  'л' => 'l',  'м' => 'm',  'н' => 'n',  'о' => 'o',
-        'п' => 'p',  'р' => 'r',  'с' => 's',  'т' => 't',  'у' => 'u',  'ф' => 'f',  'х' => 'kh', 'ц' => 'ts',
-        'ч' => 'ch', 'ш' => 'sh', 'щ' => 'shch', 'ы' => 'y', 'э' => 'e', 'ю' => 'yu', 'я' => 'ya',
-        'ъ' => '',   'ь' => '',
+        'Ð' => 'A',  'Ð‘' => 'B',  'Ð’' => 'V',  'Ð“' => 'G',  'Ð”' => 'D',  'Ð•' => 'E',  'Ð' => 'E',  'Ð–' => 'Zh',
+        'Ð—' => 'Z',  'Ð˜' => 'I',  'Ð™' => 'I',  'Ðš' => 'K',  'Ð›' => 'L',  'Ðœ' => 'M',  'Ð' => 'N',  'Ðž' => 'O',
+        'ÐŸ' => 'P',  'Ð ' => 'R',  'Ð¡' => 'S',  'Ð¢' => 'T',  'Ð£' => 'U',  'Ð¤' => 'F',  'Ð¥' => 'Kh', 'Ð¦' => 'Ts',
+        'Ð§' => 'Ch', 'Ð¨' => 'Sh', 'Ð©' => 'Shch', 'Ð«' => 'Y', 'Ð­' => 'E', 'Ð®' => 'Yu', 'Ð¯' => 'Ya',
+        'Ðª' => '',   'Ð¬' => '',
+        'Ð°' => 'a',  'Ð±' => 'b',  'Ð²' => 'v',  'Ð³' => 'g',  'Ð´' => 'd',  'Ðµ' => 'e',  'Ñ‘' => 'e',  'Ð¶' => 'zh',
+        'Ð·' => 'z',  'Ð¸' => 'i',  'Ð¹' => 'i',  'Ðº' => 'k',  'Ð»' => 'l',  'Ð¼' => 'm',  'Ð½' => 'n',  'Ð¾' => 'o',
+        'Ð¿' => 'p',  'Ñ€' => 'r',  'Ñ' => 's',  'Ñ‚' => 't',  'Ñƒ' => 'u',  'Ñ„' => 'f',  'Ñ…' => 'kh', 'Ñ†' => 'ts',
+        'Ñ‡' => 'ch', 'Ñˆ' => 'sh', 'Ñ‰' => 'shch', 'Ñ‹' => 'y', 'Ñ' => 'e', 'ÑŽ' => 'yu', 'Ñ' => 'ya',
+        'ÑŠ' => '',   'ÑŒ' => '',
     ];
     $text = strtr($text, $rus);
     $text = preg_replace('~[^a-zA-Z0-9]+~', $sep, $text);
@@ -2966,6 +2990,15 @@ function addAdminMail(bool $enab, string $mod, string $username = '', string $ti
     }
 }
 
+# Size value filter (bytes to human-readable unit)
+function filterSize(mixed $size): string {
+    $val = (float)$size;
+    if ($val <= 0) return intval($size).' Bytes';
+    $unit = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    for ($idx = 0, $max = count($unit) - 1; $val >= 1024 && $idx < $max; $idx++) $val /= 1024;
+    return round($val, 2).' '.$unit[$idx];
+}
+
 ####
 # OLD FUNCTIONS (for backward compatibility, not recommended for use in new code)
 ####
@@ -2998,13 +3031,6 @@ function datetime(int $id, string $name, string $time, int $max, string $class):
 function format_time(string $time, string $string = ''): string {
     $string = ($string) ? $string : _DATESTRING;
     $cont = date($string, strtotime($time));
-    return $cont;
-}
-
-# Size filter
-function files_size(mixed $size): string {
-    $name = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    $cont = ($size) ? round($size / pow(1024, ($i = floor(log($size, 1024)))), 2).' '.$name[$i] : intval($size).' Bytes';
     return $cont;
 }
 
@@ -3438,7 +3464,7 @@ function show_files(): void {
                     $show .= (in_array(true, checkCompress(), true)) ? "||<a OnClick=\"AjaxLoad('GET', '0', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1]."', ''); return false;\" title=\""._ZIP.'">'._ZIP.'</a>' : '';
                     $show .= "||<a OnClick=\"AjaxLoad('GET', '0', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1]."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>';
                 }
-                $contents[] = '<tr><td>'.$img.'</td><td>'.$entry[1].'</td><td>'.files_size($filesize).'</td><td>'.add_menu($show).'</td></tr>';
+                $contents[] = '<tr><td>'.$img.'</td><td>'.$entry[1].'</td><td>'.filterSize($filesize).'</td><td>'.add_menu($show).'</td></tr>';
                 $a++;
             }
             if ($eallf && $a == $eallf) break;
@@ -4713,9 +4739,9 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
             $code .= "<div class=\"sl_drop\"><span OnClick=\"HideShow('l-form-".$id."', 'blind', 'up', 500); changelanguage();\" class=\"sl_bb_translate\" title=\""._EAUTOTR.'"></span>
             <div id="l-form-'.$id."\" class=\"sl_drop-form\">
                 <table class=\"sl_bb_trans\"><tr>
-                <td>А</td><td>Б</td><td>В</td><td>Г</td><td>Д</td><td>Е</td><td>Ё</td><td>Ж</td><td>З</td><td>И</td><td>Й</td>
-                <td>К</td><td>Л</td><td>М</td><td>Н</td><td>О</td><td>П</td><td>Р</td><td>С</td><td>Т</td><td>У</td><td>Ф</td>
-                <td>Х</td><td>Ц</td><td>Ч</td><td>Ш</td><td>Щ</td><td>Ъ</td><td>Ы</td><td>Ь</td><td>Э</td><td>Ю</td><td>Я</td>
+                <td>Ð</td><td>Ð‘</td><td>Ð’</td><td>Ð“</td><td>Ð”</td><td>Ð•</td><td>Ð</td><td>Ð–</td><td>Ð—</td><td>Ð˜</td><td>Ð™</td>
+                <td>Ðš</td><td>Ð›</td><td>Ðœ</td><td>Ð</td><td>Ðž</td><td>ÐŸ</td><td>Ð </td><td>Ð¡</td><td>Ð¢</td><td>Ð£</td><td>Ð¤</td>
+                <td>Ð¥</td><td>Ð¦</td><td>Ð§</td><td>Ð¨</td><td>Ð©</td><td>Ðª</td><td>Ð«</td><td>Ð¬</td><td>Ð­</td><td>Ð®</td><td>Ð¯</td>
                 </tr><tr>
                 <td>A</td><td>B</td><td>V</td><td>G</td><td>D</td><td>E</td><td>JO</td><td>ZH</td><td>Z</td><td>I</td><td>J</td>
                 <td>K</td><td>L</td><td>M</td><td>N</td><td>O</td><td>P</td><td>R</td><td>S</td><td>T</td><td>U</td><td>F</td>
@@ -4766,7 +4792,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
         if ((defined('ADMIN_FILE') && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) {
             $code .= '<div id="af-form-'.$id.'" class="sl_bbup-panel sl_none">';
             if ($id == 1) {
-                $uinfo = '<div class="ico sl_info sl_left"><b>'._UPLOADINFO.'</b><br>'._FTYPE.': '.str_replace(',', ', ', $con[0]).'<br>'._FSIZEALL.': '.files_size($con[1]).'<br>'._FSIZE.': '.files_size($con[2]).'<br>'._AWIDTH.': '.$con[3].' px<br>'._AHEIGHT.': '.$con[4].' px<br>'._FILEUP.': '.$con[5].'<br>'.'</div>';
+                $uinfo = '<div class="ico sl_info sl_left"><b>'._UPLOADINFO.'</b><br>'._FTYPE.': '.str_replace(',', ', ', $con[0]).'<br>'._FSIZEALL.': '.filterSize($con[1]).'<br>'._FSIZE.': '.filterSize($con[2]).'<br>'._AWIDTH.': '.$con[3].' px<br>'._AHEIGHT.': '.$con[4].' px<br>'._FILEUP.': '.$con[5].'<br>'.'</div>';
                 $code .= "<script>
                 $(document).ready(function(e) {
                     $('#msg').html('".$uinfo."');
