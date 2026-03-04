@@ -6,67 +6,47 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function getMonitorTabs(int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
+function navi(int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ['name=monitor', 'name=monitor&op=info'];
     $lang = [_HOME, _INFO];
     return getAdminTabs('System Monitor', 'statistic.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
-}
-
-function isWindows(): bool {
-    return strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
-}
-
-function getServerSoftware(): string {
-    return $_SERVER['SERVER_SOFTWARE'] ?? getenv('SERVER_SOFTWARE') ?: '';
-}
-
-function getServerLoadData(): array {
-    $load = [0, 0, 0];
-    if (function_exists('sys_getloadavg')) {
-        $load = sys_getloadavg();
-    }
-    return $load;
-}
-
-function isProcReadable(string $path): bool {
-    if (strpos($path, '/proc/') !== 0) return false;
-    $base = (string)ini_get('open_basedir');
-    if ($base !== '') {
-        $allow = false;
-        foreach (explode(PATH_SEPARATOR, $base) as $root) {
-            $root = rtrim(trim($root), '/');
-            if ($root !== '' && ($path === $root || strpos($path, $root.'/') === 0)) {
-                $allow = true;
-                break;
-            }
-        }
-        if (!$allow) return false;
-    }
-    return is_readable($path);
-}
-
-function getCommandOutput(string $command): array {
-    if (!function_exists('exec')) {
-        return [];
-    }
-    // Defense-in-depth: this helper must execute only static internal commands.
-    if (preg_match('/[;&|`><\r\n]/', $command)) {
-        return [];
-    }
-    $output = [];
-    exec($command, $output);
-    return $output;
 }
 
 function getMemoryInfo(): array {
     $free = 0;
     $total = 0;
 
-    if (isWindows()) {
+    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+        // Prefer PowerShell CIM on modern Windows (WMIC is deprecated/disabled on many systems)
+        $ps = [];
+        if (function_exists('exec')) {
+            exec('powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_OperatingSystem | Select-Object TotalVisibleMemorySize,FreePhysicalMemory | Format-List)"', $ps);
+        }
+        foreach ($ps as $line) {
+            if (str_contains($line, 'TotalVisibleMemorySize')) {
+                $parts = explode(':', $line, 2);
+                $total = intval(trim($parts[1] ?? '0')) * 1024;
+            } elseif (str_contains($line, 'FreePhysicalMemory')) {
+                $parts = explode(':', $line, 2);
+                $free = intval(trim($parts[1] ?? '0')) * 1024;
+            }
+        }
+
+        if ($total > 0 && $free > 0) {
+            $used = max($total - $free, 0);
+            return [
+                'total' => $total,
+                'free' => $free,
+                'used' => $used,
+                'percent' => round(($used / $total) * 100, 1),
+            ];
+        }
+
         $cmd = 'wmic ComputerSystem get TotalPhysicalMemory /Value';
-        $outtot = getCommandOutput($cmd);
+        $outtot = [];
+        if (function_exists('exec')) exec($cmd, $outtot);
         foreach ($outtot as $line) {
-            if (strpos($line, 'TotalPhysicalMemory') !== false) {
+            if (str_contains($line, 'TotalPhysicalMemory')) {
                 $parts = explode('=', $line);
                 $total = intval($parts[1]);
                 break;
@@ -74,21 +54,22 @@ function getMemoryInfo(): array {
         }
 
         $cmd = 'wmic OS get FreePhysicalMemory /Value';
-        $outfree = getCommandOutput($cmd);
+        $outfree = [];
+        if (function_exists('exec')) exec($cmd, $outfree);
         foreach ($outfree as $line) {
-            if (strpos($line, 'FreePhysicalMemory') !== false) {
+            if (str_contains($line, 'FreePhysicalMemory')) {
                 $parts = explode('=', $line);
                 $free = intval($parts[1]) * 1024;
                 break;
             }
         }
     } else {
-        $data = isProcReadable('/proc/meminfo') ? file_get_contents('/proc/meminfo') : false;
+        $data = file_exists('/proc/meminfo') ? file_get_contents('/proc/meminfo') : false;
         if ($data) {
             $data = explode("\n", $data);
             $meminfo = [];
             foreach ($data as $line) {
-                if (strpos($line, ':') === false) continue;
+                if (!str_contains($line, ':')) continue;
                 [$key, $val] = explode(':', $line);
                 $meminfo[trim($key)] = trim($val);
             }
@@ -108,11 +89,11 @@ function getMemoryInfo(): array {
         $free = $total - memory_get_usage(true);
     }
 
-    $used = $total - $free;
+    $used = max($total - $free, 0);
     return [
-        'total' => $total,
-        'free' => $free,
-        'used' => $used,
+        'total'   => $total,
+        'free'    => $free,
+        'used'    => $used,
         'percent' => ($total > 0) ? round(($used / $total) * 100, 1) : 0,
     ];
 }
@@ -123,45 +104,123 @@ function getMemorySafeLimit(): int {
         return max(memory_get_usage(true) * 2, 134217728);
     }
     if (preg_match('/^(\d+)(.)$/', $memlim, $matches)) {
-        if ($matches[2] == 'M') {
-            $memlim = $matches[1] * 1024 * 1024;
-        } else if ($matches[2] == 'K') {
-            $memlim = $matches[1] * 1024;
-        } else if ($matches[2] == 'G') {
-            $memlim = $matches[1] * 1024 * 1024 * 1024;
-        }
+        if ($matches[2] === 'M') return $matches[1] * 1024 * 1024;
+        if ($matches[2] === 'K') return $matches[1] * 1024;
+        if ($matches[2] === 'G') return $matches[1] * 1024 * 1024 * 1024;
     }
     return intval($memlim);
 }
 
-function getFormattedBytes(float|int $bytes, int $precision = 2): string {
-    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-    $bytes = max($bytes, 0);
-    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
-    $pow = min($pow, count($units) - 1);
-    $bytes /= pow(1024, $pow);
-    return round($bytes, $precision).' '.$units[$pow];
+function getCpuCores(): int {
+    $cores = 0;
+    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+        $out = [];
+        if (function_exists('exec')) {
+            exec('powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum"', $out);
+        }
+        if (!empty($out)) {
+            $val = trim((string)$out[0]);
+            if (is_numeric($val)) $cores = (int)$val;
+        }
+        if ($cores <= 0) {
+            $envCores = getenv('NUMBER_OF_PROCESSORS');
+            if ($envCores !== false && is_numeric($envCores)) $cores = (int)$envCores;
+        }
+    } else {
+        if (file_exists('/proc/cpuinfo')) {
+            $info = file_get_contents('/proc/cpuinfo');
+            if ($info !== false) {
+                preg_match_all('/^processor\s*:/m', $info, $matches);
+                if (!empty($matches[0])) $cores = count($matches[0]);
+            }
+        }
+        if ($cores <= 0 && function_exists('exec')) {
+            $out = [];
+            exec('nproc 2>/dev/null', $out);
+            if (!empty($out) && is_numeric(trim((string)$out[0]))) $cores = (int)trim((string)$out[0]);
+        }
+    }
+    return ($cores > 0) ? $cores : 1;
+}
+
+function getNginxVersion(): string {
+    $servsw = $_SERVER['SERVER_SOFTWARE'] ?? getenv('SERVER_SOFTWARE') ?: '';
+    if (preg_match('#nginx/([0-9.]+)#i', (string)$servsw, $m)) return $m[1];
+
+    if (function_exists('exec')) {
+        $out = [];
+        exec('nginx -v 2>&1', $out);
+        if (!empty($out) && preg_match('#nginx/([0-9.]+)#i', implode(' ', $out), $m)) return $m[1];
+        if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+            $w = [];
+            exec('where nginx 2>NUL', $w);
+            foreach ($w as $bin) {
+                $bin = trim($bin);
+                if ($bin === '') continue;
+                $cmdOut = [];
+                exec('"'.$bin.'" -v 2>&1', $cmdOut);
+                if (!empty($cmdOut) && preg_match('#nginx/([0-9.]+)#i', implode(' ', $cmdOut), $m)) return $m[1];
+            }
+        }
+    }
+    return 'N/A';
+}
+
+function getFirewallInfo(): array {
+    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+        $enabled = 0;
+        if (function_exists('exec')) {
+            $out = [];
+            exec("powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"(Get-NetFirewallProfile -ErrorAction SilentlyContinue | Where-Object {\$_.Enabled -eq 'True'} | Measure-Object).Count\"", $out);
+            if (!empty($out) && is_numeric(trim((string)$out[0]))) $enabled = (int)trim((string)$out[0]);
+        }
+        $isOn = $enabled > 0;
+        return ['name' => 'Windows Firewall', 'state' => $isOn ? 'On' : 'Off', 'on' => $isOn];
+    }
+
+    if (function_exists('exec')) {
+        $out = [];
+        exec('ufw status 2>/dev/null', $out);
+        $txt = strtolower(implode(' ', $out));
+        if ($txt !== '') {
+            $isOn = str_contains($txt, 'status: active');
+            return ['name' => 'UFW', 'state' => $isOn ? 'On' : 'Off', 'on' => $isOn];
+        }
+
+        $out = [];
+        exec('systemctl is-active firewalld 2>/dev/null', $out);
+        $state = strtolower(trim((string)($out[0] ?? '')));
+        if ($state !== '') {
+            $isOn = $state === 'active';
+            return ['name' => 'firewalld', 'state' => $isOn ? 'On' : 'Off', 'on' => $isOn];
+        }
+    }
+
+    return ['name' => 'Firewall', 'state' => 'N/A', 'on' => null];
 }
 
 function getNetworkStats(): array {
     $rx = 0;
     $tx = 0;
-    if (isWindows()) {
-        $output = getCommandOutput('netstat -e');
+    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+        $output = [];
+        if (function_exists('exec')) exec('netstat -e', $output);
         foreach ($output as $line) {
             if (stripos($line, 'Bytes') !== false) {
                 $parts = preg_split('/\s+/', trim($line));
-                $rx = $parts[1] ?? 0;
-                $tx = $parts[2] ?? 0;
+                $rxRaw = (string)($parts[1] ?? '0');
+                $txRaw = (string)($parts[2] ?? '0');
+                $rx = (float)preg_replace('/[^\d]/', '', $rxRaw);
+                $tx = (float)preg_replace('/[^\d]/', '', $txRaw);
                 break;
             }
         }
     } else {
-        $data = isProcReadable('/proc/net/dev') ? file_get_contents('/proc/net/dev') : false;
+        $data = file_exists('/proc/net/dev') ? file_get_contents('/proc/net/dev') : false;
         if ($data) {
             $lines = explode("\n", $data);
             foreach ($lines as $line) {
-                if (strpos($line, ':') !== false) {
+                if (str_contains($line, ':')) {
                     $parts = preg_split('/\s+/', trim(substr($line, strpos($line, ':') + 1)));
                     $rx += $parts[0] ?? 0;
                     $tx += $parts[8] ?? 0;
@@ -172,27 +231,279 @@ function getNetworkStats(): array {
     return ['rx' => $rx, 'tx' => $tx];
 }
 
+function getMetricStorePath(): string {
+    return LOGS_DIR.'/monitor_metrics.json';
+}
 
+function readMetricStore(): array {
+    $file = getMetricStorePath();
+    if (!is_file($file) || !is_readable($file)) return [];
+    $json = file_get_contents($file);
+    if ($json === false || $json === '') return [];
+    $data = json_decode($json, true);
+    return is_array($data) ? $data : [];
+}
 
-function getMonitor(): void {
-    global $db, $conf;
+function writeMetricStore(array $data): void {
+    $file = getMetricStorePath();
+    if (!is_dir(LOGS_DIR) || !is_writable(LOGS_DIR)) return;
+    file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE), LOCK_EX);
+}
+
+function pushHistory(array $history, float $value, int $max = 30): array {
+    $history[] = round($value, 2);
+    if (count($history) > $max) $history = array_slice($history, -$max);
+    return $history;
+}
+
+function buildAreaPath(array $history, float $maxValue, int $height = 220): string {
+    $history = array_values(array_map('floatval', $history));
+    if (!$history) return 'M0,'.$height.' L100,'.$height.' Z';
+    $count = count($history);
+    $maxValue = max($maxValue, 1.0);
+    $path = 'M0,'.$height.' ';
+    foreach ($history as $i => $val) {
+        $x = ($count > 1) ? ($i * (100 / ($count - 1))) : 0;
+        $y = $height - (($val / $maxValue) * ($height - 10));
+        if ($y < 0) $y = 0;
+        if ($y > $height) $y = $height;
+        $path .= 'L'.round($x, 2).','.round($y, 2).' ';
+    }
+    $path .= 'L100,'.$height.' Z';
+    return $path;
+}
+
+function getTrafficMetrics(): array {
+    $now = time();
+    $net = getNetworkStats();
+    $store = readMetricStore();
+
+    $prevTs = (int)($store['net_prev_ts'] ?? 0);
+    $prevRx = (float)($store['net_prev_rx'] ?? 0);
+    $prevTx = (float)($store['net_prev_tx'] ?? 0);
+    $dt = max($now - $prevTs, 1);
+
+    $rxRate = ($prevTs > 0) ? max(($net['rx'] - $prevRx) / $dt, 0) : 0.0;
+    $txRate = ($prevTs > 0) ? max(($net['tx'] - $prevTx) / $dt, 0) : 0.0;
+
+    $histDown = is_array($store['net_hist_down'] ?? null) ? $store['net_hist_down'] : [];
+    $histUp = is_array($store['net_hist_up'] ?? null) ? $store['net_hist_up'] : [];
+    $histDown = pushHistory($histDown, $rxRate);
+    $histUp = pushHistory($histUp, $txRate);
+
+    $store['net_prev_ts'] = $now;
+    $store['net_prev_rx'] = $net['rx'];
+    $store['net_prev_tx'] = $net['tx'];
+    $store['net_hist_down'] = $histDown;
+    $store['net_hist_up'] = $histUp;
+    writeMetricStore($store);
+
+    return [
+        'rx_total' => (float)$net['rx'],
+        'tx_total' => (float)$net['tx'],
+        'rx_rate' => $rxRate,
+        'tx_rate' => $txRate,
+        'hist_down' => $histDown,
+        'hist_up' => $histUp,
+    ];
+}
+
+function getDiskIoTotals(): array {
+    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
+    $file = '/proc/diskstats';
+    if (!is_file($file) || !is_readable($file)) return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
+    $read = 0.0;
+    $write = 0.0;
+    $lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) return ['read' => 0.0, 'write' => 0.0, 'ok' => false];
+    foreach ($lines as $line) {
+        $parts = preg_split('/\s+/', trim($line));
+        if (!is_array($parts) || count($parts) < 14) continue;
+        $name = $parts[2] ?? '';
+        // Keep only whole block devices, skip partitions to avoid double counting.
+        if (!preg_match('/^(sd[a-z]+|hd[a-z]+|vd[a-z]+|xvd[a-z]+|nvme\d+n\d+|mmcblk\d+|md\d+|dm-\d+)$/', (string)$name)) continue;
+        $readSectors = (float)($parts[5] ?? 0);
+        $writeSectors = (float)($parts[9] ?? 0);
+        $read += $readSectors * 512;
+        $write += $writeSectors * 512;
+    }
+    return ['read' => $read, 'write' => $write, 'ok' => true];
+}
+
+function getDiskIoMetrics(): array {
+    $now = time();
+    $totals = getDiskIoTotals();
+    if (!$totals['ok']) {
+        return [
+            'read_rate' => null,
+            'write_rate' => null,
+            'hist_read' => [],
+            'hist_write' => [],
+        ];
+    }
+
+    $store = readMetricStore();
+    $prevTs = (int)($store['disk_prev_ts'] ?? 0);
+    $prevRead = (float)($store['disk_prev_read'] ?? 0);
+    $prevWrite = (float)($store['disk_prev_write'] ?? 0);
+    $dt = max($now - $prevTs, 1);
+
+    $readRate = ($prevTs > 0) ? max(($totals['read'] - $prevRead) / $dt, 0) : 0.0;
+    $writeRate = ($prevTs > 0) ? max(($totals['write'] - $prevWrite) / $dt, 0) : 0.0;
+
+    $histRead = is_array($store['disk_hist_read'] ?? null) ? $store['disk_hist_read'] : [];
+    $histWrite = is_array($store['disk_hist_write'] ?? null) ? $store['disk_hist_write'] : [];
+    $histRead = pushHistory($histRead, $readRate);
+    $histWrite = pushHistory($histWrite, $writeRate);
+
+    $store['disk_prev_ts'] = $now;
+    $store['disk_prev_read'] = $totals['read'];
+    $store['disk_prev_write'] = $totals['write'];
+    $store['disk_hist_read'] = $histRead;
+    $store['disk_hist_write'] = $histWrite;
+    writeMetricStore($store);
+
+    return [
+        'read_rate' => $readRate,
+        'write_rate' => $writeRate,
+        'hist_read' => $histRead,
+        'hist_write' => $histWrite,
+    ];
+}
+
+function getUptimeInfo(): string {
+    if (!str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+        $data = is_file('/proc/uptime') ? file_get_contents('/proc/uptime') : false;
+        if ($data !== false) {
+            $sec = (int)floatval(explode(' ', trim($data))[0] ?? 0);
+            if ($sec > 0) return formatUptime($sec);
+        }
+    } elseif (function_exists('exec')) {
+        $out = [];
+        exec("powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"(Get-CimInstance Win32_OperatingSystem).LastBootUpTime.ToString('yyyy-MM-dd HH:mm:ss')\"", $out);
+        $boot = trim((string)($out[0] ?? ''));
+        $bootTs = $boot !== '' ? strtotime($boot) : false;
+        if ($bootTs !== false) {
+            $sec = max(time() - $bootTs, 0);
+            return formatUptime($sec);
+        }
+    }
+    return 'N/A';
+}
+
+function formatUptime(int $sec): string {
+    $days = intdiv($sec, 86400);
+    $hours = intdiv($sec % 86400, 3600);
+    $mins = intdiv($sec % 3600, 60);
+    return $days.'d '.$hours.'h '.$mins.'m';
+}
+
+function getCpuDetails(): array {
+    $logical = getCpuCores();
+    $physical = 0;
+    $freq = 'N/A';
+
+    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
+        if (function_exists('exec')) {
+            $out = [];
+            exec('powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum"', $out);
+            if (!empty($out) && is_numeric(trim((string)$out[0]))) $physical = (int)trim((string)$out[0]);
+
+            $out = [];
+            exec('powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "(Get-CimInstance Win32_Processor | Select-Object -First 1 -ExpandProperty MaxClockSpeed)"', $out);
+            if (!empty($out) && is_numeric(trim((string)$out[0]))) {
+                $mhz = (int)trim((string)$out[0]);
+                if ($mhz > 0) $freq = round($mhz / 1000, 2).' GHz';
+            }
+        }
+    } else {
+        $cpuinfo = is_file('/proc/cpuinfo') ? file_get_contents('/proc/cpuinfo') : false;
+        if ($cpuinfo !== false) {
+            preg_match_all('/^physical id\s*:\s*(\d+)/m', $cpuinfo, $physIds);
+            preg_match_all('/^core id\s*:\s*(\d+)/m', $cpuinfo, $coreIds);
+            if (!empty($physIds[1]) && !empty($coreIds[1]) && count($physIds[1]) === count($coreIds[1])) {
+                $pairs = [];
+                foreach ($physIds[1] as $k => $pid) {
+                    $pairs[] = $pid.'-'.$coreIds[1][$k];
+                }
+                $physical = count(array_unique($pairs));
+            }
+            if ($physical <= 0) {
+                preg_match('/^cpu cores\s*:\s*(\d+)/m', $cpuinfo, $m);
+                if (!empty($m[1])) $physical = (int)$m[1];
+            }
+            preg_match('/^cpu MHz\s*:\s*([0-9.]+)/m', $cpuinfo, $mhz);
+            if (!empty($mhz[1])) $freq = round(((float)$mhz[1]) / 1000, 2).' GHz';
+        }
+    }
+
+    return [
+        'logical' => max($logical, 1),
+        'physical' => ($physical > 0) ? (string)$physical : 'N/A',
+        'freq' => $freq,
+    ];
+}
+
+function getStatusHtml(?bool $state): string {
+    if ($state === null) return '<span style="color:#9ca3af">N/A</span>';
+    return $state ? '<span style="color:#21c45d">On</span>' : '<span style="color:#ef4444">Off</span>';
+}
+
+function getDbHealth(object $db): array {
+    $connections = 'N/A';
+    $slow = 'N/A';
+    try {
+        $res = $db->getSqlQuery("SHOW GLOBAL STATUS LIKE 'Threads_connected'");
+        if ($res) {
+            $row = $db->getSqlRow($res);
+            if (is_array($row) && isset($row['Value'])) $connections = (string)$row['Value'];
+        }
+        $res = $db->getSqlQuery("SHOW GLOBAL STATUS LIKE 'Slow_queries'");
+        if ($res) {
+            $row = $db->getSqlRow($res);
+            if (is_array($row) && isset($row['Value'])) $slow = (string)$row['Value'];
+        }
+    } catch (Throwable) {
+        // Keep N/A when permission for global status is restricted.
+    }
+    return ['connections' => $connections, 'slow' => $slow];
+}
+
+function monitor(): void {
+    global $db, $conf, $afile;
     setHead();
-    $cont = getMonitorTabs();
-    $cont .= setTemplateBasic('open');
     
+    $cont = navi();
+    $cont .= setTemplateBasic('open');
 
-    // Stats Gathering
-    $load = getServerLoadData();
+    // CPU Stats
+    [$cpu_p, $cpu_info] = getCpuLoad();
+    $cpu = getCpuDetails();
+    
+    // Memory Stats
     $mem = getMemoryInfo();
+    
+    // Disk Stats
     $disk_total = disk_total_space('.');
     $disk_free = disk_free_space('.');
-    $disk_used = $disk_total - $disk_free;
+    $disk_used = max($disk_total - $disk_free, 0);
     $diskpct = ($disk_total > 0) ? round(($disk_used / $disk_total) * 100, 1) : 0;
-    $net = getNetworkStats();
+    
+    // Network stats (totals + real-time deltas + history)
+    $net = getTrafficMetrics();
+    $netHistMax = max(array_merge([1.0], $net['hist_up'], $net['hist_down']));
+    $path_up = buildAreaPath($net['hist_up'], $netHistMax);
+    $path_down = buildAreaPath($net['hist_down'], $netHistMax);
 
+    // Disk I/O deltas
+    $diskio = getDiskIoMetrics();
+
+    // Usage Stats
     $userson = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session'));
+    $cntfile = $db->getSqlRowCount($db->getSqlQuery("SELECT lid FROM ".PREFIX_DB."_files WHERE status != '0'"));
+    $cntnews = $db->getSqlRowCount($db->getSqlQuery("SELECT sid FROM ".PREFIX_DB."_news WHERE status != '0'"));
 
-    // DB Stats
+    // DB Size
     $dbsize = 0;
     $dbtabs = 0;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
@@ -204,141 +515,116 @@ function getMonitor(): void {
         }
     }
 
-    $servsw = getServerSoftware();
+    // Server Detect
+    $servsw = $_SERVER['SERVER_SOFTWARE'] ?? getenv('SERVER_SOFTWARE') ?: '';
     $servname = 'Web Server';
     if (stripos($servsw, 'apache') !== false) $servname = 'Apache';
     elseif (stripos($servsw, 'nginx') !== false) $servname = 'Nginx';
     elseif (stripos($servsw, 'litespeed') !== false) $servname = 'LiteSpeed';
+    $servver = 'N/A';
+    if (preg_match('#/(\\d+(?:\\.\\d+)+)#', (string)$servsw, $vm)) $servver = $vm[1];
+    $nginxver = getNginxVersion();
+    $firewall = getFirewallInfo();
 
     // Detailed Info Logic
     $gd = function_exists('gd_info') ? gd_info() : ['GD Version' => 'N/A'];
-    $mysql = db_version();
+    $statusOn = static fn(bool $v): string => getStatusHtml($v);
 
-    $status_on = '<span style="color:#21c45d">On</span>';
-    $status_off = '<span style="color:#ef4444">Off</span>';
+    // UI Dashboards Math
+    $dash = 2 * M_PI * 45;
+    $off_load = $dash - ($dash * $cpu_p / 100);
+    $off_r = $dash - ($dash * $mem['percent'] / 100);
+    $off_d = $dash - ($dash * $diskpct / 100);
 
-    // Counts for Overview Strip
-    $cntfile = $db->getSqlRowCount($db->getSqlQuery('SELECT lid FROM '.PREFIX_DB.'_files WHERE status != \'0\''));
-    $cntnews = $db->getSqlRowCount($db->getSqlQuery('SELECT sid FROM '.PREFIX_DB.'_news WHERE status != \'0\''));
-
-    // Calculate dashboard metrics
-    $load_p = min($load[0] * 10, 100);
-    $dash = 2 * pi() * 45;
-    $off_load = $dash - ($dash * $load_p / 100);
-    $ram_p = $mem['percent'];
-    $off_r = $dash - ($dash * $ram_p / 100);
-    $ram_used_mb = round($mem['used'] / 1024 / 1024);
-    $ram_total_mb = round($mem['total'] / 1024 / 1024);
-    $disk_p = $diskpct;
-    $off_d = $dash - ($dash * $disk_p / 100);
-    $disk_used_fmt = getFormattedBytes($disk_used);
-    $disk_total_fmt = getFormattedBytes($disk_total);
-    $disk_free_fmt = getFormattedBytes($disk_free);
-    $net_tx = getFormattedBytes($net['tx']);
-    $net_rx = getFormattedBytes($net['rx']);
-    $db_size_fmt = getFormattedBytes($dbsize);
-
-    // Additional variables for dashboard
-    $loadstr = implode(' / ', $load);
-    $phpver = PHP_VERSION;
-    $phpsapi = php_sapi_name();
-    $osname = php_uname('s');
-    $servfull = $servsw;
-    $gdver = $gd['GD Version'] ?? 'N/A';
-    $post_max = ini_get('post_max_size');
-    $file_up = ini_get('file_uploads') ? $status_on : $status_off;
-    $up_max = ini_get('upload_max_filesize');
-    $mem_lim = ini_get('memory_limit');
-    $max_vars = ini_get('max_input_vars');
-    $max_time = ini_get('max_execution_time');
-    $gzip_ld = extension_loaded('zlib') ? $status_on : $status_off;
-    $zip_ld = extension_loaded('zip') ? $status_on : $status_off;
-    $php_time = date('H:i:s');
-    $op_mode = !($conf['close'] ?? 0) ? $status_on : $status_off;
-    $stat_act = is_active('stat') ? $status_on : $status_off;
-    $refer_act = is_active('referers') ? $status_on : $status_off;
-    $newslet = ($conf['newsletter'] ?? 0) ? $status_on : $status_off;
-    $cache = ($conf['cache'] ?? 0) ? $status_on : $status_off;
-    $rewrite = ($conf['rewrite'] ?? 0) ? $status_on : $status_off;
-    $cms_ver = $conf['version'] ?? '';
-
-    // SVG paths for traffic chart
-    $path_up = 'M0,220 ';
-    $path_down = 'M0,220 ';
-    for ($i = 0; $i <= 20; $i++) {
-        $x = $i * (100 / 20).'%';
-        $y_u = 220 - rand(10, 80);
-        $y_d = 220 - rand(10, 80);
-        if ($i == 20) {
-            $y_u = 220;
-            $y_d = 220;
-        }
-        $path_up .= 'L'.$x.','.$y_u.' ';
-        $path_down .= 'L'.$x.','.$y_d.' ';
-    }
-    $path_up .= 'Z';
-    $path_down .= 'Z';
+    $uptime = getUptimeInfo();
+    $dbhealth = getDbHealth($db);
+    $diskwarn = ($disk_total > 0 && (($disk_free / $disk_total) * 100) < 10)
+        ? '<span style="color:#ef4444">Low free space</span>'
+        : '<span style="color:#21c45d">Normal</span>';
+    $quick = '<a href="'.$afile.'.php?name=security" class="sl_but">Security Logs</a> '
+        .'<a href="'.$afile.'.php?name=security&amp;op=conf" class="sl_but">Security Settings</a> '
+        .'<a href="'.$afile.'.php?name=database" class="sl_but">Database</a>';
 
     $cont .= setTemplateBasic('basic-monitor', [
-        '{%dash%}' => $dash,
-        '{%off%}' => $off_load,
-        '{%load_0%}' => $load[0],
-        '{%loadstr%}' => $loadstr,
-        '{%off_r%}' => $off_r,
-        '{%ram_p%}' => $ram_p,
-        '{%ramumb%}' => $ram_used_mb,
-        '{%ramtmb%}' => $ram_total_mb,
-        '{%dash_d%}' => $dash,
-        '{%off_d%}' => $off_d,
-        '{%disk_p%}' => $disk_p,
-        '{%diskused%}' => $disk_used_fmt,
-        '{%disktot%}' => $disk_total_fmt,
-        '{%cntnews%}' => $cntnews,
-        '{%cntfile%}' => $cntfile,
-        '{%dbtabs%}' => $dbtabs,
-        '{%userson%}' => $userson,
-        '{%servname%}' => $servname,
-        '{%mysql%}' => $mysql,
-        '{%phpver%}' => $phpver,
-        '{%path_up%}' => $path_up,
+        '{%dash%}'      => $dash,
+        '{%off%}'       => $off_load,
+        '{%load_0%}'    => $cpu_p,
+        '{%cpuuse%}'    => $cpu_p,
+        '{%cpucores%}'  => $cpu['logical'],
+        '{%cpuphys%}'   => $cpu['physical'],
+        '{%cpufreq%}'   => $cpu['freq'],
+        '{%loadstr%}'   => $cpu_info,
+        '{%off_r%}'     => $off_r,
+        '{%ram_p%}'     => $mem['percent'],
+        '{%ramumb%}'    => round($mem['used'] / 1048576),
+        '{%ramtmb%}'    => round($mem['total'] / 1048576),
+        '{%ramavailmb%}' => round($mem['free'] / 1048576),
+        '{%dash_d%}'    => $dash,
+        '{%off_d%}'     => $off_d,
+        '{%disk_p%}'    => $diskpct,
+        '{%diskused%}'  => files_size($disk_used),
+        '{%disktot%}'   => files_size($disk_total),
+        '{%cntnews%}'   => $cntnews,
+        '{%cntfile%}'   => $cntfile,
+        '{%dbtabs%}'    => $dbtabs,
+        '{%userson%}'   => $userson,
+        '{%servname%}'  => $servname,
+        '{%servver%}'   => $servver,
+        '{%nginxver%}'  => $nginxver,
+        '{%mysql%}'     => db_version(),
+        '{%phpver%}'    => PHP_VERSION,
+        '{%path_up%}'   => $path_up,
         '{%path_down%}' => $path_down,
-        '{%nettx%}' => $net_tx,
-        '{%netrx%}' => $net_rx,
-        '{%opmode%}' => $op_mode,
-        '{%statact%}' => $stat_act,
-        '{%referact%}' => $refer_act,
-        '{%newslet%}' => $newslet,
-        '{%cache%}' => $cache,
-        '{%rewrite%}' => $rewrite,
-        '{%cmsver%}' => $cms_ver,
-        '{%osname%}' => $osname,
-        '{%servfull%}' => $servfull,
-        '{%phpsapi%}' => $phpsapi,
-        '{%gdver%}' => $gdver,
-        '{%dbszfmt%}' => $db_size_fmt,
-        '{%postmax%}' => $post_max,
-        '{%fileup%}' => $file_up,
-        '{%upmax%}' => $up_max,
-        '{%memlim%}' => $mem_lim,
-        '{%maxvars%}' => $max_vars,
-        '{%maxtime%}' => $max_time,
-        '{%gzipld%}' => $gzip_ld,
-        '{%zipld%}' => $zip_ld,
-        '{%phptime%}' => $php_time,
-        '{%diskfree%}' => $disk_free_fmt,
+        '{%nettx%}'     => files_size($net['tx_total']),
+        '{%netrx%}'     => files_size($net['rx_total']),
+        '{%nettxrate%}' => files_size($net['tx_rate']).'/s',
+        '{%netrxrate%}' => files_size($net['rx_rate']).'/s',
+        '{%opmode%}'    => $statusOn(!($conf['close'] ?? 0)),
+        '{%statact%}'   => $statusOn(is_active('stat')),
+        '{%referact%}'  => $statusOn(is_active('referers')),
+        '{%newslet%}'   => $statusOn((bool)($conf['newsletter'] ?? 0)),
+        '{%cache%}'     => $statusOn((bool)($conf['cache'] ?? 0)),
+        '{%rewrite%}'   => $statusOn((bool)($conf['rewrite'] ?? 0)),
+        '{%cmsver%}'    => $conf['version'] ?? '',
+        '{%osname%}'    => php_uname('s'),
+        '{%servfull%}'  => $servsw,
+        '{%fwname%}'    => $firewall['name'],
+        '{%fwstate%}'   => $firewall['state'],
+        '{%fwclass%}'   => ($firewall['on'] === null) ? 'sw-status-gray' : ($firewall['on'] ? 'sw-status-green' : 'sw-status-red'),
+        '{%phpsapi%}'   => php_sapi_name(),
+        '{%gdver%}'     => $gd['GD Version'] ?? 'N/A',
+        '{%dbszfmt%}'   => files_size($dbsize),
+        '{%postmax%}'   => ini_get('post_max_size'),
+        '{%fileup%}'    => $statusOn((bool)ini_get('file_uploads')),
+        '{%upmax%}'     => ini_get('upload_max_filesize'),
+        '{%memlim%}'    => ini_get('memory_limit'),
+        '{%maxvars%}'   => ini_get('max_input_vars'),
+        '{%maxtime%}'   => ini_get('max_execution_time'),
+        '{%gzipld%}'    => $statusOn(extension_loaded('zlib')),
+        '{%zipld%}'     => $statusOn(extension_loaded('zip')),
+        '{%phptime%}'   => date('H:i:s'),
+        '{%diskfree%}'  => files_size($disk_free),
+        '{%uptime%}'    => $uptime,
+        '{%dbconn%}'    => $dbhealth['connections'],
+        '{%dbslow%}'    => $dbhealth['slow'],
+        '{%dskread%}'   => ($diskio['read_rate'] === null) ? 'N/A' : files_size((int)$diskio['read_rate']).'/s',
+        '{%dskwrite%}'  => ($diskio['write_rate'] === null) ? 'N/A' : files_size((int)$diskio['write_rate']).'/s',
+        '{%diskwarn%}'  => $diskwarn,
+        '{%quicklinks%}' => $quick,
     ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
+    
     setFoot();
 }
 
-function getInfo(): void {
+function info(): void {
     setHead();
-    echo getMonitorTabs(0, 1, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo navi(0, 1, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
 switch ($op) {
-    default: getMonitor(); break;
-    case 'info': getInfo(); break;
+    default: monitor(); break;
+    case 'info': info(); break;
 }

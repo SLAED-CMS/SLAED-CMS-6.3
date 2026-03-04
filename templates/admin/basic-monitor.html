@@ -233,6 +233,12 @@
     .sw-status-green {
         color: #22c55e;
     }
+    .sw-status-red {
+        color: #ef4444;
+    }
+    .sw-status-gray {
+        color: #9ca3af;
+    }
 
     /* Traffic Chart */
     .traffic-stats-row {
@@ -319,7 +325,7 @@
                         </svg>
                         <div class="knob-text">{%load_0%}%</div>
                     </div>
-                    <div class="sys-label">Operations</div>
+                    <div class="sys-label">System Load</div>
                     <div class="sys-sub">{%loadstr%}</div>
                 </div>
                 <!-- CPU Real -->
@@ -329,10 +335,11 @@
                             <circle class="knob-bg" cx="50" cy="50" r="45"></circle>
                             <circle class="knob-val" cx="50" cy="50" r="45" stroke="#22c55e" stroke-dasharray="{%dash%}" stroke-dashoffset="{%dash%}"></circle>
                         </svg>
-                        <div class="knob-text">0.2%</div>
+                        <div class="knob-text">{%cpuuse%}%</div>
                     </div>
                     <div class="sys-label">CPU Usage</div>
-                    <div class="sys-sub">8 Cores</div>
+                    <div class="sys-sub">{%cpuphys%} / {%cpucores%} Cores</div>
+                    <div class="sys-sub">{%cpufreq%}</div>
                 </div>
                 <!-- RAM -->
                 <div class="mon-sys-item">
@@ -345,6 +352,7 @@
                     </div>
                     <div class="sys-label">RAM Usage</div>
                     <div class="sys-sub">{%ramumb%} / {%ramtmb%} (MB)</div>
+                    <div class="sys-sub">Available: {%ramavailmb%} MB</div>
                 </div>
             </div>
         </div>
@@ -404,7 +412,7 @@
                 <div class="sw-card">
                     <i class="sw-icon fa fa-server"></i>
                     <div class="sw-name">{%servname%}</div>
-                    <div class="sw-stat-row"><span>Ver</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-stat-row"><span>{%servver%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
                 </div>
                 <div class="sw-card">
                     <i class="sw-icon fa fa-database"></i>
@@ -418,8 +426,8 @@
                 </div>
                 <div class="sw-card">
                     <i class="sw-icon fa fa-shield"></i>
-                    <div class="sw-name">Firewall</div>
-                    <div class="sw-stat-row"><span>WAF</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-name">{%fwname%}</div>
+                    <div class="sw-stat-row"><span>{%fwstate%}</span> <span class="{%fwclass%}"><i class="fa fa-play"></i></span></div>
                 </div>
             </div>
         </div>
@@ -431,14 +439,16 @@
                 <div class="t-item">
                     <div class="t-label t-label-up"><span></span> Upstream</div>
                     <div class="t-val">{%nettx%}</div>
+                    <div class="sys-sub">{%nettxrate%}</div>
                 </div>
                 <div class="t-item">
                     <div class="t-label t-label-down"><span></span> Downstream</div>
                     <div class="t-val">{%netrx%}</div>
+                    <div class="sys-sub">{%netrxrate%}</div>
                 </div>
             </div>
             <!-- Chart -->
-            <svg class="chart-svg" preserveAspectRatio="none">
+            <svg class="chart-svg" viewBox="0 0 100 220" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="gUp" x1="0" x2="0" y1="0" y2="1">
                         <stop offset="0" stop-color="#f97316" stop-opacity="0.5" />
@@ -449,18 +459,22 @@
                         <stop offset="1" stop-color="#fff" stop-opacity="0" />
                     </linearGradient>
                 </defs>
-                <path d="{%path_up%}" fill="url(#gUp)" stroke="#f97316" stroke-width="2" />
-                <path d="{%path_down%}" fill="url(#gDown)" stroke="#22c55e" stroke-width="2" />
+                <path d="{%path_up%}" fill="url(#gUp)" stroke="#f97316" stroke-width="0.5" />
+                <path d="{%path_down%}" fill="url(#gDown)" stroke="#22c55e" stroke-width="0.5" />
             </svg>
         </div>
     </div>
 
     <!-- 4. Footer: Detailed Info (Retained) -->
     <div class="mon-card">
-        <div class="mon-panel-head"><i class="fa fa-list-alt"></i> Detailed System Information</div>
+        <div class="mon-panel-head"><i class="fa fa-list-alt"></i> Detailed System Information <span style="margin-left:auto;">{%quicklinks%}</span></div>
         <div class="mon-info-grid">
             <div>
                 <table class="mon-clean-table">
+                    <tr>
+                        <td>Uptime</td>
+                        <td>{%uptime%}</td>
+                    </tr>
                     <tr>
                         <td>Operation Mode</td>
                         <td>{%opmode%}</td>
@@ -498,6 +512,10 @@
                         <td>{%servfull%}</td>
                     </tr>
                     <tr>
+                        <td>Nginx Version</td>
+                        <td>{%nginxver%}</td>
+                    </tr>
+                    <tr>
                         <td>PHP Version</td>
                         <td>{%phpver%}</td>
                     </tr>
@@ -512,6 +530,14 @@
                     <tr>
                         <td>MySQL</td>
                         <td>{%mysql%}</td>
+                    </tr>
+                    <tr>
+                        <td>DB Connections</td>
+                        <td>{%dbconn%}</td>
+                    </tr>
+                    <tr>
+                        <td>Slow Queries</td>
+                        <td>{%dbslow%}</td>
                     </tr>
                 </table>
             </div>
@@ -568,6 +594,18 @@
                     <tr>
                         <td>Disk Used</td>
                         <td>{%diskused%}</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Read</td>
+                        <td>{%dskread%}</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Write</td>
+                        <td>{%dskwrite%}</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Health</td>
+                        <td>{%diskwarn%}</td>
                     </tr>
                 </table>
             </div>
