@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('content')) die('Illegal file acce
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=conf', 'name=content&amp;op=info'];
     $lang = [_HOME, _ADD, _PREFERENCES, _INFO];
-    return getAdminTabs(_CONTENT, 'content.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function content(): void {

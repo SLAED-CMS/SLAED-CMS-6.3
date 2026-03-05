@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('whois')) die('Illegal file access
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=conf', 'name=whois&amp;op=info'];
     $lang = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
-    return getAdminTabs(_WHOIS, 'whois.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function whois(): void {

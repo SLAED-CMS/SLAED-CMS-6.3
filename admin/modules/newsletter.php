@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=info'];
     $lang = [_HOME, _ADD, _INFO];
-    return getAdminTabs(_NEWSLETTER, 'newsletter.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function newsletter(): void {

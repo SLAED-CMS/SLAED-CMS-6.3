@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('links')) die('Illegal file access
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=conf', 'name=links&amp;op=info'];
     $lang = [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO];
-    return getAdminTabs(_LINKS, 'links.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function links(): void {

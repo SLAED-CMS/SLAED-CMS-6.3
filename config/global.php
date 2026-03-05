@@ -77,7 +77,6 @@ support@slaed.net',
     'quality' => '4',
     'redaktor' => '1',
     'rewrite' => '0',
-    'sblock' => '1',
     'schema' => '<script type="application/ld+json">
 {
 	"@context": "https://schema.org",

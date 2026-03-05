@@ -716,7 +716,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
         $lang = [_HOME, _PREFERENCES, _INFO];
     }
 
-    return getAdminTabs('Changelog', 'editor.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
 // ============================================================================

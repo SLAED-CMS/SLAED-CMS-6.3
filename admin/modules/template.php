@@ -25,7 +25,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     }
     $search .= '</select> <input type="hidden" name="name" value="template"><input type="hidden" name="op" value="template"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs(_THEME, 'template.png', $search, $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs($search, $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function template(): void {

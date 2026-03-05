@@ -28,7 +28,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     }
     $search .= '</select> <input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="referers"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs(_REFERERS, 'referers.png', $search, $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs($search, $ops, $lang, [], [], $tab, $subtab);
 }
 
 function referers(): void {

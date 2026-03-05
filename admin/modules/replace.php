@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ($opt == 1) ? ['name=replace', 'name=replace', 'name=replace&amp;op=info'] : ['', '', 'name=replace&amp;op=info'];
     $lang = [_CONTENT, _NEWS, _INFO];
-    return getAdminTabs(_REPLACE, 'replace.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
 function replace(): void {

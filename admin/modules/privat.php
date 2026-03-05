@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=privat', 'name=privat&amp;op=conf', 'name=privat&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
-    return getAdminTabs(_PRIVAT, 'privat.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function privat(): void {

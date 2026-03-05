@@ -21,7 +21,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
     }
     $box .= '</select> '.get_user_search('chng', $chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $box = setTemplateBasic('searchbox', ['{%searchbox%}' => $box]);
-    return getAdminTabs(_USERS, 'users.png', $box, $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
+    return getAdminTabs($box, $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
 function account(): void {

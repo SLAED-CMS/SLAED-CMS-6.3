@@ -27,7 +27,6 @@ define('_ADMININFO','Note of the manager');
 define('_ADMININFODES','The information which will be accessible to all authors. Display of the given information is made in the top part of the panel of the manager of system.');
 define('_ADMINLOGIN','Administration System Login');
 define('_ADMINLOGIN_NEW','To create the manager of a site');
-define('_ADMIN_SBLOCK','To activate the block of the manager «System information»?');
 define('_ADMIN_SESSION','Name sessions for managers');
 define('_AFTEREXPIRATION','After Expiration');
 define('_AKTIVE','Active');

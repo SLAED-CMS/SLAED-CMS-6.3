@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=favorites', 'name=favorites&amp;op=conf', 'name=favorites&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
-    return getAdminTabs(_FAVORITES, 'favorites.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function favorites(): void {

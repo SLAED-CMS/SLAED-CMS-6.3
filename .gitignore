@@ -36,10 +36,9 @@
 *.tar
 
 # Editor files
-AGENT.md
 .agents/
 .claude/
-.vscode/
+.rules/
 .idea/
 docs/plans/
 *.sublime-*

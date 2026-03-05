@@ -25,7 +25,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
     $lang = [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO];
     $sops = ['', ''];
     $slang = [_BANNED_IP, _BANNED_USERS];
-    return getAdminTabs(_SECURITY, 'security.png', '', $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
+    return getAdminTabs('', $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
 }
 
 function security(): void {

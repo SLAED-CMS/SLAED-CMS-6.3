@@ -7,10 +7,10 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 // Builds admin navigation tabs for monitor module screens and returns rendered tab header HTML.
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function navi(int $tab = 0): string {
     $ops = ['name=monitor', 'name=monitor&op=info'];
     $lang = [_HOME, _INFO];
-    return getAdminTabs('System Monitor', 'statistic.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, act: $tab);
 }
 
 // Checks whether a filesystem path is permitted by open_basedir restrictions before any file operations.
@@ -210,60 +210,6 @@ function getCpuCores(): int {
         }
     }
     return ($cores > 0) ? $cores : 1;
-}
-
-// Resolves Nginx version from server software string or local binary execution when available.
-function getNginxVersion(): string {
-    $servsw = getServerValue('SERVER_SOFTWARE', '');
-    if (preg_match('#nginx/([0-9.]+)#i', (string)$servsw, $m)) return $m[1];
-    if (function_exists('exec')) {
-        $out = [];
-        exec('nginx -v 2>&1', $out);
-        if (!empty($out) && preg_match('#nginx/([0-9.]+)#i', implode(' ', $out), $m)) return $m[1];
-        if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
-            $w = [];
-            exec('where nginx 2>NUL', $w);
-            foreach ($w as $bin) {
-                $bin = trim($bin);
-                if ($bin === '') continue;
-                $cmdout = [];
-                exec('"'.$bin.'" -v 2>&1', $cmdout);
-                if (!empty($cmdout) && preg_match('#nginx/([0-9.]+)#i', implode(' ', $cmdout), $m)) return $m[1];
-            }
-        }
-    }
-    return 'N/A';
-}
-
-// Detects firewall product and state on Windows or Linux and returns normalized status metadata.
-function getFirewallInfo(): array {
-    if (str_starts_with(strtoupper(PHP_OS), 'WIN')) {
-        $enabled = 0;
-        if (function_exists('exec')) {
-            $out = [];
-            exec("powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command \"(Get-NetFirewallProfile -ErrorAction SilentlyContinue | Where-Object {\$_.Enabled -eq 'True'} | Measure-Object).Count\"", $out);
-            if (!empty($out) && is_numeric(trim((string)$out[0]))) $enabled = (int)trim((string)$out[0]);
-        }
-        $ison = $enabled > 0;
-        return ['name' => 'Windows Firewall', 'state' => $ison ? 'On' : 'Off', 'on' => $ison];
-    }
-    if (function_exists('exec')) {
-        $out = [];
-        exec('ufw status 2>/dev/null', $out);
-        $txt = strtolower(implode(' ', $out));
-        if ($txt !== '') {
-            $ison = str_contains($txt, 'status: active');
-            return ['name' => 'UFW', 'state' => $ison ? 'On' : 'Off', 'on' => $ison];
-        }
-        $out = [];
-        exec('systemctl is-active firewalld 2>/dev/null', $out);
-        $state = strtolower(trim((string)($out[0] ?? '')));
-        if ($state !== '') {
-            $ison = $state === 'active';
-            return ['name' => 'firewalld', 'state' => $ison ? 'On' : 'Off', 'on' => $ison];
-        }
-    }
-    return ['name' => 'Firewall', 'state' => 'N/A', 'on' => null];
 }
 
 // Returns cumulative RX and TX bytes using the active platform-specific network statistics source.
@@ -844,9 +790,10 @@ function getUploadsSizeLabel(): string {
 // Counts failed login events in recent logs within the specified hour interval.
 function getFailedLoginCountHours(int $hours = 24): int|string {
     $file = (defined('LOGS_DIR') ? (string)LOGS_DIR : BASE_DIR.'/storage/logs').'/log_admin.log';
+    if (!is_file($file) || !is_readable($file)) return 'N/A';
     $tail = getFileTailChunk($file, 262144);
     $lines = getTailLines($tail, 2500);
-    if (!$lines) return 'N/A';
+    if (!$lines) return 0;
     $threshold = time() - ($hours * 3600);
     $count = 0;
     $block = [];
@@ -886,8 +833,11 @@ function getSecurityEventHours(int $hours = 24): string {
     $threshold = time() - ($hours * 3600);
     $bestts = 0;
     $bestlabel = '';
+    $seen = false;
     foreach ($files as $name) {
         $path = $logsdir.'/'.$name;
+        if (!is_file($path) || !is_readable($path)) continue;
+        $seen = true;
         $tail = getFileTailChunk($path, 262144);
         $lines = getTailLines($tail, 2500);
         if (!$lines) continue;
@@ -901,7 +851,8 @@ function getSecurityEventHours(int $hours = 24): string {
             break;
         }
     }
-    if ($bestts <= 0) return 'N/A';
+    if (!$seen) return 'N/A';
+    if ($bestts <= 0) return '0';
     return date('Y-m-d H:i:s', $bestts).' | '.$bestlabel;
 }
 
@@ -912,9 +863,12 @@ function getDbIssueEventHours(int $hours = 24): string {
     $threshold = time() - ($hours * 3600);
     $bestts = 0;
     $bestlabel = '';
+    $seen = false;
     $dbpattern = '/(sqlstate|mysql|mysqli|mariadb|database|pdo|deadlock|lock wait|too many connections|connection refused|access denied)/iu';
     foreach ($files as $name) {
         $path = $logsdir.'/'.$name;
+        if (!is_file($path) || !is_readable($path)) continue;
+        $seen = true;
         $tail = getFileTailChunk($path, 262144);
         $lines = getTailLines($tail, 2500);
         if (!$lines) continue;
@@ -929,7 +883,8 @@ function getDbIssueEventHours(int $hours = 24): string {
             break;
         }
     }
-    if ($bestts <= 0) return 'N/A';
+    if (!$seen) return 'N/A';
+    if ($bestts <= 0) return '0';
     return date('Y-m-d H:i:s', $bestts).' | '.$bestlabel;
 }
 
@@ -1054,29 +1009,19 @@ function getServerStatusVars(?array $snapshot = null): array {
     ];
 }
 
-// Returns HTMX out-of-band swap attribute when partial panels require external update.
-function getPanelSwapAttr(bool $useoob): string {
-    return $useoob ? ' hx-swap-oob="outerHTML"' : '';
-}
-
-// Builds conditional template flags controlling status and traffic partial rendering.
-function getPartialPanelFlags(bool $showstatus, bool $showtraffic): array {
-    return [
-        'show_layout' => false,
-        'show_status' => $showstatus,
-        'show_traffic' => $showtraffic,
-    ];
-}
-
 // Renders monitor partial HTML for selected panels using merged template variables.
 function getMonitorPartial(array $snapshot, bool $showstatus, bool $showtraffic, bool $useoob = false): string {
     $vars = array_merge(
         getServerStatusVars($snapshot),
         getTrafficPanelVars($snapshot),
         [
-            '{%status_oob%}' => $showstatus ? getPanelSwapAttr($useoob) : '',
-            '{%traffic_oob%}' => $showtraffic ? getPanelSwapAttr($useoob) : '',
-            'if_flag' => getPartialPanelFlags($showstatus, $showtraffic),
+            '{%status_oob%}' => ($showstatus && $useoob) ? ' hx-swap-oob="outerHTML"' : '',
+            '{%traffic_oob%}' => ($showtraffic && $useoob) ? ' hx-swap-oob="outerHTML"' : '',
+            'if_flag' => [
+                'show_layout' => false,
+                'show_status' => $showstatus,
+                'show_traffic' => $showtraffic,
+            ],
         ]
     );
     return setTemplateBasic('basic-monitor', $vars);
@@ -1125,8 +1070,6 @@ function getMonitorServerStats(): array {
         'servsw' => $servsw,
         'servname' => $servname,
         'servver' => $servver,
-        'nginxver' => getNginxVersion(),
-        'firewall' => getFirewallInfo(),
         'extlist' => getTooltipText(implode(', ', get_loaded_extensions()), 30),
         'srvprot' => getServerValue('SERVER_PROTOCOL', 'N/A'),
         'srvname' => getServerValue('SERVER_NAME', 'N/A'),
@@ -1138,9 +1081,10 @@ function getMonitorServerStats(): array {
 }
 
 // Collects runtime diagnostics, opcache, storage, and timing metrics for monitor.
-function getMonitorRuntimeStats(object $db, array $snapshot, string $afile): array {
-    $disktot = (float)$snapshot['disk_total'];
-    $diskfree = (float)$snapshot['disk_free'];
+function getMonitorRuntimeStats(object $db, ?array $snapshot, string $afile): array {
+    $disktot = ($snapshot !== null) ? (float)$snapshot['disk_total'] : (float)disk_total_space('.');
+    $diskfree = ($snapshot !== null) ? (float)$snapshot['disk_free'] : (float)disk_free_space('.');
+    $diskused = max($disktot - $diskfree, 0);
     $opcache = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
     $opcacheon = $opcache && !empty($opcache['opcache_enabled']);
     $opmemused = $opcache ? $opcache['memory_usage']['used_memory'] : 0;
@@ -1158,6 +1102,9 @@ function getMonitorRuntimeStats(object $db, array $snapshot, string $afile): arr
         : '<span style="color:#21c45d">Normal</span>';
     return [
         'diskio' => getDiskIoMetrics(),
+        'disktotal' => $disktot,
+        'diskfree' => $diskfree,
+        'diskused' => $diskused,
         'gdver' => (function_exists('gd_info') ? (gd_info()['GD Version'] ?? 'N/A') : 'N/A'),
         'opcacheon' => $opcacheon,
         'opmem' => $opcacheon ? filterSize((int)$opmemused).' / '.filterSize((int)$opmemtot) : 'N/A',
@@ -1203,142 +1150,110 @@ function getMonitorRequestStats(): array {
     ];
 }
 
-// Merges monitor context sections into one structured dataset for template assembly.
-function getMonitorContext(object $db, array $conf, string $afile, array $snapshot): array {
-    return array_merge(
-        getMonitorDbStats($db, $conf),
-        getMonitorServerStats(),
-        getMonitorRuntimeStats($db, $snapshot, $afile),
-        getMonitorRequestStats()
-    );
-}
-
-// Builds core template variables for monitor overview and software status sections.
-function getMonitorMainVars(array $ctx, array $conf, callable $status, string $afile): array {
-    return [
-        '{%syncurl%}'    => $afile.'.php?name=monitor&amp;op=sync',
-        '{%status_oob%}' => '',
-        '{%traffic_oob%}' => '',
-        '{%cntnews%}'   => $ctx['cntnews'],
-        '{%cntfile%}'   => $ctx['cntfile'],
-        '{%dbtabs%}'    => $ctx['dbtabs'],
-        '{%userson%}'   => $ctx['userson'],
-        '{%servsoftname%}' => $ctx['servname'],
-        '{%servver%}'   => $ctx['servver'],
-        '{%nginxver%}'  => $ctx['nginxver'],
-        '{%mysql%}'     => db_version(),
-        '{%phpver%}'    => PHP_VERSION,
-        '{%opmode%}'    => $status(!($conf['close'] ?? 0)),
-        '{%statact%}'   => $status(is_active('stat')),
-        '{%referact%}'  => $status(is_active('referers')),
-        '{%newslet%}'   => $status((bool)($conf['newsletter'] ?? 0)),
-        '{%cache%}'     => $status((bool)($conf['cache'] ?? 0)),
-        '{%rewrite%}'   => $status((bool)($conf['rewrite'] ?? 0)),
-        '{%cmsver%}'    => $conf['version'] ?? '',
-        '{%osname%}'    => php_uname('s'),
-        '{%servfull%}'  => $ctx['servsw'],
-        '{%serverip%}'  => $ctx['serverip'],
-        '{%servprot%}'  => $ctx['srvprot'],
-        '{%servname%}'  => $ctx['srvname'],
-        '{%servport%}'  => $ctx['srvport'],
-        '{%servroot%}'  => getTooltipText($ctx['srvroot'], 25),
-        '{%servhttps%}' => $ctx['srvhttps'],
-        '{%fwname%}'    => $ctx['firewall']['name'],
-        '{%fwstate%}'   => $ctx['firewall']['state'],
-        '{%fwclass%}'   => ($ctx['firewall']['on'] === null) ? 'sw-status-gray' : ($ctx['firewall']['on'] ? 'sw-status-green' : 'sw-status-red'),
-        '{%phpsapi%}'   => php_sapi_name(),
-        '{%zend_eng%}'  => function_exists('zend_version') ? zend_version() : 'N/A',
-        '{%php_char%}'  => ini_get('default_charset') ?: 'N/A',
-        '{%php_exts%}'  => $ctx['extlist'],
-        '{%gdver%}'     => $ctx['gdver'],
-        '{%opcache_on%}'=> $status($ctx['opcacheon']),
-        '{%opcache_mem%}'=> $ctx['opmem'],
-        '{%opcache_scripts%}'=> $ctx['opscripts'],
-        '{%opcache_hit_rate%}'=> $ctx['ophit'],
-        '{%postmax%}'   => ini_get('post_max_size'),
-        '{%fileup%}'    => $status((bool)ini_get('file_uploads')),
-        '{%maxfileup%}' => ini_get('max_file_uploads'),
-        '{%upmax%}'     => ini_get('upload_max_filesize'),
-        '{%memlim%}'    => ini_get('memory_limit'),
-        '{%scriptmem%}' => filterSize(memory_get_usage(true)),
-        '{%mempeak%}'   => filterSize(memory_get_peak_usage(true)),
-        '{%maxvars%}'   => ini_get('max_input_vars'),
-        '{%maxtime%}'   => ini_get('max_execution_time'),
-        '{%gzipld%}'    => $status(extension_loaded('zlib')),
-        '{%zipld%}'     => $status(extension_loaded('zip')),
-        '{%bz2ld%}'     => $status(extension_loaded('bz2')),
-        '{%phptime%}'   => date('H:i:s'),
-        '{%uptime%}'    => $ctx['uptime'],
-        '{%dbszfmt%}'   => filterSize($ctx['dbsize']),
-        '{%diskwarn%}'  => $ctx['diskwarn'],
-        '{%quicklinks%}' => $ctx['quick'],
-    ];
-}
-
-// Builds database-related template variables for monitor dashboard rendering.
-function getMonitorTemplateDbVars(array $ctx, array $conf, object $db): array {
+// Builds final render-ready template variables for the main monitor dashboard.
+function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, object $db, string $afile): array {
+    $status = static fn(?bool $v): string => getStatusHtml($v);
     $dbhealth = $ctx['dbhealth'];
-    return [
-        '{%dbconn%}'    => $dbhealth['connections'],
-        '{%dbslow%}'    => $dbhealth['slow'],
-        '{%dbchar%}'    => $dbhealth['charset'],
-        '{%dbsqlmode%}' => getTooltipText($dbhealth['sql_mode'], 25),
-        '{%dbmaxpack%}' => $dbhealth['max_packet'],
-        '{%dbbuffpool%}'=> $dbhealth['buffer_pool'],
-        '{%dbtz%}'      => $dbhealth['timezone'],
-        '{%dbcurname%}' => $conf['db']['name'] ?? 'N/A',
-        '{%dbuser%}'    => $dbhealth['user'],
-        '{%dbqnum%}'    => $db->qnum,
-        '{%dbqtime%}'   => $ctx['dbtime'],
-        '{%exectime%}'  => $ctx['exectime'],
-    ];
-}
-
-// Builds request and disk-related template variables for monitor dashboard.
-function getMonitorRequestVars(array $snapshot, array $ctx): array {
-    $diskfree = (float)$snapshot['disk_free'];
     $diskio = $ctx['diskio'];
     $storages = $ctx['storages'];
-    return [
-        '{%diskfree%}'  => filterSize($diskfree),
-        '{%reqmeth%}'   => $ctx['reqmethod'],
-        '{%reqcookie%}' => getTooltipText($ctx['reqcookie'], 25),
-        '{%requri%}'    => getTooltipText($ctx['requri'], 25),
-        '{%reqquery%}'  => getTooltipText($ctx['reqquery'], 25),
-        '{%reqip%}'     => $ctx['reqip'],
-        '{%requa%}'     => getTooltipText($ctx['requa'], 25),
-        '{%reqlang%}'   => getTooltipText($ctx['reqlang'], 25),
-        '{%dskread%}'   => ($diskio['read_rate'] === null) ? 'N/A' : filterSize((int)$diskio['read_rate']).'/s',
-        '{%dskwrite%}'  => ($diskio['write_rate'] === null) ? 'N/A' : filterSize((int)$diskio['write_rate']).'/s',
-        '{%backupdirsz%}' => ($storages['backup'] === null) ? 'N/A' : filterSize((int)$storages['backup']),
-        '{%cachedirsz%}'  => ($storages['cache'] === null) ? 'N/A' : filterSize((int)$storages['cache']),
-        '{%logsdirsz%}'   => ($storages['logs'] === null) ? 'N/A' : filterSize((int)$storages['logs']),
-        '{%lastbackuprun%}' => $ctx['lastbackup'],
-        '{%errorlog24h%}' => (string)$ctx['error24'],
-        '{%uploadssz%}' => $ctx['uploadsz'],
-        '{%failedlogins24h%}' => (string)$ctx['failed24'],
-        '{%lastsecurityevent24h%}' => $ctx['seclast24'],
-        '{%dbissueevent24h%}' => $ctx['dblast24'],
-    ];
-}
-
-// Merges all monitor template variable groups into final render-ready mapping.
-function getMonitorTemplateVars(array $snapshot, array $ctx, array $conf, object $db, string $afile): array {
-    $status = static fn(?bool $v): string => getStatusHtml($v);
-    return array_merge(
-        getServerStatusVars($snapshot),
-        getTrafficPanelVars($snapshot),
-        getMonitorMainVars($ctx, $conf, $status, $afile),
-        getMonitorTemplateDbVars($ctx, $conf, $db),
-        getMonitorRequestVars($snapshot, $ctx),
-        [
+    $vars = [
+            '{%statusurl%}'  => $afile.'.php?name=monitor&amp;op=status',
+            '{%trafficurl%}' => $afile.'.php?name=monitor&amp;op=traffic',
+            '{%syncurl%}'    => $afile.'.php?name=monitor&amp;op=sync',
+            '{%status_oob%}' => '',
+            '{%traffic_oob%}' => '',
+            '{%cntnews%}'   => $ctx['cntnews'],
+            '{%cntfile%}'   => $ctx['cntfile'],
+            '{%dbtabs%}'    => $ctx['dbtabs'],
+            '{%userson%}'   => $ctx['userson'],
+            '{%servsoftname%}' => $ctx['servname'],
+            '{%servver%}'   => $ctx['servver'],
+            '{%mysql%}'     => db_version(),
+            '{%phpver%}'    => PHP_VERSION,
+            '{%opmode%}'    => $status(!($conf['close'] ?? 0)),
+            '{%statact%}'   => $status(is_active('stat')),
+            '{%referact%}'  => $status(is_active('referers')),
+            '{%newslet%}'   => $status((bool)($conf['newsletter'] ?? 0)),
+            '{%cache%}'     => $status((bool)($conf['cache'] ?? 0)),
+            '{%rewrite%}'   => $status((bool)($conf['rewrite'] ?? 0)),
+            '{%cmsver%}'    => $conf['version'] ?? '',
+            '{%osname%}'    => php_uname('s'),
+            '{%servfull%}'  => $ctx['servsw'],
+            '{%serverip%}'  => $ctx['serverip'],
+            '{%servprot%}'  => $ctx['srvprot'],
+            '{%servname%}'  => $ctx['srvname'],
+            '{%servport%}'  => $ctx['srvport'],
+            '{%servroot%}'  => getTooltipText($ctx['srvroot'], 30),
+            '{%servhttps%}' => $ctx['srvhttps'],
+            '{%phpsapi%}'   => php_sapi_name(),
+            '{%zend_eng%}'  => function_exists('zend_version') ? zend_version() : 'N/A',
+            '{%php_char%}'  => ini_get('default_charset') ?: 'N/A',
+            '{%php_exts%}'  => $ctx['extlist'],
+            '{%gdver%}'     => $ctx['gdver'],
+            '{%opcache_on%}'=> $status($ctx['opcacheon']),
+            '{%opcache_mem%}'=> $ctx['opmem'],
+            '{%opcache_scripts%}'=> $ctx['opscripts'],
+            '{%opcache_hit_rate%}'=> $ctx['ophit'],
+            '{%postmax%}'   => ini_get('post_max_size'),
+            '{%fileup%}'    => $status((bool)ini_get('file_uploads')),
+            '{%maxfileup%}' => ini_get('max_file_uploads'),
+            '{%upmax%}'     => ini_get('upload_max_filesize'),
+            '{%memlim%}'    => ini_get('memory_limit'),
+            '{%scriptmem%}' => filterSize(memory_get_usage(true)),
+            '{%mempeak%}'   => filterSize(memory_get_peak_usage(true)),
+            '{%maxvars%}'   => ini_get('max_input_vars'),
+            '{%maxtime%}'   => ini_get('max_execution_time'),
+            '{%gzipld%}'    => $status(extension_loaded('zlib')),
+            '{%zipld%}'     => $status(extension_loaded('zip')),
+            '{%bz2ld%}'     => $status(extension_loaded('bz2')),
+            '{%phptime%}'   => date('H:i:s'),
+            '{%uptime%}'    => $ctx['uptime'],
+            '{%dbszfmt%}'   => filterSize($ctx['dbsize']),
+            '{%diskwarn%}'  => $ctx['diskwarn'],
+            '{%quicklinks%}' => $ctx['quick'],
+            '{%dbconn%}'    => $dbhealth['connections'],
+            '{%dbslow%}'    => $dbhealth['slow'],
+            '{%dbchar%}'    => $dbhealth['charset'],
+            '{%dbsqlmode%}' => getTooltipText($dbhealth['sql_mode'], 30),
+            '{%dbmaxpack%}' => $dbhealth['max_packet'],
+            '{%dbbuffpool%}'=> $dbhealth['buffer_pool'],
+            '{%dbtz%}'      => $dbhealth['timezone'],
+            '{%dbcurname%}' => $conf['db']['name'] ?? 'N/A',
+            '{%dbuser%}'    => $dbhealth['user'],
+            '{%dbqnum%}'    => $db->qnum,
+            '{%dbqtime%}'   => $ctx['dbtime'],
+            '{%exectime%}'  => $ctx['exectime'],
+            '{%diskfree%}'  => filterSize((float)$ctx['diskfree']),
+            '{%disktot%}'   => filterSize((float)$ctx['disktotal']),
+            '{%diskused%}'  => filterSize((float)$ctx['diskused']),
+            '{%reqmeth%}'   => $ctx['reqmethod'],
+            '{%reqcookie%}' => getTooltipText($ctx['reqcookie'], 30),
+            '{%requri%}'    => getTooltipText($ctx['requri'], 30),
+            '{%reqquery%}'  => getTooltipText($ctx['reqquery'], 30),
+            '{%reqip%}'     => $ctx['reqip'],
+            '{%requa%}'     => getTooltipText($ctx['requa'], 30),
+            '{%reqlang%}'   => getTooltipText($ctx['reqlang'], 30),
+            '{%dskread%}'   => ($diskio['read_rate'] === null) ? 'N/A' : filterSize((int)$diskio['read_rate']).'/s',
+            '{%dskwrite%}'  => ($diskio['write_rate'] === null) ? 'N/A' : filterSize((int)$diskio['write_rate']).'/s',
+            '{%backupdirsz%}' => ($storages['backup'] === null) ? 'N/A' : filterSize((int)$storages['backup']),
+            '{%cachedirsz%}'  => ($storages['cache'] === null) ? 'N/A' : filterSize((int)$storages['cache']),
+            '{%logsdirsz%}'   => ($storages['logs'] === null) ? 'N/A' : filterSize((int)$storages['logs']),
+            '{%lastbackuprun%}' => $ctx['lastbackup'],
+            '{%errorlog24h%}' => (string)$ctx['error24'],
+            '{%uploadssz%}' => $ctx['uploadsz'],
+            '{%failedlogins24h%}' => (string)$ctx['failed24'],
+            '{%lastsecurityevent24h%}' => getTooltipText($ctx['seclast24'], 30),
+            '{%dbissueevent24h%}' => getTooltipText($ctx['dblast24'], 30),
             'if_flag' => [
                 'show_layout' => true,
-                'show_status' => true,
-                'show_traffic' => true,
+                'show_status' => ($snapshot !== null),
+                'show_traffic' => ($snapshot !== null),
             ],
-        ]
-    );
+        ];
+    if ($snapshot !== null) {
+        $vars = array_merge($vars, getServerStatusVars($snapshot), getTrafficPanelVars($snapshot));
+    }
+    return $vars;
 }
 
 // Renders the main monitor page including navigation, panels, and full dashboard layout.
@@ -1346,9 +1261,13 @@ function monitor(): void {
     global $db, $conf, $afile;
     setHead();
     $cont = navi().setTemplateBasic('open');
-    $snapshot = getMonitorPanelSnapshot();
-    $ctx = getMonitorContext($db, $conf, $afile, $snapshot);
-    $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
+    $ctx = array_merge(
+        getMonitorDbStats($db, $conf),
+        getMonitorServerStats(),
+        getMonitorRuntimeStats($db, null, $afile),
+        getMonitorRequestStats()
+    );
+    $vars = getMonitorTemplateVars(null, $ctx, $conf, $db, $afile);
     $cont .= setTemplateBasic('basic-monitor', $vars).setTemplateBasic('close');
     echo $cont;
     setFoot();
@@ -1357,26 +1276,23 @@ function monitor(): void {
 // Renders monitor information page with standard admin info block and navigation tabs.
 function info(): void {
     setHead();
-    echo navi(0, 1, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo navi(1).'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
 // Renders only traffic partial panel for asynchronous dashboard refresh requests.
 function traffic(): void {
-    $snapshot = getMonitorPanelSnapshot();
-    echo getMonitorPartial($snapshot, false, true, false);
+    echo getMonitorPartial(getMonitorPanelSnapshot(), false, true, false);
 }
 
 // Renders only status partial panel for asynchronous dashboard refresh requests.
 function status(): void {
-    $snapshot = getMonitorPanelSnapshot();
-    echo getMonitorPartial($snapshot, true, false, false);
+    echo getMonitorPartial(getMonitorPanelSnapshot(), true, false, false);
 }
 
 // Renders status and traffic partials together for synchronized asynchronous updates.
 function sync(): void {
-    $snapshot = getMonitorPanelSnapshot();
-    echo getMonitorPartial($snapshot, true, true, true);
+    echo getMonitorPartial(getMonitorPanelSnapshot(), true, true, true);
 }
 
 switch ($op) {
@@ -1386,5 +1302,3 @@ switch ($op) {
     case 'status': status(); break;
     case 'sync': sync(); break;
 }
-
-

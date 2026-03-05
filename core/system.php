@@ -2517,49 +2517,6 @@ function getCaptcha(int $id): string {
     return $cont;
 }
 
-# Hints and tips on the version, size, time, etc.
-function getHint(mixed $val, int $typ = 0, int $mod = 0, int $flg = 0, int $cut = 0, int $usef = 0, string|int $cmp1 = 0, string|int $cmp2 = 0, string $tit = ''): string {
-    $ok  = ($mod === 0 || $mod === 2);
-    $grn = $ok ? 'sl_green sl_note' : 'sl_red sl_note';
-    $red = $ok ? 'sl_red sl_note'   : 'sl_green sl_note';
-    $r5  = $ok ? _RATE5 : _RATE1;
-    $r1  = $ok ? _RATE1 : _RATE5;
-    $acon = $usef ? filterSize((string)$val) : $val;
-    if ($cut > 0) $acon = cutstr((string)$acon, $cut);
-    $info = !empty($tit) ? ' - '.$tit : '';
-    switch ($typ) {
-        case 1:
-            return '<span title="'.htmlspecialchars($tit, ENT_QUOTES, 'UTF-8').'" class="sl_blue sl_note">'.$acon.'</span>';
-        case 2:
-            $on  = ($flg === 0) ? _ON  : $r5;
-            $off = ($flg === 0) ? _OFF : $r1;
-            if ($mod <= 1) return ($val == 0) ? '<span title="'.$on.'" class="'.$grn.'">'._ON.'</span>' : '<span title="'.$off.'" class="'.$red.'">'._OFF.'</span>';
-            return ($val != 0)   ? '<span title="'.$on.'" class="'.$grn.'">'._ON.'</span>' : '<span title="'.$off.'" class="'.$red.'">'._OFF.'</span>';
-        case 3:
-            $eq  = (string)$cmp1 === (string)$cmp2;
-            $cls = $eq ? $grn : $red;
-            $ttl = ($eq ? $r5 : $r1).$info;
-            return '<span title="'.$ttl.'" class="'.$cls.'">'.$acon.'</span>';
-        default:
-            preg_match('#[\d]+#', (string)$val, $m);
-            $num = isset($m[0]) && is_numeric($m[0]);
-            if ($num) {
-                if ($val <= $cmp1 && $cmp1) {
-                    $cls = $grn;
-                    $ttl = $r5.$info;
-                } elseif ($val <= $cmp2 && $cmp2) {
-                    $cls = 'sl_orange sl_note';
-                    $ttl = _RATE3.$info;
-                } else {
-                    $cls = $red;
-                    $ttl = $r1.$info;
-                }
-                return '<span title="'.$ttl.'" class="'.$cls.'">'.$acon.'</span>';
-            }
-            return '<span title="'.htmlspecialchars($tit, ENT_QUOTES, 'UTF-8').'" class="sl_blue sl_note">'.$acon.'</span>';
-    }
-}
-
 # Convert image to base64
 function getImgEncode(array $img): string {
     if (file_exists($img[1]) && filesize($img[1]) <= 10240) {
@@ -2771,8 +2728,28 @@ function getVariables(): string {
     $cvar = explode(',', $conf['variables']);
     if ($cvar[1]) {
         list($cpu, $info) = getCpuLoad(4);
-        $cpucont = _PLOAD.': '.getHint($cpu, 0, 0, 0, 0, 0, 50, 80, $info).' % <progress max="100" value="'.$cpu.'">'.$cpu.' %</progress>';
-        $memcont = _MEML.': '.getHint(memory_get_usage(), 0, 0, 0, 0, 1, 10485760, 20971520, 0).' <progress max="'.(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024).'" value="'.memory_get_usage().'">'.filterSize(memory_get_usage()).'</progress>';
+        $cpucls = 'sl_red sl_note';
+        $cputtl = _RATE1.(($info) ? ' - '.$info : '');
+        if ($cpu <= 50) {
+            $cpucls = 'sl_green sl_note';
+            $cputtl = _RATE5.(($info) ? ' - '.$info : '');
+        } elseif ($cpu <= 80) {
+            $cpucls = 'sl_orange sl_note';
+            $cputtl = _RATE3.(($info) ? ' - '.$info : '');
+        }
+        $cpucont = _PLOAD.': <span title="'.$cputtl.'" class="'.$cpucls.'">'.$cpu.'</span> % <progress max="100" value="'.$cpu.'">'.$cpu.' %</progress>';
+        $memuse = memory_get_usage();
+        $memtxt = filterSize((string)$memuse);
+        $memcls = 'sl_red sl_note';
+        $memttl = _RATE1;
+        if ($memuse <= 10485760) {
+            $memcls = 'sl_green sl_note';
+            $memttl = _RATE5;
+        } elseif ($memuse <= 20971520) {
+            $memcls = 'sl_orange sl_note';
+            $memttl = _RATE3;
+        }
+        $memcont = _MEML.': <span title="'.$memttl.'" class="'.$memcls.'">'.$memtxt.'</span> <progress max="'.(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024).'" value="'.$memuse.'">'.$memtxt.'</progress>';
         $cont .= '<fieldset class="sl_sys_var"><legend style="color: darkgreen;">'._SYSTEM_INFO.'</legend>'.$cpucont.'<br>'.$memcont.'<br>'.getTimeLoads().'</fieldset>';
     }
     if ($cvar[2] && $_POST) $cont .= '<fieldset class="sl_sys_var"><legend style="color: green;">'._AVARIABLES.': POST</legend>'.htmlspecialchars(print_r($_POST, true)).'</fieldset>';

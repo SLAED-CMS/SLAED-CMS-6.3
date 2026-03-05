@@ -14,7 +14,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     $ops = ['name=modules'.$typelink, 'name=modules&amp;op=info'];
     $lang = [_HOME, _INFO];
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
-    return getAdminTabs(_MODULES, 'modules.png', $search, $ops, $lang, [], [], $tab, (bool)$subtab);
+    return getAdminTabs($search, $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
 function modules(): void {

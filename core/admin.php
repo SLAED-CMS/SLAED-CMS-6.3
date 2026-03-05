@@ -188,66 +188,45 @@ function setUnauthorized() {
     setExit(_LOGININCOR);
 }
 
-# Generate admin tabs navigation
-function getAdminTabs(
-    string $ttl,
-    string $ico,
-    string $sub,
-    array $ops,
-    array $tabs,
-    array $subops = [],
-    array $subtabs = [],
-    int $act = 0,
-    bool $has_sub = false,
-    int $act_sub = 0,
-    string $mtab = 'menutab'
-): string {
- global $afile;
-
+# Build admin tabs navigation with automatic module title and icon fallback
+function getAdminTabs(string $sub, array $ops, array $tabs, array $sops = [], array $stabs = [], int $act = 0, bool $hassub = false, int $actsub = 0, string $mtab = 'menutab'): string {
+    global $afile, $conf;
+    $ttl = _ADMINMENU;
+    $ico = 'components.png';
+    $name = getVar('req', 'name', 'var');
+    if ($name !== '' && isset($conf['modules'][$name]) && is_array($conf['modules'][$name])) {
+        $lang = trim($conf['modules'][$name]['lang'] ?? '');
+        if ($lang !== '') $ttl = defined($lang) ? constant($lang) : $lang;
+        $img = basename(trim($conf['modules'][$name]['img'] ?? ''));
+        if ($img !== '' && file_exists(BASE_DIR.'/templates/admin/images/admin/'.$img)) $ico = $img;
+    }
     $cnt = '<ul id="'.$mtab.'" class="reset tabmenu">';
     $scnt = '';
     $k = 0;
-
     foreach ($tabs as $tab) {
-        if ($tab === '') {
-            $k++;
-            continue;
-        }
-
+        if ($tab === '') { $k++; continue; }
         $sel = ($k === $act) ? ' class="selected"' : '';
-
-        if ($has_sub && !empty($subtabs)) {
+        if ($hassub && !empty($stabs)) {
             $scnt = '<ul id="'.$mtab.'s" class="reset tabsubmenu">';
             $l = 0;
-
-            foreach ($subtabs as $stab) {
-                if ($stab === '') {
-                    $l++;
-                    continue;
-                }
-
-                $ssel = ($l === $act_sub) ? ' class="selected"' : '';
-                $href_sub = !empty($subops[$l])
-                    ? 'href="'.$afile.'.php?'.$subops[$l].'"'
+            foreach ($stabs as $stab) {
+                if ($stab === '') { $l++; continue; }
+                $ssel = ($l === $actsub) ? ' class="selected"' : '';
+                $hrefsub = !empty($sops[$l])
+                    ? 'href="'.$afile.'.php?'.$sops[$l].'"'
                     : 'rel="tabcs'.$l.'" href="#"';
-
-                $scnt .= '<li><a '.$href_sub.$ssel.'><b>'.$stab.'</b></a></li>';
+                $scnt .= '<li><a '.$hrefsub.$ssel.'><b>'.$stab.'</b></a></li>';
                 $l++;
             }
-
             $scnt .= '</ul>';
         }
-
         $href = !empty($ops[$k])
             ? 'href="'.$afile.'.php?'.$ops[$k].'"'
             : 'rel="tabc'.$k.'" href="#"';
-
         $cnt .= '<li><a '.$href.$sel.'><b>'.$tab.'</b></a></li>';
         $k++;
     }
-
     $cnt .= ($scnt !== '') ? '</ul>'.$scnt : '</ul>';
-
     return setTemplateBasic('title', ['{%title%}' => $ttl, '{%icon%}' => $ico, '{%subtitle%}' => $sub, '{%content%}' => $cnt]);
 }
 
@@ -339,104 +318,12 @@ function admininfo() {
             $w_cont .= '</table>';
             $ablocks .= setTemplateBlock('block-left', ['{%title%}' => _WAITINGCONT, '{%content%}' => $w_cont, '{%id%}' => '4']);
             
-            if ($conf['sblock'] && isAdmin(true)) {
-                include('config/statistic.php');
-                
-                $phpsapi = ucfirst(php_sapi_name());
-                $osver = php_uname('s');
-                $server = getenv('SERVER_SOFTWARE');
-                $gdver = php_gd();
-                
-                list($dbtime) = $db->getSqlRow($db->getSqlQuery('SELECT NOW()'));
-                $dbtime = format_time($dbtime, _TIMESTRING);
-                $phptime = date(_TIMESTRING);
-                
-                $dbver = db_version();
-                $dbtotal = $dbfree = 0;
-                $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
-                if ($dbname !== '') {
-                    $dbresult = $db->getSqlQuery('SHOW TABLE STATUS FROM `'.$dbname.'`');
-                    while ($row = $db->getSqlRow($dbresult)) {
-                        $dbtotal += $row['Data_length'] + $row['Index_length'];
-                        $dbfree += ($row['Data_free']) ? $row['Data_free'] : 0;
-                    }
-                }
-                function get_modules($mod) {
-                    return (function_exists('apache_get_modules')) ? ((array_search($mod, apache_get_modules())) ? getHint(1, 2, 2, 1, 0, 0, 0, 0, 0) : getHint(0, 2, 2, 1, 0, 0, 0, 0, 0)) : getHint(_NO_INFO, 1, 0, 0, 6, 0, 0, 0, _NO_INFO);
-                }
-                $gzip = function_exists('gzopen') ? 1 : 0;
-                $bzip = function_exists('bzopen') ? 1 : 0;
-                $zip = checkCompress() ? 1 : 0;
-                $stat = (is_array($conf['statistic']) && isset($conf['statistic']['stat'])) ? $conf['statistic']['stat'] : 0;
-                $refer = (is_array($conf['referers']) && isset($conf['referers']['refer'])) ? $conf['referers']['refer'] : 0;
-                
-                $s_cont = '<table class="sl_tab_bl">'
-                .'<tr><td>'._SCLOSE.':</td><td>'.getHint($conf['close'], 2, 0, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>'._STATISTIC.':</td><td>'.getHint($stat, 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>'._REFERERS.':</td><td>'.getHint($refer, 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>'._NEWSLETTER.':</td><td>'.getHint($conf['newsletter'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>'._SICACHE.':</td><td>'.getHint($conf['cache'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>'._SIREWRITE.':</td><td>'.getHint($conf['rewrite'], 2, 2, 0, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td colspan="2"><hr></td></tr>'
-                .'<tr><td>SLAED CMS:</td><td>'.getHint($conf['version'], 1, 0, 0, 8, 0, 0, 0, $conf['version']).'</td></tr>'
-                .'<tr><td>OS:</td><td>'.getHint($osver, 1, 0, 0, 8, 0, 0, 0, $osver).'</td></tr>'
-                .'<tr><td>Server:</td><td>'.getHint($server, 1, 0, 0, 8, 0, 0, 0, $server).'</td></tr>'
-                .'<tr><td>PHP version:</td><td>'.getHint(PHP_VERSION, 0, 1, 0, 8, 0, '8.1', '8.4', PHP_VERSION).'</td></tr>'
-                .'<tr><td>PHP SAPI:</td><td>'.getHint($phpsapi, 1, 0, 0, 8, 0, 0, 0, $phpsapi).'</td></tr>'
-                .'<tr><td>PHP GD:</td><td>'.getHint($gdver, 0, 1, 0, 8, 0, '2', '2.0.2', $gdver).'</td></tr>'
-                .'<tr><td>MySQL:</td><td>'.getHint(substr($dbver, 0, strrpos($dbver, '.')), 0, 1, 0, 8, 0, '5', '10', $dbver).'</td></tr>'
-                .'<tr><td>DB size:</td><td>'.getHint($dbtotal, 0, 0, 0, 8, 1, 52428800, 104857600, 0).'</td></tr>';
-                $s_cont .= ($conf['db']['engine'] != 'InnoDB') ? '<tr><td>DB overhead:</td><td>'.getHint($dbfree, 0, 0, 8, 0, 1, 512000, 1048576, 0).'</td></tr>' : '';
-                $s_cont .= '<tr><td>Post max size:</td><td>'.getHint((str_replace('M', '', ini_get('post_max_size')) * 1024 * 1024), 0, 1, 0, 8, 1, 2097152, 4194304, 0).'</td></tr>'
-                .'<tr><td>File uploads:</td><td>'.getHint(ini_get('file_uploads'), 2, 2, 1, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>Upload max file size:</td><td>'.getHint((str_replace('M', '', ini_get('upload_max_filesize')) * 1024 * 1024), 0, 1, 0, 8, 1, 2097152, 4194304, 0).'</td></tr>'
-                .'<tr><td>Memory limit:</td><td>'.getHint((str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024), 0, 1, 0, 8, 1, 33554432, 67108864, 0).'</td></tr>'
-                .'<tr><td>Max input vars:</td><td>'.getHint(ini_get('max_input_vars'), 0, 1, 0, 0, 0, 800, 900, 0).'</td></tr>'
-                .'<tr><td>Execution time:</td><td>'.getHint((ini_get('max_execution_time').' '._SEC.'.'), 0, 1, 0, 0, 0, 15, 30, 0).'</td></tr>'
-                .'<tr><td colspan="2"><hr></td></tr>';
-                if ($server !== false && stripos($server, 'Apache') !== false) {
-                    $s_cont .= '<tr><td>Mod Rewrite:</td><td>'.get_modules('mod_rewrite').'</td></tr>'
-                    .'<tr><td>Mod Deflate:</td><td>'.get_modules('mod_deflate').'</td></tr>'
-                    .'<tr><td>Mod Expires:</td><td>'.get_modules('mod_expires').'</td></tr>'
-                    .'<tr><td>Mod GZip:</td><td>'.get_modules('mod_gzip').'</td></tr>'
-                    .'<tr><td>Mod Headers:</td><td>'.get_modules('mod_headers').'</td></tr>'
-                    .'<tr><td>Mod PageSpeed:</td><td>'.get_modules('mod_pagespeed').'</td></tr>';
-                }
-                $s_cont .= '<tr><td>GZip compression:</td><td>'.getHint($gzip, 2, 2, 1, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>BZip2 compression:</td><td>'.getHint($bzip, 2, 2, 1, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td>Zip archive compress:</td><td>'.getHint($zip, 2, 2, 1, 0, 0, 0, 0, 0).'</td></tr>'
-                .'<tr><td colspan="2"><hr></td></tr>'
-                .'<tr><td>PHP timezone:</td><td>'.getHint(date('H:i:s'), 3, 0, 1, 8, 0, $dbtime, $phptime, $phptime).'</td></tr>'
-                .'<tr><td>MySQL timezone:</td><td>'.getHint(format_time($dbtime, 'H:i:s'), 3, 0, 1, 8, 0, $dbtime, $phptime, $dbtime).'</td></tr>'
-                .'<tr><td>Disk total space:</td><td>'.getHint(disk_total_space('.'), 0, 1, 0, 9, 1, 10737418240, 107374182400, 0).'</td></tr>'
-                .'<tr><td>Disk free space:</td><td>'.getHint(disk_free_space('.'), 0, 1, 0, 9, 1, 1073741824, 10737418240, 0).'</td></tr>';
-                
-                if (PHP_VERSION < '5.4') {
-                    $globals = (ini_get('register_globals') == 1) ? 1 : 0;
-                    $safe_mode = (ini_get('safe_mode') == 1) ? 1 : 0;
-                    $magic_quotes = (ini_get('magic_quotes_gpc') == 1) ? 1 : 0;
-                    $s_cont .= '<tr><td>Register globals:</td><td>'.getHint($globals, 2, 3, 1, 0, 0, 0, 0, 0).'</td></tr>'
-                    .'<tr><td>Safe mode:</td><td>'.getHint($safe_mode, 2, 2, 1, 0, 0, 0, 0, 0).'</td></tr>'
-                    .'<tr><td>Magic quotes gpc:</td><td>'.getHint($magic_quotes, 2, 2, 1, 0, 0, 0, 0, 0).'</td></tr>';
-                }
-                
-                $s_cont .= '</table>';
-                $ablocks .= setTemplateBlock('block-left', ['{%title%}' => _SYSTEM_INFO, '{%content%}' => $s_cont, '{%id%}' => '5']);
-            }
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
         $e_cont = '<form method="post" action="'.$afile.'.php"><table><tr><td>'.redaktor('1', 'editor', '', $editor, 1).'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
         $ablocks .= setTemplateBlock('block-left', ['{%title%}' => _EDITOR, '{%content%}' => $e_cont, '{%id%}' => '6']);
         return $ablocks;
     }
-}
-
-function php_gd() {
-    ob_start();
-    phpinfo(8);
-    $module_info = ob_get_clean();
-    $gdversion = (preg_match('#\bgd\s+version\b[^\d\n\r]+?([\d\.]+)#i', $module_info, $matches)) ? $matches[1] : 0;
-    return $gdversion;
 }
 
 function db_version() {

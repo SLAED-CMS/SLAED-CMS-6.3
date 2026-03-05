@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'];
     $lang = [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO];
-    return getAdminTabs(_BLOCKS, 'blocks.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function getBlockModules(): array {

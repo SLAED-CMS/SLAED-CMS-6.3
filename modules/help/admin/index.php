@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('help')) die('Illegal file access'
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=conf', 'name=help&amp;op=info'];
     $lang = [_HOME, _CLOSED, _PREFERENCES, _INFO];
-    return getAdminTabs(_HELP, 'help.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function help(): void {

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $tab = 0, int $subtab = 0): string {
     $ops = ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
     $lang = [_HOME, _PREFERENCES, _INFO];
-    return getAdminTabs(_LANG, 'lang.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function getLangPath(string $mod = '', string $typ = ''): string {

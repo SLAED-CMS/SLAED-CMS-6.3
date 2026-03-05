@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('jokes')) die('Illegal file access
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=conf', 'name=jokes&amp;op=info'];
     $lang = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
-    return getAdminTabs(_JOKES, 'jokes.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function jokes(): void {

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $tab = 0, int $subtab = 0): string {
     $ops = ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'];
     $lang = [_HOME, _ADD, _INFO];
-    return getAdminTabs(_MESSAGES, 'messages.png', '', $ops, $lang, [], [], $tab, $subtab);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
 }
 
 function messages(): void {

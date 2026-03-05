@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('forum')) die('Illegal file access
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=forum', 'name=forum&amp;op=conf', 'name=forum&amp;op=info'];
     $lang = [_SYNCH, _PREFERENCES, _INFO];
-    return getAdminTabs(_FORUM, 'forum.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function forum(): void {

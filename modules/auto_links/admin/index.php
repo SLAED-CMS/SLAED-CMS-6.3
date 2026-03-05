@@ -32,7 +32,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
            .'<input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
         $box = setTemplateBasic('searchbox', ['{%searchbox%}' => $box]);
     }
-    $cont = getAdminTabs(_A_LINKS, 'auto_links.png', $box, $ops, $lang, [], [], $tab, (bool)$subtab);
+    $cont = getAdminTabs($box, $ops, $lang, [], [], $tab, (bool)$subtab);
     $cont .= (!$conf['referers']['refer']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]) : '';
     return $cont;
 }

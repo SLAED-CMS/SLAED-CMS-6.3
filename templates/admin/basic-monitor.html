@@ -446,6 +446,12 @@
 {%if show_layout%}
     <!-- ROW 1: Sys Status + Software -->
     <div class="mon-top-split">
+        <div id="monitor-status-panel" class="mon-card" hx-get="{%statusurl%}" hx-trigger="load" hx-swap="outerHTML">
+            <div class="mon-panel-head">
+                <span class="mon-head-left"><i class="bi bi-speedometer2"></i>Server Status</span>
+            </div>
+            <div class="sys-sub">Loading...</div>
+        </div>
 {%endif%}
 {%if show_status%}
         <div id="monitor-status-panel"{%status_oob%} class="mon-card">
@@ -545,6 +551,17 @@
     </div>
 {%endif%}
 
+{%if show_layout%}
+    <!-- ROW 3: Traffic -->
+    <div id="monitor-traffic-panel" class="mon-bottom-grid" hx-get="{%trafficurl%}" hx-trigger="load" hx-swap="outerHTML">
+        <div class="mon-card">
+            <div class="mon-panel-head">
+                <span class="mon-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic & Status</span>
+            </div>
+            <div class="sys-sub">Loading...</div>
+        </div>
+    </div>
+{%endif%}
 {%if show_traffic%}
     <!-- ROW 3: Traffic -->
     <div id="monitor-traffic-panel"{%traffic_oob%} class="mon-bottom-grid">
@@ -637,8 +654,8 @@
                         <td>{%servfull%}</td>
                     </tr>
                     <tr>
-                        <td>Server IP</td>
-                        <td>{%serverip%}</td>
+                        <td>HTTPS</td>
+                        <td>{%servhttps%}</td>
                     </tr>
                     <tr>
                         <td>Server Protocol</td>
@@ -649,12 +666,12 @@
                         <td>{%servname%}</td>
                     </tr>
                     <tr>
-                        <td>Server Port</td>
-                        <td>{%servport%}</td>
+                        <td>Server IP</td>
+                        <td>{%serverip%}</td>
                     </tr>
                     <tr>
-                        <td>HTTPS</td>
-                        <td>{%servhttps%}</td>
+                        <td>Server Port</td>
+                        <td>{%servport%}</td>
                     </tr>
                     <tr>
                         <td>Document Root</td>
@@ -668,10 +685,6 @@
                         <td>Disk Free</td>
                         <td>{%diskfree%}</td>
                     </tr>
-                </table>
-            </div>
-            <div>
-                <table class="mon-clean-table">
                     <tr>
                         <td>Disk Used</td>
                         <td>{%diskused%}</td>
@@ -688,42 +701,10 @@
                         <td>Disk Health</td>
                         <td>{%diskwarn%}</td>
                     </tr>
-                    <tr>
-                        <td>Backup Folder Size</td>
-                        <td>{%backupdirsz%}</td>
-                    </tr>
-                    <tr>
-                        <td>Cache Folder Size</td>
-                        <td>{%cachedirsz%}</td>
-                    </tr>
-                    <tr>
-                        <td>Logs Folder Size</td>
-                        <td>{%logsdirsz%}</td>
-                    </tr>
-                    <tr>
-                        <td>Last Backup Run</td>
-                        <td>{%lastbackuprun%}</td>
-                    </tr>
-                    <tr>
-                        <td>Error Log (24h)</td>
-                        <td>{%errorlog24h%}</td>
-                    </tr>
-                    <tr>
-                        <td>Uploads Folder Size</td>
-                        <td>{%uploadssz%}</td>
-                    </tr>
-                    <tr>
-                        <td>Failed Logins (24h)</td>
-                        <td>{%failedlogins24h%}</td>
-                    </tr>
-                    <tr>
-                        <td>Last Security Event (24h)</td>
-                        <td>{%lastsecurityevent24h%}</td>
-                    </tr>
-                    <tr>
-                        <td>DB Issues Event (24h)</td>
-                        <td>{%dbissueevent24h%}</td>
-                    </tr>
+                </table>
+            </div>
+            <div>
+                <table class="mon-clean-table">
                     <tr>
                         <td>Operation Mode</td>
                         <td>{%opmode%}</td>
@@ -747,6 +728,42 @@
                     <tr>
                         <td>SEF Rewrite</td>
                         <td>{%rewrite%}</td>
+                    </tr>
+                    <tr>
+                        <td>Last Backup Run</td>
+                        <td>{%lastbackuprun%}</td>
+                    </tr>
+                    <tr>
+                        <td>Backup Folder Size</td>
+                        <td>{%backupdirsz%}</td>
+                    </tr>
+                    <tr>
+                        <td>Cache Folder Size</td>
+                        <td>{%cachedirsz%}</td>
+                    </tr>
+                    <tr>
+                        <td>Logs Folder Size</td>
+                        <td>{%logsdirsz%}</td>
+                    </tr>
+                    <tr>
+                        <td>Uploads Folder Size</td>
+                        <td>{%uploadssz%}</td>
+                    </tr>
+                    <tr>
+                        <td>Failed Logins</td>
+                        <td>{%failedlogins24h%}</td>
+                    </tr>
+                    <tr>
+                        <td>Security Event</td>
+                        <td>{%lastsecurityevent24h%}</td>
+                    </tr>
+                    <tr>
+                        <td>Database Error</td>
+                        <td>{%dbissueevent24h%}</td>
+                    </tr>
+                    <tr>
+                        <td>Error Log</td>
+                        <td>{%errorlog24h%}</td>
                     </tr>
                 </table>
             </div>

@@ -27,7 +27,6 @@ define('_ADMININFO','Notizen des Administrators');
 define('_ADMININFODES','Die Information, die wird allen Autoren zugдnglich sein. Die Abbildung der gegebenen Information wird im Oberteil des Paneeles fьr Systemadministrators erstellt.');
 define('_ADMINLOGIN','Zugang in das System-Administration');
 define('_ADMINLOGIN_NEW','Die Installation des Systems Administration');
-define('_ADMIN_SBLOCK','Den Block des Administrators die «Systeminformation» aktivieren?');
 define('_ADMIN_SESSION','Sitzungen für die Verwalter');
 define('_AFTEREXPIRATION','Nach dem Ablauf');
 define('_AKTIVE','Aktive');

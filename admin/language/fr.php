@@ -27,7 +27,6 @@ define('_ADMININFO','Notes administrateur');
 define('_ADMININFODES',"L'information qui sera accessible à tous les auteurs. L'affichage de cette information est produite dans la partie supérieure du panneau de l'administrateur système.");
 define('_ADMINLOGIN',"Ouverture de session d'administration");
 define('_ADMINLOGIN_NEW',"Installation d'un système d'administration");
-define('_ADMIN_SBLOCK',"Activation du bloc de l'administrateur «Système d'information»?");
 define('_ADMIN_SESSION','Nom de sessions pour les administrateurs');
 define('_AFTEREXPIRATION',"Après l'expiration de la");
 define('_AKTIVE','Actif');

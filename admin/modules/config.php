@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ($opt == 1) ? ['name=config', 'name=config', 'name=config', 'name=config', 'name=config', 'name=config&amp;op=show', 'name=config', 'name=config', 'name=config&amp;op=info'] : ['', '', '', '', '', '', '', '', 'name=config&amp;op=info'];
     $lang = [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _SEARCH, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO];
-    return getAdminTabs(_PREFERENCES, 'config.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
 function config(): void {
@@ -152,7 +152,6 @@ function config(): void {
     .'<tr><td>'._SESSION.'</td><td>'.radio_form($conf['session'], 'session').'</td></tr>'
     .'<tr><td>'._MESSAGE_BOX.'</td><td>'.radio_form($conf['message'], 'message').'</td></tr>'
     .'<tr><td>'._TIME_DB.'</td><td>'.radio_form($conf['db_t'], 'db_t').'</td></tr>'
-    .'<tr><td>'._ADMIN_SBLOCK.'</td><td>'.radio_form($conf['sblock'], 'sblock').'</td></tr>'
     .'<tr><td>'._ADMINFOEDIT.'</td><td>'.radio_form($conf['adminfo'], 'adminfo').'</td></tr>'
     .'<tr><td>'._SITE_CLOSE.'</td><td>'.radio_form($conf['close'], 'close').'</td></tr>'
     .'<tr><td>'._DEVMODE.'</td><td>'.radio_form($conf['dev_mode'] ?? 0, 'dev_mode').'</td></tr></table>'
@@ -341,7 +340,6 @@ function save(): void {
         'session' => getVar('post', 'session', 'num'),
         'message' => getVar('post', 'message', 'num'),
         'db_t' => getVar('post', 'db_t', 'num'),
-        'sblock' => getVar('post', 'sblock', 'num'),
         'adminfo' => getVar('post', 'adminfo', 'num'),
         'close' => getVar('post', 'close', 'num'),
         'defis' => urlencode(getVar('post', 'defis', 'let', '|')),

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('voting')) die('Illegal file acces
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'];
     $lang = [_HOME, _ADD, _PREFERENCES, _INFO];
-    return getAdminTabs(_VOTING, 'voting.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, (bool)$subtab);
 }
 
 function voting(): void {

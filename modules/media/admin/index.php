@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('media')) die('Illegal file access
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=conf', 'name=media&amp;op=info'];
     $lang = [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO];
-    return getAdminTabs(_MEDIA, 'media.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function media(): void {

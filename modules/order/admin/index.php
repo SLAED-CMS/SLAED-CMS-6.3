@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('order')) die('Illegal file access
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=conf', 'name=order&amp;op=info'];
     $lang = [_HOME, _ADD, _PREFERENCES, _INFO];
-    return getAdminTabs(_ORDER, 'order.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function order(): void {

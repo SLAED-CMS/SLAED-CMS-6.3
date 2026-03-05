@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
     $ops = ($opt == 1) ? ['name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields&amp;op=info'] : ['', '', '', '', '', '', 'name=fields&amp;op=info'];
     $lang = [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO];
-    return getAdminTabs(_FIELDS, 'fields.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
 function fields(): void {

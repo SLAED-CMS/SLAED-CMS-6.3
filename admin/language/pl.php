@@ -27,7 +27,6 @@ define('_ADMININFO','Notatki admin');
 define('_ADMININFODES','Informacja, która będzie dostępna dla wszystkich autorów. Wyświetlanie tej informacji odbywa się w górnej części panelu administratora systemu.');
 define('_ADMINLOGIN','Logowanie administracyjne');
 define('_ADMINLOGIN_NEW','Instalacja systemu administracji');
-define('_ADMIN_SBLOCK','Aktywacja bloku administratora «informacje o systemie»?');
 define('_ADMIN_SESSION','Nazwa sesje dla administratorów');
 define('_AFTEREXPIRATION','Po upływie');
 define('_AKTIVE','Aktywne');

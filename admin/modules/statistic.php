@@ -27,7 +27,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
     }
     $search .= '</select> <input type="hidden" name="name" value="statistic"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs(_STATISTIC, 'statistic.png', $search, $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs($search, $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function statistic(): void {

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('sitemap')) die('Illegal file acce
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
     $ops = ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'];
     $lang = [_HOME, _TEMPLATE, _PREFERENCES, _INFO];
-    return getAdminTabs(_SITEMAP, 'sitemap.png', '', $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
 }
 
 function sitemap(): void {
