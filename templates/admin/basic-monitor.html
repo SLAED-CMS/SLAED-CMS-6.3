@@ -1,6 +1,8 @@
 
+{%if show_layout%}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <link rel="stylesheet" href="templates/admin/bootstrap-icons.css">
+<script src="templates/admin/js/htmx.min.js"></script>
 <style>
     :root {
         --bg-body: #f3f4f6;
@@ -11,6 +13,11 @@
         --accent: #22c55e;
         --warn: #f97316;
         --danger: #ef4444;
+        --slaed-blue: #64b1e1;
+        --slaed-red: #de6262;
+        --slaed-orange: #d97706;
+        --slaed-green: #21c45d;
+        --slaed-gray: #9ca3af;
         --border: #e5e7eb;
     }
 
@@ -249,13 +256,16 @@
     }
 
     .sw-status-green {
-        color: #22c55e;
+        color: var(--slaed-green);
+    }
+     .sw-status-blue {
+        color: var(--slaed-blue);
     }
     .sw-status-red {
-        color: #ef4444;
+        color: var(--slaed-red);
     }
     .sw-status-gray {
-        color: #9ca3af;
+        color: var(--slaed-gray);
     }
 
     /* Compact software panel (ROW 1 right side) */
@@ -301,13 +311,33 @@
 
     /* Traffic Chart */
     .traffic-stats-row {
-        display: flex;
-        justify-content: space-between;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(150px, 1fr));
+        gap: 10px;
         margin-bottom: 15px;
         background: #f9fafb;
         padding: 15px;
         border-radius: 8px;
         font-size: 13px;
+    }
+
+    @media(max-width: 900px) {
+        .traffic-stats-row {
+            grid-template-columns: repeat(2, minmax(140px, 1fr));
+        }
+    }
+
+    @media(max-width: 560px) {
+        .traffic-stats-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .t-item {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
     }
 
     .t-label span {
@@ -319,11 +349,19 @@
     }
 
     .t-label-up span {
-        background: #f97316;
+        background: var(--slaed-orange);
     }
 
     .t-label-down span {
-        background: #22c55e;
+        background: var(--slaed-green);
+    }
+
+    .t-label-cpu span {
+        background: var(--slaed-red);
+    }
+
+    .t-label-ram span {
+        background: var(--slaed-blue);
     }
 
     .t-val {
@@ -333,9 +371,36 @@
         margin-top: 4px;
     }
 
+
     .chart-svg {
         width: 100%;
         height: 220px;
+    }
+
+    .chart-path {
+        stroke: none;
+    }
+
+    .chart-area {
+        filter: url(#chartSoftShadow);
+    }
+
+    .chart-line {
+        fill: none;
+        stroke-width: 1.0;
+        vector-effect: non-scaling-stroke;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        filter: url(#chartSoftShadow);
+    }
+
+    .chart-hit {
+        fill: none;
+        stroke: transparent;
+        stroke-width: 10;
+        vector-effect: non-scaling-stroke;
+        pointer-events: stroke;
+        cursor: help;
     }
 
     /* Detailed Table Footer */
@@ -349,35 +414,45 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 13px;
+        table-layout: fixed;
     }
 
     .mon-clean-table td {
         padding: 9px 0;
         border-bottom: 1px solid #f0f0f0;
+        vertical-align: top;
     }
 
     .mon-clean-table td:first-child {
         font-weight: 600;
         color: #555;
-        width: 45%;
+        width: 38%;
     }
 
     .mon-clean-table td:last-child {
         color: #333;
+        width: 62%;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
 </style>
+{%endif%}
 
+{%if show_layout%}
 <div class="mon-wrapper">
+    <div id="monitor-sync-poller" hx-get="{%syncurl%}" hx-trigger="every 4s" hx-swap="none"></div>
+{%endif%}
 
+{%if show_layout%}
     <!-- ROW 1: Sys Status + Software -->
     <div class="mon-top-split">
-        <!-- STATUS PANEL -->
-        <div class="mon-card">
+{%endif%}
+{%if show_status%}
+        <div id="monitor-status-panel"{%status_oob%} class="mon-card">
             <div class="mon-panel-head">
-                <span class="mon-head-left"><i class="bi bi-speedometer2"></i>Sys Status</span>
+                <span class="mon-head-left"><i class="bi bi-speedometer2"></i>Server Status</span>
             </div>
             <div class="mon-sys-grid">
-                <!-- CPU Load -->
                 <div class="mon-sys-item">
                     <div class="knob-wrapper">
                         <svg class="knob-svg" viewBox="0 0 100 100">
@@ -390,7 +465,6 @@
                     <div class="sys-sub">{%cpuphys%} / {%cpucores%} Cores</div>
                     <div class="sys-sub">{%cpufreq%}</div>
                 </div>
-                <!-- RAM -->
                 <div class="mon-sys-item">
                     <div class="knob-wrapper">
                         <svg class="knob-svg" viewBox="0 0 100 100">
@@ -403,7 +477,6 @@
                     <div class="sys-sub">{%ramumb%} / {%ramtmb%}</div>
                     <div class="sys-sub">Available: {%ramavailmb%}</div>
                 </div>
-                <!-- DISK -->
                 <div class="mon-sys-item">
                     <div class="knob-wrapper">
                         <svg class="knob-svg" viewBox="0 0 100 100">
@@ -418,7 +491,9 @@
                 </div>
             </div>
         </div>
+{%endif%}
 
+{%if show_layout%}
         <!-- SOFTWARE PANEL -->
         <div class="mon-card">
             <div class="mon-panel-head">
@@ -427,19 +502,19 @@
             <div class="sw-compact">
                 <div class="sw-compact-item">
                     <div class="sw-compact-left"><i class="bi bi-window-stack"></i> SLAED CMS</div>
-                    <div class="sw-compact-right"><span>{%cmsver%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-compact-right"><span>{%cmsver%}</span> <span class="sw-status-blue"><i class="fa fa-play"></i></span></div>
                 </div>
                 <div class="sw-compact-item">
                     <div class="sw-compact-left"><i class="bi bi-cpu"></i> PHP</div>
-                    <div class="sw-compact-right"><span>{%phpver%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-compact-right"><span>{%phpver%}</span> <span class="sw-status-blue"><i class="fa fa-play"></i></span></div>
                 </div>
                 <div class="sw-compact-item">
                     <div class="sw-compact-left"><i class="bi bi-database"></i> MySQL</div>
-                    <div class="sw-compact-right"><span>{%mysql%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-compact-right"><span>{%mysql%}</span> <span class="sw-status-blue"><i class="fa fa-play"></i></span></div>
                 </div>
                 <div class="sw-compact-item">
-                    <div class="sw-compact-left"><i class="bi bi-hdd-rack"></i> {%servname%}</div>
-                    <div class="sw-compact-right"><span>{%servver%}</span> <span class="sw-status-green"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-compact-left"><i class="bi bi-hdd-rack"></i> {%servsoftname%}</div>
+                    <div class="sw-compact-right"><span>{%servver%}</span> <span class="sw-status-blue"><i class="fa fa-play"></i></span></div>
                 </div>
             </div>
         </div>
@@ -468,13 +543,14 @@
             </div>
         </div>
     </div>
+{%endif%}
 
+{%if show_traffic%}
     <!-- ROW 3: Traffic -->
-    <div class="mon-bottom-grid">
-        <!-- Traffic -->
+    <div id="monitor-traffic-panel"{%traffic_oob%} class="mon-bottom-grid">
         <div class="mon-card">
             <div class="mon-panel-head">
-                <span class="mon-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic</span>
+                <span class="mon-head-left"><i class="bi bi-graph-up-arrow"></i>Traffic & Status</span>
                 <span class="mon-head-right">Net: All</span>
             </div>
             <div class="traffic-stats-row">
@@ -488,29 +564,61 @@
                     <div class="t-val">{%netrx%}</div>
                     <div class="sys-sub">{%netrxrate%}</div>
                 </div>
+                <div class="t-item">
+                    <div class="t-label t-label-cpu"><span></span> CPU Usage</div>
+                    <div class="t-val">{%cpuuse%}%</div>
+                    <div class="sys-sub">{%cpufreq%}</div>
+                </div>
+                <div class="t-item">
+                    <div class="t-label t-label-ram"><span></span> RAM Usage</div>
+                    <div class="t-val">{%ram_p%}%</div>
+                    <div class="sys-sub">{%ramtmb%}</div>
+                </div>
             </div>
-            <!-- Chart -->
             <svg class="chart-svg" viewBox="0 0 100 220" preserveAspectRatio="none">
                 <defs>
                     <linearGradient id="gUp" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="#f97316" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="#fff" stop-opacity="0" />
+                        <stop offset="0" stop-color="#d97706" stop-opacity="0.5" />
+                        <stop offset="1" stop-color="#d97706" stop-opacity="0" />
                     </linearGradient>
                     <linearGradient id="gDown" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0" stop-color="#22c55e" stop-opacity="0.5" />
-                        <stop offset="1" stop-color="#fff" stop-opacity="0" />
+                        <stop offset="0" stop-color="#21c45d" stop-opacity="0.5" />
+                        <stop offset="1" stop-color="#21c45d" stop-opacity="0" />
                     </linearGradient>
+                    <linearGradient id="gCpu" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0" stop-color="#de6262" stop-opacity="0.5" />
+                        <stop offset="1" stop-color="#de6262" stop-opacity="0" />
+                    </linearGradient>
+                    <linearGradient id="gRam" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0" stop-color="#64b1e1" stop-opacity="0.5" />
+                        <stop offset="1" stop-color="#64b1e1" stop-opacity="0" />
+                    </linearGradient>
+                    <filter id="chartSoftShadow" x="-10%" y="-10%" width="120%" height="120%">
+                        <feDropShadow dx="0" dy="1" stdDeviation="0.6" flood-color="#111827" flood-opacity="0.08" />
+                    </filter>
                 </defs>
-                <path d="{%path_up%}" fill="url(#gUp)" stroke="#f97316" stroke-width="1.0" vector-effect="non-scaling-stroke" />
-                <path d="{%path_down%}" fill="url(#gDown)" stroke="#22c55e" stroke-width="1.0" vector-effect="non-scaling-stroke" />
+                <path class="chart-path chart-area" d="{%path_up%}" fill="url(#gUp)" />
+                <path class="chart-path chart-area" d="{%path_down%}" fill="url(#gDown)" />
+                <path class="chart-path chart-area" d="{%path_cpu%}" fill="url(#gCpu)" />
+                <path class="chart-path chart-area" d="{%path_ram%}" fill="url(#gRam)" />
+                <path class="chart-line" d="{%path_up_line%}" stroke="#d97706" />
+                <path class="chart-line" d="{%path_down_line%}" stroke="#21c45d" />
+                <path class="chart-line" d="{%path_cpu_line%}" stroke="#de6262" />
+                <path class="chart-line" d="{%path_ram_line%}" stroke="#64b1e1" />
+                <path class="chart-hit" d="{%path_up_line%}"><title>{%tip_up%}</title></path>
+                <path class="chart-hit" d="{%path_down_line%}"><title>{%tip_down%}</title></path>
+                <path class="chart-hit" d="{%path_cpu_line%}"><title>{%tip_cpu%}</title></path>
+                <path class="chart-hit" d="{%path_ram_line%}"><title>{%tip_ram%}</title></path>
             </svg>
         </div>
     </div>
+{%endif%}
 
-    <!-- 4. Footer: Detailed Info (Retained) -->
+{%if show_layout%}
+    <!-- Server Block -->
     <div class="mon-card">
         <div class="mon-panel-head">
-            <span class="mon-head-left"><i class="bi bi-activity"></i>Detailed System Information</span>
+            <span class="mon-head-left"><i class="bi bi-hdd-network"></i>Server & CMS</span>
             <span>{%quicklinks%}</span>
         </div>
         <div class="mon-info-grid">
@@ -519,6 +627,102 @@
                     <tr>
                         <td>Uptime</td>
                         <td>{%uptime%}</td>
+                    </tr>
+                    <tr>
+                        <td>OS</td>
+                        <td>{%osname%}</td>
+                    </tr>
+                    <tr>
+                        <td>Server</td>
+                        <td>{%servfull%}</td>
+                    </tr>
+                    <tr>
+                        <td>Server IP</td>
+                        <td>{%serverip%}</td>
+                    </tr>
+                    <tr>
+                        <td>Server Protocol</td>
+                        <td>{%servprot%}</td>
+                    </tr>
+                    <tr>
+                        <td>Server Name</td>
+                        <td>{%servname%}</td>
+                    </tr>
+                    <tr>
+                        <td>Server Port</td>
+                        <td>{%servport%}</td>
+                    </tr>
+                    <tr>
+                        <td>HTTPS</td>
+                        <td>{%servhttps%}</td>
+                    </tr>
+                    <tr>
+                        <td>Document Root</td>
+                        <td>{%servroot%}</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Total</td>
+                        <td>{%disktot%}</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Free</td>
+                        <td>{%diskfree%}</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table class="mon-clean-table">
+                    <tr>
+                        <td>Disk Used</td>
+                        <td>{%diskused%}</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Read</td>
+                        <td>{%dskread%}</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Write</td>
+                        <td>{%dskwrite%}</td>
+                    </tr>
+                    <tr>
+                        <td>Disk Health</td>
+                        <td>{%diskwarn%}</td>
+                    </tr>
+                    <tr>
+                        <td>Backup Folder Size</td>
+                        <td>{%backupdirsz%}</td>
+                    </tr>
+                    <tr>
+                        <td>Cache Folder Size</td>
+                        <td>{%cachedirsz%}</td>
+                    </tr>
+                    <tr>
+                        <td>Logs Folder Size</td>
+                        <td>{%logsdirsz%}</td>
+                    </tr>
+                    <tr>
+                        <td>Last Backup Run</td>
+                        <td>{%lastbackuprun%}</td>
+                    </tr>
+                    <tr>
+                        <td>Error Log (24h)</td>
+                        <td>{%errorlog24h%}</td>
+                    </tr>
+                    <tr>
+                        <td>Uploads Folder Size</td>
+                        <td>{%uploadssz%}</td>
+                    </tr>
+                    <tr>
+                        <td>Failed Logins (24h)</td>
+                        <td>{%failedlogins24h%}</td>
+                    </tr>
+                    <tr>
+                        <td>Last Security Event (24h)</td>
+                        <td>{%lastsecurityevent24h%}</td>
+                    </tr>
+                    <tr>
+                        <td>DB Issues Event (24h)</td>
+                        <td>{%dbissueevent24h%}</td>
                     </tr>
                     <tr>
                         <td>Operation Mode</td>
@@ -544,77 +748,90 @@
                         <td>SEF Rewrite</td>
                         <td>{%rewrite%}</td>
                     </tr>
-                    <tr>
-                        <td>SLAED CMS</td>
-                        <td>{%cmsver%}</td>
-                    </tr>
-                    <tr>
-                        <td>OS</td>
-                        <td>{%osname%}</td>
-                    </tr>
-                    <tr>
-                        <td>Server</td>
-                        <td>{%servfull%}</td>
-                    </tr>
-                    <tr>
-                        <td>Nginx Version</td>
-                        <td>{%nginxver%}</td>
-                    </tr>
-                    <tr>
-                        <td>PHP Version</td>
-                        <td>{%phpver%}</td>
-                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHP Block -->
+    <div class="mon-card">
+        <div class="mon-panel-head">
+            <span class="mon-head-left"><i class="bi bi-filetype-php"></i>PHP Information</span>
+        </div>
+        <div class="mon-info-grid">
+            <div>
+                <table class="mon-clean-table">
                     <tr>
                         <td>PHP SAPI</td>
                         <td>{%phpsapi%}</td>
                     </tr>
                     <tr>
-                        <td>PHP GD</td>
-                        <td>{%gdver%}</td>
+                        <td>Zend Engine</td>
+                        <td>{%zend_eng%}</td>
                     </tr>
                     <tr>
-                        <td>MySQL</td>
-                        <td>{%mysql%}</td>
+                        <td>Default Charset</td>
+                        <td>{%php_char%}</td>
                     </tr>
                     <tr>
-                        <td>DB Connections</td>
-                        <td>{%dbconn%}</td>
-                    </tr>
-                    <tr>
-                        <td>Slow Queries</td>
-                        <td>{%dbslow%}</td>
-                    </tr>
-                </table>
-            </div>
-            <div>
-                <table class="mon-clean-table">
-                    <tr>
-                        <td>DB Size</td>
-                        <td>{%dbszfmt%}</td>
-                    </tr>
-                    <tr>
-                        <td>Post Max Size</td>
-                        <td>{%postmax%}</td>
-                    </tr>
-                    <tr>
-                        <td>File Uploads</td>
-                        <td>{%fileup%}</td>
-                    </tr>
-                    <tr>
-                        <td>Upload Max</td>
-                        <td>{%upmax%}</td>
+                        <td>PHP Timezone</td>
+                        <td>{%phptime%}</td>
                     </tr>
                     <tr>
                         <td>Memory Limit</td>
                         <td>{%memlim%}</td>
                     </tr>
                     <tr>
-                        <td>Max Input Vars</td>
-                        <td>{%maxvars%}</td>
+                        <td>Script Memory</td>
+                        <td>{%scriptmem%}</td>
                     </tr>
                     <tr>
                         <td>Execution Time</td>
                         <td>{%maxtime%} s</td>
+                    </tr>
+                    <tr>
+                        <td>Post Max Size</td>
+                        <td>{%postmax%}</td>
+                    </tr>
+                    <tr>
+                        <td>Upload Max</td>
+                        <td>{%upmax%}</td>
+                    </tr>
+                    <tr>
+                        <td>Max Input Vars</td>
+                        <td>{%maxvars%}</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table class="mon-clean-table">
+                    <tr>
+                        <td>PHP GD</td>
+                        <td>{%gdver%}</td>
+                    </tr>
+                    <tr>
+                        <td>OPcache</td>
+                        <td>{%opcache_on%}</td>
+                    </tr>
+                    <tr>
+                        <td>OPcache Memory</td>
+                        <td>{%opcache_mem%}</td>
+                    </tr>
+                    <tr>
+                        <td>Cached Scripts</td>
+                        <td>{%opcache_scripts%}</td>
+                    </tr>
+                    <tr>
+                        <td>Hit Rate</td>
+                        <td>{%opcache_hit_rate%}</td>
+                    </tr>
+                    <tr>
+                        <td>File Uploads</td>
+                        <td>{%fileup%}</td>
+                    </tr>
+                    <tr>
+                        <td>Max File Uploads</td>
+                        <td>{%maxfileup%}</td>
                     </tr>
                     <tr>
                         <td>GZip</td>
@@ -625,35 +842,126 @@
                         <td>{%zipld%}</td>
                     </tr>
                     <tr>
-                        <td>PHP Timezone</td>
-                        <td>{%phptime%}</td>
+                        <td>BZip2</td>
+                        <td>{%bz2ld%}</td>
                     </tr>
                     <tr>
-                        <td>Disk Total</td>
-                        <td>{%disktot%}</td>
+                        <td>Extensions</td>
+                        <td>{%php_exts%}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MySQL Block -->
+    <div class="mon-card" style="margin-bottom: 0;">
+        <div class="mon-panel-head">
+            <span class="mon-head-left"><i class="bi bi-database"></i>MySQL Information</span>
+        </div>
+        <div class="mon-info-grid">
+            <div>
+                <table class="mon-clean-table">
+                    <tr>
+                        <td>Connection Charset</td>
+                        <td>{%dbchar%}</td>
                     </tr>
                     <tr>
-                        <td>Disk Free</td>
-                        <td>{%diskfree%}</td>
+                        <td>DB Timezone</td>
+                        <td>{%dbtz%}</td>
                     </tr>
                     <tr>
-                        <td>Disk Used</td>
-                        <td>{%diskused%}</td>
+                        <td>Max Allowed Packet</td>
+                        <td>{%dbmaxpack%}</td>
                     </tr>
                     <tr>
-                        <td>Disk Read</td>
-                        <td>{%dskread%}</td>
+                        <td>InnoDB Buffer Pool</td>
+                        <td>{%dbbuffpool%}</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table class="mon-clean-table">
+                    <tr>
+                        <td>DB Connections</td>
+                        <td>{%dbconn%}</td>
                     </tr>
                     <tr>
-                        <td>Disk Write</td>
-                        <td>{%dskwrite%}</td>
+                        <td>DB Size</td>
+                        <td>{%dbszfmt%}</td>
                     </tr>
                     <tr>
-                        <td>Disk Health</td>
-                        <td>{%diskwarn%}</td>
+                        <td>Current Database</td>
+                        <td>{%dbcurname%}</td>
+                    </tr>
+                    <tr>
+                        <td>Database User</td>
+                        <td>{%dbuser%}</td>
+                    </tr>
+                    <tr>
+                        <td>SQL Mode</td>
+                        <td>{%dbsqlmode%}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request & Performance Block -->
+    <div class="mon-card" style="margin-top: 20px; margin-bottom: 0;">
+        <div class="mon-panel-head">
+            <span class="mon-head-left"><i class="bi bi-stopwatch"></i>Request & Performance</span>
+        </div>
+        <div class="mon-info-grid">
+            <div>
+                <table class="mon-clean-table">
+                    <tr>
+                        <td>Client IP</td>
+                        <td>{%reqip%}</td>
+                    </tr>
+                    <tr>
+                        <td>Request URI</td>
+                        <td>{%requri%}</td>
+                    </tr>
+                    <tr>
+                        <td>Query String</td>
+                        <td>{%reqquery%}</td>
+                    </tr>
+                    <tr>
+                        <td>Cookies</td>
+                        <td>{%reqcookie%}</td>
+                    </tr>
+                    <tr>
+                        <td>Accept Language</td>
+                        <td>{%reqlang%}</td>
+                    </tr>
+                </table>
+            </div>
+            <div>
+                <table class="mon-clean-table">
+                    <tr>
+                        <td>Execution Time</td>
+                        <td>{%exectime%} s</td>
+                    </tr>
+                    <tr>
+                        <td>DB Queries</td>
+                        <td>{%dbqnum%}</td>
+                    </tr>
+                    <tr>
+                        <td>DB Time</td>
+                        <td>{%dbqtime%} ms</td>
+                    </tr>
+                    <tr>
+                        <td>Memory Peak</td>
+                        <td>{%mempeak%}</td>
+                    </tr>
+                    <tr>
+                        <td>User Agent</td>
+                        <td>{%requa%}</td>
                     </tr>
                 </table>
             </div>
         </div>
     </div>
 </div>
+{%endif%}
