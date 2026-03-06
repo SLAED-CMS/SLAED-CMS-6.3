@@ -38,7 +38,7 @@
 # Editor files
 .agents/
 .claude/
-.promts/
+.prompts/
 .rules/
 .idea/
 docs/plans/
@@ -68,12 +68,6 @@ composer.phar
 tests/coverage/
 
 # OS files
-.editorconfig
-.gitignore
 .DS_Store
 desktop.ini
 nul
-
-# Project meta files
-.gitignore
-.editorconfig
