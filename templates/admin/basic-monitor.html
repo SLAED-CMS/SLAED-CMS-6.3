@@ -1,6 +1,5 @@
 
 {%if show_layout%}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <link rel="stylesheet" href="templates/admin/bootstrap-icons.css">
 <script src="templates/admin/js/htmx.min.js"></script>
 <style>
@@ -508,51 +507,27 @@
             <div class="sw-compact">
                 <div class="sw-compact-item">
                     <div class="sw-compact-left"><i class="bi bi-window-stack"></i> SLAED CMS</div>
-                    <div class="sw-compact-right"><span>{%cmsver%}</span> <span class="sw-status-blue"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-compact-right"><span>{%cmsver%}</span> <span class="sw-status-blue"><i class="bi bi-play-fill"></i></span></div>
                 </div>
                 <div class="sw-compact-item">
                     <div class="sw-compact-left"><i class="bi bi-cpu"></i> PHP</div>
-                    <div class="sw-compact-right"><span>{%phpver%}</span> <span class="sw-status-blue"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-compact-right"><span>{%phpver%}</span> <span class="sw-status-blue"><i class="bi bi-play-fill"></i></span></div>
                 </div>
                 <div class="sw-compact-item">
                     <div class="sw-compact-left"><i class="bi bi-database"></i> MySQL</div>
-                    <div class="sw-compact-right"><span>{%mysql%}</span> <span class="sw-status-blue"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-compact-right"><span>{%mysql%}</span> <span class="sw-status-blue"><i class="bi bi-play-fill"></i></span></div>
                 </div>
                 <div class="sw-compact-item">
                     <div class="sw-compact-left"><i class="bi bi-hdd-rack"></i> {%servsoftname%}</div>
-                    <div class="sw-compact-right"><span>{%servver%}</span> <span class="sw-status-blue"><i class="fa fa-play"></i></span></div>
+                    <div class="sw-compact-right"><span>{%servver%}</span> <span class="sw-status-blue"><i class="bi bi-play-fill"></i></span></div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ROW 2: Overview Strip -->
-    <div class="mon-overview-strip">
-        <div class="ov-item">
-            <div class="ov-label">Website</div>
-            <div class="ov-val">{%cntnews%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
-            </div>
-        </div>
-        <div class="ov-item">
-            <div class="ov-label">Files</div>
-            <div class="ov-val">{%cntfile%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
-            </div>
-        </div>
-        <div class="ov-item">
-            <div class="ov-label">Database</div>
-            <div class="ov-val">{%dbtabs%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
-            </div>
-        </div>
-        <div class="ov-item">
-            <div class="ov-label">Users</div>
-            <div class="ov-val">{%userson%} <div class="ov-icon-arr"><i class="fa fa-chevron-right"></i></div>
             </div>
         </div>
     </div>
 {%endif%}
 
 {%if show_layout%}
-    <!-- ROW 3: Traffic -->
+    <!-- ROW 2: Traffic -->
     <div id="monitor-traffic-panel" class="mon-bottom-grid" hx-get="{%trafficurl%}" hx-trigger="load" hx-swap="outerHTML">
         <div class="mon-card">
             <div class="mon-panel-head">
@@ -563,7 +538,7 @@
     </div>
 {%endif%}
 {%if show_traffic%}
-    <!-- ROW 3: Traffic -->
+    <!-- ROW 2: Traffic -->
     <div id="monitor-traffic-panel"{%traffic_oob%} class="mon-bottom-grid">
         <div class="mon-card">
             <div class="mon-panel-head">
@@ -632,11 +607,33 @@
 {%endif%}
 
 {%if show_layout%}
+    <!-- ROW 3: Overview Strip -->
+    <div class="mon-overview-strip">
+        <div class="ov-item">
+            <div class="ov-label">Website</div>
+            <div class="ov-val">{%cntnews%} <div class="ov-icon-arr"><i class="bi bi-chevron-right"></i></div>
+            </div>
+        </div>
+        <div class="ov-item">
+            <div class="ov-label">Files</div>
+            <div class="ov-val">{%cntfile%} <div class="ov-icon-arr"><i class="bi bi-chevron-right"></i></div>
+            </div>
+        </div>
+        <div class="ov-item">
+            <div class="ov-label">Database</div>
+            <div class="ov-val">{%dbtabs%} <div class="ov-icon-arr"><i class="bi bi-chevron-right"></i></div>
+            </div>
+        </div>
+        <div class="ov-item">
+            <div class="ov-label">Users</div>
+            <div class="ov-val">{%userson%} <div class="ov-icon-arr"><i class="bi bi-chevron-right"></i></div>
+            </div>
+        </div>
+    </div>
     <!-- Server Block -->
     <div class="mon-card">
         <div class="mon-panel-head">
             <span class="mon-head-left"><i class="bi bi-hdd-network"></i>Server & CMS</span>
-            <span>{%quicklinks%}</span>
         </div>
         <div class="mon-info-grid">
             <div>
@@ -734,19 +731,19 @@
                         <td>{%lastbackuprun%}</td>
                     </tr>
                     <tr>
-                        <td>Backup Folder Size</td>
+                        <td>Backup Folder</td>
                         <td>{%backupdirsz%}</td>
                     </tr>
                     <tr>
-                        <td>Cache Folder Size</td>
+                        <td>Cache Folder</td>
                         <td>{%cachedirsz%}</td>
                     </tr>
                     <tr>
-                        <td>Logs Folder Size</td>
+                        <td>Logs Folder</td>
                         <td>{%logsdirsz%}</td>
                     </tr>
                     <tr>
-                        <td>Uploads Folder Size</td>
+                        <td>Uploads Folder</td>
                         <td>{%uploadssz%}</td>
                     </tr>
                     <tr>

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -897,15 +897,27 @@ function getUsageColor(float $pct): string {
     return '#22c55e';
 }
 
+// Collects disk capacity and usage values used by both realtime and full dashboard render paths.
+function getMonitorDiskSnapshot(): array {
+    $disktotal = (float)disk_total_space('.');
+    $diskfree = (float)disk_free_space('.');
+    $diskused = max($disktotal - $diskfree, 0);
+    $diskpct = ($disktotal > 0) ? round(($diskused / $disktotal) * 100, 1) : 0;
+
+    return [
+        'disk_total' => $disktotal,
+        'disk_free' => $diskfree,
+        'disk_used' => $diskused,
+        'disk_pct' => (float)$diskpct,
+    ];
+}
+
 // Builds complete monitor snapshot with system, network, and chart path values.
 function getMonitorPanelSnapshot(): array {
     [$cpup] = getCpuLoad();
     $cpu = getCpuDetails();
     $mem = getMemoryInfo();
-    $disktotal = disk_total_space('.');
-    $diskfree = disk_free_space('.');
-    $diskused = max($disktotal - $diskfree, 0);
-    $diskpct = ($disktotal > 0) ? round(($diskused / $disktotal) * 100, 1) : 0;
+    $disk = getMonitorDiskSnapshot();
     $live = getRealtimePanelMetrics((float)$cpup, (float)$mem['percent']);
     $nethistmax = max(array_merge([1.0], $live['hist_up'], $live['hist_down']));
     $pathup = getSmoothAreaPath($live['hist_up'], $nethistmax);
@@ -916,17 +928,17 @@ function getMonitorPanelSnapshot(): array {
     $pathram = getSmoothAreaPath($live['hist_ram'], 100.0);
     $pathcpuline = getSmoothLinePath($live['hist_cpu'], 100.0);
     $pathramline = getSmoothLinePath($live['hist_ram'], 100.0);
-    return [
-        'cpu_p' => (float)$cpup,
-        'cpu' => $cpu,
-        'mem' => $mem,
-        'disk_total' => (float)$disktotal,
-        'disk_free' => (float)$diskfree,
-        'disk_used' => (float)$diskused,
-        'disk_pct' => (float)$diskpct,
-        'net' => [
-            'rx_total' => $live['rx_total'],
-            'tx_total' => $live['tx_total'],
+        return [
+            'cpu_p' => (float)$cpup,
+            'cpu' => $cpu,
+            'mem' => $mem,
+            'disk_total' => $disk['disk_total'],
+            'disk_free' => $disk['disk_free'],
+            'disk_used' => $disk['disk_used'],
+            'disk_pct' => $disk['disk_pct'],
+            'net' => [
+                'rx_total' => $live['rx_total'],
+                'tx_total' => $live['tx_total'],
             'rx_rate' => $live['rx_rate'],
             'tx_rate' => $live['tx_rate'],
         ],
@@ -1070,7 +1082,7 @@ function getMonitorServerStats(): array {
         'servsw' => $servsw,
         'servname' => $servname,
         'servver' => $servver,
-        'extlist' => getTooltipText(implode(', ', get_loaded_extensions()), 30),
+        'extlist' => getTooltipText(implode(', ', get_loaded_extensions()), 25),
         'srvprot' => getServerValue('SERVER_PROTOCOL', 'N/A'),
         'srvname' => getServerValue('SERVER_NAME', 'N/A'),
         'srvport' => $srvport,
@@ -1080,11 +1092,53 @@ function getMonitorServerStats(): array {
     ];
 }
 
+// Caches expensive runtime extras such as directory scans and log counters across short monitor refresh windows.
+function getMonitorRuntimeExtras(): array {
+    static $reqcache = null;
+    if (is_array($reqcache)) return $reqcache;
+
+    $ttl = 60;
+    $cachekey = 'slaed_monitor_runtime_extras_v1';
+    if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
+        $ok = false;
+        $cached = call_user_func('apcu_fetch', $cachekey, $ok);
+        if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
+            $reqcache = $cached['data'];
+            return $reqcache;
+        }
+    }
+
+    $fresh = [
+        'storages' => getStorageDirectorySizes(),
+        'lastbackup' => getLastBackupRunLabel(),
+        'error24' => getErrorLogCountHours(24),
+        'uploadsz' => getUploadsSizeLabel(),
+        'failed24' => getFailedLoginCountHours(24),
+        'seclast24' => getSecurityEventHours(24),
+        'dblast24' => getDbIssueEventHours(24),
+    ];
+    $reqcache = $fresh;
+
+    if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
+        call_user_func('apcu_store', $cachekey, ['ts' => time(), 'data' => $fresh], $ttl);
+    }
+
+    return $fresh;
+}
+
 // Collects runtime diagnostics, opcache, storage, and timing metrics for monitor.
-function getMonitorRuntimeStats(object $db, ?array $snapshot, string $afile): array {
-    $disktot = ($snapshot !== null) ? (float)$snapshot['disk_total'] : (float)disk_total_space('.');
-    $diskfree = ($snapshot !== null) ? (float)$snapshot['disk_free'] : (float)disk_free_space('.');
-    $diskused = max($disktot - $diskfree, 0);
+function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
+    $disk = ($snapshot !== null)
+        ? [
+            'disk_total' => (float)$snapshot['disk_total'],
+            'disk_free' => (float)$snapshot['disk_free'],
+            'disk_used' => (float)$snapshot['disk_used'],
+            'disk_pct' => (float)$snapshot['disk_pct'],
+        ]
+        : getMonitorDiskSnapshot();
+    $disktot = (float)$disk['disk_total'];
+    $diskfree = (float)$disk['disk_free'];
+    $diskused = (float)$disk['disk_used'];
     $opcache = function_exists('opcache_get_status') ? opcache_get_status(false) : false;
     $opcacheon = $opcache && !empty($opcache['opcache_enabled']);
     $opmemused = $opcache ? $opcache['memory_usage']['used_memory'] : 0;
@@ -1093,10 +1147,7 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot, string $afile): ar
     $opmemtot = $opmemused + $opmemfree + $opmemwaste;
     $reqtime = (float)getServerValue('REQUEST_TIME_FLOAT', '0');
     if ($reqtime <= 0) $reqtime = microtime(true);
-    $storages = getStorageDirectorySizes();
-    $quick = '<a href="'.$afile.'.php?name=security" class="sl_but">Security Logs</a> '
-        .'<a href="'.$afile.'.php?name=security&amp;op=conf" class="sl_but">Security Settings</a> '
-        .'<a href="'.$afile.'.php?name=database" class="sl_but">Database</a>';
+    $extras = getMonitorRuntimeExtras();
     $diskwarn = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10)
         ? '<span style="color:#ef4444">Low free space</span>'
         : '<span style="color:#21c45d">Normal</span>';
@@ -1113,14 +1164,13 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot, string $afile): ar
         'uptime' => getUptimeInfo(),
         'dbhealth' => getDbHealth($db),
         'diskwarn' => $diskwarn,
-        'storages' => $storages,
-        'lastbackup' => getLastBackupRunLabel(),
-        'error24' => getErrorLogCountHours(24),
-        'uploadsz' => getUploadsSizeLabel(),
-        'failed24' => getFailedLoginCountHours(24),
-        'seclast24' => getSecurityEventHours(24),
-        'dblast24' => getDbIssueEventHours(24),
-        'quick' => $quick,
+        'storages' => $extras['storages'],
+        'lastbackup' => $extras['lastbackup'],
+        'error24' => $extras['error24'],
+        'uploadsz' => $extras['uploadsz'],
+        'failed24' => $extras['failed24'],
+        'seclast24' => $extras['seclast24'],
+        'dblast24' => $extras['dblast24'],
         'exectime' => round(microtime(true) - $reqtime, 3),
         'dbtime' => round($db->sqltime * 1000, 1),
     ];
@@ -1183,7 +1233,7 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             '{%servprot%}'  => $ctx['srvprot'],
             '{%servname%}'  => $ctx['srvname'],
             '{%servport%}'  => $ctx['srvport'],
-            '{%servroot%}'  => getTooltipText($ctx['srvroot'], 30),
+            '{%servroot%}'  => getTooltipText($ctx['srvroot'], 25),
             '{%servhttps%}' => $ctx['srvhttps'],
             '{%phpsapi%}'   => php_sapi_name(),
             '{%zend_eng%}'  => function_exists('zend_version') ? zend_version() : 'N/A',
@@ -1210,11 +1260,10 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             '{%uptime%}'    => $ctx['uptime'],
             '{%dbszfmt%}'   => filterSize($ctx['dbsize']),
             '{%diskwarn%}'  => $ctx['diskwarn'],
-            '{%quicklinks%}' => $ctx['quick'],
             '{%dbconn%}'    => $dbhealth['connections'],
             '{%dbslow%}'    => $dbhealth['slow'],
             '{%dbchar%}'    => $dbhealth['charset'],
-            '{%dbsqlmode%}' => getTooltipText($dbhealth['sql_mode'], 30),
+            '{%dbsqlmode%}' => getTooltipText($dbhealth['sql_mode'], 25),
             '{%dbmaxpack%}' => $dbhealth['max_packet'],
             '{%dbbuffpool%}'=> $dbhealth['buffer_pool'],
             '{%dbtz%}'      => $dbhealth['timezone'],
@@ -1227,12 +1276,12 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             '{%disktot%}'   => filterSize((float)$ctx['disktotal']),
             '{%diskused%}'  => filterSize((float)$ctx['diskused']),
             '{%reqmeth%}'   => $ctx['reqmethod'],
-            '{%reqcookie%}' => getTooltipText($ctx['reqcookie'], 30),
-            '{%requri%}'    => getTooltipText($ctx['requri'], 30),
-            '{%reqquery%}'  => getTooltipText($ctx['reqquery'], 30),
+            '{%reqcookie%}' => getTooltipText($ctx['reqcookie'], 25),
+            '{%requri%}'    => getTooltipText($ctx['requri'], 25),
+            '{%reqquery%}'  => getTooltipText($ctx['reqquery'], 25),
             '{%reqip%}'     => $ctx['reqip'],
-            '{%requa%}'     => getTooltipText($ctx['requa'], 30),
-            '{%reqlang%}'   => getTooltipText($ctx['reqlang'], 30),
+            '{%requa%}'     => getTooltipText($ctx['requa'], 25),
+            '{%reqlang%}'   => getTooltipText($ctx['reqlang'], 25),
             '{%dskread%}'   => ($diskio['read_rate'] === null) ? 'N/A' : filterSize((int)$diskio['read_rate']).'/s',
             '{%dskwrite%}'  => ($diskio['write_rate'] === null) ? 'N/A' : filterSize((int)$diskio['write_rate']).'/s',
             '{%backupdirsz%}' => ($storages['backup'] === null) ? 'N/A' : filterSize((int)$storages['backup']),
@@ -1242,8 +1291,8 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             '{%errorlog24h%}' => (string)$ctx['error24'],
             '{%uploadssz%}' => $ctx['uploadsz'],
             '{%failedlogins24h%}' => (string)$ctx['failed24'],
-            '{%lastsecurityevent24h%}' => getTooltipText($ctx['seclast24'], 30),
-            '{%dbissueevent24h%}' => getTooltipText($ctx['dblast24'], 30),
+            '{%lastsecurityevent24h%}' => getTooltipText($ctx['seclast24'], 25),
+            '{%dbissueevent24h%}' => getTooltipText($ctx['dblast24'], 25),
             'if_flag' => [
                 'show_layout' => true,
                 'show_status' => ($snapshot !== null),
@@ -1256,20 +1305,28 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
     return $vars;
 }
 
+// Aggregates all monitor context providers for full dashboard rendering.
+function getMonitorDashboardContext(object $db, array $conf, ?array $snapshot = null): array {
+    return array_merge(
+        getMonitorDbStats($db, $conf),
+        getMonitorServerStats(),
+        getMonitorRuntimeStats($db, $snapshot),
+        getMonitorRequestStats()
+    );
+}
+
+// Renders the monitor dashboard with standard admin wrapper and optional snapshot-backed panels.
+function renderMonitorDashboard(object $db, array $conf, string $afile, ?array $snapshot = null): void {
+    $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
+    $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
+    echo navi().setTemplateBasic('open').setTemplateBasic('basic-monitor', $vars).setTemplateBasic('close');
+}
+
 // Renders the main monitor page including navigation, panels, and full dashboard layout.
 function monitor(): void {
     global $db, $conf, $afile;
     setHead();
-    $cont = navi().setTemplateBasic('open');
-    $ctx = array_merge(
-        getMonitorDbStats($db, $conf),
-        getMonitorServerStats(),
-        getMonitorRuntimeStats($db, null, $afile),
-        getMonitorRequestStats()
-    );
-    $vars = getMonitorTemplateVars(null, $ctx, $conf, $db, $afile);
-    $cont .= setTemplateBasic('basic-monitor', $vars).setTemplateBasic('close');
-    echo $cont;
+    renderMonitorDashboard($db, $conf, $afile);
     setFoot();
 }
 
@@ -1280,19 +1337,24 @@ function info(): void {
     setFoot();
 }
 
+// Renders snapshot-backed monitor partials for HTMX refresh endpoints.
+function renderMonitorPartialEndpoint(bool $showstatus, bool $showtraffic, bool $useoob = false): void {
+    echo getMonitorPartial(getMonitorPanelSnapshot(), $showstatus, $showtraffic, $useoob);
+}
+
 // Renders only traffic partial panel for asynchronous dashboard refresh requests.
 function traffic(): void {
-    echo getMonitorPartial(getMonitorPanelSnapshot(), false, true, false);
+    renderMonitorPartialEndpoint(false, true, false);
 }
 
 // Renders only status partial panel for asynchronous dashboard refresh requests.
 function status(): void {
-    echo getMonitorPartial(getMonitorPanelSnapshot(), true, false, false);
+    renderMonitorPartialEndpoint(true, false, false);
 }
 
 // Renders status and traffic partials together for synchronized asynchronous updates.
 function sync(): void {
-    echo getMonitorPartial(getMonitorPanelSnapshot(), true, true, true);
+    renderMonitorPartialEndpoint(true, true, true);
 }
 
 switch ($op) {

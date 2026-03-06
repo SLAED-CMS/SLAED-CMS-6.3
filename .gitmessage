@@ -1,31 +1,38 @@
-<Type>: <Short description of changes>
+Refactor: Unify changelog core and modernize admin tools
 
-<Extended description: 1-3 sentences explaining what this commit does
-and why it matters in the context of the project architecture.>
+Consolidate changelog loading, rendering, localization, and export behavior
+across public and admin code paths. Modernize monitor and editor admin
+modules to align them with the current SLAED routing and input rules.
 
 Core changes:
 
-1. <Feature/Component description> (<filename.php>):
-- <Main change or addition>
-  * <Detail or sub-point>
-  * <Another detail>
-- <Another main change>
+1. Changelog module (`modules/changelog/*.php`, `templates/admin/basic-changelog*.html`):
+- Introduce shared changelog core logic in `modules/changelog/common.php`
+  * Unify GitHub/local source loading, cache handling, pagination, and export helpers
+  * Remove active GraphQL usage and count available commits from loaded data
+- Refactor admin and public changelog handlers to use shared loaders and render helpers
+- Localize admin changelog UI and refresh related module language files
 
-2. <Another component> (<filename.php>):
-- <Change description>
-- <Implementation detail>
+2. Admin tools (`admin/modules/monitor.php`, `admin/modules/editor.php`):
+- Simplify monitor controller flow and centralize runtime snapshot handling
+  * Reduce duplicated disk/runtime logic and remove external admin template dependency
+- Refactor editor input handling to use shared helpers and SLAED raw input access
+
+3. Language and template alignment (`language/*.php`, `templates/admin/*.html`):
+- Add missing monitor and changelog language constants across six languages
+- Update admin templates to match the new changelog and monitor behavior
 
 Benefits:
-- <Performance/reliability improvement>
-- <Maintainability gain>
-- <Architecture alignment>
+- Better maintainability through shared changelog logic and reduced duplication
+- Cleaner admin behavior aligned with current SLAED rules for input and routing
+- More consistent localization and admin rendering across modules
 
 Technical notes:
-- <Storage/format changes>
-- <API/interface notes>
-- <Backward compatibility status>
+- `modules/changelog/common.php` is a new shared module file
+- Commit counting now reflects available loaded/cached commits instead of GraphQL totals
+- Backward compatibility is preserved for existing changelog routes and admin operations
 
-# ─────────────────────────────────────────────────────────────────────
+# --------------------------------------------------------------------
 # Types: Refactor | Feature | Fix | Docs | Style | Test | Chore | Perf
 # Bullets: - main point, * sub-detail
-# ─────────────────────────────────────────────────────────────────────
+# --------------------------------------------------------------------

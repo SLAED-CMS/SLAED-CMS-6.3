@@ -38,6 +38,7 @@
 # Editor files
 .agents/
 .claude/
+.promts/
 .rules/
 .idea/
 docs/plans/
