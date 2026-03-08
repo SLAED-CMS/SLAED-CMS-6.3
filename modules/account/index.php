@@ -696,6 +696,14 @@ function edithome(): void {
             'title' => _CHANGE,
         ]);
         $userinfo = getUserInfo();
+        $conf['style'] = (string)($conf['style'] ?? '');
+        if ($conf['style'] === '') {
+            $conf['style'] = 'sl_account';
+        }
+        $birthday = trim((string)($userinfo['user_birthday'] ?? ''));
+        if ($birthday !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birthday)) {
+            $birthday = '';
+        }
         $userinfo['user_theme'] = (!$userinfo['user_theme']) ? $conf['theme'] : $userinfo['user_theme'];
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]) : '';
         $change = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
@@ -703,7 +711,7 @@ function edithome(): void {
         .'<tr><td>'._REG.':</td><td>'.format_time($userinfo['user_regdate']).'</td></tr>';
         if ($conf['users']['point']) $change .= '<tr><td>'._POINTS.':</td><td>'.$userinfo['user_points'].'</td></tr>';
         $change .= '<tr><td>'._YOURNAME.':</td><td>'.$userinfo['user_name'].'</td></tr>'
-        .'<tr><td>'._BIRTHDAY.':</td><td>'.datetime(2, 'user_birthday', $userinfo['user_birthday'], 10, $conf['style']).'</td></tr>'
+        .'<tr><td>'._BIRTHDAY.':</td><td>'.datetime(2, 'user_birthday', $birthday, 10, $conf['style']).'</td></tr>'
         .'<tr><td>'._GENDER.':</td><td>'.get_gender('gender', $userinfo['user_gender'], $conf['style']).'</td></tr>'
         .'<tr><td>'._YOUREMAIL.':</td><td><input type="email" name="mail" value="'.$userinfo['user_email'].'" maxlength="60" class="sl_field '.$conf['style'].'" placeholder="'._YOUREMAIL.'" required></td></tr>'
         .'<tr><td>'._SITEURL.':</td><td><input type="url" name="site" value="'.$userinfo['user_website'].'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._SITEURL.'"></td></tr>'

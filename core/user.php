@@ -269,7 +269,10 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
     $offset = ($cid-1) * $newlistnum;
     $offset = intval($offset);
     $conf['name'] = 'account';
-    $conf['style'] = ($conf['style']) ? $conf['style'] : 'sl_account';
+    $conf['style'] = (string)($conf['style'] ?? '');
+    if ($conf['style'] === '') {
+        $conf['style'] = 'sl_account';
+    }
     $cont = '';
     if ($typ == 1) {
         [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status <= 1', ['uid' => $uid]));
