@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -123,7 +123,7 @@ function active(): void {
         $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._ORDER;
         $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
-        $msg .= bb_decode($conf['order']['sendinfo'] ?? '', 'all');
+        $msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'] ?? '', 'all', false), 'all');
         addMail($mail, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=order&send=1');
     }
@@ -185,7 +185,5 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
-
 
 

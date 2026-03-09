@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright Ã‚Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -132,7 +132,7 @@ function getBlocks(string $side, string $fly = ''): void {
         $result = $db->getSqlQuery('SELECT bid, bkey, title, content, url, blockfile, view, expire, action, bposition, which FROM '.PREFIX_DB."_blocks WHERE active = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
         while(list($bid, $bkey, $title, $content, $url, $blockfile, $view, $expire, $action, $bposition, $which) = $db->getSqlRow($result)) {
             $bid = intval($bid);
-            $content = bb_decode($content, 'all');
+            $content = filterReplaceText(filterMarkdown($content, 'all', false), 'all');
             $view = intval($view);
             $where_mas = explode(',', $which);
             $barr[] = [$bid, $bkey, $title, $content, $url, $blockfile, $view, $expire, $action, $bposition, $where_mas];
@@ -267,6 +267,7 @@ function getBlocks(string $side, string $fly = ''): void {
 # Safe mode (true): escapes HTML, URL allowlist - for user content.
 # Safe mode (false): allows raw HTML blocks + admin BB tags.
 function filterMarkdown(string $src, string $mod = '', bool $safe = true): string {
+    global $conf;
     static $md = null;
     $md ??= new class {
 
@@ -472,11 +473,8 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
         }
 
         private function filterAttach(string $src): string {
+            global $conf;
             $mod = $this->mod !== '' ? $this->mod : 'all';
-            $up  = include 'config/uploads.php';
-            $cfg = is_array($up) ? ($up['uploads'] ?? []) : [];
-            $ft  = include 'config/filetype.php';
-            $tpl = is_array($ft) ? ($ft['filetype'] ?? []) : [];
 
             if (stripos($src, 'rel=') !== false && stripos($src, 'width=') !== false) {
                 $re = '/\[attach=([a-zA-Z0-9_\-\. ]+) align=([a-zA-Z]+) title=([\pL0-9_\-\.\"\s]+) width=([0-5]?[0-9]?[0-9]+) height=([0-5]?[0-9]?[0-9]+) rel=([a-zA-Z0-9_\-]+)\]/siu';
@@ -488,8 +486,8 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
 
             if (!preg_match_all($re, $src, $mm, PREG_SET_ORDER)) return $src;
 
-            $con = explode('|', (string)($cfg[$mod] ?? ''));
-            $twd = $con[6] ?? ($cfg['width'] ?? '250');
+            $con = explode('|', (string)($conf['uploads'][$mod] ?? ''));
+            $twd = $con[6] ?? ($conf['uploads']['width'] ?? '250');
             $img = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
 
             foreach ($mm as $m) {
@@ -516,16 +514,16 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                     if (file_exists($file)) [$wd, $hg] = getimagesize($file);
                 }
 
-                $tmp = $tpl[$ext] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
+                $tmp = $conf['filetype'][$ext] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
                 $tmp = str_replace('[src]',    $file, $tmp);
                 $tmp = str_replace('[tsrc]',   (string)$timg, $tmp);
                 $tmp = (!empty($wd) && (int)$wd)
                      ? str_replace('[width]',  (string)$wd, $tmp)
-                     : str_replace('[width]',  (string)($cfg['width'] ?? '500'), $tmp);
+                     : str_replace('[width]',  (string)($conf['uploads']['width'] ?? '500'), $tmp);
                 $tmp = str_replace('[twidth]', (string)$twd, $tmp);
                 $tmp = (!empty($hg) && (int)$hg)
                      ? str_replace('[height]', (string)$hg, $tmp)
-                     : str_replace('[height]', (string)($cfg['height'] ?? '500'), $tmp);
+                     : str_replace('[height]', (string)($conf['uploads']['height'] ?? '500'), $tmp);
                 $tmp = str_replace('[align]',  $al, $tmp);
                 $tmp = str_replace('[title]',  $tl, $tmp);
                 $tmp = str_replace('[quot]',   '&quot;', $tmp);
@@ -600,7 +598,23 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
 
                 if (str_starts_with($trim, '>')) {
                     [$bq, $i] = $this->getBlockquote($lines, $i, $n);
-                    $out .= "<blockquote>\n".$this->filterBlocks(implode("\n", $bq), $safe)."</blockquote>\n";
+                    $map  = ['note' => 'sl_callout_note', 'tip' => 'sl_callout_tip', 'important' => 'sl_callout_important', 'warning' => 'sl_callout_warning', 'caution' => 'sl_callout_caution'];
+                    $segs = [[]];
+                    foreach ($bq as $ln) {
+                        if ($ln === '' && end($segs) !== []) $segs[] = [];
+                        elseif ($ln !== '') $segs[count($segs) - 1][] = $ln;
+                    }
+                    foreach ($segs as $seg) {
+                        if ($seg === []) continue;
+                        $hd = trim($seg[0]);
+                        if (preg_match('/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i', $hd, $cm)) {
+                            $cls = $map[strtolower($cm[1])];
+                            array_shift($seg);
+                            $out .= '<div class="'.$cls.'">'."\n".$this->filterBlocks(implode("\n", $seg), $safe)."</div>\n";
+                        } else {
+                            $out .= "<blockquote>\n".$this->filterBlocks(implode("\n", $seg), $safe)."</blockquote>\n";
+                        }
+                    }
                     continue;
                 }
 
@@ -960,6 +974,34 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
     };
 
     return $md->filterHtml($src, $safe, $mod);
+}
+
+# Search and replace
+function filterReplaceText(string $sourse, string $mod): string {
+    global $conf;
+    $mod = ($mod && isset($conf['replace'][$mod])) ? $conf['replace'][$mod] : '';
+    if ($mod) {
+        $mod = explode('||', $mod);
+        foreach ($mod as $word) {
+            if ($word != '') {
+                $warray = explode('|', $word);
+                if ($warray[0]) {
+                    preg_match_all('#<[^>]*>#', $sourse, $tags);
+                    array_unique($tags);
+                    $taglist = [];
+                    $k = 0;
+                    foreach($tags[0] as $i) {
+                        $k++;
+                        $taglist[$k] = $i;
+                        $sourse = str_replace($i, '<'.$k.'>', $sourse);
+                    }
+                    $sourse = preg_replace('#'.$warray[0].'#i', $warray[1], $sourse);
+                    foreach($taglist as $k => $i) $sourse = str_replace('<'.$k.'>', $i, $sourse);
+                }
+            }
+        }
+    }
+    return $sourse;
 }
 
 # Backup DB for MySQL 8.0+ & MariaDB 10+
@@ -2484,7 +2526,7 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
 
 # Transliteration
 function getTranslit(string $st, string $lo = ''): string {
-    $st = strtr($st, ['Ð°' => 'a', 'Ð±' => 'b', 'Ð²' => 'v', 'Ð³' => 'g', 'Ð´' => 'd', 'Ðµ' => 'e', 'Ð¶' => 'g', 'Ð·' => 'z', 'Ð¸' => 'i', 'Ð¹' => 'y', 'Ðº' => 'k', 'Ð»' => 'l', 'Ð¼' => 'm', 'Ð½' => 'n', 'Ð¾' => 'o', 'Ð¿' => 'p', 'Ñ€' => 'r', 'Ñ' => 's', 'Ñ‚' => 't', 'Ñƒ' => 'u', 'Ñ„' => 'f', 'Ñ‹' => 'i', 'Ñ' => 'e', 'Ð' => 'A', 'Ð‘' => 'B', 'Ð’' => 'V', 'Ð“' => 'G', 'Ð”' => 'D', 'Ð•' => 'E', 'Ð–' => 'G', 'Ð—' => 'Z', 'Ð˜' => 'I', 'Ð™' => 'Y', 'Ðš' => 'K', 'Ð›' => 'L', 'Ðœ' => 'M', 'Ð' => 'N', 'Ðž' => 'O', 'ÐŸ' => 'P', 'Ð ' => 'R', 'Ð¡' => 'S', 'Ð¢' => 'T', 'Ð£' => 'U', 'Ð¤' => 'F', 'Ð«' => 'I', 'Ð­' => 'E', 'Ñ‘' => 'yo', 'Ñ…' => 'h', 'Ñ†' => 'ts', 'Ñ‡' => 'ch', 'Ñˆ' => 'sh', 'Ñ‰' => 'shch', 'ÑŠ' => '', 'ÑŒ' => '', 'ÑŽ' => 'yu', 'Ñ' => 'ya', 'Ð' => 'Yo', 'Ð¥' => 'H', 'Ð¦' => 'Ts', 'Ð§' => 'Ch', 'Ð¨' => 'Sh', 'Ð©' => 'Shch', 'Ðª' => '', 'Ð¬' => '', 'Ð®' => 'Yu', 'Ð¯' => 'Ya']);
+    $st = strtr($st, ['ÃÂ°' => 'a', 'ÃÂ±' => 'b', 'ÃÂ²' => 'v', 'ÃÂ³' => 'g', 'ÃÂ´' => 'd', 'ÃÂµ' => 'e', 'ÃÂ¶' => 'g', 'ÃÂ·' => 'z', 'ÃÂ¸' => 'i', 'ÃÂ¹' => 'y', 'ÃÂº' => 'k', 'ÃÂ»' => 'l', 'ÃÂ¼' => 'm', 'ÃÂ½' => 'n', 'ÃÂ¾' => 'o', 'ÃÂ¿' => 'p', 'Ã‘â‚¬' => 'r', 'Ã‘Â' => 's', 'Ã‘â€š' => 't', 'Ã‘Æ’' => 'u', 'Ã‘â€ž' => 'f', 'Ã‘â€¹' => 'i', 'Ã‘Â' => 'e', 'ÃÂ' => 'A', 'Ãâ€˜' => 'B', 'Ãâ€™' => 'V', 'Ãâ€œ' => 'G', 'Ãâ€' => 'D', 'Ãâ€¢' => 'E', 'Ãâ€“' => 'G', 'Ãâ€”' => 'Z', 'ÃËœ' => 'I', 'Ãâ„¢' => 'Y', 'ÃÅ¡' => 'K', 'Ãâ€º' => 'L', 'ÃÅ“' => 'M', 'ÃÂ' => 'N', 'ÃÅ¾' => 'O', 'ÃÅ¸' => 'P', 'ÃÂ ' => 'R', 'ÃÂ¡' => 'S', 'ÃÂ¢' => 'T', 'ÃÂ£' => 'U', 'ÃÂ¤' => 'F', 'ÃÂ«' => 'I', 'ÃÂ­' => 'E', 'Ã‘â€˜' => 'yo', 'Ã‘â€¦' => 'h', 'Ã‘â€ ' => 'ts', 'Ã‘â€¡' => 'ch', 'Ã‘Ë†' => 'sh', 'Ã‘â€°' => 'shch', 'Ã‘Å ' => '', 'Ã‘Å’' => '', 'Ã‘Å½' => 'yu', 'Ã‘Â' => 'ya', 'ÃÂ' => 'Yo', 'ÃÂ¥' => 'H', 'ÃÂ¦' => 'Ts', 'ÃÂ§' => 'Ch', 'ÃÂ¨' => 'Sh', 'ÃÂ©' => 'Shch', 'ÃÂª' => '', 'ÃÂ¬' => '', 'ÃÂ®' => 'Yu', 'ÃÂ¯' => 'Ya']);
     $st = empty($lo) ? $st : mb_strtolower($st);
     $st = preg_replace('#[^a-zA-Z0-9]#', '', $st);
     $st = trim($st);
@@ -2841,16 +2883,16 @@ function getSeoUrl(array $params): string {
 function filterSlug(string $text, string $sep = '-'): string {
     $text = trim($text);
     static $rus = [
-        'Ð' => 'A',  'Ð‘' => 'B',  'Ð’' => 'V',  'Ð“' => 'G',  'Ð”' => 'D',  'Ð•' => 'E',  'Ð' => 'E',  'Ð–' => 'Zh',
-        'Ð—' => 'Z',  'Ð˜' => 'I',  'Ð™' => 'I',  'Ðš' => 'K',  'Ð›' => 'L',  'Ðœ' => 'M',  'Ð' => 'N',  'Ðž' => 'O',
-        'ÐŸ' => 'P',  'Ð ' => 'R',  'Ð¡' => 'S',  'Ð¢' => 'T',  'Ð£' => 'U',  'Ð¤' => 'F',  'Ð¥' => 'Kh', 'Ð¦' => 'Ts',
-        'Ð§' => 'Ch', 'Ð¨' => 'Sh', 'Ð©' => 'Shch', 'Ð«' => 'Y', 'Ð­' => 'E', 'Ð®' => 'Yu', 'Ð¯' => 'Ya',
-        'Ðª' => '',   'Ð¬' => '',
-        'Ð°' => 'a',  'Ð±' => 'b',  'Ð²' => 'v',  'Ð³' => 'g',  'Ð´' => 'd',  'Ðµ' => 'e',  'Ñ‘' => 'e',  'Ð¶' => 'zh',
-        'Ð·' => 'z',  'Ð¸' => 'i',  'Ð¹' => 'i',  'Ðº' => 'k',  'Ð»' => 'l',  'Ð¼' => 'm',  'Ð½' => 'n',  'Ð¾' => 'o',
-        'Ð¿' => 'p',  'Ñ€' => 'r',  'Ñ' => 's',  'Ñ‚' => 't',  'Ñƒ' => 'u',  'Ñ„' => 'f',  'Ñ…' => 'kh', 'Ñ†' => 'ts',
-        'Ñ‡' => 'ch', 'Ñˆ' => 'sh', 'Ñ‰' => 'shch', 'Ñ‹' => 'y', 'Ñ' => 'e', 'ÑŽ' => 'yu', 'Ñ' => 'ya',
-        'ÑŠ' => '',   'ÑŒ' => '',
+        'ÃÂ' => 'A',  'Ãâ€˜' => 'B',  'Ãâ€™' => 'V',  'Ãâ€œ' => 'G',  'Ãâ€' => 'D',  'Ãâ€¢' => 'E',  'ÃÂ' => 'E',  'Ãâ€“' => 'Zh',
+        'Ãâ€”' => 'Z',  'ÃËœ' => 'I',  'Ãâ„¢' => 'I',  'ÃÅ¡' => 'K',  'Ãâ€º' => 'L',  'ÃÅ“' => 'M',  'ÃÂ' => 'N',  'ÃÅ¾' => 'O',
+        'ÃÅ¸' => 'P',  'ÃÂ ' => 'R',  'ÃÂ¡' => 'S',  'ÃÂ¢' => 'T',  'ÃÂ£' => 'U',  'ÃÂ¤' => 'F',  'ÃÂ¥' => 'Kh', 'ÃÂ¦' => 'Ts',
+        'ÃÂ§' => 'Ch', 'ÃÂ¨' => 'Sh', 'ÃÂ©' => 'Shch', 'ÃÂ«' => 'Y', 'ÃÂ­' => 'E', 'ÃÂ®' => 'Yu', 'ÃÂ¯' => 'Ya',
+        'ÃÂª' => '',   'ÃÂ¬' => '',
+        'ÃÂ°' => 'a',  'ÃÂ±' => 'b',  'ÃÂ²' => 'v',  'ÃÂ³' => 'g',  'ÃÂ´' => 'd',  'ÃÂµ' => 'e',  'Ã‘â€˜' => 'e',  'ÃÂ¶' => 'zh',
+        'ÃÂ·' => 'z',  'ÃÂ¸' => 'i',  'ÃÂ¹' => 'i',  'ÃÂº' => 'k',  'ÃÂ»' => 'l',  'ÃÂ¼' => 'm',  'ÃÂ½' => 'n',  'ÃÂ¾' => 'o',
+        'ÃÂ¿' => 'p',  'Ã‘â‚¬' => 'r',  'Ã‘Â' => 's',  'Ã‘â€š' => 't',  'Ã‘Æ’' => 'u',  'Ã‘â€ž' => 'f',  'Ã‘â€¦' => 'kh', 'Ã‘â€ ' => 'ts',
+        'Ã‘â€¡' => 'ch', 'Ã‘Ë†' => 'sh', 'Ã‘â€°' => 'shch', 'Ã‘â€¹' => 'y', 'Ã‘Â' => 'e', 'Ã‘Å½' => 'yu', 'Ã‘Â' => 'ya',
+        'Ã‘Å ' => '',   'Ã‘Å’' => '',
     ];
     $text = strtr($text, $rus);
     $text = preg_replace('~[^a-zA-Z0-9]+~', $sep, $text);
@@ -2974,6 +3016,28 @@ function filterSize(mixed $size): string {
     $unit = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     for ($idx = 0, $max = count($unit) - 1; $val >= 1024 && $idx < $max; $idx++) $val /= 1024;
     return round($val, 2).' '.$unit[$idx];
+}
+
+# Newsletter send
+function updateNewsletter(): void {
+ global $db, $conf;
+    if ($conf['newsletter']) {
+        $result = $db->getSqlQuery('SELECT id, title, content, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
+        if ($db->getSqlRowCount($result) > 0) {
+            list($id, $title, $content, $mails) = $db->getSqlRow($result);
+            $ncount = intval($conf['newslettercount']);
+            $id = intval($id);
+            $mails = explode(',', $mails);
+            $outmail = array_slice($mails, 0, $ncount);
+            $inmail = implode(',', array_slice($mails, $ncount));
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id', ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
+            foreach ($outmail as $val) if ($val != '') addMail($val, $conf['adminmail'], $title, filterReplaceText(filterMarkdown($content, 'all', false), 'all'), 0, 3);
+            if (!$inmail) {
+                $cont = ['newsletter' => '0'];
+                setConfigFile('global.php', $cont, $conf);
+            }
+        }
+    }
 }
 
 ####
@@ -3216,28 +3280,6 @@ function adminblock(): string {
     return '';
 }
 
-# Newsletter send
-function updateNewsletter(): void {
- global $db, $conf;
-    if ($conf['newsletter']) {
-        $result = $db->getSqlQuery('SELECT id, title, content, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
-        if ($db->getSqlRowCount($result) > 0) {
-            list($id, $title, $content, $mails) = $db->getSqlRow($result);
-            $ncount = intval($conf['newslettercount']);
-            $id = intval($id);
-            $mails = explode(',', $mails);
-            $outmail = array_slice($mails, 0, $ncount);
-            $inmail = implode(',', array_slice($mails, $ncount));
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id', ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
-            foreach ($outmail as $val) if ($val != '') addMail($val, $conf['adminmail'], $title, bb_decode($content, 'all'), 0, 3);
-            if (!$inmail) {
-                $cont = ['newsletter' => '0'];
-                setConfigFile('global.php', $cont, $conf);
-            }
-        }
-    }
-}
-
 # User info link
 function user_info(string $name): string {
     global $conf;
@@ -3395,9 +3437,7 @@ function ajax_rating(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor,
 
 # Show editor files
 function show_files(): void {
- global $conf, $user;
-    $uploads_data = include('config/uploads.php');
-    $conf['uploads'] = $uploads_data['uploads'] ?? [];
+    global $conf, $user;
     $id   = filterVar(getVar('get', 'id',   'text', '')) ?: 0;
     $dir  = strtolower(getVar('get', 'dir',  'text', ''));
     $cid = getVar('get', 'cid', 'num', 0);
@@ -3588,8 +3628,7 @@ function img_find(string $img): string {
 
 # Format select RSS
 function rss_select(): string {
- global $conf;
-    require_once CONFIG_DIR.'/rss.php';
+    global $conf;
     $fieldc = explode('||', $conf['rss']['rss']);
     $url = getVar('post', 'url', 'url', '');
     $cont = '';
@@ -3608,8 +3647,8 @@ function rss_select(): string {
 
 # Read RSS
 function rss_read(mixed $url, mixed $id): string {
+    global $conf;
     if ($url) {
-        require_once CONFIG_DIR.'/rss.php';
         $url = trim(html_entity_decode(str_replace(['&#038;', '&amp;'], '&', $url), ENT_QUOTES, 'UTF-8'));
         $url = (!preg_match('#^https?://#i', $url)) ? 'http://'.$url : $url;
         $context = stream_context_create([
@@ -3682,9 +3721,9 @@ function rss_load(mixed $bid): void {
 # Preview
 function preview(string $title = '', string $text1 = '', string $text2 = '', string $text3 = '', string $mod = ''): string {
     $fields  = $title ? '<b>'.$title.'</b>' : '';
-    $fields1 = $text1 ? (($fields) ? '<br><br>'.bb_decode($text1, $mod) : bb_decode($text1, $mod)) : '';
-    $fields2 = $text2 ? '<br><br>'.bb_decode($text2, $mod) : '';
-    $fields3 = $text3 ? '<br><br>'.fields_out(bb_decode($text3, $mod), $mod) : '';
+    $fields1 = $text1 ? (($fields) ? '<br><br>'.filterReplaceText(filterMarkdown($text1, $mod, false), $mod) : filterReplaceText(filterMarkdown($text1, $mod, false), $mod)) : '';
+    $fields2 = $text2 ? '<br><br>'.filterReplaceText(filterMarkdown($text2, $mod, false), $mod) : '';
+    $fields3 = $text3 ? '<br><br>'.fields_out(filterReplaceText(filterMarkdown($text3, $mod, false), $mod), $mod) : '';
     return setTemplateBasic('preview', ['{%title%}' => _PREVIEW, '{%fields%}' => $fields, '{%fields1%}' => $fields1, '{%fields2%}' => $fields2, '{%fields3%}' => $fields3]);
 }
 
@@ -4300,13 +4339,6 @@ function is_active(string $mod, string $view = ''): int {
     return isset($list[$vnum][$mod]) ? 1 : 0;
 }
 
-# OLD DELETE
-# Decode BB (shim - delegates to filterMarkdown for backward compatibility)
-function bb_decode(string $src, string $mod = '', string $id = ''): string {
-    $out = filterMarkdown($src, $mod, false); // backward compat: HTML passes through as in old bb_decode
-    return search_replace($out, $mod);
-}
-
 # Format PHP code
 function encode_php(array $text): string {
  global $conf;
@@ -4363,34 +4395,6 @@ function encode_php(array $text): string {
         $format = $scripts.'<pre class="brush: '.$ucname.';">'.$replace.'</pre>';
     }
     return setTemplateBasic('code', ['{%title%}' => $cname.' - '._CODE, '{%content%}' => $format]);
-}
-
-# Search and replace
-function search_replace(string $sourse, string $mod): string {
-    global $conf;
-    $mod = ($mod && isset($conf['replace'][$mod])) ? $conf['replace'][$mod] : '';
-    if ($mod) {
-        $mod = explode('||', $mod);
-        foreach ($mod as $word) {
-            if ($word != '') {
-                $warray = explode('|', $word);
-                if ($warray[0]) {
-                    preg_match_all('#<[^>]*>#', $sourse, $tags);
-                    array_unique($tags);
-                    $taglist = [];
-                    $k = 0;
-                    foreach($tags[0] as $i) {
-                        $k++;
-                        $taglist[$k] = $i;
-                        $sourse = str_replace($i, '<'.$k.'>', $sourse);
-                    }
-                    $sourse = preg_replace('#'.$warray[0].'#i', $warray[1], $sourse);
-                    foreach($taglist as $k => $i) $sourse = str_replace('<'.$k.'>', $i, $sourse);
-                }
-            }
-        }
-    }
-    return $sourse;
 }
 
 # Mail check
@@ -4656,8 +4660,6 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
     $required    = $required ? ' required' : '';
     $stloc = substr(_LOCALE, 0, 2);
     $desc = $var ?: filterHtml(getVar('post', $name, 'raw', ''));
-    $uploads_data = include('config/uploads.php');
-    $conf['uploads'] = $uploads_data['uploads'] ?? [];
     $con = explode('|', (string)($conf['uploads'][strtolower($mod)] ?? ''));
     $style = (defined('ADMIN_FILE')) ? ' sl_form' : ' '.$conf['style'];
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
@@ -4716,9 +4718,9 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
             $code .= "<div class=\"sl_drop\"><span OnClick=\"HideShow('l-form-".$id."', 'blind', 'up', 500); changelanguage();\" class=\"sl_bb_translate\" title=\""._EAUTOTR.'"></span>
             <div id="l-form-'.$id."\" class=\"sl_drop-form\">
                 <table class=\"sl_bb_trans\"><tr>
-                <td>Ð</td><td>Ð‘</td><td>Ð’</td><td>Ð“</td><td>Ð”</td><td>Ð•</td><td>Ð</td><td>Ð–</td><td>Ð—</td><td>Ð˜</td><td>Ð™</td>
-                <td>Ðš</td><td>Ð›</td><td>Ðœ</td><td>Ð</td><td>Ðž</td><td>ÐŸ</td><td>Ð </td><td>Ð¡</td><td>Ð¢</td><td>Ð£</td><td>Ð¤</td>
-                <td>Ð¥</td><td>Ð¦</td><td>Ð§</td><td>Ð¨</td><td>Ð©</td><td>Ðª</td><td>Ð«</td><td>Ð¬</td><td>Ð­</td><td>Ð®</td><td>Ð¯</td>
+                <td>ÃÂ</td><td>Ãâ€˜</td><td>Ãâ€™</td><td>Ãâ€œ</td><td>Ãâ€</td><td>Ãâ€¢</td><td>ÃÂ</td><td>Ãâ€“</td><td>Ãâ€”</td><td>ÃËœ</td><td>Ãâ„¢</td>
+                <td>ÃÅ¡</td><td>Ãâ€º</td><td>ÃÅ“</td><td>ÃÂ</td><td>ÃÅ¾</td><td>ÃÅ¸</td><td>ÃÂ </td><td>ÃÂ¡</td><td>ÃÂ¢</td><td>ÃÂ£</td><td>ÃÂ¤</td>
+                <td>ÃÂ¥</td><td>ÃÂ¦</td><td>ÃÂ§</td><td>ÃÂ¨</td><td>ÃÂ©</td><td>ÃÂª</td><td>ÃÂ«</td><td>ÃÂ¬</td><td>ÃÂ­</td><td>ÃÂ®</td><td>ÃÂ¯</td>
                 </tr><tr>
                 <td>A</td><td>B</td><td>V</td><td>G</td><td>D</td><td>E</td><td>JO</td><td>ZH</td><td>Z</td><td>I</td><td>J</td>
                 <td>K</td><td>L</td><td>M</td><td>N</td><td>O</td><td>P</td><td>R</td><td>S</td><td>T</td><td>U</td><td>F</td>
@@ -5405,7 +5407,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
 
             if (is_moder($com_modul)) {
                 if (defined('ADMIN_FILE')) {
-                    $edit = add_menu('<a href="index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?op=comm_edit&amp;id='.$com_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=comm_act&amp;id='.$com_id.'&amp;refer=1" title="'._ACTIVATE.'">'._ACTIVATE.'</a>||<a href="'.$afile.'.php?op=comm_del&amp;id='.$com_id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.cutstr(filterText(bb_decode($com_text, $com_modul)), 10)."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>');
+                    $edit = add_menu('<a href="index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?op=comm_edit&amp;id='.$com_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=comm_act&amp;id='.$com_id.'&amp;refer=1" title="'._ACTIVATE.'">'._ACTIVATE.'</a>||<a href="'.$afile.'.php?op=comm_del&amp;id='.$com_id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.cutstr(filterText(filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul)), 10)."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>');
                 } else {
                     $edit = add_menu("<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=editcom&amp;id=".$com_id.'&amp;typ=1&amp;mod='.$com_modul."', ''); return false;\" title=\""._ONEDIT.'">'._ONEDIT."</a>||<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=closecom&amp;id=".$com_id.'&amp;typ=0&amp;mod='.$com_modul."', ''); return false;\" title=\""._FMODC.'">'._FMODC."</a>||<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=closecom&amp;id=".$com_id.'&amp;typ=1&amp;mod='.$com_modul."', ''); return false;\" title=\""._ACTIVATE.'">'._ACTIVATE.'</a>');
                 }
@@ -5414,14 +5416,14 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 $edit = (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) ? add_menu("<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=editcom&amp;id=".$com_id.'&amp;typ=1&amp;mod='.$com_modul."', ''); return false;\" title=\""._ONEDIT.'">'._ONEDIT.'</a>') : '';
             }
             $hclass = (!defined('ADMIN_FILE') && !$com_status) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
-            $text = '<div id="repcom'.$com_id.'">'.bb_decode($com_text, $com_modul).'</div>';
+            $text = '<div id="repcom'.$com_id.'">'.filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul).'</div>';
             if (defined('ADMIN_FILE')) {
                 $checkb = (!$b) ? ' '._CHECKALL." <input type=\"checkbox\" name=\"markcheck\" id=\"markcheck\" OnClick=\"CheckBox('#markcheck', '.sl_check')\"> | <input type=\"checkbox\" name=\"id[]\" class=\"sl_check\" value=\"".$com_id.'">' : ' <input type="checkbox" name="id[]" class="sl_check" value="'.$com_id.'">';
                 $b++;
             } else {
                 $checkb = '';
             }
-            $cont .= setTemplateBasic('comment', ['{%id%}' => $com_id, '{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => bb_decode($sig, $com_modul), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass, '{%checkb%}' => $checkb]);
+            $cont .= setTemplateBasic('comment', ['{%id%}' => $com_id, '{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => filterReplaceText(filterMarkdown($sig, $com_modul, false), $com_modul), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass, '{%checkb%}' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {
@@ -5454,7 +5456,7 @@ function editcom(): string {
     $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
-            $content = ($typ) ? textareae('com'.$id, '1', 'editcom', $id, '0', '0', $mod, $comment, '10') : bb_decode($comment, $mod);
+            $content = ($typ) ? textareae('com'.$id, '1', 'editcom', $id, '0', '0', $mod, $comment, '10') : filterReplaceText(filterMarkdown($comment, $mod, false), $mod);
             echo $content;
         } elseif ($id && $mod && $text) {
             $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
@@ -5468,7 +5470,7 @@ function editcom(): string {
             if (!$stop) {
                 $comm = filterHtml($text, $urlclick);
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET comment = :comment WHERE id = :id', ['comment' => $comm, 'id' => $id]);
-                echo bb_decode($comm, $mod);
+                echo filterReplaceText(filterMarkdown($comm, $mod, false), $mod);
             } else {
                 return setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
             }

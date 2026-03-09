@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -121,7 +121,7 @@ function shop(): void {
 			$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
 			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= '<tr>';
 			$cont .= '<td style="width: '.$width.'%;">';
-			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($text, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '', '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
+			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '', '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 			$cont .= '</td>';
 			if ($i % $conf['shop']['bascol'] == 0) $cont .= '</tr>';
 			$i++;
@@ -189,7 +189,7 @@ function view(): void {
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
-		$seodesc = cutstr(trim(strip_tags(bb_decode($text, $conf['name']))), 160);
+		$seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']))), 160);
 		$seoimg = getImgText($text, '', false);
 		$seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
 		$seotime = $time;
@@ -237,7 +237,7 @@ function view(): void {
 		
 		$cart = '<a OnClick="AjaxLoad(\'GET\', \'0\', \'kasse\', \'go=2&amp;op=add_kasse&amp;id='.$id.'\', \'\'); AddBasket(\''.$id.'\'); return false;" title="'._SCART.'" class="sl_shop_add">'._SCART.'</a>';
 		$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
-		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting, '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
+		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting, '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 		if ($conf['shop']['assoc']) {
 			$limit = intval($conf['shop']['assocnum']);
 			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\'', ['id' => $id]));
@@ -247,7 +247,7 @@ function view(): void {
 				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _ASPROD]);
 				while ([$aid, $time, $title, $hometext, $bodytext] = $db->getSqlRow($result)) {
 					$date = ($conf['shop']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
-					$text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
+					$text = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
 					$cont .= setTemplateBasic('assoc-basic', ['{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img]);
@@ -341,7 +341,7 @@ function kasse(): void {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
 				$msg = $conf['sitename'].' - '._C_TITLE.'<br><br>';
-				$msg .= bb_decode($conf['shop']['sende'], $conf['name']).'<br><br>';
+				$msg .= filterReplaceText(filterMarkdown($conf['shop']['sende'], $conf['name'], false), $conf['name']).'<br><br>';
 				$msg .= $pinfo.'<br><br>';
 				$msg .= '<b>'._PERSONALINFO.'</b><br><br>';
 				$msg .= _NICKNAME.': '.$slogin.'<br>';
@@ -363,7 +363,7 @@ function kasse(): void {
 			setcookie('shop', false);
 			setcookie('part', false);
 			update_points(39);
-			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => bb_decode($conf['shop']['sende'], $conf['name'])]);
+			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => filterReplaceText(filterMarkdown($conf['shop']['sende'], $conf['name'], false), $conf['name'])]);
 		} else {
 			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 			$cont .= '<div id="repkasse">'.show_kasse().'</div>';
@@ -409,7 +409,7 @@ function clients(): void {
 			$cont .= '</tbody></table>';
 			$cont .= setTemplateBasic('close');
 		}
-		$cont .= setTemplateBasic('open').bb_decode($conf['shop']['userinfo'], $conf['name']).setTemplateBasic('close');
+		$cont .= setTemplateBasic('open').filterReplaceText(filterMarkdown($conf['shop']['userinfo'], $conf['name'], false), $conf['name']).setTemplateBasic('close');
 		echo $cont;
 		setFoot();
 	} else {
@@ -433,7 +433,7 @@ function rech(): void {
 				$cont .= '<link rel="stylesheet" href="templates/'.$theme.'/theme.css">'."\n";
 			}
 			$cont .= '<title>'.$conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN.'</title></head>'
-			.'<body><table style="width: 640px; margin: 5%;"><tr><td colspan="2"><hr></td></tr><tr><td style="width: 40%;"><img src="'.img_find('logos/'.$conf['site_logo']).'" alt="'.$conf['sitename'].'"></td><td style="text-align: right;">'.bb_decode($conf['shop']['shopinfo'], $conf['name']).'</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2"><br><p>'._C_PIN.': '.$cname.'<br>'._C_PIP.': '.$cadres.'<br>'._C_TEL.': '.$cphone.'<br>'._C_MAIL.': '.$cemail.'</p></td></tr><tr><td colspan="2"><hr></td></tr><tr><td><b>'._C_NAIM.'</b></td><td style="text-align: right;"><b>'._K_DATE.': '.date(_TIMESTRING, $cregdate).'</b></td></tr><tr><td colspan="2"><hr></td></tr>';
+			.'<body><table style="width: 640px; margin: 5%;"><tr><td colspan="2"><hr></td></tr><tr><td style="width: 40%;"><img src="'.img_find('logos/'.$conf['site_logo']).'" alt="'.$conf['sitename'].'"></td><td style="text-align: right;">'.filterReplaceText(filterMarkdown($conf['shop']['shopinfo'], $conf['name'], false), $conf['name']).'</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2"><br><p>'._C_PIN.': '.$cname.'<br>'._C_PIP.': '.$cadres.'<br>'._C_TEL.': '.$cphone.'<br>'._C_MAIL.': '.$cemail.'</p></td></tr><tr><td colspan="2"><hr></td></tr><tr><td><b>'._C_NAIM.'</b></td><td style="text-align: right;"><b>'._K_DATE.': '.date(_TIMESTRING, $cregdate).'</b></td></tr><tr><td colspan="2"><hr></td></tr>';
 			$cenddate = ($cenddate != '0') ? date(_TIMESTRING, $cenddate) : _UNLIMITED;
 			$cont .= '<tr><td>'._PRODUCT.':</td><td style="text-align: right;">'.$stitle.'</td></tr>'
 			.'<tr><td>'._SDOM.':</td><td style="text-align: right;">'.$cwebsite.'</td></tr>'
@@ -442,7 +442,7 @@ function rech(): void {
 			.'<tr><td colspan="2"><hr></td></tr>'
 			.'<tr><td colspan="2"><b>'._PRODUCT_TEXT.'</b></td></tr>'
 			.'<tr><td colspan="2"><hr></td></tr>'
-			.'<tr><td colspan="2">'.bb_decode($text, $conf['name']).'</td></tr>'
+			.'<tr><td colspan="2">'.filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']).'</td></tr>'
 			.'<tr><td colspan="2"><hr></td></tr>'
 			.'<tr><td colspan="2" style="text-align: right;"><b>'._PREIS_TEXT.': '.$ppreis.' '.$conf['shop']['valute'].'</b></td></tr>'
 			.'</table></body></html>';
@@ -496,11 +496,11 @@ function partners(): void {
 				.'<td>'.$partsumges.' '.$conf['shop']['valute'].'</td><td>'.$parest.' '.$conf['shop']['valute'].'</td><td>'.$pabek.' '.$conf['shop']['valute'].'</td></tr></tbody></table>';
 				$cont .= setTemplateBasic('close');
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
-				$cont .= setTemplateBasic('open').bb_decode(str_replace('[id]', $uid, $conf['shop']['partinfo2']), $conf['name']).setTemplateBasic('close');
+				$cont .= setTemplateBasic('open').filterReplaceText(filterMarkdown(str_replace('[id]', $uid, $conf['shop']['partinfo2']), $conf['name'], false), $conf['name']).setTemplateBasic('close');
 			}
 		} else {
 			if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-			$cont .= setTemplateBasic('open').bb_decode($conf['shop']['partinfo'], $conf['name']).setTemplateBasic('close');
+			$cont .= setTemplateBasic('open').filterReplaceText(filterMarkdown($conf['shop']['partinfo'], $conf['name'], false), $conf['name']).setTemplateBasic('close');
 			$cont .= setTemplateBasic('title', ['{%title%}' => _PARTNERADD]);
 			$cont .= setTemplateBasic('open');
 			$cont .= '<form method="post" action="index.php?name='.$conf['name'].'"><table class="sl_table_form">'

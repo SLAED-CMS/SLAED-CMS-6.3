@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -103,7 +103,7 @@ function help(): void {
             $date = ($conf['help']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
             $reads = ($conf['help']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
             $comm = '<a href="'.$thref.'#'.$id.'" title="'._MESSAGES.'" class="sl_coms">'.$comm.'</a>';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($hometext, $conf['name']), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => '', '{%admin%}' => '', '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => '', '{%admin%}' => '', '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'sid', '_help', 'catid', $onum, $conf['help']['nump']);
     } else {
@@ -171,7 +171,7 @@ function view(): void {
             'LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) '.
             'WHERE s.sid = :id AND s.uid = :uid '.$cwhere, ['id' => $id, 'uid' => $uid]
         ));
-        $seodesc   = cutstr(trim(strip_tags(bb_decode($seohometext, $conf['name']))), 160);
+        $seodesc   = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($seohometext, $conf['name'], false), $conf['name']))), 160);
         $seoimg    = getImgText($seohometext, '', false);
         $seoimg    = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         $seoauthor = $seoname ?: $conf['sitename'];
@@ -206,7 +206,7 @@ function view(): void {
             } else {
                 $reads = $ctitle = $cimg = $favorites = $goback = '';
             }
-            $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => !$pid], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $hid, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => '', '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => !$pid], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $hid, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => '', '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
             $a++;
         }
         $cont .= addview($id);

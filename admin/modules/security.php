@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -193,7 +193,7 @@ function blocksave(): void {
         if ($mail) {
             [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
             $subject = $conf['sitename'].' - '._SECURITY;
-            $msg = nl2br(bb_decode(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), 'all'), false);
+            $msg = nl2br(filterReplaceText(filterMarkdown(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), 'all', false), 'all'), false);
             addMail($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }

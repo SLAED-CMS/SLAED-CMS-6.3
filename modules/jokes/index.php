@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -90,7 +90,7 @@ function jokes(): void {
             $cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
             $rating = ajax_rating(1, $id, $conf['name'], $ratingtot, $rating, '');
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=jokes_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=jokes_delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$jtitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => search_color(bb_decode($joke, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => '', '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => search_color(filterReplaceText(filterMarkdown($joke, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => '', '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'jokeid', '_jokes', 'cat', $onum, $conf['jokes']['nump']);
     } else {

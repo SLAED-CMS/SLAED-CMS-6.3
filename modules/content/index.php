@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -59,7 +59,7 @@ function view(): void {
         $fields = fields_out($field, $conf['name']);
         $fields = ($fields) ? '<br><br>'.$fields : '';
         $hometext = $text.$fields;
-        $seodesc = cutstr(trim(strip_tags(bb_decode($hometext, $conf['name']))), 160);
+        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         setHead([

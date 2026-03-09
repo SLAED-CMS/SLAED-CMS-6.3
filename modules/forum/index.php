@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -280,7 +280,7 @@ function view(): void {
         $isedit = is_acess($cmassiv[0][22]);
         $isdelete = is_acess($cmassiv[0][23]);
         $ismod = is_acess($cmassiv[0][24]);
-        $seodesc = cutstr(trim(strip_tags(bb_decode($cmassiv[0][7], $conf['name']))), 160);
+        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($cmassiv[0][7], $conf['name'], false), $conf['name']))), 160);
         $seoimg  = getImgText($cmassiv[0][7], '', false);
         $seoimg  = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         setHead([
@@ -378,8 +378,8 @@ function view(): void {
                 $edit .= ($ismod || ($isdelete && $val[3] == intval($user[0]))) ? '<a href="index.php?name='.$conf['name'].'&amp;op=delete&amp;cat='.$fcat.'&amp;id='.$fid."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$val[5]."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>' : '';
                 $edit = ($edit) ? add_menu($edit) : '';
                 $hclass = (!$val[17]) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
-                $text = ($fields) ? '<div id="repfor'.$fid.'">'.search_color(bb_decode($val[7], $conf['name']), $word).'</div>'.search_color(bb_decode('<br><br>'.$fields, $conf['name']), $word) : '<div id="repfor'.$fid.'">'.search_color(bb_decode($val[7], $conf['name']), $word).'</div>';
-                $cont .= setTemplateBasic('forum-view-basic', ['{%id%}' => $fid, '{%username%}' => $avname, '{%date%}' => $date, '{%rating%}' => $rating, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => bb_decode($sig, $conf['name']), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_reply%}' => $qreply, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass]);
+                $text = ($fields) ? '<div id="repfor'.$fid.'">'.search_color(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>'.search_color(filterReplaceText(filterMarkdown('<br><br>'.$fields, $conf['name'], false), $conf['name']), $word) : '<div id="repfor'.$fid.'">'.search_color(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>';
+                $cont .= setTemplateBasic('forum-view-basic', ['{%id%}' => $fid, '{%username%}' => $avname, '{%date%}' => $date, '{%rating%}' => $rating, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_reply%}' => $qreply, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass]);
                 if ($conf['forum']['sort']) { $a++; } else { $a--; }
             }
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$id.'&', $conf['forum']['pnum'], $num);

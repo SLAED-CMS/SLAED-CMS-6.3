@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright � 2005 - 2026 SLAED
+# Copyright ï¿½ 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -273,7 +273,7 @@ function addsave(): void {
         if ($mail) {
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$uname;
             $mailtext = getVar('post', 'mailtext', 'text');
-            $msg = nl2br(bb_decode(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), 'account'), false);
+            $msg = nl2br(filterReplaceText(filterMarkdown(str_replace('[pass]', $pass, str_replace('[login]', $uname, $mailtext)), 'account', false), 'account'), false);
             addMail($email, $conf['adminmail'], $subject, $msg, 0, 3);
             $send = '&send=1';
         }
@@ -463,5 +463,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-
-

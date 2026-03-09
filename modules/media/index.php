@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -97,7 +97,7 @@ function media(): void {
             $comm = ($acomm) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=media_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=media_delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$mtitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => cutstr(bb_decode($description, $conf['name']), 800), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $links, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $links, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
     } else {
@@ -159,7 +159,7 @@ function view(): void {
         $ptitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
         $seotitle = $ptitle;
         $seoctitle = $ctitle;
-        $seodesc = cutstr(trim(strip_tags(bb_decode($description, $conf['name']))), 160);
+        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']))), 160);
         $seoimg = getImgText($description, '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         $seotime = $date;
@@ -198,7 +198,7 @@ function view(): void {
         $quality = ($quality) ? _MQUALITY.': '.$quality : '';
         $size = ($size) ? _MSIZE.': '.$size : '';
         $released = ($released) ? _MRELEASED.': '.$released : '';
-        $note = ($note) ? bb_decode($note, $conf['name']) : '';
+        $note = ($note) ? filterReplaceText(filterMarkdown($note, $conf['name'], false), $conf['name']) : '';
         if ($links) {
             if ((is_user() && $conf['media']['hide'] == '0') || $conf['media']['hide'] == '1') {
                 $links = explode(',', $links);
@@ -224,7 +224,7 @@ function view(): void {
                 $mlinks = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _HIDETEXT]);
             }
         }
-        $cont .= setTemplateBasic('basic-media-view', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => search_color($ptitle, $word), '{%hits%}' => '', '{%reads%}' => $reads, '{%post%}' => $post, '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%cimg%}' => $cimg, '{%text%}' => search_color(bb_decode($description, $conf['name']), $word), '{%year%}' => $year, '{%director%}' => $director, '{%roles%}' => $roles, '{%createdby%}' => $createdby, '{%duration%}' => $duration, '{%lang%}' => $lang, '{%format%}' => $format, '{%quality%}' => $quality, '{%size%}' => $size, '{%released%}' => $released, '{%note%}' => $note, '{%links_label%}' => ($mlinks ?? '') ? _MURLS : '', '{%mlinks%}' => $mlinks ?? '', '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%download%}' => '', '{%broken%}' => $broc]);
+        $cont .= setTemplateBasic('basic-media-view', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => search_color($ptitle, $word), '{%hits%}' => '', '{%reads%}' => $reads, '{%post%}' => $post, '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%cimg%}' => $cimg, '{%text%}' => search_color(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), $word), '{%year%}' => $year, '{%director%}' => $director, '{%roles%}' => $roles, '{%createdby%}' => $createdby, '{%duration%}' => $duration, '{%lang%}' => $lang, '{%format%}' => $format, '{%quality%}' => $quality, '{%size%}' => $size, '{%released%}' => $released, '{%note%}' => $note, '{%links_label%}' => ($mlinks ?? '') ? _MURLS : '', '{%mlinks%}' => $mlinks ?? '', '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%download%}' => '', '{%broken%}' => $broc]);
         if ($conf['media']['link']) {
             $limit = intval($conf['media']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
@@ -235,7 +235,7 @@ function view(): void {
                 while([$aid, $title, $subtitle, $hometext, $time] = $db->getSqlRow($result)) {
                     $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
                     $adate = ($conf['media']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
-                    $atext = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
+                    $atext = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
                     if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
                         $img = 'uploads/'.$conf['name'].'/thumb/'.trim($match[1]);
                     } else {

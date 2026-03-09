@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -9,7 +9,6 @@ if (!defined('ADMIN_FILE')) die('Illegal file access');
 # Format statistic image
 function getStatistic(): void {
  global $conf;
-    require_once CONFIG_DIR.'/statistic.php';
     $report = getVar('get', 'report', 'num', 0);
     $day    = getVar('get', 'day', 'num', 15);
     $file   = getVar('get', 'file', 'text', '');
@@ -666,7 +665,7 @@ function ajax_privat(int $obj = 0): string {
             $unre = ($user_re) ? user_info($user_re) : _ANONYM;
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
-            $info = bb_decode($content, 'privat');
+            $info = filterReplaceText(filterMarkdown($content, 'privat', false), 'privat');
             $cont .= '<tr>'
             .'<td>'.$id.'</td>'
             .'<td>'.title_tip($info).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 30).'</span></td>'
@@ -848,7 +847,7 @@ function getAdminInfo(): string {
         }
     }
     $cont .= setTemplateBasic('open');
-    $cont .= bb_decode($thefile, 'info');
+    $cont .= filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
     if ($conf['adminfo']) {
         $cont .= '<hr><form name="post" id="formadm_info" method="post"><table class="sl_table_edit">'
         .'<tr><td>'.textarea('1', 'text', $thefile, 'info', '25').'</td></tr>'

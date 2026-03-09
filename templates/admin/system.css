@@ -59,6 +59,44 @@
 /* Оформление информации */
 .sl_info { padding: 8px 10px 8px 47px; margin: 10px 12px 10px 12px; color: #332d27; text-align: justify; min-height: 28px; background: #e6f8e2 url(images/info.png) no-repeat 7px 6px; }
 
+/* Callout-блоки (Markdown > [!TYPE]) */
+.sl_callout_note,
+.sl_callout_tip,
+.sl_callout_important,
+.sl_callout_warning,
+.sl_callout_caution {
+	position: relative;
+	padding: 8px 12px 8px 44px;
+	margin: 10px 12px 10px 12px;
+	text-align: justify;
+	min-height: 28px;
+	border-radius: 4px;
+	border-left-width: 4px;
+	border-left-style: solid;
+}
+.sl_callout_note::before,
+.sl_callout_tip::before,
+.sl_callout_important::before,
+.sl_callout_warning::before,
+.sl_callout_caution::before {
+	position: absolute;
+	left: 12px;
+	top: 8px;
+	font-size: 17px;
+	font-style: normal;
+	line-height: 1;
+}
+.sl_callout_note    { background: #e8f4fd; border-color: #3498db; color: #1b2c3a; }
+.sl_callout_tip     { background: #eafaf1; border-color: #27ae60; color: #1a3028; }
+.sl_callout_important { background: #fef9e7; border-color: #f0b429; color: #3a2e0a; }
+.sl_callout_warning { background: #fef0e6; border-color: #e67e22; color: #3a2010; }
+.sl_callout_caution { background: #fdecea; border-color: #e74c3c; color: #3a1010; }
+.sl_callout_note::before    { content: "\2139"; color: #2980b9; }
+.sl_callout_tip::before     { content: "\2714"; color: #219a52; }
+.sl_callout_important::before { content: "\2605"; color: #c49a00; }
+.sl_callout_warning::before { content: "\26A0"; color: #c0691a; }
+.sl_callout_caution::before { content: "\2716"; color: #c0392b; }
+
 /* Оформление таблиц с сортировкой строк */
 .sl_table_list, .sl_table_list_sort { width: 100%; margin-bottom: 10px; }
 .sl_table_list tr:hover, .sl_table_list_sort tr:hover { background-color: #f1f6f9; }

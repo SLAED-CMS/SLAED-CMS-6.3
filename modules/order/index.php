@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -21,7 +21,7 @@ function order(): void {
 	setHead(['title' => _ORDER]);
 	$cont = setTemplateBasic('title', ['{%title%}' => _ORDER]);
 	$cont .= setTemplateBasic('open');
-	$cont .= bb_decode($conf['order']['text'], 'all');
+	$cont .= filterReplaceText(filterMarkdown($conf['order']['text'], 'all', false), 'all');
 	$cont .= setTemplateBasic('close');
 	if ($conf['order']['an']) {
 		$com = getVar('post', 'com', 'text');
@@ -63,12 +63,12 @@ function send(): void {
 				$amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._ORDER;
 				$msg = $conf['sitename'].' - '._ORDER.'<br><br>';
-				$msg .= bb_decode($conf['order']['sendinfo'], 'all');
+				$msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'], 'all', false), 'all');
 				addMail($mail, $amail, $subject, $msg, 0, 3);
 			}
 			update_points(34);
 			setHead(['title' => _ORDER]);
-			echo setTemplateBasic('title', ['{%title%}' => _ORDER]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => bb_decode($conf['order']['info'], 'all')]);
+			echo setTemplateBasic('title', ['{%title%}' => _ORDER]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => filterReplaceText(filterMarkdown($conf['order']['info'], 'all', false), 'all')]);
 			setFoot();
 		} else {
 			order();

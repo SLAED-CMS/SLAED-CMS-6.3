@@ -115,7 +115,6 @@ function uploadsave(): void {
 
 function templconf(): void {
     global $afile, $conf;
-    require_once CONFIG_DIR.'/filetype.php';
     setHead();
     $cont = navi(0, 1, 0, 0, 'templconf');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TPINFO]);

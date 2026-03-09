@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -44,7 +44,7 @@ function setMessageShow(): string {
             while ([$mid, $title, $content, $expire, $view] = $db->getSqlRow($result)) {
                 $mid = intval($mid);
                 if ($expire && $expire < time()) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET active = 0, expire = 0 WHERE mid = :mid', ['mid' => $mid]);
-                $content = bb_decode($content, 'all');
+                $content = filterReplaceText(filterMarkdown($content, 'all', false), 'all');
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 $info = '| '._PURCHASED.': '.$exp.' | <a href="'.$afile.'.php?op=msg_add&amp;id='.$mid.'" title="'._EDIT.'">'._EDIT.'</a> ]</div>';
@@ -150,7 +150,7 @@ function getUserBlock(): string {
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT user_block FROM '.PREFIX_DB.'_users WHERE user_id = :uid', ['uid' => $uid]));
-        $userblock = bb_decode($userblock, 'account');
+        $userblock = filterReplaceText(filterMarkdown($userblock, 'account', false), 'account');
         return setTemplateBlock('', ['{%title%}' => _MENUFOR, '{%content%}' => $userblock]);
     }
     return '';
@@ -229,7 +229,7 @@ function updatePost() {
         }
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             if (!$text) {
-                $content = ($typ) ? textareae('for'.$id, '1', 'editpost', $id, $cid, '0', $mod, $hometext, '15') : bb_decode($hometext, $mod);
+                $content = ($typ) ? textareae('for'.$id, '1', 'editpost', $id, $cid, '0', $mod, $hometext, '15') : filterReplaceText(filterMarkdown($hometext, $mod, false), $mod);
                 echo $content;
             } else {
                 $postid = (is_user()) ? intval($user[0]) : '';
@@ -246,7 +246,7 @@ function updatePost() {
                         'UPDATE '.PREFIX_DB.'_forum SET hometext = :hometext, e_uid = :e_uid, e_ip_send = :e_ip_send, e_time = NOW() WHERE id = :id',
                         ['hometext' => $htext, 'e_uid' => $postid, 'e_ip_send' => $ip, 'id' => $id]
                     );
-                    echo bb_decode($htext, $mod);
+                    echo filterReplaceText(filterMarkdown($htext, $mod, false), $mod);
                 } else {
                     return setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
                 }
@@ -421,7 +421,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
 
                 
                 $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? add_menu("<a OnClick=\"AjaxLoad('GET', '0', '".$prmid."', 'go=1&amp;op=prmessdel&amp;id=".$idp.'&amp;typ='.$mod."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-                $cont .= setTemplateBasic('privat-message', ['{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%title%}' => cutstr($title, 35), '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => bb_decode($content, $conf['name']), '{%sig%}' => bb_decode($sig, $conf['name']), '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_edit%}' => $edit]);
+                $cont .= setTemplateBasic('privat-message', ['{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%title%}' => cutstr($title, 35), '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => filterReplaceText(filterMarkdown($content, $conf['name'], false), $conf['name']), '{%sig%}' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_edit%}' => $edit]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {
@@ -756,7 +756,7 @@ function getRssChannel() {
             .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
             .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
             .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
-            .'<description>'.htmlspecialchars(bb_decode($rhometext, $name, 1))."</description>\n"
+            .'<description>'.htmlspecialchars(filterReplaceText(filterMarkdown($rhometext, $name, false), $name))."</description>\n"
             .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= '<author>antispam@antispam.com ('.htmlspecialchars($rauthor).")</author>\n"
@@ -769,7 +769,7 @@ function getRssChannel() {
         .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
         .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
         .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
-        .'<description>'.htmlspecialchars(bb_decode($rhometext, $name))."</description>\n"
+        .'<description>'.htmlspecialchars(filterReplaceText(filterMarkdown($rhometext, $name, false), $name))."</description>\n"
         ."</item>\n\n";
     } elseif ($name && $name == 'shop' && $result) {
         while ([$rid, $rtitle, $rtime, $rhometext, $rctitle] = $db->getSqlRow($result)) {
@@ -778,7 +778,7 @@ function getRssChannel() {
             .'<pubDate>'.htmlspecialchars(date('D, j M Y H:m:s O', strtotime($rtime)))."</pubDate>\n"
             .'<guid>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</guid>\n"
             .'<link>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid."</link>\n"
-            .'<description>'.htmlspecialchars(bb_decode($rhometext, $name))."</description>\n"
+            .'<description>'.htmlspecialchars(filterReplaceText(filterMarkdown($rhometext, $name, false), $name))."</description>\n"
             .'<comments>'.$conf['homeurl'].'/index.php?name='.$name.'&amp;op=view&amp;id='.$rid.'#'.$rid."</comments>\n";
             $content .= ($rctitle) ? '<category>'.htmlspecialchars($rctitle)."</category>\n" : '';
             $content .= "</item>\n\n";
@@ -812,7 +812,7 @@ function getOpenXsl(): string {
     global $conf;
     if (file_exists('config/sitemap/sitemap.xsl')) {
         $file = file_get_contents('config/sitemap/sitemap.xsl');
-        $licens = str_replace('&copy;', '©', base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']));
+        $licens = str_replace('&copy;', 'Â©', base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']));
         $title = $conf['sitename'].' - '._SITEMAP;
         $langs = ['$lan[0]' => $title, '$lan[1]' => $licens, '$lan[2]' => _SITEMAP_XML, '$lan[3]' => _URL, '$lan[4]' => _PRIORITY, '$lan[5]' => _CHANGEFREQ, '$lan[6]' => _LASTMOD];
         $cont = strtr($file, $langs);

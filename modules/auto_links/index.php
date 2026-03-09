@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -53,7 +53,7 @@ function autolink(): void {
             $reads = '<span title="'._OUTS.'" class="sl_outs">'.$outs.'</span>';
             $hits = '<span title="'._HITS.'" class="sl_hits">'.$hits.'</span>';
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=auto_links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=auto_links_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$sitename.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => '', '{%cimg%}' => '', '{%ctitle%}' => '', '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => search_color(bb_decode($description, $conf['name']), $word), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => '', '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['{%cid%}' => '', '{%cimg%}' => '', '{%ctitle%}' => '', '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => search_color(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), $word), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => '', '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_auto_links', '', 'hits != \'0\'', $conf['auto_links']['nump']);
     } else {

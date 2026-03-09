@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -22,7 +22,7 @@ function money(): void {
     $cont = setTemplateBasic('title', ['{%title%}' => _MONEY]);
     $cont .= ($conf['money']['an']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MO_11]);
     $cont .= setTemplateBasic('open');
-    $cont .= bb_decode(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), 'all');
+    $cont .= filterReplaceText(filterMarkdown(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), 'all', false), 'all');
     $cont .= setTemplateBasic('close');
     $cont .= setTemplateBasic('open');
     $cont .= '<script>
@@ -135,11 +135,11 @@ function send(): void {
                 $amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._MONEY;
                 $msg = $conf['sitename'].' - '._MONEY.'<br><br>';
-                $msg .= bb_decode($conf['money']['sendinfo'], 'all');
+                $msg .= filterReplaceText(filterMarkdown($conf['money']['sendinfo'], 'all', false), 'all');
                 addMail($mail, $amail, $subject, $msg, 0, 3);
             }
             setHead(['title' => _MONEY]);
-            echo setTemplateBasic('title', ['{%title%}' => _MONEY]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => bb_decode($conf['money']['info'], 'all')]);
+            echo setTemplateBasic('title', ['{%title%}' => _MONEY]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => filterReplaceText(filterMarkdown($conf['money']['info'], 'all', false), 'all')]);
             setFoot();
         } else {
             money();

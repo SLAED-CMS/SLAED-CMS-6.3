@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -39,7 +39,7 @@ function contact(): void {
     }
     if ($conf['contact']['info']) {
         $title = _CONTACT;
-        $form = bb_decode($conf['contact']['info'], $conf['name']).'<hr>';
+        $form = filterReplaceText(filterMarkdown($conf['contact']['info'], $conf['name'], false), $conf['name']).'<hr>';
     } else {
         $title = _FEEDBACK;
         $form = '';

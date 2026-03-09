@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -83,7 +83,7 @@ function view(): void {
             $reads =  '';
         }
         $admin = add_menu('<a href="'.$afile.'.php?name=help&amp;op=add&amp;id='.$sid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=help&amp;op=del&amp;id='.$sid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
-        $cont .= setTemplateBasic('basic', ['{%ctitle%}' => $ctitle, '{%id%}' => $sid, '{%title%}' => $title, '{%text%}' => bb_decode($text, 'help'), '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin]);
+        $cont .= setTemplateBasic('basic', ['{%ctitle%}' => $ctitle, '{%id%}' => $sid, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin]);
         $a++;
     }
     $cont .= setTemplateBasic('close');
@@ -266,8 +266,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
-
 
 
 

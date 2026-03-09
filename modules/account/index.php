@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -274,7 +274,7 @@ function view(): void {
             [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $last, $lang, $point, $ip, $warn, $birth, $gender, $votes, $total, $field, $agent, $gname, $grank, $gcolor] = $db->getSqlRow($result);
             $seotitle  = $nick;
             $seoctitle = _PERSONALINFO;
-            $seodesc   = cutstr(trim(strip_tags(bb_decode($sig ?? '', $conf['name']))), 160);
+            $seodesc   = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($sig ?? '', $conf['name'], false), $conf['name']))), 160);
             $seoimg    = ($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['homeurl'].'/'.$conf['users']['adirectory'].'/'.$avatar : '';
             $seotime   = $last;
             $seoauthor = $nick ?: ($uname ?: $conf['sitename']);
@@ -307,7 +307,7 @@ function view(): void {
             $occup = ($occ) ? [_OCCUPATION, $occ] : [_OCCUPATION, _NO_INFO];
             $from = ($from) ? [_LOCALITYLANG, $from] : [_LOCALITYLANG, _NO_INFO];
             $inter = ($inter) ? [_INTERESTS, $inter] : [_INTERESTS, _NO_INFO];
-            $sign = ((isAdmin() || is_user()) && $sig) ? '<hr>'.bb_decode($sig, $conf['name']) : '';
+            $sign = ((isAdmin() || is_user()) && $sig) ? '<hr>'.filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']) : '';
             $lang = ($lang) ? [_LANGUAGE, deflang($lang)] : [_LANGUAGE, deflang($conf['language'])];
             $points = ($conf['users']['point'] && $point) ? [_POINTS, $point] : [_POINTS, _NO_INFO];
             $warn = [_UWARNS, warnings($warn)];
@@ -459,7 +459,7 @@ function last(int|string $uid, string $modul): string {
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
             while([$id, $cid, $modul, $date, $comment] = $db->getSqlRow($result)) {
-                $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText(bb_decode($comment, $conf['name']))), 70);
+                $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText(filterReplaceText(filterMarkdown($comment, $conf['name'], false), $conf['name']))), 70);
                 $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.': '.format_time($date, _TIMESTRING).'" class="sl_date">'.format_time($date).'</time></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id.'" title="'.$comment.'" class="sl_last">'.$comment.'</a></td></tr>';
             }
             $cont .= '</table>';

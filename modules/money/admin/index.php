@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright � 2005 - 2026 SLAED
+# Copyright ï¿½ 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -189,7 +189,7 @@ function rechn(): void {
     $proz = (float)($conf['money']['proz'] ?? 0);
     $menge = ($sum / 100) * $kurs * (100 - $proz);
     $kurs = ($menge > 0) ? round($sum / $menge, 2) : 0;
-    billing($title, bb_decode($conf['money']['autor'] ?? '', 'money'), bb_decode($infos, 'money'), $rnum, format_time($date), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
+    billing($title, filterReplaceText(filterMarkdown($conf['money']['autor'] ?? '', 'money', false), 'money'), filterReplaceText(filterMarkdown($infos, 'money', false), 'money'), $rnum, format_time($date), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
 }
 
 function active(): void {
@@ -202,7 +202,7 @@ function active(): void {
         $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._MONEY;
         $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
-        $msg .= bb_decode($conf['money']['sendinfo'] ?? '', 'all');
+        $msg .= filterReplaceText(filterMarkdown($conf['money']['sendinfo'] ?? '', 'all', false), 'all');
         addMail($mail, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=money&send=1');
     }
@@ -280,8 +280,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
-
 
 
 

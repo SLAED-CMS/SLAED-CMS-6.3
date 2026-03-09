@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -99,7 +99,7 @@ function links(): void {
             $comm = ($acomm) ? '<a href="'.$thref.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=links_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => bb_decode($description, $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'lid', '_links', 'cid', $onum, $conf['links']['nump']);
     } else {
@@ -163,7 +163,7 @@ function view(): void {
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
         $seotitle = $title;
         $seoctitle = $ctitle;
-        $seodesc = cutstr(trim(strip_tags(bb_decode($description, $conf['name']))), 160);
+        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']))), 160);
         $seoimg = getImgText($description, '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         $seotime = $date;
@@ -202,7 +202,7 @@ function view(): void {
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCLINK.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($authorurl) ? _SITE.': '.domain($authorurl) : '';
-        $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(bb_decode($text, $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '', '{%size%}' => '', '{%version%}' => '', '{%download%}' => $download, '{%broken%}' => $broken, '{%email%}' => $email, '{%home%}' => $home]);
+        $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '', '{%size%}' => '', '{%version%}' => '', '{%download%}' => $download, '{%broken%}' => $broken, '{%email%}' => $email, '{%home%}' => $home]);
         if ($conf['links']['link']) {
             $limit = intval($conf['links']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(lid) FROM '.PREFIX_DB.'_links WHERE cid = :cid AND lid != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
@@ -212,7 +212,7 @@ function view(): void {
                 $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
                 while([$aid, $title, $hometext, $bodytext, $time] = $db->getSqlRow($result)) {
                     $date = ($conf['links']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
-                    $text = cutstr(htmlspecialchars(trim(strip_tags(bb_decode($hometext, $conf['name']))), ENT_QUOTES), 80);
+                    $text = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
                     $cont .= setTemplateBasic('assoc-basic', ['{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img]);

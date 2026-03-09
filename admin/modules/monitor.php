@@ -1022,11 +1022,11 @@ function getMonitorDbStats(object $db, array $conf): array {
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname !== '') {
         $dbres = $db->getSqlQuery(
-            'SELECT DATA_LENGTH, INDEX_LENGTH FROM information_schema.TABLES WHERE TABLE_SCHEMA = :name',
+            'SELECT DATA_LENGTH AS data_length, INDEX_LENGTH AS index_length FROM information_schema.TABLES WHERE TABLE_SCHEMA = :name',
             ['name' => $dbname]
         );
         while ($row = $db->getSqlRow($dbres)) {
-            $dbsize += $row['Data_length'] + $row['Index_length'];
+            $dbsize += (int)($row['data_length'] ?? 0) + (int)($row['index_length'] ?? 0);
             $dbtabs++;
         }
     }
