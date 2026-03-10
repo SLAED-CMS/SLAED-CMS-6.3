@@ -308,7 +308,7 @@ function view(): void {
             $from = ($from) ? [_LOCALITYLANG, $from] : [_LOCALITYLANG, _NO_INFO];
             $inter = ($inter) ? [_INTERESTS, $inter] : [_INTERESTS, _NO_INFO];
             $sign = ((isAdmin() || is_user()) && $sig) ? '<hr>'.filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']) : '';
-            $lang = ($lang) ? [_LANGUAGE, deflang($lang)] : [_LANGUAGE, deflang($conf['language'])];
+            $lang = ($lang) ? [_LANGUAGE, getLangName($lang)] : [_LANGUAGE, getLangName($conf['language'])];
             $points = ($conf['users']['point'] && $point) ? [_POINTS, $point] : [_POINTS, _NO_INFO];
             $warn = [_UWARNS, warnings($warn)];
             if ($birth) {

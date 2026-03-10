@@ -39,7 +39,7 @@ function messages(): void {
                 .'<td><span title="'.$title.'" class="sl_note">'.cutstr($title, 35).'</span></td>'
                 .'<td>'.$exp.'</td>'
                 .'<td>'.$mview.'</td>'
-                .'<td>'.deflang($mlanguage).'</td>'
+                .'<td>'.getLangName($mlanguage).'</td>'
                 .'<td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active).'||<a href="'.$afile.'.php?name=messages&amp;op=add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=messages&amp;op=del&amp;id='.$mid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';

@@ -141,7 +141,7 @@ function subadd(): void {
         $cont .= setTemplateBasic('close');
     } else {
         $cont = navi(0, 2, 0, 0);
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, deflmconst($modul))]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
     }
     echo $cont;
     setFoot();
@@ -159,7 +159,7 @@ function addedit(): void {
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="edit"><input type="submit" value="'._EDIT.'" class="sl_but_blue"></td></tr></form></table>';
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, deflmconst($modul))]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
     }
     echo $cont;
     setFoot();

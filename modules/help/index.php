@@ -187,7 +187,7 @@ function view(): void {
         $a = 0;
         while ([$hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $title = ($title) ? search_color($title, $word) : _MESSAGE.': '.$a;
+            $title = ($title) ? filterTextHighlight($title, $word) : _MESSAGE.': '.$a;
             $fields = fields_out($field, $conf['name']);
             $fields = ($fields) ? '<br><br>'.$fields : '';
             $text = $hometext.$fields;
@@ -206,7 +206,7 @@ function view(): void {
             } else {
                 $reads = $ctitle = $cimg = $favorites = $goback = '';
             }
-            $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => !$pid], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $hid, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => '', '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => !$pid], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $hid, '{%title%}' => filterTextHighlight($title, $word), '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => '', '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
             $a++;
         }
         $cont .= addview($id);

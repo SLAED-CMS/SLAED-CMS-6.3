@@ -296,7 +296,7 @@ function view(): void {
             $areply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$cmassiv[0][2].'&amp;pid='.$id.'" title="'._TOPICREPLY.'" class="sl_but">'._REPLY.'</a>' : '<span title="'.sprintf(_ACINFOP, _NOTCAN).'" class="sl_but sl_hidden">'._REPLY.'</span>';
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$id.'&', $conf['forum']['pnum'], $num);
             $favor = getFavorBtn($id, $conf['name']);
-            $cont = setTemplateBasic('forum-view-open', ['{%atopic%}' => $atopic, '{%areply%}' => $areply, '{%title%}' => search_color($cmassiv[0][5], $word), '{%favor%}' => $favor]);
+            $cont = setTemplateBasic('forum-view-open', ['{%atopic%}' => $atopic, '{%areply%}' => $areply, '{%title%}' => filterTextHighlight($cmassiv[0][5], $word), '{%favor%}' => $favor]);
             foreach ($cmassiv as $val) {
                 $fid = $val[0];
                 $fcat = $val[2];
@@ -378,7 +378,7 @@ function view(): void {
                 $edit .= ($ismod || ($isdelete && $val[3] == intval($user[0]))) ? '<a href="index.php?name='.$conf['name'].'&amp;op=delete&amp;cat='.$fcat.'&amp;id='.$fid."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$val[5]."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>' : '';
                 $edit = ($edit) ? add_menu($edit) : '';
                 $hclass = (!$val[17]) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
-                $text = ($fields) ? '<div id="repfor'.$fid.'">'.search_color(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>'.search_color(filterReplaceText(filterMarkdown('<br><br>'.$fields, $conf['name'], false), $conf['name']), $word) : '<div id="repfor'.$fid.'">'.search_color(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>';
+                $text = ($fields) ? '<div id="repfor'.$fid.'">'.filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>'.filterTextHighlight(filterReplaceText(filterMarkdown('<br><br>'.$fields, $conf['name'], false), $conf['name']), $word) : '<div id="repfor'.$fid.'">'.filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>';
                 $cont .= setTemplateBasic('forum-view-basic', ['{%id%}' => $fid, '{%username%}' => $avname, '{%date%}' => $date, '{%rating%}' => $rating, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_reply%}' => $qreply, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass]);
                 if ($conf['forum']['sort']) { $a++; } else { $a--; }
             }

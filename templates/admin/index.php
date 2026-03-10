@@ -15,7 +15,7 @@ function setTemplateHead($sub, $val = '') {
 			while (false !== ($file = readdir($dir))) {
 				if (preg_match('#^(.+)\.php#', $file, $matches)) {
 					$lfound = $matches[1];
-					$title = deflang($lfound);
+					$title = getLangName($lfound);
 					$langs .= '<a href="'.$afile.'.php?newlang='.$lfound.'"><img src="'.img_find('language/'.$lfound.'_mini.png').'" alt="'.$title.'" title="'.$title.'"></a>';
 				}
 			}

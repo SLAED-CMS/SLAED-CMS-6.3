@@ -69,7 +69,7 @@ function view(): void {
             'time' => $time,
             'author' => $conf['sitename'],
         ]);
-        echo setTemplateBasic('title', ['if_flag' => ['is_view' => true], '{%title%}' => $title]).setTemplateBasic('open').search_color(filterMarkdown($hometext, $conf['name'], false), $word).setTemplateBasic('close');
+        echo setTemplateBasic('title', ['if_flag' => ['is_view' => true], '{%title%}' => $title]).setTemplateBasic('open').filterTextHighlight(filterMarkdown($hometext, $conf['name'], false), $word).setTemplateBasic('close');
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);

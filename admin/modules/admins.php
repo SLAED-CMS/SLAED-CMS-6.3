@@ -22,7 +22,7 @@ function admins(): void {
     $result = $db->getSqlQuery('SELECT id, name, title, url, email, lang, ip, regdate, lastvisit FROM '.PREFIX_DB.'_admins ORDER BY id');
     while ([$id, $name, $title, $url, $email, $lang, $ip, $regdate, $lastvisit] = $db->getSqlRow($result)) {
         $lang = (!$lang) ? _ALL : $lang;
-        $cont .= '<tr><td>'.title_tip(_REG.': '.format_time($regdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($lastvisit, _TIMESTRING)).$name.'</td><td>'.$title.'</td><td>'.domain($url).'</td><td>'.mailto($email).'</td><td>'.deflang($lang).'</td><td>'.user_geo_ip($ip, 4).'</td>'
+        $cont .= '<tr><td>'.title_tip(_REG.': '.format_time($regdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($lastvisit, _TIMESTRING)).$name.'</td><td>'.$title.'</td><td>'.domain($url).'</td><td>'.mailto($email).'</td><td>'.getLangName($lang).'</td><td>'.user_geo_ip($ip, 4).'</td>'
         .'<td>'.add_menu('<a href="'.$afile.'.php?name=admins&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=admins&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
     }
     $cont .= '</tbody></table>';
@@ -95,7 +95,7 @@ function add(): void {
         }
         $tdwidth = intval(100/$a);
         if (($i - 1) % $a == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="modules[]" value="'.$mid.'"'.$sel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
+        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="modules[]" value="'.$mid.'"'.$sel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.getModuleName($title).'</span></td>';
         if ($i % $a == 0) $cont .= '</tr>';
         $i++;
     }

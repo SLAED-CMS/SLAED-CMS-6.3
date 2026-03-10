@@ -156,7 +156,7 @@ function setTemplateHead($sub, $val = '') {
             $cont = setTemplateBasic('login-without', ['{%register%}' => _BREG]);
         }
     }
-    $mname = ($conf['name']) ? deflmconst($conf['name']) : '';
+    $mname = ($conf['name']) ? getModuleName($conf['name']) : '';
     $fcat = (isset($_GET['cat'])) ? intval($_GET['cat']) : 0;
     $cname = ($fcat && !empty($conf['files'])) ? catlink($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
     list($count) = $db->getSqlRow($db->getSqlQuery('SELECT Count(fid) FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));

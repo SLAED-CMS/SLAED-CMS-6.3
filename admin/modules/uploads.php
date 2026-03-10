@@ -38,7 +38,7 @@ function uploads(): void {
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $cont .= '<div id="tabcs0" class="tabcont">';
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.deflmconst($dir).'<br>'._DIR.': uploads/'.$dir]);
+    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form enctype="multipart/form-data" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_form"></td></tr>'
@@ -63,7 +63,7 @@ function uploads(): void {
             }
             closedir($handle);
         }
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.deflmconst($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -86,7 +86,7 @@ function uploads(): void {
             }
             closedir($handle);
         }
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.deflmconst($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
+        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -172,7 +172,7 @@ function conf(): void {
             $con = explode('|', $conf['uploads'][$val]);
             $hr = ($i == 0) ? '' : '<hr>';
             $conts .= $hr.'<table class="sl_table_conf">'
-            .'<tr><td>'._MODUL.':</td><td>'.deflmconst($val).'</td></tr>'
+            .'<tr><td>'._MODUL.':</td><td>'.getModuleName($val).'</td></tr>'
             .'<tr><td>'._FTYPE.':</td><td><input type="text" name="type[]" value="'.$con[0].'" class="sl_conf" placeholder="'._FTYPE.'" required></td></tr>'
             .'<tr><td>'._FSIZEALL._FIN.':</td><td><input type="number" name="allsize[]" value="'.$con[1].'" class="sl_conf" placeholder="'._FSIZEALL._FIN.'" required></td></tr>'
             .'<tr><td>'._FSIZE._FIN.':</td><td><input type="number" name="size[]" value="'.$con[2].'" class="sl_conf" placeholder="'._FSIZE._FIN.'" required></td></tr>'

@@ -46,7 +46,7 @@ function template(): void {
                     $filelink = $dir.'/'.$file;
                     $permtest = checkPerms(BASE_DIR.'/'.$filelink);
                     if ($permtest) $cont .= $permtest;
-                    $comp = deflmconst(strtr($file, $langs));
+                    $comp = getModuleName(strtr($file, $langs));
                     $conts .= '<table class="sl_bodyline"><tr><th class="sl_right"><a OnClick="CloseOpen(\'sl_open_'.$i.'\', 0);" title="'._EDIT.'" class="sl_plus">'.$comp.' | '._FILE.': '.$file.' | '.date(_TIMESTRING, filemtime($filelink)).'</a></th></tr></table>'
                     .'<div id="sl_open_'.$i.'"><form action="'.$afile.'.php" method="post"><table class="sl_blockline"><tr><td>'.textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/html', file_get_contents($filelink)).'</td></tr>'
                     .'<tr><td class="sl_center"><input type="hidden" name="name" value="template"><input type="hidden" name="op" value="save"><input type="hidden" name="templ" value="'.$templ.'"><input type="hidden" name="filelink" value="'.$filelink.'"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form></div>';
@@ -80,7 +80,7 @@ function style(): void {
                     $filelink = $dir.'/'.$file;
                     $permtest = checkPerms(BASE_DIR.'/'.$filelink);
                     if ($permtest) $cont .= $permtest;
-                    $comp = deflmconst(strtr($file, $langs));
+                    $comp = getModuleName(strtr($file, $langs));
                     $conts .= '<table class="sl_bodyline"><tr><th class="sl_right"><a OnClick="CloseOpen(\'sl_open_'.$i.'\', 0);" title="'._EDIT.'" class="sl_plus">'.$comp.' | '._FILE.': '.$file.' | '.date(_TIMESTRING, filemtime($filelink)).'</a></th></tr></table>'
                     .'<div id="sl_open_'.$i.'"><form action="'.$afile.'.php" method="post"><table class="sl_blockline"><tr><td>'.textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/css', file_get_contents($filelink)).'</td></tr>'
                     .'<tr><td class="sl_center"><input type="hidden" name="name" value="template"><input type="hidden" name="op" value="stylesave"><input type="hidden" name="templ" value="'.$templ.'"><input type="hidden" name="filelink" value="'.$filelink.'"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form></div>';

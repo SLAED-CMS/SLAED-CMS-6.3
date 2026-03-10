@@ -24,7 +24,7 @@ function ratings(): void {
         $con = explode('|', $conf['ratings'][$val]);
         $hr = ($i == 0) ? '' : '<tr><td colspan="2" class="sl_center"><hr></td></tr>';
         $content .= $hr
-           .'<tr><td>'._MODUL.':</td><td><span title="'._MODUL.': '.$val.'" class="sl_note">'.deflmconst($val).'</span></td></tr>'
+           .'<tr><td>'._MODUL.':</td><td><span title="'._MODUL.': '.$val.'" class="sl_note">'.getModuleName($val).'</span></td></tr>'
            .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="time[]" value="'.intval($con[0] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
            .'<tr><td>'._C_21.'</td><td>'.radio_form($con[1], $i.'in').'</td></tr>'
            .'<tr><td>'._C_22.'</td><td>'.radio_form($con[2], $i.'view').'</td></tr>';

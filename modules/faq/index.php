@@ -83,7 +83,7 @@ function faq(): void {
 		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_faq">';
 		$result = $db->getSqlQuery('SELECT fid, title FROM '.PREFIX_DB.'_faq WHERE catid = :ncat AND time <= NOW() AND status != \'0\' ORDER BY '.$orderbyf, ['ncat' => $ncat]);
-		while ([$fid, $ftitle] = $db->getSqlRow($result)) $cont .= '<tr><td><a href="#'.$fid.'" title="'.$ftitle.'" class="sl_faq">'.search_color($ftitle, $word).'</a></td></tr>';
+		while ([$fid, $ftitle] = $db->getSqlRow($result)) $cont .= '<tr><td><a href="#'.$fid.'" title="'.$ftitle.'" class="sl_faq">'.filterTextHighlight($ftitle, $word).'</a></td></tr>';
 		$cont .= '</table>';
 		$cont .= setTemplateBasic('close');
 	}
@@ -208,7 +208,7 @@ function view(): void {
 		$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=faq_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=faq_delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
 		$favorites = getFavorBtn($id, $conf['name']);
 		$goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
-		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => search_color($title, $word), '{%text%}' => search_color(filterReplaceText(filterMarkdown($conpag[$arrayelement], $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
+		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => filterTextHighlight($title, $word), '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($conpag[$arrayelement], $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
 		$cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['faq']['nump'], (int)$pag, '#'.$id);
 		if ($conf['faq']['link']) {
 			$limit = intval($conf['faq']['linknum']);

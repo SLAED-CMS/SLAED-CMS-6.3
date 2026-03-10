@@ -65,7 +65,7 @@ function config(): void {
         if ($val != '') {
             if (file_exists('modules/'.$mname[$i].'/admin/index.php')) {
                 $selected = ($conf['amod'] == $val) ? 'selected' : '';
-                $ocont .= '<option value="'.$val.'" '.$selected.'>'.deflmconst($mname[$i]).'</option>';
+                $ocont .= '<option value="'.$val.'" '.$selected.'>'.getModuleName($mname[$i]).'</option>';
             }
             $i++;
         }
@@ -184,7 +184,7 @@ function config(): void {
             if (preg_match('/^(.+)\.php/', $file, $matches)) {
                 $langfound = $matches[1];
                 $selected = ($conf['language'] == $langfound) ? 'selected' : '';
-                $cont .= '<option value="'.$langfound.'" '.$selected.'>'.deflang($langfound).'</option>';
+                $cont .= '<option value="'.$langfound.'" '.$selected.'>'.getLangName($langfound).'</option>';
             }
         }
     }

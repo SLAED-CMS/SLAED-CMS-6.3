@@ -21,7 +21,7 @@ foreach ($mod_list as $m_title => $info) {
     $view = (int)($info['view'] ?? 0);
     $active = (int)($info['active'] ?? 0);
     $inmenu = (int)($info['menu'] ?? 1);
-    $m_title2 = deflmconst($m_title);
+    $m_title2 = getModuleName($m_title);
     if ($inmenu == 1 && $active == 1 && $view != 2) {
         if ((is_moder($m_title) && $view == 2) || $view != 2) {
             $mods_1 .= '<tr><td><a href="index.php?name='.$m_title.'" title="'.$m_title2.'" class="sl_modul">'.$m_title2.'</a></td></tr>';

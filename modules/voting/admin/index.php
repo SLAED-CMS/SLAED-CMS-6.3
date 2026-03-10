@@ -38,9 +38,9 @@ function voting(): void {
             .'<td>'.title_tip(_CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>';
             if ($conf['multilingual'] == 1) {
                 $language = (!$language) ? _ALL : $language;
-                $cont .= '<td>'.deflang($language).'</td>';
+                $cont .= '<td>'.getLangName($language).'</td>';
             }
-            $mod = ($modul) ? deflmconst($modul) : _NONE;
+            $mod = ($modul) ? getModuleName($modul) : _NONE;
             $cont .= '<td>'.$mod.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
             .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
@@ -88,7 +88,7 @@ function add(): void {
     foreach ($mname as $val) {
         if ($val != '') {
             $sel = ($modul == $val) ? ' selected' : '';
-            $content .= '<option value="'.$val.'"'.$sel.'>'.deflmconst($val).'</option>';
+            $content .= '<option value="'.$val.'"'.$sel.'>'.getModuleName($val).'</option>';
         }
     }
     $cont .= '<tr><td>'._MODUL.':</td><td><select name="modul" class="sl_form"><option value="">'._NO.'</option>'.$content.'</select></td></tr>'

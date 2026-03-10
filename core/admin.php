@@ -393,7 +393,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
             }
             $descript = ($description) ? $description : _NO;
             $subcat = ($ispid) ? $ispid : _NO;
-            $clang = ($conf['multilingual'] == 1) ? ((!$language) ? '<br>'._LANGUAGE.': '._ALL : '<br>'._LANGUAGE.': '.deflang($language)) : '';
+            $clang = ($conf['multilingual'] == 1) ? ((!$language) ? '<br>'._LANGUAGE.': '._ALL : '<br>'._LANGUAGE.': '.getLangName($language)) : '';
             $delete = (!$pnum && !$ispid) ? '||<a href="'.$afile.'.php?op=cat_del&amp;id='.$id.$modlink."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$title."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>' : '';
             $fcont .= '<tr><td>'.$id.'</td>'
             .'<td>'.title_tip(_DESCRIPTION.': '.$descript.'<br>'._CATEGORIES.': '.$subcat.$clang).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span></td>'
@@ -502,8 +502,8 @@ function ajax_block(): string {
         $weight_plus = $weight + 1;
         $exp = intval($expire - time());
         $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-        $blang = ($conf['multilingual'] == 1) ? ((!$blanguage) ? '<br>'._LANGUAGE.': '._ALL : '<br>'._LANGUAGE.': '.deflang($blanguage)) : '';
-        $fcont .= '<tr><td>'.$bid.'</td><td>'.title_tip(_NAME.': '.$title.'<br>'._PURCHASED.': '.$exp.$blang).cutstr(defconst($title), 15).'</td>';
+        $blang = ($conf['multilingual'] == 1) ? ((!$blanguage) ? '<br>'._LANGUAGE.': '._ALL : '<br>'._LANGUAGE.': '.getLangName($blanguage)) : '';
+        $fcont .= '<tr><td>'.$bid.'</td><td>'.title_tip(_NAME.': '.$title.'<br>'._PURCHASED.': '.$exp.$blang).cutstr(getConst($title), 15).'</td>';
         if ($bposition == 'l') {
             $bposition = '<span title="'._LEFTBLOCK.'" class="sl_note">'._LEFT.'</span>';
         } elseif ($bposition == 'r') {
@@ -624,7 +624,7 @@ function fav_aliste(int $obj = 0): string {
                 $cont .= '<tr>'
                 .'<td>'.$id.'</td>'
                 .'<td><span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
-                .'<td>'.deflmconst($modul).'</td>'
+                .'<td>'.getModuleName($modul).'</td>'
                 .'<td>'.$uname.'</td>'
                 .'<td>'.add_menu('<a href="index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid.'" title="'._MVIEW.'">'._MVIEW."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'fav_aliste', 'go=5&amp;op=fav_adel&amp;id=".$id."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>').'</td>';
             }

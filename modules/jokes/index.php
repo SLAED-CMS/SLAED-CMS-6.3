@@ -81,7 +81,7 @@ function jokes(): void {
     $result = $db->getSqlQuery('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, j.rating, j.ratingtot, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
-            $title = '<a href="#'.$id.'" title="'.$jtitle.'">'.search_color($jtitle, $word).'</a> '.new_graphic($time);
+            $title = '<a href="#'.$id.'" title="'.$jtitle.'">'.filterTextHighlight($jtitle, $word).'</a> '.new_graphic($time);
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
             $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
             $date = ($conf['jokes']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
@@ -90,7 +90,7 @@ function jokes(): void {
             $cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
             $rating = ajax_rating(1, $id, $conf['name'], $ratingtot, $rating, '');
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=jokes_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=jokes_delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$jtitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => search_color(filterReplaceText(filterMarkdown($joke, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => '', '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($joke, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => '', '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'jokeid', '_jokes', 'cat', $onum, $conf['jokes']['nump']);
     } else {

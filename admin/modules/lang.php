@@ -53,7 +53,7 @@ function lang(): void {
         $a = $i + 2;
         $act = isset($modbase[$mod[$i]]) && $modbase[$mod[$i]] ? 1 : 0;
         $view = $who_view[$mod[$i]] ?? _MVALL;
-        $cont .= '<tr><td>'.$a.'</td><td>'.deflmconst($mod[$i]).'</td><td>'.$mod[$i].'</td><td>'.$view.'</td><td>'.ad_status('', $act).'</td>';
+        $cont .= '<tr><td>'.$a.'</td><td>'.getModuleName($mod[$i]).'</td><td>'.$mod[$i].'</td><td>'.$view.'</td><td>'.ad_status('', $act).'</td>';
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $eadmin = '';
         $emodul = '';
@@ -134,7 +134,7 @@ function editfile(): void {
                 $tloc = substr($lng_cn[$j], 0, 2);
                 $button = '<input type="button" OnClick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');" value="'._OK.'" title="'._EAUTOTR.'" class="sl_but_blue">';
             }
-            $cont .= '<tr><td>'.deflang($lng_cn[$j]).':</td><td><input type="text" name="lng['.$lng_cn[$j].'][]" value="'.$val.'" class="sl_form '.$class.'" placeholder="'.deflang($lng_cn[$j]).'"></td><td>'.$button.'</td></tr>';
+            $cont .= '<tr><td>'.getLangName($lng_cn[$j]).':</td><td><input type="text" name="lng['.$lng_cn[$j].'][]" value="'.$val.'" class="sl_form '.$class.'" placeholder="'.getLangName($lng_cn[$j]).'"></td><td>'.$button.'</td></tr>';
         }
     }
     $cont .= '<tr><td colspan="3" class="sl_center">';

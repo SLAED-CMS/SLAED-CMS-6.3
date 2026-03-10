@@ -74,7 +74,7 @@ function add(): void {
     foreach ($modules as $title) {
         $tdwidth = intval(100/$a);
         if (($i - 1) % $a == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="blockwhere[]" value="'.$title.'"> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
+        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="blockwhere[]" value="'.$title.'"> <span title="'._MODUL.': '.$title.'" class="sl_note">'.getModuleName($title).'</span></td>';
         if ($i % $a == 0) $cont .= '</tr>';
         $i++;
     }
@@ -339,7 +339,7 @@ function edit(): void {
         foreach ($where_mas as $val) if ($val == $title) $mel = ' checked';
         $tdwidth = intval(100/$a);
         if (($i - 1) % $a == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="blockwhere[]" value="'.$title.'"'.$mel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.deflmconst($title).'</span></td>';
+        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="blockwhere[]" value="'.$title.'"'.$mel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.getModuleName($title).'</span></td>';
         if ($i % $a == 0) $cont .= '</tr>';
         $i++;
     }

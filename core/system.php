@@ -1493,7 +1493,7 @@ function setHead(array $seo = []): void {
             $title = $conf['sitename'].' '.$sep.' '.$conf['slogan'];
         } else {
             if ($conf['ltitle']) {
-                $mod = deflmconst($conf['name']);
+                $mod = getModuleName($conf['name']);
                 $title = ($title == $conf['sitename']) ? [] : [$title];
                 $title = empty($ctitle) ? $title : array_merge($title, [$ctitle]);
                 $word = getVar('get', 'word', 'word');
@@ -1674,24 +1674,16 @@ function setRedirect(string $url, bool $refer = false, int $code = 302): never {
 function filterTextHighlight(string $sourse, string $word): string {
     $word = filterWord(urldecode($word));
     if (!$word) return $sourse;
-    $word = preg_replace('/\s+/', ' ', trim($word));
-    $warray = strpos($word, ' ') !== false ? explode(' ', $word) : [$word];
+    $parts = array_values(array_unique(array_filter(array_map('trim', explode(' ', preg_replace('/\s+/', ' ', trim($word)))))));
+    if (!$parts) return $sourse;
+    usort($parts, static fn(string $a, string $b): int => strlen($b) - strlen($a));
     preg_match_all('#<[^>]*>#', $sourse, $tags);
-    $taglist = [];
-    $k = 0;
-    foreach ($tags[0] as $tag) {
-        $k++;
-        $taglist[$k] = $tag;
-        $sourse = str_replace($tag, '<'.$k.'>', $sourse);
-    }
-    foreach ($warray as $i) {
-        $i = trim($i);
-        if ($i === '') continue;
-        $pattern = '/'.preg_quote($i, '/').'/iu';
-        $sourse = preg_replace($pattern, '<span class="sl_word">$0</span>', $sourse);
-    }
-    foreach ($taglist as $k => $tag) $sourse = str_replace('<'.$k.'>', $tag, $sourse);
-    return $sourse;
+    $from = $tags[0];
+    $to   = array_map(static fn(int $k): string => "\x00TAG{$k}\x00", array_keys($from));
+    $sourse = str_replace($from, $to, $sourse);
+    $pattern = '/('.implode('|', array_map(static fn(string $p): string => preg_quote($p, '/'), $parts)).')/iu';
+    $sourse = preg_replace($pattern, '<span class="sl_word">$0</span>', $sourse);
+    return str_replace($to, $from, $sourse);
 }
 
 # Write, append, or compress file
@@ -1999,8 +1991,8 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
             foreach ($massiv as $val) {
                 if ($val[4] == $id && is_acess($val[5])) {
                     $catid[] = $val[0];
-                    $val[1] = defconst($val[1]);
-                    $val[2] = defconst($val[2]);
+                    $val[1] = getConst($val[1]);
+                    $val[2] = getConst($val[2]);
                     if (is_acess($val[6])) {
                         $style = '';
                         $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
@@ -2017,7 +2009,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                         if ($val[0] == $sval[4] && is_acess($sval[5])) {
                             $catid[] = $sval[0];
                             if ($sub == 1) {
-                                $sval[1] = defconst($sval[1]);
+                                $sval[1] = getConst($sval[1]);
                                 $shref = getSeoUrl(['name' => $mod, 'cat' => $sval[0]]);
                                 $sublink = (is_acess($sval[6])) ? ' <a href="'.$shref.'" title="'.$sval[1].'" class="sl_cat">'.$sval[1].'</a>' : '';
                                 $subcat .= '<div>'.$sublink.'</div>';
@@ -2429,7 +2421,7 @@ function doSitemap(): void {
             if ($conf['sitemap']['txt']) {
                 $buffer = '<ol class="sl_list">';
                 foreach ($htm as $key => $val) {
-                    $buffer .= '<li><a href="index.php?name='.$key.'" title="'.deflmconst($key).'">'.deflmconst($key).'</a>';
+                    $buffer .= '<li><a href="index.php?name='.$key.'" title="'.getModuleName($key).'">'.getModuleName($key).'</a>';
                     if (count($htm[$key]) > 0) {
                         $cat = '';
                         foreach ($htm[$key] as $key2 => $val2) {
@@ -3040,6 +3032,23 @@ function updateNewsletter(): void {
     }
 }
 
+# Resolve a PHP constant by name; return the name itself if undefined
+function getConst(string $con): string {
+    return defined($con) ? constant($con) : $con;
+}
+
+# Resolve a module key to its localised name constant
+function getModuleName(string $con): string {
+    $map = ['account' => _ACCOUNT, 'album' => _ALBUM, 'all' => _ALL, 'auto_links' => _A_LINKS, 'changelog' => _CHANGELOG, 'clients' => _CLIENTS, 'contact' => _FEEDBACK, 'content' => _CONTENT, 'faq' => _FAQ, 'files' => _FILES, 'forum' => _FORUM, 'gallery' => _ALBUM, 'help' => _HELP, 'info' => _INFO, 'jokes' => _JOKES, 'links' => _LINKS, 'main' => _MAIN, 'media' => _MEDIA, 'members' => _USERS, 'money' => _MONEY, 'news' => _NEWS, 'order' => _ORDER, 'pages' => _PAGES, 'radio' => _RADIO, 'recommend' => _RECOMMEND, 'rss_info' => _RSS, 'search' => _SEARCH, 'shop' => _SHOP, 'sitemap' => _SITEMAP, 'users' => _TOPUSERS, 'voting' => _VOTING, 'whois' => _WHOIS];
+    return $map[$con] ?? $con;
+}
+
+# Resolve a language code to its localised name constant
+function getLangName(string $con): string {
+    $map = ['en' => _ENGLISH, 'fr' => _FRENCH, 'de' => _GERMAN, 'pl' => _POLISH, 'ru' => _RUSSIAN, 'uk' => _UKRAINIAN];
+    return $map[$con] ?? $con;
+}
+
 ####
 # OLD FUNCTIONS (for backward compatibility, not recommended for use in new code)
 ####
@@ -3123,31 +3132,6 @@ function gender(int $gender): string {
     return $gen;
 }
 
-# OLD DELETE
-# Format search highlight
-function search_color(string $sourse, string $word): string {
- global $conf;
-    $word = filterWord(urldecode($word));
-    if ($word) {
-        if (strstr($word, ' ')) {
-            $warray = explode(' ', str_replace('  ', ' ', $word));
-        } else {
-            $warray[] = $word;
-        }
-        preg_match_all('#<[^>]*>#', $sourse, $tags);
-        array_unique($tags);
-        $taglist = [];
-        $k = 0;
-        foreach($tags[0] as $i) {
-            $k++;
-            $taglist[$k] = $i;
-            $sourse = str_replace($i, '<'.$k.'>', $sourse);
-        }
-        foreach($warray as $i) if (!is_numeric($i)) $sourse = preg_replace('#'.$i.'#iu', '<span class="sl_word">$0</span>', $sourse);
-        foreach($taglist as $k => $i) $sourse = str_replace('<'.$k.'>', $i, $sourse);
-    }
-    return $sourse;
-}
 
 # Replace break
 function replace_break(string $text): string {
@@ -3196,7 +3180,7 @@ function user_sinfo(string $id = ''): string {
         while (list($uname, $time, $host, $guest, $module) = $db->getSqlRow($result)) {
             $time = time() - $time;
             $strip = cutstr($uname, 15);
-            $module = deflmconst($module);
+            $module = getModuleName($module);
             $linkstrip = cutstr($module, 15);
             if ($guest == 2) {
                 $who_online .= '<tr><td>'.user_geo_ip($host, 3).'<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($uname).'" title="'.getDuration($time).'">'.$strip.'</a></td><td title="'.$module.'" class="sl_right sl_note">'.$linkstrip.'</td></tr>';
@@ -3727,24 +3711,6 @@ function preview(string $title = '', string $text1 = '', string $text2 = '', str
     return setTemplateBasic('preview', ['{%title%}' => _PREVIEW, '{%fields%}' => $fields, '{%fields1%}' => $fields1, '{%fields2%}' => $fields2, '{%fields3%}' => $fields3]);
 }
 
-# Defined constant
-function defconst(string $con): string {
-    $out = (defined($con)) ? constant($con) : $con;
-    return $out;
-}
-
-# Defined lang modul names constant
-function deflmconst(string $con): string {
-    $val = ['account' => _ACCOUNT, 'album' => _ALBUM, 'all' => _ALL, 'auto_links' => _A_LINKS, 'clients' => _CLIENTS, 'contact' => _FEEDBACK, 'content' => _CONTENT, 'faq' => _FAQ, 'files' => _FILES, 'forum' => _FORUM, 'gallery' => _ALBUM, 'help' => _HELP, 'info' => _INFO, 'radio' => _RADIO, 'jokes' => _JOKES, 'links' => _LINKS, 'main' => _MAIN, 'media' => _MEDIA, 'members' => _USERS, 'money' => _MONEY, 'news' => _NEWS, 'order' => _ORDER, 'pages' => _PAGES, 'recommend' => _RECOMMEND, 'rss_info' => _RSS, 'search' => _SEARCH, 'shop' => _SHOP, 'users' => _TOPUSERS, 'voting' => _VOTING, 'whois' => _WHOIS, 'sitemap' => _SITEMAP];
-    return strtr($con, $val);
-}
-
-# Defined lang constant
-function deflang(string $con): string {
-    $val = ['en' => _ENGLISH, 'fr' => _FRENCH, 'de' => _GERMAN, 'pl' => _POLISH, 'ru' => _RUSSIAN, 'uk' => _UKRAINIAN];
-    return strtr($con, $val);
-}
-
 # Fields in
 function fields_in(mixed $fieldb, string $mod): string {
  global $conf;
@@ -3766,7 +3732,7 @@ function fields_in(mixed $fieldb, string $mod): string {
                 $fieldin = (!empty($fieldb[$i])) ? $fieldb[$i] : $out[2];
                 $requir = ($out[4] == 1) ? ' required' : '';
                 if ($out[3] == 1) {
-                    $dvalue = ($fieldin) ? defconst($fieldin) : '';
+                    $dvalue = ($fieldin) ? getConst($fieldin) : '';
                     $field = '<input type="text" name="field[]" value="'.$dvalue.'" class="'.$style.'" placeholder="'.$dvalue.'"'.$requir.'>';
                 } elseif ($out[3] == 2) {
                     $field = '<textarea name="field[]" cols="15" rows="5" class="'.$style.'"'.$requir.'>'.$fieldin.'</textarea>';
@@ -3786,7 +3752,7 @@ function fields_in(mixed $fieldb, string $mod): string {
                 } elseif ($out[3] == 5) {
                     $field = datetime(2, 'field[]', $fieldin, 10, $conf['style']);
                 }
-                $fields .= '<tr><td>'.defconst($out[1]).':</td><td>'.$field.'</td></tr>';
+                $fields .= '<tr><td>'.getConst($out[1]).':</td><td>'.$field.'</td></tr>';
             }
         }
         $i++;
@@ -3807,7 +3773,7 @@ function fields_out(mixed $fieldb, string $mod): string {
         foreach ($fieldc as $val) {
             if ($val != '' && !empty($fieldb[$i])) {
                 preg_match("#(.*)\|(.*)\|(.*)\|(.*)#i", $val, $out);
-                $fields .= defconst($out[1]).': '.$fieldb[$i].'<br>';
+                $fields .= getConst($out[1]).': '.$fieldb[$i].'<br>';
             }
             $i++;
         }
@@ -4215,7 +4181,7 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
     $result = $db->getSqlQuery('SELECT id, title, parentid, auth_view FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
         $content = (!$noSelect) ? '<select name="'.$selectName.'" title="'._CATEGORIES.'" class="'.$class.'">' : '';
-        while (list($cid, $title, $parentid, $auth_view) = $db->getSqlRow($result)) if (is_acess($auth_view)) $massiv[$cid] = [defconst($title), $parentid];
+        while (list($cid, $title, $parentid, $auth_view) = $db->getSqlRow($result)) if (is_acess($auth_view)) $massiv[$cid] = [getConst($title), $parentid];
         foreach ($massiv as $key => $val) {
             $cont[$key] = $val[0];
             $flag = $val[1];
@@ -4248,7 +4214,7 @@ function catlink(string $mod = '', int $id = 0, string $sep = '', string $home =
     }
     $result = $db->getSqlQuery('SELECT id, title, parentid FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
-        while (list($cid, $title, $parentid) = $db->getSqlRow($result)) $massiv[$cid] = [defconst($title), $parentid];
+        while (list($cid, $title, $parentid) = $db->getSqlRow($result)) $massiv[$cid] = [getConst($title), $parentid];
         foreach ($massiv as $key => $val) {
             $flag = $val[1];
             $cont[$key] = ($flag != 0) ? $val[0] : '<a href="index.php?name='.$conf['name'].'&amp;cat='.$key.'" title="'.$val[0].'">'.$val[0].'</a>';
@@ -4486,7 +4452,7 @@ function addblocks(string $str): string {
 function render_blocks(string $side, string $blockfile, string $blocktitle, string $content, mixed $bid, string $url): string {
  global $showbanners, $foot;
     if ($url == '') {
-        $blocktitle = defconst($blocktitle);
+        $blocktitle = getConst($blocktitle);
         if ($blockfile != '') {
             if (file_exists('blocks/'.$blockfile)) {
                 include('blocks/'.$blockfile);
@@ -5200,7 +5166,7 @@ function language(string $lang = '', string $typ = ''): string {
     while (false !== ($file = readdir($dir))) {
         if (preg_match("#^(.+)\.php#", $file, $matches)) {
             $langf = $matches[1];
-            $title = deflang($langf);
+            $title = getLangName($langf);
             $sel = ($lang == $langf) ? ' selected' : '';
             $cont .= '<option value="'.$langf.'"'.$sel.'>'.$title.'</option>';
         }
@@ -5229,7 +5195,7 @@ function modul(string $name, string $class, string $modul, string $no = ''): str
                     $sel = '';
                 }
             }
-            $content .= '<option value="'.$file.'"'.$sel.'>'.deflmconst($file).'</option>';
+            $content .= '<option value="'.$file.'"'.$sel.'>'.getModuleName($file).'</option>';
         }
     }
     closedir($dir);
@@ -5245,7 +5211,7 @@ function cat_modul(string $selectName, string $extraClass = '', string $selected
     $mods = ['faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     foreach ($mods as $m) {
         $sel     = ($selected == $m) ? ' selected' : '';
-        $content .= '<option value="'.$m.'"'.$sel.'>'.deflmconst($m).' - '.$m.'</option>';
+        $content .= '<option value="'.$m.'"'.$sel.'>'.getModuleName($m).' - '.$m.'</option>';
     }
     $content .= '</select>';
     return $content;

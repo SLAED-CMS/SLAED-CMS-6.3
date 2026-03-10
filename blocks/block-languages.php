@@ -22,7 +22,7 @@ if ($conf['flags'] == 1) {
 	$content = '<div style="text-align: center;">';
 	for ($i = 0; $i < count($langlist); $i++) {
 		if ($langlist[$i] != '') {
-			$altlang = deflang($langlist[$i]);
+			$altlang = getLangName($langlist[$i]);
 			$content .= '<a href="index.php?newlang='.$langlist[$i].'"><img src="'.img_find('language/'.$langlist[$i].'.png').'" alt="'.$altlang.'" title="'.$altlang.'"></a>';
 		}
 	}
@@ -33,7 +33,7 @@ if ($conf['flags'] == 1) {
 		if ($langlist[$i] != '') {
 			$content .= '<option value="index.php?newlang='.$langlist[$i].'" ';
 			if ($langlist[$i] == $locale) $content .= ' selected';
-			$content .= '>'.deflang($langlist[$i])."</option>\n";
+			$content .= '>'.getLangName($langlist[$i])."</option>\n";
 		}
 	}
 	$content .= '</select></form>';

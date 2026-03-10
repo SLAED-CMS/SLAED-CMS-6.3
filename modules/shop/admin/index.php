@@ -96,14 +96,14 @@ function clients(): void {
             $cinfo = ($cinfo) ? $cinfo : _NO;
             if ($nick) {
                 $name = $nick;
-                $nick = user_info(search_color($nick, $csearch));
+                $nick = user_info(filterTextHighlight($nick, $csearch));
             } else {
                 $name = _ANONYM;
                 $nick = _ANONYM;
             }
             $cont .= '<tr><td>'.$cid.'</td>'
-            .'<td>'.title_tip(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.search_color($cname, $csearch).'<br>'._CLIENTADRES.': '.$cadres.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 40).'</span></td>'
-            .'<td>'.search_color(domain($cwebsite), $csearch).'</td>'
+            .'<td>'.title_tip(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.filterTextHighlight($cname, $csearch).'<br>'._CLIENTADRES.': '.$cadres.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 40).'</span></td>'
+            .'<td>'.filterTextHighlight(domain($cwebsite), $csearch).'</td>'
             .'<td>'.$nick.'</td>'
             .'<td>'.$cenddate.'</td>'
             .'<td>'.ad_status('', $cactive).'</td>'
@@ -476,7 +476,7 @@ function partners(): void {
         while([$paid, $paname, $paadres, $paphone, $paemail, $pawebsite, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result)) {
             if ($nick) {
                 $name = $nick;
-                $nick = user_info(search_color($nick, ''));
+                $nick = user_info(filterTextHighlight($nick, ''));
             } else {
                 $name = _ANONYM;
                 $nick = _ANONYM;
