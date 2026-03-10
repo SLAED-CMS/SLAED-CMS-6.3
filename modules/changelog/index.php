@@ -27,8 +27,7 @@ function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perp
 
 function changelog(): void {
     global $conf;
-
-    setHead();
+    setHead(['title' => _CHANGELOG]);
 
     $page = max(1, getVar('get', 'page', 'num', 1));
     $filters = chlogReadFilters('get');
