@@ -371,10 +371,10 @@ function save(): void {
         $bodytext .= getSqlFile('setup/sql/table_update4_3.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update5_0') {
         $title = _SAVE_UPDATE;
-        $result = $db->getSqlQuery('SELECT id, pwd FROM '.$xprefix.'_admins');
+        $result = $db->getSqlQuery('SELECT id, password FROM '.$xprefix.'_admins');
         while (list($a_id, $a_pwd) = $db->getSqlRow($result)) {
             $pwd_hash = getCrypt($a_pwd);
-            $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET pwd = :pwd WHERE id = :id', ['pwd' => $pwd_hash, 'id' => $a_id]);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET password = :password WHERE id = :id', ['password' => $pwd_hash, 'id' => $a_id]);
         }
         $bodytext .= getInfo($xprefix.'_admins', $result);
         $result = $db->getSqlQuery('SELECT id, password FROM '.$xprefix.'_users');
@@ -410,7 +410,7 @@ function save(): void {
         }
         $bodytext .= getInfo($xprefix.'_voting', $result);
 
-        $result = $db->getSqlQuery('SELECT sid, associated FROM '.$xprefix.'_news');
+        $result = $db->getSqlQuery('SELECT id, assoc FROM '.$xprefix.'_news');
         while (list($id, $associated) = $db->getSqlRow($result)) {
             $associated = explode('-', $associated);
             if (is_array($associated)) {
@@ -422,7 +422,7 @@ function save(): void {
             } else {
                 $assoc = '';
             }
-            $db->getSqlQuery('UPDATE '.$xprefix.'_news SET associated = :assoc WHERE id = :id', ['assoc' => $assoc, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_news SET assoc = :assoc WHERE id = :id', ['assoc' => $assoc, 'id' => $id]);
         }
         $bodytext .= getInfo($xprefix.'_news', $result);
 
