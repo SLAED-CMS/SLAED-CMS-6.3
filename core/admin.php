@@ -238,7 +238,7 @@ function admininfo() {
             if (is_active('account') && is_admin_modul('account')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT user_id FROM '.PREFIX_DB.'_users_temp'));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=users_new" title="'._NEW_USER.'">'._USERS.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=account&op=newuser" title="'._NEW_USER.'">'._USERS.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('album') && is_admin_modul('album')) {
                 #$num = $db->getSqlRowCount($db->getSqlQuery("SELECT pid FROM ".PREFIX_DB."_album_pictures_newpicture"));
@@ -248,64 +248,64 @@ function admininfo() {
             if (is_active('faq') && is_admin_modul('faq')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT fid FROM '.PREFIX_DB."_faq WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=faq&amp;status=1" title="'._FAQ.'">'._FAQ.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=faq&status=1" title="'._FAQ.'">'._FAQ.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('files') && is_admin_modul('files')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT lid FROM '.PREFIX_DB."_files WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=files&amp;status=1" title="'._FILES.'">'._FILES.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=files&status=1" title="'._FILES.'">'._FILES.'</a>:</td><td>'.$num.'</td></tr>';
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT lid FROM '.PREFIX_DB."_files WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=files&amp;status=2" title="'._BROCFILES.'">'._BROCFILES.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=files&status=2" title="'._BROCFILES.'">'._BROCFILES.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('help') && is_admin_modul('help')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT sid FROM '.PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=help" title="'._HELP.'">'._HELP.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=help" title="'._HELP.'">'._HELP.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('jokes') && is_admin_modul('jokes')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT jokeid FROM '.PREFIX_DB."_jokes WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=jokes&amp;status=1" title="'._JOKES.'">'._JOKES.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=jokes&status=1" title="'._JOKES.'">'._JOKES.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('links') && is_admin_modul('links')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT lid FROM '.PREFIX_DB."_links WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=links&amp;status=1" title="'._LINKS.'">'._LINKS.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=links&status=1" title="'._LINKS.'">'._LINKS.'</a>:</td><td>'.$num.'</td></tr>';
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT lid FROM '.PREFIX_DB."_links WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=links&amp;status=2" title="'._BROCLINKS.'">'._BROCLINKS.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=links&status=2" title="'._BROCLINKS.'">'._BROCLINKS.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('media') && is_admin_modul('media')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=media&amp;status=1" title="'._MEDIA.'">'._MEDIA.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=media&status=1" title="'._MEDIA.'">'._MEDIA.'</a>:</td><td>'.$num.'</td></tr>';
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=media&amp;status=2" title="'._BROCMFILES.'">'._BROCMFILES.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=media&status=2" title="'._BROCMFILES.'">'._BROCMFILES.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('news') && is_admin_modul('news')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT sid FROM '.PREFIX_DB."_news WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=news&amp;status=1" title="'._NEWS.'">'._NEWS.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=news&status=1" title="'._NEWS.'">'._NEWS.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('pages') && is_admin_modul('pages')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT pid FROM '.PREFIX_DB."_pages WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=page&amp;status=1" title="'._PAGES.'">'._PAGES.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=pages&status=1" title="'._PAGES.'">'._PAGES.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('shop') && is_admin_modul('shop')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_clients WHERE active = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=shop_clients" title="'._CLIENTS.'">'._CLIENTS.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=shop&op=clients" title="'._CLIENTS.'">'._CLIENTS.'</a>:</td><td>'.$num.'</td></tr>';
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_partners WHERE active = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=shop_partners" title="'._PARTNERS.'">'._PARTNERS.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=shop&op=partners" title="'._PARTNERS.'">'._PARTNERS.'</a>:</td><td>'.$num.'</td></tr>';
             }
             if (is_active('whois') && is_admin_modul('whois')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_whois WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?op=whois&amp;status=1" title="'._WHOIS.'">'._WHOIS.'</a>:</td><td>'.$num.'</td></tr>';
+                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=whois&status=1" title="'._WHOIS.'">'._WHOIS.'</a>:</td><td>'.$num.'</td></tr>';
             }
             $n_cont .= '</table>';
             $ablocks = setTemplateBlock('block-left', ['{%title%}' => _NEW, '{%content%}' => $n_cont, '{%id%}' => '3']);
@@ -313,7 +313,7 @@ function admininfo() {
             $w_cont = '<table class="sl_tab_bl">';
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
             $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-            $w_cont .= '<tr><td><a href="'.$afile.'.php?op=comm_show&amp;status=1" title="'._COMMENTS.'">'._COMMENTS.'</a>:</td><td>'.$num.'</td></tr>';
+            $w_cont .= '<tr><td><a href="'.$afile.'.php?name=comments&status=1" title="'._COMMENTS.'">'._COMMENTS.'</a>:</td><td>'.$num.'</td></tr>';
             $w_cont .= '</table>';
             $ablocks .= setTemplateBlock('block-left', ['{%title%}' => _WAITINGCONT, '{%content%}' => $w_cont, '{%id%}' => '4']);
             
@@ -810,32 +810,40 @@ function edit_list(string $modul, string $name, string $extraClass = ''): string
     return $cont;
 }
 
+# Renders the info/help page for the current admin module
 function getAdminInfo(): string {
     global $locale, $conf;
     $id   = getVar('post', 'id', 'num', 0);
     $cont = '';
+    $fdoc = static function(string $base): string {
+        foreach (['.html', '.md'] as $ext) {
+            if (file_exists($base.$ext)) return $base.$ext;
+        }
+        return '';
+    };
     if ($conf['adminfo'] && $id) {
         $type    = getVar('post', 'type', 'num', 0);
         $name    = filterWord(getVar('post', 'name', 'text', ''));
         $content = filterHtml(trim(getVar('post', 'text', 'raw', '')));
-        $fpdir   = $type
-            ? "modules/{$name}/admin/info/{$locale}.html"
-            : "admin/info/{$name}/{$locale}.html";
+        $base    = $type
+            ? "modules/{$name}/admin/info/{$locale}"
+            : "admin/info/{$name}/{$locale}";
+        $fpdir   = $fdoc($base) ?: $base.'.html';
         if ($content) {
             $fp = fopen($fpdir, 'wb');
             fwrite($fp, $content);
             fclose($fp);
         }
-        $thefile = (file_exists($fpdir)) ? file_get_contents($fpdir) : _NO_INFO;
+        $thefile = file_exists($fpdir) ? file_get_contents($fpdir) : _NO_INFO;
     } else {
-        $name    = filterWord(getVar('get', 'name', 'text', ''));
-        $modPath = "modules/{$name}/admin/info/{$locale}.html";
-        $admPath = "admin/info/{$name}/{$locale}.html";
-        if (file_exists($modPath)) {
-            $dir  = $modPath;
+        $name  = filterWord(getVar('get', 'name', 'text', ''));
+        $mpath = $fdoc("modules/{$name}/admin/info/{$locale}");
+        $apath = $fdoc("admin/info/{$name}/{$locale}");
+        if ($mpath) {
+            $dir  = $mpath;
             $type = 1;
-        } elseif (file_exists($admPath)) {
-            $dir  = $admPath;
+        } elseif ($apath) {
+            $dir  = $apath;
             $type = 0;
         } else {
             $dir  = '';

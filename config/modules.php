@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright (c) 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -437,7 +437,7 @@ return [
         ],
         'search' => [
             'lang' => '_SEARCH',
-            'img' => 'admins.png',
+            'img' => 'gears.png',
             'active' => '1',
             'view' => '0',
             'menu' => '1',

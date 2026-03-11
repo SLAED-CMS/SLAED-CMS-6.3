@@ -398,6 +398,8 @@ define('_SCRIPTFILE','Skriptdateien');
 define('_SCRIPTFILEINFO','Bitte direkt Skriptdateien.');
 define('_SCRIPTHEAD','Ausgegeben werden die Inhalte der Skripte in der Kopfzeile?');
 define('_SEARCHLETINFO','Aktiv für das Modul Suche, als auch in der Funktion bei der Suche nach den Benutzer in dem Modul persönliche Nachrichten und Admin-Panel.');
+define('_SEARCHLIMIT','Maximale Textlänge für die Suche (Zeichen)');
+define('_SEARCHLIMITINFO','Begrenzt die Anzahl der Zeichen, die an die Suchanfrage übergeben werden, um die Datenbank vor Überlastung zu schützen.');
 define('_SEARCHNUM','Menge der Ergebnisse der Suche auf die Seite');
 define('_SEC_ADMIN_IP','Erlaubte IP-Bereiche des Administrators (CIDR)');
 define('_SEC_ADMIN_MASK','Maske des Netzes für den Eingang in das Panel des Verwalters');

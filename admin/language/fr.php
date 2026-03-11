@@ -398,6 +398,8 @@ define('_SCRIPTFILE','Les fichiers de script');
 define('_SCRIPTFILEINFO','Indiquer directement les fichiers de script.');
 define('_SCRIPTHEAD',"Afficher le contenu de script dans l'en-tête?");
 define('_SEARCHLETINFO',"Rechercher activement pour le module, ainsi que dans la fonction invite l'utilisateur lors de la recherche dans le module des messages personnels et panneau d'administration.");
+define('_SEARCHLIMIT','Longueur maximale du texte pour la recherche (caractères)');
+define('_SEARCHLIMITINFO','Limite le nombre de caractères transmis à la requête de recherche pour protéger la base de données contre les surcharges.');
 define('_SEARCHNUM','Nombre de résultats de recherche sur la page');
 define('_SEC_ADMIN_IP',"Plages d'adresses IP administrateur autorisées (CIDR)");
 define('_SEC_ADMIN_MASK',"Masque de réseau pour entrer dans le panneau de l'administrateur");

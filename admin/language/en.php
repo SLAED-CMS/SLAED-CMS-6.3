@@ -398,6 +398,8 @@ define('_SCRIPTFILE','Script files');
 define('_SCRIPTFILEINFO','Directly include script files.');
 define('_SCRIPTHEAD','To display the contents of the scripts in the header?');
 define('_SEARCHLETINFO','Actively search for the module, as well as in the function prompts the user when searching in the module personal messages and admin panel.');
+define('_SEARCHLIMIT','Maximum text length for search (characters)');
+define('_SEARCHLIMITINFO','Limits the number of characters passed to the search query to protect the database from overload.');
 define('_SEARCHNUM','Quantity of results of search on page');
 define('_SEC_ADMIN_IP','Allowed administrator IP ranges (CIDR)');
 define('_SEC_ADMIN_MASK','Mask of a network for an input in the panel of manager');

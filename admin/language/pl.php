@@ -398,6 +398,8 @@ define('_SCRIPTFILE','Pliki skryptów');
 define('_SCRIPTFILEINFO','Podawać bezpośrednio pliki skryptów.');
 define('_SCRIPTHEAD','Wyświetlanie treści skryptów w nagłówku strony?');
 define('_SEARCHLETINFO','Aktywnie szukać modułu, jak również w funkcji prosi użytkownika podczas wyszukiwania w module osobistych wiadomości i panelu administracyjnego.');
+define('_SEARCHLIMIT','Maksymalna długość tekstu do wyszukiwania (znaki)');
+define('_SEARCHLIMITINFO','Ogranicza liczbę znaków przekazywanych do zapytania wyszukiwania, aby chronić bazę danych przed przeciążeniem.');
 define('_SEARCHNUM','Liczba wyników wyszukiwania na stronę');
 define('_SEC_ADMIN_IP','Dozwolone zakresy IP administratora (CIDR)');
 define('_SEC_ADMIN_MASK','Maska sieci, aby wejść w panel admina');

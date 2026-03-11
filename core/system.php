@@ -3945,7 +3945,7 @@ function get_user_search(string $id, string $val, int $maxlength, string $extraC
     $(function() {
         $("#'.$id.'").autocomplete({
             source: "index.php?go=1&op=get_user",
-            minLength: '.$conf['slet'].'
+            minLength: '.$conf['search']['slet'].'
         });
     });
     </script>'
@@ -5175,8 +5175,8 @@ function language(string $lang = '', string $typ = ''): string {
     return $cont;
 }
 
-# Format module
-function modul(string $name, string $class, string $modul, string $no = ''): string {
+# Builds a multiple-select list of module directories; $allow limits options to a whitelist when non-empty
+function modul(string $name, string $class, string $modul, string $no = '', array $allow = []): string {
     $class = ($class) ? ' class="'.$class.'"' : '';
     $content = '<select name="'.$name.'[]"'.$class.' multiple>';
     if (!empty($no)) {
@@ -5184,21 +5184,15 @@ function modul(string $name, string $class, string $modul, string $no = ''): str
         $content .= '<option value="0"'.$sel.'>'._NO.'</option>';
     }
     $modul = explode(',', $modul);
-    $dir = opendir('modules');
-    while (false !== ($file = readdir($dir))) {
-        if (!preg_match('#\.#', $file)) {
-            foreach ($modul as $val) {
-                if ($val != '' && $val == $file) {
-                    $sel = ' selected';
-                    break;
-                } else {
-                    $sel = '';
-                }
-            }
-            $content .= '<option value="'.$file.'"'.$sel.'>'.getModuleName($file).'</option>';
+    foreach (scandir('modules') as $file) {
+        if (str_contains($file, '.')) continue;
+        if ($allow && !in_array($file, $allow, true)) continue;
+        $sel = '';
+        foreach ($modul as $val) {
+            if ($val !== '' && $val === $file) { $sel = ' selected'; break; }
         }
+        $content .= '<option value="'.$file.'"'.$sel.'>'.getModuleName($file).'</option>';
     }
-    closedir($dir);
     $content .= '</select>';
     return $content;
 }

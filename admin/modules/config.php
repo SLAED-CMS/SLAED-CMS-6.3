@@ -7,8 +7,8 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    $ops = ($opt == 1) ? ['name=config', 'name=config', 'name=config', 'name=config', 'name=config', 'name=config&amp;op=show', 'name=config', 'name=config', 'name=config&amp;op=info'] : ['', '', '', '', '', '', '', '', 'name=config&amp;op=info'];
-    $lang = [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _SEARCH, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO];
+    $ops = ($opt == 1) ? ['name=config', 'name=config', 'name=config', 'name=config', 'name=config&amp;op=show', 'name=config', 'name=config', 'name=config&amp;op=info'] : ['', '', '', '', '', '', '', 'name=config&amp;op=info'];
+    $lang = [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO];
     return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
 }
 
@@ -211,19 +211,11 @@ function config(): void {
     .'</div>'
     .'<div id="tabc4" class="tabcont">'
     .'<table class="sl_table_conf">'
-    .'<tr><td>'._SMODULE.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.modul('search', 'sl_conf', $conf['search'], 1).'</td></tr>'
-    .'<tr><td>'._SEARCHLETMIN.':<div class="sl_small">'._SEARCHLETINFO.'</div></td><td><input type="number" name="slet" value="'.$conf['slet'].'" class="sl_conf" placeholder="'._SEARCHLETMIN.'" required></td></tr>'
-    .'<tr><td>'._SEARCHNUM.':</td><td><input type="number" name="snum" value="'.$conf['snum'].'" class="sl_conf" placeholder="'._SEARCHNUM.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="snump" value="'.$conf['snump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._ASEARCH.'</td><td>'.radio_form($conf['asearch'], 'asearch').'</td></tr></table>'
-    .'</div>'
-    .'<div id="tabc5" class="tabcont">'
-    .'<table class="sl_table_conf">'
     .'<tr><td>'._BOTSLIST.':<div class="sl_small">'._NOKOMA.' '._BOTSINFO.'</div></td><td><textarea name="bots" cols="65" rows="10" class="sl_conf" placeholder="'._BOTSLIST.'" required>'.$conf['bots'].'</textarea></td></tr>'
     .'<tr><td>'._BOTSSITE.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="fbots" cols="65" rows="10" class="sl_conf" placeholder="'._BOTSSITE.'" required>'.$conf['fbots'].'</textarea></td></tr>'
     .'<tr><td>'._BOTSACT.'</td><td>'.radio_form($conf['botsact'], 'botsact').'</td></tr></table>'
     .'</div>'
-    .'<div id="tabc6" class="tabcont">';
+    .'<div id="tabc5" class="tabcont">';
     $f = $asize = 0;
     foreach (glob('config/cache/*.txt') as $file) {
         $size = filesize($file);
@@ -262,7 +254,7 @@ function config(): void {
     .'<tr><td>'._SCRIPTASIN.'</td><td>'.radio_form($conf['script_a'], 'script_a').'</td></tr>'
     .'<tr><td>'._SCRIPTBOT.'</td><td>'.radio_form($conf['script_b'], 'script_b').'</td></tr></table>'
     .'</div>'
-    .'<div id="tabc7" class="tabcont">'
+    .'<div id="tabc6" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._MAILTEMP.':<div class="sl_small">'._MAILTEMPINFO.'</div></td><td><textarea name="mtemp" cols="65" rows="10" class="sl_conf" placeholder="'._MAILTEMP.'" required>'.$conf['mtemp'].'</textarea></td></tr></table>'
     .'</div>'
@@ -306,8 +298,6 @@ function save(): void {
     $xcensor_r = strtolower(strtr(getVar('post', 'censor_r', 'text', ''), $protect));
     $xcensor_l = strtolower(strtr(getVar('post', 'censor_l', 'text', ''), $protect));
     $xcensor = (!$xcensor_r || !$xcensor_l) ? 0 : getVar('post', 'censor', 'num');
-    $search = getVar('post', 'search', 'var');
-    $xsearch = $search ? implode(',', $search) : '0';
 
     $cont = [
         'version' => '6.3.0 Phoenix',
@@ -364,11 +354,6 @@ function save(): void {
         'censor_r' => $xcensor_r,
         'censor_l' => $xcensor_l,
         'clickable' => getVar('post', 'clickable', 'num'),
-        'search' => $xsearch,
-        'slet' => getVar('post', 'slet', 'num'),
-        'snum' => getVar('post', 'snum', 'num'),
-        'snump' => getVar('post', 'snump', 'num'),
-        'asearch' => getVar('post', 'asearch', 'num'),
         'bots' => strtr(getVar('post', 'bots', 'text', ''), $kprotect),
         'fbots' => strtr(getVar('post', 'fbots', 'text', ''), $kprotect),
         'botsact' => getVar('post', 'botsact', 'num'),
