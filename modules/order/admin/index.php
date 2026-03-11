@@ -21,7 +21,7 @@ function order(): void {
     $anum = $conf['order']['anum'] ?? 25;
     $anump = $conf['order']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
-    $result = $db->getSqlQuery('SELECT id, mail, info, com, ip, agent, date, status FROM '.PREFIX_DB.'_order ORDER BY date DESC LIMIT '.$offset.', '.$anum);
+    $result = $db->getSqlQuery('SELECT id, mail, info, com, ip, agent, time, status FROM '.PREFIX_DB.'_order ORDER BY time DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_order'));
@@ -56,7 +56,7 @@ function add(): void {
     $mid = $id;
     $mid = $id;
     if ($mid) {
-        $result = $db->getSqlQuery('SELECT mail, info, com, date FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
+        $result = $db->getSqlQuery('SELECT mail, info, com, time FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
         [$mail, $field, $com, $date] = $db->getSqlRow($result);
     } else {
         $mid = getVar('post', 'mid', 'num', 0);
@@ -92,11 +92,11 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         if ($mid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['mail' => $mail, 'info' => $field, 'com' => $com, 'date' => $date, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, time = :time WHERE id = :mid', ['mail' => $mail, 'info' => $field, 'com' => $com, 'time' => $date, 'mid' => $mid]);
         } else {
             $ip = getip();
             $agent = getagent();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :time, \'1\')', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
         }
         setRedirect($afile.'.php?name=order');
     } elseif ($posttype === 'delete') {

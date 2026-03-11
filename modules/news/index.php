@@ -24,7 +24,7 @@ function navigate(string $title, string|int $cat = ''): string {
 
 function news(): void {
     global $db, $afile, $conf, $home, $op;
-    $cwhere = catmids($conf['name'], 's.catid');
+    $cwhere = catmids($conf['name'], 's.cid');
     $unum = getUserNews($conf['news']['num']);
     $cat = getVar('get', 'cat', 'num');
     $ncat = $cat;
@@ -46,19 +46,19 @@ function news(): void {
         $orderby = ($op) ? (($op == 'best') ? 'IFNULL((s.score/NULLIF(s.ratings,0)),0) DESC' : 'IFNULL((s.counter/NULLIF((TO_DAYS(NOW()) - TO_DAYS(s.time)),0)),0) DESC') : 's.fix DESC, s.time DESC';
         [$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
-        $order = "WHERE (s.catid = :ncat1 OR s.associated REGEXP :ncat_re OR c.parentid = :ncat2) AND s.time <= NOW() AND s.status != '0' ".$cwhere.' ORDER BY '.$orderby;
+        $order = "WHERE (s.cid = :ncat1 OR s.associated REGEXP :ncat_re OR c.parent = :ncat2) AND s.time <= NOW() AND s.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat_re' => '[[:<:]]'.$ncat.'[[:>:]]', 'ncat2' => $ncat];
         $catid = [];
-        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
         while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
         unset($result);
         if (isArray($catid)) {
             $caton = 1;
             array_unshift($catid, $ncat);
-            $wcid = 'catid IN ('.implode(', ', array_map('intval', $catid)).')';
+            $wcid = 'cid IN ('.implode(', ', array_map('intval', $catid)).')';
         } else {
             $caton = 0;
-            $wcid = 'catid = '.(int)$ncat;
+            $wcid = 'cid = '.(int)$ncat;
         }
         $onum = '('.$wcid." OR associated REGEXP '[[:<:]]".(int)$ncat."[[:>:]]') AND time <= NOW() AND status != '0'";
     } else {
@@ -80,7 +80,7 @@ function news(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT s.sid, s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         $width = 100 / $conf['news']['bascol'];
         $i = 1;
@@ -117,7 +117,7 @@ function news(): void {
             $i++;
         }
         $cont .= '</table>';
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'sid', '_news', 'catid', $onum, $conf['news']['nump']);
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_news', 'cid', $onum, $conf['news']['nump']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -127,7 +127,7 @@ function news(): void {
 
 function liste(): void {
     global $db, $conf;
-    $cwhere = catmids($conf['name'], 's.catid');
+    $cwhere = catmids($conf['name'], 's.cid');
     $listnum = intval($conf['news']['listnum']);
     $let = getVar('get', 'let', 'let');
     $params = [];
@@ -142,7 +142,7 @@ function liste(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $listnum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT s.sid, s.catid, s.name, s.title, s.time, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) '.$order.' '.$cwhere.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$listnum, $params);
+    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, c.title, c.description, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$order.' '.$cwhere.' ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
     $cont = navigate(_LIST);
     if ($db->getSqlRowCount($result) > 0) {
@@ -159,7 +159,7 @@ function liste(): void {
         }
         $cont .= setTemplateBasic('liste-close');
         $onum = ($let) ? "title LIKE BINARY '".addslashes($let)."%' AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'sid', '_news', 'catid', $onum, $conf['news']['nump']);
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_news', 'cid', $onum, $conf['news']['nump']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -173,10 +173,10 @@ function view(): void {
     $num = getVar('get', 'num', 'num', '1');
     $pag = $num;
     $word = getVar('get', 'word', 'word');
-    $cwhere = catmids($conf['name'], 's.catid');
-    $result = $db->getSqlQuery('SELECT s.catid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.counter, s.acomm, s.score, s.ratings, s.associated, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.sid = :id AND s.time <= NOW() AND s.status != \'0\' '.$cwhere, ['id' => $id]);
+    $cwhere = catmids($conf['name'], 's.cid');
+    $result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.counter, s.acomm, s.score, s.ratings, s.associated, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.id = :id AND s.time <= NOW() AND s.status != \'0\' '.$cwhere, ['id' => $id]);
     if ($db->getSqlRowCount($result) == 1) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET counter = counter+1 WHERE sid = :id', ['id' => $id]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET counter = counter+1 WHERE id = :id', ['id' => $id]);
         [$cid, $uname, $title, $time, $hometext, $bodytext, $field, $vote, $counter, $acomm, $score, $ratings, $associated, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result);
         $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
         $seotitle  = $title;
@@ -225,13 +225,13 @@ function view(): void {
             $assocIn = implode(', ', $assocIds);
             $limit = intval($conf['news']['asocnum']);
             if ($assocIn !== '') {
-                [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(sid) FROM '.PREFIX_DB.'_news WHERE catid IN ('.$assocIn.') AND sid != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
+                [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_news WHERE cid IN ('.$assocIn.') AND id != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
             } else {
                 $count = 0;
             }
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
-                $result = $db->getSqlQuery('SELECT sid, title, time, hometext, bodytext FROM '.PREFIX_DB.'_news WHERE catid IN ('.$assocIn.') AND sid != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
+                $result = $db->getSqlQuery('SELECT id, title, time, hometext, bodytext FROM '.PREFIX_DB.'_news WHERE cid IN ('.$assocIn.') AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
                 $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _ASSTORY]);
                 while ([$aid, $title, $time, $hometext, $bodytext] = $db->getSqlRow($result)) {
                     $date = ($conf['news']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
@@ -306,7 +306,7 @@ function send(): void {
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = (is_user()) ? intval($user[0]) : '';
             $uname = (!is_user()) ? $postname : '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_news (sid, catid, uid, name, title, time, hometext, bodytext, field, associated, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :hometext, :bodytext, :field, \'\', :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'ip' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_news (id, cid, uid, name, title, time, hometext, bodytext, field, associated, ip, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :hometext, :bodytext, :field, \'\', :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'ip' => getIp()]);
             update_points(31);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);

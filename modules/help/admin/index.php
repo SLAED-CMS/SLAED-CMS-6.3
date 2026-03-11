@@ -30,7 +30,7 @@ function help(): void {
         $refer = '';
         $cont = navi(0, 0, 0, 0);
     }
-    $result = $db->getSqlQuery('SELECT s.sid, s.catid, s.title, s.time, s.comments, s.ip_sender, s.status, c.title, u.user_name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th>'.cutstr(_MESSAGES, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -47,7 +47,7 @@ function help(): void {
             .'<td>'.add_menu('<a href="'.$afile.'.php?name=help&amp;op=view&amp;id='.$sid.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=help&amp;op=del&amp;id='.$sid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
-        $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'sid', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
+        $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -59,7 +59,7 @@ function help(): void {
 function view(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
-    $result = $db->getSqlQuery('SELECT s.sid, s.pid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) WHERE s.sid = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id]);
+    $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, c.title, c.description, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id]);
     setHead();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
@@ -94,7 +94,7 @@ function view(): void {
 
 function addview(int $id): string {
     global $db, $afile, $admin;
-    $result = $db->getSqlQuery('SELECT catid, uid, status FROM '.PREFIX_DB.'_help WHERE sid = :id', ['id' => $id]);
+    $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
     [$catid, $uid, $status] = $db->getSqlRow($result);
     $cont = setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
@@ -113,7 +113,7 @@ function add(): void {
     $sid = $id;
     $sid = $id;
     if ($sid) {
-        $result = $db->getSqlQuery('SELECT s.pid, s.catid, s.title, s.time, s.hometext, s.field, s.status, u.user_name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) WHERE s.sid = :sid', ['sid' => $sid]);
+        $result = $db->getSqlQuery('SELECT s.pid, s.cid, s.title, s.time, s.hometext, s.field, s.status, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :sid', ['sid' => $sid]);
         [$pid, $cat, $subject, $time, $hometext, $field, $status, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: _ANONYM;
     } else {
@@ -166,15 +166,15 @@ function save(): void {
     if (!$stop && $posttype === 'save') {
         $postid = (is_user_id($postname)) ? is_user_id($postname) : 0;
         if ($sid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET catid = :cat, aid = :postid, title = :subject, time = :time, hometext = :hometext, field = :field WHERE sid = :sid', ['cat' => $cat, 'postid' => $postid, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'sid' => $sid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET cid = :cat, aid = :postid, title = :subject, time = :time, hometext = :hometext, field = :field WHERE id = :sid', ['cat' => $cat, 'postid' => $postid, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'sid' => $sid]);
             $hid = ($pid) ? $pid : $sid;
             setRedirect($afile.'.php?name=help&op=view&id='.$hid);
         } else {
             $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (:pid, :cat, :uid, :postid, :subject, now(), :hometext, \'\', :ip, \'0\')', ['pid' => $pid, 'cat' => $cat, 'uid' => $uid, 'postid' => $postid, 'subject' => $subject, 'hometext' => $hometext, 'ip' => $ip]);
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE sid = :pid', ['status' => $status, 'pid' => $pid]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (pid, cid, uid, aid, title, time, hometext, field, ip, status) VALUES (:pid, :cat, :uid, :postid, :subject, now(), :hometext, \'\', :ip, \'0\')', ['pid' => $pid, 'cat' => $cat, 'uid' => $uid, 'postid' => $postid, 'subject' => $subject, 'hometext' => $hometext, 'ip' => $ip]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE id = :pid', ['status' => $status, 'pid' => $pid]);
             if ($umail) {
-                $result = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_id = :uid', ['uid' => $uid]);
+                $result = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]);
                 if ($db->getSqlRowCount($result) == 1) {
                     [$mail] = $db->getSqlRow($result);
                     $finishlink = ($conf['homeurl'] ?? '').'/index.php?name=help&amp;op=view&amp;id='.$pid;
@@ -198,7 +198,7 @@ function del(int $fid = 0): void {
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     if ($id) {
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE fid = :id AND modul = \'help\'', ['id' => $id]);
-        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_help WHERE sid = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_help WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
     }
     setRedirect($afile.'.php?name=help');
 }

@@ -13,7 +13,7 @@ $content = '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><
 
 // Last added jokes
 $content .='<tr><td>';
-$result = $db->getSqlQuery('SELECT jokeid, title FROM '.PREFIX_DB."_jokes WHERE date <= now() AND status != '0' ORDER BY date DESC LIMIT 5");
+$result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_jokes WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
 while(list($jokeid, $title) = $db->getSqlRow($result)) {
 	$linkstrip = cutstr($title, $strip);
 	$content .= '<table><tr><td><a href="index.php?name=jokes#'.$jokeid.'" title="'.$title.'">'.$linkstrip.'</a></td></tr></table>';
@@ -21,7 +21,7 @@ while(list($jokeid, $title) = $db->getSqlRow($result)) {
 
 // Last added faq
 $content .='</td><td>';
-$result = $db->getSqlQuery('SELECT fid, title FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
+$result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
 while(list($fid, $title) = $db->getSqlRow($result)) {
 	$linkstrip = cutstr($title, $strip);
 	$content .= '<table><tr><td><a href="index.php?name=faq&amp;op=view&amp;id='.$fid.'" title="'.$title.'">'.$linkstrip.'</a></td></tr></table>';

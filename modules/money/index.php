@@ -14,7 +14,7 @@ function money(): void {
     if (is_user()) {
         $userinfo = getUserInfo();
         $mail = getVar('post', 'mail', 'text');
-        $mail = ($mail) ? $mail : $userinfo['user_email'];
+        $mail = ($mail) ? $mail : $userinfo['email'];
     } else {
         $mail = getVar('post', 'mail', 'text');
     }

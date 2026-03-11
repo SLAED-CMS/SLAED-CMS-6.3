@@ -57,16 +57,16 @@ function add(): void {
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($content) $cont .= preview($title, $content, '', '', 'all');
-    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(user_id) FROM '.PREFIX_DB.'_users'));
+    [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
     $sel = ($mails == 1) ? ' selected' : '';
     $option = '<option value="1"'.$sel.'>'._MASSMAIL.' - '.$num.'</option>';
-    [$num2] = $db->getSqlRow($db->getSqlQuery('SELECT Count(user_id) FROM '.PREFIX_DB.'_users WHERE user_newsletter = 1'));
+    [$num2] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users WHERE newslet = 1'));
     $sel = ($mails == 2) ? ' selected' : '';
     $option .= '<option value="2"'.$sel.'>'._ANEWSLETTER.' - '.$num2.'</option>';
     $result3 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra = 1 ORDER BY id');
     if ($db->getSqlRowCount($result3) > 0) {
         while ([$grid, $grname, $points] = $db->getSqlRow($result3)) {
-            $result4 = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]);
+            $result4 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE grp = :grid', ['grid' => $grid]);
             $email3 = '';
             $num3 = 0;
             while ([$user_email] = $db->getSqlRow($result4)) {
@@ -80,7 +80,7 @@ function add(): void {
     $result5 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 ORDER BY id');
     if ($db->getSqlRowCount($result5) > 0) {
         while ([$grid, $grname, $points] = $db->getSqlRow($result5)) {
-            $result6 = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]);
+            $result6 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE points >= :points', ['points' => $points]);
             $email4 = '';
             $num4 = 0;
             while ([$user_email] = $db->getSqlRow($result6)) {
@@ -144,7 +144,7 @@ function add(): void {
             $sel = ($email7 == $mails) ? ' selected' : '';
             $option .= '<option value="'.$email7.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7.'</option>';
         }
-        $result10 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE active = 1');
+        $result10 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE status = 1');
         if ($db->getSqlRowCount($result10) > 0) {
             $aemail = [];
             while ([$user_email] = $db->getSqlRow($result10)) $aemail[] = $user_email;
@@ -160,7 +160,7 @@ function add(): void {
             $sel = ($email8 == $mails) ? ' selected' : '';
             $option .= '<option value="'.$email8.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8.'</option>';
         }
-        $result11 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE active = 0');
+        $result11 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE status = 0');
         if ($db->getSqlRowCount($result11) > 0) {
             $aemail = [];
             while ([$user_email] = $db->getSqlRow($result11)) $aemail[] = $user_email;
@@ -209,12 +209,12 @@ function save(): void {
     if (!$content) $stop[] = _CERROR1;
     if (!$stop && getVar('post', 'posttype') == 'save') {
         if ($mails == 1) {
-            $result = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users');
+            $result = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users');
             $emails = [];
             while ([$user_email] = $db->getSqlRow($result)) $emails[] = $user_email;
             $emails = implode(',', array_unique($emails));
         } elseif ($mails == 2) {
-            $result = $db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_newsletter = 1');
+            $result = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE newslet = 1');
             $emails = [];
             while ([$user_email] = $db->getSqlRow($result)) $emails[] = $user_email;
             $emails = implode(',', array_unique($emails));

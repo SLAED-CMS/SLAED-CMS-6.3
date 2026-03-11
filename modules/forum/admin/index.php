@@ -14,21 +14,21 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 
 function forum(): void {
     global $db;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost_id = \'0\' WHERE modul = \'forum\'');
-    $result = $db->getSqlQuery('SELECT id, parentid FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost = \'0\' WHERE modul = \'forum\'');
+    $result = $db->getSqlQuery('SELECT id, parent FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     $massiv = [];
     while ([$id, $parentid] = $db->getSqlRow($result)) {
         $massiv[$id] = [$parentid];
     }
     foreach ($massiv as $key => $val) {
-        [$topics] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid = \'0\' AND catid = :key', ['key' => $key]));
-        [$posts] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid != \'0\' AND catid = :key', ['key' => $key]));
-        [$id, $pid] = $db->getSqlRow($db->getSqlQuery('SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE catid = :key AND ((pid != \'0\' AND status = \'1\') OR (pid = \'0\' AND status > \'1\')) ORDER BY id DESC LIMIT 1', ['key' => $key]));
+        [$topics] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid = \'0\' AND cid = :key', ['key' => $key]));
+        [$posts] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid != \'0\' AND cid = :key', ['key' => $key]));
+        [$id, $pid] = $db->getSqlRow($db->getSqlQuery('SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE cid = :key AND ((pid != \'0\' AND status = \'1\') OR (pid = \'0\' AND status > \'1\')) ORDER BY id DESC LIMIT 1', ['key' => $key]));
         $lid = ($pid) ? $pid : ($id ?? 0);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost_id = :lid WHERE id = :key AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'key' => $key]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost = :lid WHERE id = :key AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'key' => $key]);
         $flag = $val[0];
         while ($flag != 0) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+:topics, posts = posts+:posts, lpost_id = :lid WHERE id = :flag AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'flag' => $flag]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+:topics, posts = posts+:posts, lpost = :lid WHERE id = :flag AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'flag' => $flag]);
             $flag = (int)($massiv[$flag][0] ?? 0);
         }
     }
@@ -37,7 +37,7 @@ function forum(): void {
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHIN]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._FORUM.'</th><th>'._NEWTOPICS.'</th><th>'._MESSAGES.'</th><th class="{sorter: false}">'._STATUS.'</th></tr></thead><tbody>';
-    $result = $db->getSqlQuery('SELECT id, title, description, cstatus, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
+    $result = $db->getSqlQuery('SELECT id, title, description, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     while ([$id, $title, $description, $cstatus, $topics, $posts] = $db->getSqlRow($result)) {
         $descript = ($description) ? $description : _NO;
         $ltitle = title_tip(_DESCRIPTION.': '.$descript).'<a href="index.php?name=forum&amp;cat='.$id.'" target="_blank" title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</a>';

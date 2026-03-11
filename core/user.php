@@ -14,7 +14,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOANONCOMMENTS]);
     } else {
         $userinfo = getUserInfo();
-        if ($cid == 1 || $userinfo['user_acess'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE]);
+        if ($cid == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE]);
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" id="formcsave" method="post">'
         .'<table class="sl_table_form">';
@@ -35,15 +35,15 @@ function setMessageShow(): string {
     global $db, $afile, $conf, $currentlang;
     if ($conf['message'] == 1) {
         $params = [];
-        $querylang = ($conf['multilingual'] == 1) ? 'AND (mlanguage = :lang OR mlanguage = \'\')' : '';
+        $querylang = ($conf['multilingual'] == 1) ? 'AND (lang = :lang OR lang = \'\')' : '';
         if ($conf['multilingual'] == 1) {
             $params['lang'] = $currentlang;
         }
-        $result = $db->getSqlQuery('SELECT mid, title, content, expire, view FROM '.PREFIX_DB.'_message WHERE active = 1 '.$querylang, $params);
+        $result = $db->getSqlQuery('SELECT id, title, content, expire, view FROM '.PREFIX_DB.'_message WHERE status = 1 '.$querylang, $params);
         if ($db->getSqlRowCount($result) > 0) {
             while ([$mid, $title, $content, $expire, $view] = $db->getSqlRow($result)) {
                 $mid = intval($mid);
-                if ($expire && $expire < time()) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET active = 0, expire = 0 WHERE mid = :mid', ['mid' => $mid]);
+                if ($expire && $expire < time()) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = 0 WHERE id = :mid', ['mid' => $mid]);
                 $content = filterReplaceText(filterMarkdown($content, 'all', false), 'all');
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
@@ -70,7 +70,7 @@ function setMessageShow(): string {
 # Render the user account navigation menu with icon links
 function getUserNav(): string {
     global $conf;
-    $uid = intval((getUserInfo() ?? [])['user_id'] ?? 0);
+    $uid = intval((getUserInfo() ?? [])['id'] ?? 0);
     if ($conf['name'] !== 'account') getLang('account');
 
     $navs = [[_HOME, _RETURNACCOUNT, 'index.php?name=account', 'account/home.png']];
@@ -112,9 +112,9 @@ function isModGroup(string $name): int {
     global $db, $user;
     if (is_user()) {
         $uid = intval($user[0]);
-        $row = $db->getSqlRow($db->getSqlQuery('SELECT user_points, user_group FROM '.PREFIX_DB.'_users WHERE user_id = :id', ['id' => $uid]));
-        $points = $row['user_points'] ?? 0;
-        $group = $row['user_group'] ?? 0;
+        $row = $db->getSqlRow($db->getSqlQuery('SELECT points, grp FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $uid]));
+        $points = $row['points'] ?? 0;
+        $group = $row['grp'] ?? 0;
         $mod_conf = $conf['modules'][$name] ?? [];
         $mgroup = intval($mod_conf['group'] ?? 0);
         $grpoints = 0;
@@ -138,7 +138,7 @@ function getUserInfo() {
     global $db, $user;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     if (is_user() && $uid) {
-        $info = $db->getSqlRow($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE user_id = :uid', ['uid' => $uid]));
+        $info = $db->getSqlRow($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
         return $info;
     }
 }
@@ -149,7 +149,7 @@ function getUserBlock(): string {
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
-        [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT user_block FROM '.PREFIX_DB.'_users WHERE user_id = :uid', ['uid' => $uid]));
+        [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
         $userblock = filterReplaceText(filterMarkdown($userblock, 'account', false), 'account');
         return setTemplateBlock('', ['{%title%}' => _MENUFOR, '{%content%}' => $userblock]);
     }
@@ -165,7 +165,7 @@ function addComment() {
     $postname = filterText(substr(getVar('post', 'name', 'raw', ''), 0, 25));
     $ip       = getip();
     $comment  = trim(getVar('post', 'text', 'raw', ''));
-    [$date] = $db->getSqlRow($db->getSqlQuery('SELECT date FROM '.PREFIX_DB.'_comment WHERE host_name = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
+    [$date] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_comment WHERE ip = :ip ORDER BY id DESC LIMIT 1', ['ip' => $ip]));
     $stime = strtotime($date) + $conf['comments']['send'];
     $checks = str_replace(["\n", "\r", "\t"], ' ', $comment);
     $e = explode(' ', $checks);
@@ -183,16 +183,16 @@ function addComment() {
         if (is_user()) {
             $postid = intval($user[0]);
             $userinfo = getUserInfo();
-            $postname = $userinfo['user_name'];
-            $status = (!is_moder($mod) && ($cid == 1 || $userinfo['user_acess'])) ? 0 : 1;
+            $postname = $userinfo['name'];
+            $status = (!is_moder($mod) && ($cid == 1 || $userinfo['access'])) ? 0 : 1;
         } else {
             $postid = '0';
             $postname = $postname;
             $status = (!is_moder($mod) && ($cid == 1 || $conf['comments']['anonpost'] == 1)) ? 0 : 1;
         }
         $db->getSqlQuery(
-            'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :host_name, :comment, :status)',
-            ['cid' => $id, 'modul' => $mod, 'uid' => $postid, 'name' => $postname, 'host_name' => $ip, 'comment' => $comment, 'status' => $status]
+            'INSERT INTO '.PREFIX_DB.'_comment VALUES (NULL, :cid, :modul, NOW(), :uid, :name, :ip, :comment, :status)',
+            ['cid' => $id, 'modul' => $mod, 'uid' => $postid, 'name' => $postname, 'ip' => $ip, 'comment' => $comment, 'status' => $status]
         );
         if ($status) numcom($id, $mod, 0, $postid);
         [$lcom_id] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1', ['cid' => $id, 'uid' => $postid]));
@@ -243,8 +243,8 @@ function updatePost() {
                 if (!$stop) {
                     $htext = filterHtml($text);
                     $db->getSqlQuery(
-                        'UPDATE '.PREFIX_DB.'_forum SET hometext = :hometext, e_uid = :e_uid, e_ip_send = :e_ip_send, e_time = NOW() WHERE id = :id',
-                        ['hometext' => $htext, 'e_uid' => $postid, 'e_ip_send' => $ip, 'id' => $id]
+                        'UPDATE '.PREFIX_DB.'_forum SET hometext = :hometext, euid = :euid, eip = :eip, etime = NOW() WHERE id = :id',
+                        ['hometext' => $htext, 'euid' => $postid, 'eip' => $ip, 'id' => $id]
                     );
                     echo filterReplaceText(filterMarkdown($htext, $mod, false), $mod);
                 } else {
@@ -291,7 +291,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
         } elseif ($info) {
             $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'info']);
         }
-        $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.user_id) WHERE p.uidin = :uid AND p.status <= 1 ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
+        $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE p.uidin = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._TITLE.'</th><th>'._PRSE.'</th><th>'._DATE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
             while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
@@ -315,7 +315,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= num_ajax('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'prmess', 'prmessin', 0, '1', '');
     } elseif ($typ == 2) {
-        $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.user_id) WHERE p.uidout = :uid AND p.status <= 1 ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
+        $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.id) WHERE p.uidout = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._TITLE.'</th><th>'._PRRE.'</th><th>'._DATE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
             while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
@@ -353,7 +353,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             $fstatus = 'info';
         }
         if ($fstatus) $cont .= setTemplateWarning('warn', ['text' => $messinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
-        $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.date, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout=u.user_id) WHERE p.uidin = :uid AND p.status = 2 ORDER BY p.date DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
+        $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout=u.id) WHERE p.uidin = :uid AND p.status = 2 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._TITLE.'</th><th>'._PRSE.'</th><th>'._DATE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
             while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
@@ -389,16 +389,16 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
         }
         if ($id) {
             if ($cid == '2') {
-                [$idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.ip_sender, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.user_id) WHERE p.id = :id AND p.uidout = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
+                [$idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.time, p.ip, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.id) WHERE p.id = :id AND p.uidout = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
             } else {
-                [$idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.date, p.ip_sender, p.status, u.user_name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.user_id) WHERE p.id = :id AND p.uidin = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
+                [$idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.time, p.ip, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE p.id = :id AND p.uidin = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
                 if (!$status) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_privat SET status = 1 WHERE id = :id AND uidin = :uid AND status != 2', ['id' => $id, 'uid' => $uid]);
             }
             if ($idp) {
                 # UNBEKANTE VARIABLEN INITIALISIERUNG VERHINDERN
                 $com_name = $com_id = '';
 
-                $result = $db->getSqlQuery('SELECT u.user_id, u.user_name, u.user_rank, u.user_email, u.user_website, u.user_avatar, u.user_regdate, u.user_from, u.user_sig, u.user_viewemail, u.user_points, u.user_warnings, u.user_gender, u.user_votes, u.user_totalvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.user_group=g.id) OR (g.extra!=1 AND u.user_points>=g.points)) WHERE u.user_id = :uidout ORDER BY g.extra DESC, g.points DESC', ['uidout' => $uidout]);
+                $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id = :uidout ORDER BY g.extra DESC, g.points DESC', ['uidout' => $uidout]);
                 [$user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor] = $db->getSqlRow($result);
                 $avname = ($user_name) ? $user_name : $com_name.' ('._ANONYM.')';
                 $date = '<span title="'._PADD.'" class="sl_t_post">'.format_time($date, _TIMESTRING).'</span>';
@@ -458,7 +458,7 @@ function addPmMsg() {
     $uidin = (is_user_id($postname)) ? is_user_id($postname) : '';
     $uidout = (is_user()) ? intval($user[0]) : '';
     
-    [$date] = $db->getSqlRow($db->getSqlQuery('SELECT date FROM '.PREFIX_DB.'_privat WHERE uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidout' => $uidout]));
+    [$date] = $db->getSqlRow($db->getSqlQuery('SELECT time FROM '.PREFIX_DB.'_privat WHERE uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidout' => $uidout]));
     $stime = strtotime($date) + $conf['privat']['send'];
     $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
     $e = explode(' ', $checks);
@@ -483,10 +483,10 @@ function addPmMsg() {
     if (!$stop && $conf['privat']['act'] && is_user()) {
         $title = filterHtml($title, 1);
         $text = filterHtml($text);
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_privat VALUES (NULL, :uidin, :uidout, :title, :content, NOW(), :ip_sender, 0)', ['uidin' => $uidin, 'uidout' => $uidout, 'title' => $title, 'content' => $text, 'ip_sender' => $ip]);
+        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_privat VALUES (NULL, :uidin, :uidout, :title, :content, NOW(), :ip, 0)', ['uidin' => $uidin, 'uidout' => $uidout, 'title' => $title, 'content' => $text, 'ip' => $ip]);
         update_points(45);
         if ($conf['privat']['newmail']) {
-            [$user_email, $user_psmail] = $db->getSqlRow($db->getSqlQuery('SELECT user_email, user_psmail FROM '.PREFIX_DB.'_users WHERE user_id = :uidin', ['uidin' => $uidin]));
+            [$user_email, $user_psmail] = $db->getSqlRow($db->getSqlQuery('SELECT email, fsmail FROM '.PREFIX_DB.'_users WHERE id = :uidin', ['uidin' => $uidin]));
             if ($user_email && $user_psmail) {
                 [$id] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_privat WHERE uidin = :uidin AND uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidin' => $uidin, 'uidout' => $uidout]));
                 $uname = filterText(substr($user[1], 0, 25));
@@ -610,19 +610,19 @@ function getFavorList(int $obj = 0): string {
             $in = implode(', ', $pp);
             $numl = count($val);
             if ($key == 'faq') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_faq AS n ON (f.fid=n.fid) WHERE f.uid = :uid AND n.fid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_faq AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
             } elseif ($key == 'files') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_files AS n ON (f.fid=n.lid) WHERE f.uid = :uid AND n.lid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_files AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
             } elseif ($key == 'forum') {
                 $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_forum AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
             } elseif ($key == 'help') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_help AS n ON (f.fid=n.sid) WHERE f.uid = :uid AND n.sid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_help AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
             } elseif ($key == 'links') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid=n.lid) WHERE f.uid = :uid AND n.lid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_links AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
             } elseif ($key == 'media') {
                 $conf['media'] = $conf['media'] ?? [];
@@ -632,10 +632,10 @@ function getFavorList(int $obj = 0): string {
                     $ffmassiv[] = [$id, $fid, $modul, $title];
                 }
             } elseif ($key == 'news') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_news AS n ON (f.fid=n.sid) WHERE f.uid = :uid AND n.sid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_news AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
             } elseif ($key == 'pages') {
-                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_pages AS n ON (f.fid=n.pid) WHERE f.uid = :uid AND n.pid IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
+                $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_pages AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
                 while ([$id, $fid, $modul, $title] = $db->getSqlRow($result)) $ffmassiv[] = [$id, $fid, $modul, $title];
             } elseif ($key == 'shop') {
                 $result = $db->getSqlQuery('SELECT f.id, f.fid, f.modul, n.title FROM '.PREFIX_DB.'_favorites AS f LEFT JOIN '.PREFIX_DB.'_products AS n ON (f.fid=n.id) WHERE f.uid = :uid AND n.id IN ('.$in.') ORDER BY f.id DESC LIMIT 0, '.intval($numl), $pm);
@@ -699,39 +699,39 @@ function getRssChannel() {
         $result = $db->getSqlQuery('SELECT id, title, text, time FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
     } elseif ($name == 'faq') {
         $params = [];
-        $where = $cat ? 'WHERE s.catid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
+        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
         if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.fid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
+        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.hometext, c.title, u.name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == 'files') {
         $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.date <= NOW() AND s.status != 0' : 'WHERE s.date <= NOW() AND s.status != 0';
+        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
         if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.lid, s.name, s.title, s.date, s.description, c.title, u.user_name FROM '.PREFIX_DB.'_files AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.date DESC LIMIT '.intval($num), $params);
+        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.description, c.title, u.name FROM '.PREFIX_DB.'_files AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == 'links') {
         $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.date <= NOW() AND s.status != 0' : 'WHERE s.date <= NOW() AND s.status != 0';
+        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
         if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.lid, s.name, s.title, s.date, s.description, c.title, u.user_name FROM '.PREFIX_DB.'_links AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.date DESC LIMIT '.intval($num), $params);
+        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.description, c.title, u.name FROM '.PREFIX_DB.'_links AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == 'media') {
         $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.date <= NOW() AND s.status != 0' : 'WHERE s.date <= NOW() AND s.status != 0';
+        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
         if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.date, s.description, c.title, u.user_name FROM '.PREFIX_DB.'_media AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.date DESC LIMIT '.intval($num), $params);
+        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.description, c.title, u.name FROM '.PREFIX_DB.'_media AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == 'pages') {
         $params = [];
-        $where = $cat ? 'WHERE s.catid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
+        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
         if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.pid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
+        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.hometext, c.title, u.name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == 'shop') {
         $params = [];
-        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.active = 1' : 'WHERE s.time <= NOW() AND s.active = 1';
+        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status = 1' : 'WHERE s.time <= NOW() AND s.status = 1';
         if ($cat) $params['cat'] = $cat;
         $result = $db->getSqlQuery('SELECT s.id, s.title, s.time, s.text, c.title FROM '.PREFIX_DB.'_products AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
     } elseif ($name == 'news') {
         $params = [];
-        $where = $cat ? 'WHERE s.catid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
+        $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';
         if ($cat) $params['cat'] = $cat;
-        $result = $db->getSqlQuery('SELECT s.sid, s.name, s.title, s.time, s.hometext, c.title, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
+        $result = $db->getSqlQuery('SELECT s.id, s.name, s.title, s.time, s.hometext, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$where.' ORDER BY s.time DESC LIMIT '.intval($num), $params);
         $name = 'news';
     } else {
         $result = '';

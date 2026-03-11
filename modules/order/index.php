@@ -13,7 +13,7 @@ function order(): void {
     global $conf, $stop;
     if (is_user()) {
         $userinfo = getUserInfo();
-        $mail = getVar('post', 'mail', 'text', $userinfo['user_email']);
+        $mail = getVar('post', 'mail', 'text', $userinfo['email']);
     } else {
         $mail = getVar('post', 'mail', 'text');
     }

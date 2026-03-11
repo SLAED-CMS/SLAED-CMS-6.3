@@ -117,10 +117,10 @@ require_once BASE_DIR.'/core/template.php';
 
 # Format block
 function getBlocks(string $side, string $fly = ''): void {
-    global $db, $conf, $locale, $name, $home, $pos, $b_id, $blockfile;
+    global $db, $conf, $locale, $name, $home, $pos, $b_id, $bfile;
     static $barr;
     if ($conf['multilingual'] == 1) {
-        $querylang = "AND (blanguage = :loc OR blanguage = '')";
+        $querylang = "AND (blang = :loc OR blang = '')";
         $qlang_params = ['loc' => $locale];
     } else {
         $querylang = '';
@@ -129,28 +129,28 @@ function getBlocks(string $side, string $fly = ''): void {
     $pos = strtolower($side[0]);
     $side = $pos;
     if (!isset($barr)) {
-        $result = $db->getSqlQuery('SELECT bid, bkey, title, content, url, blockfile, view, expire, action, bposition, which FROM '.PREFIX_DB."_blocks WHERE active = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
-        while(list($bid, $bkey, $title, $content, $url, $blockfile, $view, $expire, $action, $bposition, $which) = $db->getSqlRow($result)) {
+        $result = $db->getSqlQuery('SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
+        while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which) = $db->getSqlRow($result)) {
             $bid = intval($bid);
             $content = filterReplaceText(filterMarkdown($content, 'all', false), 'all');
             $view = intval($view);
             $where_mas = explode(',', $which);
-            $barr[] = [$bid, $bkey, $title, $content, $url, $blockfile, $view, $expire, $action, $bposition, $where_mas];
+            $barr[] = [$bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas];
         }
     }
     if ($fly != '') {
         $b_id = 0;
         $flag = 0;
-        $blockfile = '';
+        $bfile = '';
         if (false === strpos($fly, '-')) {
             $b_id = intval($fly);
         } else {
-            $blockfile = trim($fly);
+            $bfile = trim($fly);
         }
         $ci = count($barr);
         for ($i = 0; $i < $ci; $i++) {
-            if (($b_id != 0 && $barr[$i][0] == $b_id) || ($blockfile != '' && $barr[$i][5] == $blockfile)) {
-                list($bid, $bkey, $title, $content, $url, $blockfile, $view, $expire, $action, $bposition, $where_mas) = $barr[$i];
+            if (($b_id != 0 && $barr[$i][0] == $b_id) || ($bfile != '' && $barr[$i][5] == $bfile)) {
+                list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas) = $barr[$i];
                 $b_id = $bid;
                 $flag = 1;
                 break;
@@ -187,13 +187,13 @@ function getBlocks(string $side, string $fly = ''): void {
             }
             if ($flag_where == 1) {
                 if ($view == 0) {
-                    render_blocks($side, $blockfile, $title, $content, $bid, $url); return;
+                    render_blocks($side, $bfile, $title, $content, $bid, $url); return;
                 } elseif ($view == 1 && is_user() || is_moder()) {
-                    render_blocks($side, $blockfile, $title, $content, $bid, $url); return;
+                    render_blocks($side, $bfile, $title, $content, $bid, $url); return;
                 } elseif ($view == 2 && is_moder()) {
-                    render_blocks($side, $blockfile, $title, $content, $bid, $url); return;
+                    render_blocks($side, $bfile, $title, $content, $bid, $url); return;
                 } elseif ($view == 3 && !is_user() || is_moder()) {
-                    render_blocks($side, $blockfile, $title, $content, $bid, $url); return;
+                    render_blocks($side, $bfile, $title, $content, $bid, $url); return;
                 }
             }
         }
@@ -228,14 +228,14 @@ function getBlocks(string $side, string $fly = ''): void {
             }
             if (in_array('otricanie', $where_mas)) $flag_where = ($flag_where) ? 0 : 1;
             if ($flag_where == 1) {
-                list($bid, $bkey, $title, $content, $url, $blockfile, $view, $expire, $action, $bposition, $where_mas) = $barr[$i];
+                list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $where_mas) = $barr[$i];
                 $b_id = $bid;
                 if ($expire && $expire < time()) {
                     if ($action == 'd') {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB."_blocks SET active = '0', expire = '0' WHERE bid = :bid", ['bid' => $bid]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB."_blocks SET status = '0', expire = '0' WHERE id = :bid", ['bid' => $bid]);
                         return;
                     } elseif ($action == 'r') {
-                        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]);
+                        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]);
                         return;
                     }
                 }
@@ -248,13 +248,13 @@ function getBlocks(string $side, string $fly = ''): void {
                     break;
                     default:
                     if ($view == 0) {
-                        render_blocks($side, $blockfile, $title, $content, $bid, $url);
+                        render_blocks($side, $bfile, $title, $content, $bid, $url);
                     } elseif ($view == 1 && is_user() || is_moder()) {
-                        render_blocks($side, $blockfile, $title, $content, $bid, $url);
+                        render_blocks($side, $bfile, $title, $content, $bid, $url);
                     } elseif ($view == 2 && is_moder()) {
-                        render_blocks($side, $blockfile, $title, $content, $bid, $url);
+                        render_blocks($side, $bfile, $title, $content, $bid, $url);
                     } elseif ($view == 3 && !is_user() || is_moder()) {
-                        render_blocks($side, $blockfile, $title, $content, $bid, $url);
+                        render_blocks($side, $bfile, $title, $content, $bid, $url);
                     }
                     break;
                 }
@@ -1326,13 +1326,13 @@ function setHead(array $seo = []): void {
             if (!defined('ADMIN_FILE') && is_user()) {
                 $uagent = getAgent();
                 $uid= intval($user[0]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_last_ip = :ip, user_lastvisit = NOW(), user_agent = :agent WHERE user_id = :uid', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
             }
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session WHERE uname = :uname', ['uname' => $uname]));
             if ($num >= 1) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_session SET time = :time, host_addr = :ip, guest = :guest, module = :module, url = :url WHERE uname = :uname', [':time' => $ctime, ':ip' => $ip, ':guest' => $guest, ':module' => $name, ':url' => $url, ':uname' => $uname]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_session SET time = :time, ip = :ip, guest = :guest, module = :module, url = :url WHERE uname = :uname', [':time' => $ctime, ':ip' => $ip, ':guest' => $guest, ':module' => $name, ':url' => $url, ':uname' => $uname]);
             } else {
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_session (uname, time, host_addr, guest, module, url) VALUES (:uname, :time, :ip, :guest, :module, :url)', ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'module' => $name, 'url' => $url]);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_session (uname, time, ip, guest, module, url) VALUES (:uname, :time, :ip, :guest, :module, :url)', ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'module' => $name, 'url' => $url]);
             }
         }
     }
@@ -1355,7 +1355,7 @@ function setHead(array $seo = []): void {
             if (is_active('auto_links')) {
                 list($exist) = $db->getSqlRow($db->getSqlQuery('SELECT ip FROM '.PREFIX_DB.'_referer WHERE ip = :ip AND lid != :lid', ['ip' => $ip, 'lid' => 0]));
                 if ($exist) {
-                    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, date, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
+                    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, time, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
                 } else {
                     $result = $db->getSqlQuery('SELECT link FROM '.PREFIX_DB.'_auto_links');
                     while(list($slink) = $db->getSqlRow($result)) {
@@ -1369,13 +1369,13 @@ function setHead(array $seo = []): void {
                     if ($islink) {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = hits + 1 WHERE link = :link', ['link' => $slink]);
                         list($lid) = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_auto_links WHERE link = :link', ['link' => $slink]));
-                        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, date, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => $lid]);
+                        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, time, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => $lid]);
                     } else {
-                        if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, date, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
+                        if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, time, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
                     }
                 }
             } else {
-                if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, date, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
+                if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, time, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
             }
         }
     }
@@ -1971,7 +1971,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
         $id = (intval($id)) ? $id : 0;
         $params = ['mod' => $mod];
         if ($id) {
-            $where = 'WHERE modul = :mod AND parentid = :pid';
+            $where = 'WHERE modul = :mod AND parent = :pid';
             $params['pid'] = $id;
         } elseif ($conf['multilingual']) {
             $where = "WHERE modul = :mod AND (language = :loc OR language = '')";
@@ -1980,7 +1980,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
             $where = 'WHERE modul = :mod';
         }
         $cnum = 0;
-        $result = $db->getSqlQuery('SELECT id, title, description, img, parentid, auth_view, auth_read FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY ordern, title', $params);
+        $result = $db->getSqlQuery('SELECT id, title, description, img, parent, auth_view, auth_read FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY ordern, title', $params);
         while (list($cid, $title, $description, $img, $parentid, $auth_view, $auth_read) = $db->getSqlRow($result)) {
             $massiv[] = [$cid, $title, $description, $img, $parentid, $auth_view, $auth_read];
             unset($cid, $title, $description, $img, $parentid, $auth_view, $auth_read);
@@ -2034,32 +2034,32 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
             }
             $cin = implode(', ', $pp);
             if ($mod == 'faq') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(fid) FROM '.PREFIX_DB.'_faq WHERE catid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_faq WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INFA;
             } elseif ($mod == 'files') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(lid) FROM '.PREFIX_DB.'_files WHERE cid IN ('.$cin.") AND date <= NOW() AND status != '0'", $pm));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_files WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INF;
             } elseif ($mod == 'help') {
                 $uid = intval($user[0]);
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(sid) FROM '.PREFIX_DB.'_help WHERE catid IN ('.$cin.") AND time <= NOW() AND pid = '0' AND uid = :uid", array_merge($pm, ['uid' => $uid])));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_help WHERE cid IN ('.$cin.") AND time <= NOW() AND pid = '0' AND uid = :uid", array_merge($pm, ['uid' => $uid])));
                 $in = _INH;
             } elseif ($mod == 'jokes') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(jokeid) FROM '.PREFIX_DB.'_jokes WHERE cat IN ('.$cin.") AND date <= NOW() AND status != '0'", $pm));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_jokes WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INJ;
             } elseif ($mod == 'links') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(lid) FROM '.PREFIX_DB.'_links WHERE cid IN ('.$cin.") AND date <= NOW() AND status != '0'", $pm));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_links WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INL;
             } elseif ($mod == 'media') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid IN ('.$cin.") AND date <= NOW() AND status != '0'", $pm));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INM;
             } elseif ($mod == 'news') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(sid) FROM '.PREFIX_DB.'_news WHERE catid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_news WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INN;
             } elseif ($mod == 'pages') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(pid) FROM '.PREFIX_DB.'_pages WHERE catid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_pages WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INP;
             } elseif ($mod == 'shop') {
-                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$cin.") AND time <= NOW() AND active != '0'", $pm));
+                list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INS;
             }
             return setTemplateBasic('categories', ['{%categories%}' => _CATEGORIES, '{%content%}' => $cont, '{%total%}' => _ALLIN, '{%pages%}' => $pnum, '{%in%}' => $in, '{%cat%}' => $cnum, '{%category%}' => _ALLINC, '{%mod%}' => $mod]);
@@ -2343,43 +2343,43 @@ function doSitemap(): void {
             $mod = ($modules_raw === '') ? ['0'] : explode(',', $modules_raw);
             for ($i = 0; $i < count($mod); $i++) {
                 if ($mod[$i] == 'account' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT user_id, user_name, user_lastvisit FROM '.PREFIX_DB.'_users');
+                    $result = $db->getSqlQuery('SELECT id, name, lastvis FROM '.PREFIX_DB.'_users');
                     while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'content' && is_active($mod[$i], '0')) {
                     $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB.'_content WHERE time <= NOW()');
                     while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'faq' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT fid, catid, title, time FROM '.PREFIX_DB."_faq WHERE time <= NOW() AND status != '0'");
+                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_faq WHERE time <= NOW() AND status != '0'");
                     while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'files' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT lid, cid, title, date FROM '.PREFIX_DB."_files WHERE date <= NOW() AND status != '0'");
+                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_files WHERE time <= NOW() AND status != '0'");
                     while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'forum' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, catid, title, time FROM '.PREFIX_DB."_forum WHERE pid = '0' AND time <= NOW() AND status > '1'");
+                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_forum WHERE pid = '0' AND time <= NOW() AND status > '1'");
                     while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'jokes' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT jokeid, date, title, cat FROM '.PREFIX_DB."_jokes WHERE date <= NOW() AND status != '0'");
+                    $result = $db->getSqlQuery('SELECT id, time, title, cid FROM '.PREFIX_DB."_jokes WHERE time <= NOW() AND status != '0'");
                     while (list($id, $time, $title, $cat) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'links' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT lid, cid, title, date FROM '.PREFIX_DB."_links WHERE date <= NOW() AND status != '0'");
+                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_links WHERE time <= NOW() AND status != '0'");
                     while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'media' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, title, subtitle, date FROM '.PREFIX_DB."_media WHERE date <= NOW() AND status != '0'");
+                    $result = $db->getSqlQuery('SELECT id, cid, title, subtitle, time FROM '.PREFIX_DB."_media WHERE time <= NOW() AND status != '0'");
                     while (list($id, $cat, $title, $subtitle, $time) = $db->getSqlRow($result)) {
                         $title = ($subtitle) ? $title.' - '.$subtitle : $title;
                         $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                     }
                 } elseif ($mod[$i] == 'news' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT sid, catid, title, time FROM '.PREFIX_DB."_news WHERE time <= NOW() AND status != '0'");
+                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_news WHERE time <= NOW() AND status != '0'");
                     while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'pages' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT pid, catid, title, time FROM '.PREFIX_DB."_pages WHERE time <= NOW() AND status != '0'");
+                    $result = $db->getSqlQuery('SELECT id, cid, title, time FROM '.PREFIX_DB."_pages WHERE time <= NOW() AND status != '0'");
                     while (list($id, $cat, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'shop' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, cid, time, title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND active != '0'");
+                    $result = $db->getSqlQuery('SELECT id, cid, time, title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
                     while (list($id, $cat, $time, $title) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, $cat, $title, $time, $mod[$i]];
                 } elseif ($mod[$i] == 'voting' && is_active($mod[$i], '0')) {
-                    $result = $db->getSqlQuery('SELECT id, title, date FROM '.PREFIX_DB."_voting WHERE modul = '' AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')");
+                    $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_voting WHERE modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')");
                     while (list($id, $title, $time) = $db->getSqlRow($result)) $info[$mod[$i]][] = [$id, '', $title, $time, $mod[$i]];
                 } elseif (is_active($mod[$i], '0')) {
                     $info[$mod[$i]][] = ['', '', '', '', $mod[$i]];
@@ -2405,7 +2405,7 @@ function doSitemap(): void {
                         }
                         $htm[$key][$info[$key][$key2][1]][] = [$info[$key][$key2][0],$info[$key][$key2][2]];
                     }
-                    $result = $db->getSqlQuery('SELECT id, modul, title, parentid FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => $key]);
+                    $result = $db->getSqlQuery('SELECT id, modul, title, parent FROM '.PREFIX_DB.'_categories WHERE modul = :mod', ['mod' => $key]);
                     while (list($cid, $cmodul, $title, $parentid) = $db->getSqlRow($result)) {
                         $cd[$cid] = [$cid, $parentid, $title, $cmodul];
                         if ($conf['sitemap']['gen_c']) {
@@ -2613,10 +2613,10 @@ function getCompressHtml(string $html): string {
 function getVoting(int $id = 0, string $votid = ''): string {
  global $db, $afile, $user, $locale, $conf;
     if ($conf['multilingual'] == 1) {
-        $querylang = "(language = :locale OR language = '') AND date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $querylang = "(language = :locale OR language = '') AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
         $qlang_params = ['locale' => $locale];
     } else {
-        $querylang = "date <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $querylang = "time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
         $qlang_params = [];
     }
     if (!$id)    $id    = getVar('get', 'id', 'num', 0);
@@ -2629,7 +2629,7 @@ function getVoting(int $id = 0, string $votid = ''): string {
         $cookies = (isset($_COOKIE[$cmod])) ? intval($_COOKIE[$cmod]) : '';
         $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
-        list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND host = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
+        list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
         list($modul, $title, $questions, $answer, $enddate, $multi, $comments, $acomm, $typ, $status) = $db->getSqlRow($result);
         $rate = ($cookies == $id || $num > 0 || strtotime($enddate) <= time()) ? 1 : 0;
         if ($typ || !$typ && !$rate) {
@@ -3176,7 +3176,7 @@ function user_sinfo(string $id = ''): string {
  global $db, $conf;
     if ($conf['session']) {
         $who_online = ''; $m = 0; $b = 0; $u = 0; $i = 0;
-        $result = $db->getSqlQuery('SELECT uname, time, host_addr, guest, module FROM '.PREFIX_DB.'_session ORDER BY uname');
+        $result = $db->getSqlQuery('SELECT uname, time, ip, guest, module FROM '.PREFIX_DB.'_session ORDER BY uname');
         while (list($uname, $time, $host, $guest, $module) = $db->getSqlRow($result)) {
             $time = time() - $time;
             $strip = cutstr($uname, 15);
@@ -3210,7 +3210,7 @@ function user_sainfo(string $id = ''): string {
         $a = $b = $m = $u = $i = 0;
         $who_online = ['0' => '', '1' => '', '2' => '', '3' => ''];
         $content_who = '';
-        $result = $db->getSqlQuery('SELECT uname, time, host_addr, guest, module, url FROM '.PREFIX_DB.'_session ORDER BY uname');
+        $result = $db->getSqlQuery('SELECT uname, time, ip, guest, module, url FROM '.PREFIX_DB.'_session ORDER BY uname');
         while (list($uname, $time, $host, $guest, $module, $url) = $db->getSqlRow($result)) {
             $time = time() - $time;
             $namestrip = cutstr($uname, 15);
@@ -3293,24 +3293,24 @@ function show_kasse(string $info = ''): string {
             $pp[] = ':'.$ph;
             $pm[$ph] = $pid;
         }
-        $result = $db->getSqlQuery('SELECT id, time, title, preis FROM '.PREFIX_DB.'_products WHERE id IN ('.implode(', ', $pp).')', $pm);
+        $result = $db->getSqlQuery('SELECT id, time, title, price FROM '.PREFIX_DB.'_products WHERE id IN ('.implode(', ', $pp).')', $pm);
         $cont = '';
-        $preistotal = 0;
-        while (list($id, $time, $title, $preis) = $db->getSqlRow($result)) {
+        $ptotal = 0;
+        while (list($id, $time, $title, $price) = $db->getSqlRow($result)) {
             $i = 0;
             foreach ($massiv as $val) {
                 if ($val == $id) $i++;
             }
-            $preis = $preis * $i;
-            $preistotal += $preis;
+            $price = $price * $i;
+            $ptotal += $price;
             $ptitle = '<a href="index.php?name=shop&amp;op=view&amp;id='.$id.'" title="'.$title.'">'.$title.'</a> '.new_graphic($time);
             $mtitle = ($i > 1) ? _PMINUS : _DELETE;
             $plus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=add_kasse&amp;id=".$id."', ''); return false;\" title=\""._PPLUS.'" class="sl_shop_plus"></a>';
             $minus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=del_kasse&amp;id=".$id."', ''); return false;\" title=\"".$mtitle.'" class="sl_shop_minus"></a>';
-            $cont .= setTemplateBasic('kasse-basic', ['{%id%}' => $id, '{%title%}' => $ptitle, '{%qty%}' => $i, '{%price%}' => $preis.' '.$conf['shop']['valute'], '{%plus%}' => $plus, '{%minus%}' => $minus]);
+            $cont .= setTemplateBasic('kasse-basic', ['{%id%}' => $id, '{%title%}' => $ptitle, '{%qty%}' => $i, '{%price%}' => $price.' '.$conf['shop']['valute'], '{%plus%}' => $plus, '{%minus%}' => $minus]);
         }
         $cart = '<a href="index.php?name=shop&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
-        $total = '<span title="'._PARTNERGES.'" class="sl_shop_total">'._PARTNERGES.': '.$preistotal.' '.$conf['shop']['valute'].'</span>';
+        $total = '<span title="'._PARTNERGES.'" class="sl_shop_total">'._PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'].'</span>';
         return setTemplateBasic('kasse-open', ['{%title%}' => _PBASKET, '{%col_id%}' => _ID, '{%col_product%}' => _PRODUCT, '{%col_qty%}' => cutstr(_QUANTITY, 3, 1), '{%col_price%}' => _PREIS, '{%col_fn%}' => _FUNCTIONS]).$cont.setTemplateBasic('kasse-close', ['{%cart%}' => $cart, '{%total%}' => $total]);
     }
     return '';
@@ -3518,20 +3518,20 @@ function letter(string $mod): string {
     if ($mod == 'faq') {
         $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_faq WHERE time <= NOW() AND status != '0'");
     } elseif ($mod == 'files') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_files WHERE date <= NOW() AND status != '0'");
+        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_files WHERE time <= NOW() AND status != '0'");
     } elseif ($mod == 'help') {
         $uid = intval($user[0]);
         $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_help WHERE time <= NOW() AND pid = '0' AND uid = :uid", ['uid' => $uid]);
     } elseif ($mod == 'links') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_links WHERE date <= NOW() AND status != '0'");
+        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_links WHERE time <= NOW() AND status != '0'");
     } elseif ($mod == 'media') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_media WHERE date <= NOW() AND status != '0'");
+        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_media WHERE time <= NOW() AND status != '0'");
     } elseif ($mod == 'news') {
         $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_news WHERE time <= NOW() AND status != '0'");
     } elseif ($mod == 'pages') {
         $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_pages WHERE time <= NOW() AND status != '0'");
     } elseif ($mod == 'shop') {
-        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND active != '0'");
+        $result = $db->getSqlQuery('SELECT title FROM '.PREFIX_DB."_products WHERE time <= NOW() AND status != '0'");
     } else {
         $result = '';
     }
@@ -3692,12 +3692,12 @@ function rss_read(mixed $url, mixed $id): string {
 function rss_load(mixed $bid): void {
  global $db;
     $bid = intval($bid);
-    list($title, $content, $url, $refresh, $otime) = $db->getSqlRow($db->getSqlQuery('SELECT title, content, url, refresh, time FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]));
+    list($title, $content, $url, $refresh, $otime) = $db->getSqlRow($db->getSqlQuery('SELECT title, content, url, refresh, time FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
     $past = time() - $refresh;
     if ($otime < $past) {
         $btime = time();
         $content = rss_read($url, 1);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET content = :content, time = :time WHERE bid = :bid', ['content' => $content, 'time' => $btime, 'bid' => $bid]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET content = :content, time = :time WHERE id = :bid', ['content' => $content, 'time' => $btime, 'bid' => $bid]);
     }
     echo setTemplateBlock('', ['{%title%}' => $title, '{%content%}' => $content]);
 }
@@ -3863,13 +3863,13 @@ function is_user(string $usr = ''): int {
         $ip = getIp();
         if ($uid != '' && $pwd != '') {
             if ($conf['users']['check'] == '0') {
-                list($pass) = $db->getSqlRow($db->getSqlQuery('SELECT user_password FROM '.PREFIX_DB.'_users WHERE user_id = :uid AND user_name = :name', ['uid' => $uid, 'name' => $una]));
+                list($pass) = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
                 if ($pass == $pwd && $pass != '') {
                     $usertrue = 1;
                     return 1;
                 }
             } else {
-                list($pass, $last_ip) = $db->getSqlRow($db->getSqlQuery('SELECT user_password, user_last_ip FROM '.PREFIX_DB.'_users WHERE user_id = :uid AND user_name = :name', ['uid' => $uid, 'name' => $una]));
+                list($pass, $last_ip) = $db->getSqlRow($db->getSqlQuery('SELECT password, lastip FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
                 if ($pass == $pwd && $pass != '' && $last_ip == $ip && $last_ip != '') {
                     $usertrue = 1;
                     return 1;
@@ -3890,7 +3890,7 @@ function is_user(string $usr = ''): int {
 function is_user_id(string $name): int {
  global $db;
     $name = filterText(substr($name, 0, 25));
-    list($uid) = $db->getSqlRow($db->getSqlQuery('SELECT user_id FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
+    list($uid) = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
     return intval($uid);
 }
 
@@ -3930,7 +3930,7 @@ function get_user(): void {
  global $db;
     $let = analyze_name(getVar('get', 'term', 'text', ''));
     if ($let) {
-        $result = $db->getSqlQuery('SELECT user_name FROM '.PREFIX_DB.'_users WHERE user_name LIKE :name ORDER BY user_name ASC', ['name' => $let.'%']);
+        $result = $db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name LIKE :name ORDER BY name ASC', ['name' => $let.'%']);
         while(list($user_name) = $db->getSqlRow($result)) $name[]= '"'.$user_name.'"';
         echo '['.implode(', ', $name).']';
     }
@@ -4148,7 +4148,7 @@ function is_acess(string $ids): bool {
                     $pp[] = ':'.$ph;
                     $pm[$ph] = $gid;
                 }
-                $sql = 'SELECT COUNT(u.user_id) FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.user_group = g.id) OR (g.extra != 1 AND u.user_points >= g.points)) WHERE u.user_id = :uid AND g.id IN ('.implode(', ', $pp).')';
+                $sql = 'SELECT COUNT(u.id) FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points)) WHERE u.id = :uid AND g.id IN ('.implode(', ', $pp).')';
                 list($uid) = $db->getSqlRow($db->getSqlQuery($sql, $pm));
             } else {
                 $uid = 0;
@@ -4178,7 +4178,7 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
         $where  = 'ORDER BY ordern';
         $params = [];
     }
-    $result = $db->getSqlQuery('SELECT id, title, parentid, auth_view FROM '.PREFIX_DB.'_categories '.$where, $params);
+    $result = $db->getSqlQuery('SELECT id, title, parent, auth_view FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
         $content = (!$noSelect) ? '<select name="'.$selectName.'" title="'._CATEGORIES.'" class="'.$class.'">' : '';
         while (list($cid, $title, $parentid, $auth_view) = $db->getSqlRow($result)) if (is_acess($auth_view)) $massiv[$cid] = [getConst($title), $parentid];
@@ -4212,7 +4212,7 @@ function catlink(string $mod = '', int $id = 0, string $sep = '', string $home =
         $where  = '';
         $params = [];
     }
-    $result = $db->getSqlQuery('SELECT id, title, parentid FROM '.PREFIX_DB.'_categories '.$where, $params);
+    $result = $db->getSqlQuery('SELECT id, title, parent FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while (list($cid, $title, $parentid) = $db->getSqlRow($result)) $massiv[$cid] = [getConst($title), $parentid];
         foreach ($massiv as $key => $val) {
@@ -4241,7 +4241,7 @@ function catids(string $mod = '', int $id = 0): string {
         $where  = '';
         $params = [];
     }
-    $result = $db->getSqlQuery('SELECT id, parentid FROM '.PREFIX_DB.'_categories '.$where, $params);
+    $result = $db->getSqlQuery('SELECT id, parent FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while (list($cid, $parentid) = $db->getSqlRow($result)) $massiv[$cid] = [$parentid];
         foreach ($massiv as $key => $val) {
@@ -4449,13 +4449,13 @@ function addblocks(string $str): string {
 }
 
 # Format block
-function render_blocks(string $side, string $blockfile, string $blocktitle, string $content, mixed $bid, string $url): string {
+function render_blocks(string $side, string $bfile, string $blocktitle, string $content, mixed $bid, string $url): string {
  global $showbanners, $foot;
     if ($url == '') {
         $blocktitle = getConst($blocktitle);
-        if ($blockfile != '') {
-            if (file_exists('blocks/'.$blockfile)) {
-                include('blocks/'.$blockfile);
+        if ($bfile != '') {
+            if (file_exists('blocks/'.$bfile)) {
+                include('blocks/'.$bfile);
             } else {
                 $content = '<div class="sl_center">'._BLOCKPROBLEM.'</div>';
             }
@@ -4499,27 +4499,27 @@ function rating(): void {
     if ($id && $mod) {
         $query = '';
         if ($mod == 'account') {
-            $query = 'SELECT user_votes, user_totalvotes FROM '.PREFIX_DB.'_users WHERE user_id = :id';
+            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_users WHERE id = :id';
         } elseif ($mod == 'faq') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_faq WHERE fid = :id';
+            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_faq WHERE id = :id';
         } elseif ($mod == 'files') {
-            $query = 'SELECT votes, totalvotes FROM '.PREFIX_DB.'_files WHERE lid = :id';
+            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_files WHERE id = :id';
         } elseif ($mod == 'forum') {
             $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_forum WHERE id = :id';
         } elseif ($mod == 'help') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_help WHERE sid = :id';
+            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_help WHERE id = :id';
         } elseif ($mod == 'jokes') {
-            $query = 'SELECT ratingtot, rating FROM '.PREFIX_DB.'_jokes WHERE jokeid = :id';
+            $query = 'SELECT ratetot, rating FROM '.PREFIX_DB.'_jokes WHERE id = :id';
         } elseif ($mod == 'links') {
-            $query = 'SELECT votes, totalvotes FROM '.PREFIX_DB.'_links WHERE lid = :id';
+            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_links WHERE id = :id';
         } elseif ($mod == 'media') {
-            $query = 'SELECT votes, totalvotes FROM '.PREFIX_DB.'_media WHERE id = :id';
+            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_media WHERE id = :id';
         } elseif ($mod == 'news') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_news WHERE sid = :id';
+            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_news WHERE id = :id';
         } elseif ($mod == 'pages') {
-            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_pages WHERE pid = :id';
+            $query = 'SELECT ratings, score FROM '.PREFIX_DB.'_pages WHERE id = :id';
         } elseif ($mod == 'shop') {
-            $query = 'SELECT votes, totalvotes FROM '.PREFIX_DB.'_products WHERE id = :id';
+            $query = 'SELECT votes, tvotes FROM '.PREFIX_DB.'_products WHERE id = :id';
         }
         if ($query == '') {
             return;
@@ -4530,7 +4530,7 @@ function rating(): void {
         $cookies = isset($_COOKIE[$cmod]) ? intval($_COOKIE[$cmod]) : '';
         $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_rating WHERE time < :past AND modul = :mod', ['past' => $past, 'mod' => $mod]);
-        list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = :mod AND host = :ip) OR (mid = :id2 AND modul = :mod2 AND uid = :uid AND uid != '0')", ['id' => $id, 'mod' => $mod, 'ip' => $ip, 'id2' => $id, 'mod2' => $mod, 'uid' => $uid]));
+        list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = :mod AND ip = :ip) OR (mid = :id2 AND modul = :mod2 AND uid = :uid AND uid != '0')", ['id' => $id, 'mod' => $mod, 'ip' => $ip, 'id2' => $id, 'mod2' => $mod, 'uid' => $uid]));
         if ($cookies == $id || $num > 0) {
             list($votes, $totalvotes) = $db->getSqlRow($db->getSqlQuery($query, ['id' => $id]));
             echo ajax_rating(2, '', '', $votes, $totalvotes, '', $stl);
@@ -4571,45 +4571,45 @@ function rating(): void {
         } elseif (!$cookies && !$num && $rate) {
             setcookie(substr($mod, 0, 2).'-'.$id, $id, time() + intval($con[0]));
             $new = time();
-            $inserted = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, host) VALUES (:mid, :modul, :time, :uid, :host)', ['mid' => $id, 'modul' => $mod, 'time' => $new, 'uid' => $uid, 'host' => $ip]);
+            $inserted = $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_rating (mid, modul, time, uid, ip) VALUES (:mid, :modul, :time, :uid, :ip)', ['mid' => $id, 'modul' => $mod, 'time' => $new, 'uid' => $uid, 'ip' => $ip]);
             if ($inserted) {
                 if ($mod == 'account' || $mod == 'members') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_votes = user_votes + 1, user_totalvotes = user_totalvotes + :rate WHERE user_id = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(2);
                 } elseif ($mod == 'faq') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET score = score + :rate, ratings = ratings + 1 WHERE fid = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(8);
                 } elseif ($mod == 'files') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET votes = votes + 1, totalvotes = totalvotes + :rate WHERE lid = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(12);
                 } elseif ($mod == 'forum') {
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(15);
                 } elseif ($mod == 'help') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET score = score + :rate, ratings = ratings + 1 WHERE sid = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                 } elseif ($mod == 'gallery') {
                     #$db->getSqlQuery("UPDATE ".PREFIX_DB."_gallery SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE lid = '".$id."'");
                     update_points(18);
                 } elseif ($mod == 'jokes') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET rating = rating + :rate, ratingtot = ratingtot + 1 WHERE jokeid = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET rating = rating + :rate, ratetot = ratetot + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(20);
                 } elseif ($mod == 'links') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET votes = votes + 1, totalvotes = totalvotes + :rate WHERE lid = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(24);
                 } elseif ($mod == 'media') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET votes = votes + 1, totalvotes = totalvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(27);
                 } elseif ($mod == 'multimedia') {
                     #$db->getSqlQuery("UPDATE ".PREFIX_DB."_multimedia SET votes=votes+1, totalvotes=totalvotes+".$rate." WHERE id = '".$id."'");
                     update_points(30);
                 } elseif ($mod == 'news') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET score = score + :rate, ratings = ratings + 1 WHERE sid = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(33);
                 } elseif ($mod == 'pages') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET score = score + :rate, ratings = ratings + 1 WHERE pid = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET score = score + :rate, ratings = ratings + 1 WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(37);
                 } elseif ($mod == 'shop') {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET votes = votes + 1, totalvotes = totalvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET votes = votes + 1, tvotes = tvotes + :rate WHERE id = :id', ['rate' => $rate, 'id' => $id]);
                     update_points(41);
                 }
             }
@@ -5274,7 +5274,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             if ($numstories > $offset) $a -= $offset;
         }
         $where = [];
-        $result = $db->getSqlQuery('SELECT id, cid, modul, date, uid, name, host_name, comment, status FROM '.PREFIX_DB.'_comment '.$ordern.' ORDER BY date '.$sort.' LIMIT '.intval($offset).', '.intval($ccnum), $params);
+        $result = $db->getSqlQuery('SELECT id, cid, modul, time, uid, name, ip, comment, status FROM '.PREFIX_DB.'_comment '.$ordern.' ORDER BY time '.$sort.' LIMIT '.intval($offset).', '.intval($ccnum), $params);
         while (list($com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status) = $db->getSqlRow($result)) {
             $cmassiv[] = [$com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status];
             if ($com_uid) $where[] = $com_uid;
@@ -5291,7 +5291,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     $up[] = ':'.$ph;
                     $um[$ph] = $v;
                 }
-                $result2 = $db->getSqlQuery('SELECT u.user_id, u.user_name, u.user_rank, u.user_email, u.user_website, u.user_avatar, u.user_regdate, u.user_from, u.user_sig, u.user_viewemail, u.user_points, u.user_warnings, u.user_gender, u.user_votes, u.user_totalvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.user_group = g.id) OR (g.extra != 1 AND u.user_points >= g.points)) WHERE u.user_id IN ('.implode(', ', $up).') ORDER BY g.extra ASC, g.points ASC', $um);
+                $result2 = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra = 1 AND u.grp = g.id) OR (g.extra != 1 AND u.points >= g.points)) WHERE u.id IN ('.implode(', ', $up).') ORDER BY g.extra ASC, g.points ASC', $um);
                 while (list($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor) = $db->getSqlRow($result2)) {
                     $umassiv[] = [$user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor];
                     unset($user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor);
@@ -5412,7 +5412,7 @@ function editcom(): string {
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
     $mod  = filterVar(getVar('post', 'mod',  'text', '') ?: getVar('get', 'mod',  'text', ''));
     $text = trim(getVar('post', 'text', 'raw',  '') ?: getVar('get', 'text', 'raw',  ''));
-    list($uid, $date, $comment) = $db->getSqlRow($db->getSqlQuery('SELECT uid, date, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+    list($uid, $date, $comment) = $db->getSqlRow($db->getSqlQuery('SELECT uid, time, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
     $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
@@ -5470,28 +5470,28 @@ function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0):
             #$db->getSqlQuery("UPDATE ".PREFIX_DB."_users SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
             update_points(3, $uid, $point);
         } elseif ($mod == 'faq') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET comments = comments + :delta WHERE fid = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(7, $uid, $point);
         } elseif ($mod == 'files') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET totalcomments = totalcomments + :delta WHERE lid = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET tcom = tcom + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(10, $uid, $point);
         } elseif ($mod == 'gallery') {
             #$db->getSqlQuery("UPDATE ".PREFIX_DB."_gallery SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
             update_points(17, $uid, $point);
         } elseif ($mod == 'links') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET totalcomments = totalcomments + :delta WHERE lid = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET tcom = tcom + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(22, $uid, $point);
         } elseif ($mod == 'media') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET totalcom = totalcom + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET tcom = tcom + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(26, $uid, $point);
         } elseif ($mod == 'multimedia') {
             #$db->getSqlQuery("UPDATE ".PREFIX_DB."_multimedia SET totalcom=totalcom".$typ." WHERE id = '".$id."'");
             update_points(29, $uid, $point);
         } elseif ($mod == 'news') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET comments = comments + :delta WHERE sid = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(32, $uid, $point);
         } elseif ($mod == 'pages') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET comments = comments + :delta WHERE pid = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(36, $uid, $point);
         } elseif ($mod == 'shop') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET com = com + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
@@ -5509,10 +5509,10 @@ function avoting_save(): void {
     $id = getVar('post', 'id', 'num', 0);
     $questions = isset($_POST['questions']) && is_array($_POST['questions']) ? $_POST['questions'] : [];
     if ($conf['multilingual'] == 1) {
-        $querylang = "(language = :locale OR language = '') AND date <= NOW() AND enddate >= NOW()";
+        $querylang = "(language = :locale OR language = '') AND time <= NOW() AND enddate >= NOW()";
         $qlang_params = ['locale' => $locale];
     } else {
-        $querylang = 'date <= NOW() AND enddate >= NOW()';
+        $querylang = 'time <= NOW() AND enddate >= NOW()';
         $qlang_params = [];
     }
     $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
@@ -5526,13 +5526,13 @@ function avoting_save(): void {
             $cookies = (isset($_COOKIE[$cmod])) ? intval($_COOKIE[$cmod]) : '';
             $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
-            list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND host = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
+            list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
             if ($cookies == $id || $num > 0) {
                 $cont = setTemplateWarning('warn', ['text' => _SEROR2, 'url' => '?name=voting&amp;op=view&amp;id='.$id, 'time' => 3, 'id' => 'warn']);
             } else {
                 setcookie(substr('voting', 0, 2).'-'.$id, $id, time() + intval($conf['voting']['voting_t']));
                 $new = time();
-                $inserted = $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_rating (mid, modul, time, uid, host) VALUES (:mid, 'voting', :time, :uid, :host)", ['mid' => $id, 'time' => $new, 'uid' => $uid, 'host' => $ip]);
+                $inserted = $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_rating (mid, modul, time, uid, ip) VALUES (:mid, 'voting', :time, :uid, :ip)", ['mid' => $id, 'time' => $new, 'uid' => $uid, 'ip' => $ip]);
                 if ($inserted) {
                     list($answer) = $db->getSqlRow($db->getSqlQuery('SELECT answer FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]));
                     $answer = explode('|', $answer);
@@ -5571,7 +5571,7 @@ function update_points(int $id, int $uid = 0, bool $del = false): void {
         $a       = $id - 1;
         $delta   = isset($upoints[$a]) ? intval($upoints[$a]) : 0;
         $delta   = $del ? -$delta : $delta;
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET user_points = user_points + :delta WHERE user_id = :uid', ['delta' => $delta, 'uid' => $uid]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET points = points + :delta WHERE id = :uid', ['delta' => $delta, 'uid' => $uid]);
     }
 }
 

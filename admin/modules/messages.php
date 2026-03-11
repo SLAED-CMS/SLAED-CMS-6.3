@@ -16,12 +16,12 @@ function messages(): void {
     global $db, $afile;
     setHead();
     $cont = navi(0, 0);
-    $result = $db->getSqlQuery('SELECT mid, title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message ORDER BY mid');
+    $result = $db->getSqlQuery('SELECT id, title, content, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._PURCHASED.'</th><th>'._VIEW.'</th><th>'._LANGUAGE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$mid, $title, $content, $expire, $active, $view, $mlanguage] = $db->getSqlRow($result)) {
-            if (($expire && $expire < time()) || (!$active && $expire)) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET active = :active, expire = :expire WHERE mid = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
+            if (($expire && $expire < time()) || (!$active && $expire)) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active, expire = :expire WHERE id = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
             $act = ($active) ? '0' : '1';
             if ($view == 1) {
                 $mview = _MVALL;
@@ -55,7 +55,7 @@ function add(): void {
     global $db, $conf, $afile, $stop;
     $mid = getVar('req', 'id', 'num');
     if ($mid) {
-        [$title, $content, $expire, $active, $view, $mlanguage] = $db->getSqlRow($db->getSqlQuery('SELECT title, content, expire, active, view, mlanguage FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $mid]));
+        [$title, $content, $expire, $active, $view, $mlanguage] = $db->getSqlRow($db->getSqlQuery('SELECT title, content, expire, status, view, lang FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $mid]));
     } else {
         $mid = getVar('post', 'mid', 'num');
         $title = getVar('post', 'title', 'title');
@@ -63,7 +63,7 @@ function add(): void {
         $newexpire = getVar('post', 'newexpire', 'num');
         $expire_input = getVar('post', 'expire', 'num');
         $expire = ($newexpire == 1 && $expire_input) ? time() + ($expire_input * 86400) : $expire_input;
-        $active = getVar('post', 'active', 'num');
+        $active = getVar('post', 'status', 'num');
         $view = getVar('post', 'view', 'num');
         $mlanguage = getVar('post', 'mlanguage', 'var');
     }
@@ -95,7 +95,7 @@ function add(): void {
         $cont .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
     }
     $cont .= '</select></td></tr>'
-       .'<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($active, 'active').'</td></tr>'
+       .'<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($active, 'status').'</td></tr>'
        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="mid" value="'.$mid.'"><input type="hidden" name="name" value="messages"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"><input type="hidden" name="newexpire" value="'.$newexpire.'"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -109,7 +109,7 @@ function save(): void {
     $content = getVar('post', 'content', 'text');
     $newexpire = getVar('post', 'newexpire', 'num');
     $expire = getVar('post', 'expire', 'num');
-    $active = getVar('post', 'active', 'num');
+    $active = getVar('post', 'status', 'num');
     $view = getVar('post', 'view', 'num');
     $mlanguage = getVar('post', 'mlanguage', 'var');
     $posttype = getVar('post', 'posttype', 'var');
@@ -118,9 +118,9 @@ function save(): void {
     if (!$content) $stop[] = _CERROR1;
     if (!$stop && $posttype == 'save') {
         if ($mid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, content = :content, expire = :expire, active = :active, view = :view, mlanguage = :mlanguage WHERE mid = :mid', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, content = :content, expire = :expire, status = :active, view = :view, lang = :mlanguage WHERE id = :mid', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage, 'mid' => $mid]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (mid, title, content, expire, active, view, mlanguage) VALUES (NULL, :title, :content, :expire, :active, :view, :mlanguage)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (id, title, content, expire, status, view, lang) VALUES (NULL, :title, :content, :expire, :active, :view, :mlanguage)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage]);
         }
         setRedirect($afile.'.php?name=messages');
     } elseif ($posttype == 'delete') {
@@ -134,14 +134,14 @@ function status(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num');
-    if ($id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET active = :active WHERE mid = :mid', ['active' => $act, 'mid' => $id]);
+    if ($id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active WHERE id = :mid', ['active' => $act, 'mid' => $id]);
     setRedirect($afile.'.php?name=messages');
 }
 
 function del(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE mid = :mid', ['mid' => $id]);
+    if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $id]);
     setRedirect($afile.'.php?name=messages');
 }
 

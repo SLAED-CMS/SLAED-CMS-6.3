@@ -103,8 +103,8 @@ if (!function_exists('setTemplateHead')) {
         if (is_user()) {
             $uname = htmlspecialchars(substr((string)$user[1], 0, 25), ENT_QUOTES, 'UTF-8');
             $userinfo = getUserInfo();
-            $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.$userinfo['user_avatar'];
-            $avatar = (!empty($userinfo['user_avatar']) && is_file($avpath)) ? $userinfo['user_avatar'] : 'default/00.gif';
+            $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.$userinfo['avatar'];
+            $avatar = (!empty($userinfo['avatar']) && is_file($avpath)) ? $userinfo['avatar'] : 'default/00.gif';
             $login = setTemplateBasic('login-logged', [
                 '{%title%}' => _ACCOUNT,
                 '{%avatar%}' => $conf['users']['adirectory'].'/'.$avatar,
@@ -152,7 +152,7 @@ if (!function_exists('setTemplateBasic')) {
 # Set template of block
 if (!function_exists('setTemplateBlock')) {
     function setTemplateBlock(string $tpl, array $val = []): string {
-        global $pos, $blockfile, $b_id;
+        global $pos, $bfile, $b_id;
         $flags = [];
         if (isset($val['if_flag']) && is_array($val['if_flag'])) {
             $flags = $val['if_flag'];
@@ -160,9 +160,9 @@ if (!function_exists('setTemplateBlock')) {
         }
         $theme = getTheme();
         if ($pos === 's' || $pos === 'o') {
-            $bname = empty($blockfile) ? 'fly-block-'.$b_id : 'fly-'.str_replace('.php', '', $blockfile);
+            $bname = empty($bfile) ? 'fly-block-'.$b_id : 'fly-'.str_replace('.php', '', $bfile);
         } else {
-            $bname = empty($blockfile) ? 'block-'.$b_id : str_replace('.php', '', $blockfile);
+            $bname = empty($bfile) ? 'block-'.$b_id : str_replace('.php', '', $bfile);
         }
         $direct = BASE_DIR.'/templates/'.$theme.'/'.$bname.'.html';
         if (is_file($direct)) {

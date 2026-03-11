@@ -14,8 +14,8 @@ function recommend(): void {
     $unkey = md5_salt($conf['sitekey']);
     if (is_user()) {
         $userinfo = getUserInfo();
-        $sname = getVar('post', $unkey, 'name', $userinfo['user_name']);
-        $semail = getVar('post', 'semail', 'text', $userinfo['user_email']);
+        $sname = getVar('post', $unkey, 'name', $userinfo['name']);
+        $semail = getVar('post', 'semail', 'text', $userinfo['email']);
     } else {
         $sname = getVar('post', $unkey, 'name');
         $semail = getVar('post', 'semail', 'text');

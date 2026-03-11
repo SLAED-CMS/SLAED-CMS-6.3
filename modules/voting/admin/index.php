@@ -19,7 +19,7 @@ function voting(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['voting']['anum'];
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT id, modul, date, enddate, title, language, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['anum']);
+    $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, language, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th>';
@@ -60,7 +60,7 @@ function add(): void {
     $stop = $stop ?? '';
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->getSqlQuery('SELECT id, modul, title, questions, answer, date, enddate, multi, language, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
+        $result = $db->getSqlQuery('SELECT id, modul, title, questions, answer, time, enddate, multi, language, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
         [$id, $modul, $title, $questions, $answer, $date, $enddate, $multi, $language, $acomm, $typ, $status] = $db->getSqlRow($result);
         $questions = explode('|', $questions);
         $answer = explode('|', $answer);
@@ -160,10 +160,10 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'var', '');
     if (!$stop && $posttype == 'save') {
         if ($id) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, questions = :quest, answer = :answ, date = :date, enddate = :enddate, multi = :multi, language = :language, acomm = :acomm, typ = :typ, status = :status WHERE id = :id', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'date' => $date, 'enddate' => $enddate, 'multi' => $multi, 'language' => $language, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, questions = :quest, answer = :answ, time = :time, enddate = :enddate, multi = :multi, language = :language, acomm = :acomm, typ = :typ, status = :status WHERE id = :id', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'language' => $language, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id]);
         } else {
             $ip = getIp();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, questions, answer, date, enddate, multi, language, acomm, ip, typ, status) VALUES (NULL, :modul, :title, :quest, :answ, :date, :enddate, :multi, :language, :acomm, :ip, :typ, :status)', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'date' => $date, 'enddate' => $enddate, 'multi' => $multi, 'language' => $language, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, questions, answer, time, enddate, multi, language, acomm, ip, typ, status) VALUES (NULL, :modul, :title, :quest, :answ, :time, :enddate, :multi, :language, :acomm, :ip, :typ, :status)', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'language' => $language, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status]);
         }
         setRedirect($afile.'.php?name=voting');
     } elseif ($posttype == 'delete') {

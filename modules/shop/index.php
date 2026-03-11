@@ -33,23 +33,23 @@ function shop(): void {
 			$caton = 0;
 			$field = 'op='.$op.'&';
 			if ($op == 'best') {
-				$orderby = 'IFNULL((p.totalvotes/NULLIF(p.votes,0)),0) DESC';
+				$orderby = 'IFNULL((p.tvotes/NULLIF(p.votes,0)),0) DESC';
 				$ntitle = _BEST;
 			} else {
 				$orderby = 'IFNULL((p.count/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC';
 				$ntitle = _POP;
 			}
-		$order = "WHERE p.time <= NOW() AND p.active != '0' ".$cwhere.' ORDER BY '.$orderby;
-		$onum = "time <= NOW() AND active != '0'";
+		$order = "WHERE p.time <= NOW() AND p.status != '0' ".$cwhere.' ORDER BY '.$orderby;
+		$onum = "time <= NOW() AND status != '0'";
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-			$orderby = ($op) ? (($op == 'best') ? 'IFNULL((p.totalvotes/NULLIF(p.votes,0)),0) DESC' : 'IFNULL((p.count/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC') : 'p.fix DESC, p.time DESC';
+			$orderby = ($op) ? (($op == 'best') ? 'IFNULL((p.tvotes/NULLIF(p.votes,0)),0) DESC' : 'IFNULL((p.count/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC') : 'p.fix DESC, p.time DESC';
 		[$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
-		$order = "WHERE (p.cid = :ncat1 OR p.assoc REGEXP :ncat_re OR c.parentid = :ncat2) AND p.time <= NOW() AND p.active != '0' ".$cwhere.' ORDER BY '.$orderby;
+		$order = "WHERE (p.cid = :ncat1 OR p.assoc REGEXP :ncat_re OR c.parent = :ncat2) AND p.time <= NOW() AND p.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$params = ['ncat1' => $ncat, 'ncat_re' => '[[:<:]]'.$ncat.'[[:>:]]', 'ncat2' => $ncat];
 		$catid = [];
-		$result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+		$result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
 		while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
 		unset($result);
 		if (isArray($catid)) {
@@ -60,14 +60,14 @@ function shop(): void {
 			$caton = 0;
 			$wcid = "cid = '".$ncat."'";
 		}
-		$onum = '('.$wcid." OR assoc REGEXP '[[:<:]]".$ncat."[[:>:]]') AND time <= NOW() AND active != '0'";
+		$onum = '('.$wcid." OR assoc REGEXP '[[:<:]]".$ncat."[[:>:]]') AND time <= NOW() AND status != '0'";
 	} else {
 		$caton = 1;
 		$field = '';
 		$hwhere = ($home) ? "AND p.ihome = '1'" : '';
 		$hnwhere = ($home) ? "AND ihome = '1'" : '';
-		$order = "WHERE p.time <= NOW() AND p.active != '0' ".$hwhere.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC';
-		$onum = "time <= NOW() AND active != '0' ".$hnwhere;
+		$order = "WHERE p.time <= NOW() AND p.status != '0' ".$hwhere.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC';
+		$onum = "time <= NOW() AND status != '0' ".$hnwhere;
 		$ntitle = _SHOP;
 	}
 	setHead(['title' => $ntitle]);
@@ -81,13 +81,13 @@ function shop(): void {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
-	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.acomm, p.com, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.price, p.acomm, p.com, p.count, p.votes, p.tvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
 		$width = 100 / $conf['shop']['bascol'];
 		$i = 1;
 		$cont .= '<table>';
-		while ([$id, $cid, $time, $stitle, $text, $bodytext, $ppreis, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
+		while ([$id, $cid, $time, $stitle, $text, $bodytext, $pprice, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -112,16 +112,16 @@ function shop(): void {
 			
 			#### In Bearbeitung
 			$prtitle = empty($opreis) ? _PREIS : _NPREIS;
-			$preis = '<span title="'.$prtitle.'" class="sl_shop_price">'.$prtitle.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
-			$opreis = empty($opreis) ? '' : '<span title="'._OPREIS.'" class="sl_shop_oprice">'._OPREIS.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
-			$discount = empty($discount) ? '' : '<span title="'._DISCOUNT.'" class="sl_shop_discount">'._DISCOUNT.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
+			$price = '<span title="'.$prtitle.'" class="sl_shop_price">'.$prtitle.': '.$pprice.' '.$conf['shop']['valute'].'</span>';
+			$opreis = empty($opreis) ? '' : '<span title="'._OPREIS.'" class="sl_shop_oprice">'._OPREIS.': '.$pprice.' '.$conf['shop']['valute'].'</span>';
+			$discount = empty($discount) ? '' : '<span title="'._DISCOUNT.'" class="sl_shop_discount">'._DISCOUNT.': '.$pprice.' '.$conf['shop']['valute'].'</span>';
 			####
-			
+
 			$cart = '<a OnClick="AjaxLoad(\'GET\', \'0\', \'kasse\', \'go=2&amp;op=add_kasse&amp;id='.$id.'\', \'\'); AddBasket(\''.$id.'\'); return false;" title="'._SCART.'" class="sl_shop_add">'._SCART.'</a>';
 			$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
 			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= '<tr>';
 			$cont .= '<td style="width: '.$width.'%;">';
-			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '', '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
+			$cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '', '{%preis%}' => $price, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 			$cont .= '</td>';
 			if ($i % $conf['shop']['bascol'] == 0) $cont .= '</tr>';
 			$i++;
@@ -143,32 +143,32 @@ function liste(): void {
 	$params = [];
 	if ($let) {
 		$field = 'op=liste&let='.urlencode($let).'&';
-		$order = "WHERE UCASE(p.title) LIKE BINARY :let AND p.time <= NOW() AND p.active != '0'";
+		$order = "WHERE UCASE(p.title) LIKE BINARY :let AND p.time <= NOW() AND p.status != '0'";
 		$params['let'] = $let.'%';
 	} else {
 		$field = 'op=liste&';
-		$order = "WHERE p.time <= NOW() AND p.active != '0'";
+		$order = "WHERE p.time <= NOW() AND p.status != '0'";
 	}
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
-	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.preis, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
+	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
 	setHead(['title' => _LIST]);
 	$cont = navigate(_LIST);
 	if ($db->getSqlRowCount($result) > 0) {
 		$letter = ($conf['shop']['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _PREIS, '{%date%}' => _DATE]);
-		while ([$id, $cid, $time, $title, $preis, $ctitle, $cdesc] = $db->getSqlRow($result)) {
+		while ([$id, $cid, $time, $title, $price, $ctitle, $cdesc] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
 			$cdesc = ($cdesc) ? $cdesc : $ctitle;
 			$ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
-			$preis = $preis.' '.$conf['shop']['valute'];
-			$cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $preis, '{%time%}' => format_time($time)]);
+			$price = $price.' '.$conf['shop']['valute'];
+			$cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $price, '{%time%}' => format_time($time)]);
 		}
 		$cont .= setTemplateBasic('liste-close');
-		$onum = ($let) ? "title LIKE BINARY '".$let."%' AND time <= NOW() AND active != '0'" : "time <= NOW() AND active != '0'";
+		$onum = ($let) ? "title LIKE BINARY '".$let."%' AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump']);
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -182,10 +182,10 @@ function view(): void {
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$result = $db->getSqlQuery('SELECT p.cid, p.time, p.title, p.text, p.bodytext, p.preis, p.vote, p.assoc, p.acomm, p.count, p.votes, p.totalvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.active != \'0\' '.$cwhere, ['id' => $id]);
+	$result = $db->getSqlQuery('SELECT p.cid, p.time, p.title, p.text, p.bodytext, p.price, p.vote, p.assoc, p.acomm, p.count, p.votes, p.tvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->getSqlRowCount($result) == 1) {
 		$db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET count = count+1 WHERE id = :id', ['id' => $id]);
-		[$cid, $time, $title, $text, $bodytext, $ppreis, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result);
+		[$cid, $time, $title, $text, $bodytext, $pprice, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
 		$seoctitle = $ctitle;
@@ -230,20 +230,20 @@ function view(): void {
 		
 		#### In Bearbeitung
 		$prtitle = empty($opreis) ? _PREIS : _NPREIS;
-		$preis = '<span title="'.$prtitle.'" class="sl_shop_price">'.$prtitle.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
-		$opreis = empty($opreis) ? '' : '<span title="'._OPREIS.'" class="sl_shop_oprice">'._OPREIS.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
-		$discount = empty($discount) ? '' : '<span title="'._DISCOUNT.'" class="sl_shop_discount">'._DISCOUNT.': '.$ppreis.' '.$conf['shop']['valute'].'</span>';
+		$price = '<span title="'.$prtitle.'" class="sl_shop_price">'.$prtitle.': '.$pprice.' '.$conf['shop']['valute'].'</span>';
+		$opreis = empty($opreis) ? '' : '<span title="'._OPREIS.'" class="sl_shop_oprice">'._OPREIS.': '.$pprice.' '.$conf['shop']['valute'].'</span>';
+		$discount = empty($discount) ? '' : '<span title="'._DISCOUNT.'" class="sl_shop_discount">'._DISCOUNT.': '.$pprice.' '.$conf['shop']['valute'].'</span>';
 		####
 		
 		$cart = '<a OnClick="AjaxLoad(\'GET\', \'0\', \'kasse\', \'go=2&amp;op=add_kasse&amp;id='.$id.'\', \'\'); AddBasket(\''.$id.'\'); return false;" title="'._SCART.'" class="sl_shop_add">'._SCART.'</a>';
 		$kasse = '<a href="index.php?name='.$conf['name'].'&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
-		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => filterTextHighlight($title, $word), '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting, '{%preis%}' => $preis, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
+		$cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => filterTextHighlight($title, $word), '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => $voting, '{%preis%}' => $price, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse]);
 		if ($conf['shop']['assoc']) {
 			$limit = intval($conf['shop']['assocnum']);
-			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\'', ['id' => $id]));
+			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->getSqlQuery('SELECT id, time, title, text, bodytext FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND active != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
+				$result = $db->getSqlQuery('SELECT id, time, title, text, bodytext FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
 				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _ASPROD]);
 				while ([$aid, $time, $title, $hometext, $bodytext] = $db->getSqlRow($result)) {
 					$date = ($conf['shop']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
@@ -267,10 +267,10 @@ function kasse(): void {
 	global $db, $conf, $stop;
 	if (is_user()) {
 		$userinfo = getUserInfo();
-		$sid = $userinfo['user_id'];
-		$slogin = $userinfo['user_name'];
-		$smail = getVar('post', 'smail', 'text', $userinfo['user_email']);
-		$sdom = getVar('post', 'sdom', 'url', $userinfo['user_website']);
+		$sid = $userinfo['id'];
+		$slogin = $userinfo['name'];
+		$smail = getVar('post', 'smail', 'text', $userinfo['email']);
+		$sdom = getVar('post', 'sdom', 'url', $userinfo['website']);
 	} else {
 		$sid = 0;
 		$slogin = _ANONYM;
@@ -308,20 +308,20 @@ function kasse(): void {
 			$stop[] = _ERROR_ALL;
 		}
 		if (!$stop) {
-			$preistotal = 0;
+			$ptotal = 0;
 			$content = '';
-			$result = $db->getSqlQuery('SELECT id, title, preis FROM '.PREFIX_DB.'_products WHERE id IN ('.$cookies.')');
-			while([$id, $title, $preis] = $db->getSqlRow($result)) {
+			$result = $db->getSqlQuery('SELECT id, title, price FROM '.PREFIX_DB.'_products WHERE id IN ('.$cookies.')');
+			while([$id, $title, $price] = $db->getSqlRow($result)) {
 				$massiv = explode(',', $cookies);
 				$i = 0;
 				foreach ($massiv as $val) {
 					if ($val == $id) $i++;
 				}
-				$preis = $preis * $i;
-				$preistotal += $preis;
-				$content .= '<tr><td>'.$id.'</td><td>'.$i.'</td><td>'.$title.'</td><td>'.$preis.' '.$conf['shop']['valute'].'</td></td></tr>';
+				$price = $price * $i;
+				$ptotal += $price;
+				$content .= '<tr><td>'.$id.'</td><td>'.$i.'</td><td>'.$title.'</td><td>'.$price.' '.$conf['shop']['valute'].'</td></td></tr>';
 			}
-			$pinfo = '<table style="width: 100%;"><tr><th>'._ID.'</th><th>'._QUANTITY.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th></tr>'.$content.'<tr><td colspan="5"><br><b>'._PARTNERGES.': '.$preistotal.' '.$conf['shop']['valute'].'</b></td></tr></table>';
+			$pinfo = '<table style="width: 100%;"><tr><th>'._ID.'</th><th>'._QUANTITY.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th></tr>'.$content.'<tr><td colspan="5"><br><b>'._PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'].'</b></td></tr></table>';
 			if ($conf['shop']['mailsend']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
@@ -390,18 +390,18 @@ function clients(): void {
 		setHead(['title' => _CLIENTINFO]);
 		$cont = navigate(_CLIENTINFO);
 		$cont .= getUserNav();
-		$result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_user = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
+		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.uid = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
 			$cont .= setTemplateBasic('open');
 			$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._L_DATE.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
-			while([$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $ppreis] = $db->getSqlRow($result)) {
+			while([$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $pprice] = $db->getSqlRow($result)) {
 				$website = ($cwebsite) ? '<br>'._SITE.': '.$cwebsite : '';
 				$note = ($cinfo) ? '<br>'._NOTE.' : '.$cinfo : '';
 				$cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _NO;
 				$rechn = add_menu('<a href="index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid.'" target="_blank" title="'._RECHN_B.'">'._RECHN_B.'</a>');
 				$cont .= '<tr id="'.$cid.'">'
 				.'<td><a href="#'.$cid.'" title="'.$cid.'" class="sl_pnum">'.$cid.'</a></td>'
-				.'<td>'.title_tip(_PREIS.': '.$ppreis.' '.$conf['shop']['valute'].$website.$note).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
+				.'<td>'.title_tip(_PREIS.': '.$pprice.' '.$conf['shop']['valute'].$website.$note).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
 				.'<td>'.$cenddate.'</td>'
 				.'<td>'.ad_status('', $cactive).'</td>'
 				.'<td>'.$rechn.'</td></tr>';
@@ -422,9 +422,9 @@ function rech(): void {
 	if (is_user() && is_active('shop')) {
 		$defis = urldecode($conf['defis']);
 		$id = getVar('get', 'id', 'num');
-		$result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.text, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
+		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.text, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
 		if ($db->getSqlRowCount($result) > 0) {
-			[$cid, $cuid, $cprod, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $ppreis] = $db->getSqlRow($result);
+			[$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $pprice] = $db->getSqlRow($result);
 			$cont = '<!doctype html>'."\n";
 			$cont .= '<html>'."\n";
 			$cont .= '<head>'."\n";
@@ -433,7 +433,7 @@ function rech(): void {
 				$cont .= '<link rel="stylesheet" href="templates/'.$theme.'/theme.css">'."\n";
 			}
 			$cont .= '<title>'.$conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN.'</title></head>'
-			.'<body><table style="width: 640px; margin: 5%;"><tr><td colspan="2"><hr></td></tr><tr><td style="width: 40%;"><img src="'.img_find('logos/'.$conf['site_logo']).'" alt="'.$conf['sitename'].'"></td><td style="text-align: right;">'.filterReplaceText(filterMarkdown($conf['shop']['shopinfo'], $conf['name'], false), $conf['name']).'</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2"><br><p>'._C_PIN.': '.$cname.'<br>'._C_PIP.': '.$cadres.'<br>'._C_TEL.': '.$cphone.'<br>'._C_MAIL.': '.$cemail.'</p></td></tr><tr><td colspan="2"><hr></td></tr><tr><td><b>'._C_NAIM.'</b></td><td style="text-align: right;"><b>'._K_DATE.': '.date(_TIMESTRING, $cregdate).'</b></td></tr><tr><td colspan="2"><hr></td></tr>';
+			.'<body><table style="width: 640px; margin: 5%;"><tr><td colspan="2"><hr></td></tr><tr><td style="width: 40%;"><img src="'.img_find('logos/'.$conf['site_logo']).'" alt="'.$conf['sitename'].'"></td><td style="text-align: right;">'.filterReplaceText(filterMarkdown($conf['shop']['shopinfo'], $conf['name'], false), $conf['name']).'</td></tr><tr><td colspan="2"><hr></td></tr><tr><td colspan="2"><br><p>'._C_PIN.': '.$cname.'<br>'._C_PIP.': '.$caddr.'<br>'._C_TEL.': '.$cphone.'<br>'._C_MAIL.': '.$cemail.'</p></td></tr><tr><td colspan="2"><hr></td></tr><tr><td><b>'._C_NAIM.'</b></td><td style="text-align: right;"><b>'._K_DATE.': '.date(_TIMESTRING, $cregdate).'</b></td></tr><tr><td colspan="2"><hr></td></tr>';
 			$cenddate = ($cenddate != '0') ? date(_TIMESTRING, $cenddate) : _UNLIMITED;
 			$cont .= '<tr><td>'._PRODUCT.':</td><td style="text-align: right;">'.$stitle.'</td></tr>'
 			.'<tr><td>'._SDOM.':</td><td style="text-align: right;">'.$cwebsite.'</td></tr>'
@@ -444,7 +444,7 @@ function rech(): void {
 			.'<tr><td colspan="2"><hr></td></tr>'
 			.'<tr><td colspan="2">'.filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']).'</td></tr>'
 			.'<tr><td colspan="2"><hr></td></tr>'
-			.'<tr><td colspan="2" style="text-align: right;"><b>'._PREIS_TEXT.': '.$ppreis.' '.$conf['shop']['valute'].'</b></td></tr>'
+			.'<tr><td colspan="2" style="text-align: right;"><b>'._PREIS_TEXT.': '.$pprice.' '.$conf['shop']['valute'].'</b></td></tr>'
 			.'</table></body></html>';
 			echo $cont;
 		}
@@ -457,31 +457,31 @@ function partners(): void {
 	global $db, $conf, $stop;
 	if (is_user() && is_active('shop')) {
 		$userinfo = getUserInfo();
-		$uid = intval($userinfo['user_id']);
-		$smail = $userinfo['user_email'];
-		$sdom = $userinfo['user_website'];
+		$uid = intval($userinfo['id']);
+		$smail = $userinfo['email'];
+		$sdom = $userinfo['website'];
 		setHead(['title' => _PARTNERINFO]);
 		$cont = navigate(_PARTNERINFO);
 		$cont .= getUserNav();
-		$result = $db->getSqlQuery('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id_user = :user_id', ['user_id' => $uid]);
+		$result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE uid = :user_id', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
-			[$paid, $puid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
+			[$paid, $puid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
 			if ($paactive == 2) {
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PARTNERADD_W]);
 			} elseif ($paactive == 0) {
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _PARTNER_AUS]);
 			} else {
-				$result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.id_partner = :user_id AND c.active != 2 ORDER BY c.id ASC', ['user_id' => $uid]);
+				$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.part = :user_id AND c.status != 2 ORDER BY c.id ASC', ['user_id' => $uid]);
 				$partsum = $partsumges = $a = 0;
 				if ($db->getSqlRowCount($result) > 0) {
 					$content = '';
-					while([$cid, $cuid, $cprod, $cpart, $proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $ppreis] = $db->getSqlRow($result)) {
-						$partsum = $ppreis / 100 * $proz;
+					while([$cid, $cuid, $cprod, $cpart, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $pprice] = $db->getSqlRow($result)) {
+						$partsum = $pprice / 100 * $proz;
 						$partsumges += $partsum;
 						$content .= '<tr id="'.$cid.'">'
 						.'<td><a href="#'.$cid.'" title="'.$cid.'" class="sl_pnum">'.$cid.'</a></td>'
 						.'<td>'.user_info($nick).'</td>'
-						.'<td>'.title_tip(_PREIS.': '.$ppreis.' '.$conf['shop']['valute'].'<br>'._DATE.' : '.date(_TIMESTRING, $cregdate)).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
+						.'<td>'.title_tip(_PREIS.': '.$pprice.' '.$conf['shop']['valute'].'<br>'._DATE.' : '.date(_TIMESTRING, $cregdate)).'<span title="'.$stitle.'">'.cutstr($stitle, 35).'</span></td>'
 						.'<td>'.$proz.' %</td>'
 						.'<td>'.$partsum.' '.$conf['shop']['valute'].'</td></tr>';
 						$a++;
@@ -505,7 +505,7 @@ function partners(): void {
 			$cont .= setTemplateBasic('open');
 			$cont .= '<form method="post" action="index.php?name='.$conf['name'].'"><table class="sl_table_form">'
 			.'<tr><td>'._C_PIN.':</td><td><input type="text" name="paname" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_PINB.'" required></td></tr>'
-			.'<tr><td>'._C_PIP.':</td><td><input type="text" name="paadres" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_PIPB.'" required></td></tr>'
+			.'<tr><td>'._C_PIP.':</td><td><input type="text" name="paaddr" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_PIPB.'" required></td></tr>'
 			.'<tr><td>'._C_TEL.':</td><td><input type="text" name="paphone" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_TELB.'" required></td></tr>'
 			.'<tr><td>'._EMAIL.':</td><td><input type="email" value="'.$smail.'" name="paemail" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'" required></td></tr>'
 			.'<tr><td>'._SITE.':</td><td><input type="url" value="'.$sdom.'" name="pawebsite" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SDOMB.'"></td></tr>'
@@ -526,16 +526,16 @@ function partners_send(): void {
 	if (is_user() && is_active('shop')) {
 		$puid = getVar('post', 'puid', 'num');
 		$paname = getVar('post', 'paname', 'text');
-		$paadres = getVar('post', 'paadres', 'text');
+		$paaddr = getVar('post', 'paaddr', 'text');
 		$paphone = getVar('post', 'paphone', 'text');
 		$paemail = getVar('post', 'paemail', 'text');
 		$pawebsite = getVar('post', 'pawebsite', 'url');
 		$pawebmoney = getVar('post', 'pawebmoney', 'text');
 		$papaypal = getVar('post', 'papaypal', 'text');
 		checkemail($paemail);
-		if (!$paname || !$paadres || !$paphone) $stop[] = _ERROR_ALL;
+		if (!$paname || !$paaddr || !$paphone) $stop[] = _ERROR_ALL;
 		if (!$stop) {
-			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :puid, :paname, :paadres, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['puid' => $puid, 'paname' => $paname, 'paadres' => $paadres, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
+			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, :puid, :paname, :paaddr, :paphone, :paemail, :pawebsite, :pawebmoney, :papaypal, \''.time().'\', \'0\', \'0\', \'2\')', ['puid' => $puid, 'paname' => $paname, 'paaddr' => $paaddr, 'paphone' => $paphone, 'paemail' => $paemail, 'pawebsite' => $pawebsite, 'pawebmoney' => $pawebmoney, 'papaypal' => $papaypal]);
 			setRedirect('index.php?name='.$conf['name'].'&op=partners');
 		} else {
 			partners();

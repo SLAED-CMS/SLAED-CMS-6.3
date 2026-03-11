@@ -140,9 +140,9 @@ function add_admin() {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_admins VALUES (NULL, '".$aname."', 'Admin', '".$aurl."', '".$aemail."', '".$apwd."', '1', '".$aeditor."', '1', '', '".$alang."', '".$aip."', now(), now())");
             if ($auser_new == 1) {
                 $auser_avatar = 'default/00.gif';
-                $user_exist = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB."_users WHERE user_name = '".$aname."'"));
-                if ($user_exist) $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_users WHERE user_name='".$aname."'");
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_users (user_id, user_name, user_email, user_website, user_avatar, user_regdate, user_password, user_lang, user_last_ip, user_block, user_warnings, user_field) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."', '', '', '')");
+                $user_exist = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB."_users WHERE name = '".$aname."'"));
+                if ($user_exist) $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_users WHERE name='".$aname."'");
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_users (id, name, email, website, avatar, regdate, password, lang, lastip, block, warnings, field) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."', '', '', '')");
             }
             header('Location: '.$afile.'.php');
         } else {
@@ -169,7 +169,7 @@ function check_admin() {
         $_SESSION[$conf['admin_c']] = $info;
         $ip = getip();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_session WHERE uname = '".$ip."'");
-        $db->getSqlQuery('UPDATE '.PREFIX_DB."_admins SET ip = '".$ip."', lastvisit = now() WHERE id = '".$aid."'");
+        $db->getSqlQuery('UPDATE '.PREFIX_DB."_admins SET ip = '".$ip."', lvisit = now() WHERE id = '".$aid."'");
         login_report(1, 1, $name, '');
         header('Location: '.$afile.'.php');
     } else {

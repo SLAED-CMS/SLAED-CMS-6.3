@@ -78,7 +78,7 @@ function mwhois(): void {
 	$cont .= setTemplateBasic('open');
 	$cont .= $licensopt;
 	if ($option == 'licens' && !namecheck($domainlicens)) {
-		$result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE active != \'2\'');
+		$result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE status != \'2\'');
 		$list = [];
 		while ([$website] = $db->getSqlRow($result)) $list[] = $website;
 		$list = implode(',', $list);

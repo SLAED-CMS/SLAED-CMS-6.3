@@ -12,9 +12,9 @@ if (!defined('BLOCK_FILE')) {
 global $db, $locale, $conf;
 if (is_user()) {
 	$userinfo = getUserInfo();
-	$uname = $userinfo['user_name'];
-	$user_id = intval($userinfo['user_id']);
-	$user_avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['user_avatar'])) ? $userinfo['user_avatar'] : 'default/00.gif';
+	$uname = $userinfo['name'];
+	$user_id = intval($userinfo['id']);
+	$user_avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['avatar'])) ? $userinfo['avatar'] : 'default/00.gif';
 	$content = '<span class="sl_pos_center"><a title="'.$uname.'" class="sl_avatar" style="background-image: url('.$conf['users']['adirectory'].'/'.$user_avatar.');"></a><br><b>'._HELLO.',<br>'.$uname.'</b></span>';
 	if ($conf['privat']['act']) {
 		list($prin) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_privat WHERE uidin='".$user_id."' AND status = '0'"));

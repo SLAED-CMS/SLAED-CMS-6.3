@@ -56,7 +56,7 @@ function clients(): void {
 function download(): void {
     global $db, $user, $stop, $info;
     $uid = (int)($user[0] ?? 0);
-    $result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $uid]);
+    $result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE status = 1 AND uid = :user_id', ['user_id' => $uid]);
     if (is_user() && $db->getSqlRowCount($result) > 0) {
         $id = getVar('get', 'id', 'num');
         [$pid, $url, $num] = $db->getSqlRow($db->getSqlQuery('SELECT id, url, num FROM '.PREFIX_DB.'_clients_down WHERE status != 0 AND id = :id', ['id' => $id]));
@@ -127,7 +127,7 @@ function hidden(string $path, string $ipath, string $code): void {
 function generator(string $path = ''): void {
     global $db, $user, $stop;
     $uid = (int)($user[0] ?? 0);
-    $result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE active = 1 AND id_user = :user_id', ['user_id' => $uid]);
+    $result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE status = 1 AND uid = :user_id', ['user_id' => $uid]);
     if (is_user() && $db->getSqlRowCount($result) > 0) {
         $domains = [];
         $code = '';

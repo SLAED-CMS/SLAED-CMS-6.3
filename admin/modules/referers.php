@@ -43,12 +43,12 @@ function referers(): void {
         3 => ['link', 'hits'], 4 => ['link', 'link'],
         5 => ['name', 'hits'], 6 => ['name', 'name'],
         7 => ['ip', 'hits'], 8 => ['ip', 'ip'],
-        9 => ['date', 'hits'], 10 => ['date', 'date']
+        9 => ['time', 'hits'], 10 => ['time', 'time']
     ];
-    $count = $sortmap[$sort][0] ?? 'date';
-    $ordby = $sortmap[$sort][1] ?? 'date';
+    $count = $sortmap[$sort][0] ?? 'time';
+    $ordby = $sortmap[$sort][1] ?? 'time';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, date FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
+    $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     setHead();
     $cont = navi(0, 0, 0, 0);
     if ($db->getSqlRowCount($result) > 0) {

@@ -49,17 +49,17 @@ function add(): void {
     .'<option value="36000">10 '._HOUR.'.</option>'
     .'<option value="86400">24 '._HOUR.'.</option></select></td></tr>'
     .'<tr><td>'._FILENAME.':<div class="sl_small">'._FILENAMEIN.'</div></td><td>'
-    .'<select name="blockfile" class="sl_form">'
+    .'<select name="bfile" class="sl_form">'
     .'<option value="" selected>'._NONE.'</option>';
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE blockfile = :file', ['file' => $file])) == 0) $cont .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
+            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $cont .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
         }
     }
     $cont .= '</select></td></tr>'
     .'<tr><td>'._CONTENT.':</td><td>'.textarea('1', 'content', '', 'all', '15', _CONTENT, '').'</td></tr>'
-    .'<tr><td>'._POSITION.':</td><td><select name="bposition" class="sl_form">'
+    .'<tr><td>'._POSITION.':</td><td><select name="bpos" class="sl_form">'
     .'<option value="l">'._LEFT.'</option>'
     .'<option value="c">'._CENTERUP.'</option>'
     .'<option value="d">'._CENTERDOWN.'</option>'
@@ -82,8 +82,8 @@ function add(): void {
     .'<tr><td><input type="checkbox" name="blockwhere[]" value="all"> <b>'._BLOCK_ALL.'</b></td><td><input type="checkbox" name="blockwhere[]" value="otricanie"> <b>'._DENYING.'</b></td></tr>'
     .'<tr><td><input type="checkbox" name="blockwhere[]" value="infly"> <b>'._INFLY.'</b></td><td><input type="checkbox" name="blockwhere[]" value="flyfix"> <b>'._FLY_FIX.'</b></td></tr></table>'
     .'</td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="blanguage" class="sl_form">'.language().'</select></td></tr>';
-    $cont .= '<tr><td>'._ACTIVATE2.'</td><td>'.radio_form(1, 'active').'</td></tr>'
+    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="blang" class="sl_form">'.language().'</select></td></tr>';
+    $cont .= '<tr><td>'._ACTIVATE2.'</td><td>'.radio_form(1, 'status').'</td></tr>'
     .'<tr><td>'._EXPIRATION.':<div class="sl_small">'._CONFINES.'</div></td><td><input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required></td></tr>'
     .'<tr><td>'._AFTEREXPIRATION.':</td><td><select name="action" class="sl_form">'
     .'<option value="d">'._DEACTIVATE.'</option>'
@@ -123,7 +123,7 @@ function fileedit(): void {
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE blockfile = :file', ['file' => $file])) == 0) $cont .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
+            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $cont .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
         }
     }
     $cont .= '</select></td></tr>'
@@ -137,11 +137,11 @@ function fix(): void {
     global $db, $afile;
     $pos = ['b', 'c', 'd', 'f', 'l', 'r'];
     foreach ($pos as $val) {
-        $result = $db->getSqlQuery('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE bposition = :val ORDER BY weight ASC', ['val' => $val]);
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE bpos = :val ORDER BY weight ASC', ['val' => $val]);
         $weight = 0;
         while ([$bid] = $db->getSqlRow($result)) {
             $weight++;
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $bid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $bid]);
         }
     }
     setRedirect($afile.'.php?name=blocks');
@@ -152,30 +152,30 @@ function addsave(): void {
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
     $url = getVar('post', 'url', 'url', '');
-    $bposition = getVar('post', 'bposition', 'var', '');
-    $active = getVar('post', 'active', 'num', 0);
+    $bpos = getVar('post', 'bpos', 'var', '');
+    $active = getVar('post', 'status', 'num', 0);
     $refresh = getVar('post', 'refresh', 'num', 0);
     $headline = getVar('post', 'headline', 'url', '');
-    $blanguage = getVar('post', 'blanguage', 'var', '');
-    $blockfile = getVar('post', 'blockfile', 'var', '');
+    $blang = getVar('post', 'blang', 'var', '');
+    $bfile = getVar('post', 'bfile', 'var', '');
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
     $url = ($headline) ? $headline : $url;
     $blockwhere = getVar('post', 'blockwhere', 'var', []);
-    [$weight] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC', ['bposition' => $bposition]));
+    [$weight] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC', ['bpos' => $bpos]));
     $weight++;
     $bkey = '';
     $btime = '';
-    if ($blockfile != '') {
+    if ($bfile != '') {
         $url = '';
-        if ($title == '') $title = str_replace('_', ' ', str_replace(['block-', '.php'], '', $blockfile));
+        if ($title == '') $title = str_replace('_', ' ', str_replace(['block-', '.php'], '', $bfile));
     }
     if ($url) {
         $btime = time();
         $content = rss_read($url, 1);
     }
-    if (($content == '') && ($blockfile == '')) {
+    if (($content == '') && ($bfile == '')) {
         setHead();
         echo navi(0, 1, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _RSSFAIL]).setTemplateBasic('open').'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.setTemplateBasic('close');
         setFoot();
@@ -191,8 +191,8 @@ function addsave(): void {
             $which = (in_array('home', $blockwhere)) ? 'home' : $which;
             if ($which == '') $which = implode(',', $blockwhere);
         }
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bposition, :weight, :active, :refresh, :btime, :blanguage, :blockfile, :view, :expire, :action, :which)', [
-            'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
+        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_blocks VALUES (NULL, :bkey, :title, :content, :url, :bpos, :weight, :active, :refresh, :btime, :blang, :bfile, :view, :expire, :action, :which)', [
+            'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'btime' => $btime, 'blang' => $blang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'which' => $which
         ]);
         setRedirect($afile.'.php?name=blocks');
     }
@@ -268,11 +268,11 @@ function edit(): void {
     global $db, $afile, $conf;
     setHead();
     $cont = navi(0, 1, 0, 0);
-    $bid = getVar('get', 'bid', 'num');
-    [$bkey, $title, $content, $url, $bposition, $weight, $active, $refresh, $blanguage, $blockfile, $view, $expire, $action, $which] = $db->getSqlRow($db->getSqlQuery('SELECT bkey, title, content, url, bposition, weight, active, refresh, blanguage, blockfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE bid = :bid', ['bid' => $bid]));
+    $bid = getVar('get', 'id', 'num');
+    [$bkey, $title, $content, $url, $bpos, $weight, $active, $refresh, $blang, $bfile, $view, $expire, $action, $which] = $db->getSqlRow($db->getSqlQuery('SELECT bkey, title, content, url, bpos, weight, status, refresh, blang, bfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
     if ($url != '') {
         $type = '('._BLOCKRSS.')';
-    } elseif ($blockfile != '') {
+    } elseif ($bfile != '') {
         $type = '('._BLOCKFILE.')';
     } else {
         $type = '('._BLOCKHTML.')';
@@ -281,12 +281,12 @@ function edit(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.':<div class="sl_small">'._ADDCONST.'</div></td><td><input type="text" name="title" maxlength="50" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>';
-    if ($blockfile != '') {
-        $cont .= '<tr><td>'._FILENAME.':</td><td><select name="blockfile" class="sl_form">';
+    if ($bfile != '') {
+        $cont .= '<tr><td>'._FILENAME.':</td><td><select name="bfile" class="sl_form">';
         $files = scandir('blocks');
         foreach ($files as $file) {
             if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-                $selected = ($blockfile == $file) ? ' selected' : '';
+                $selected = ($bfile == $file) ? ' selected' : '';
                 $cont .= '<option value="'.$file.'"'.$selected.'>'.$matches[0].'</option>';
             }
         }
@@ -315,13 +315,13 @@ function edit(): void {
             $cont .= '<tr><td>'._CONTENT.':</td><td>'.textarea('1', 'content', $content, 'all', '15', _CONTENT, '').'</td></tr>';
         }
     }
-    $sel1 = ($bposition == 'l') ? ' selected' : '';
-    $sel2 = ($bposition == 'c') ? ' selected' : '';
-    $sel3 = ($bposition == 'r') ? ' selected' : '';
-    $sel4 = ($bposition == 'd') ? ' selected' : '';
-    $sel5 = ($bposition == 'b') ? ' selected' : '';
-    $sel6 = ($bposition == 'f') ? ' selected' : '';
-    $cont .= '<tr><td>'._POSITION.':</td><td><select name="bposition" class="sl_form">'
+    $sel1 = ($bpos == 'l') ? ' selected' : '';
+    $sel2 = ($bpos == 'c') ? ' selected' : '';
+    $sel3 = ($bpos == 'r') ? ' selected' : '';
+    $sel4 = ($bpos == 'd') ? ' selected' : '';
+    $sel5 = ($bpos == 'b') ? ' selected' : '';
+    $sel6 = ($bpos == 'f') ? ' selected' : '';
+    $cont .= '<tr><td>'._POSITION.':</td><td><select name="bpos" class="sl_form">'
     .'<option value="l"'.$sel1.'>'._LEFT.'</option>'
     .'<option value="c"'.$sel2.'>'._CENTERUP.'</option>'
     .'<option value="d"'.$sel4.'>'._CENTERDOWN.'</option>'
@@ -353,7 +353,7 @@ function edit(): void {
     .'<tr><td><input type="checkbox" name="blockwhere[]" value="all"'.$cel.'> <b>'._BLOCK_ALL.'</b></td><td><input type="checkbox" name="blockwhere[]" value="otricanie"'.$oel.'> <b>'._DENYING.'</b></td></tr>'
     .'<tr><td><input type="checkbox" name="blockwhere[]" value="infly"'.$fel.'> <b>'._INFLY.'</b></td><td><input type="checkbox" name="blockwhere[]" value="flyfix"'.$xel.'> <b>'._FLY_FIX.'</b></td></tr></table>'
     .'</td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="blanguage" class="sl_form">'.language($blanguage).'</select></td></tr>';
+    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="blang" class="sl_form">'.language($blang).'</select></td></tr>';
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
@@ -366,7 +366,7 @@ function edit(): void {
     }
     $selact1 = ($action == 'd') ? ' selected' : '';
     $selact2 = ($action == 'r') ? ' selected' : '';
-    $cont .= '<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($active, 'active').'</td></tr>'
+    $cont .= '<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($active, 'status').'</td></tr>'
     .'<tr><td>'._EXPIRATION.':<div class="sl_small">'._CONFINES.'</div></td><td>'.$expire_text.'</td></tr>'
     .'<tr><td>'._AFTEREXPIRATION.':</td><td><select name="action" class="sl_form">'
     .'<option value="d"'.$selact1.'>'._DEACTIVATE.'</option>'
@@ -379,7 +379,7 @@ function edit(): void {
     }
     $cont .= '</select></td></tr>'
     .'<tr><td colspan="2" class="sl_center">'
-    .'<input type="hidden" name="oldposition" value="'.$bposition.'">'
+    .'<input type="hidden" name="oldposition" value="'.$bpos.'">'
     .'<input type="hidden" name="bid" value="'.$bid.'">'
     .'<input type="hidden" name="newexpire" value="'.$newexpire.'">'
     .'<input type="hidden" name="bkey" value="'.$bkey.'">'
@@ -401,12 +401,12 @@ function editsave(): void {
     $content = getVar('post', 'content', 'text', '');
     $url = getVar('post', 'url', 'url', '');
     $oldposition = getVar('post', 'oldposition', 'var', '');
-    $bposition = getVar('post', 'bposition', 'var', '');
-    $active = getVar('post', 'active', 'num', 0);
+    $bpos = getVar('post', 'bpos', 'var', '');
+    $active = getVar('post', 'status', 'num', 0);
     $refresh = getVar('post', 'refresh', 'num', 0);
     $weight = getVar('post', 'weight', 'num', 0);
-    $blanguage = getVar('post', 'blanguage', 'var', '');
-    $blockfile = getVar('post', 'blockfile', 'var', '');
+    $blang = getVar('post', 'blang', 'var', '');
+    $bfile = getVar('post', 'bfile', 'var', '');
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
@@ -431,73 +431,73 @@ function editsave(): void {
         if (in_array('ihome', $blockwhere) && $which != 'home') {
             $which = 'ihome,'.str_replace(',ihome', '', $which);
         }
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET which = :which WHERE bid = :bid', ['which' => $which, 'bid' => $bid]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET which = :which WHERE id = :bid', ['which' => $which, 'bid' => $bid]);
     } else {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET which = \'\' WHERE bid = :bid', ['bid' => $bid]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET which = \'\' WHERE id = :bid', ['bid' => $bid]);
     }
     if ($url) {
         $bkey = '';
         $content = rss_read($url, 1);
-        if ($oldposition != $bposition) {
-            $result = $db->getSqlQuery('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
+        if ($oldposition != $bpos) {
+            $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
             $fweight = $weight;
             $oweight = $weight;
             while ([$nbid] = $db->getSqlRow($result)) {
                 $weight++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $nbid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
             }
-            $result2 = $db->getSqlQuery('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bposition = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldposition]);
+            $result2 = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldposition]);
             while ([$obid] = $db->getSqlRow($result2)) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE bid = :bid', ['oweight' => $oweight, 'bid' => $obid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE id = :bid', ['oweight' => $oweight, 'bid' => $obid]);
                 $oweight++;
             }
-            [$lastw] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC LIMIT 0,1', ['bposition' => $bposition]));
+            [$lastw] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC LIMIT 0,1', ['bpos' => $bpos]));
             if ($lastw <= $fweight) {
                 $lastw++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bposition = :bposition, weight = :weight, active = :active, refresh = :refresh, blanguage = :blanguage, blockfile = :blockfile, view = :view WHERE bid = :bid', [
-                    'title' => $title, 'content' => $content, 'bposition' => $bposition, 'weight' => $lastw, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, blang = :blang, bfile = :bfile, view = :view WHERE id = :bid', [
+                    'title' => $title, 'content' => $content, 'bpos' => $bpos, 'weight' => $lastw, 'active' => $active, 'refresh' => $refresh, 'blang' => $blang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
                 ]);
             } else {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bposition = :bposition, weight = :weight, active = :active, refresh = :refresh, blanguage = :blanguage, blockfile = :blockfile, view = :view WHERE bid = :bid', [
-                    'title' => $title, 'content' => $content, 'bposition' => $bposition, 'weight' => $fweight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, blang = :blang, bfile = :bfile, view = :view WHERE id = :bid', [
+                    'title' => $title, 'content' => $content, 'bpos' => $bpos, 'weight' => $fweight, 'active' => $active, 'refresh' => $refresh, 'blang' => $blang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
                 ]);
             }
         } else {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bposition = :bposition, weight = :weight, active = :active, refresh = :refresh, blanguage = :blanguage, blockfile = :blockfile, view = :view WHERE bid = :bid', [
-                'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, blang = :blang, bfile = :bfile, view = :view WHERE id = :bid', [
+                'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blang' => $blang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
             ]);
         }
         setRedirect($afile.'.php?name=blocks');
     } else {
-        if ($oldposition != $bposition) {
-            $result = $db->getSqlQuery('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
+        if ($oldposition != $bpos) {
+            $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight >= :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
             $fweight = $weight;
             $oweight = $weight;
             while ([$nbid] = $db->getSqlRow($result)) {
                 $weight++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $nbid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
             }
-            $result2 = $db->getSqlQuery('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bposition = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldposition]);
+            $result2 = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :oweight AND bpos = :oldposition', ['oweight' => $oweight, 'oldposition' => $oldposition]);
             while ([$obid] = $db->getSqlRow($result2)) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE bid = :bid', ['oweight' => $oweight, 'bid' => $obid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :oweight WHERE id = :bid', ['oweight' => $oweight, 'bid' => $obid]);
                 $oweight++;
             }
-            [$lastw] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bposition = :bposition ORDER BY weight DESC LIMIT 0,1', ['bposition' => $bposition]));
+            [$lastw] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC LIMIT 0,1', ['bpos' => $bpos]));
             if ($lastw <= $fweight) {
                 $lastw++;
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bposition = :bposition, weight = :weight, active = :active, refresh = :refresh, blanguage = :blanguage, blockfile = :blockfile, view = :view WHERE bid = :bid', [
-                    'title' => $title, 'content' => $content, 'bposition' => $bposition, 'weight' => $lastw, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, blang = :blang, bfile = :bfile, view = :view WHERE id = :bid', [
+                    'title' => $title, 'content' => $content, 'bpos' => $bpos, 'weight' => $lastw, 'active' => $active, 'refresh' => $refresh, 'blang' => $blang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
                 ]);
             } else {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bposition = :bposition, weight = :weight, active = :active, refresh = :refresh, blanguage = :blanguage, blockfile = :blockfile, view = :view WHERE bid = :bid', [
-                    'title' => $title, 'content' => $content, 'bposition' => $bposition, 'weight' => $fweight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'bid' => $bid
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET title = :title, content = :content, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, blang = :blang, bfile = :bfile, view = :view WHERE id = :bid', [
+                    'title' => $title, 'content' => $content, 'bpos' => $bpos, 'weight' => $fweight, 'active' => $active, 'refresh' => $refresh, 'blang' => $blang, 'bfile' => $bfile, 'view' => $view, 'bid' => $bid
                 ]);
             }
         } else {
             if ($expire == '') $expire = 0;
             if ($newexpire == 1 && $expire != 0) $expire = time() + ($expire * 86400);
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bposition = :bposition, weight = :weight, active = :active, refresh = :refresh, blanguage = :blanguage, blockfile = :blockfile, view = :view, expire = :expire, action = :action WHERE bid = :bid', [
-                'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bposition' => $bposition, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blanguage' => $blanguage, 'blockfile' => $blockfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET bkey = :bkey, title = :title, content = :content, url = :url, bpos = :bpos, weight = :weight, status = :active, refresh = :refresh, blang = :blang, bfile = :bfile, view = :view, expire = :expire, action = :action WHERE id = :bid', [
+                'bkey' => $bkey, 'title' => $title, 'content' => $content, 'url' => $url, 'bpos' => $bpos, 'weight' => $weight, 'active' => $active, 'refresh' => $refresh, 'blang' => $blang, 'bfile' => $bfile, 'view' => $view, 'expire' => $expire, 'action' => $action, 'bid' => $bid
             ]);
         }
         setRedirect($afile.'.php?name=blocks');
@@ -509,20 +509,20 @@ function change(): void {
     $id = getVar('get', 'id', 'num');
     $act = getVar('get', 'act', 'num', 0);
     $active = ($act) ? 0 : 1;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET active = :active WHERE bid = :id', ['active' => $active, 'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
     setRedirect($afile.'.php?name=blocks');
 }
 
 function del(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    [$bposition, $weight] = $db->getSqlRow($db->getSqlQuery('SELECT bposition, weight FROM '.PREFIX_DB.'_blocks WHERE bid = :id', ['id' => $id]));
-    $result = $db->getSqlQuery('SELECT bid FROM '.PREFIX_DB.'_blocks WHERE weight > :weight AND bposition = :bposition', ['weight' => $weight, 'bposition' => $bposition]);
+    [$bpos, $weight] = $db->getSqlRow($db->getSqlQuery('SELECT bpos, weight FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]));
+    $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_blocks WHERE weight > :weight AND bpos = :bpos', ['weight' => $weight, 'bpos' => $bpos]);
     while ([$nbid] = $db->getSqlRow($result)) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE bid = :bid', ['weight' => $weight, 'bid' => $nbid]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :weight WHERE id = :bid', ['weight' => $weight, 'bid' => $nbid]);
         $weight++;
     }
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE bid = :id', ['id' => $id]);
+    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=blocks');
 }
 

@@ -125,7 +125,7 @@ function main(): void {
         <div class="grid col-block">
             <h3 title="'._NEWS.'" class="font heading-1">ÐÐ¾Ð²Ð¾ÑÑ‚Ð¸</h3>
             <ul class="ms-list">';
-            $result = $db->getSqlQuery('SELECT s.sid, s.catid, s.title, s.time, s.hometext, c.title, c.description FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB."_categories AS c ON (s.catid=c.id) WHERE time <= now() AND status!='0' ORDER BY time DESC LIMIT 3");
+            $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.hometext, c.title, c.description FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB."_categories AS c ON (s.cid=c.id) WHERE time <= now() AND status!='0' ORDER BY time DESC LIMIT 3");
             while([$sid, $catid, $title, $time, $hometext, $ctitle, $cdesc] = $db->getSqlRow($result)) {
                 $linkstrip = cutstr($title, 45);
                 if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
@@ -151,7 +151,7 @@ function main(): void {
         <div class="grid col-block">
             <h3 title="'._FILES.'" class="font heading-1">Ð¤Ð°Ð¹Ð»Ñ‹</h3>
             <ul class="ms-list">';
-            $result = $db->getSqlQuery('SELECT s.lid, s.cid, s.title, s.description, s.date, c.title, c.description FROM '.PREFIX_DB.'_files AS s LEFT JOIN '.PREFIX_DB."_categories AS c ON (s.cid=c.id) WHERE date <= now() AND status!='0' ORDER BY date DESC LIMIT 3");
+            $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.description, s.time, c.title, c.description FROM '.PREFIX_DB.'_files AS s LEFT JOIN '.PREFIX_DB."_categories AS c ON (s.cid=c.id) WHERE time <= now() AND status!='0' ORDER BY time DESC LIMIT 3");
             while([$sid, $catid, $title, $hometext, $time, $ctitle, $cdesc] = $db->getSqlRow($result)) {
                 $linkstrip = cutstr($title, 45);
                 if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {

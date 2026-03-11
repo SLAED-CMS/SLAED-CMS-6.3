@@ -17,7 +17,7 @@ function forum(): void {
     $id = $cat;
     $params = ['mod' => $mod];
     if ($id) {
-        $where = 'WHERE c.modul = :mod AND (c.parentid = :parentid OR c.id = :cid)';
+        $where = 'WHERE c.modul = :mod AND (c.parent = :parentid OR c.id = :cid)';
         $params['parentid'] = $id;
         $params['cid'] = $id;
         if ($conf['multilingual']) {
@@ -30,7 +30,7 @@ function forum(): void {
     } else {
         $where = 'WHERE c.modul = :mod';
     }
-    $result = $db->getSqlQuery('SELECT c.id, c.title, c.description, c.img, c.parentid, c.cstatus, c.ordern, c.topics, c.posts, c.lpost_id, c.auth_view, c.auth_read, c.auth_post, c.auth_reply, c.auth_edit, c.auth_delete, c.auth_mod, f.title, f.l_uid, f.l_name, f.l_id, f.l_time FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost_id = f.id) '.$where.' ORDER BY c.ordern', $params);
+    $result = $db->getSqlQuery('SELECT c.id, c.title, c.description, c.img, c.parent, c.status, c.ordern, c.topics, c.posts, c.lpost, c.auth_view, c.auth_read, c.auth_post, c.auth_reply, c.auth_edit, c.auth_delete, c.auth_mod, f.title, f.luid, f.lname, f.lpost, f.ltime FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost = f.id) '.$where.' ORDER BY c.ordern', $params);
     while ([$cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime] = $db->getSqlRow($result)) {
         $massiv[] = [$cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime];
         unset($cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime);
@@ -44,7 +44,7 @@ function forum(): void {
         $isdelete = is_acess($massiv[0][15]);
         $ismod = is_acess($massiv[0][16]);
         $userinfo = getUserInfo();
-        $ulastvisit = (is_array($userinfo) && !empty($userinfo['user_lastvisit'])) ? intval($userinfo['user_lastvisit']) : 0;
+        $ulastvisit = (is_array($userinfo) && !empty($userinfo['lastvis'])) ? intval($userinfo['lastvis']) : 0;
         $pagetitle = ($id) ? _FORUM.' '.$massiv[0][1] : _FORUM;
         setHead(['title' => $pagetitle]);
         $a = 0;
@@ -119,7 +119,7 @@ function forum(): void {
             if (!$a) {
                 if ($isview) {
                     $cat = intval($id);
-                    $lang = ($conf['multilingual']) ? 'AND (c.language = :locale OR c.language = \'\') AND s.catid = :cat' : 'AND s.catid = :cat';
+                    $lang = ($conf['multilingual']) ? 'AND (c.language = :locale OR c.language = \'\') AND s.cid = :cat' : 'AND s.cid = :cat';
                     $listparams = ['cat' => $cat];
                     if ($conf['multilingual']) {
                         $listparams['locale'] = $locale;
@@ -129,7 +129,7 @@ function forum(): void {
                     $num = getVar('req', 'num', 'num') ?: 1;
                     $offset = ($num-1) * $listnum;
                     $offset = intval($offset);
-                    $result = $db->getSqlQuery('SELECT s.id, s.catid, s.name, s.title, s.time, s.hometext, s.comments, s.counter, s.score, s.ratings, s.ip_send, s.l_uid, s.l_name, s.l_id, s.l_time, s.status, c.id, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.user_id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.l_time DESC LIMIT '.$offset.', '.$listnum, $listparams);
+                    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.hometext, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $listparams);
                     $newtop = ($istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$massiv[0][0].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
                     $cont = setTemplateBasic('forum-list-open', ['{%button%}' => $newtop, '{%cat%}' => '<a href="index.php?name='.$mod.'&amp;cat='.$massiv[0][0].'" title="'.$massiv[0][1].'">'.$massiv[0][1].'</a>']);
                     if ($db->getSqlRowCount($result) > 0) {
@@ -199,8 +199,8 @@ function forum(): void {
                     } else {
                         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
                     }
-                    $ordernum = (is_moder($conf['name'])) ? "pid = '0' AND catid = '".$cat."'" : "pid = '0' AND catid = '".$cat."' AND time <= NOW() AND status != '0'";
-                    $pnum = setArticleNumbers('forum-pagenum', $conf['name'], $listnum, 'cat='.$cat.'&', 'id', '_forum', 'catid', $ordernum, $conf['forum']['pnum']);
+                    $ordernum = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$cat."'" : "pid = '0' AND cid = '".$cat."' AND time <= NOW() AND status != '0'";
+                    $pnum = setArticleNumbers('forum-pagenum', $conf['name'], $listnum, 'cat='.$cat.'&', 'id', '_forum', 'cid', $ordernum, $conf['forum']['pnum']);
                     $cont .= setTemplateBasic('forum-list-close', ['{%button%}' => $newtop, '{%pager%}' => $pnum]);
                     $infov = ($isview) ? sprintf(_ACINFOV, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOV, '<b>'._NOTCAN.'</b>');
                     $infor = ($isread) ? sprintf(_ACINFOR, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOR, '<b>'._NOTCAN.'</b>');
@@ -255,7 +255,7 @@ function view(): void {
         }
         $word = getVar('req', 'word', 'word');
         $orderw = (is_moder($conf['name'])) ? 'WHERE (s.id = :id1 OR s.pid = :id2)' : "WHERE (s.id = :id1 OR s.pid = :id2) AND s.time <= NOW() AND s.status != '0'";
-        $result = $db->getSqlQuery('SELECT s.id, s.pid, s.catid, s.uid, s.name, s.title, s.time, s.hometext, s.field, s.comments, s.counter, s.score, s.ratings, s.ip_send, s.e_uid, s.e_ip_send, s.e_time, s.status, c.title, c.auth_read, c.auth_post, c.auth_reply, c.auth_edit, c.auth_delete, c.auth_mod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid=c.id) '.$orderw.' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum, $orderparams);
+        $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.name, s.title, s.time, s.hometext, s.field, s.comments, s.counter, s.score, s.ratings, s.ip, s.euid, s.eip, s.etime, s.status, c.title, c.auth_read, c.auth_post, c.auth_reply, c.auth_edit, c.auth_delete, c.auth_mod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$orderw.' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum, $orderparams);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET counter=counter+1 WHERE id = :id', ['id' => $id]);
         while ([$sid, $pid, $catid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm] = $db->getSqlRow($result)) {
             $cmassiv[] = [$sid, $pid, $catid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm];
@@ -263,7 +263,7 @@ function view(): void {
             unset($sid, $pid, $catid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm);
         }
         if ($where) {
-            $result2 = $db->getSqlQuery('SELECT u.user_id, u.user_name, u.user_rank, u.user_email, u.user_website, u.user_avatar, u.user_regdate, u.user_from, u.user_sig, u.user_viewemail, u.user_points, u.user_warnings, u.user_gender, u.user_votes, u.user_totalvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.user_group=g.id) OR (g.extra!=1 AND u.user_points>=g.points)) WHERE u.user_id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC');
+            $result2 = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC');
             while ([$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor] = $db->getSqlRow($result2)) {
                 $umassiv[] = [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor];
                 unset($uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor);
@@ -432,18 +432,18 @@ function move(): void {
                         delete($catid, $val);
                     } elseif (is_numeric($tmove[0])) {
                         $rcatids = catids($conf['name'], $move);
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET catid = :tmove WHERE id = :id_val OR pid = :pid_val', ['tmove' => $move, 'id_val' => $val, 'pid_val' => $val]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET cid = :tmove WHERE id = :id_val OR pid = :pid_val', ['tmove' => $move, 'id_val' => $val, 'pid_val' => $val]);
                         [$rnpost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
                         $wrnpost = ($rnpost) ? ', posts=posts+'.$rnpost : '';
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics+1'.$wrnpost.', lpost_id = :val WHERE id IN ('.$rcatids.')', ['val' => $val]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics+1'.$wrnpost.', lpost = :val WHERE id IN ('.$rcatids.')', ['val' => $val]);
             
                         $catids = catids($conf['name'], $catid);
-                        [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost_id FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+                        [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
                         [$npost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
                         $wnpost = ($npost) ? ', posts=posts-'.$npost : '';
                         if ($lid == $val) {
-                            [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_forum WHERE catid = :catid AND ((pid != \'0\' && status = \'1\') || (pid = \'0\' && status > \'1\')) ORDER BY id DESC LIMIT 1', ['catid' => $catid]));
-                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics-1'.$wnpost.', lpost_id = :lid WHERE id IN ('.$catids.')', ['lid' => $lid]);
+                            [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_forum WHERE cid = :catid AND ((pid != \'0\' && status = \'1\') || (pid = \'0\' && status > \'1\')) ORDER BY id DESC LIMIT 1', ['catid' => $catid]));
+                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics-1'.$wnpost.', lpost = :lid WHERE id IN ('.$catids.')', ['lid' => $lid]);
                         } else {
                             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
                         }
@@ -521,7 +521,7 @@ function add(): void {
         $psubject = (!$subh) ? $subject : '';
         if ($hometext) $cont .= preview($psubject, $hometext, '', $field, $conf['name']);
         $userinfo = getUserInfo();
-        if ($userinfo['user_acess'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= setTemplateWarning('warn', ['text' => _POSTNOTE, 'url' => '', 'time' => 0, 'id' => 'warn']);
+        if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= setTemplateWarning('warn', ['text' => _POSTNOTE, 'url' => '', 'time' => 0, 'id' => 'warn']);
         $cont .= setTemplateBasic('forum-all-open', ['{%title%}' => $info]);
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
         $cont .= (!is_user()) ? '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>' : '';
@@ -615,21 +615,21 @@ function send(): void {
                 if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
                     $ftime = ($ismod) ? $time : $ftime;
                     if ($ismod) {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, hometext = :hometext, field = :field, e_uid = :postid, e_ip_send = :ip, e_time = NOW(), status = :status WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'hometext' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'status' => $status, 'id' => $id]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, hometext = :hometext, field = :field, euid = :postid, eip = :ip, etime = NOW(), status = :status WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'hometext' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'status' => $status, 'id' => $id]);
                     } else {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, hometext = :hometext, field = :field, e_uid = :postid, e_ip_send = :ip, e_time = NOW() WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'hometext' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, hometext = :hometext, field = :field, euid = :postid, eip = :ip, etime = NOW() WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'hometext' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]);
                     }
                 }
             
             } else {
                 if ($ismod) {
                     $userinfo = getUserInfo();
-                    $postname = ($userinfo['user_name']) ? $userinfo['user_name'] : $postname;
+                    $postname = ($userinfo['name']) ? $userinfo['name'] : $postname;
                     $status = ($status) ? $status : (($pid) ? 1 : 3);
                 } elseif (is_user()) {
                     $userinfo = getUserInfo();
-                    $postname = $userinfo['user_name'];
-                    $status = ($userinfo['user_acess']) ? 0 : (($pid) ? 1 : 3);
+                    $postname = $userinfo['name'];
+                    $status = ($userinfo['access']) ? 0 : (($pid) ? 1 : 3);
                 } else {
                     $postid = '';
                     $status = ($conf['forum']['anonpost'] == 1) ? (($pid) ? 1 : 3) : 0;
@@ -645,16 +645,16 @@ function send(): void {
                 
                 if ($insert) {
                     $catids = catids($conf['name'], $catid);
-                    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_forum (id, pid, catid, uid, name, title, time, hometext, field, ip_send, l_uid, l_name, l_time, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :hometext, :field, :ip, :l_uid, :l_name, :l_time, :status)', ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'ip' => $ip, 'l_uid' => $postid, 'l_name' => $postname, 'l_time' => $time, 'status' => $status]);
-                    [$lpid, $ltime] = $db->getSqlRow($db->getSqlQuery('SELECT id, time FROM '.PREFIX_DB.'_forum WHERE catid = :catid AND uid = :postid ORDER BY id DESC LIMIT 1', ['catid' => $catid, 'postid' => $postid]));
+                    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_forum (id, pid, cid, uid, name, title, time, hometext, field, ip, luid, lname, ltime, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :hometext, :field, :ip, :luid, :lname, :ltime, :status)', ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'ip' => $ip, 'luid' => $postid, 'lname' => $postname, 'ltime' => $time, 'status' => $status]);
+                    [$lpid, $ltime] = $db->getSqlRow($db->getSqlQuery('SELECT id, time FROM '.PREFIX_DB.'_forum WHERE cid = :catid AND uid = :postid ORDER BY id DESC LIMIT 1', ['catid' => $catid, 'postid' => $postid]));
                     if ($pid) {
                         $lname = (isset($uname) && $uname) ? $uname : $postname;
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = comments+1, l_uid = :postid, l_name = :lname, l_id = :lpost_id, l_time = :time WHERE id = :pid', ['postid' => $postid, 'lname' => $lname, 'lpost_id' => $lpid, 'time' => $time, 'pid' => $pid]);
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET posts = posts+1, lpost_id = :pid WHERE id IN ('.$catids.')', ['pid' => $pid]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = comments+1, luid = :postid, lname = :lname, lpost = :lpost, ltime = :time WHERE id = :pid', ['postid' => $postid, 'lname' => $lname, 'lpost' => $lpid, 'time' => $time, 'pid' => $pid]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET posts = posts+1, lpost = :pid WHERE id IN ('.$catids.')', ['pid' => $pid]);
                         if ($conf['forum']['addmail']) {
                             [$muid] = $db->getSqlRow($db->getSqlQuery('SELECT uid FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
                             if ($postid != $muid) {
-                                [$mail, $fsmail] = $db->getSqlRow($db->getSqlQuery('SELECT user_email, user_fsmail FROM '.PREFIX_DB.'_users WHERE user_id = :muid', ['muid' => $muid]));
+                                [$mail, $fsmail] = $db->getSqlRow($db->getSqlQuery('SELECT email, fsmail FROM '.PREFIX_DB.'_users WHERE id = :muid', ['muid' => $muid]));
                                 if ($mail && $fsmail) {
                                     $finishlink = $conf['homeurl'].'/index.php?name=forum&amp;op=view&amp;id='.$pid.'#'.$lpid;
                                     $link = '<a href="'.$finishlink.'">'.$finishlink.'</a>';
@@ -669,7 +669,7 @@ function send(): void {
                         if (strtotime($ltime) > time()) {
                             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1 WHERE id IN ('.$catids.')');
                         } else {
-                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1, lpost_id = :lpost_id WHERE id IN ('.$catids.')', ['lpost_id' => $lpid]);
+                            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, posts = posts+1, lpost = :lpost WHERE id IN ('.$catids.')', ['lpost' => $lpid]);
                         }
                         update_points(13);
                     }
@@ -703,35 +703,35 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
             if ($recycle && $recycle != $catid) {
                 $rcatids = catids($conf['name'], $recycle);
                 if ($pid) {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB."_forum SET pid = '0', catid = :recycle WHERE id = :id", ['recycle' => $recycle, 'id' => $id]);
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, lpost_id = :id WHERE id IN ('.$rcatids.')', ['id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB."_forum SET pid = '0', cid = :recycle WHERE id = :id", ['recycle' => $recycle, 'id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1, lpost = :id WHERE id IN ('.$rcatids.')', ['id' => $id]);
                 } else {
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET catid = :recycle WHERE id = :id OR pid = :pid', ['recycle' => $recycle, 'id' => $id, 'pid' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET cid = :recycle WHERE id = :id OR pid = :pid', ['recycle' => $recycle, 'id' => $id, 'pid' => $id]);
                     [$rnpost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :id', ['id' => $id]));
                     $wrnpost = ($rnpost) ? ', posts=posts+'.$rnpost : '';
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1'.$wrnpost.', lpost_id = :id WHERE id IN ('.$rcatids.')', ['id' => $id]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1'.$wrnpost.', lpost = :id WHERE id IN ('.$rcatids.')', ['id' => $id]);
                 }
             }
             
             $catids = catids($conf['name'], $catid);
 
             if ($pid) {
-                [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT l_id FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
+                [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost FROM '.PREFIX_DB.'_forum WHERE id = :pid', ['pid' => $pid]));
                 if ($lid == $id) {
                     [$lid, $luid, $lname, $ltime] = $db->getSqlRow($db->getSqlQuery('SELECT id, uid, name, time FROM '.PREFIX_DB.'_forum WHERE pid = :pid1 OR id = :pid2 ORDER BY id DESC LIMIT 1', ['pid1' => $pid, 'pid2' => $pid]));
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = comments-1, l_uid = :luid, l_name = :lname, l_id = :lid, l_time = :ltime WHERE id = :pid', ['luid' => $luid, 'lname' => $lname, 'lid' => $lid, 'ltime' => $ltime, 'pid' => $pid]);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = comments-1, luid = :luid, lname = :lname, lpost = :lid, ltime = :ltime WHERE id = :pid', ['luid' => $luid, 'lname' => $lname, 'lid' => $lid, 'ltime' => $ltime, 'pid' => $pid]);
                 } else {
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET comments = comments-1 WHERE id = :pid', ['pid' => $pid]);
                 }
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET posts = posts-1 WHERE id IN ('.$catids.')');
 
             } else {
-                [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost_id FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+                [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
                 [$npost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :id', ['id' => $id]));
                 $wnpost = ($npost) ? ', posts=posts-'.$npost : '';
                 if ($lid == $id) {
-                    [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_forum WHERE catid = :catid AND ((pid != '0' && status = '1') || (pid = '0' && status > '1')) ORDER BY id DESC LIMIT 1", ['catid' => $catid]));
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.', lpost_id = :lid WHERE id IN ('.$catids.')', ['lid' => $lid]);
+                    [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_forum WHERE cid = :catid AND ((pid != '0' && status = '1') || (pid = '0' && status > '1')) ORDER BY id DESC LIMIT 1", ['catid' => $catid]));
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.', lpost = :lid WHERE id IN ('.$catids.')', ['lid' => $lid]);
                 } else {
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
                 }

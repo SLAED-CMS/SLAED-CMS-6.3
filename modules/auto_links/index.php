@@ -41,7 +41,7 @@ function autolink(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT id, sitename, description, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
+    $result = $db->getSqlQuery('SELECT id, title, description, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home) $cont .= navigate($ntitle);
@@ -84,9 +84,9 @@ function add(): void {
     if (is_user()) {
         $userinfo = getUserInfo();
         $mail = getVar('post', 'mail', 'var');
-        $mail = ($mail) ? $mail : $userinfo['user_email'];
+        $mail = ($mail) ? $mail : $userinfo['email'];
         $site = getVar('post', 'site', 'url');
-        $site = ($site) ? $site : $userinfo['user_website'];
+        $site = ($site) ? $site : $userinfo['website'];
     } else {
         $mail = getVar('post', 'mail', 'var');
         $mail = ($mail) ? $mail : '';

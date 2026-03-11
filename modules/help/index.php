@@ -24,7 +24,7 @@ function navigate(string $title, string|int $cat = ''): string {
 
 function help(): void {
     global $db, $user, $conf, $home, $op;
-    $cwhere = catmids($conf['name'], 's.catid');
+    $cwhere = catmids($conf['name'], 's.cid');
     $uid = intval($user[0]);
     $unum = getUserNews($conf['help']['num']);
     $cat = getVar('get', 'cat', 'num');
@@ -46,28 +46,28 @@ function help(): void {
         $field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
         [$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
         $catid = [];
-        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
         while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
         unset($result);
         $params = ['uid' => $uid, 'ncat1' => $ncat, 'ncat2' => $ncat];
         if (isArray($catid)) {
             $caton = 1;
             array_unshift($catid, $ncat);
-            $wcid = 'catid IN ('.implode(', ', $catid).')';
+            $wcid = 'cid IN ('.implode(', ', $catid).')';
         } else {
             $caton = 0;
-            $wcid = "catid = '".$ncat."'";
+            $wcid = "cid = '".$ncat."'";
         }
         if ($op == 'closed') {
-            $order = "WHERE s.status != '0' AND s.pid = '0' AND s.uid = :uid AND (s.catid = :ncat1 OR c.parentid = :ncat2) AND s.time <= NOW() ".$cwhere.' ORDER BY s.time DESC';
+            $order = "WHERE s.status != '0' AND s.pid = '0' AND s.uid = :uid AND (s.cid = :ncat1 OR c.parent = :ncat2) AND s.time <= NOW() ".$cwhere.' ORDER BY s.time DESC';
             $onum = $wcid." AND pid = '0' AND uid = '".$uid."' AND time <= NOW() AND status != '0'";
             $ntitle = _CLOSED;
         } elseif ($op == 'pop') {
-            $order = "WHERE s.pid = '0' AND s.uid = :uid AND (s.catid = :ncat1 OR c.parentid = :ncat2) AND s.time <= NOW() ".$cwhere.' ORDER BY s.counter DESC';
+            $order = "WHERE s.pid = '0' AND s.uid = :uid AND (s.cid = :ncat1 OR c.parent = :ncat2) AND s.time <= NOW() ".$cwhere.' ORDER BY s.counter DESC';
             $onum = $wcid." AND pid = '0' AND uid = '".$uid."' AND time <= NOW()";
             $ntitle = _POP;
         } else {
-            $order = "WHERE s.pid = '0' AND s.uid = :uid AND (s.catid = :ncat1 OR c.parentid = :ncat2) AND s.time <= NOW() ".$cwhere.' ORDER BY s.time DESC';
+            $order = "WHERE s.pid = '0' AND s.uid = :uid AND (s.cid = :ncat1 OR c.parent = :ncat2) AND s.time <= NOW() ".$cwhere.' ORDER BY s.time DESC';
             $onum = $wcid." AND pid = '0' AND uid = '".$uid."' AND time <= NOW()";
             $ntitle = _HELP;
         }
@@ -89,7 +89,7 @@ function help(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT s.sid, s.catid, s.title, s.time, s.hometext, s.comments, s.counter, c.title, c.description, c.img FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.hometext, s.comments, s.counter, c.title, c.description, c.img FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $cid, $stitle, $time, $hometext, $comm, $counter, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
@@ -105,7 +105,7 @@ function help(): void {
             $comm = '<a href="'.$thref.'#'.$id.'" title="'._MESSAGES.'" class="sl_coms">'.$comm.'</a>';
             $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => '', '{%admin%}' => '', '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'sid', '_help', 'catid', $onum, $conf['help']['nump']);
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_help', 'cid', $onum, $conf['help']['nump']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -115,7 +115,7 @@ function help(): void {
 
 function liste(): void {
     global $db, $conf, $user;
-    $cwhere = catmids($conf['name'], 's.catid');
+    $cwhere = catmids($conf['name'], 's.cid');
     $uid = intval($user[0]);
     $listnum = intval($conf['help']['listnum']);
     $let = getVar('get', 'let', 'let');
@@ -131,7 +131,7 @@ function liste(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $listnum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT s.sid, s.catid, s.title, s.time, s.status, c.title, c.description FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) '.$order.' '.$cwhere.' ORDER BY s.time DESC LIMIT '.$offset.', '.$listnum, $params);
+    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.status, c.title, c.description FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.$order.' '.$cwhere.' ORDER BY s.time DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
     $cont = navigate(_LIST);
     if ($db->getSqlRowCount($result) > 0) {
@@ -148,7 +148,7 @@ function liste(): void {
         }
         $cont .= setTemplateBasic('liste-close');
         $onum = ($let) ? "title LIKE BINARY '".$let."%' AND time <= NOW() AND pid = '0' AND uid = '".$uid."'" : "time <= NOW() AND pid = '0' AND uid = '".$uid."'";
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'sid', '_help', 'catid', $onum, $conf['help']['nump']);
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_help', 'cid', $onum, $conf['help']['nump']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -161,15 +161,15 @@ function view(): void {
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $uid = intval($user[0]);
-    $cwhere = catmids($conf['name'], 's.catid');
-    $result = $db->getSqlQuery('SELECT s.sid, s.pid, s.catid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) WHERE (s.sid = :id1 OR s.pid = :id2) AND s.uid = :uid AND s.time <= NOW() '.$cwhere.' ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id, 'uid' => $uid]);
+    $cwhere = catmids($conf['name'], 's.cid');
+    $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE (s.id = :id1 OR s.pid = :id2) AND s.uid = :uid AND s.time <= NOW() '.$cwhere.' ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id, 'uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET counter = counter+1 WHERE sid = :id', ['id' => $id]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET counter = counter+1 WHERE id = :id', ['id' => $id]);
         [$seotitle, $seohometext, $seotime, $seoctitle, $seoname] = $db->getSqlRow($db->getSqlQuery(
-            'SELECT s.title, s.hometext, s.time, c.title, u.user_name FROM '.PREFIX_DB.'_help AS s '.
-            'LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) '.
-            'LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.user_id) '.
-            'WHERE s.sid = :id AND s.uid = :uid '.$cwhere, ['id' => $id, 'uid' => $uid]
+            'SELECT s.title, s.hometext, s.time, c.title, u.name FROM '.PREFIX_DB.'_help AS s '.
+            'LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.
+            'LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) '.
+            'WHERE s.id = :id AND s.uid = :uid '.$cwhere, ['id' => $id, 'uid' => $uid]
         ));
         $seodesc   = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($seohometext, $conf['name'], false), $conf['name']))), 160);
         $seoimg    = getImgText($seohometext, '', false);
@@ -220,7 +220,7 @@ function view(): void {
 function addview(int $id): string {
     global $db, $conf;
     if ((is_user() && $conf['help']['add'] == 1)) {
-        $result = $db->getSqlQuery('SELECT catid, status FROM '.PREFIX_DB.'_help WHERE sid = :id', ['id' => $id]);
+        $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$hcatid, $status] = $db->getSqlRow($result);
         $cont = setTemplateBasic('open');
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
@@ -276,8 +276,8 @@ function send(): void {
         if (!$hometext && !$pid) $stop[] = _CERROR1;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = intval($user[0]);
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (sid, pid, catid, uid, aid, title, time, hometext, field, ip_sender, status) VALUES (NULL, :pid, :cid, :postid, :postid, :title, NOW(), :hometext, :field, :ip, \'0\')', ['pid' => $pid, 'cid' => $cid, 'postid' => $postid, 'title' => $title, 'hometext' => $hometext, 'field' => $field, 'ip' => getIp()]);
-            if ($pid) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE sid = :pid', ['status' => $status, 'pid' => $pid]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (id, pid, cid, uid, aid, title, time, hometext, field, ip, status) VALUES (NULL, :pid, :cid, :postid, :postid, :title, NOW(), :hometext, :field, :ip, \'0\')', ['pid' => $pid, 'cid' => $cid, 'postid' => $postid, 'title' => $title, 'hometext' => $hometext, 'field' => $field, 'ip' => getIp()]);
+            if ($pid) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE id = :pid', ['status' => $status, 'pid' => $pid]);
             $puname = (is_user()) ? $user[1] : '';
             addAdminMail($conf['help']['addmail'], $conf['name'], $puname, _HELP);
             setHead(['title' => _ADD]);

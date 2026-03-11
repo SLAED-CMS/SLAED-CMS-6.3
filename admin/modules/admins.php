@@ -19,7 +19,7 @@ function admins(): void {
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._URL.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE.'</th><th>'._IP.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-    $result = $db->getSqlQuery('SELECT id, name, title, url, email, lang, ip, regdate, lastvisit FROM '.PREFIX_DB.'_admins ORDER BY id');
+    $result = $db->getSqlQuery('SELECT id, name, title, url, email, lang, ip, regdate, lvisit FROM '.PREFIX_DB.'_admins ORDER BY id');
     while ([$id, $name, $title, $url, $email, $lang, $ip, $regdate, $lastvisit] = $db->getSqlRow($result)) {
         $lang = (!$lang) ? _ALL : $lang;
         $cont .= '<tr><td>'.title_tip(_REG.': '.format_time($regdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($lastvisit, _TIMESTRING)).$name.'</td><td>'.$title.'</td><td>'.domain($url).'</td><td>'.mailto($email).'</td><td>'.getLangName($lang).'</td><td>'.user_geo_ip($ip, 4).'</td>'

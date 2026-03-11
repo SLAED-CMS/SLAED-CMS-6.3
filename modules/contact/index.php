@@ -13,8 +13,8 @@ function contact(): void {
     global $db, $conf, $locale, $stop;
     if (is_user()) {
         $userinfo = getUserInfo();
-        $sname = getVar('post', 'sname', 'name', $userinfo['user_name']);
-        $semail = getVar('post', 'semail', 'text', $userinfo['user_email']);
+        $sname = getVar('post', 'sname', 'name', $userinfo['name']);
+        $semail = getVar('post', 'semail', 'text', $userinfo['email']);
     } else {
         $sname = getVar('post', 'sname', 'name');
         $semail = getVar('post', 'semail', 'text');

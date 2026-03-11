@@ -33,23 +33,23 @@ function media(): void {
         $caton = 0;
         $field = 'op='.$op.'&';
             if ($op == 'best') {
-                $orderby = 'IFNULL((m.totalvotes/NULLIF(m.votes,0)),0) DESC';
+                $orderby = 'IFNULL((m.tvotes/NULLIF(m.votes,0)),0) DESC';
                 $ntitle = _BEST;
             } else {
-                $orderby = 'IFNULL((m.hits/NULLIF((TO_DAYS(NOW()) - TO_DAYS(m.date)),0)),0) DESC';
+                $orderby = 'IFNULL((m.hits/NULLIF((TO_DAYS(NOW()) - TO_DAYS(m.time)),0)),0) DESC';
                 $ntitle = _POP;
             }
-        $order = "WHERE m.date <= NOW() AND m.status != '0' ".$cwhere.' ORDER BY '.$orderby;
-        $onum = "date <= NOW() AND status != '0'";
+        $order = "WHERE m.time <= NOW() AND m.status != '0' ".$cwhere.' ORDER BY '.$orderby;
+        $onum = "time <= NOW() AND status != '0'";
     } elseif ($ncat) {
         $field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-            $orderby = ($op) ? (($op == 'best') ? 'IFNULL((m.totalvotes/NULLIF(m.votes,0)),0) DESC' : 'IFNULL((m.hits/NULLIF((TO_DAYS(NOW()) - TO_DAYS(m.date)),0)),0) DESC') : 'm.date DESC';
+            $orderby = ($op) ? (($op == 'best') ? 'IFNULL((m.tvotes/NULLIF(m.votes,0)),0) DESC' : 'IFNULL((m.hits/NULLIF((TO_DAYS(NOW()) - TO_DAYS(m.time)),0)),0) DESC') : 'm.time DESC';
         [$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
-        $order = "WHERE (m.cid = :ncat1 OR c.parentid = :ncat2) AND m.date <= NOW() AND m.status != '0' ".$cwhere.' ORDER BY '.$orderby;
+        $order = "WHERE (m.cid = :ncat1 OR c.parent = :ncat2) AND m.time <= NOW() AND m.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat2' => $ncat];
         $catid = [];
-        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
         while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
         unset($result);
         if (isArray($catid)) {
@@ -60,14 +60,14 @@ function media(): void {
             $caton = 0;
             $wcid = "cid = '".$ncat."'";
         }
-        $onum = $wcid." AND date <= NOW() AND status != '0'";
+        $onum = $wcid." AND time <= NOW() AND status != '0'";
     } else {
         $caton = 1;
         $field = '';
         $hwhere = ($home) ? "AND m.ihome = '1'" : '';
         $hnwhere = ($home) ? "AND ihome = '1'" : '';
-        $order = "WHERE m.date <= NOW() AND m.status != '0' ".$hwhere.' '.$cwhere.' ORDER BY m.date DESC';
-        $onum = "date <= NOW() AND status != '0' ".$hnwhere;
+        $order = "WHERE m.time <= NOW() AND m.status != '0' ".$hwhere.' '.$cwhere.' ORDER BY m.time DESC';
+        $onum = "time <= NOW() AND status != '0' ".$hnwhere;
         $ntitle = _MEDIA;
     }
     setHead(['title' => $ntitle]);
@@ -80,7 +80,7 @@ function media(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.description, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.totalcom, m.hits, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.description, m.links, m.time, m.acomm, m.votes, m.tvotes, m.tcom, m.hits, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -115,16 +115,16 @@ function liste(): void {
     $params = [];
     if ($let) {
         $field = 'op=liste&let='.urlencode($let).'&';
-        $order = "WHERE UCASE(m.title) LIKE BINARY :let AND m.date <= NOW() AND m.status != '0'";
+        $order = "WHERE UCASE(m.title) LIKE BINARY :let AND m.time <= NOW() AND m.status != '0'";
         $params['let'] = $let.'%';
     } else {
         $field = 'op=liste&';
-        $order = "WHERE m.date <= NOW() AND m.status != '0'";
+        $order = "WHERE m.time <= NOW() AND m.status != '0'";
     }
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num-1) * $listnum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.date, c.title, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid=u.user_id) '.$order.' '.$cwhere.' ORDER BY date DESC LIMIT '.$offset.', '.$listnum, $params);
+    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.time, c.title, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid=u.id) '.$order.' '.$cwhere.' ORDER BY time DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
     $cont = navigate(_LIST);
     if ($db->getSqlRowCount($result) > 0) {
@@ -138,7 +138,7 @@ function liste(): void {
             $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $post, '{%time%}' => format_time($time)]);
         }
         $cont .= setTemplateBasic('liste-close', []);
-        $onum = ($let) ? "title LIKE BINARY '".$let."%' AND date <= NOW() AND status != '0'" : "date <= NOW() AND status != '0'";
+        $onum = ($let) ? "title LIKE BINARY '".$let."%' AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
         $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -152,7 +152,7 @@ function view(): void {
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'text');
     $cwhere = catmids($conf['name'], 'm.cid');
-    $result = $db->getSqlQuery('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.createdby, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.date, m.acomm, m.votes, m.totalvotes, m.hits, m.status, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.id = :id AND m.date <= NOW() AND m.status != \'0\' '.$cwhere, ['id' => $id]);
+    $result = $db->getSqlQuery('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.author, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.time, m.acomm, m.votes, m.tvotes, m.hits, m.status, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.id = :id AND m.time <= NOW() AND m.status != \'0\' '.$cwhere, ['id' => $id]);
     if ($db->getSqlRowCount($result) == 1) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET hits = hits+1 WHERE id = :id', ['id' => $id]);
         [$cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $date, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result);
@@ -227,10 +227,10 @@ function view(): void {
         $cont .= setTemplateBasic('basic-media-view', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => filterTextHighlight($ptitle, $word), '{%hits%}' => '', '{%reads%}' => $reads, '{%post%}' => $post, '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%cimg%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), $word), '{%year%}' => $year, '{%director%}' => $director, '{%roles%}' => $roles, '{%createdby%}' => $createdby, '{%duration%}' => $duration, '{%lang%}' => $lang, '{%format%}' => $format, '{%quality%}' => $quality, '{%size%}' => $size, '{%released%}' => $released, '{%note%}' => $note, '{%links_label%}' => ($mlinks ?? '') ? _MURLS : '', '{%mlinks%}' => $mlinks ?? '', '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%download%}' => '', '{%broken%}' => $broc]);
         if ($conf['media']['link']) {
             $limit = intval($conf['media']['linknum']);
-            [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
+            [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
-                $result = $db->getSqlQuery('SELECT id, title, subtitle, description, date FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND date <= NOW() AND status != \'0\' ORDER BY date DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
+                $result = $db->getSqlQuery('SELECT id, title, subtitle, description, time FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
                 $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
                 while([$aid, $title, $subtitle, $hometext, $time] = $db->getSqlRow($result)) {
                     $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
@@ -384,7 +384,7 @@ function send(): void {
         if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
             $postid = (is_user()) ? intval($user[0]) : '';
             $uname = (!is_user()) ? $postname : '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, createdby, duration, lang, note, format, quality, size, released, links, date, ip_sender, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, author, duration, lang, note, format, quality, size, released, links, time, ip, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
             update_points(25);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);

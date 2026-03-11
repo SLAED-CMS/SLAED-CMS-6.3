@@ -191,7 +191,7 @@ function blocksave(): void {
         $time = (is_numeric($time)) ? time() + ($time * 86400) : time() + 2592000;
         $cont['blocker_user'] = $conf['security']['blocker_user'].$name.'|'.$time.'|'.$info.'||';
         if ($mail) {
-            [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT user_email FROM '.PREFIX_DB.'_users WHERE user_name = :name', ['name' => $name]));
+            [$mail_addr] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $name]));
             $subject = $conf['sitename'].' - '._SECURITY;
             $msg = nl2br(filterReplaceText(filterMarkdown(str_replace('[time]', getTimeLeft($time), str_replace('[info]', $info, $mailtext)), 'all', false), 'all'), false);
             addMail($mail_addr, $conf['adminmail'], $subject, $msg, 0, 3);

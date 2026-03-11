@@ -23,11 +23,11 @@ function groups(): void {
         while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
             if (intval($extra)) {
                 $extra = _YES;
-                [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]));
+                [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE grp = :grid', ['grid' => $grid]));
                 $userlink = $afile.'.php?op=users_show&amp;search=6&amp;chng_user='.$grid;
             } else {
                 $extra = _NO;
-                [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]));
+                [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE points >= :points', ['points' => $points]));
                 $userlink = $afile.'.php?op=users_show&amp;search=7&amp;chng_user='.$points;
             }
             $cont .= '<tr>'

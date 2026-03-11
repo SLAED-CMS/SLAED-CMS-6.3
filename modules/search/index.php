@@ -77,12 +77,12 @@ function search(): void {
         }
         $lim = (int)($conf['search']['slimit'] ?? 500);
         $modmap = [
-            'faq'   => ['sql' => 'SELECT f.fid, f.name, f.title, f.time, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.hometext LIKE :word2) ORDER BY f.time DESC LIMIT :lim', 'editop' => 'faq_add', 'wcount' => 2],
-            'files' => ['sql' => 'SELECT f.lid, f.name, f.title, f.date, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE f.date <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.description LIKE :word2 OR f.bodytext LIKE :word3) ORDER BY f.date DESC LIMIT :lim', 'editop' => 'files_add', 'wcount' => 3],
-            'jokes' => ['sql' => 'SELECT j.jokeid, j.name, j.title, j.date, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.user_id) WHERE j.date <= NOW() AND j.status != \'0\' AND (j.title LIKE :word1 OR j.joke LIKE :word2) ORDER BY j.date DESC LIMIT :lim', 'editop' => 'jokes_add', 'wcount' => 2],
-            'links' => ['sql' => 'SELECT l.lid, l.name, l.title, l.date, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.user_id) WHERE l.date <= NOW() AND l.status != \'0\' AND (l.title LIKE :word1 OR l.description LIKE :word2 OR l.bodytext LIKE :word3 OR l.url LIKE :word4) ORDER BY l.date DESC LIMIT :lim', 'editop' => 'links_add', 'wcount' => 4],
-            'news'  => ['sql' => 'SELECT s.sid, s.name, s.title, s.time, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.user_id) WHERE s.time <= NOW() AND s.status != \'0\' AND (s.title LIKE :word1 OR s.hometext LIKE :word2 OR s.bodytext LIKE :word3) ORDER BY s.time DESC LIMIT :lim', 'editop' => 'news_add', 'wcount' => 3],
-            'pages' => ['sql' => 'SELECT p.pid, p.name, p.title, p.time, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.user_id) WHERE p.time <= NOW() AND p.status != \'0\' AND (p.title LIKE :word1 OR p.hometext LIKE :word2 OR p.bodytext LIKE :word3) ORDER BY p.time DESC LIMIT :lim', 'editop' => 'page_add', 'wcount' => 3],
+            'faq'   => ['sql' => 'SELECT f.id, f.name, f.title, f.time, c.id, c.title, c.description, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.hometext LIKE :word2) ORDER BY f.time DESC LIMIT :lim', 'editop' => 'faq_add', 'wcount' => 2],
+            'files' => ['sql' => 'SELECT f.id, f.name, f.title, f.time, c.id, c.title, c.description, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.description LIKE :word2 OR f.bodytext LIKE :word3) ORDER BY f.time DESC LIMIT :lim', 'editop' => 'files_add', 'wcount' => 3],
+            'jokes' => ['sql' => 'SELECT j.id, j.name, j.title, j.time, c.id, c.title, c.description, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.time <= NOW() AND j.status != \'0\' AND (j.title LIKE :word1 OR j.hometext LIKE :word2) ORDER BY j.time DESC LIMIT :lim', 'editop' => 'jokes_add', 'wcount' => 2],
+            'links' => ['sql' => 'SELECT l.id, l.name, l.title, l.time, c.id, c.title, c.description, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.time <= NOW() AND l.status != \'0\' AND (l.title LIKE :word1 OR l.description LIKE :word2 OR l.bodytext LIKE :word3 OR l.url LIKE :word4) ORDER BY l.time DESC LIMIT :lim', 'editop' => 'links_add', 'wcount' => 4],
+            'news'  => ['sql' => 'SELECT s.id, s.name, s.title, s.time, c.id, c.title, c.description, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.time <= NOW() AND s.status != \'0\' AND (s.title LIKE :word1 OR s.hometext LIKE :word2 OR s.bodytext LIKE :word3) ORDER BY s.time DESC LIMIT :lim', 'editop' => 'news_add', 'wcount' => 3],
+            'pages' => ['sql' => 'SELECT p.id, p.name, p.title, p.time, c.id, c.title, c.description, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.time <= NOW() AND p.status != \'0\' AND (p.title LIKE :word1 OR p.hometext LIKE :word2 OR p.bodytext LIKE :word3) ORDER BY p.time DESC LIMIT :lim', 'editop' => 'page_add', 'wcount' => 3],
         ];
         $a = 1;
         $conts = [];
@@ -103,7 +103,7 @@ function search(): void {
                         $a++;
                     }
                 } elseif ($val == 'auto_links') {
-                    $result = $db->getSqlQuery('SELECT id, sitename, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (sitename LIKE :word1 OR description LIKE :word2 OR link LIKE :word3) ORDER BY added DESC LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
+                    $result = $db->getSqlQuery('SELECT id, title, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (title LIKE :word1 OR description LIKE :word2 OR link LIKE :word3) ORDER BY added DESC LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
                     while ([$id, $title, $date] = $db->getSqlRow($result)) {
                         $evurl = 'index.php?name='.$val.'&amp;op=view&amp;id='.$id;
                         $title = '<a href="'.$evurl.'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($title, $word).'</a> '.new_graphic($date);
@@ -119,11 +119,11 @@ function search(): void {
                         $frecycle = '';
                         $fparams = ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%'];
                     } else {
-                        $frecycle = 'f.catid != :rid AND';
+                        $frecycle = 'f.cid != :rid AND';
                         $fparams = ['rid' => $rid, 'word1' => '%'.$word.'%', 'word2' => '%'.$word.'%'];
                     }
                     $fparams['lim'] = $lim;
-                    $result = $db->getSqlQuery('SELECT f.id, f.pid, f.name, f.title, f.time, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.catid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.user_id) WHERE '.$frecycle.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.hometext LIKE :word2) ORDER BY f.time DESC LIMIT :lim', $fparams);
+                    $result = $db->getSqlQuery('SELECT f.id, f.pid, f.name, f.title, f.time, c.id, c.title, c.description, u.name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE '.$frecycle.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.hometext LIKE :word2) ORDER BY f.time DESC LIMIT :lim', $fparams);
                     while ([$id, $pid, $uname, $title, $date, $cid, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
                         $id = (!$pid) ? $id : $pid;
                         $evurl = 'index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word);
@@ -150,9 +150,9 @@ function search(): void {
                     } elseif ($typ == 5 && $word) {
                         $qstr = '(m.year LIKE :word1) ORDER BY m.year ASC';
                     } else {
-                        $qstr = '(m.title LIKE :word1 OR m.subtitle LIKE :word2 OR m.description LIKE :word3) ORDER BY m.date DESC';
+                        $qstr = '(m.title LIKE :word1 OR m.subtitle LIKE :word2 OR m.description LIKE :word3) ORDER BY m.time DESC';
                     }
-                    $result = $db->getSqlQuery('SELECT m.id, m.name, m.title, m.subtitle, m.date, c.id, c.title, c.description, u.user_name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.user_id) WHERE m.date <= NOW() AND m.status != \'0\' AND '.$qstr.' LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
+                    $result = $db->getSqlQuery('SELECT m.id, m.name, m.title, m.subtitle, m.time, c.id, c.title, c.description, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.time <= NOW() AND m.status != \'0\' AND '.$qstr.' LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
                     while ([$id, $uname, $title, $subtitle, $date, $cid, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
                         $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
                         $evurl = 'index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word);
@@ -162,7 +162,7 @@ function search(): void {
                         $a++;
                     }
                 } elseif ($val == 'shop') {
-                    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, c.id, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE time <= NOW() AND active = \'1\' AND (p.title LIKE :word1 OR p.text LIKE :word2 OR p.bodytext LIKE :word3) ORDER BY time DESC LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
+                    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, c.id, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE time <= NOW() AND status = \'1\' AND (p.title LIKE :word1 OR p.text LIKE :word2 OR p.bodytext LIKE :word3) ORDER BY time DESC LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
                     while ([$id, $date, $title, $cid, $ctitle, $cdesc] = $db->getSqlRow($result)) {
                         $evurl = 'index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word);
                         $title = '<a href="'.$evurl.'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($title, $word).'</a> '.new_graphic($date);

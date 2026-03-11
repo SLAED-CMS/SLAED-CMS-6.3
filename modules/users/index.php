@@ -25,7 +25,7 @@ function users(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $lim;
     $count = ($num) ? $offset + 1 : 1;
-        $result = $db->getSqlQuery('SELECT user_id, user_name, user_website, user_regdate, user_from, user_lastvisit, user_points, user_last_ip, user_gender, user_votes, user_totalvotes FROM '.PREFIX_DB.'_users ORDER BY user_points DESC LIMIT '.$offset.', '.$lim);
+        $result = $db->getSqlQuery('SELECT id, name, website, regdate, origin, lastvis, points, lastip, gender, votes, tvotes FROM '.PREFIX_DB.'_users ORDER BY points DESC LIMIT '.$offset.', '.$lim);
         if ($db->getSqlRowCount($result) > 0) {
             $con = explode('|', (string)($conf['rating']['account'] ?? '0|0|0'));
             $rate = !empty($con[1]);
@@ -47,7 +47,7 @@ function users(): void {
             $count++;
         }
         $cont .= '</tbody></table>';
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $lim, '', 'user_id', '_users', '', '', '5');
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $lim, '', 'id', '_users', '', '', '5');
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -87,10 +87,10 @@ function stats(): void {
         while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
             if (intval($extra)) {
                 $extra = _YES;
-                [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE user_group = :grid', ['grid' => $grid]));
+                [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE grp = :grid', ['grid' => $grid]));
             } else {
                 $extra = _NO;
-                [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE user_points >= :points', ['points' => $points]));
+                [$total] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(*) FROM '.PREFIX_DB.'_users WHERE points >= :points', ['points' => $points]));
             }
             $trank = ($grname) ? _GROUP.': '.$grname : _RANK;
             $cont .= '<tr>'

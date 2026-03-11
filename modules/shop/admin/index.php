@@ -46,8 +46,8 @@ function clients(): void {
     $search = getVar('post', 'search', 'num');
     setHead();
     $searchCols = [
-        1 => 'u.user_id',
-        2 => 'u.user_name',
+        1 => 'u.id',
+        2 => 'u.name',
         3 => 'c.name',
         4 => 'c.email',
         5 => 'c.website',
@@ -56,7 +56,7 @@ function clients(): void {
     $searchOrder = 'c.enddate ASC';
     $searchParams = [];
     if ($csearch !== '') {
-        $searchCol = $searchCols[$search] ?? 'u.user_name';
+        $searchCol = $searchCols[$search] ?? 'u.name';
         $searchWhere = ' AND '.$searchCol.' LIKE :csearch';
         $searchOrder = $searchCol.' ASC';
         $searchParams['csearch'] = '%'.$csearch.'%';
@@ -65,33 +65,33 @@ function clients(): void {
     $offset = ($num - 1) * $conf['shop']['anum'];
     $a = ($num) ? $offset+1 : 1;
     if ($csearch) {
-        $sqlstatus = 'active != \'2\'';
+        $sqlstatus = 'status != \'2\'';
         $field = 'name=shop&amp;op=clients&amp;';
         $refer = '';
         $cont = navi(0, 0, 1, 1);
     } elseif (getVar('get', 'status', 'num') == 1) {
-        $sqlstatus = 'active = \'1\'';
+        $sqlstatus = 'status = \'1\'';
         $field = 'name=shop&amp;op=clients&amp;status=1&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(0, 0, 1, 1);
     } elseif (getVar('get', 'status', 'num') == 2) {
-        $sqlstatus = 'active = \'0\'';
+        $sqlstatus = 'status = \'0\'';
         $field = 'name=shop&amp;op=clients&amp;status=2&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(0, 0, 1, 2);
     } else {
-        $sqlstatus = 'active = \'2\'';
+        $sqlstatus = 'status = \'2\'';
         $field = 'name=shop&amp;op=clients&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(0, 0, 1, 0);
     }
-    $result = $db->getSqlQuery('SELECT c.id, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_name, p.title FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.id_product) WHERE c.'.$sqlstatus.$searchWhere.' ORDER BY '.$searchOrder.' LIMIT '.$offset.', '.$conf['shop']['anum'], $searchParams);
-    [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(c.id) FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_user) WHERE c.'.$sqlstatus.$searchWhere, $searchParams));
+    $result = $db->getSqlQuery('SELECT c.id, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.name, p.title FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.'.$sqlstatus.$searchWhere.' ORDER BY '.$searchOrder.' LIMIT '.$offset.', '.$conf['shop']['anum'], $searchParams);
+    [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(c.id) FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) WHERE c.'.$sqlstatus.$searchWhere, $searchParams));
     $numpages = ($conf['shop']['anum'] > 0) ? (int)ceil($numstories / $conf['shop']['anum']) : 1;
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._SITE.'</th><th>'._NICKNAME.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while([$cid, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $nick, $ptitle] = $db->getSqlRow($result)) {
+        while([$cid, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $nick, $ptitle] = $db->getSqlRow($result)) {
             $cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _UNLIMITED;
             $cinfo = ($cinfo) ? $cinfo : _NO;
             if ($nick) {
@@ -102,7 +102,7 @@ function clients(): void {
                 $nick = _ANONYM;
             }
             $cont .= '<tr><td>'.$cid.'</td>'
-            .'<td>'.title_tip(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.filterTextHighlight($cname, $csearch).'<br>'._CLIENTADRES.': '.$cadres.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 40).'</span></td>'
+            .'<td>'.title_tip(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.filterTextHighlight($cname, $csearch).'<br>'._CLIENTADRES.': '.$caddr.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 40).'</span></td>'
             .'<td>'.filterTextHighlight(domain($cwebsite), $csearch).'</td>'
             .'<td>'.$nick.'</td>'
             .'<td>'.$cenddate.'</td>'
@@ -123,9 +123,9 @@ function clients(): void {
 function clientsact(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    [$active] = $db->getSqlRow($db->getSqlQuery('SELECT active FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]));
+    [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]));
     $active = ($active) ? 0 : 1;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET active = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
     setRedirect($afile.'.php?name=shop&op=clients');
 }
 
@@ -133,8 +133,8 @@ function clientsadd(): void {
     global $db, $afile, $conf, $stop;
         if (getVar('req', 'cid', 'num', 0)) {
         $cid = getVar('req', 'cid', 'num');
-        $result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = c.id_partner) WHERE c.id = :cid', ['cid' => $cid]);
-        [$cid, $uid, $product, $partner, $proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick] = $db->getSqlRow($result);
+        $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.part) WHERE c.id = :cid', ['cid' => $cid]);
+        [$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick] = $db->getSqlRow($result);
         $cregdate = date('Y-m-d H:i:s', $cregdate);
         $cenddate = ($cenddate) ? date('Y-m-d H:i:s', $cenddate) : date('Y-m-d H:i:s');
     } else {
@@ -143,7 +143,7 @@ function clientsadd(): void {
         $uid = getVar('post', 'uid', 'num');
         $product = getVar('post', 'product', 'num');
         $cname = getVar('post', 'cname', 'text');
-        $cadres = getVar('post', 'cadres', 'text');
+        $caddr = getVar('post', 'caddr', 'text');
         $cphone = getVar('post', 'cphone', 'text');
         $cemail = getVar('post', 'cemail', 'text');
         $cwebsite = getVar('post', 'cwebsite', 'url');
@@ -160,7 +160,7 @@ function clientsadd(): void {
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     if ($partner) {
         if (!$proz) {
-            $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id_partner FROM '.PREFIX_DB.'_clients WHERE id_partner = :partner AND active != 2', ['partner' => $partner]));
+            $num = $db->getSqlRowCount($db->getSqlQuery('SELECT part FROM '.PREFIX_DB.'_clients WHERE part = :partner AND status != 2', ['partner' => $partner]));
             if ($num >= $conf['shop']['clients2']) {
                 $proz = $conf['shop']['proz2'];
             } elseif ($num >= $conf['shop']['clients1']) {
@@ -189,7 +189,7 @@ function clientsadd(): void {
     }
     $cont .= '</select></td></tr>'
     .'<tr><td>'._CLIENTNAME.':</td><td><input type="text" name="cname" value="'.$cname.'" maxlength="255" class="sl_form" placeholder="'._CLIENTNAME.'" required></td></tr>'
-    .'<tr><td>'._CLIENTADRES.':</td><td><input type="text" name="cadres" value="'.$cadres.'" maxlength="255" class="sl_form" placeholder="'._CLIENTADRES.'" required></td></tr>'
+    .'<tr><td>'._CLIENTADRES.':</td><td><input type="text" name="caddr" value="'.$caddr.'" maxlength="255" class="sl_form" placeholder="'._CLIENTADRES.'" required></td></tr>'
     .'<tr><td>'._CLIENTPHONE.':</td><td><input type="text" name="cphone" value="'.$cphone.'" maxlength="255" class="sl_form" placeholder="'._CLIENTPHONE.'" required></td></tr>'
     .'<tr><td>'._EMAIL.':</td><td><input type="email" name="cemail" value="'.$cemail.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required></td></tr>'
     .'<tr><td>'._SITE.':</td><td><input type="url" name="cwebsite" value="'.$cwebsite.'" maxlength="255" class="sl_form" placeholder="'._SITE.'"></td></tr>'
@@ -209,7 +209,7 @@ function clientssave(): void {
     $uid = getVar('post', 'uid', 'num');
     $product = getVar('post', 'product', 'num');
     $cname = getVar('post', 'cname', 'text');
-    $cadres = getVar('post', 'cadres', 'text');
+    $caddr = getVar('post', 'caddr', 'text');
     $cphone = getVar('post', 'cphone', 'text');
     $cemail = getVar('post', 'cemail', 'text');
     $cwebsite = getVar('post', 'cwebsite', 'url');
@@ -223,32 +223,32 @@ function clientssave(): void {
     $cenddate = ($cenddate) ? strtotime($cenddate) : 0;
     $stop = [];
     checkemail($cemail);
-    if (!$cname || !$cadres || !$cphone) $stop[] = _ERROR_ALL;
+    if (!$cname || !$caddr || !$cphone) $stop[] = _ERROR_ALL;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         if ($cid) {
             if ($partner && $cppi) {
-                [$ppreis] = $db->getSqlRow($db->getSqlQuery('SELECT preis FROM '.PREFIX_DB.'_products WHERE id = :product', ['product' => $product]));
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id_partner FROM '.PREFIX_DB.'_clients WHERE id_partner = :partner AND active != 2', ['partner' => $partner]));
+                [$pprice] = $db->getSqlRow($db->getSqlQuery('SELECT price FROM '.PREFIX_DB.'_products WHERE id = :product', ['product' => $product]));
+                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT part FROM '.PREFIX_DB.'_clients WHERE part = :partner AND status != 2', ['partner' => $partner]));
                 if ($num >= $conf['shop']['clients2']) {
                     $conf['shop']['proz2'] = ($conf['shop']['proz2']) ? $conf['shop']['proz2'] : 1;
-                    $preis = $ppreis / 100 * $conf['shop']['proz2'];
+                    $price = $pprice / 100 * $conf['shop']['proz2'];
                     $proz = $conf['shop']['proz2'];
                 } elseif ($num >= $conf['shop']['clients1']) {
                     $conf['shop']['proz1'] = ($conf['shop']['proz1']) ? $conf['shop']['proz1'] : 1;
-                    $preis = $ppreis / 100 * $conf['shop']['proz1'];
+                    $price = $pprice / 100 * $conf['shop']['proz1'];
                     $proz = $conf['shop']['proz1'];
                 } elseif ($num >= $conf['shop']['clients']) {
                     $conf['shop']['proz'] = ($conf['shop']['proz']) ? $conf['shop']['proz'] : 1;
-                    $preis = $ppreis / 100 * $conf['shop']['proz'];
+                    $price = $pprice / 100 * $conf['shop']['proz'];
                     $proz = $conf['shop']['proz'];
                 }
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET rest = rest+:end_preis WHERE id_user = :partner', ['end_preis' => $preis, 'partner' => $partner]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET id_user = :uid, id_product = :product, id_partner = :partner, partner_proz = :cpartner_proz, name = :cname, adres = :cadres, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, active = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'partner' => $partner, 'cpartner_proz' => $proz, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET rest = rest+:endprice WHERE uid = :partner', ['endprice' => $price, 'partner' => $partner]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET uid = :uid, prod = :product, part = :partner, proz = :cpartner_proz, name = :cname, addr = :caddr, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, status = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'partner' => $partner, 'cpartner_proz' => $proz, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
             } else {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET id_user = :uid, id_product = :product, name = :cname, adres = :cadres, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, active = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients SET uid = :uid, prod = :product, name = :cname, addr = :caddr, phone = :cphone, email = :cemail, website = :cwebsite, regdate = :cregdate, enddate = :cenddate, info = :cinfo, status = :cactive WHERE id = :cid', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive, 'cid' => $cid]);
             }
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :uid, :product, \'0\', \'0\', :cname, :cadres, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'cadres' => $cadres, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients VALUES(NULL, :uid, :product, \'0\', \'0\', :cname, :caddr, :cphone, :cemail, :cwebsite, :cregdate, :cenddate, :cinfo, :cactive)', ['uid' => $uid, 'product' => $product, 'cname' => $cname, 'caddr' => $caddr, 'cphone' => $cphone, 'cemail' => $cemail, 'cwebsite' => $cwebsite, 'cregdate' => $cregdate, 'cenddate' => $cenddate, 'cinfo' => $cinfo, 'cactive' => $cactive]);
         }
         setRedirect($afile.'.php?name=shop&op=clients');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
@@ -272,22 +272,22 @@ function products(): void {
     $offset = ($num-1) * $conf['shop']['anum'];
     $offset = intval($offset);
     if (getVar('get', 'status', 'num') == 1) {
-        $sqlstatus = 'active=0';
+        $sqlstatus = 'status=0';
         $field = 'name=shop&amp;op=products&amp;status=1&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(1, 1, 1, 1);
     } else {
-        $sqlstatus = 'active=1';
+        $sqlstatus = 'status=1';
         $field = 'name=shop&amp;op=products&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(1, 1, 1, 0);
     }
-    $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.preis, p.vote, p.active, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
+    $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, p.vote, p.status, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" action="'.$afile.'.php" method="post">'
         .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th><th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th></tr></thead><tbody>';
-        while([$pid, $pcid, $ptime, $ptitle, $ppreis, $pvote, $pactive, $ctitle] = $db->getSqlRow($result)) {
+        while([$pid, $pcid, $ptime, $ptitle, $pprice, $pvote, $pactive, $ctitle] = $db->getSqlRow($result)) {
             $ctitle = ($pcid) ? $ctitle : _NO;
             if ($pactive && time() >= strtotime($ptime)) {
                 $view = '<a href="index.php?name=shop&amp;op=view&amp;id='.$pid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
@@ -300,7 +300,7 @@ function products(): void {
             $typ = ($pactive) ? '0' : '1';
             $cont .= '<tr><td>'.$pid.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime ?? '', _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span></td>'
-            .'<td>'.$ppreis.' '.$conf['shop']['valute'].'</td>'
+            .'<td>'.$pprice.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.ad_status('', $active).'</td>'
             .'<td>'.add_menu($view.$vote.ad_status($afile.'.php?name=shop&op=productsadmin&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive).'||<a href="'.$afile.'.php?name=shop&op=productsadd&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=productsadmin&amp;typ=d&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$ptitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
             .'<td><input type="checkbox" name="id[]" class="sl_check" value="'.$pid.'"></td></tr>';
@@ -321,8 +321,8 @@ function productsadd(): void {
     global $db, $afile, $conf, $stop;
     if (getVar('req', 'id', 'num', 0)) {
         $id = getVar('req', 'id', 'num');
-        $result = $db->getSqlQuery('SELECT id, cid, time, title, text, bodytext, preis, vote, assoc, ihome, acomm, count, fix, active FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $id]);
-        [$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $ppreis, $vote, $passoc, $ihome, $acomm, $pcount, $fix, $pactive] = $db->getSqlRow($result);
+        $result = $db->getSqlQuery('SELECT id, cid, time, title, text, bodytext, price, vote, assoc, ihome, acomm, count, fix, status FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $id]);
+        [$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $pprice, $vote, $passoc, $ihome, $acomm, $pcount, $fix, $pactive] = $db->getSqlRow($result);
         $associated = explode(',', $passoc);
     } else {
         $pid = getVar('post', 'pid', 'num');
@@ -330,7 +330,7 @@ function productsadd(): void {
         $ptitle = getVar('post', 'ptitle', 'title');
         $ptext = getVar('post', 'ptext', 'text');
         $pbodytext = getVar('post', 'pbodytext', 'text');
-        $ppreis = getVar('post', 'ppreis', 'text');
+        $pprice = getVar('post', 'pprice', 'text');
         $vote = getVar('post', 'vote', 'num');
         $ptime = getVar('req', 'ptime', 'time');
         $associated = getVar('post', 'associated', 'array');
@@ -348,7 +348,7 @@ function productsadd(): void {
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.' / '._PRODUCT.':</td><td><input type="text" name="ptitle" value="'.$ptitle.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._CATEGORY.':</td><td>'.getcat('shop', $pcid, 'pcid', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>';
-    $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parentid, title', ['modul' => 'shop']);
+    $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
     if ($db->getSqlRowCount($result2) > 0) {
         $cont .= '<tr><td>'._ASSOTOPIC.':<div class="sl_small">'._ASSOTOPICI.'</div></td><td><table class="sl_form"><tr>';
         while ([$id, $title] = $db->getSqlRow($result2)) {
@@ -365,7 +365,7 @@ function productsadd(): void {
     }
     $cont .= '<tr><td>'._TEXT.':</td><td>'.textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._ENDTEXT.':</td><td>'.textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0').'</td></tr>'
-    .'<tr><td>'._PREIS.':</td><td><input type="text" name="ppreis" value="'.$ppreis.'" maxlength="10" class="sl_form" placeholder="'._PREIS.'" required></td></tr>'
+    .'<tr><td>'._PREIS.':</td><td><input type="text" name="pprice" value="'.$pprice.'" maxlength="10" class="sl_form" placeholder="'._PREIS.'" required></td></tr>'
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'ptime', $ptime, 16, 'sl_form').'</td></tr>'
     .'<tr><td>'._VOTING.':</td><td>'.add_voting('shop', 'vote', $vote, 'sl_form').'</td></tr>'
     .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
@@ -386,7 +386,7 @@ function productssave(): void {
     $associated = implode(',', getVar('post', 'associated', 'array', []));
     $ptext = getVar('post', 'ptext', 'text');
     $pbodytext = getVar('post', 'pbodytext', 'text');
-    $ppreis = getVar('post', 'ppreis', 'text');
+    $pprice = getVar('post', 'pprice', 'text');
     $vote = getVar('post', 'vote', 'num');
     $ihome = getVar('post', 'ihome', 'num');
     $acomm = getVar('post', 'acomm', 'num');
@@ -394,12 +394,12 @@ function productssave(): void {
     $pactive = getVar('post', 'pactive', 'num');
     $ptime = getVar('req', 'ptime', 'time');
     $stop = [];
-    if (!$ptitle || !$ptext || !$ppreis) $stop[] = _ERROR_ALL;
+    if (!$ptitle || !$ptext || !$pprice) $stop[] = _ERROR_ALL;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         if ($pid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :pcid, time = :ptime, title = :ptitle, text = :ptext, bodytext = :pbodytext, preis = :ppreis, vote = :vote, assoc = :associated, ihome = :ihome, acomm = :acomm, fix = :fix, active = :pactive WHERE id = :pid', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'ppreis' => $ppreis, 'vote' => $vote, 'associated' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive, 'pid' => $pid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :pcid, time = :ptime, title = :ptitle, text = :ptext, bodytext = :pbodytext, price = :pprice, vote = :vote, assoc = :associated, ihome = :ihome, acomm = :acomm, fix = :fix, status = :pactive WHERE id = :pid', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'associated' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive, 'pid' => $pid]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_products VALUES (NULL, :pcid, :ptime, :ptitle, :ptext, :pbodytext, :ppreis, :vote, :associated, :ihome, :acomm, \'0\', \'0\', \'0\', \'0\', :fix, :pactive)', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'ppreis' => $ppreis, 'vote' => $vote, 'associated' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_products VALUES (NULL, :pcid, :ptime, :ptitle, :ptext, :pbodytext, :pprice, :vote, :associated, :ihome, :acomm, \'0\', \'0\', \'0\', \'0\', :fix, :pactive)', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'associated' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive]);
         }
         setRedirect($afile.'.php?name=shop&op=products');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
@@ -427,7 +427,7 @@ function productsadmin(int|array $id = 0, string $vtyp = ''): void {
     $typ = (is_numeric($vtyp[0])) ? intval($vtyp) : intval(substr($vtyp, 1));
     if ($id) {
         if ($vtyp[0] == 'a') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET active = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET status = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
         } elseif ($vtyp[0] == 'f') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET fix = :typ WHERE id IN ('.$id.')', ['typ' => $typ]);
         } elseif ($vtyp[0] == 'h') {
@@ -454,26 +454,26 @@ function partners(): void {
     $offset = ($num - 1) * $conf['shop']['anum'];
     $offset = intval($offset);
     if (getVar('get', 'status', 'num') == 1) {
-        $sqlstatus = 'active=1';
+        $sqlstatus = 'status=1';
         $field = 'name=shop&amp;op=partners&amp;status=1&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(2, 2, 1, 1);
     } elseif (getVar('get', 'status', 'num') == 2) {
-        $sqlstatus = 'active=0';
+        $sqlstatus = 'status=0';
         $field = 'name=shop&amp;op=partners&amp;status=1&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(2, 2, 1, 2);
     } else {
-        $sqlstatus = 'active=2';
+        $sqlstatus = 'status=2';
         $field = 'name=shop&amp;op=partners&amp;';
         $refer = '&amp;refer=1';
         $cont = navi(2, 2, 1, 0);
     }
-    $result = $db->getSqlQuery('SELECT p.id, p.name, p.adres, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.active, u.user_name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = p.id_user) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
+    $result = $db->getSqlQuery('SELECT p.id, p.name, p.addr, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PARTNERREST.'</th><th>'._PARTNERBEK.'</th><th>'._SITE.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while([$paid, $paname, $paadres, $paphone, $paemail, $pawebsite, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result)) {
+        while([$paid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result)) {
             if ($nick) {
                 $name = $nick;
                 $nick = user_info(filterTextHighlight($nick, ''));
@@ -482,7 +482,7 @@ function partners(): void {
                 $nick = _ANONYM;
             }
             $cont .= '<tr><td>'.$paid.'</td>'
-            .'<td>'.title_tip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paadres.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$nick.'</td>'
+            .'<td>'.title_tip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paaddr.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$nick.'</td>'
             .'<td>'.$parest.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.$pabek.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.domain($pawebsite).'</td>'
@@ -502,9 +502,9 @@ function partners(): void {
 function partnersact(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
-    [$active] = $db->getSqlRow($db->getSqlQuery('SELECT active FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]));
+    [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]));
     $active = ($active == 1) ? 0 : 1;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET active = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET status = :active WHERE id = :id', ['active' => $active, 'id' => $id]);
     setRedirect($afile.'.php?name=shop&op=partners');
 }
 
@@ -512,14 +512,14 @@ function partnersadd(): void {
     global $db, $afile, $stop;
     if (getVar('req', 'paid', 'num', 0)) {
         $paid = getVar('req', 'paid', 'num');
-        $result = $db->getSqlQuery('SELECT p.id, p.id_user, p.name, p.adres, p.phone, p.email, p.website, p.webmoney, p.paypal, p.regdate, p.rest, p.bek, p.active, u.user_name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id = p.id_user) WHERE p.id = :paid', ['paid' => $paid]);
-        [$paid, $uid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result);
+        $result = $db->getSqlQuery('SELECT p.id, p.uid, p.name, p.addr, p.phone, p.email, p.website, p.webmoney, p.paypal, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE p.id = :paid', ['paid' => $paid]);
+        [$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result);
         $paregdate = ($paregdate) ? date('Y-m-d H:i:s', $paregdate) : date('Y-m-d H:i:s');
     } else {
         $paid = 0;
         $uid = getVar('post', 'uid', 'num');
         $paname = getVar('post', 'paname', 'text');
-        $paadres = getVar('post', 'paadres', 'text');
+        $paaddr = getVar('post', 'paaddr', 'text');
         $paphone = getVar('post', 'paphone', 'text');
         $paemail = getVar('post', 'paemail', 'text');
         $pawebsite = getVar('post', 'pawebsite', 'url');
@@ -542,7 +542,7 @@ function partnersadd(): void {
     $cont .= '<tr><td>'._USER_ID.':</td><td>';
     $cont .= ($uid == 0) ? '<input type="number" name="uid" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'" required>' : '<input type="hidden" name="uid" value="'.$uid.'">'.$uid;
     $cont .= '</td></tr><tr><td>'._CLIENTNAME.':</td><td><input type="text" name="paname" value="'.$paname.'" maxlength="255" class="sl_form" placeholder="'._CLIENTNAME.'" required></td></tr>'
-    .'<tr><td>'._CLIENTADRES.':</td><td><input type="text" name="paadres" value="'.$paadres.'" maxlength="255" class="sl_form" placeholder="'._CLIENTADRES.'" required></td></tr>'
+    .'<tr><td>'._CLIENTADRES.':</td><td><input type="text" name="paaddr" value="'.$paaddr.'" maxlength="255" class="sl_form" placeholder="'._CLIENTADRES.'" required></td></tr>'
     .'<tr><td>'._CLIENTPHONE.':</td><td><input type="text" name="paphone" value="'.$paphone.'" maxlength="255" class="sl_form" placeholder="'._CLIENTPHONE.'" required></td></tr>'
     .'<tr><td>'._EMAIL.':</td><td><input type="email" name="paemail" value="'.$paemail.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required></td></tr>'
     .'<tr><td>'._SITE.':</td><td><input type="url" name="pawebsite" value="'.$pawebsite.'" maxlength="255" class="sl_form" placeholder="'._SITE.'"></td></tr>'
@@ -564,7 +564,7 @@ function partnerssave(): void {
     global $db, $afile, $stop;
     $uid = getVar('post', 'uid', 'num');
     $paname = getVar('post', 'paname', 'text');
-    $paadres = getVar('post', 'paadres', 'text');
+    $paaddr = getVar('post', 'paaddr', 'text');
     $paphone = getVar('post', 'paphone', 'text');
     $paemail = getVar('post', 'paemail', 'text');
     $pawebsite = getVar('post', 'pawebsite', 'url');
@@ -577,12 +577,12 @@ function partnerssave(): void {
     $paid = getVar('post', 'paid', 'num');
     $paregdate = ($paregdate) ? strtotime($paregdate) : 0;
     checkemail($paemail);
-    if (!$paname || !$paadres || !$paphone) $stop[] = _ERROR_ALL;
+    if (!$paname || !$paaddr || !$paphone) $stop[] = _ERROR_ALL;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         if ($paid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET id_user = \''.$uid.'\', name = \''.$paname.'\', adres = \''.$paadres.'\', phone = \''.$paphone.'\', email = \''.$paemail.'\', website = \''.$pawebsite.'\', webmoney = \''.$pawebmoney.'\', paypal = \''.$papaypal.'\', regdate = \''.$paregdate.'\', rest = \''.$parest.'\', bek = \''.$pabek.'\', active = \''.$paactive.'" WHERE id = \''.$paid.'\'');
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_partners SET uid = \''.$uid.'\', name = \''.$paname.'\', addr = \''.$paaddr.'\', phone = \''.$paphone.'\', email = \''.$paemail.'\', website = \''.$pawebsite.'\', webmoney = \''.$pawebmoney.'\', paypal = \''.$papaypal.'\', regdate = \''.$paregdate.'\', rest = \''.$parest.'\', bek = \''.$pabek.'\', status = \''.$paactive.'" WHERE id = \''.$paid.'\'');
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, \''.$uid.'\', \''.$paname.'\', \''.$paadres.'\', \''.$paphone.'\', \''.$paemail.'\', \''.$pawebsite.'\', \''.$pawebmoney.'\', \''.$papaypal.'\', \''.$paregdate.'\', \''.$parest.'\', \''.$pabek.'\', \''.$paactive.'\')');
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_partners VALUES(NULL, \''.$uid.'\', \''.$paname.'\', \''.$paaddr.'\', \''.$paphone.'\', \''.$paemail.'\', \''.$pawebsite.'\', \''.$pawebmoney.'\', \''.$papaypal.'\', \''.$paregdate.'\', \''.$parest.'\', \''.$pabek.'\', \''.$paactive.'\')');
         }
         setRedirect($afile.'.php?name=shop&op=partners');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
@@ -604,22 +604,22 @@ function partnersdetails(): void {
         $paid = getVar('get', 'paid', 'num');
     setHead();
     $cont = navi(2, 2, 1, 1);
-    $result = $db->getSqlQuery('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
-    [$paid, $uid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
-    $result = $db->getSqlQuery('SELECT c.id, c.id_user, c.id_product, c.id_partner, c.partner_proz, c.name, c.adres, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.active, u.user_id, u.user_name, p.id, p.title, p.preis FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.user_id=c.id_user) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.id_product) WHERE c.id_partner = :uid AND c.active != 2 ORDER BY c.id ASC', ['uid' => $uid]);
+    $result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
+    [$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
+    $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id=c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.prod) WHERE c.part = :uid AND c.status != 2 ORDER BY c.id ASC', ['uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th><th>'._PERCENT.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._SUM.'</th></tr></thead><tbody>';
         $partsum = 0;
         $partsumges = 0;
         $a = 0;
-        while([$cid, $uid, $product, $partner, $proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $ptitle, $ppreis] = $db->getSqlRow($result)) {
-            $partsum = $ppreis / 100 * $proz;
+        while([$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $ptitle, $pprice] = $db->getSqlRow($result)) {
+            $partsum = $pprice / 100 * $proz;
             $partsumges += $partsum;
             $cont .= '<tr><td>'.$cid.'</td>'
             .'<td>'.user_info($nick).'</td>'
             .'<td>'.$ptitle.'</td>'
-            .'<td>'.$ppreis.' '.$conf['shop']['valute'].'</td>'
+            .'<td>'.$pprice.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.$proz.' %</td>'
             .'<td>'.date(_TIMESTRING, $cregdate).'</td>'
             .'<td>'.$partsum.' '.$conf['shop']['valute'].'</td></tr>';
@@ -648,19 +648,19 @@ function exportdata(): void {
     if ($id == 1 && $bd) {
         $list = [];
         if ($bd == 'products') {
-            $result = $db->getSqlQuery('SELECT id, cid, time, title, text, bodytext, preis, vote, assoc, com, count, votes, totalvotes, fix, active FROM '.PREFIX_DB.'_products ORDER BY id');
-            while([$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $ppreis, $pvote, $passoc, $pcom, $pcount, $pvotes, $ptotalvotes, $pfix, $pactive] = $db->getSqlRow($result)) {
-                $list[] = $pid.'||'.$pcid.'||'.$ptime.'||'.$ptitle.'||'.$ptext.'||'.$pbodytext.'||'.$ppreis.'||'.$pvote.'||'.$passoc.'||'.$pcom.'||'.$pcount.'||'.$pvotes.'||'.$ptotalvotes.'||'.$pfix.'||'.$pactive;
+            $result = $db->getSqlQuery('SELECT id, cid, time, title, text, bodytext, price, vote, assoc, com, count, votes, tvotes, fix, status FROM '.PREFIX_DB.'_products ORDER BY id');
+            while([$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $pprice, $pvote, $passoc, $pcom, $pcount, $pvotes, $ptotalvotes, $pfix, $pactive] = $db->getSqlRow($result)) {
+                $list[] = $pid.'||'.$pcid.'||'.$ptime.'||'.$ptitle.'||'.$ptext.'||'.$pbodytext.'||'.$pprice.'||'.$pvote.'||'.$passoc.'||'.$pcom.'||'.$pcount.'||'.$pvotes.'||'.$ptotalvotes.'||'.$pfix.'||'.$pactive;
             }
         } elseif ($bd == 'clients') {
-            $result = $db->getSqlQuery('SELECT id, id_user, id_product, id_partner, partner_proz, name, adres, phone, email, website, regdate, enddate, info, active FROM '.PREFIX_DB.'_clients ORDER BY id');
-            while([$cid, $uid, $product, $partner, $proz, $cname, $cadres, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive] = $db->getSqlRow($result)) {
-                $list[] = $cid.'||'.$uid.'||'.$product.'||'.$partner.'||'.$proz.'||'.$cname.'||'.$cadres.'||'.$cphone.'||'.$cemail.'||'.$cwebsite.'||'.$cregdate.'||'.$cenddate.'||'.$cinfo.'||'.$cactive;
+            $result = $db->getSqlQuery('SELECT id, uid, prod, part, proz, name, addr, phone, email, website, regdate, enddate, info, status FROM '.PREFIX_DB.'_clients ORDER BY id');
+            while([$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive] = $db->getSqlRow($result)) {
+                $list[] = $cid.'||'.$uid.'||'.$product.'||'.$partner.'||'.$proz.'||'.$cname.'||'.$caddr.'||'.$cphone.'||'.$cemail.'||'.$cwebsite.'||'.$cregdate.'||'.$cenddate.'||'.$cinfo.'||'.$cactive;
             }
         } elseif ($bd == 'partners') {
-            $result = $db->getSqlQuery('SELECT id, id_user, name, adres, phone, email, website, webmoney, paypal, regdate, rest, bek, active FROM '.PREFIX_DB.'_partners ORDER BY id');
-            while([$paid, $uid, $paname, $paadres, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result)) {
-                $list[] = $paid.'||'.$uid.'||'.$paname.'||'.$paadres.'||'.$paphone.'||'.$paemail.'||'.$pawebsite.'||'.$pawebmoney.'||'.$papaypal.'||'.$paregdate.'||'.$parest.'||'.$pabek.'||'.$paactive;
+            $result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners ORDER BY id');
+            while([$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result)) {
+                $list[] = $paid.'||'.$uid.'||'.$paname.'||'.$paaddr.'||'.$paphone.'||'.$paemail.'||'.$pawebsite.'||'.$pawebmoney.'||'.$papaypal.'||'.$paregdate.'||'.$parest.'||'.$pabek.'||'.$paactive;
             }
         }
         if ($list) {
@@ -679,17 +679,17 @@ function exportdata(): void {
             if (preg_match('#(.*?)products\\.csv#', $bd)) {
                 $iid = 'id';
                 $idb = 'products';
-                $uquery = 'cid = \''.$data[1].'\', time = \''.$data[2].'\', title = \''.$data[3].'\', text = \''.$data[4].'\', bodytext = \''.$data[5].'\', preis = \''.$data[6].'\', vote = \''.$data[7].'\', assoc = \''.$data[7].'\', com = \''.$data[9].'\', count = \''.$data[10].'\', votes = \''.$data[11].'\', totalvotes = \''.$data[12].'\', fix = \''.$data[13].'\', active = \''.$data[14].'\'';
+                $uquery = 'cid = \''.$data[1].'\', time = \''.$data[2].'\', title = \''.$data[3].'\', text = \''.$data[4].'\', bodytext = \''.$data[5].'\', price = \''.$data[6].'\', vote = \''.$data[7].'\', assoc = \''.$data[7].'\', com = \''.$data[9].'\', count = \''.$data[10].'\', votes = \''.$data[11].'\', tvotes = \''.$data[12].'\', fix = \''.$data[13].'\', status = \''.$data[14].'\'';
                 $squery = '\''.$data[1].'\', \''.$data[2].'\', \''.$data[3].'\', \''.$data[4].'\', \''.$data[5].'\', \''.$data[6].'\', \''.$data[7].'\', \''.$data[8].'\', \''.$data[9].'\', \''.$data[10].'\', \''.$data[11].'\', \''.$data[12].'\'';
             } elseif (preg_match('#(.*?)clients\\.csv#', $bd)) {
                 $iid = 'id';
                 $idb = 'clients';
-                $uquery = 'id_user = \''.$data[1].'\', id_product = \''.$data[2].'\', id_partner = \''.$data[3].'\', partner_proz = \''.$data[4].'\', name = \''.$data[5].'\', adres = \''.$data[6].'\', phone = \''.$data[7].'\', email = \''.$data[8].'\', website = \''.$data[9].'\', regdate = \''.$data[10].'\', enddate = \''.$data[11].'\', info = \''.$data[12].'\', active = \''.$data[13].'\'';
+                $uquery = 'uid = \''.$data[1].'\', prod = \''.$data[2].'\', part = \''.$data[3].'\', proz = \''.$data[4].'\', name = \''.$data[5].'\', addr = \''.$data[6].'\', phone = \''.$data[7].'\', email = \''.$data[8].'\', website = \''.$data[9].'\', regdate = \''.$data[10].'\', enddate = \''.$data[11].'\', info = \''.$data[12].'\', status = \''.$data[13].'\'';
                 $squery = '\''.$data[1].'\', \''.$data[2].'\', \''.$data[3].'\', \''.$data[4].'\', \''.$data[5].'\', \''.$data[6].'\', \''.$data[7].'\', \''.$data[8].'\', \''.$data[9].'\', \''.$data[10].'\', \''.$data[11].'\', \''.$data[12].'\', \''.$data[13].'\'';
             } elseif (preg_match('#(.*?)partners\\.csv#', $bd)) {
                 $iid = 'id';
                 $idb = 'partners';
-                $uquery = 'id_user = \''.$data[1].'\', name = \''.$data[2].'\', adres = \''.$data[3].'\', phone = \''.$data[4].'\', email = \''.$data[5].'\', website = \''.$data[6].'\', webmoney = \''.$data[7].'\', paypal = \''.$data[8].'\', regdate = \''.$data[9].'\', rest = \''.$data[10].'\', bek = \''.$data[11].'\', active = \''.$data[12].'\'';
+                $uquery = 'uid = \''.$data[1].'\', name = \''.$data[2].'\', addr = \''.$data[3].'\', phone = \''.$data[4].'\', email = \''.$data[5].'\', website = \''.$data[6].'\', webmoney = \''.$data[7].'\', paypal = \''.$data[8].'\', regdate = \''.$data[9].'\', rest = \''.$data[10].'\', bek = \''.$data[11].'\', status = \''.$data[12].'\'';
                 $squery = '\''.$data[1].'\', \''.$data[2].'\', \''.$data[3].'\', \''.$data[4].'\', \''.$data[5].'\', \''.$data[6].'\', \''.$data[7].'\', \''.$data[8].'\', \''.$data[9].'\', \''.$data[10].'\', \''.$data[11].'\', \''.$data[12].'\'';
             }
             $id = intval($data[0]);

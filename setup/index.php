@@ -377,10 +377,10 @@ function save(): void {
             $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET pwd = :pwd WHERE id = :id', ['pwd' => $pwd_hash, 'id' => $a_id]);
         }
         $bodytext .= getInfo($xprefix.'_admins', $result);
-        $result = $db->getSqlQuery('SELECT user_id, user_password FROM '.$xprefix.'_users');
+        $result = $db->getSqlQuery('SELECT id, password FROM '.$xprefix.'_users');
         while (list($user_id, $user_password) = $db->getSqlRow($result)) {
             $pwd_hash = getCrypt($user_password);
-            $db->getSqlQuery('UPDATE '.$xprefix.'_users SET user_password = :pwd WHERE user_id = :uid', ['pwd' => $pwd_hash, 'uid' => $user_id]);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_users SET password = :pwd WHERE id = :uid', ['pwd' => $pwd_hash, 'uid' => $user_id]);
         }
         $bodytext .= getInfo($xprefix.'_users', $result);
         $bodytext .= getSqlFile('setup/sql/table_update5_0.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
@@ -395,7 +395,7 @@ function save(): void {
             $answ = [];
             foreach ($array_answ as $val) if (!empty($val)) $answ[] = trim($val);
             $answ = implode('|', $answ);
-            $db->getSqlQuery('INSERT INTO '.$xprefix.'_voting (id, modul, title, questions, answer, date, enddate, multi, comments, language, acomm, ip, typ, status) VALUES (:id, \'\', :title, :questions, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
+            $db->getSqlQuery('INSERT INTO '.$xprefix.'_voting (id, modul, title, questions, answer, time, enddate, multi, comments, language, acomm, ip, typ, status) VALUES (:id, \'\', :title, :questions, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
                 'id' => $poll_id,
                 'title' => $poll_title,
                 'questions' => $questions,
@@ -422,7 +422,7 @@ function save(): void {
             } else {
                 $assoc = '';
             }
-            $db->getSqlQuery('UPDATE '.$xprefix.'_news SET associated = :assoc WHERE sid = :id', ['assoc' => $assoc, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_news SET associated = :assoc WHERE id = :id', ['assoc' => $assoc, 'id' => $id]);
         }
         $bodytext .= getInfo($xprefix.'_news', $result);
 

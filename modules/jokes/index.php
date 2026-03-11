@@ -23,7 +23,7 @@ function navigate(string $title, string|int $cat = ''): string {
 
 function jokes(): void {
     global $db, $afile, $user, $conf, $home, $op;
-    $cwhere = catmids($conf['name'], 'j.cat');
+    $cwhere = catmids($conf['name'], 'j.cid');
     $word = getVar('get', 'word', 'word');
     $unum = getUserNews($conf['jokes']['num']);
     $cat = getVar('get', 'cat', 'num');
@@ -33,39 +33,39 @@ function jokes(): void {
         $caton = 0;
         $field = 'op='.$op.'&';
         if ($op == 'best') {
-            $orderby = 'IFNULL((j.rating/NULLIF(j.ratingtot,0)),0) DESC';
+            $orderby = 'IFNULL((j.rating/NULLIF(j.ratetot,0)),0) DESC';
             $ntitle = _BEST;
         } else {
-            $orderby = 'IFNULL((j.ratingtot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.date)),0)),0) DESC';
+            $orderby = 'IFNULL((j.ratetot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.time)),0)),0) DESC';
             $ntitle = _POP;
         }
-        $order = "WHERE j.date <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
-        $onum = "date <= NOW() AND status != '0'";
+        $order = "WHERE j.time <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
+        $onum = "time <= NOW() AND status != '0'";
     } elseif ($ncat) {
         $field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-        $orderby = ($op) ? (($op == 'best') ? 'IFNULL((j.rating/NULLIF(j.ratingtot,0)),0) DESC' : 'IFNULL((j.ratingtot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.date)),0)),0) DESC') : 'j.date DESC';
+        $orderby = ($op) ? (($op == 'best') ? 'IFNULL((j.rating/NULLIF(j.ratetot,0)),0) DESC' : 'IFNULL((j.ratetot/NULLIF((TO_DAYS(NOW()) - TO_DAYS(j.time)),0)),0) DESC') : 'j.time DESC';
         [$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
-        $order = "WHERE (j.cat = :ncat1 OR c.parentid = :ncat2) AND j.date <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
+        $order = "WHERE (j.cid = :ncat1 OR c.parent = :ncat2) AND j.time <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat2' => $ncat];
         $catid = [];
-        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parentid = :ncat', ['ncat' => $ncat]);
+        $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
         while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
         unset($result);
         if (isArray($catid)) {
             $caton = 1;
             array_unshift($catid, $ncat);
-            $wcid = 'cat IN ('.implode(', ', $catid).')';
+            $wcid = 'cid IN ('.implode(', ', $catid).')';
         } else {
             $caton = 0;
-            $wcid = "cat = '".$ncat."'";
+            $wcid = "cid = '".$ncat."'";
         }
-        $onum = $wcid." AND date <= NOW() AND status != '0'";
+        $onum = $wcid." AND time <= NOW() AND status != '0'";
     } else {
         $caton = 1;
         $field = '';
-        $order = "WHERE j.date <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY j.date DESC';
-        $onum = "date <= NOW() AND status != '0'";
+        $order = "WHERE j.time <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY j.time DESC';
+        $onum = "time <= NOW() AND status != '0'";
         $ntitle = _JOKES;
     }
     setHead(['title' => $ntitle]);
@@ -78,7 +78,7 @@ function jokes(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT j.jokeid, j.name, j.date, j.title, j.cat, j.joke, j.rating, j.ratingtot, c.title, c.description, c.img, u.user_name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cat=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.user_id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.hometext, j.rating, j.ratetot, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $title = '<a href="#'.$id.'" title="'.$jtitle.'">'.filterTextHighlight($jtitle, $word).'</a> '.new_graphic($time);
@@ -92,7 +92,7 @@ function jokes(): void {
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=jokes_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=jokes_delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$jtitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
             $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($joke, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => '', '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'jokeid', '_jokes', 'cat', $onum, $conf['jokes']['nump']);
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_jokes', 'cid', $onum, $conf['jokes']['nump']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -148,7 +148,7 @@ function send(): void {
         if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
             $postid = (is_user()) ? intval($user[0]) : '';
             $uname = (!is_user()) ? $postname : '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (jokeid, uid, name, date, title, cat, joke, ip_sender, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (id, uid, name, time, title, cid, hometext, ip, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
             update_points(19);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
