@@ -41,19 +41,19 @@ function autolink(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT id, title, description, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
+    $result = $db->getSqlQuery('SELECT id, title, intro, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home) $cont .= navigate($ntitle);
     if ($db->getSqlRowCount($result) > 0) {
-        while ([$id, $sitename, $description, $hits, $outs, $time] = $db->getSqlRow($result)) {
+        while ([$id, $sitename, $intro, $hits, $outs, $time] = $db->getSqlRow($result)) {
             $title = filterTextHighlight($sitename, $word).' '.new_graphic($time);
             $read = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" target="_blank" title="'.$sitename.'" class="sl_but_read">'._DOWNLLINK.'</a>';
             $date = '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>';
             $reads = '<span title="'._OUTS.'" class="sl_outs">'.$outs.'</span>';
             $hits = '<span title="'._HITS.'" class="sl_hits">'.$hits.'</span>';
             $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=auto_links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=auto_links_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$sitename.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => '', '{%cimg%}' => '', '{%ctitle%}' => '', '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), $word), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => '', '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['{%cid%}' => '', '{%cimg%}' => '', '{%ctitle%}' => '', '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($intro, $conf['name'], false), $conf['name']), $word), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => '', '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_auto_links', '', 'hits != \'0\'', $conf['auto_links']['nump']);
     } else {
@@ -67,13 +67,13 @@ function view(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num');
     if ($id) {
-        [$link] = $db->getSqlRow($db->getSqlQuery('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
-        if (!$link) {
+        [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
+        if (!$url) {
             setRedirect('index.php?name='.$conf['name']);
         }
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
         update_points(4);
-        setRedirect($link);
+        setRedirect($url);
     } else {
         setRedirect('index.php?name='.$conf['name']);
     }
@@ -83,13 +83,13 @@ function add(): void {
     global $stop, $conf;
     if (is_user()) {
         $userinfo = getUserInfo();
-        $mail = getVar('post', 'mail', 'var');
-        $mail = ($mail) ? $mail : $userinfo['email'];
+        $email = getVar('post', 'mail', 'var');
+        $email = ($email) ? $email : $userinfo['email'];
         $site = getVar('post', 'site', 'url');
         $site = ($site) ? $site : $userinfo['website'];
     } else {
-        $mail = getVar('post', 'mail', 'var');
-        $mail = ($mail) ? $mail : '';
+        $email = getVar('post', 'mail', 'var');
+        $email = ($email) ? $email : '';
         $site = getVar('post', 'site', 'url', 'http://');
         $site = ($site) ? $site : 'http://';
     }
@@ -104,7 +104,7 @@ function add(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
     .'<tr><td>'._SITENAME.':</td><td><input type="text" name="name" value="'.$name.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SITENAME.'" required></td></tr>'
-    .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_E.'" required></td></tr>'
+    .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="mail" value="'.$email.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_E.'" required></td></tr>'
     .'<tr><td>'._A_LINKS_TEXT.':</td><td>'.textarea('1', 'desc', $desc, $conf['name'], '5', _A_LINKS_TEXT, '1').'</td></tr>'
     .'<tr><td>'._A_LINKS_L.':</td><td><input type="url" name="site" value="'.$site.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_L.'" required></td></tr>'
     .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
@@ -118,18 +118,21 @@ function send(): void {
     $name = getVar('post', 'name', 'title');
     $desc = getVar('post', 'desc', 'text');
     $site = getVar('post', 'site', 'url');
-    $mail = getVar('post', 'mail', 'var');
+    $email = getVar('post', 'mail', 'var');
     $stop = [];
     if (!$name) $stop[] = _CERROR10;
     if (!$desc) $stop[] = _CERROR11;
     if (!$site) $stop[] = _CERROR4;
-    checkemail($mail);
+    checkemail($email);
     if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
-    if ($db->getSqlRowCount($db->getSqlQuery('SELECT link FROM '.PREFIX_DB.'_auto_links WHERE link = :sitelink', ['sitelink' => $site])) > 0) $stop[] = _LINKEXIST;
+    if ($db->getSqlRowCount($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $site])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         setHead(['title' => _ADD]);
         $cont = navigate(_ADD);
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_auto_links VALUES (NULL, :sitename, :description, :sitelink, :adminemail, 0, 0, NOW())', ['sitename' => $name, 'description' => $desc, 'sitelink' => $site, 'adminemail' => $mail]);
+        $db->getSqlQuery(
+            'INSERT INTO '.PREFIX_DB.'_auto_links (title, intro, url, email, hits, outs, added) VALUES (:title, :intro, :url, :email, 0, 0, NOW())',
+            ['title' => $name, 'intro' => $desc, 'url' => $site, 'email' => $email]
+        );
         $puname = (is_user()) ? $user[1] : '';
         addAdminMail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_OK]);

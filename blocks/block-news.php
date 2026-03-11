@@ -9,8 +9,8 @@ if (!defined('BLOCK_FILE')) {
 
 global $db;
 $strip = 20;
-$result = $db->getSqlQuery('SELECT sid, title FROM '.PREFIX_DB."_news WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
-while(list($sid, $title) = $db->getSqlRow($result)) {
+$result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_news WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
+while (list($id, $title) = $db->getSqlRow($result)) {
 	$linkstrip = cutstr($title, $strip);
-	$content .= '<table class="sl_table_block"><tr><td><a href="index.php?name=news&amp;op=view&amp;id='.$sid.'" title="'.$title.'">'.$linkstrip.'</a></td></tr></table>';
+	$content .= '<table class="sl_table_block"><tr><td><a href="index.php?name=news&amp;op=view&amp;id='.$id.'" title="'.$title.'">'.$linkstrip.'</a></td></tr></table>';
 }

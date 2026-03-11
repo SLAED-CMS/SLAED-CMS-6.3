@@ -24,13 +24,13 @@ function order(): void {
     $cont .= filterReplaceText(filterMarkdown($conf['order']['text'], 'all', false), 'all');
     $cont .= setTemplateBasic('close');
     if ($conf['order']['an']) {
-        $com = getVar('post', 'com', 'text');
+        $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         $cont .= setTemplateBasic('open');
         $cont .= '<h2>'._OR_1.'</h2><form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
         .'<tr><td>'._OR_2.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._OR_2.'" required></td></tr>'
         .fields_in($field, $conf['name'])
-        .'<tr><td>'._OR_3.':</td><td><textarea name="com" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$com.'</textarea></td></tr>'
+        .'<tr><td>'._OR_3.':</td><td><textarea name="note" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$note.'</textarea></td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="hidden" name="op" value="send"><input type="submit" value="'._OR_4.'" class="sl_but_blue"></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
     } else {
@@ -45,18 +45,18 @@ function send(): void {
     if ($conf['order']['an']) {
         $mail = getVar('post', 'mail', 'text');
         $field = getVar('post', 'field', 'field');
-        $com = getVar('post', 'com', 'text');
+        $note = getVar('post', 'note', 'text');
         $stop = [];
         checkemail($mail);
         if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
         if (!$stop) {
             $status = ($conf['order']['pr']) ? '0' : '1';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, NOW(), :status)', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, NOW(), :status)', ['email' => $mail, 'info' => $field, 'note' => $note, 'ip' => getIp(), 'agent' => getAgent(), 'status' => $status]);
             if ($conf['order']['ad']) {
                 $infos = fields_out($field, $conf['name']);
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._ORDER;
-                $msg = $conf['sitename'].' - '._ORDER.'<br><br><b>'._PERSONALINFO.'</b><br><br>'._OR_2.': '.$mail.'<br>'.$infos.'<br>'._OR_3.': '.$com;
+                $msg = $conf['sitename'].' - '._ORDER.'<br><br><b>'._PERSONALINFO.'</b><br><br>'._OR_2.': '.$mail.'<br>'.$infos.'<br>'._OR_3.': '.$note;
                 addMail($amail, $mail, $subject, $msg, 1, 1);
             }
             if (!$conf['order']['pr']) {

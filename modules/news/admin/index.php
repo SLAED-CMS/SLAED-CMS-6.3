@@ -35,24 +35,24 @@ function news(): void {
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" action="'.$afile.'.php" method="post"><input type="hidden" name="name" value="news"><input type="hidden" name="op" value="admin"><input type="hidden" name="refer" value="1">'
         .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th><th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th></tr></thead><tbody>';
-        while ([$sid, $catid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
-            $ctitle = ($catid) ? $ctitle : _NO;
+        while ([$id, $cid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
+            $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status && time() >= strtotime($time)) {
-                $view = '<a href="index.php?name=news&amp;op=view&amp;id='.$sid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = '<a href="index.php?name=news&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
             $vote = ($vote) ? '<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$vote.'" title="'._EDITVOTE.'">'._EDITVOTE.'</a>||' : '';
-            $cont .= '<tr><td>'.$sid.'</td>'
+            $cont .= '<tr><td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.$vote.'<a href="'.$afile.'.php?name=news&amp;op=add&amp;id='.$sid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=news&amp;op=admin&amp;typ=d&amp;id='.$sid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
-            .'<td><input type="checkbox" name="id[]" class="sl_check" value="'.$sid.'"></td></tr>';
+            .'<td>'.add_menu($view.$vote.'<a href="'.$afile.'.php?name=news&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=news&amp;op=admin&amp;typ=d&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
+            .'<td><input type="checkbox" name="id[]" class="sl_check" value="'.$id.'"></td></tr>';
         }
         $cont .= '</tbody></table>';
         $selms = _CHECKOP.': '.edit_list('news', 'typ', '').' <input type="submit" value="'._OK.'" class="sl_but_blue">';
@@ -69,15 +69,13 @@ function news(): void {
 function add(): void {
     global $db, $afile, $stop;
     $id = getVar('req', 'id', 'num', 0);
-    $sid = $id;
-    $sid = $id;
-    if ($sid) {
-        $result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.hometext, s.bodytext, s.field, s.vote, s.ihome, s.acomm, s.associated, s.fix, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE id = :sid', ['sid' => $sid]);
+    if ($id) {
+        $result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.intro, s.body, s.field, s.vote, s.ihome, s.acomm, s.assoc, s.fix, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE id = :id', ['id' => $id]);
         [$cat, $uname, $subject, $time, $hometext, $bodytext, $field, $vote, $ihome, $acomm, $associated, $fix, $nick] = $db->getSqlRow($result);
         $associated = explode(',', $associated);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
-        $sid = getVar('post', 'sid', 'num', 0);
+        $id = getVar('post', 'id', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');
         $subject = getVar('post', 'subject', 'title', '');
         $associated = getVar('post', 'associated', 'array', []);
@@ -130,7 +128,7 @@ function add(): void {
     .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
     .'<tr><td>'._FIXED.'?</td><td>'.radio_form($fix, 'fix').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="news">'.ad_save('sid', $sid, 'save').'</td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="news">'.ad_save('id', $id, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
@@ -138,7 +136,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $stop;
-    $sid = getVar('post', 'sid', 'num', 0);
+    $id = getVar('post', 'id', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
     $subject = getVar('post', 'subject', 'title', '');
     $associated = getVar('post', 'associated', 'array', []);
@@ -160,15 +158,15 @@ function save(): void {
     if (!$stop && $posttype === 'save') {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
-        if ($sid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, field = :field, vote = :vote, ihome = :ihome, acomm = :acomm, associated = :associated, fix = :fix, status = \'1\' WHERE id = :sid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'fix' => $fix, 'sid' => $sid]);
+        if ($id) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_news SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, intro = :intro, body = :body, field = :field, vote = :vote, ihome = :ihome, acomm = :acomm, assoc = :assoc, fix = :fix, status = \'1\' WHERE id = :id', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'assoc' => $associated, 'fix' => $fix, 'id' => $id]);
         } else {
             $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_news (id, cid, uid, name, title, time, hometext, bodytext, field, vote, comments, counter, ihome, acomm, score, ratings, associated, ip, fix, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, :field, :vote, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :associated, :ip, :fix, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'associated' => $associated, 'ip' => $ip, 'fix' => $fix]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_news (id, cid, uid, name, title, time, intro, body, field, vote, comments, counter, ihome, acomm, score, ratings, assoc, ip, fix, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :intro, :body, :field, :vote, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :assoc, :ip, :fix, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'field' => $field, 'vote' => $vote, 'ihome' => $ihome, 'acomm' => $acomm, 'assoc' => $associated, 'ip' => $ip, 'fix' => $fix]);
         }
         setRedirect($afile.'.php?name=news');
     } elseif ($posttype === 'delete') {
-        admin($sid, 'd');
+        admin($id, 'd');
     } else {
         add();
     }
@@ -181,7 +179,6 @@ function admin(int|array $ids = 0, string $vtyp = ''): void {
     if (!is_array($req) || $req === []) {
         $id = getVar('req', 'id', 'num', 0);
         $single = $id;
-    $sid = $id;
         $req = ($single > 0) ? [$single] : [];
     }
     if (!is_array($ids)) $ids = ($ids > 0) ? [$ids] : [];
@@ -296,7 +293,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
 
 
 

@@ -175,7 +175,7 @@ function send(): void {
 		if (!$stop) {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :hometext, \'0\', \'0\', \'0\', \'0\')', ['uid' => $postid, 'name' => $uname, 'ip' => getIp(), 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
+			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_whois (id, uid, name, ip, time, domain, host, dc, body, sdomain, shost, sdc, status) VALUES (NULL, :uid, :name, :ip, NOW(), :domain, :host, :dc, :body, \'0\', \'0\', \'0\', \'0\')', ['uid' => $postid, 'name' => $uname, 'ip' => getIp(), 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext]);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addAdminMail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
 			setHead(['title' => _WHOIS_LICENS_SEND]);

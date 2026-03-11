@@ -43,14 +43,14 @@ function auto_links(): void {
     $cont = navi(0, 0, 0, 0);
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['auto_links']['anum'];
-    $result = $db->getSqlQuery('SELECT id, title, link, hits, outs, added FROM '.PREFIX_DB.'_auto_links ORDER BY hits ASC LIMIT '.$offset.', '.$conf['auto_links']['anum']);
+    $result = $db->getSqlQuery('SELECT id, title, url, hits, outs, added FROM '.PREFIX_DB.'_auto_links ORDER BY hits ASC LIMIT '.$offset.', '.$conf['auto_links']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr>'
            .'<th>'._ID.'</th><th>'._SITENAME.'</th><th>'._SITEURL.'</th>'
            .'<th>'._HITS.'</th><th>'._OUTS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>'
            .'</tr></thead><tbody>';
-        while ([$id, $name, $link, $hits, $outs, $added] = $db->getSqlRow($result)) {
+        while ([$id, $name, $url, $hits, $outs, $added] = $db->getSqlRow($result)) {
             $vhits = ($hits) ? '<a href="'.$afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||' : '';
             $edit = '<a href="'.$afile.'.php?name=auto_links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>';
             $drop = '<a href="'.$afile.'.php?name=auto_links&amp;op=del&amp;id='.$id.'&amp;refer=1"'
@@ -59,7 +59,7 @@ function auto_links(): void {
             $cont .= '<tr>'
                .'<td>'.$id.'</td>'
                .'<td>'.title_tip(_REG.': '.format_time($added, _TIMESTRING)).'<span title="'.$name.'" class="sl_note">'.cutstr($name, 40).'</span></td>'
-               .'<td>'.domain($link).'</td>'
+               .'<td>'.domain($url).'</td>'
                .'<td>'.$hits.'</td>'
                .'<td>'.$outs.'</td>'
                .'<td>'.add_menu($vhits.$edit.'||'.$drop).'</td>'
@@ -85,8 +85,8 @@ function stats(): void {
     $tnum = ($offset) ? $conf['auto_links']['anum'] + $offset : $conf['auto_links']['anum'];
     if ($sort == 1) { $count = 'referer'; $ordby = 'hits'; }
     elseif ($sort == 2) { $count = 'referer'; $ordby = 'referer'; }
-    elseif ($sort == 3) { $count = 'link'; $ordby = 'hits'; }
-    elseif ($sort == 4) { $count = 'link'; $ordby = 'link'; }
+    elseif ($sort == 3) { $count = 'url'; $ordby = 'hits'; }
+    elseif ($sort == 4) { $count = 'url'; $ordby = 'url'; }
     elseif ($sort == 5) { $count = 'name'; $ordby = 'hits'; }
     elseif ($sort == 6) { $count = 'name'; $ordby = 'name'; }
     elseif ($sort == 7) { $count = 'ip'; $ordby = 'hits'; }
@@ -94,13 +94,13 @@ function stats(): void {
     elseif ($sort == 9) { $count = 'time'; $ordby = 'hits'; }
     else { $count = 'time'; $ordby = 'time'; }
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, time FROM '.PREFIX_DB.'_referer WHERE lid = :lid GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc, ['lid' => $id]);
+    $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer WHERE lid = :lid GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc, ['lid' => $id]);
     setHead();
     $cont = navi(0, 0, 0, 0);
     $list = [];
     $a = 0;
-    while ([$hits, $uid, $name, $ip, $referer, $link, $date] = $db->getSqlRow($result)) {
-        $list[] = [$hits, $uid, $name, $ip, $referer, $link, $date];
+    while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
+        $list[] = [$hits, $uid, $name, $ip, $referer, $url, $date];
         $a++;
     }
     if (isArray($list)) {
@@ -136,12 +136,12 @@ function add(): void {
     $stop = $stop ?? [];
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->getSqlQuery('SELECT id, title, description, link, mail, hits, outs FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]);
-        [$id, $name, $desc, $site, $mail, $hits, $outs] = $db->getSqlRow($result);
+        $result = $db->getSqlQuery('SELECT id, title, intro, url, email, hits, outs FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]);
+        [$id, $name, $desc, $site, $email, $hits, $outs] = $db->getSqlRow($result);
     } else {
         $id = getVar('post', 'id', 'num');
         $name = getVar('post', 'name', 'title', '');
-        $mail = getVar('post', 'mail', 'var', '');
+        $email = getVar('post', 'mail', 'var', '');
         $desc = getVar('post', 'desc', 'text', '');
         $site = getVar('post', 'site', 'url', 'https://');
         $hits = getVar('post', 'hits', 'num', 0);
@@ -154,7 +154,7 @@ function add(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php?name=auto_links" method="post"><table class="sl_table_form">'
        .'<tr><td>'._SITENAME.':</td><td><input type="text" name="name" value="'.$name.'" maxlength="255" class="sl_form" placeholder="'._SITENAME.'" required></td></tr>'
-       .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="100" class="sl_form" placeholder="'._A_LINKS_E.'" required></td></tr>'
+       .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="mail" value="'.$email.'" maxlength="100" class="sl_form" placeholder="'._A_LINKS_E.'" required></td></tr>'
        .'<tr><td>'._A_LINKS_TEXT.':</td><td>'.textarea('1', 'desc', $desc, 'auto_links', '5', _A_LINKS_TEXT, '1').'</td></tr>'
        .'<tr><td>'._A_LINKS_L.':</td><td><input type="url" name="site" value="'.$site.'" maxlength="100" class="sl_form" placeholder="'._A_LINKS_L.'" required></td></tr>'
        .'<tr><td>'._HITS.':</td><td><input type="number" name="hits" value="'.$hits.'" class="sl_form" placeholder="'._HITS.'"></td></tr>'
@@ -171,7 +171,7 @@ function save(): void {
     $name = getVar('post', 'name', 'title', '');
     $desc = getVar('post', 'desc', 'text', '');
     $site = getVar('post', 'site', 'url', 'https://');
-    $mail = getVar('post', 'mail', 'var', '');
+    $email = getVar('post', 'mail', 'var', '');
     $hits = getVar('post', 'hits', 'num', 0);
     $outs = getVar('post', 'outs', 'num', 0);
     $stop = [];
@@ -181,9 +181,9 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'var', '');
     if (!$stop && $posttype === 'save') {
         if ($id) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET title = :name, description = :desc, link = :link, mail = :mail, hits = :hits, outs = :outs WHERE id = :id', ['name' => $name, 'desc' => $desc, 'link' => $site, 'mail' => $mail, 'hits' => $hits, 'outs' => $outs, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET title = :name, intro = :desc, url = :url, email = :email, hits = :hits, outs = :outs WHERE id = :id', ['name' => $name, 'desc' => $desc, 'url' => $site, 'email' => $email, 'hits' => $hits, 'outs' => $outs, 'id' => $id]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_auto_links (title, description, link, mail, hits, outs, added) VALUES (:name, :desc, :link, :mail, :hits, :outs, now())', ['name' => $name, 'desc' => $desc, 'link' => $site, 'mail' => $mail, 'hits' => $hits, 'outs' => $outs]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_auto_links (title, intro, url, email, hits, outs, added) VALUES (:name, :desc, :url, :email, :hits, :outs, now())', ['name' => $name, 'desc' => $desc, 'url' => $site, 'email' => $email, 'hits' => $hits, 'outs' => $outs]);
         }
         setRedirect($afile.'.php?name=auto_links');
     } elseif ($posttype === 'delete') {

@@ -34,22 +34,22 @@ function pages(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$pid, $catid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
-            $ctitle = ($catid) ? $ctitle : _NO;
+        while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
+            $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status && time() >= strtotime($time)) {
-                $view = '<a href="index.php?name=pages&amp;op=view&amp;id='.$pid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = '<a href="index.php?name=pages&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
-            $cont .= '<tr><td>'.$pid.'</td>'
+            $cont .= '<tr><td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=pages&amp;op=add&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=pages&amp;op=del&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=pages&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=pages&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_pages', '', 'status = \''.$status.'\'', $anump);
@@ -66,7 +66,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $pid = $id;
     if ($pid) {
-        $result = $db->getSqlQuery('SELECT p.cid, p.name, p.title, p.time, p.hometext, p.bodytext, p.ihome, p.acomm, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE id = :pid', ['pid' => $pid]);
+        $result = $db->getSqlQuery('SELECT p.cid, p.name, p.title, p.time, p.intro, p.body, p.ihome, p.acomm, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE id = :pid', ['pid' => $pid]);
         [$cat, $uname, $subject, $time, $hometext, $bodytext, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
@@ -121,10 +121,10 @@ function save(): void {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($pid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, hometext = :hometext, bodytext = :bodytext, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET cid = :cat, uid = :uid, name = :name, title = :title, time = :time, intro = :intro, body = :body, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :pid', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'pid' => $pid]);
         } else {
             $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (id, cid, uid, name, title, time, hometext, bodytext, comments, counter, ihome, acomm, score, ratings, ip, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :hometext, :bodytext, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :ip, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (id, cid, uid, name, title, time, intro, body, comments, counter, ihome, acomm, score, ratings, ip, status) VALUES (NULL, :cat, :uid, :name, :title, :time, :intro, :body, \'0\', \'0\', :ihome, :acomm, \'0\', \'0\', :ip, \'1\')', ['cat' => $cat, 'uid' => $postid, 'name' => $postname, 'title' => $subject, 'time' => $time, 'intro' => $hometext, 'body' => $bodytext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
         }
         setRedirect($afile.'.php?name=pages');
     } elseif ($posttype === 'delete') {
@@ -222,7 +222,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
 
 
 

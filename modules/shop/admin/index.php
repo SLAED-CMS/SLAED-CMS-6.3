@@ -321,7 +321,7 @@ function productsadd(): void {
     global $db, $afile, $conf, $stop;
     if (getVar('req', 'id', 'num', 0)) {
         $id = getVar('req', 'id', 'num');
-        $result = $db->getSqlQuery('SELECT id, cid, time, title, text, bodytext, price, vote, assoc, ihome, acomm, count, fix, status FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $id]);
+        $result = $db->getSqlQuery('SELECT id, cid, time, title, intro, body, price, vote, assoc, ihome, acomm, counter, fix, status FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $id]);
         [$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $pprice, $vote, $passoc, $ihome, $acomm, $pcount, $fix, $pactive] = $db->getSqlRow($result);
         $associated = explode(',', $passoc);
     } else {
@@ -397,9 +397,9 @@ function productssave(): void {
     if (!$ptitle || !$ptext || !$pprice) $stop[] = _ERROR_ALL;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         if ($pid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :pcid, time = :ptime, title = :ptitle, text = :ptext, bodytext = :pbodytext, price = :pprice, vote = :vote, assoc = :associated, ihome = :ihome, acomm = :acomm, fix = :fix, status = :pactive WHERE id = :pid', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'associated' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive, 'pid' => $pid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET cid = :pcid, time = :ptime, title = :ptitle, intro = :ptext, body = :pbodytext, price = :pprice, vote = :vote, assoc = :assoc, ihome = :ihome, acomm = :acomm, fix = :fix, status = :pactive WHERE id = :pid', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'assoc' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive, 'pid' => $pid]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_products VALUES (NULL, :pcid, :ptime, :ptitle, :ptext, :pbodytext, :pprice, :vote, :associated, :ihome, :acomm, \'0\', \'0\', \'0\', \'0\', :fix, :pactive)', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'associated' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_products VALUES (NULL, :pcid, :ptime, :ptitle, :ptext, :pbodytext, :pprice, :vote, :assoc, :ihome, :acomm, \'0\', \'0\', \'0\', \'0\', :fix, :pactive)', ['pcid' => $pcid, 'ptime' => $ptime, 'ptitle' => $ptitle, 'ptext' => $ptext, 'pbodytext' => $pbodytext, 'pprice' => $pprice, 'vote' => $vote, 'assoc' => $associated, 'ihome' => $ihome, 'acomm' => $acomm, 'fix' => $fix, 'pactive' => $pactive]);
         }
         setRedirect($afile.'.php?name=shop&op=products');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
@@ -648,9 +648,9 @@ function exportdata(): void {
     if ($id == 1 && $bd) {
         $list = [];
         if ($bd == 'products') {
-            $result = $db->getSqlQuery('SELECT id, cid, time, title, text, bodytext, price, vote, assoc, com, count, votes, tvotes, fix, status FROM '.PREFIX_DB.'_products ORDER BY id');
-            while([$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $pprice, $pvote, $passoc, $pcom, $pcount, $pvotes, $ptotalvotes, $pfix, $pactive] = $db->getSqlRow($result)) {
-                $list[] = $pid.'||'.$pcid.'||'.$ptime.'||'.$ptitle.'||'.$ptext.'||'.$pbodytext.'||'.$pprice.'||'.$pvote.'||'.$passoc.'||'.$pcom.'||'.$pcount.'||'.$pvotes.'||'.$ptotalvotes.'||'.$pfix.'||'.$pactive;
+            $result = $db->getSqlQuery('SELECT id, cid, time, title, intro, body, price, vote, assoc, comments, counter, votes, tvotes, fix, status FROM '.PREFIX_DB.'_products ORDER BY id');
+            while([$pid, $pcid, $ptime, $ptitle, $ptext, $pbodytext, $pprice, $pvote, $passoc, $pcomments, $pcount, $pvotes, $ptotalvotes, $pfix, $pactive] = $db->getSqlRow($result)) {
+                $list[] = $pid.'||'.$pcid.'||'.$ptime.'||'.$ptitle.'||'.$ptext.'||'.$pbodytext.'||'.$pprice.'||'.$pvote.'||'.$passoc.'||'.$pcomments.'||'.$pcount.'||'.$pvotes.'||'.$ptotalvotes.'||'.$pfix.'||'.$pactive;
             }
         } elseif ($bd == 'clients') {
             $result = $db->getSqlQuery('SELECT id, uid, prod, part, proz, name, addr, phone, email, website, regdate, enddate, info, status FROM '.PREFIX_DB.'_clients ORDER BY id');
@@ -679,7 +679,7 @@ function exportdata(): void {
             if (preg_match('#(.*?)products\\.csv#', $bd)) {
                 $iid = 'id';
                 $idb = 'products';
-                $uquery = 'cid = \''.$data[1].'\', time = \''.$data[2].'\', title = \''.$data[3].'\', text = \''.$data[4].'\', bodytext = \''.$data[5].'\', price = \''.$data[6].'\', vote = \''.$data[7].'\', assoc = \''.$data[7].'\', com = \''.$data[9].'\', count = \''.$data[10].'\', votes = \''.$data[11].'\', tvotes = \''.$data[12].'\', fix = \''.$data[13].'\', status = \''.$data[14].'\'';
+                $uquery = 'cid = \''.$data[1].'\', time = \''.$data[2].'\', title = \''.$data[3].'\', intro = \''.$data[4].'\', body = \''.$data[5].'\', price = \''.$data[6].'\', vote = \''.$data[7].'\', assoc = \''.$data[7].'\', comments = \''.$data[9].'\', counter = \''.$data[10].'\', votes = \''.$data[11].'\', tvotes = \''.$data[12].'\', fix = \''.$data[13].'\', status = \''.$data[14].'\'';
                 $squery = '\''.$data[1].'\', \''.$data[2].'\', \''.$data[3].'\', \''.$data[4].'\', \''.$data[5].'\', \''.$data[6].'\', \''.$data[7].'\', \''.$data[8].'\', \''.$data[9].'\', \''.$data[10].'\', \''.$data[11].'\', \''.$data[12].'\'';
             } elseif (preg_match('#(.*?)clients\\.csv#', $bd)) {
                 $iid = 'id';

@@ -16,7 +16,7 @@ $blimit = '3';
 # Закрытые форумы, сообщения которых не будут показаны в блоке
 $bclos = '97, 98';
 
-$bwhere = ($bclos) ? 'catid NOT IN ('.$bclos.') AND' : '';
+$bwhere = ($bclos) ? 'cid NOT IN ('.$bclos.') AND' : '';
 $ordern = (is_moder('forum')) ? '' : "AND time <= now() AND status > '1'";
 $buffer = '';
 $result = $db->getSqlQuery('SELECT id, title, time, luid, lname, lpost, ltime, status FROM '.PREFIX_DB.'_forum WHERE '.$bwhere." pid = '0' ".$ordern.' ORDER BY ltime DESC LIMIT 0, '.$blimit);

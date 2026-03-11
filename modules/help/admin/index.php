@@ -34,17 +34,17 @@ function help(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th>'.cutstr(_MESSAGES, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$sid, $catid, $title, $time, $comments, $ip, $stat, $ctitle, $nick] = $db->getSqlRow($result)) {
-            $ctitle = ($catid) ? $ctitle : _NO;
+        while ([$id, $cid, $title, $time, $comments, $ip, $stat, $ctitle, $nick] = $db->getSqlRow($result)) {
+            $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : _ANONYM;
             $stat = ($stat) ? 0 : 1;
-            $cont .= '<tr><td>'.$sid.'</td>'
+            $cont .= '<tr><td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.$comments.'</td>'
             .'<td>'.ad_status('', $stat).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?name=help&amp;op=view&amp;id='.$sid.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=help&amp;op=del&amp;id='.$sid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu('<a href="'.$afile.'.php?name=help&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=help&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
@@ -59,12 +59,12 @@ function help(): void {
 function view(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
-    $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.hometext, s.field, s.counter, s.score, s.ratings, c.title, c.description, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id]);
+    $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id]);
     setHead();
     $cont = navi(0, 0, 0, 0);
     $cont .= setTemplateBasic('open');
     $a = 0;
-    while ([$sid, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
+    while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $title = ($title) ? $title : _MESSAGE.': '.$a;
         $fields = fields_out($field, 'help');
         $fields = ($fields) ? '<br><br>'.$fields : '';
@@ -72,8 +72,8 @@ function view(): void {
         $post = $nick ? user_info($nick) : _ANONYM;
         $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
         $date = '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time, _TIMESTRING).'</span>';
-        $comm = ($a) ? '<a href="#'.$sid.'" title="'._MESSAGE.': '.$a.'" class="sl_pnum">'.$a.'</a>' : '';
-        $rating = ($haid && $huid != $haid) ? ajax_rating(0, $sid, 'help', $ratings, $score, '') : '';
+        $comm = ($a) ? '<a href="#'.$id.'" title="'._MESSAGE.': '.$a.'" class="sl_pnum">'.$a.'</a>' : '';
+        $rating = ($haid && $huid != $haid) ? ajax_rating(0, $id, 'help', $ratings, $score, '') : '';
         if (!$pid) {
             $cdesc = ($cdesc) ? $cdesc : $ctitle;
             $ctitle = ($ctitle) ? '<span title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</span>' : '';
@@ -82,8 +82,8 @@ function view(): void {
             $ctitle = '';
             $reads =  '';
         }
-        $admin = add_menu('<a href="'.$afile.'.php?name=help&amp;op=add&amp;id='.$sid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=help&amp;op=del&amp;id='.$sid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
-        $cont .= setTemplateBasic('basic', ['{%ctitle%}' => $ctitle, '{%id%}' => $sid, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin]);
+        $admin = add_menu('<a href="'.$afile.'.php?name=help&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=help&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
+        $cont .= setTemplateBasic('basic', ['{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin]);
         $a++;
     }
     $cont .= setTemplateBasic('close');
@@ -95,14 +95,14 @@ function view(): void {
 function addview(int $id): string {
     global $db, $afile, $admin;
     $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
-    [$catid, $uid, $status] = $db->getSqlRow($result);
+    [$cid, $uid, $status] = $db->getSqlRow($result);
     $cont = setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $admin[1] ?? '', '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', 'help', '10', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._HELPGLOS.'</td><td>'.radio_form($status, 'status').'</td></tr>'
     .'<tr><td>'._MAIL_SENDE.'</td><td>'.radio_form('1', 'umail').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="refer" value="1"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$catid.'"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="save"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="refer" value="1"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$cid.'"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="save"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     return $cont;
 }
@@ -110,14 +110,12 @@ function addview(int $id): string {
 function add(): void {
     global $db, $afile, $stop;
     $id = getVar('req', 'id', 'num', 0);
-    $sid = $id;
-    $sid = $id;
-    if ($sid) {
-        $result = $db->getSqlQuery('SELECT s.pid, s.cid, s.title, s.time, s.hometext, s.field, s.status, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :sid', ['sid' => $sid]);
+    if ($id) {
+        $result = $db->getSqlQuery('SELECT s.pid, s.cid, s.title, s.time, s.body, s.field, s.status, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id', ['id' => $id]);
         [$pid, $cat, $subject, $time, $hometext, $field, $status, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: _ANONYM;
     } else {
-        $sid = getVar('post', 'sid', 'num', 0);
+        $id = getVar('post', 'id', 'num', 0);
         $pid = getVar('post', 'pid', 'num', 0);
         $postname = getVar('post', 'postname', 'name', '');
         $subject = getVar('post', 'subject', 'title', '');
@@ -139,7 +137,7 @@ function add(): void {
     .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1').'</td></tr>'
     .fields_in($field, 'help')
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="pid" value="'.$pid.'">'.ad_save('sid', $sid, 'save').'</td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="pid" value="'.$pid.'">'.ad_save('id', $id, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
@@ -147,7 +145,7 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $admin, $conf, $stop;
-    $sid = getVar('post', 'sid', 'num', 0);
+    $id = getVar('post', 'id', 'num', 0);
     $pid = getVar('post', 'pid', 'num', 0);
     $uid = getVar('post', 'uid', 'num', 0);
     $postname = getVar('post', 'postname', 'name', '');
@@ -165,13 +163,13 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         $postid = (is_user_id($postname)) ? is_user_id($postname) : 0;
-        if ($sid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET cid = :cat, aid = :postid, title = :subject, time = :time, hometext = :hometext, field = :field WHERE id = :sid', ['cat' => $cat, 'postid' => $postid, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'sid' => $sid]);
-            $hid = ($pid) ? $pid : $sid;
+        if ($id) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET cid = :cat, aid = :postid, title = :subject, time = :time, body = :body, field = :field WHERE id = :id', ['cat' => $cat, 'postid' => $postid, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'field' => $field, 'id' => $id]);
+            $hid = ($pid) ? $pid : $id;
             setRedirect($afile.'.php?name=help&op=view&id='.$hid);
         } else {
             $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (pid, cid, uid, aid, title, time, hometext, field, ip, status) VALUES (:pid, :cat, :uid, :postid, :subject, now(), :hometext, \'\', :ip, \'0\')', ['pid' => $pid, 'cat' => $cat, 'uid' => $uid, 'postid' => $postid, 'subject' => $subject, 'hometext' => $hometext, 'ip' => $ip]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (pid, cid, uid, aid, title, time, body, field, ip, status) VALUES (:pid, :cat, :uid, :postid, :subject, now(), :body, \'\', :ip, \'0\')', ['pid' => $pid, 'cat' => $cat, 'uid' => $uid, 'postid' => $postid, 'subject' => $subject, 'body' => $hometext, 'ip' => $ip]);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE id = :pid', ['status' => $status, 'pid' => $pid]);
             if ($umail) {
                 $result = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]);
@@ -187,7 +185,7 @@ function save(): void {
             setRedirect($afile.'.php?name=help');
         }
     } elseif ($posttype === 'delete') {
-        del($sid);
+        del($id);
     } else {
         add();
     }
@@ -266,7 +264,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
 
 
 

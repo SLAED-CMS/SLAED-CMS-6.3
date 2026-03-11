@@ -11,7 +11,7 @@ if (!defined('MODULE_FILE')) {
 
 function voting(): void {
 	global $db, $afile, $locale, $conf;
-	$onum = ($conf['multilingual'] == 1) ? "(language = '".$locale."' OR language = '') AND modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+	$onum = ($conf['multilingual'] == 1) ? "(lang = '".$locale."' OR lang = '') AND modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $conf['voting']['num'];
 	setHead(['title' => _VOTING]);

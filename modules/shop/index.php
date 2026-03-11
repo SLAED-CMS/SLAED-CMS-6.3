@@ -36,26 +36,26 @@ function shop(): void {
 				$orderby = 'IFNULL((p.tvotes/NULLIF(p.votes,0)),0) DESC';
 				$ntitle = _BEST;
 			} else {
-				$orderby = 'IFNULL((p.count/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC';
+				$orderby = 'IFNULL((p.counter/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC';
 				$ntitle = _POP;
 			}
 		$order = "WHERE p.time <= NOW() AND p.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$onum = "time <= NOW() AND status != '0'";
 	} elseif ($ncat) {
 		$field = ($op) ? 'cat='.$ncat.'&op='.$op.'&' : 'cat='.$ncat.'&';
-			$orderby = ($op) ? (($op == 'best') ? 'IFNULL((p.tvotes/NULLIF(p.votes,0)),0) DESC' : 'IFNULL((p.count/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC') : 'p.fix DESC, p.time DESC';
+			$orderby = ($op) ? (($op == 'best') ? 'IFNULL((p.tvotes/NULLIF(p.votes,0)),0) DESC' : 'IFNULL((p.counter/NULLIF((TO_DAYS(NOW()) - TO_DAYS(p.time)),0)),0) DESC') : 'p.fix DESC, p.time DESC';
 		[$ctitle] = $db->getSqlRow($db->getSqlQuery('SELECT title FROM '.PREFIX_DB.'_categories WHERE id = :ncat', ['ncat' => $ncat]));
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (p.cid = :ncat1 OR p.assoc REGEXP :ncat_re OR c.parent = :ncat2) AND p.time <= NOW() AND p.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$params = ['ncat1' => $ncat, 'ncat_re' => '[[:<:]]'.$ncat.'[[:>:]]', 'ncat2' => $ncat];
-		$catid = [];
+		$cids = [];
 		$result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
-		while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
+		while ([$caid] = $db->getSqlRow($result)) $cids[] = $caid;
 		unset($result);
-		if (isArray($catid)) {
+		if (isArray($cids)) {
 			$caton = 1;
-			array_unshift($catid, $ncat);
-			$wcid = 'cid IN ('.implode(', ', $catid).')';
+			array_unshift($cids, $ncat);
+			$wcid = 'cid IN ('.implode(', ', $cids).')';
 		} else {
 			$caton = 0;
 			$wcid = "cid = '".$ncat."'";
@@ -81,7 +81,7 @@ function shop(): void {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
-	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.text, p.bodytext, p.price, p.acomm, p.com, p.count, p.votes, p.tvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.intro, p.body, p.price, p.acomm, p.comments, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
 		$cont .= '<div id="shop"><div id="repkasse">'.show_kasse().'</div></div>';
 		$width = 100 / $conf['shop']['bascol'];
@@ -152,7 +152,7 @@ function liste(): void {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
-	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, c.title, c.description FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
+	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
 	setHead(['title' => _LIST]);
 	$cont = navigate(_LIST);
 	if ($db->getSqlRowCount($result) > 0) {
@@ -182,9 +182,9 @@ function view(): void {
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'p.cid');
-	$result = $db->getSqlQuery('SELECT p.cid, p.time, p.title, p.text, p.bodytext, p.price, p.vote, p.assoc, p.acomm, p.count, p.votes, p.tvotes, c.title, c.description, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.status != \'0\' '.$cwhere, ['id' => $id]);
+	$result = $db->getSqlQuery('SELECT p.cid, p.time, p.title, p.intro, p.body, p.price, p.vote, p.assoc, p.acomm, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.id = :id AND p.time <= NOW() AND p.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->getSqlRowCount($result) == 1) {
-		$db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET count = count+1 WHERE id = :id', ['id' => $id]);
+		$db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET counter = counter+1 WHERE id = :id', ['id' => $id]);
 		[$cid, $time, $title, $text, $bodytext, $pprice, $vote, $passoc, $acomm, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result);
 		$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 		$seotitle = $title;
@@ -243,7 +243,7 @@ function view(): void {
 			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->getSqlQuery('SELECT id, time, title, text, bodytext FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
+				$result = $db->getSqlQuery('SELECT id, time, title, intro, body FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
 				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _ASPROD]);
 				while ([$aid, $time, $title, $hometext, $bodytext] = $db->getSqlRow($result)) {
 					$date = ($conf['shop']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
@@ -422,7 +422,7 @@ function rech(): void {
 	if (is_user() && is_active('shop')) {
 		$defis = urldecode($conf['defis']);
 		$id = getVar('get', 'id', 'num');
-		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.text, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
+		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.intro, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
 		if ($db->getSqlRowCount($result) > 0) {
 			[$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $pprice] = $db->getSqlRow($result);
 			$cont = '<!doctype html>'."\n";

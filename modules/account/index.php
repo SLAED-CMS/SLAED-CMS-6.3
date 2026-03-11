@@ -43,10 +43,10 @@ function checkuser(string $nick, string $mail, int|string $rules): ?array {
     foreach ($nameb as $val) if ($val != '' && $val == strtolower($nick)) $stop[] = _NAME_BLOCK;
     if (!$nick || !analyze_name($nick)) $stop[] = _ERRORINVNICK;
     if (strlen($nick) > 25) $stop[] = _NICKLONG;
-    if ($db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name = :user_name', ['user_name' => $nick])) > 0) $stop[] = _NICKTAKEN;
-    if ($db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users_temp WHERE name = :user_name', ['user_name' => $nick])) > 0) $stop[] = _NICKTAKEN;
-    if ($db->getSqlRowCount($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE email = :user_email', ['user_email' => $mail])) > 0) $stop[] = _ERROR_EMAIL;
-    if ($db->getSqlRowCount($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users_temp WHERE email = :user_email', ['user_email' => $mail])) > 0) $stop[] = _ERROR_EMAIL;
+    if ($db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $nick])) > 0) $stop[] = _NICKTAKEN;
+    if ($db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users_temp WHERE name = :name', ['name' => $nick])) > 0) $stop[] = _NICKTAKEN;
+    if ($db->getSqlRowCount($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users WHERE email = :email', ['email' => $mail])) > 0) $stop[] = _ERROR_EMAIL;
+    if ($db->getSqlRowCount($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users_temp WHERE email = :email', ['email' => $mail])) > 0) $stop[] = _ERROR_EMAIL;
     return($stop);
 }
 
@@ -122,8 +122,8 @@ function finnewuser(): void {
             $nick = filterText($nick);
             $mail = filterText($mail);
             $db->getSqlQuery(
-                'INSERT INTO '.PREFIX_DB.'_users_temp (id, name, email, password, regdate, code, time) VALUES (NULL, :user_name, :user_email, :user_password, NOW(), :check_num, :time)',
-                ['user_name' => $nick, 'user_email' => $mail, 'user_password' => $pass, 'check_num' => $check, 'time' => $time]
+                'INSERT INTO '.PREFIX_DB.'_users_temp (id, name, email, password, regdate, code, time) VALUES (NULL, :name, :email, :password, NOW(), :code, :time)',
+                ['name' => $nick, 'email' => $mail, 'password' => $pass, 'code' => $check, 'time' => $time]
             );
             setHead(['title' => _ACCOUNTCREATED]);
             if ($conf['users']['nomail'] == 1) {
@@ -182,30 +182,30 @@ function network(): void {
             $variants[] = substr($first, 0, 22).'-'.rand(1, 99);
             $variants[] = substr($first, 0, 20).'-'.getPass(4);
             foreach ($variants as $var) {
-                if ($db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name = :user_name', ['user_name' => $var])) == 0) {
+                if ($db->getSqlRowCount($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name = :name', ['name' => $var])) == 0) {
                     $uname = $var;
                     break;
                 }
             }
-            $upass = md5_salt(trim($ulog['identity']));
             $uip = getIp();
             $uagent = getAgent();
-            $result = $db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE password = :user_password', ['user_password' => $upass]);
+            $network = isset($ulog['profile']) ? $ulog['profile'] : $ulog['network'];
+            $result = $db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]);
             [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($result);
             if ($db->getSqlRowCount($result) == 1) {
                 setCookies('account', time() + intval($conf['user_c_t']), [$uid, $nick, $pass, $story, $blockon, $theme]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastip = :user_last_ip, lastvis = NOW(), agent = :user_agent WHERE id = :user_id', ['user_last_ip' => $uip, 'user_agent' => $uagent, 'user_id' => $uid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastip = :lastip, lastvis = NOW(), agent = :agent WHERE id = :id', ['lastip' => $uip, 'agent' => $uagent, 'id' => $uid]);
                 login_report(0, 1, $nick, '');
                 setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
             } else {
                 $uemail = isset($ulog['email']) ? mb_strtolower($ulog['email']) : '';
-                $network = isset($ulog['profile']) ? $ulog['profile'] : $ulog['network'];
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, lastip, agent, network, block, warnings, field) VALUES (NULL, :user_name, :user_email, :user_avatar, NOW(), :user_password, :user_last_ip, :user_agent, :user_network, :user_block, :user_warnings, :user_field)', ['user_name' => $uname, 'user_email' => $uemail, 'user_avatar' => 'default/00.gif', 'user_password' => $upass, 'user_last_ip' => $uip, 'user_agent' => $uagent, 'user_network' => $network, 'user_block' => '', 'user_warnings' => '', 'user_field' => '']);
-                [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE password = :user_password', ['user_password' => $upass]));
+                $upass = getPassHash(getPass(32));
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, lastip, agent, network, block, warnings, field) VALUES (NULL, :name, :email, :avatar, NOW(), :password, :lastip, :agent, :network, :block, :warnings, :field)', ['name' => $uname, 'email' => $uemail, 'avatar' => 'default/00.gif', 'password' => $upass, 'lastip' => $uip, 'agent' => $uagent, 'network' => $network, 'block' => '', 'warnings' => '', 'field' => '']);
+                [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]));
                 setCookies('account', time() + intval($conf['user_c_t']), [$uid, $nick, $pass, $story, $blockon, $theme]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastvis = NOW() WHERE id = :user_id', ['user_id' => $uid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastvis = NOW() WHERE id = :id', ['id' => $uid]);
                 $uphoto = isset($ulog['photo']) ? $ulog['photo'] : '';
                 if ($uphoto) {
                     $anetwork = isset($ulog['network']) ? substr(getTranslit($ulog['network'], 1), 0, 25) : 'network';
@@ -214,7 +214,7 @@ function network(): void {
                     if (file_exists($afile)) {
                         [$awidth] = getimagesize($afile);
                         if ($awidth > $conf['users']['awidth']) create_img_gd($afile, $afile, $conf['users']['awidth']);
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :user_avatar WHERE id = :user_id', ['user_avatar' => $uavatar, 'user_id' => $uid]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => $uavatar, 'id' => $uid]);
                     }
                 }
                 login_report(0, 1, $nick, '');
@@ -478,7 +478,7 @@ function last(int|string $uid, string $modul): string {
         }
     }
     if ($modul == 'files') {
-        $result = $db->getSqlQuery('SELECT lid, title, time FROM '.PREFIX_DB."_files WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY lid DESC LIMIT 0,".$limit, ['user_id' => $uid]);
+        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_files WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="'.getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
@@ -508,7 +508,7 @@ function last(int|string $uid, string $modul): string {
         }
     }
     if ($modul == 'links') {
-        $result = $db->getSqlQuery('SELECT lid, title, time FROM '.PREFIX_DB."_links WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY lid DESC LIMIT 0,".$limit, ['user_id' => $uid]);
+        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_links WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=links&amp;op=view&amp;id='.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
@@ -528,7 +528,7 @@ function last(int|string $uid, string $modul): string {
         }
     }
     if ($modul == 'news') {
-        $result = $db->getSqlQuery('SELECT sid, title, time FROM '.PREFIX_DB."_news WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY sid DESC LIMIT 0,".$limit, ['user_id' => $uid]);
+        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_news WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=news&amp;op=view&amp;id='.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
@@ -538,7 +538,7 @@ function last(int|string $uid, string $modul): string {
         }
     }
     if ($modul == 'pages') {
-        $result = $db->getSqlQuery('SELECT pid, title, time FROM '.PREFIX_DB."_pages WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY pid DESC LIMIT 0,".$limit, ['user_id' => $uid]);
+        $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_pages WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= '<tr><td style="width: 15%"><time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.': '.format_time($time, _TIMESTRING).'" class="sl_date">'.format_time($time).'</time></td><td><a href="index.php?name=pages&amp;op=view&amp;id='.$id.'" title="'.$title.'" class="sl_last">'.$title.'</a></td></tr>';
@@ -629,8 +629,8 @@ function passmail(): void {
         $subpass = substr(md5($pass), 0, 10);
         if ($code && $subpass == $code) {
             $newpass = getPass($conf['users']['minpass']);
-            $cryptpass = md5_salt($newpass);
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :user_password WHERE email = :email', ['user_password' => $cryptpass, 'email' => $email]);
+            $chash = getPassHash($newpass);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE email = :email', ['password' => $chash, 'email' => $email]);
             $link = '<a href="'.$conf['homeurl'].'/index.php?name='.$conf['name'].'">'.$conf['homeurl'].'/index.php?name='.$conf['name'].'</a>';
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
@@ -658,20 +658,22 @@ function login(): void {
     $uname = htmlspecialchars(trim(substr(getVar('post', 'user_name', 'text'), 0, 25)));
     $upass = htmlspecialchars(trim(substr(getVar('post', 'user_password', 'text'), 0, 25)));
     if (!$uname || !$upass) $stop[] = _LOGININCOR;
-    $upasshash = md5_salt($upass);
     $result = $db->getSqlQuery(
-        'SELECT id, name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE name = :uname AND password = :upass AND network = :network',
-        ['uname' => $uname, 'upass' => $upasshash, 'network' => '']
+        'SELECT id, name, email, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE name = :name AND network = :network',
+        ['name' => $uname, 'network' => '']
     );
-    if ($db->getSqlRowCount($result) != 1) $stop[] = _LOGININCOR;
     [$uid, $nick, $mail, $pass, $story, $blockon, $theme] = $db->getSqlRow($result);
-    if (!$uid || $nick != $uname || $pass != $upasshash) $stop[] = _LOGININCOR;
+    if ($db->getSqlRowCount($result) != 1 || !$uid || $nick != $uname || !checkPassHash($upass, $pass)) $stop[] = _LOGININCOR;
+    if (!$stop && password_needs_rehash($pass, PASSWORD_BCRYPT)) {
+        $pass = getPassHash($upass);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :pwd WHERE id = :id', ['pwd' => $pass, 'id' => $uid]);
+    }
     if (!$stop) {
         setCookies('account', time() + intval($conf['user_c_t']), [$uid, $nick, $pass, $story, $blockon, $theme]);
         $uip = getIp();
         $uagent = getAgent();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastip = :user_last_ip, lastvis = NOW(), agent = :user_agent WHERE id = :user_id', ['user_last_ip' => $uip, 'user_agent' => $uagent, 'user_id' => $uid]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastip = :lastip, lastvis = NOW(), agent = :agent WHERE id = :id', ['lastip' => $uip, 'agent' => $uagent, 'id' => $uid]);
         login_report(0, 1, $uname, '');
         setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
     } else {
@@ -827,7 +829,7 @@ function savehome(): void {
             $birth = getVar('req', 'user_birthday', 'date');
             $gender = getVar('post', 'gender', 'num');
             $field = getVar('post', 'field', 'field');
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :user_email, website = :user_website, viewmail = :user_viewemail, occ = :user_occ, origin = :user_from, interest = :user_interests, sig = :user_sig, storynum = :user_storynum, blockon = :user_blockon, block = :user_block, theme = :user_theme, newslet = :user_newsletter, fsmail = :user_fsmail, psmail = :user_psmail, birthday = :user_birthday, gender = :user_gender, field = :user_field WHERE id = :user_id', ['user_email' => $mail, 'user_website' => $site, 'user_viewemail' => $view, 'user_occ' => $occ, 'user_from' => $from, 'user_interests' => $inter, 'user_sig' => $sig, 'user_storynum' => $story, 'user_blockon' => $blockon, 'user_block' => $block, 'user_theme' => $theme, 'user_newsletter' => $news, 'user_fsmail' => $fsmail, 'user_psmail' => $psmail, 'user_birthday' => $birth, 'user_gender' => $gender, 'user_field' => $field, 'user_id' => $uid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
             $userinfo = getUserInfo();
             setCookies('account', time() + intval($conf['user_c_t']), [$userinfo['id'], $userinfo['name'], $userinfo['password'], $userinfo['storynum'], $userinfo['blockon'], $userinfo['theme']]);
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
@@ -851,7 +853,7 @@ function saveavatar(): void {
         }
         if (!$stop && $avatar) {
             $avatar = filterText($avatar);
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :user_avatar WHERE id = :user_id', ['user_avatar' => $avatar, 'user_id' => $uid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET avatar = :avatar WHERE id = :id', ['avatar' => $avatar, 'id' => $uid]);
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
         } else {
             edithome();
@@ -868,10 +870,9 @@ function savepass(): void {
     $oldpass = getVar('post', 'oldpass', 'text', false);
     if (is_user() && $oldpass && $newpass && $newpass2) {
         if (strlen($newpass) >= $conf['users']['minpass']) {
-            $oldpass = md5_salt($oldpass);
             $uid = intval($user[0]);
-            [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :user_id AND network = :network', ['user_id' => $uid, 'network' => '']));
-            if (!empty($pass) && $pass == $oldpass) {
+            [$pass] = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :id AND network = :network', ['id' => $uid, 'network' => '']));
+            if (!empty($pass) && checkPassHash($oldpass, $pass)) {
                 if ($newpass == $newpass2) {
                     $userinfo = getUserInfo();
                     $mail = $userinfo['email'];
@@ -880,8 +881,8 @@ function savepass(): void {
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
                     addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
-                    $newpass = md5_salt($newpass);
-                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :user_password WHERE id = :user_id', ['user_password' => $newpass, 'user_id' => $uid]);
+                    $newpass = getPassHash($newpass);
+                    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE id = :id', ['password' => $newpass, 'id' => $uid]);
                     setRedirect('index.php?name='.$conf['name']);
                 } else {
                     $stop[] = _ERROR_PASS;

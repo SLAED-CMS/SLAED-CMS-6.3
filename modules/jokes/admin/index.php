@@ -66,7 +66,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $jokeid = $id;
     if ($jokeid) {
-        $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.hometext, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.id = :jokeid', ['jokeid' => $jokeid]);
+        $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.body, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.id = :jokeid', ['jokeid' => $jokeid]);
         [$jokeid, $uname, $date, $title, $cat, $joke, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
@@ -112,10 +112,10 @@ function save(): void {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($jokeid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, time = :time, title = :title, cid = :cat, hometext = :joke, status = \'1\' WHERE id = :jokeid', ['uid' => $postid, 'name' => $postname, 'time' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_jokes SET uid = :uid, name = :name, time = :time, title = :title, cid = :cat, body = :joke, status = \'1\' WHERE id = :jokeid', ['uid' => $postid, 'name' => $postname, 'time' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'jokeid' => $jokeid]);
         } else {
             $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (uid, name, time, title, cid, hometext, ip, status) VALUES (:uid, :name, :time, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'time' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (uid, name, time, title, cid, body, ip, status) VALUES (:uid, :name, :time, :title, :cat, :joke, :ip, \'1\')', ['uid' => $postid, 'name' => $postname, 'time' => $date, 'title' => $title, 'cat' => $cat, 'joke' => $joke, 'ip' => $ip]);
         }
         setRedirect($afile.'.php?name=jokes');
     } elseif ($posttype === 'delete') {

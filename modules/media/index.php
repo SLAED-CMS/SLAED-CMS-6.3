@@ -48,14 +48,14 @@ function media(): void {
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
         $order = "WHERE (m.cid = :ncat1 OR c.parent = :ncat2) AND m.time <= NOW() AND m.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat2' => $ncat];
-        $catid = [];
+        $cids = [];
         $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
-        while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
+        while ([$caid] = $db->getSqlRow($result)) $cids[] = $caid;
         unset($result);
-        if (isArray($catid)) {
+        if (isArray($cids)) {
             $caton = 1;
-            array_unshift($catid, $ncat);
-            $wcid = 'cid IN ('.implode(', ', $catid).')';
+            array_unshift($cids, $ncat);
+            $wcid = 'cid IN ('.implode(', ', $cids).')';
         } else {
             $caton = 0;
             $wcid = "cid = '".$ncat."'";
@@ -80,7 +80,7 @@ function media(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.description, m.links, m.time, m.acomm, m.votes, m.tvotes, m.tcom, m.hits, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.intro, m.links, m.time, m.acomm, m.votes, m.tvotes, m.comments, m.hits, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -152,7 +152,7 @@ function view(): void {
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'text');
     $cwhere = catmids($conf['name'], 'm.cid');
-    $result = $db->getSqlQuery('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.description, m.author, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.time, m.acomm, m.votes, m.tvotes, m.hits, m.status, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.id = :id AND m.time <= NOW() AND m.status != \'0\' '.$cwhere, ['id' => $id]);
+    $result = $db->getSqlQuery('SELECT m.cid, m.name, m.title, m.subtitle, m.year, m.director, m.roles, m.intro, m.author, m.duration, m.lang, m.note, m.format, m.quality, m.size, m.released, m.links, m.time, m.acomm, m.votes, m.tvotes, m.hits, m.status, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.id = :id AND m.time <= NOW() AND m.status != \'0\' '.$cwhere, ['id' => $id]);
     if ($db->getSqlRowCount($result) == 1) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET hits = hits+1 WHERE id = :id', ['id' => $id]);
         [$cid, $uname, $title, $subtitle, $year, $director, $roles, $description, $createdby, $duration, $lang, $note, $format, $quality, $size, $released, $links, $date, $acomm, $votes, $totalvotes, $hits, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result);
@@ -230,7 +230,7 @@ function view(): void {
             [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
-                $result = $db->getSqlQuery('SELECT id, title, subtitle, description, time FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
+                $result = $db->getSqlQuery('SELECT id, title, subtitle, intro, time FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
                 $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
                 while([$aid, $title, $subtitle, $hometext, $time] = $db->getSqlRow($result)) {
                     $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
@@ -384,7 +384,7 @@ function send(): void {
         if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
             $postid = (is_user()) ? intval($user[0]) : '';
             $uname = (!is_user()) ? $postname : '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, description, author, duration, lang, note, format, quality, size, released, links, time, ip, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :description, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'description' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_media (id, cid, uid, name, title, subtitle, year, director, roles, intro, author, duration, lang, note, format, quality, size, released, links, time, ip, status) VALUES (NULL, :cid, :postid, :uname, :title, :subtitle, :year, :director, :roles, :intro, :createdby, :duration, :lang, :note, :format, :quality, :size, :released, :links, NOW(), :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'subtitle' => $subtitle, 'year' => $year, 'director' => $director, 'roles' => $roles, 'intro' => $description, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'note' => $note, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'links' => $links, 'ip' => getIp()]);
             update_points(25);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);

@@ -74,8 +74,8 @@ function add(): void {
     $fid = $id;
     $fid = $id;
     if ($fid) {
-        $result = $db->getSqlQuery('SELECT f.cid, f.name, f.title, f.description, f.bodytext, f.url, f.time, f.filesize, f.version, f.email, f.homepage, f.ihome, f.acomm, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE id = :id', ['id' => $fid]);
-        [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $homepage, $ihome, $acomm, $nick] = $db->getSqlRow($result);
+        $result = $db->getSqlQuery('SELECT f.cid, f.name, f.title, f.intro, f.body, f.url, f.time, f.filesize, f.version, f.email, f.website, f.ihome, f.acomm, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE id = :id', ['id' => $fid]);
+        [$cid, $uname, $title, $description, $bodytext, $url, $date, $filesize, $version, $email, $website, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
         $fid = getVar('post', 'fid', 'num', 0);
@@ -92,7 +92,7 @@ function add(): void {
         $version = getVar('post', 'version', 'name', '');
         $postname = getVar('post', 'postname', 'name', '');
         $email = getVar('post', 'email', 'name', '');
-        $homepage = getVar('post', 'homepage', 'url', 'http://');
+        $website = getVar('post', 'website', 'url', 'http://');
     }
     setHead();
     $cont = navi(0, 1, 0, 0);
@@ -119,7 +119,7 @@ function add(): void {
     .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'description', $description, 'files', '5', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._ENDTEXT.':</td><td>'.textarea('2', 'bodytext', $bodytext, 'files', '15', _ENDTEXT, '0').'</td></tr>'
     .'<tr><td>'._AUEMAIL.':</td><td><input type="email" name="email" value="'.$email.'" class="sl_form" placeholder="'._AUEMAIL.'"></td></tr>'
-    .'<tr><td>'._SITE.':</td><td><input type="url" name="homepage" value="'.$homepage.'" class="sl_form" placeholder="'._SITE.'"></td></tr>'
+    .'<tr><td>'._SITE.':</td><td><input type="url" name="website" value="'.$website.'" class="sl_form" placeholder="'._SITE.'"></td></tr>'
     .'<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_form"></td></tr>'
     .'<tr><td>'._FILE_SITE.':</td><td><input type="text" name="sitefile" class="sl_form" placeholder="'._FILE_SITE.'"></td></tr>'
     .'<tr><td>'.$link.':</td><td><input type="text" name="url" value="'.$url.'" class="sl_form" placeholder="'._URL.'"></td></tr>';
@@ -151,7 +151,7 @@ function save(): void {
     $filesize = getVar('post', 'filesize', 'num', 0);
     $version = getVar('post', 'version', 'name', '');
     $email = getVar('post', 'email', 'name', '');
-    $homepage = getVar('post', 'homepage', 'url', '');
+    $website = getVar('post', 'website', 'url', '');
     $stop = [];
     if (!$title) $stop[] = _CERROR;
     if (!$description) $stop[] = _CERROR1;
@@ -176,10 +176,10 @@ function save(): void {
                     $url = $path.'/'.$filel[0];
                 }
             }
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, description = :description, bodytext = :bodytext, url = :url, time = :time, filesize = :filesize, version = :version, email = :email, homepage = :homepage, ihome = :ihome, acomm = :acomm, status = :status WHERE id = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1', 'id' => $fid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, filesize = :filesize, version = :version, email = :email, website = :website, ihome = :ihome, acomm = :acomm, status = :status WHERE id = :id', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1', 'id' => $fid]);
         } else {
             $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, description, bodytext, url, time, filesize, version, email, homepage, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :description, :bodytext, :url, :time, :filesize, :version, :email, :homepage, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'homepage' => $homepage, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_files (cid, uid, name, title, intro, body, url, time, filesize, version, email, website, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :intro, :body, :url, :time, :filesize, :version, :email, :website, :ip, :ihome, :acomm, :status)', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $url, 'time' => $date, 'filesize' => $filesize, 'version' => $version, 'email' => $email, 'website' => $website, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm, 'status' => '1']);
         }
         setRedirect($afile.'.php?name=files');
     } elseif ($posttype === 'delete') {

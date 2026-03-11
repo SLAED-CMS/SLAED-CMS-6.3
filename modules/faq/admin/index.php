@@ -34,22 +34,22 @@ function faq(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._QUESTION.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$fid, $catid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
-            $ctitle = ($catid) ? $ctitle : _NO;
+        while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
+            $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status == '1' && time() >= strtotime($time)) {
-                $view = '<a href="index.php?name=faq&amp;op=view&amp;id='.$fid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = '<a href="index.php?name=faq&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
-            $cont .= '<tr><td>'.$fid.'</td>'
+            $cont .= '<tr><td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=faq&amp;op=add&amp;id='.$fid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=faq&amp;op=del&amp;id='.$fid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=faq&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=faq&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_faq', '', 'status = \''.$status.'\'', $anump);
@@ -66,7 +66,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $fid = $id;
     if ($fid) {
-        $result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.hometext, s.ihome, s.acomm, u.name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE id = :fid', ['fid' => $fid]);
+        $result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.body, s.ihome, s.acomm, u.name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE id = :fid', ['fid' => $fid]);
         [$cat, $uname, $subject, $time, $hometext, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
@@ -118,10 +118,10 @@ function save(): void {
         $postid = (is_user_id($postname)) ? is_user_id($postname) : 0;
         $postname = (!is_user_id($postname)) ? filterText(substr($postname, 0, 25)) : '';
         if ($fid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET cid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, hometext = :hometext, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET cid = :cat, uid = :postid, name = :postname, title = :subject, time = :time, body = :body, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :fid', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
         } else {
             $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_faq (cid, uid, name, title, time, hometext, ihome, acomm, ip, status) VALUES (:cat, :postid, :postname, :subject, :time, :hometext, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_faq (cid, uid, name, title, time, body, ihome, acomm, ip, status) VALUES (:cat, :postid, :postname, :subject, :time, :body, :ihome, :acomm, :ip, \'1\')', ['cat' => $cat, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'ihome' => $ihome, 'acomm' => $acomm, 'ip' => $ip]);
         }
         setRedirect($afile.'.php?name=faq');
     } elseif ($posttype == 'delete') {
@@ -219,7 +219,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
 
 
 

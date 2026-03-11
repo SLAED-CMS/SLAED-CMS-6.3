@@ -21,16 +21,16 @@ function forum(): void {
         $params['parentid'] = $id;
         $params['cid'] = $id;
         if ($conf['multilingual']) {
-            $where .= ' AND (c.language = :locale OR c.language = \'\')';
+            $where .= ' AND (c.lang = :locale OR c.lang = \'\')';
             $params['locale'] = $locale;
         }
     } elseif ($conf['multilingual']) {
-        $where = 'WHERE c.modul = :mod AND (c.language = :locale OR c.language = \'\')';
+        $where = 'WHERE c.modul = :mod AND (c.lang = :locale OR c.lang = \'\')';
         $params['locale'] = $locale;
     } else {
         $where = 'WHERE c.modul = :mod';
     }
-    $result = $db->getSqlQuery('SELECT c.id, c.title, c.description, c.img, c.parent, c.status, c.ordern, c.topics, c.posts, c.lpost, c.auth_view, c.auth_read, c.auth_post, c.auth_reply, c.auth_edit, c.auth_delete, c.auth_mod, f.title, f.luid, f.lname, f.lpost, f.ltime FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost = f.id) '.$where.' ORDER BY c.ordern', $params);
+    $result = $db->getSqlQuery('SELECT c.id, c.title, c.intro, c.img, c.parent, c.status, c.ordern, c.topics, c.posts, c.lpost, c.pview, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod, f.title, f.luid, f.lname, f.lpost, f.ltime FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost = f.id) '.$where.' ORDER BY c.ordern', $params);
     while ([$cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime] = $db->getSqlRow($result)) {
         $massiv[] = [$cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime];
         unset($cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime);
@@ -119,7 +119,7 @@ function forum(): void {
             if (!$a) {
                 if ($isview) {
                     $cat = intval($id);
-                    $lang = ($conf['multilingual']) ? 'AND (c.language = :locale OR c.language = \'\') AND s.cid = :cat' : 'AND s.cid = :cat';
+                    $lang = ($conf['multilingual']) ? 'AND (c.lang = :locale OR c.lang = \'\') AND s.cid = :cat' : 'AND s.cid = :cat';
                     $listparams = ['cat' => $cat];
                     if ($conf['multilingual']) {
                         $listparams['locale'] = $locale;
@@ -129,15 +129,15 @@ function forum(): void {
                     $num = getVar('req', 'num', 'num') ?: 1;
                     $offset = ($num-1) * $listnum;
                     $offset = intval($offset);
-                    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.hometext, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $listparams);
+                    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.body, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $listparams);
                     $newtop = ($istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$massiv[0][0].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
                     $cont = setTemplateBasic('forum-list-open', ['{%button%}' => $newtop, '{%cat%}' => '<a href="index.php?name='.$mod.'&amp;cat='.$massiv[0][0].'" title="'.$massiv[0][1].'">'.$massiv[0][1].'</a>']);
                     if ($db->getSqlRowCount($result) > 0) {
                         $b = 0;
                         $cont .= setTemplateBasic('forum-list-basic-open', ['{%col_topics%}' => _NEWTOPICS, '{%col_posts%}' => _POSTS, '{%col_poster%}' => _POSTER, '{%col_views%}' => cutstr(_TVIEWS, 5, 1), '{%col_last%}' => _LASTMESSAGE]);
                         $cont .= ($ismod) ? '<form action="index.php?name='.$conf['name'].'" method="post">' : '';
-                        while ([$sid, $catid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cid, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
-                            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $sid, 'title' => $title, 'ctitle' => $ctitle]);
+                        while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+                            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
                             $view = 0;
                             if (!$status && is_moder($conf['name'])) {
                                 $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICM.'" class="sl_t_clos_m"></span></a>';
@@ -184,7 +184,7 @@ function forum(): void {
                             $post = ($nick) ? user_info($nick) : $uname.' ('._ANONYM.')';
                             $lposter = ($luid) ? _POSTER.': '.user_info($lname) : _POSTER.': '.$lname;
                             if ($ismod) {
-                                $checkb = (!$b) ? '<br>'._CHECKALL." <input type=\"checkbox\" name=\"markcheck\" id=\"markcheck\" OnClick=\"CheckBox('#markcheck', '.sl_check')\"> | <input type=\"checkbox\" name=\"id[]\" class=\"sl_check\" value=\"".$sid.'">' : ' <input type="checkbox" name="id[]" class="sl_check" value="'.$sid.'">';
+                                $checkb = (!$b) ? '<br>'._CHECKALL." <input type=\"checkbox\" name=\"markcheck\" id=\"markcheck\" OnClick=\"CheckBox('#markcheck', '.sl_check')\"> | <input type=\"checkbox\" name=\"id[]\" class=\"sl_check\" value=\"".$id.'">' : ' <input type="checkbox" name="id[]" class="sl_check" value="'.$id.'">';
                                 $b++;
                             } else {
                                 $checkb = '';
@@ -255,12 +255,12 @@ function view(): void {
         }
         $word = getVar('req', 'word', 'word');
         $orderw = (is_moder($conf['name'])) ? 'WHERE (s.id = :id1 OR s.pid = :id2)' : "WHERE (s.id = :id1 OR s.pid = :id2) AND s.time <= NOW() AND s.status != '0'";
-        $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.name, s.title, s.time, s.hometext, s.field, s.comments, s.counter, s.score, s.ratings, s.ip, s.euid, s.eip, s.etime, s.status, c.title, c.auth_read, c.auth_post, c.auth_reply, c.auth_edit, c.auth_delete, c.auth_mod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$orderw.' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum, $orderparams);
+        $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.name, s.title, s.time, s.body, s.field, s.comments, s.counter, s.score, s.ratings, s.ip, s.euid, s.eip, s.etime, s.status, c.title, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$orderw.' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum, $orderparams);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET counter=counter+1 WHERE id = :id', ['id' => $id]);
-        while ([$sid, $pid, $catid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm] = $db->getSqlRow($result)) {
-            $cmassiv[] = [$sid, $pid, $catid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm];
+        while ([$id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm] = $db->getSqlRow($result)) {
+            $cmassiv[] = [$id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm];
             if ($uid) $where[] = $uid;
-            unset($sid, $pid, $catid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm);
+            unset($id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm);
         }
         if ($where) {
             $result2 = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC');
@@ -301,9 +301,9 @@ function view(): void {
                 $fid = $val[0];
                 $fcat = $val[2];
                 /*
-                $sid = $val[0];
+                $id = $val[0];
                 $pid = $val[1];
-                $catid = $val[2];
+                $cid = $val[2];
                 $uid = $val[3];
                 $name = $val[4];
                 $title = $val[5];
@@ -418,7 +418,7 @@ function move(): void {
     $cat = getVar('post', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
-        [$authm] = $db->getSqlRow($db->getSqlQuery('SELECT auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+        [$authm] = $db->getSqlRow($db->getSqlQuery('SELECT pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $ismod = is_acess($authm);
         $id = getVar('post', 'id', 'array', []);
         $tmove = getVar('post', 'tmove', 'text');
@@ -460,7 +460,7 @@ function add(): void {
     global $db, $user, $conf, $stop;
     $cat = getVar('req', 'cat', 'num');
     $catid = $cat;
-    [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT title, auth_post, auth_reply, auth_edit, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+    [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
     $istopic = is_acess($authp);
     $isreply = is_acess($authy);
     $isedit = is_acess($authe);
@@ -475,7 +475,7 @@ function add(): void {
 
     if ($conf['forum']['add'] && $id) {
         $fid = $id;
-        [$qpid, $uid, $subject, $time, $hometext, $field, $status] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, title, time, hometext, field, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
+        [$qpid, $uid, $subject, $time, $hometext, $field, $status] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, title, time, body, field, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             $subh = ($qpid) ? 1 : 0;
             $info = _EDITS.': '.$subject;
@@ -497,7 +497,7 @@ function add(): void {
 
         if ($pid) {
             $id = ($qid) ? $qid : $pid;
-            [$ftitle, $ftext, $status] = $db->getSqlRow($db->getSqlQuery('SELECT title, hometext, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
+            [$ftitle, $ftext, $status] = $db->getSqlRow($db->getSqlQuery('SELECT title, body, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
             $form = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
         
         } else {
@@ -575,7 +575,7 @@ function send(): void {
     $cat = getVar('req', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
-        [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT title, auth_post, auth_reply, auth_edit, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+        [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $istopic = is_acess($authp);
         $isreply = is_acess($authy);
         $isedit = is_acess($authe);
@@ -615,9 +615,9 @@ function send(): void {
                 if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
                     $ftime = ($ismod) ? $time : $ftime;
                     if ($ismod) {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, hometext = :hometext, field = :field, euid = :postid, eip = :ip, etime = NOW(), status = :status WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'hometext' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'status' => $status, 'id' => $id]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW(), status = :status WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'status' => $status, 'id' => $id]);
                     } else {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, hometext = :hometext, field = :field, euid = :postid, eip = :ip, etime = NOW() WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'hometext' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW() WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]);
                     }
                 }
             
@@ -645,7 +645,7 @@ function send(): void {
                 
                 if ($insert) {
                     $catids = catids($conf['name'], $catid);
-                    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_forum (id, pid, cid, uid, name, title, time, hometext, field, ip, luid, lname, ltime, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :hometext, :field, :ip, :luid, :lname, :ltime, :status)', ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'hometext' => $hometext, 'field' => $field, 'ip' => $ip, 'luid' => $postid, 'lname' => $postname, 'ltime' => $time, 'status' => $status]);
+                    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_forum (id, pid, cid, uid, name, title, time, body, field, ip, luid, lname, ltime, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :body, :field, :ip, :luid, :lname, :ltime, :status)', ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'field' => $field, 'ip' => $ip, 'luid' => $postid, 'lname' => $postname, 'ltime' => $time, 'status' => $status]);
                     [$lpid, $ltime] = $db->getSqlRow($db->getSqlQuery('SELECT id, time FROM '.PREFIX_DB.'_forum WHERE cid = :catid AND uid = :postid ORDER BY id DESC LIMIT 1', ['catid' => $catid, 'postid' => $postid]));
                     if ($pid) {
                         $lname = (isset($uname) && $uname) ? $uname : $postname;
@@ -692,7 +692,7 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
     $catid = ($catid !== null && $catid !== '') ? $catid : getVar('req', 'cat', 'num');
     $id = ($id !== null && $id !== '') ? $id : getVar('req', 'id', 'num');
     if ($conf['forum']['add'] && $catid && $id) {
-        [$authd, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT auth_delete, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
+        [$authd, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $isdelete = is_acess($authd);
         $ismod = is_acess($authm);
         

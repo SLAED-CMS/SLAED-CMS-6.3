@@ -74,7 +74,7 @@ function add(): void {
     $id = getVar('req', 'id', 'num', 0);
     $fid = $id;
     if ($fid) {
-        $result = $db->getSqlQuery('SELECT l.cid, l.name, l.title, l.description, l.bodytext, l.url, l.time, l.email, l.ihome, l.acomm, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.id = :fid', ['fid' => $fid]);
+        $result = $db->getSqlQuery('SELECT l.cid, l.name, l.title, l.intro, l.body, l.url, l.time, l.email, l.ihome, l.acomm, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.id = :fid', ['fid' => $fid]);
         [$cid, $uname, $title, $description, $bodytext, $site, $date, $email, $ihome, $acomm, $nick] = $db->getSqlRow($result);
         $postname = $nick ?: ($uname ?: _ANONYM);
     } else {
@@ -136,10 +136,10 @@ function save(): void {
         $postid = is_user_id($postname) ?: 0;
         $postname = !is_user_id($postname) ? filterText(substr($postname, 0, 25)) : '';
         if ($fid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET cid = :cid, uid = :uid, name = :name, title = :title, description = :description, bodytext = :bodytext, url = :url, time = :time, email = :email, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :fid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $site, 'time' => $date, 'email' => $email, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET cid = :cid, uid = :uid, name = :name, title = :title, intro = :intro, body = :body, url = :url, time = :time, email = :email, ihome = :ihome, acomm = :acomm, status = \'1\' WHERE id = :fid', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $site, 'time' => $date, 'email' => $email, 'ihome' => $ihome, 'acomm' => $acomm, 'fid' => $fid]);
         } else {
             $ip = getip();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_links (cid, uid, name, title, description, bodytext, url, time, email, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :description, :bodytext, :url, :time, :email, :ip, :ihome, :acomm, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'description' => $description, 'bodytext' => $bodytext, 'url' => $site, 'time' => $date, 'email' => $email, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_links (cid, uid, name, title, intro, body, url, time, email, ip, ihome, acomm, status) VALUES (:cid, :uid, :name, :title, :intro, :body, :url, :time, :email, :ip, :ihome, :acomm, \'1\')', ['cid' => $cid, 'uid' => $postid, 'name' => $postname, 'title' => $title, 'intro' => $description, 'body' => $bodytext, 'url' => $site, 'time' => $date, 'email' => $email, 'ip' => $ip, 'ihome' => $ihome, 'acomm' => $acomm]);
         }
         setRedirect($afile.'.php?name=links');
     } elseif ($posttype === 'delete') {

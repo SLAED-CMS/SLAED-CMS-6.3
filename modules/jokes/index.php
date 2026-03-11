@@ -48,14 +48,14 @@ function jokes(): void {
         $ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
         $order = "WHERE (j.cid = :ncat1 OR c.parent = :ncat2) AND j.time <= NOW() AND j.status != '0' ".$cwhere.' ORDER BY '.$orderby;
         $params = ['ncat1' => $ncat, 'ncat2' => $ncat];
-        $catid = [];
+        $cids = [];
         $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
-        while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
+        while ([$caid] = $db->getSqlRow($result)) $cids[] = $caid;
         unset($result);
-        if (isArray($catid)) {
+        if (isArray($cids)) {
             $caton = 1;
-            array_unshift($catid, $ncat);
-            $wcid = 'cid IN ('.implode(', ', $catid).')';
+            array_unshift($cids, $ncat);
+            $wcid = 'cid IN ('.implode(', ', $cids).')';
         } else {
             $caton = 0;
             $wcid = "cid = '".$ncat."'";
@@ -78,7 +78,7 @@ function jokes(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $unum;
     $offset = intval($offset);
-    $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.hometext, j.rating, j.ratetot, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+    $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.body, j.rating, j.ratetot, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $title = '<a href="#'.$id.'" title="'.$jtitle.'">'.filterTextHighlight($jtitle, $word).'</a> '.new_graphic($time);
@@ -148,7 +148,7 @@ function send(): void {
         if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
             $postid = (is_user()) ? intval($user[0]) : '';
             $uname = (!is_user()) ? $postname : '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (id, uid, name, time, title, cid, hometext, ip, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_jokes (id, uid, name, time, title, cid, body, ip, status) VALUES (NULL, :postid, :uname, NOW(), :title, :cid, :joke, :ip, \'0\')', ['postid' => $postid, 'uname' => $uname, 'title' => $title, 'cid' => $cid, 'joke' => $joke, 'ip' => getIp()]);
             update_points(19);
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);

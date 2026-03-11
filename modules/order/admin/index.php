@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -21,7 +21,7 @@ function order(): void {
     $anum = $conf['order']['anum'] ?? 25;
     $anump = $conf['order']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
-    $result = $db->getSqlQuery('SELECT id, mail, info, com, ip, agent, time, status FROM '.PREFIX_DB.'_order ORDER BY time DESC LIMIT '.$offset.', '.$anum);
+    $result = $db->getSqlQuery('SELECT id, email, info, note, ip, agent, time, status FROM '.PREFIX_DB.'_order ORDER BY time DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_order'));
@@ -29,11 +29,11 @@ function order(): void {
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $mail, $info, $com, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
+        while ([$id, $email, $info, $note, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $infos = fields_out($info, 'order');
             $cont .= '<tr><td>'.$id.'</td>'
-            .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$com.'<br><br>'._BROWSER.': '.$agent).anti_spam($mail).'</td>'
+            .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email).'</td>'
             .'<td>'.user_geo_ip($ip, 4).'</td>'
             .'<td>'.format_time($date, _TIMESTRING).'</td>'
             .'<td>'.ad_status('', $status).'</td>'
@@ -56,24 +56,24 @@ function add(): void {
     $mid = $id;
     $mid = $id;
     if ($mid) {
-        $result = $db->getSqlQuery('SELECT mail, info, com, time FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
-        [$mail, $field, $com, $date] = $db->getSqlRow($result);
+        $result = $db->getSqlQuery('SELECT email, info, note, time FROM '.PREFIX_DB.'_order WHERE id = :mid', ['mid' => $mid]);
+        [$email, $field, $note, $date] = $db->getSqlRow($result);
     } else {
         $mid = getVar('post', 'mid', 'num', 0);
-        $mail = getVar('post', 'mail', 'text', '');
+        $email = getVar('post', 'email', 'text', '');
         $field = getVar('post', 'field', 'field');
-        $com = getVar('post', 'com', 'text', '');
+        $note = getVar('post', 'note', 'text', '');
         $date = getVar('req', 'date', 'time');
     }
     setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
-    if ($field) $cont .= preview($mail, $field, _COMMENT.': '.$com, '', 'all');
+    if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._OR_9.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_form" placeholder="'._OR_9.'" required></td></tr>'
+    .'<tr><td>'._OR_9.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._OR_9.'" required></td></tr>'
     .fields_in($field, 'order')
-    .'<tr><td>'._OR_10.':</td><td><textarea name="com" cols="65" rows="5" class="sl_form" placeholder="'._OR_10.'">'.$com.'</textarea></td></tr>'
+    .'<tr><td>'._OR_10.':</td><td><textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._OR_10.'">'.$note.'</textarea></td></tr>'
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
@@ -84,19 +84,19 @@ function add(): void {
 function save(): void {
     global $db, $afile, $stop;
     $mid = getVar('post', 'mid', 'num', 0);
-    $mail = getVar('post', 'mail', 'text', '');
+    $email = getVar('post', 'email', 'text', '');
     $field = getVar('post', 'field', 'field');
-    $com = getVar('post', 'com', 'text', '');
+    $note = getVar('post', 'note', 'text', '');
     $date = getVar('req', 'date', 'time');
-    checkemail($mail);
+    checkemail($email);
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         if ($mid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET mail = :mail, info = :info, com = :com, time = :time WHERE id = :mid', ['mail' => $mail, 'info' => $field, 'com' => $com, 'time' => $date, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET email = :email, info = :info, note = :note, time = :time WHERE id = :mid', ['email' => $email, 'info' => $field, 'note' => $note, 'time' => $date, 'mid' => $mid]);
         } else {
             $ip = getip();
             $agent = getagent();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :mail, :info, :com, :ip, :agent, :time, \'1\')', ['mail' => $mail, 'info' => $field, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_order VALUES (NULL, :email, :info, :note, :ip, :agent, :time, \'1\')', ['email' => $email, 'info' => $field, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $date]);
         }
         setRedirect($afile.'.php?name=order');
     } elseif ($posttype === 'delete') {
@@ -119,12 +119,12 @@ function active(): void {
     $id = getVar('get', 'id', 'num', 0);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
     if ($act) {
-        [$mail] = $db->getSqlRow($db->getSqlQuery('SELECT mail FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
+        [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
         $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._ORDER;
         $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
         $msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'] ?? '', 'all', false), 'all');
-        addMail($mail, $amail, $subject, $msg, 0, 3);
+        addMail($email, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=order&send=1');
     }
     setRedirect($afile.'.php?name=order');
@@ -185,5 +185,3 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
-

@@ -49,14 +49,14 @@ function pages(): void {
 		$ntitle = ($op) ? (($op == 'best') ? $ctitle.' '.$conf['defis'].' '._BEST : $ctitle.' '.$conf['defis'].' '._POP) : $ctitle;
 		$order = "WHERE (s.cid = :ncat1 OR c.parent = :ncat2) AND s.time <= NOW() AND s.status != '0' ".$cwhere.' ORDER BY '.$orderby;
 		$params = ['ncat1' => $ncat, 'ncat2' => $ncat];
-		$catid = [];
+		$cids = [];
 		$result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE parent = :ncat', ['ncat' => $ncat]);
-		while ([$caid] = $db->getSqlRow($result)) $catid[] = $caid;
+		while ([$caid] = $db->getSqlRow($result)) $cids[] = $caid;
 		unset($result);
-		if (isArray($catid)) {
+		if (isArray($cids)) {
 			$caton = 1;
-			array_unshift($catid, $ncat);
-			$wcid = 'cid IN ('.implode(', ', $catid).')';
+			array_unshift($cids, $ncat);
+			$wcid = 'cid IN ('.implode(', ', $cids).')';
 		} else {
 			$caton = 0;
 			$wcid = "cid = '".$ncat."'";
@@ -81,7 +81,7 @@ function pages(): void {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
 	$offset = intval($offset);
-	$result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.hometext, s.bodytext, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
+	$result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.intro, s.body, s.comments, s.counter, s.acomm, s.score, s.ratings, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
 		while([$id, $cid, $uname, $stitle, $time, $hometext, $bodytext, $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
@@ -126,7 +126,7 @@ function liste(): void {
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $listnum;
 	$offset = intval($offset);
-	$result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, c.title, c.description, u.name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$order.' '.$cwhere.' ORDER BY time DESC LIMIT '.$offset.', '.$listnum, $params);
+	$result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, c.title, c.intro, u.name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$order.' '.$cwhere.' ORDER BY time DESC LIMIT '.$offset.', '.$listnum, $params);
 	setHead(['title' => _LIST]);
 	$cont = navigate(_LIST);
 	if ($db->getSqlRowCount($result) > 0) {
@@ -158,7 +158,7 @@ function view(): void {
 	$pag = $num;
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 's.cid');
-	$result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.hometext, s.bodytext, s.counter, s.acomm, s.score, s.ratings, c.title, c.description, c.img, u.name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) WHERE s.id = :id AND s.time<=NOW() AND s.status != \'0\' '.$cwhere, ['id' => $id]);
+	$result = $db->getSqlQuery('SELECT s.cid, s.name, s.title, s.time, s.intro, s.body, s.counter, s.acomm, s.score, s.ratings, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_pages AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) WHERE s.id = :id AND s.time<=NOW() AND s.status != \'0\' '.$cwhere, ['id' => $id]);
 	if ($db->getSqlRowCount($result) == 1) {
 		$db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET counter = counter+1 WHERE id = :id', ['id' => $id]);
 		[$cid, $uname, $title, $time, $hometext, $bodytext, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result);
@@ -206,7 +206,7 @@ function view(): void {
 			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_pages WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
-				$result = $db->getSqlQuery('SELECT id, title, time, hometext, bodytext FROM '.PREFIX_DB.'_pages WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
+				$result = $db->getSqlQuery('SELECT id, title, time, intro, body FROM '.PREFIX_DB.'_pages WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
 				$cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
 				while ([$aid, $title, $time, $hometext, $bodytext] = $db->getSqlRow($result)) {
 					$date = ($conf['pages']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
@@ -230,8 +230,7 @@ function add(): void {
 	global $db, $user, $conf, $stop;
 	if ((is_user() && $conf['pages']['add'] == 1) || (!is_user() && $conf['pages']['addquest'] == 1)) {
 		$title = getVar('post', 'title', 'title');
-		$catid = getVar('post', 'catid', 'num');
-		$cid = $catid;
+		$cid = getVar('post', 'catid', 'num');
 		$hometext = getVar('post', 'hometext', 'text');
 		$bodytext = getVar('post', 'bodytext', 'text');
 		$postname = getVar('post', 'postname', 'name');
@@ -265,8 +264,7 @@ function send(): void {
 	global $db, $user, $conf, $stop;
 	if ((is_user() && $conf['pages']['add'] == 1) || (!is_user() && $conf['pages']['addquest'] == 1)) {
 		$title = getVar('post', 'title', 'title');
-		$catid = getVar('post', 'catid', 'num');
-		$cid = $catid;
+		$cid = getVar('post', 'catid', 'num');
 		$hometext = getVar('post', 'hometext', 'text');
 		$bodytext = getVar('post', 'bodytext', 'text');
 		$postname = getVar('post', 'postname', 'name');
@@ -278,7 +276,7 @@ function send(): void {
 		if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
 			$postid = (is_user()) ? intval($user[0]) : '';
 			$uname = (!is_user()) ? $postname : '';
-			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (id, cid, uid, name, title, time, hometext, bodytext, ip, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :hometext, :bodytext, :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'hometext' => $hometext, 'bodytext' => $bodytext, 'ip' => getIp()]);
+			$db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_pages (id, cid, uid, name, title, time, intro, body, ip, status) VALUES (NULL, :cid, :postid, :uname, :title, NOW(), :intro, :body, :ip, \'0\')', ['cid' => $cid, 'postid' => $postid, 'uname' => $uname, 'title' => $title, 'intro' => $hometext, 'body' => $bodytext, 'ip' => getIp()]);
 			update_points(35);
 			$puname = (is_user()) ? $user[1] : $postname;
 			addAdminMail($conf['pages']['addmail'], $conf['name'], $puname, _PAGES);

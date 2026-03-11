@@ -31,7 +31,7 @@ function whois(): void {
         $cont = navi(0, 0, 0, 0);
     }
 
-    $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.hometext, w.st_domain, w.st_host, w.st_dc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
+    $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._POSTEDBY.'</th><th colspan="2">'._SITE.'</th><th colspan="2">'._HOST.'</th><th colspan="2">'._DC.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -68,9 +68,9 @@ function act(): void {
     $id = getVar('get', 'id', 'num');
     $fid = getVar('get', 'fid', 'num');
     $field = match ($fid) {
-        1 => 'st_domain',
-        2 => 'st_host',
-        3 => 'st_dc',
+        1 => 'sdomain',
+        2 => 'shost',
+        3 => 'sdc',
         default => '',
     };
     if ($id && $field) {
@@ -87,7 +87,7 @@ function add(): void {
     $wid = 0;
     $id = getVar('req', 'id', 'num');
     if ($wid) {
-        $result = $db->getSqlQuery('SELECT w.id, w.name, w.domain, w.host, w.dc, w.hometext, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE w.id = :id', ['id' => $id]);
+        $result = $db->getSqlQuery('SELECT w.id, w.name, w.domain, w.host, w.dc, w.body, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE w.id = :id', ['id' => $id]);
         [$id, $uname, $domain, $host, $dc, $hometext, $userName] = $db->getSqlRow($result);
         $postname = $userName ?: ($uname ?: _ANONYM);
     } else {
@@ -132,10 +132,10 @@ function save(): void {
         $uid = $postid ? $postid : '';
         $name = $postid ? '' : filterText(substr($postname, 0, 25));
         if ($wid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB."_whois SET uid = :uid, name = :name, domain = :domain, host = :host, dc = :dc, hometext = :hometext, status = '1' WHERE id = :id", ['uid' => $uid, 'name' => $name, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext, 'id' => $wid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB."_whois SET uid = :uid, name = :name, domain = :domain, host = :host, dc = :dc, body = :body, status = '1' WHERE id = :id", ['uid' => $uid, 'name' => $name, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext, 'id' => $wid]);
         } else {
             $ip = getIp();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_whois (id, uid, name, ip, time, domain, host, dc, hometext, st_domain, st_host, st_dc, status) VALUES (NULL, :uid, :name, :ip, now(), :domain, :host, :dc, :hometext, '0', '0', '0', '1')", ['uid' => $uid, 'name' => $name, 'ip' => $ip, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'hometext' => $hometext]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_whois (id, uid, name, ip, time, domain, host, dc, body, sdomain, shost, sdc, status) VALUES (NULL, :uid, :name, :ip, now(), :domain, :host, :dc, :body, '0', '0', '0', '1')", ['uid' => $uid, 'name' => $name, 'ip' => $ip, 'domain' => $domain, 'host' => $host, 'dc' => $dc, 'body' => $hometext]);
         }
         setRedirect($afile.'.php?name=whois');
     } elseif ($posttype == 'delete') {

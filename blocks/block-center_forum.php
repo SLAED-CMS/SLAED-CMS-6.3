@@ -16,10 +16,10 @@ $blimit = '15';
 # Закрытые форумы, сообщения которых не будут показаны в блоке
 $bclos = '97, 98';
 
-$bwhere = ($bclos) ? 'catid NOT IN ('.$bclos.') AND' : '';
+$bwhere = ($bclos) ? 'cid NOT IN ('.$bclos.') AND' : '';
 $ordern = (is_moder('forum')) ? '' : "AND time <= now() AND status > '1'";
 $buffer = '';
-$result = $db->getSqlQuery('SELECT id, uid, name, title, time, hometext, comments, counter, luid, lname, lpost, ltime, status FROM '.PREFIX_DB.'_forum WHERE '.$bwhere." pid = '0' ".$ordern.' ORDER BY ltime DESC LIMIT 0, '.$blimit);
+$result = $db->getSqlQuery('SELECT id, uid, name, title, time, body, comments, counter, luid, lname, lpost, ltime, status FROM '.PREFIX_DB.'_forum WHERE '.$bwhere." pid = '0' ".$ordern.' ORDER BY ltime DESC LIMIT 0, '.$blimit);
 while (list($id, $uid, $uname, $title, $time, $hometext, $comments, $counter, $luid, $lname, $lpost, $ltime, $status) = $db->getSqlRow($result)) {
 	$thref = getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'title' => $title]);
 	if (!($conf['rewrite'] ?? false)) $thref .= '&amp;last';
