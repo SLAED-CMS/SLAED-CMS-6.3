@@ -16,7 +16,7 @@ function groups(): void {
     global $db, $afile, $conf;
     setHead();
     $cont = navi(0, 0, 0, 0);
-    $result = $db->getSqlQuery('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
+    $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th class="{sorter: false}">'._RANK.'</th><th>'._GROUP.'</th><th>'._POINTS.'</th><th>'.cutstr(_USERSCOUNT, 5, 1).'</th><th>'.cutstr(_SPEC, 4, 1).'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -52,7 +52,7 @@ function add(): void {
     global $db, $afile, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->getSqlQuery('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
+        $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $id]);
         [$gid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result);
         $check = ($extra) ? ' checked' : '';
     } else {
@@ -109,9 +109,9 @@ function save(): void {
         $points = ($grextra == '1') ? '0' : $points;
         $rank = str_replace('templates/'.$conf['theme'].'/images/ranks/', '', $rank);
         if ($gid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_groups SET name = :name, description = :description, points = :points, extra = :extra, rank = :rank, color = :color WHERE id = :id', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $gid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_groups SET name = :name, intro = :intro, points = :points, extra = :extra, rank = :rank, color = :color WHERE id = :id', ['name' => $grname, 'intro' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color, 'id' => $gid]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_groups (name, description, points, extra, rank, color) VALUES (:name, :description, :points, :extra, :rank, :color)', ['name' => $grname, 'description' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_groups (name, intro, points, extra, rank, color) VALUES (:name, :intro, :points, :extra, :rank, :color)', ['name' => $grname, 'intro' => $description, 'points' => $points, 'extra' => $grextra, 'rank' => $rank, 'color' => $color]);
         }
         setRedirect($afile.'.php?name=groups');
     } else {

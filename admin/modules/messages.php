@@ -20,7 +20,7 @@ function messages(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._PURCHASED.'</th><th>'._VIEW.'</th><th>'._LANGUAGE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$mid, $title, $content, $expire, $active, $view, $mlanguage] = $db->getSqlRow($result)) {
+        while ([$mid, $title, $content, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
             if (($expire && $expire < time()) || (!$active && $expire)) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active, expire = :expire WHERE id = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
             $act = ($active) ? '0' : '1';
             if ($view == 1) {
@@ -32,14 +32,14 @@ function messages(): void {
             } elseif ($view == 4) {
                 $mview = _MVADMIN;
             }
-            $mlanguage = (!$mlanguage) ? _ALL : $mlanguage;
+            $lang = (!$lang) ? _ALL : $lang;
             $exp = intval($expire - time());
             $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
             $cont .= '<tr><td>'.$mid.'</td>'
                 .'<td><span title="'.$title.'" class="sl_note">'.cutstr($title, 35).'</span></td>'
                 .'<td>'.$exp.'</td>'
                 .'<td>'.$mview.'</td>'
-                .'<td>'.getLangName($mlanguage).'</td>'
+                .'<td>'.getLangName($lang).'</td>'
                 .'<td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active).'||<a href="'.$afile.'.php?name=messages&amp;op=add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=messages&amp;op=del&amp;id='.$mid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
@@ -55,7 +55,7 @@ function add(): void {
     global $db, $conf, $afile, $stop;
     $mid = getVar('req', 'id', 'num');
     if ($mid) {
-        [$title, $content, $expire, $active, $view, $mlanguage] = $db->getSqlRow($db->getSqlQuery('SELECT title, content, expire, status, view, lang FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $mid]));
+        [$title, $content, $expire, $active, $view, $lang] = $db->getSqlRow($db->getSqlQuery('SELECT title, content, expire, status, view, lang FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $mid]));
     } else {
         $mid = getVar('post', 'mid', 'num');
         $title = getVar('post', 'title', 'title');
@@ -65,7 +65,7 @@ function add(): void {
         $expire = ($newexpire == 1 && $expire_input) ? time() + ($expire_input * 86400) : $expire_input;
         $active = getVar('post', 'status', 'num');
         $view = getVar('post', 'view', 'num');
-        $mlanguage = getVar('post', 'mlanguage', 'var');
+        $lang = getVar('post', 'lang', 'var');
     }
     setHead();
     $cont = navi(1, 0);
@@ -75,7 +75,7 @@ function add(): void {
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
        .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
        .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'content', $content, 'all', '10', _TEXT, '1').'</td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="mlanguage" class="sl_form">'.language($mlanguage).'</select></td></tr>';
+    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language($lang).'</select></td></tr>';
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
@@ -111,16 +111,16 @@ function save(): void {
     $expire = getVar('post', 'expire', 'num');
     $active = getVar('post', 'status', 'num');
     $view = getVar('post', 'view', 'num');
-    $mlanguage = getVar('post', 'mlanguage', 'var');
+    $lang = getVar('post', 'lang', 'var');
     $posttype = getVar('post', 'posttype', 'var');
     $expire = ($newexpire == 1 && $expire) ? time() + ($expire * 86400) : $expire;
     if (!$title) $stop[] = _CERROR;
     if (!$content) $stop[] = _CERROR1;
     if (!$stop && $posttype == 'save') {
         if ($mid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, content = :content, expire = :expire, status = :active, view = :view, lang = :mlanguage WHERE id = :mid', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET title = :title, content = :content, expire = :expire, status = :active, view = :view, lang = :lang WHERE id = :mid', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'lang' => $lang, 'mid' => $mid]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (id, title, content, expire, status, view, lang) VALUES (NULL, :title, :content, :expire, :active, :view, :mlanguage)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'mlanguage' => $mlanguage]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_message (id, title, content, expire, status, view, lang) VALUES (NULL, :title, :content, :expire, :active, :view, :lang)', ['title' => $title, 'content' => $content, 'expire' => $expire, 'active' => $active, 'view' => $view, 'lang' => $lang]);
         }
         setRedirect($afile.'.php?name=messages');
     } elseif ($posttype == 'delete') {

@@ -50,7 +50,7 @@ function add(): void {
     .'<table class="sl_table_form">'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'"></textarea></td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="language" class="sl_form">'.language().'</select></td></tr>';
+    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language().'</select></td></tr>';
     $cont .= '<tr><td>'._MODUL.':</td><td>'.cat_modul('modul', 'sl_form', $modul).'</td></tr>'
     .'<tr><td>'._IMG.':</td><td><select name="imgcat" id="img_replace" class="sl_form">'
     .'<option value="'.$path.'no.png">'._NO.'</option>';
@@ -66,16 +66,16 @@ function add(): void {
     .'</div>'
     .'<div id="tabcs1" class="tabcont">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', '', 0).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', '', 0).'</td></tr></table>'
+    .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pview', 'sl_form', '', 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pread', 'sl_form', '', 0).'</td></tr></table>'
     .'</div>'
     .'<div id="tabcs2" class="tabcont">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', '', 0).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', '', 0).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_edit', 'sl_form', '', 1).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_delete', 'sl_form', '', 1).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', '', 2).'</td></tr></table>'
+    .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('ppost', 'sl_form', '', 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('preply', 'sl_form', '', 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pedit', 'sl_form', '', 1).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pdelete', 'sl_form', '', 1).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pmod', 'sl_form', '', 2).'</td></tr></table>'
     .'</div>'
     .'<script>
         var countries=new ddtabcontent("adds")
@@ -103,7 +103,7 @@ function subadd(): void {
         .'<table class="sl_table_form">'
         .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
         .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'"></textarea></td></tr>';
-        if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="language" class="sl_form">'.language().'</select></td></tr>';
+        if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language().'</select></td></tr>';
         $cont .= '<tr><td>'._MODUL.':</td><td>'.cat_modul('modul', 'sl_form', $modul).'</td></tr>'
         .'<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, 0, 'cid', 'sl_form').'</td></tr>'
         .'<tr><td>'._IMG.':</td><td><select name="imgcat" id="img_replace" class="sl_form">'
@@ -120,16 +120,16 @@ function subadd(): void {
         .'</div>'
         .'<div id="tabcs1" class="tabcont">'
         .'<table class="sl_table_form">'
-        .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', '', 0).'</td></tr>'
-        .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', '', 0).'</td></tr></table>'
+        .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pview', 'sl_form', '', 0).'</td></tr>'
+        .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pread', 'sl_form', '', 0).'</td></tr></table>'
         .'</div>'
         .'<div id="tabcs2" class="tabcont">'
         .'<table class="sl_table_form">'
-        .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', '', 0).'</td></tr>'
-        .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', '', 0).'</td></tr>'
-        .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_edit', 'sl_form', '', 1).'</td></tr>'
-        .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_delete', 'sl_form', '', 1).'</td></tr>'
-        .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', '', 2).'</td></tr></table>'
+        .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('ppost', 'sl_form', '', 0).'</td></tr>'
+        .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('preply', 'sl_form', '', 0).'</td></tr>'
+        .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pedit', 'sl_form', '', 1).'</td></tr>'
+        .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pdelete', 'sl_form', '', 1).'</td></tr>'
+        .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pmod', 'sl_form', '', 2).'</td></tr></table>'
         .'</div>'
         .'<script>
             var countries=new ddtabcontent("subadds")
@@ -169,8 +169,8 @@ function edit(): void {
     global $db, $conf, $afile;
     $cid = getVar('req', 'cid', 'num');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
-    $result = $db->getSqlQuery('SELECT modul, title, description, img, language, parent, status, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
-    [$modul, $title, $description, $imgcat, $language, $parentid, $cstatus, $auth_view, $auth_read, $auth_post, $auth_reply, $auth_edit, $auth_delete, $auth_mod] = $db->getSqlRow($result);
+    $result = $db->getSqlQuery('SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
+    [$modul, $title, $description, $imgcat, $lang, $parent, $status, $pview, $pread, $ppost, $preply, $pedit, $pdelete, $pmod] = $db->getSqlRow($result);
     setHead();
     $cont = navi(0, 3, 1, 0, 'edit');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
@@ -181,9 +181,9 @@ function edit(): void {
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'">'.$description.'</textarea></td></tr>'
     .'<tr><td>'._MODUL.':</td><td>'.cat_modul('modul', 'sl_form', $modul).'</td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="language" class="sl_form">'.language($language).'</select></td></tr>';
-    if ($parentid != 0) {
-        $cont .= '<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, $parentid, 'parent', 'sl_form').'</td></tr>';
+    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language($lang).'</select></td></tr>';
+    if ($parent != 0) {
+        $cont .= '<tr><td>'._CATEGORY.':</td><td>'.getcat($modul, $parent, 'parent', 'sl_form').'</td></tr>';
     } else {
         $cont .= '<input type="hidden" name="parent" value="0">';
     }
@@ -201,20 +201,20 @@ function edit(): void {
     asort($conts);
     $cont .= implode('', $conts).'</select></td></tr>'
     .'<tr><td>'._PREVIEW.':</td><td><img src="'.$path.$imgcat.'" id="picture" alt="'._IMG.'"></td></tr>'
-    .'<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($cstatus, 'status').'</td></tr></table>'
+    .'<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($status, 'status').'</td></tr></table>'
     .'</div>'
     .'<div id="tabcs1" class="tabcont">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_view', 'sl_form', $auth_view, 0).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_read', 'sl_form', $auth_read, 0).'</td></tr></table>'
+    .'<tr><td>'._CAN.' '._AUTH_VIEW.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pview', 'sl_form', $pview, 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_READ.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pread', 'sl_form', $pread, 0).'</td></tr></table>'
     .'</div>'
     .'<div id="tabcs2" class="tabcont">'
     .'<table class="sl_table_form">'
-    .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_post', 'sl_form', $auth_post, 0).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_reply', 'sl_form', $auth_reply, 0).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_edit', 'sl_form', $auth_edit, 1).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_delete', 'sl_form', $auth_delete, 1).'</td></tr>'
-    .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('auth_mod', 'sl_form', $auth_mod, 2).'</td></tr></table>'
+    .'<tr><td>'._CAN.' '._AUTH_POST.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('ppost', 'sl_form', $ppost, 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_REPLY.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('preply', 'sl_form', $preply, 0).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_EDIT.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pedit', 'sl_form', $pedit, 1).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_DELETE.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pdelete', 'sl_form', $pdelete, 1).'</td></tr>'
+    .'<tr><td>'._CAN.' '._AUTH_MOD.':<div class="sl_small">'._ACESSI.' '._CTRLINFO.'</div></td><td>'.catacess('pmod', 'sl_form', $pmod, 2).'</td></tr></table>'
     .'</div>'
     .'<script>
         var countries=new ddtabcontent("edits")
@@ -234,29 +234,29 @@ function addsave(): void {
     $title = getVar('post', 'title', 'title');
     $description = getVar('post', 'description', 'text');
     $imgcat = getVar('post', 'imgcat', 'var');
-    $language = getVar('post', 'language', 'var');
+    $lang = getVar('post', 'lang', 'var');
     $cid = getVar('post', 'cid', 'num', 0);
     $imgcat = str_replace('templates/'.$conf['theme'].'/images/categories/', '', $imgcat);
     $imgcat = (!$imgcat || $imgcat == 'no.png') ? '' : $imgcat;
-    $cstatus = getVar('post', 'status', 'num');
+    $status = getVar('post', 'status', 'num');
     [$ordern] = $db->getSqlRow($db->getSqlQuery('SELECT ordern FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern DESC', ['modul' => $modul]));
     $ordern++;
-    $auth_view_raw = getVar('post', 'auth_view[]', 'var', []);
-    $auth_read_raw = getVar('post', 'auth_read[]', 'var', []);
-    $auth_post_raw = getVar('post', 'auth_post[]', 'var', []);
-    $auth_reply_raw = getVar('post', 'auth_reply[]', 'var', []);
-    $auth_edit_raw = getVar('post', 'auth_edit[]', 'var', []);
-    $auth_delete_raw = getVar('post', 'auth_delete[]', 'var', []);
-    $auth_mod_raw = getVar('post', 'auth_mod[]', 'var', []);
-    $auth_view = (is_array($auth_view_raw) && $auth_view_raw) ? scatacess($auth_view_raw) : '0|0';
-    $auth_read = (is_array($auth_read_raw) && $auth_read_raw) ? scatacess($auth_read_raw) : '0|0';
-    $auth_post = (is_array($auth_post_raw) && $auth_post_raw) ? scatacess($auth_post_raw) : '0|0';
-    $auth_reply = (is_array($auth_reply_raw) && $auth_reply_raw) ? scatacess($auth_reply_raw) : '0|0';
-    $auth_edit = (is_array($auth_edit_raw) && $auth_edit_raw) ? scatacess($auth_edit_raw) : '3|0';
-    $auth_delete = (is_array($auth_delete_raw) && $auth_delete_raw) ? scatacess($auth_delete_raw) : '3|0';
-    $auth_mod = (is_array($auth_mod_raw) && $auth_mod_raw) ? scatacess($auth_mod_raw) : '3|0';
-    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_categories (id, modul, title, description, img, language, parent, status, ordern, auth_view, auth_read, auth_post, auth_reply, auth_edit, auth_delete, auth_mod) VALUES (NULL, :modul, :title, :description, :img, :language, :parentid, :cstatus, :ordern, :auth_view, :auth_read, :auth_post, :auth_reply, :auth_edit, :auth_delete, :auth_mod)', [
-        'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $cid, 'cstatus' => $cstatus, 'ordern' => $ordern, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod
+    $pview_raw = getVar('post', 'pview[]', 'var', []);
+    $pread_raw = getVar('post', 'pread[]', 'var', []);
+    $ppost_raw = getVar('post', 'ppost[]', 'var', []);
+    $preply_raw = getVar('post', 'preply[]', 'var', []);
+    $pedit_raw = getVar('post', 'pedit[]', 'var', []);
+    $pdelete_raw = getVar('post', 'pdelete[]', 'var', []);
+    $pmod_raw = getVar('post', 'pmod[]', 'var', []);
+    $pview = (is_array($pview_raw) && $pview_raw) ? scatacess($pview_raw) : '0|0';
+    $pread = (is_array($pread_raw) && $pread_raw) ? scatacess($pread_raw) : '0|0';
+    $ppost = (is_array($ppost_raw) && $ppost_raw) ? scatacess($ppost_raw) : '0|0';
+    $preply = (is_array($preply_raw) && $preply_raw) ? scatacess($preply_raw) : '0|0';
+    $pedit = (is_array($pedit_raw) && $pedit_raw) ? scatacess($pedit_raw) : '3|0';
+    $pdelete = (is_array($pdelete_raw) && $pdelete_raw) ? scatacess($pdelete_raw) : '3|0';
+    $pmod = (is_array($pmod_raw) && $pmod_raw) ? scatacess($pmod_raw) : '3|0';
+    $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_categories (id, modul, title, intro, img, lang, parent, status, ordern, pview, pread, ppost, preply, pedit, pdelete, pmod) VALUES (NULL, :modul, :title, :intro, :img, :lang, :parent, :status, :ordern, :pview, :pread, :ppost, :preply, :pedit, :pdelete, :pmod)', [
+        'modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $cid, 'status' => $status, 'ordern' => $ordern, 'pview' => $pview, 'pread' => $pread, 'ppost' => $ppost, 'preply' => $preply, 'pedit' => $pedit, 'pdelete' => $pdelete, 'pmod' => $pmod
     ]);
     setRedirect($afile.'.php?name=categories&modul='.$modul);
 }
@@ -268,27 +268,27 @@ function save(): void {
     $title = getVar('post', 'title', 'title');
     $description = getVar('post', 'description', 'text');
     $imgcat = getVar('post', 'imgcat', 'var');
-    $language = getVar('post', 'language', 'var');
-    $parentid = getVar('post', 'parent', 'num');
+    $lang = getVar('post', 'lang', 'var');
+    $parent = getVar('post', 'parent', 'num');
     $imgcat = str_replace('templates/'.$conf['theme'].'/images/categories/', '', $imgcat);
     $imgcat = (!$imgcat || $imgcat == 'no.png') ? '' : $imgcat;
-    $cstatus = getVar('post', 'status', 'num');
-    $auth_view_raw = getVar('post', 'auth_view[]', 'var', []);
-    $auth_read_raw = getVar('post', 'auth_read[]', 'var', []);
-    $auth_post_raw = getVar('post', 'auth_post[]', 'var', []);
-    $auth_reply_raw = getVar('post', 'auth_reply[]', 'var', []);
-    $auth_edit_raw = getVar('post', 'auth_edit[]', 'var', []);
-    $auth_delete_raw = getVar('post', 'auth_delete[]', 'var', []);
-    $auth_mod_raw = getVar('post', 'auth_mod[]', 'var', []);
-    $auth_view = (is_array($auth_view_raw) && $auth_view_raw) ? scatacess($auth_view_raw) : '0|0';
-    $auth_read = (is_array($auth_read_raw) && $auth_read_raw) ? scatacess($auth_read_raw) : '0|0';
-    $auth_post = (is_array($auth_post_raw) && $auth_post_raw) ? scatacess($auth_post_raw) : '0|0';
-    $auth_reply = (is_array($auth_reply_raw) && $auth_reply_raw) ? scatacess($auth_reply_raw) : '0|0';
-    $auth_edit = (is_array($auth_edit_raw) && $auth_edit_raw) ? scatacess($auth_edit_raw) : '3|0';
-    $auth_delete = (is_array($auth_delete_raw) && $auth_delete_raw) ? scatacess($auth_delete_raw) : '3|0';
-    $auth_mod = (is_array($auth_mod_raw) && $auth_mod_raw) ? scatacess($auth_mod_raw) : '3|0';
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET modul = :modul, title = :title, description = :description, img = :img, language = :language, parent = :parentid, status = :cstatus, auth_view = :auth_view, auth_read = :auth_read, auth_post = :auth_post, auth_reply = :auth_reply, auth_edit = :auth_edit, auth_delete = :auth_delete, auth_mod = :auth_mod WHERE id = :id', [
-        'modul' => $modul, 'title' => $title, 'description' => $description, 'img' => $imgcat, 'language' => $language, 'parentid' => $parentid, 'cstatus' => $cstatus, 'auth_view' => $auth_view, 'auth_read' => $auth_read, 'auth_post' => $auth_post, 'auth_reply' => $auth_reply, 'auth_edit' => $auth_edit, 'auth_delete' => $auth_delete, 'auth_mod' => $auth_mod, 'id' => $id
+    $status = getVar('post', 'status', 'num');
+    $pview_raw = getVar('post', 'pview[]', 'var', []);
+    $pread_raw = getVar('post', 'pread[]', 'var', []);
+    $ppost_raw = getVar('post', 'ppost[]', 'var', []);
+    $preply_raw = getVar('post', 'preply[]', 'var', []);
+    $pedit_raw = getVar('post', 'pedit[]', 'var', []);
+    $pdelete_raw = getVar('post', 'pdelete[]', 'var', []);
+    $pmod_raw = getVar('post', 'pmod[]', 'var', []);
+    $pview = (is_array($pview_raw) && $pview_raw) ? scatacess($pview_raw) : '0|0';
+    $pread = (is_array($pread_raw) && $pread_raw) ? scatacess($pread_raw) : '0|0';
+    $ppost = (is_array($ppost_raw) && $ppost_raw) ? scatacess($ppost_raw) : '0|0';
+    $preply = (is_array($preply_raw) && $preply_raw) ? scatacess($preply_raw) : '0|0';
+    $pedit = (is_array($pedit_raw) && $pedit_raw) ? scatacess($pedit_raw) : '3|0';
+    $pdelete = (is_array($pdelete_raw) && $pdelete_raw) ? scatacess($pdelete_raw) : '3|0';
+    $pmod = (is_array($pmod_raw) && $pmod_raw) ? scatacess($pmod_raw) : '3|0';
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET modul = :modul, title = :title, intro = :intro, img = :img, lang = :lang, parent = :parent, status = :status, pview = :pview, pread = :pread, ppost = :ppost, preply = :preply, pedit = :pedit, pdelete = :pdelete, pmod = :pmod WHERE id = :id', [
+        'modul' => $modul, 'title' => $title, 'intro' => $description, 'img' => $imgcat, 'lang' => $lang, 'parent' => $parent, 'status' => $status, 'pview' => $pview, 'pread' => $pread, 'ppost' => $ppost, 'preply' => $preply, 'pedit' => $pedit, 'pdelete' => $pdelete, 'pmod' => $pmod, 'id' => $id
     ]);
     setRedirect($afile.'.php?name=categories&modul='.$modul);
 }

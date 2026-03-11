@@ -254,7 +254,7 @@ function admininfo() {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '0'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
                 $n_cont .= '<tr><td><a href="'.$afile.'.php?name=files&status=1" title="'._FILES.'">'._FILES.'</a>:</td><td>'.$num.'</td></tr>';
-                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT lid FROM '.PREFIX_DB."_files WHERE status = '2'"));
+                $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '2'"));
                 $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
                 $n_cont .= '<tr><td><a href="'.$afile.'.php?name=files&status=2" title="'._BROCFILES.'">'._BROCFILES.'</a>:</td><td>'.$num.'</td></tr>';
             }
@@ -337,7 +337,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
     $where   = ($modul) ? 'WHERE a.modul = :modul' : '';
     $params  = ($modul) ? ['modul' => $modul] : [];
     $modlink = ($modul) ? '&amp;modul='.$modul : '';
-    $result  = $db->getSqlQuery('SELECT a.id, a.modul, a.title, a.description, a.img, a.language, a.parent, a.ordern, a.status, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
+    $result  = $db->getSqlQuery('SELECT a.id, a.modul, a.title, a.description, a.img, a.lang, a.parent, a.ordern, a.status, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
     if ($db->getSqlRowCount($result) > 0) {
         while (list($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2) = $db->getSqlRow($result)) {
             $massiv[$id] = [$id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2];
@@ -489,7 +489,7 @@ function scatacess($auth) {
 function ajax_block(): string {
  global $db, $conf, $afile;
     $fcont  = '';
-    $result = $db->getSqlQuery('SELECT a.id, a.bkey, a.title, a.url, a.bpos, a.weight, a.status, a.blang, a.bfile, a.view, a.expire, a.action, b.id, b.bpos, b.weight, c.id, c.bpos, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bpos = a.bpos AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bpos = a.bpos AND c.weight = a.weight+1) ORDER BY a.bpos, a.weight');
+    $result = $db->getSqlQuery('SELECT a.id, a.bkey, a.title, a.url, a.bpos, a.weight, a.status, a.lang, a.bfile, a.view, a.expire, a.action, b.id, b.bpos, b.weight, c.id, c.bpos, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bpos = a.bpos AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bpos = a.bpos AND c.weight = a.weight+1) ORDER BY a.bpos, a.weight');
     while (list($bid, $bkey, $title, $url, $bpos, $weight, $active, $lang, $bfile, $view, $expire, $action, $con1, $bpos1, $weight1, $con2, $bpos2, $weight2) = $db->getSqlRow($result)) {
         if (($expire && $expire < time()) || (!$active && $expire)) {
             if ($action == 'd') {

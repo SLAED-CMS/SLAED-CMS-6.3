@@ -40,7 +40,7 @@ function referers(): void {
     $tnum = ($offset) ? $conf['referers']['anum'] + $offset : $conf['referers']['anum'];
     $sortmap = [
         1 => ['referer', 'hits'], 2 => ['referer', 'referer'],
-        3 => ['link', 'hits'], 4 => ['link', 'link'],
+        3 => ['url', 'hits'], 4 => ['url', 'url'],
         5 => ['name', 'hits'], 6 => ['name', 'name'],
         7 => ['ip', 'hits'], 8 => ['ip', 'ip'],
         9 => ['time', 'hits'], 10 => ['time', 'time']
@@ -48,15 +48,15 @@ function referers(): void {
     $count = $sortmap[$sort][0] ?? 'time';
     $ordby = $sortmap[$sort][1] ?? 'time';
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
-    $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, link, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
+    $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     setHead();
     $cont = navi(0, 0, 0, 0);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $a = 0;
         $massiv = [];
-        while ([$hits, $uid, $name, $ip, $referer, $link, $date] = $db->getSqlRow($result)) {
-            $massiv[] = [$hits, $uid, $name, $ip, $referer, $link, $date];
+        while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
+            $massiv[] = [$hits, $uid, $name, $ip, $referer, $url, $date];
             $a++;
         }
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._IP.'</th><th>'._HITS.'</th><th>'._REFERERS.'</th><th>'._SWORD.'</th><th class="{sorter: false}">'._ID.'</th></tr></thead><tbody>';

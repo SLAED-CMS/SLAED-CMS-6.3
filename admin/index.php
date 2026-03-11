@@ -159,7 +159,7 @@ function check_admin() {
     $name = htmlspecialchars(trim(substr($_POST['name'], 0, 25)));
     $pwd = htmlspecialchars(trim(substr($_POST['pwd'], 0, 25)));
     if (!$name || !$pwd) $stop = _LOGININCOR;
-    $result = $db->getSqlQuery('SELECT id, name, pwd, editor FROM '.PREFIX_DB."_admins WHERE name = '".$name."' AND pwd = '".md5_salt($pwd)."'");
+    $result = $db->getSqlQuery('SELECT id, name, password, editor FROM '.PREFIX_DB."_admins WHERE name = '".$name."' AND password = '".md5_salt($pwd)."'");
     if ($db->getSqlRowCount($result) != 1) $stop = _LOGININCOR;
     list($aid, $aname, $apwd, $aeditor) = $db->getSqlRow($result);
     if (!$aid || $aname != $name || $apwd != md5_salt($pwd)) $stop = _LOGININCOR;
@@ -169,7 +169,7 @@ function check_admin() {
         $_SESSION[$conf['admin_c']] = $info;
         $ip = getip();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_session WHERE uname = '".$ip."'");
-        $db->getSqlQuery('UPDATE '.PREFIX_DB."_admins SET ip = '".$ip."', lvisit = now() WHERE id = '".$aid."'");
+        $db->getSqlQuery('UPDATE '.PREFIX_DB."_admins SET ip = '".$ip."', lastvis = now() WHERE id = '".$aid."'");
         login_report(1, 1, $name, '');
         header('Location: '.$afile.'.php');
     } else {

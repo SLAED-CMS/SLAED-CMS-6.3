@@ -120,7 +120,7 @@ function getBlocks(string $side, string $fly = ''): void {
     global $db, $conf, $locale, $name, $home, $pos, $b_id, $bfile;
     static $barr;
     if ($conf['multilingual'] == 1) {
-        $querylang = "AND (blang = :loc OR blang = '')";
+        $querylang = "AND (lang = :loc OR lang = '')";
         $qlang_params = ['loc' => $locale];
     } else {
         $querylang = '';
@@ -1330,9 +1330,9 @@ function setHead(array $seo = []): void {
             }
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session WHERE uname = :uname', ['uname' => $uname]));
             if ($num >= 1) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_session SET time = :time, ip = :ip, guest = :guest, module = :module, url = :url WHERE uname = :uname', [':time' => $ctime, ':ip' => $ip, ':guest' => $guest, ':module' => $name, ':url' => $url, ':uname' => $uname]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_session SET time = :time, ip = :ip, guest = :guest, modul = :modul, url = :url WHERE uname = :uname', [':time' => $ctime, ':ip' => $ip, ':guest' => $guest, ':modul' => $name, ':url' => $url, ':uname' => $uname]);
             } else {
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_session (uname, time, ip, guest, module, url) VALUES (:uname, :time, :ip, :guest, :module, :url)', ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'module' => $name, 'url' => $url]);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_session (uname, time, ip, guest, modul, url) VALUES (:uname, :time, :ip, :guest, :modul, :url)', ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'modul' => $name, 'url' => $url]);
             }
         }
     }
@@ -1355,9 +1355,9 @@ function setHead(array $seo = []): void {
             if (is_active('auto_links')) {
                 list($exist) = $db->getSqlRow($db->getSqlQuery('SELECT ip FROM '.PREFIX_DB.'_referer WHERE ip = :ip AND lid != :lid', ['ip' => $ip, 'lid' => 0]));
                 if ($exist) {
-                    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, time, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
+                    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => 0]);
                 } else {
-                    $result = $db->getSqlQuery('SELECT link FROM '.PREFIX_DB.'_auto_links');
+                    $result = $db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links');
                     while(list($slink) = $db->getSqlRow($result)) {
                         if (preg_match('#'.$slink.'#i', $referer)) {
                             $islink = 1;
@@ -1367,15 +1367,15 @@ function setHead(array $seo = []): void {
                         }
                     }
                     if ($islink) {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = hits + 1 WHERE link = :link', ['link' => $slink]);
-                        list($lid) = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_auto_links WHERE link = :link', ['link' => $slink]));
-                        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, time, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => $lid]);
+                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = hits + 1 WHERE url = :url', ['url' => $slink]);
+                        list($lid) = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $slink]));
+                        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => $lid]);
                     } else {
-                        if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, time, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
+                        if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => 0]);
                     }
                 }
             } else {
-                if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, link, time, lid) VALUES (:uid, :name, :ip, :referer, :link, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'link' => $link, 'lid' => 0]);
+                if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => 0]);
             }
         }
     }
@@ -1974,16 +1974,16 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
             $where = 'WHERE modul = :mod AND parent = :pid';
             $params['pid'] = $id;
         } elseif ($conf['multilingual']) {
-            $where = "WHERE modul = :mod AND (language = :loc OR language = '')";
+            $where = "WHERE modul = :mod AND (lang = :loc OR lang = '')";
             $params['loc'] = $locale;
         } else {
             $where = 'WHERE modul = :mod';
         }
         $cnum = 0;
-        $result = $db->getSqlQuery('SELECT id, title, description, img, parent, auth_view, auth_read FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY ordern, title', $params);
-        while (list($cid, $title, $description, $img, $parentid, $auth_view, $auth_read) = $db->getSqlRow($result)) {
-            $massiv[] = [$cid, $title, $description, $img, $parentid, $auth_view, $auth_read];
-            unset($cid, $title, $description, $img, $parentid, $auth_view, $auth_read);
+        $result = $db->getSqlQuery('SELECT id, title, intro, img, parent, pview, pread FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY ordern, title', $params);
+        while (list($cid, $title, $intro, $img, $parentid, $pview, $pread) = $db->getSqlRow($result)) {
+            $massiv[] = [$cid, $title, $intro, $img, $parentid, $pview, $pread];
+            unset($cid, $title, $intro, $img, $parentid, $pview, $pread);
             $cnum++;
         }
         if ($massiv) {
@@ -2073,13 +2073,13 @@ function setArticleNumbers(string $name, string $mod, int $limit, string $url, s
     global $db, $conf, $locale;
     if (!defined('ADMIN_FILE') && $catfld && $where) {
         if ($conf['multilingual']) {
-            $lng_where = 'WHERE modul = :mod AND (language = :loc OR language = \'\')';
+            $lng_where = 'WHERE modul = :mod AND (lang = :loc OR lang = \'\')';
             $lng_params = ['mod' => $mod, 'loc' => $locale];
         } else {
             $lng_where = 'WHERE modul = :mod';
             $lng_params = ['mod' => $mod];
         }
-        $res = $db->getSqlQuery('SELECT id, auth_read FROM '.PREFIX_DB.'_categories '.$lng_where.' ORDER BY id', $lng_params);
+        $res = $db->getSqlQuery('SELECT id, pread FROM '.PREFIX_DB.'_categories '.$lng_where.' ORDER BY id', $lng_params);
         $catid = [];
         while (list($cid, $auth) = $db->getSqlRow($res)) {
             if (is_acess($auth)) $catid[] = (int)$cid;
@@ -3049,6 +3049,18 @@ function getLangName(string $con): string {
     return $map[$con] ?? $con;
 }
 
+# Hash a user password with bcrypt
+function getPassHash(string $pass): string {
+    return password_hash($pass, PASSWORD_BCRYPT);
+}
+
+# Verify a user password; supports current bcrypt and legacy md5_salt hashes transparently
+function checkPassHash(string $pass, string $hash): bool {
+    if (password_verify($pass, $hash)) return true;
+    if (strlen($hash) === 32 && ctype_xdigit($hash)) return md5_salt($pass) === $hash;
+    return false;
+}
+
 ####
 # OLD FUNCTIONS (for backward compatibility, not recommended for use in new code)
 ####
@@ -3176,7 +3188,7 @@ function user_sinfo(string $id = ''): string {
  global $db, $conf;
     if ($conf['session']) {
         $who_online = ''; $m = 0; $b = 0; $u = 0; $i = 0;
-        $result = $db->getSqlQuery('SELECT uname, time, ip, guest, module FROM '.PREFIX_DB.'_session ORDER BY uname');
+        $result = $db->getSqlQuery('SELECT uname, time, ip, guest, modul FROM '.PREFIX_DB.'_session ORDER BY uname');
         while (list($uname, $time, $host, $guest, $module) = $db->getSqlRow($result)) {
             $time = time() - $time;
             $strip = cutstr($uname, 15);
@@ -3210,7 +3222,7 @@ function user_sainfo(string $id = ''): string {
         $a = $b = $m = $u = $i = 0;
         $who_online = ['0' => '', '1' => '', '2' => '', '3' => ''];
         $content_who = '';
-        $result = $db->getSqlQuery('SELECT uname, time, ip, guest, module, url FROM '.PREFIX_DB.'_session ORDER BY uname');
+        $result = $db->getSqlQuery('SELECT uname, time, ip, guest, modul, url FROM '.PREFIX_DB.'_session ORDER BY uname');
         while (list($uname, $time, $host, $guest, $module, $url) = $db->getSqlRow($result)) {
             $time = time() - $time;
             $namestrip = cutstr($uname, 15);
@@ -3859,7 +3871,7 @@ function is_user(string $usr = ''): int {
     if (!isset($usertrue) && $user) {
         $uid = intval(substr($user[0], 0, 11));
         $una = htmlspecialchars(substr($user[1], 0, 25));
-        $pwd = htmlspecialchars(substr($user[2], 0, 40));
+        $pwd = htmlspecialchars(substr($user[2], 0, 255));
         $ip = getIp();
         if ($uid != '' && $pwd != '') {
             if ($conf['users']['check'] == '0') {
@@ -4178,10 +4190,10 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
         $where  = 'ORDER BY ordern';
         $params = [];
     }
-    $result = $db->getSqlQuery('SELECT id, title, parent, auth_view FROM '.PREFIX_DB.'_categories '.$where, $params);
+    $result = $db->getSqlQuery('SELECT id, title, parent, pview FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
         $content = (!$noSelect) ? '<select name="'.$selectName.'" title="'._CATEGORIES.'" class="'.$class.'">' : '';
-        while (list($cid, $title, $parentid, $auth_view) = $db->getSqlRow($result)) if (is_acess($auth_view)) $massiv[$cid] = [getConst($title), $parentid];
+        while (list($cid, $title, $parentid, $pview) = $db->getSqlRow($result)) if (is_acess($pview)) $massiv[$cid] = [getConst($title), $parentid];
         foreach ($massiv as $key => $val) {
             $cont[$key] = $val[0];
             $flag = $val[1];
@@ -4262,14 +4274,14 @@ function catids(string $mod = '', int $id = 0): string {
 function catmids(string $modul, string $field): string {
  global $db, $conf, $locale;
     if ($conf['multilingual']) {
-        $where  = 'WHERE modul = :modul AND (language = :locale OR language = \'\')';
+        $where  = 'WHERE modul = :modul AND (lang = :locale OR lang = \'\')';
         $params = ['modul' => $modul, 'locale' => $locale];
     } else {
         $where  = 'WHERE modul = :modul';
         $params = ['modul' => $modul];
     }
-    $result = $db->getSqlQuery('SELECT id, auth_read FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY id', $params);
-    while (list($cid, $auth_read) = $db->getSqlRow($result)) if (is_acess($auth_read)) $catid[] = $cid;
+    $result = $db->getSqlQuery('SELECT id, pread FROM '.PREFIX_DB.'_categories '.$where.' ORDER BY id', $params);
+    while (list($cid, $pread) = $db->getSqlRow($result)) if (is_acess($pread)) $catid[] = $cid;
     return isset($catid) ? 'AND '.$field.' IN ('.implode(', ', $catid).')' : '';
 }
 
@@ -5008,7 +5020,7 @@ function check_size(string $file, int $width, int $height): string {
     return '';
 }
 
-# Crypted md5 and salt
+# Crypted md5 and salt — legacy, kept for tokens and transparent upgrade
 function md5_salt(string $pass): string {
  global $conf;
     $crypt = md5(md5($conf['lic_f']).md5($pass));
@@ -5274,7 +5286,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             if ($numstories > $offset) $a -= $offset;
         }
         $where = [];
-        $result = $db->getSqlQuery('SELECT id, cid, modul, time, uid, name, ip, comment, status FROM '.PREFIX_DB.'_comment '.$ordern.' ORDER BY time '.$sort.' LIMIT '.intval($offset).', '.intval($ccnum), $params);
+        $result = $db->getSqlQuery('SELECT id, cid, modul, time, uid, name, ip, body, status FROM '.PREFIX_DB.'_comment '.$ordern.' ORDER BY time '.$sort.' LIMIT '.intval($offset).', '.intval($ccnum), $params);
         while (list($com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status) = $db->getSqlRow($result)) {
             $cmassiv[] = [$com_id, $com_cid, $com_modul, $com_date, $com_uid, $com_name, $com_host, $com_text, $com_status];
             if ($com_uid) $where[] = $com_uid;
@@ -5412,7 +5424,7 @@ function editcom(): string {
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
     $mod  = filterVar(getVar('post', 'mod',  'text', '') ?: getVar('get', 'mod',  'text', ''));
     $text = trim(getVar('post', 'text', 'raw',  '') ?: getVar('get', 'text', 'raw',  ''));
-    list($uid, $date, $comment) = $db->getSqlRow($db->getSqlQuery('SELECT uid, time, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
+    list($uid, $date, $comment) = $db->getSqlRow($db->getSqlQuery('SELECT uid, time, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
     $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
@@ -5429,7 +5441,7 @@ function editcom(): string {
             $urlclick = (!is_moder($mod) && (($conf['comments']['alink'] == 1 && !is_user()) || ($conf['comments']['alink'] == 2))) ? 1 : 0;
             if (!$stop) {
                 $comm = filterHtml($text, $urlclick);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET comment = :comment WHERE id = :id', ['comment' => $comm, 'id' => $id]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $comm, 'id' => $id]);
                 echo filterReplaceText(filterMarkdown($comm, $mod, false), $mod);
             } else {
                 return setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
@@ -5473,16 +5485,16 @@ function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0):
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_faq SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(7, $uid, $point);
         } elseif ($mod == 'files') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET tcom = tcom + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(10, $uid, $point);
         } elseif ($mod == 'gallery') {
             #$db->getSqlQuery("UPDATE ".PREFIX_DB."_gallery SET totalcomments=totalcomments".$typ." WHERE lid = '".$id."'");
             update_points(17, $uid, $point);
         } elseif ($mod == 'links') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET tcom = tcom + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(22, $uid, $point);
         } elseif ($mod == 'media') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET tcom = tcom + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(26, $uid, $point);
         } elseif ($mod == 'multimedia') {
             #$db->getSqlQuery("UPDATE ".PREFIX_DB."_multimedia SET totalcom=totalcom".$typ." WHERE id = '".$id."'");
@@ -5494,7 +5506,7 @@ function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0):
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_pages SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(36, $uid, $point);
         } elseif ($mod == 'shop') {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET com = com + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_products SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);
             update_points(40, $uid, $point);
         } elseif ($mod == 'voting') {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET comments = comments + :delta WHERE id = :id', ['delta' => $delta, 'id' => $id]);

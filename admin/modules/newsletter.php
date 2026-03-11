@@ -110,7 +110,7 @@ function add(): void {
         }
     }
     if (is_active('order')) {
-        $result8 = $db->getSqlQuery('SELECT mail FROM '.PREFIX_DB.'_order WHERE status = 1');
+        $result8 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE status = 1');
         if ($db->getSqlRowCount($result8) > 0) {
             $aemail = [];
             while ([$user_email] = $db->getSqlRow($result8)) $aemail[] = $user_email;

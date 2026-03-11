@@ -573,7 +573,7 @@ function isAdmin(bool $super = false): bool {
     $pwd = substr($admin[2], 0, 40);
     $ip = getIp();
     if ($id && $name && $pwd && $ip) {
-        [$aname, $apwd, $aip, $asuper] = $db->getSqlRow($db->getSqlQuery('SELECT name, pwd, ip, super FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id])) ?? ['', '', '', '0'];
+        [$aname, $apwd, $aip, $asuper] = $db->getSqlRow($db->getSqlQuery('SELECT name, password, ip, super FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id])) ?? ['', '', '', '0'];
         if ($aname !== '' && $aname === $name && $apwd !== '' && hash_equals($apwd, $pwd) && $aip !== '' && $aip === $ip) {
             $cache[0] = true;
             $cache[1] = ((int)$asuper === 1);
