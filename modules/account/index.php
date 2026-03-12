@@ -455,7 +455,7 @@ function last(int|string $uid, string $modul): string {
     $limit = intval($num);
     $cont = '';
     if ($modul == 'comm') {
-        $result = $db->getSqlQuery('SELECT id, cid, modul, time, comment FROM '.PREFIX_DB."_comment WHERE uid = :user_id AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
+        $result = $db->getSqlQuery('SELECT id, cid, modul, time, body FROM '.PREFIX_DB."_comment WHERE uid = :user_id AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_amount">';
             while([$id, $cid, $modul, $date, $comment] = $db->getSqlRow($result)) {
@@ -684,9 +684,9 @@ function login(): void {
 
 function logout(): void {
     global $db, $user;
-    $nick = htmlspecialchars(substr($user[1], 0, 25));
+    $nick = (is_array($user) && isset($user[1])) ? htmlspecialchars(substr((string)$user[1], 0, 25)) : '';
     setCookiesDelete('account');
-    $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $nick, 'guest' => 2]);
+    if ($nick !== '') $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $nick, 'guest' => 2]);
     unset($user);
     setRedirect('index.php', true);
 }

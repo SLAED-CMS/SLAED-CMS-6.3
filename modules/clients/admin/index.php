@@ -17,11 +17,11 @@ function clients(): void {
     setHead();
     $cont = navi(0, 0, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _CERROR]);
-    $result = $db->getSqlQuery('SELECT id, title, infotext, url, num, hits, prod_id, status FROM '.PREFIX_DB.'_clients_down');
+    $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CDATE.'</th><th>'._ID.'</th><th>'._CLOADS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while ([$id, $title, $infotext, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
+        while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
             $cont .= '<tr>'
@@ -50,12 +50,12 @@ function add(): void {
     global $db, $afile, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->getSqlQuery('SELECT id, title, infotext, url, num, code, prod_id, status FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
-        [$cid, $title, $infotext, $url, $num, $code, $prod, $status] = $db->getSqlRow($result);
+        $result = $db->getSqlQuery('SELECT id, title, body, url, num, code, pid, status FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
+        [$cid, $title, $body, $url, $num, $code, $prod, $status] = $db->getSqlRow($result);
     } else {
         $cid = getVar('post', 'cid', 'num');
         $title = getVar('post', 'title', 'title', '');
-        $infotext = getVar('post', 'infotext', 'text', '');
+        $body = getVar('post', 'body', 'text', '');
         $url = getVar('post', 'url', 'text', '');
         $num = getVar('post', 'num', 'text', '');
         $code = getVar('post', 'code', 'text', '');
@@ -68,11 +68,11 @@ function add(): void {
         $stopText = is_array($stop) ? implode('<br>', $stop) : $stop;
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stopText]);
     }
-    if ($infotext) $cont .= preview($title, $infotext, '', '', 'all');
+    if ($body) $cont .= preview($title, $body, '', '', 'all');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._CTITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._CTITLE.'" required></td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'infotext', $infotext, 'clients', '15', _TEXT, '1').'</td></tr>'
+    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'body', $body, 'clients', '15', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._CURL.':</td><td><input type="text" name="url" value="'.$url.'" maxlength="100" class="sl_form" placeholder="'._CURL.'"></td></tr>'
     .'<tr><td>'._CVERSION.':</td><td><input type="text" name="num" value="'.$num.'" maxlength="10" class="sl_form" placeholder="'._CVERSION.'"></td></tr>'
     .'<tr><td>'._CODE.':</td><td><input type="text" name="code" value="'.$code.'" maxlength="100" class="sl_form" placeholder="'._CODE.'"></td></tr>'
@@ -88,7 +88,7 @@ function save(): void {
     global $db, $afile, $stop;
     $cid = getVar('post', 'cid', 'num', 0);
     $title = getVar('post', 'title', 'title', '');
-    $infotext = getVar('post', 'infotext', 'text', '');
+    $body = getVar('post', 'body', 'text', '');
     $url = getVar('post', 'url', 'text', '');
     $num = getVar('post', 'num', 'text', '');
     $code = getVar('post', 'code', 'text', '');
@@ -96,13 +96,13 @@ function save(): void {
     $status = getVar('post', 'status', 'num', 0);
     $stop = [];
     if (!$title) $stop[] = _CERROR;
-    if (!$infotext) $stop[] = _CERROR1;
+    if (!$body) $stop[] = _CERROR1;
     $posttype = getVar('post', 'posttype', 'var', '');
     if (!$stop && $posttype === 'save') {
         if ($cid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET title = :title, infotext = :infotext, url = :url, num = :num, code = :code, prod_id = :prod_id, status = :status WHERE id = :id', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'prod_id' => $prod, 'status' => $status, 'id' => $cid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_clients_down SET title = :title, body = :body, url = :url, num = :num, code = :code, pid = :pid, status = :status WHERE id = :id', ['title' => $title, 'body' => $body, 'url' => $url, 'num' => $num, 'code' => $code, 'pid' => $prod, 'status' => $status, 'id' => $cid]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients_down (title, infotext, url, num, code, hits, prod_id, status) VALUES (:title, :infotext, :url, :num, :code, :hits, :prod_id, :status)', ['title' => $title, 'infotext' => $infotext, 'url' => $url, 'num' => $num, 'code' => $code, 'hits' => 0, 'prod_id' => $prod, 'status' => $status]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_clients_down (title, body, url, num, code, hits, pid, status) VALUES (:title, :body, :url, :num, :code, :hits, :pid, :status)', ['title' => $title, 'body' => $body, 'url' => $url, 'num' => $num, 'code' => $code, 'hits' => 0, 'pid' => $prod, 'status' => $status]);
         }
         setRedirect($afile.'.php?name=clients');
     } elseif ($posttype === 'delete') {

@@ -24,7 +24,7 @@ function edit(): void {
     $id = getVar('get', 'id', 'num');
     setHead();
     $cont = navi(0, 0, 0, 0);
-    $result = $db->getSqlQuery('SELECT id, modul, comment FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
+    $result = $db->getSqlQuery('SELECT id, modul, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
@@ -39,7 +39,7 @@ function editsave(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num');
     $com_text = getVar('post', 'comment', 'text', '');
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET comment = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
+    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :comment WHERE id = :id', ['comment' => $com_text, 'id' => $id]);
     setRedirect($afile.'.php?name=comments');
 }
 
