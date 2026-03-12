@@ -851,6 +851,24 @@ CALL rencol('{prefix}_categories', 'auth_delete', 'pdelete');
 CALL rencol('{prefix}_categories', 'auth_mod',    'pmod');
 
 # =============================================================================
+# Batch W: body column unification
+#   _clients_down: infotext   → body,  prod_id   → pid
+#   _content:      text       → body
+#   _message:      content    → body
+#   _newsletter:   content    → body
+#   _privat:       content    → body
+#   _voting:       questions  → body
+# =============================================================================
+
+CALL rencol('{prefix}_clients_down', 'infotext',   'body');
+CALL rencol('{prefix}_clients_down', 'prod_id',    'pid');
+CALL rencol('{prefix}_content',      'text',       'body');
+CALL rencol('{prefix}_message',      'content',    'body');
+CALL rencol('{prefix}_newsletter',   'content',    'body');
+CALL rencol('{prefix}_privat',       'content',    'body');
+CALL rencol('{prefix}_voting',       'questions',  'body');
+
+# =============================================================================
 # Cleanup
 # =============================================================================
 
@@ -1078,7 +1096,7 @@ ALTER TABLE `{prefix}_comment`
   MODIFY `body`  TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_content`
-  MODIFY `text`  MEDIUMTEXT NOT NULL,
+  MODIFY `body`  MEDIUMTEXT NOT NULL,
   MODIFY `field` TEXT NOT NULL,
   MODIFY `url`   VARCHAR(200) NOT NULL;
 
@@ -1111,8 +1129,8 @@ ALTER TABLE `{prefix}_links`
   MODIFY `url`   VARCHAR(100) NOT NULL;
 
 ALTER TABLE `{prefix}_message`
-  MODIFY `title`   VARCHAR(100) NOT NULL,
-  MODIFY `content` TEXT NOT NULL;
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `body`  TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_news`
   MODIFY `title` VARCHAR(100) NOT NULL,
@@ -1122,9 +1140,9 @@ ALTER TABLE `{prefix}_news`
   MODIFY `assoc` TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_newsletter`
-  MODIFY `title`   VARCHAR(50) NOT NULL,
-  MODIFY `content` TEXT,
-  MODIFY `mails`   MEDIUMTEXT;
+  MODIFY `title` VARCHAR(50) NOT NULL,
+  MODIFY `body`  TEXT,
+  MODIFY `mails` MEDIUMTEXT;
 
 ALTER TABLE `{prefix}_order`
   MODIFY `info` TEXT NOT NULL,
@@ -1140,8 +1158,8 @@ ALTER TABLE `{prefix}_partners`
   MODIFY `email` VARCHAR(255) NOT NULL;
 
 ALTER TABLE `{prefix}_privat`
-  MODIFY `title`   VARCHAR(100) NOT NULL,
-  MODIFY `content` TEXT NOT NULL;
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `body`  TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_products`
   MODIFY `title` VARCHAR(100) NOT NULL,
@@ -1160,8 +1178,8 @@ ALTER TABLE `{prefix}_users_temp`
   MODIFY `time`  VARCHAR(14) NOT NULL;
 
 ALTER TABLE `{prefix}_voting`
-  MODIFY `questions` TEXT NOT NULL,
-  MODIFY `answer`    TEXT NOT NULL;
+  MODIFY `body`   TEXT NOT NULL,
+  MODIFY `answer` TEXT NOT NULL;
 
 UPDATE `{prefix}_whois` SET `ip` = '' WHERE `ip` IS NULL;
 ALTER TABLE `{prefix}_whois`

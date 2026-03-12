@@ -9,11 +9,37 @@
 # - do not use it as the public 6.2 -> 6.3 update script
 # - public update path remains in setup/sql/table_update6_3.sql
 
+DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS ensure_unique_idx;
 DROP PROCEDURE IF EXISTS finalize_user_names;
 
 DELIMITER $$
+
+CREATE PROCEDURE rencol(IN ptab VARCHAR(128), IN pold VARCHAR(128), IN pnew VARCHAR(128))
+BEGIN
+    DECLARE ctab INT DEFAULT 0;
+    DECLARE cold INT DEFAULT 0;
+    DECLARE cnew INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO ctab FROM information_schema.tables
+     WHERE table_schema = DATABASE() AND table_name = ptab;
+
+    IF ctab > 0 THEN
+        SELECT COUNT(*) INTO cold FROM information_schema.columns
+         WHERE table_schema = DATABASE() AND table_name = ptab AND column_name = pold;
+
+        SELECT COUNT(*) INTO cnew FROM information_schema.columns
+         WHERE table_schema = DATABASE() AND table_name = ptab AND column_name = pnew;
+
+        IF cold > 0 AND cnew = 0 THEN
+            SET @sql = CONCAT('ALTER TABLE `', ptab, '` RENAME COLUMN `', pold, '` TO `', pnew, '`');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END$$
 
 CREATE PROCEDURE delidx(IN ptab VARCHAR(128), IN pidx VARCHAR(128))
 BEGIN
@@ -206,10 +232,11 @@ ALTER TABLE `{prefix}_comment`
   MODIFY `modul` VARCHAR(60) NOT NULL,
   MODIFY `comment` TEXT NOT NULL;
 
+CALL rencol('{prefix}_content', 'text', 'body');
 ALTER TABLE `{prefix}_content`
-  MODIFY `text` MEDIUMTEXT NOT NULL,
+  MODIFY `body`  MEDIUMTEXT NOT NULL,
   MODIFY `field` TEXT NOT NULL,
-  MODIFY `url` VARCHAR(200) NOT NULL;
+  MODIFY `url`   VARCHAR(200) NOT NULL;
 
 ALTER TABLE `{prefix}_faq`
   MODIFY `title` VARCHAR(100) NOT NULL,
@@ -239,9 +266,10 @@ ALTER TABLE `{prefix}_links`
   MODIFY `bodytext` TEXT NOT NULL,
   MODIFY `url` VARCHAR(100) NOT NULL;
 
+CALL rencol('{prefix}_message', 'content', 'body');
 ALTER TABLE `{prefix}_message`
   MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `content` TEXT NOT NULL;
+  MODIFY `body`  TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_news`
   MODIFY `title` VARCHAR(100) NOT NULL,
@@ -250,9 +278,10 @@ ALTER TABLE `{prefix}_news`
   MODIFY `field` TEXT NOT NULL,
   MODIFY `associated` TEXT NOT NULL;
 
+CALL rencol('{prefix}_newsletter', 'content', 'body');
 ALTER TABLE `{prefix}_newsletter`
   MODIFY `title` VARCHAR(50) NOT NULL,
-  MODIFY `content` TEXT,
+  MODIFY `body`  TEXT,
   MODIFY `mails` MEDIUMTEXT;
 
 ALTER TABLE `{prefix}_order`
@@ -268,9 +297,10 @@ ALTER TABLE `{prefix}_partners`
   MODIFY `name` VARCHAR(255) NOT NULL,
   MODIFY `email` VARCHAR(255) NOT NULL;
 
+CALL rencol('{prefix}_privat', 'content', 'body');
 ALTER TABLE `{prefix}_privat`
   MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `content` TEXT NOT NULL;
+  MODIFY `body`  TEXT NOT NULL;
 
 ALTER TABLE `{prefix}_products`
   MODIFY `title` VARCHAR(100) NOT NULL,
@@ -288,10 +318,15 @@ ALTER TABLE `{prefix}_users_temp`
   MODIFY `code` VARCHAR(50) NOT NULL,
   MODIFY `time` VARCHAR(14) NOT NULL;
 
+CALL rencol('{prefix}_voting', 'questions', 'body');
 ALTER TABLE `{prefix}_voting`
-  MODIFY `questions` TEXT NOT NULL,
+  MODIFY `body`   TEXT NOT NULL,
   MODIFY `answer` TEXT NOT NULL;
 
+CALL rencol('{prefix}_clients_down', 'infotext', 'body');
+CALL rencol('{prefix}_clients_down', 'prod_id',  'pid');
+
+DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS ensure_unique_idx;
 DROP PROCEDURE IF EXISTS finalize_user_names;

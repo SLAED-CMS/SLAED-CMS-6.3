@@ -713,6 +713,12 @@ ALTER TABLE `{prefix}_groups`
   DROP KEY IF EXISTS `id`,
   ADD PRIMARY KEY IF NOT EXISTS (`id`);
 
+# _whois: rename legacy status columns before type normalization
+# Must run here (Batch N) because the MODIFY below references sdomain/shost/sdc
+CALL rencol('{prefix}_whois', 'st_domain', 'sdomain');
+CALL rencol('{prefix}_whois', 'st_host',   'shost');
+CALL rencol('{prefix}_whois', 'st_dc',     'sdc');
+
 # _whois: normalize types from legacy schema to match table.sql
 UPDATE `{prefix}_whois` SET `ip` = '' WHERE `ip` IS NULL;
 ALTER TABLE `{prefix}_whois`
@@ -861,6 +867,24 @@ CALL rencol('{prefix}_categories', 'auth_reply',  'preply');
 CALL rencol('{prefix}_categories', 'auth_edit',   'pedit');
 CALL rencol('{prefix}_categories', 'auth_delete', 'pdelete');
 CALL rencol('{prefix}_categories', 'auth_mod',    'pmod');
+
+# =============================================================================
+# Batch W: body column unification
+#   _clients_down: infotext   → body,  prod_id   → pid
+#   _content:      text       → body
+#   _message:      content    → body
+#   _newsletter:   content    → body
+#   _privat:       content    → body
+#   _voting:       questions  → body
+# =============================================================================
+
+CALL rencol('{prefix}_clients_down', 'infotext',   'body');
+CALL rencol('{prefix}_clients_down', 'prod_id',    'pid');
+CALL rencol('{prefix}_content',      'text',       'body');
+CALL rencol('{prefix}_message',      'content',    'body');
+CALL rencol('{prefix}_newsletter',   'content',    'body');
+CALL rencol('{prefix}_privat',       'content',    'body');
+CALL rencol('{prefix}_voting',       'questions',  'body');
 
 # =============================================================================
 # Cleanup
