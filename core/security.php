@@ -749,9 +749,9 @@ function setLang(): void {
     if ($mult) {
         $newlang = getVar('req', 'newlang', 'var', '');
         $clang = getCookies('language');
-        if ($newlang && is_readable('language/'.$newlang.'.php')) {
+        if ($newlang && is_readable('lang/'.$newlang.'.php')) {
             $locale = $newlang;
-        } elseif ($clang && is_readable('language/'.$clang.'.php')) {
+        } elseif ($clang && is_readable('lang/'.$clang.'.php')) {
             $locale = $clang;
         } else {
             $locale = $mlang;
@@ -762,8 +762,8 @@ function setLang(): void {
     } else {
         $locale = $mlang;
     }
-    $file = 'language/'.$locale.'.php';
-    require_once is_readable($file) ? $file : 'language/'.$mlang.'.php';
+    $file = 'lang/'.$locale.'.php';
+    require_once is_readable($file) ? $file : 'lang/'.$mlang.'.php';
 }
 
 # Load module language file and return the active locale
@@ -776,16 +776,16 @@ function getLang(string $module = '', bool $admin = false): string {
     $key = $module.'|'.$ctx.'|'.$locale;
     if (!array_key_exists($key, $lmods)) {
         if ($module === 'admin') {
-            $list = ['admin/language/'.$locale.'.php', 'admin/language/'.$mlang.'.php'];
+            $list = ['admin/lang/'.$locale.'.php', 'admin/lang/'.$mlang.'.php'];
         } elseif ($admin) {
             $list = [
-                'modules/'.$module.'/admin/language/'.$locale.'.php',
-                'modules/'.$module.'/admin/language/'.$mlang.'.php',
+                'modules/'.$module.'/admin/lang/'.$locale.'.php',
+                'modules/'.$module.'/admin/lang/'.$mlang.'.php',
             ];
         } else {
             $list = [
-                'modules/'.$module.'/language/'.$locale.'.php',
-                'modules/'.$module.'/language/'.$mlang.'.php',
+                'modules/'.$module.'/lang/'.$locale.'.php',
+                'modules/'.$module.'/lang/'.$mlang.'.php',
             ];
         }
         $done = false;

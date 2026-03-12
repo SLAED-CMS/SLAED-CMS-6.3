@@ -178,7 +178,7 @@ function config(): void {
     .'<div id="tabc2" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._SELLANGUAGE.':</td><td><select name="language" class="sl_conf">';
-    $entries = is_dir('language') ? scandir('language') : [];
+    $entries = is_dir('lang') ? scandir('lang') : [];
     if (is_array($entries)) {
         foreach ($entries as $file) {
             if (preg_match('/^(.+)\.php/', $file, $matches)) {

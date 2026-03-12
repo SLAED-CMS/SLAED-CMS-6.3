@@ -150,7 +150,7 @@ Tests must be run after about 100 changed lines and before merging into `master`
 slaed-cms/
 ├── admin/                 # Admin panel interface
 │   ├── modules/          # Admin modules
-│   └── language/         # Admin translations
+│   └── lang/             # Admin translations
 ├── blocks/               # Reusable UI components
 ├── config/               # Configuration files
 │   ├── db.php           # Database configuration
@@ -161,7 +161,7 @@ slaed-cms/
 │   ├── security.php     # Security functions
 │   ├── user.php         # User management
 │   └── classes/         # Database drivers (MySQLi, PDO)
-├── language/             # Multi-language files
+├── lang/                 # Multi-language files
 │   ├── en.php
 │   ├── de.php
 │   └── ...

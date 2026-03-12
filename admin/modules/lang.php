@@ -16,7 +16,7 @@ function getLangPath(string $mod = '', string $typ = ''): string {
     $base = BASE_DIR;
     $module = $mod ? '/modules/'.$mod : '';
     $type = $typ ? '/'.$typ : '';
-    return $base.$module.$type.'/language';
+    return $base.$module.$type.'/lang';
 }
 
 function lang(): void {
@@ -57,8 +57,8 @@ function lang(): void {
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $eadmin = '';
         $emodul = '';
-        if (is_dir($mod_path.'/admin/language')) $eadmin = '<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
-        if (is_dir($mod_path.'/language')) {
+        if (is_dir($mod_path.'/admin/lang')) $eadmin = '<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
+        if (is_dir($mod_path.'/lang')) {
             $sep = $eadmin ? '||' : '';
             $emodul = $sep.'<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
         }

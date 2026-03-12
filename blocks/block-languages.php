@@ -10,7 +10,7 @@ if (!defined('BLOCK_FILE')) {
 }
 
 global $conf, $locale;
-$handle = opendir('language');
+$handle = opendir('lang');
 while (false !== ($file = readdir($handle))) {
 	if (preg_match("/^(.+)\.php/", $file, $matches)) {
 		$langlist[] = $matches[1];
@@ -23,7 +23,7 @@ if ($conf['flags'] == 1) {
 	for ($i = 0; $i < count($langlist); $i++) {
 		if ($langlist[$i] != '') {
 			$altlang = getLangName($langlist[$i]);
-			$content .= '<a href="index.php?newlang='.$langlist[$i].'"><img src="'.img_find('language/'.$langlist[$i].'.png').'" alt="'.$altlang.'" title="'.$altlang.'"></a>';
+			$content .= '<a href="index.php?newlang='.$langlist[$i].'"><img src="'.img_find('lang/'.$langlist[$i].'.png').'" alt="'.$altlang.'" title="'.$altlang.'"></a>';
 		}
 	}
 	$content .= '</div>';

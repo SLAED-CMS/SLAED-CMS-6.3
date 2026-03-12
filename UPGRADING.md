@@ -314,7 +314,7 @@ The configurable anonymous user name has been replaced with a language constant:
 |-------------|-------------|
 | `$confu['anonym']` | `_ANONYM` |
 
-Define `_ANONYM` in all 6 `language/*.php` files. Do **not** add it to `admin/language/*.php`.
+Define `_ANONYM` in all 6 `lang/*.php` files. Do **not** add it to `admin/lang/*.php`.
 
 ##### Protected: `setConfigFile()` reserved files
 
@@ -461,12 +461,12 @@ Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
 **Cause:** Language constant not defined in all languages.
 
 **Solution:** Add the constant to all 6 language files:
-- `language/en.php`
-- `language/de.php`
-- `language/fr.php`
-- `language/pl.php`
-- `language/ru.php`
-- `language/uk.php`
+- `lang/en.php`
+- `lang/de.php`
+- `lang/fr.php`
+- `lang/pl.php`
+- `lang/ru.php`
+- `lang/uk.php`
 
 #### White Screen / 500 Error
 

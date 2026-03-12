@@ -238,10 +238,10 @@ define('_USR_ACTIVE', 'User is active');
 > Every constant **must** be defined in all 6 languages: EN, FR, DE, PL, RU, UA.
 >
 > **Placement:**
-> - Constants used in public-facing modules → `language/*.php`
-> - Constants used only in the admin panel → `admin/language/*.php`
+> - Constants used in public-facing modules → `lang/*.php`
+> - Constants used only in the admin panel → `admin/lang/*.php`
 >
-> Example: `_ANONYM` is used by front-end modules, so it belongs in `language/*.php`.
+> Example: `_ANONYM` is used by front-end modules, so it belongs in `lang/*.php`.
 
 ### Config Files
 
@@ -475,7 +475,7 @@ getLang(string $module = '', bool $admin = false): string
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `$module` | `string` | `''` | Module name, `'admin'` for the admin panel, or `''` to return the active locale without loading any file |
-| `$admin` | `bool` | `false` | `true` loads the admin language variant (`modules/{module}/admin/language/`) |
+| `$admin` | `bool` | `false` | `true` loads the admin language variant (`modules/{module}/admin/lang/`) |
 
 **Returns:** The active locale string (e.g. `'en'`, `'de'`).
 
@@ -483,13 +483,13 @@ getLang(string $module = '', bool $admin = false): string
 
 ```php
 // Load front-end module language file — call at the top of every module
-$locale = getLang('news');           // loads modules/news/language/{locale}.php
+$locale = getLang('news');           // loads modules/news/lang/{locale}.php
 
 // Load admin language variant
-$locale = getLang('news', true);     // loads modules/news/admin/language/{locale}.php
+$locale = getLang('news', true);     // loads modules/news/admin/lang/{locale}.php
 
 // Load admin panel base language
-$locale = getLang('admin');          // loads admin/language/{locale}.php
+$locale = getLang('admin');          // loads admin/lang/{locale}.php
 
 // Return active locale without loading any file
 $locale = getLang();
@@ -505,7 +505,7 @@ $locale = getLang();
 setLang(): void
 ```
 
-Called once per request from bootstrap (`index.php` / `admin.php`). Sets the global `$locale` from, in order: the `newlang` request parameter → the language cookie → the config default. Also loads the main `language/{locale}.php` file.
+Called once per request from bootstrap (`index.php` / `admin.php`). Sets the global `$locale` from, in order: the `newlang` request parameter → the language cookie → the config default. Also loads the main `lang/{locale}.php` file.
 
 > [!CAUTION]
 > Never call `setLang()` from within a module or admin module. It is a bootstrap function and must run exactly once per request.
