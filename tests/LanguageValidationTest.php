@@ -26,8 +26,8 @@ class LanguageValidationTest extends TestCase
     private static function scanLanguageFiles(): void
     {
         $directories = [
-            self::$basePath.'/language',
-            self::$basePath.'/admin/language',
+            self::$basePath.'/lang',
+            self::$basePath.'/admin/lang',
         ];
 
         // Добавляем языковые директории модулей
@@ -35,7 +35,7 @@ class LanguageValidationTest extends TestCase
         if (is_dir($modulesDir)) {
             foreach (scandir($modulesDir) as $module) {
                 if ($module === '.' || $module === '..') continue;
-                $langDir = $modulesDir.'/'.$module.'/language';
+                $langDir = $modulesDir.'/'.$module.'/lang';
                 if (is_dir($langDir)) {
                     $directories[] = $langDir;
                 }

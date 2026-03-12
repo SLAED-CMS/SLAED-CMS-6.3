@@ -57,7 +57,7 @@ class ModuleStructureTest extends TestCase
     }
 
     /**
-     * Проверяет наличие директории language в модулях
+     * Проверяет наличие директории lang в модулях
      */
     public function testModulesHaveLanguageDirectory(): void
     {
@@ -65,13 +65,13 @@ class ModuleStructureTest extends TestCase
 
         foreach (self::$modules as $name => $path) {
             // Некоторые модули могут не требовать языковых файлов
-            if (!is_dir($path.'/language')) {
-                $warnings[] = "modules/$name - отсутствует директория language/";
+            if (!is_dir($path.'/lang')) {
+                $warnings[] = "modules/$name - отсутствует директория lang/";
             }
         }
 
         // Это предупреждение, не ошибка
-        $this->assertTrue(true, count($warnings).' модулей без директории language/');
+        $this->assertTrue(true, count($warnings).' модулей без директории lang/');
     }
 
     /**
@@ -82,7 +82,7 @@ class ModuleStructureTest extends TestCase
         $errors = [];
 
         foreach (self::$modules as $name => $path) {
-            $langPath = $path.'/language';
+            $langPath = $path.'/lang';
             if (!is_dir($langPath)) continue;
 
             $presentLangs = [];
@@ -96,7 +96,7 @@ class ModuleStructureTest extends TestCase
             if (!empty($presentLangs)) {
                 $missing = array_diff(self::$languages, $presentLangs);
                 foreach ($missing as $lang) {
-                    $errors[] = "modules/$name/language/$lang.php - отсутствует";
+                    $errors[] = "modules/$name/lang/$lang.php - отсутствует";
                 }
             }
         }

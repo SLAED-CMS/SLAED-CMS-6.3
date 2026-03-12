@@ -115,7 +115,7 @@ function setTemplateForum() {
  global $db;
     $blimit = '3';
     $bclos = '97, 98, 99, 100, 101';
-    $bwhere = ($bclos) ? 'catid NOT IN ('.$bclos.') AND' : '';
+    $bwhere = ($bclos) ? 'cid NOT IN ('.$bclos.') AND' : '';
     $ordern = (is_moder('forum')) ? '' : "AND time <= now() AND status > '1'";
     $buffer = '';
     $result = $db->getSqlQuery('SELECT id, title, ltime, luid, lname, lpost, ltime, status FROM '.PREFIX_DB.'_forum WHERE '.$bwhere." pid = '0' ".$ordern.' ORDER BY ltime DESC LIMIT 0, '.$blimit);

@@ -2,10 +2,10 @@
 /**
  * Informational usage audit for language constants.
  * Scans only language sources:
- * - language/*.php
- * - admin/language/*.php
- * - modules/<module>/language/*.php
- * - modules/<module>/admin/language/*.php
+ * - lang/*.php
+ * - admin/lang/*.php
+ * - modules/<module>/lang/*.php
+ * - modules/<module>/admin/lang/*.php
  */
 
 use PHPUnit\Framework\TestCase;
@@ -26,7 +26,7 @@ final class LanguageConstantsUsageTest extends TestCase
         $this->assertGreaterThan(
             0,
             self::$stats['total_constants'],
-            'Не найдены языковые константы в language sources'
+            'Не найдены языковые константы в lang sources'
         );
     }
 
@@ -151,7 +151,7 @@ final class LanguageConstantsUsageTest extends TestCase
     {
         $rel = str_replace('\\', '/', $rel);
         return (bool) preg_match(
-            '#^(language/[^/]+\.php|admin/language/[^/]+\.php|modules/[^/]+/language/[^/]+\.php|modules/[^/]+/admin/language/[^/]+\.php)$#',
+            '#^(lang/[^/]+\.php|admin/lang/[^/]+\.php|modules/[^/]+/lang/[^/]+\.php|modules/[^/]+/admin/lang/[^/]+\.php)$#',
             $rel
         );
     }

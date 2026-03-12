@@ -11,11 +11,11 @@ function setTemplateHead($sub, $val = ''): string {
     $langs = $menu = $blocks = $login = '';
     if (isAdmin()) {
         if ($conf['multilingual'] == 1) {
-            foreach (scandir(BASE_DIR.'/language') as $file) {
+            foreach (scandir(BASE_DIR.'/lang') as $file) {
                 if (preg_match('#^(.+)\.php$#', $file, $matches)) {
                     $lfound = $matches[1];
                     $title = getLangName($lfound);
-                    $langs .= '<a href="'.$afile.'.php?newlang='.$lfound.'"><img src="'.img_find('language/'.$lfound.'_mini.png').'" alt="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"></a>';
+                    $langs .= '<a href="'.$afile.'.php?newlang='.$lfound.'"><img src="'.img_find('lang/'.$lfound.'_mini.png').'" alt="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"></a>';
                 }
             }
         }

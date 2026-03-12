@@ -3,6 +3,6 @@ Disallow: /admin/
 Disallow: /blocks/
 Disallow: /config/
 Disallow: /core/
-Disallow: /language/
+Disallow: /lang/
 Disallow: /modules/
 Disallow: /sound/
