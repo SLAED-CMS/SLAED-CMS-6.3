@@ -91,7 +91,7 @@ define('_COUNTRY','Страна');
 define('_C_12','Количество публикаций на страницу');
 define('_DATE','Дата');
 define('_DATESTRING','d.m.Y');
-define('_DAYS','суток');
+define('_DAYS','Суток');
 define('_DEACT','Деактивирован');
 define('_DEACTIVATE','Деактивировать');
 define('_DELETE','Удалить');
