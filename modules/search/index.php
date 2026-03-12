@@ -9,183 +9,340 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function getSearchRow(string $val, string $afile, int $id, string $date, int $cid, ?string $ctitle, ?string $cdesc, ?string $nick, ?string $uname, string $editop, bool $haspost, string $evurl): array {
-    $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
-    $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.getModuleName($val).'</a>';
-    $cdesc = $cdesc ?: $ctitle;
-    $ctitle = $ctitle ? '<a href="index.php?name='.$val.'&amp;cat='.$cid.'" title="'.htmlspecialchars($cdesc, ENT_QUOTES, 'UTF-8').'" class="sl_cat">'.htmlspecialchars(cutstr($ctitle, 15), ENT_QUOTES, 'UTF-8').'</a>' : '';
-    $post = '';
-    if ($haspost) {
-        $pval = $nick ? user_info($nick) : ($uname ?: _ANONYM);
-        $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$pval.'</span>';
+function getSearchRow(string $mod, string $afile, int $mid, string $time, int $cid, ?string $ctit, ?string $cdes, ?string $nick, ?string $user, string $edit, bool $post, string $url): array {
+    $date = '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>';
+    $mlab = '<a href="index.php?name='.$mod.'" title="'._MODUL.'" class="sl_modul">'.getModuleName($mod).'</a>';
+    $cdes = $cdes ?: $ctit;
+    $ctit = $ctit ? '<a href="index.php?name='.$mod.'&amp;cat='.$cid.'" title="'.htmlspecialchars($cdes, ENT_QUOTES, 'UTF-8').'" class="sl_cat">'.htmlspecialchars(cutstr($ctit, 15), ENT_QUOTES, 'UTF-8').'</a>' : '';
+    $pout = '';
+    if ($post) {
+        $pval = $nick ? user_info($nick) : ($user ?: _ANONYM);
+        $pout = '<span title="'._POSTEDBY.'" class="sl_post">'.$pval.'</span>';
     }
-    $edit = is_moder($val) ? add_menu('<a href="'.$afile.'.php?op='.$editop.'&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$evurl.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>') : '';
-    return [$date, $modul, $ctitle, $post, $edit];
+    $menu = is_moder($mod) ? add_menu('<a href="'.$afile.'.php?op='.$edit.'&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$url.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>') : '';
+    return [$date, $mlab, $ctit, $pout, $menu];
+}
+
+function getSearchMods(): array {
+    global $conf;
+    $mods = [];
+    foreach (explode(',', (string)$conf['search']['mods']) as $mod) {
+        $mod = trim($mod);
+        if ($mod === '' || !is_active($mod)) continue;
+        $mods[] = $mod;
+    }
+    return $mods;
+}
+
+function getSearchState(): array {
+    global $conf;
+    $mods = getSearchMods();
+    $word = trim((string)getVar('req', 'word', 'word', ''));
+    $mod = getVar('req', 'mod', 'var', '');
+    $mod = in_array($mod, $mods, true) ? $mod : '';
+    $typ = getVar('req', 'typ', 'num', 0);
+    $num = getVar('req', 'num', 'num', 1);
+    $stop = ($word !== '' && mb_strlen($word) < intval($conf['search']['slet'])) ? _SEARCHLETMIN.': '.$conf['search']['slet'] : '';
+    return [
+        'mods' => $mods,
+        'word' => $word,
+        'mod' => $mod,
+        'typ' => $typ,
+        'num' => $num,
+        'stop' => $stop,
+        'lim' => intval($conf['search']['slimit'] ?? 500),
+        'snum' => intval($conf['search']['snum'] ?? 25),
+        'snump' => intval($conf['search']['snump'] ?? 5),
+    ];
+}
+
+function getSearchModList(array $mods, string $curr): string {
+    $cont = '';
+    foreach ($mods as $mod) {
+        $sel = ($mod === $curr) ? ' selected' : '';
+        $cont .= '<option value="'.$mod.'"'.$sel.'>'.getModuleName($mod).'</option>';
+    }
+    return $cont;
+}
+
+function getSearchTypeList(int $typ): string {
+    $list = [1 => _MTITLE, 2 => _DESCRIPTION, 3 => _MDIRECTOR, 4 => _MROLES, 5 => _MYEAR];
+    $cont = '';
+    foreach ($list as $key => $val) {
+        $sel = ($typ === $key || (!$typ && $key === 2)) ? ' selected' : '';
+        $cont .= '<option value="'.$key.'"'.$sel.'>'.$val.'</option>';
+    }
+    return $cont;
+}
+
+function getSearchForm(array $state): string {
+    global $conf;
+    $cont = setTemplateBasic('open');
+    $cont .= '<form action="index.php?name='.htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8').'" method="post"><table class="sl_table_form">'
+        .'<tr><td>'._MODUL.':</td><td><select name="mod" onchange="submit()" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'"><option value="">'._SEARCHALL.'</option>'
+        .getSearchModList($state['mods'], (string)$state['mod']).'</select></td></tr>';
+    if ($state['mod'] === 'media') {
+        $cont .= '<tr><td>'._SEARCHFROM.':</td><td><select name="typ" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'">'.getSearchTypeList(intval($state['typ'])).'</select></td></tr>';
+    }
+    $cont .= '<tr><td>'._SEARCH.':</td><td><input type="text" name="word" value="'.htmlspecialchars((string)$state['word'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'" placeholder="'._SEARCH.'" required></td></tr>'
+        .'<tr><td colspan="2" class="sl_center"><input type="submit" title="'._SEARCH.'" value="'._SEARCH.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    return $cont;
+}
+
+function addSearchStat(array $state): void {
+    global $db, $conf;
+    if (!$conf['search']['asearch'] || $state['word'] === '') return;
+    $pars = ['word' => $state['word'], 'modul' => $state['mod']];
+    $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_search WHERE word = :word AND modul = :modul', $pars);
+    if ($db->getSqlRowCount($result) > 0) {
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_search SET time = NOW(), score = score + 1 WHERE word = :word AND modul = :modul', $pars);
+    } else {
+        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_search VALUES (NULL, :word, :modul, NOW(), :score)', ['word' => $state['word'], 'modul' => $state['mod'], 'score' => 1]);
+    }
+}
+
+function getSearchEdit(string $mod): string {
+    $list = ['pages' => 'page_add'];
+    return $list[$mod] ?? $mod.'_add';
+}
+
+function getSearchCols(string $mod): array {
+    global $db, $conf;
+    $list = [];
+    $table = PREFIX_DB.'_'.$mod;
+    $result = $db->getSqlQuery(
+        'SELECT COLUMN_NAME FROM information_schema.columns WHERE table_schema = :name AND table_name = :table ORDER BY ORDINAL_POSITION',
+        ['name' => $conf['db']['name'], 'table' => $table]
+    );
+    while ($row = $db->getSqlRow($result)) {
+        $name = (string)($row[0] ?? $row['COLUMN_NAME'] ?? '');
+        if ($name !== '') $list[] = $name;
+    }
+    return $list;
+}
+
+function getSearchSimpleCfg(string $mod): array {
+    $cols = getSearchCols($mod);
+    $need = ['id', 'title'];
+    foreach ($need as $col) {
+        if (!in_array($col, $cols, true)) return [];
+    }
+    $find = [];
+    foreach (['title', 'intro', 'body', 'url'] as $col) {
+        if (in_array($col, $cols, true)) $find[] = $col;
+    }
+    if (!$find) return [];
+    return [
+        'kind' => 'simple',
+        'table' => PREFIX_DB.'_'.$mod,
+        'find' => $find,
+        'edit' => getSearchEdit($mod),
+        'hasname' => in_array('name', $cols, true) ? 1 : 0,
+        'hastime' => in_array('time', $cols, true) ? 1 : 0,
+        'hascid' => in_array('cid', $cols, true) ? 1 : 0,
+        'hasuid' => in_array('uid', $cols, true) ? 1 : 0,
+        'hasstatus' => in_array('status', $cols, true) ? 1 : 0,
+    ];
+}
+
+function getSearchMap(): array {
+    return [
+        'faq' => ['kind' => 'simple', 'sql' => 'SELECT f.id, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim', 'edit' => 'faq_add', 'cnt' => 2],
+        'files' => ['kind' => 'simple', 'sql' => 'SELECT f.id, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.intro LIKE :wordb OR f.body LIKE :wordc) ORDER BY f.time DESC LIMIT :lim', 'edit' => 'files_add', 'cnt' => 3],
+        'jokes' => ['kind' => 'simple', 'sql' => 'SELECT j.id, j.name, j.title, j.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.time <= NOW() AND j.status != \'0\' AND (j.title LIKE :worda OR j.body LIKE :wordb) ORDER BY j.time DESC LIMIT :lim', 'edit' => 'jokes_add', 'cnt' => 2],
+        'links' => ['kind' => 'simple', 'sql' => 'SELECT l.id, l.name, l.title, l.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.time <= NOW() AND l.status != \'0\' AND (l.title LIKE :worda OR l.intro LIKE :wordb OR l.body LIKE :wordc OR l.url LIKE :wordd) ORDER BY l.time DESC LIMIT :lim', 'edit' => 'links_add', 'cnt' => 4],
+        'news' => ['kind' => 'simple', 'sql' => 'SELECT s.id, s.name, s.title, s.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.time <= NOW() AND s.status != \'0\' AND (s.title LIKE :worda OR s.intro LIKE :wordb OR s.body LIKE :wordc) ORDER BY s.time DESC LIMIT :lim', 'edit' => 'news_add', 'cnt' => 3],
+        'pages' => ['kind' => 'simple', 'sql' => 'SELECT p.id, p.name, p.title, p.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.time <= NOW() AND p.status != \'0\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim', 'edit' => 'page_add', 'cnt' => 3],
+        'auto_links' => ['kind' => 'auto'],
+        'forum' => ['kind' => 'forum'],
+        'media' => ['kind' => 'media'],
+        'shop' => ['kind' => 'shop'],
+    ];
+}
+
+function getSearchSimple(string $mod, array $cfg, array $state): array {
+    global $db, $afile;
+    $rows = [];
+    if (isset($cfg['sql'])) {
+        $pars = ['lim' => $state['lim']];
+        $keys = ['worda', 'wordb', 'wordc', 'wordd', 'worde'];
+        for ($indx = 0; $indx < $cfg['cnt']; $indx++) $pars[$keys[$indx]] = '%'.$state['word'].'%';
+        $result = $db->getSqlQuery($cfg['sql'], $pars);
+    } else {
+        $pars = ['lim' => $state['lim']];
+        $cond = [];
+        $keys = ['worda', 'wordb', 'wordc', 'wordd', 'worde'];
+        foreach ($cfg['find'] as $indx => $col) {
+            $key = $keys[$indx];
+            $cond[] = 's.'.$col.' LIKE :'.$key;
+            $pars[$key] = '%'.$state['word'].'%';
+        }
+        $sels = [
+            's.id',
+            $cfg['hasname'] ? 's.name' : 'NULL AS name',
+            's.title',
+            $cfg['hastime'] ? 's.time' : 'NOW() AS time',
+            $cfg['hascid'] ? 'c.id' : '0 AS cid',
+            $cfg['hascid'] ? 'c.title' : 'NULL AS ctitle',
+            $cfg['hascid'] ? 'c.intro' : 'NULL AS cintro',
+            $cfg['hasuid'] ? 'u.name' : 'NULL AS uname',
+        ];
+        $sql = 'SELECT '.implode(', ', $sels).' FROM '.$cfg['table'].' AS s';
+        if ($cfg['hascid']) $sql .= ' LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id)';
+        if ($cfg['hasuid']) $sql .= ' LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id)';
+        $whr = [];
+        if ($cfg['hastime']) $whr[] = 's.time <= NOW()';
+        if ($cfg['hasstatus']) $whr[] = 's.status != \'0\'';
+        $whr[] = '('.implode(' OR ', $cond).')';
+        $sql .= ' WHERE '.implode(' AND ', $whr);
+        $sql .= $cfg['hastime'] ? ' ORDER BY s.time DESC' : ' ORDER BY s.id DESC';
+        $sql .= ' LIMIT :lim';
+        $result = $db->getSqlQuery($sql, $pars);
+    }
+    while ([$mid, $user, $titl, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
+        $url = ($mod === 'jokes') ? 'index.php?name='.$mod.'&amp;cat='.$cid.'&amp;word='.urlencode($state['word']).'#'.$mid : 'index.php?name='.$mod.'&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
+        $titl = '<a href="'.$url.'" title="'.htmlspecialchars($titl, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($titl, $state['word']).'</a> '.new_graphic($time);
+        [$date, $mlab, $clab, $post, $edit] = getSearchRow($mod, $afile, intval($mid), $time, intval($cid), $ctit, $cdes, $nick, $user, $cfg['edit'], true, $url);
+        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
+    }
+    return $rows;
+}
+
+function getSearchAuto(array $state): array {
+    global $db, $afile;
+    $rows = [];
+    $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
+    $result = $db->getSqlQuery('SELECT id, title, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (title LIKE :worda OR description LIKE :wordb OR link LIKE :wordc) ORDER BY added DESC LIMIT :lim', $pars);
+    while ([$mid, $titl, $time] = $db->getSqlRow($result)) {
+        $url = 'index.php?name=auto_links&amp;op=view&amp;id='.$mid;
+        $titl = '<a href="'.$url.'" title="'.htmlspecialchars($titl, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($titl, $state['word']).'</a> '.new_graphic($time);
+        $date = '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>';
+        $mlab = '<a href="index.php?name=auto_links" title="'._MODUL.'" class="sl_modul">'.getModuleName('auto_links').'</a>';
+        $edit = is_moder('auto_links') ? add_menu('<a href="'.$afile.'.php?op=auto_links_add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$url.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>') : '';
+        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => '', 'post' => '', 'edit' => $edit];
+    }
+    return $rows;
+}
+
+function getSearchForum(array $state): array {
+    global $db, $afile, $conf;
+    $rows = [];
+    $rid = intval($conf['forum']['recycle'] ?? 0);
+    if (is_moder('forum') || !$rid) {
+        $cond = '';
+        $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%'];
+    } else {
+        $cond = 'f.cid != :rid AND';
+        $pars = ['rid' => $rid, 'worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%'];
+    }
+    $pars['lim'] = $state['lim'];
+    $result = $db->getSqlQuery('SELECT f.id, f.pid, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE '.$cond.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :worda OR f.body LIKE :wordb) ORDER BY f.time DESC LIMIT :lim', $pars);
+    while ([$mid, $pid, $user, $titl, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
+        $tid = !$pid ? $mid : $pid;
+        $url = 'index.php?name=forum&amp;op=view&amp;id='.$tid.'&amp;word='.urlencode($state['word']);
+        $titl = '<a href="'.$url.'" title="'.htmlspecialchars($titl, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($titl, $state['word']).'</a> '.new_graphic($time);
+        [$date, $mlab, $clab, $post, $edit] = getSearchRow('forum', $afile, intval($tid), $time, intval($cid), $ctit, $cdes, $nick, $user, 'forum_add', true, $url);
+        if (is_moder('forum')) $edit = add_menu('<a href="index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$url.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>');
+        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
+    }
+    return $rows;
+}
+
+function getSearchMedia(array $state): array {
+    global $db, $afile, $conf;
+    $rows = [];
+    if ($state['typ'] === 1 && $state['word'] !== '') {
+        $cond = '(m.title LIKE :worda OR m.subtitle LIKE :wordb) ORDER BY m.title ASC';
+    } elseif ($state['typ'] === 2 && $state['word'] !== '') {
+        $cond = '(m.description LIKE :worda) ORDER BY m.description ASC';
+    } elseif ($state['typ'] === 3 && $state['word'] !== '') {
+        $cond = '(m.director LIKE :worda) ORDER BY m.director ASC';
+    } elseif ($state['typ'] === 4 && $state['word'] !== '') {
+        $cond = '(m.roles LIKE :worda) ORDER BY m.roles ASC';
+    } elseif ($state['typ'] === 5 && $state['word'] !== '') {
+        $cond = '(m.year LIKE :worda) ORDER BY m.year ASC';
+    } else {
+        $cond = '(m.title LIKE :worda OR m.subtitle LIKE :wordb OR m.description LIKE :wordc) ORDER BY m.time DESC';
+    }
+    $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
+    $result = $db->getSqlQuery('SELECT m.id, m.name, m.title, m.subtitle, m.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.time <= NOW() AND m.status != \'0\' AND '.$cond.' LIMIT :lim', $pars);
+    while ([$mid, $user, $titl, $subt, $time, $cid, $ctit, $cdes, $nick] = $db->getSqlRow($result)) {
+        $titl = $subt ? $titl.' '.urldecode($conf['media']['mdefis']).' '.$subt : $titl;
+        $url = 'index.php?name=media&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
+        $titl = '<a href="'.$url.'" title="'.htmlspecialchars($titl, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($titl, $state['word']).'</a> '.new_graphic($time);
+        [$date, $mlab, $clab, $post, $edit] = getSearchRow('media', $afile, intval($mid), $time, intval($cid), $ctit, $cdes, $nick, $user, 'media_add', true, $url);
+        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
+    }
+    return $rows;
+}
+
+function getSearchShop(array $state): array {
+    global $db, $afile;
+    $rows = [];
+    $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
+    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, c.id, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE time <= NOW() AND status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY time DESC LIMIT :lim', $pars);
+    while ([$mid, $time, $titl, $cid, $ctit, $cdes] = $db->getSqlRow($result)) {
+        $url = 'index.php?name=shop&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
+        $titl = '<a href="'.$url.'" title="'.htmlspecialchars($titl, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($titl, $state['word']).'</a> '.new_graphic($time);
+        [$date, $mlab, $clab, $post, $edit] = getSearchRow('shop', $afile, intval($mid), $time, intval($cid), $ctit, $cdes, '', '', 'shop_products_add', false, $url);
+        $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
+    }
+    return $rows;
+}
+
+function getSearchRows(array $state): array {
+    $rows = [];
+    $list = getSearchMap();
+    foreach ($state['mods'] as $mod) {
+        if ($state['mod'] !== '' && $state['mod'] !== $mod) continue;
+        $cfg = $list[$mod] ?? getSearchSimpleCfg($mod);
+        if (!$cfg) continue;
+        if ($cfg['kind'] === 'simple') {
+            $rows = array_merge($rows, getSearchSimple($mod, $cfg, $state));
+        } elseif ($cfg['kind'] === 'auto') {
+            $rows = array_merge($rows, getSearchAuto($state));
+        } elseif ($cfg['kind'] === 'forum') {
+            $rows = array_merge($rows, getSearchForum($state));
+        } elseif ($cfg['kind'] === 'media') {
+            $rows = array_merge($rows, getSearchMedia($state));
+        } elseif ($cfg['kind'] === 'shop') {
+            $rows = array_merge($rows, getSearchShop($state));
+        }
+    }
+    return $rows;
+}
+
+function getSearchList(array $rows, array $state): string {
+    global $conf;
+    $cont = '';
+    $anum = count($rows);
+    $from = ($state['num'] - 1) * $state['snum'];
+    $slice = array_slice($rows, $from, $state['snum']);
+    $numb = $from + 1;
+    foreach ($slice as $row) {
+        $cont .= setTemplateBasic('basic-search', ['{%n%}' => $numb, '{%title%}' => $row['title'], '{%date%}' => $row['date'], '{%modul%}' => $row['modul'], '{%ctitle%}' => $row['ctitle'], '{%post%}' => $row['post'], '{%admin%}' => $row['edit']]);
+        $numb++;
+    }
+    if (!$anum) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOMATCHES]);
+    $pnum = ceil($anum / $state['snum']);
+    $tail = $state['typ'] ? '&typ='.$state['typ'] : '';
+    $cont .= ($anum > $state['snum']) ? setPageNumbers('pagenum', $conf['name'], $anum, $pnum, $state['snum'], 'mod='.$state['mod'].'&word='.urlencode($state['word']).$tail.'&', $state['snump']) : setNaviLower($conf['name']);
+    return $cont;
 }
 
 function search(): void {
-    global $db, $afile, $conf;
-    $search = explode(',', $conf['search']['mods']);
-    $word = getVar('req', 'word', 'word', 0);
-    $mod = getVar('req', 'mod', 'var', '');
-    $mod = in_array($mod, $search, true) ? $mod : '';
-    $typ = getVar('req', 'typ', 'num', 0);
-    $num = getVar('req', 'num', 'num', 1);
-    $modcont = '';
-    foreach ($search as $val) {
-        if (is_active($val) && $val != '') {
-            $sel = ($val == $mod && $mod != '') ? ' selected' : '';
-            $modcont .= '<option value="'.$val.'"'.$sel.'>'.getModuleName($val).'</option>';
-        }
-    }
-    $stop = ($word && mb_strlen($word) < $conf['search']['slet']) ? _SEARCHLETMIN.': '.$conf['search']['slet'] : '';
+    global $conf;
+    $state = getSearchState();
     setHead(['title' => _SEARCH]);
     $cont = setTemplateBasic('title', ['{%title%}' => _SEARCH]);
-    $cont .= setTemplateBasic('open');
-    $cont .= '<form action="index.php?name='.htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8').'" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._MODUL.':</td><td><select name="mod" onchange="submit()" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'"><option value="">'._SEARCHALL.'</option>'.$modcont.'</select></td></tr>';
-    if ($mod && $mod == 'media') {
-        $cont .= '<tr><td>'._SEARCHFROM.':</td><td><select name="typ" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'">'
-        .'<option value="1"';
-        if ($typ == '1') $cont .= ' selected';
-        $cont .= '>'._MTITLE.'</option>'
-        .'<option value="2"';
-        if ($typ == '2' || !$typ) $cont .= ' selected';
-        $cont .= '>'._DESCRIPTION.'</option>'
-        .'<option value="3"';
-        if ($typ == '3') $cont .= ' selected';
-        $cont .= '>'._MDIRECTOR.'</option>'
-        .'<option value="4"';
-        if ($typ == '4') $cont .= ' selected';
-        $cont .= '>'._MROLES.'</option>'
-        .'<option value="5"';
-        if ($typ == '5') $cont .= ' selected';
-        $cont .= '>'._MYEAR.'</option>'
-        .'</select></td></tr>';
-    }
-    $cont .= '<tr><td>'._SEARCH.':</td><td><input type="text" name="word" value="'.htmlspecialchars($word, ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'" placeholder="'._SEARCH.'" required></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="submit" title="'._SEARCH.'" value="'._SEARCH.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
-    if (!$stop && $word) {
-        if ($conf['search']['asearch']) {
-            $result = $db->getSqlQuery('SELECT word FROM '.PREFIX_DB.'_search WHERE word = :word', ['word' => $word]);
-            if ($db->getSqlRowCount($result) > 0) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_search SET time = NOW(), score = score+1 WHERE word = :word', ['word' => $word]);
-            } else {
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_search VALUES (NULL, :word, :mod, NOW(), \'0\')', ['word' => $word, 'mod' => $mod]);
-            }
-        }
-        $lim = (int)($conf['search']['slimit'] ?? 500);
-        $modmap = [
-            'faq'   => ['sql' => 'SELECT f.id, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.body LIKE :word2) ORDER BY f.time DESC LIMIT :lim', 'editop' => 'faq_add', 'wcount' => 2],
-            'files' => ['sql' => 'SELECT f.id, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.intro LIKE :word2 OR f.body LIKE :word3) ORDER BY f.time DESC LIMIT :lim', 'editop' => 'files_add', 'wcount' => 3],
-            'jokes' => ['sql' => 'SELECT j.id, j.name, j.title, j.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.time <= NOW() AND j.status != \'0\' AND (j.title LIKE :word1 OR j.body LIKE :word2) ORDER BY j.time DESC LIMIT :lim', 'editop' => 'jokes_add', 'wcount' => 2],
-            'links' => ['sql' => 'SELECT l.id, l.name, l.title, l.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.time <= NOW() AND l.status != \'0\' AND (l.title LIKE :word1 OR l.intro LIKE :word2 OR l.body LIKE :word3 OR l.url LIKE :word4) ORDER BY l.time DESC LIMIT :lim', 'editop' => 'links_add', 'wcount' => 4],
-            'news'  => ['sql' => 'SELECT s.id, s.name, s.title, s.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.time <= NOW() AND s.status != \'0\' AND (s.title LIKE :word1 OR s.intro LIKE :word2 OR s.body LIKE :word3) ORDER BY s.time DESC LIMIT :lim', 'editop' => 'news_add', 'wcount' => 3],
-            'pages' => ['sql' => 'SELECT p.id, p.name, p.title, p.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.time <= NOW() AND p.status != \'0\' AND (p.title LIKE :word1 OR p.intro LIKE :word2 OR p.body LIKE :word3) ORDER BY p.time DESC LIMIT :lim', 'editop' => 'page_add', 'wcount' => 3],
-        ];
-        $a = 1;
-        $conts = [];
-        foreach ($search as $val) {
-            if (($mod === '' || $mod === $val) && is_active($val) && $val !== '') {
-                if (isset($modmap[$val])) {
-                    $cfg = $modmap[$val];
-                    $params = ['lim' => $lim];
-                    for ($cnt = 1; $cnt <= $cfg['wcount']; $cnt++) $params['word'.$cnt] = '%'.$word.'%';
-                    $result = $db->getSqlQuery($cfg['sql'], $params);
-                    while ([$id, $uname, $title, $date, $cid, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
-                        $evurl = ($val == 'jokes')
-                            ? 'index.php?name='.$val.'&amp;cat='.$cid.'&amp;word='.urlencode($word).'#'.$id
-                            : 'index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word);
-                        $title = '<a href="'.$evurl.'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($title, $word).'</a> '.new_graphic($date);
-                        [$date, $modul, $ctitle, $post, $edit] = getSearchRow($val, $afile, (int)$id, $date, (int)$cid, $ctitle, $cdesc, $nick, $uname, $cfg['editop'], true, $evurl);
-                        $conts[] = [$a, $id, $title, $date, $modul, $ctitle, $post, $edit];
-                        $a++;
-                    }
-                } elseif ($val == 'auto_links') {
-                    $result = $db->getSqlQuery('SELECT id, title, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' AND (title LIKE :word1 OR description LIKE :word2 OR link LIKE :word3) ORDER BY added DESC LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
-                    while ([$id, $title, $date] = $db->getSqlRow($result)) {
-                        $evurl = 'index.php?name='.$val.'&amp;op=view&amp;id='.$id;
-                        $title = '<a href="'.$evurl.'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($title, $word).'</a> '.new_graphic($date);
-                        $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
-                        $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.getModuleName($val).'</a>';
-                        $edit = is_moder($val) ? add_menu('<a href="'.$afile.'.php?op=auto_links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$evurl.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>') : '';
-                        $conts[] = [$a, $id, $title, $date, $modul, '', '', $edit];
-                        $a++;
-                    }
-                } elseif ($val == 'forum') {
-                    $rid = (int)($conf['forum']['recycle'] ?? 0);
-                    if (is_moder('forum') || !$rid) {
-                        $frecycle = '';
-                        $fparams = ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%'];
-                    } else {
-                        $frecycle = 'f.cid != :rid AND';
-                        $fparams = ['rid' => $rid, 'word1' => '%'.$word.'%', 'word2' => '%'.$word.'%'];
-                    }
-                    $fparams['lim'] = $lim;
-                    $result = $db->getSqlQuery('SELECT f.id, f.pid, f.name, f.title, f.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_forum AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE '.$frecycle.' f.pid = \'0\' AND f.time <= NOW() AND f.status != \'0\' AND (f.title LIKE :word1 OR f.body LIKE :word2) ORDER BY f.time DESC LIMIT :lim', $fparams);
-                    while ([$id, $pid, $uname, $title, $date, $cid, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
-                        $id = (!$pid) ? $id : $pid;
-                        $evurl = 'index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word);
-                        $title = '<a href="'.$evurl.'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($title, $word).'</a> '.new_graphic($date);
-                        $date = '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>';
-                        $modul = '<a href="index.php?name='.$val.'" title="'._MODUL.'" class="sl_modul">'.getModuleName($val).'</a>';
-                        $cdesc = $cdesc ?: $ctitle;
-                        $ctitle = $ctitle ? '<a href="index.php?name='.$val.'&amp;cat='.$cid.'" title="'.htmlspecialchars($cdesc, ENT_QUOTES, 'UTF-8').'" class="sl_cat">'.htmlspecialchars(cutstr($ctitle, 15), ENT_QUOTES, 'UTF-8').'</a>' : '';
-                        $pval = $nick ? user_info($nick) : ($uname ?: _ANONYM);
-                        $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$pval.'</span>';
-                        $edit = is_moder($val) ? add_menu('<a href="index.php?name='.$val.'&amp;op=add&amp;cat='.$cid.'&amp;id='.$id.'&amp;pid='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$evurl.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>') : '';
-                        $conts[] = [$a, $id, $title, $date, $modul, $ctitle, $post, $edit];
-                        $a++;
-                    }
-                } elseif ($val == 'media') {
-                    if ($typ == 1 && $word) {
-                        $qstr = '(m.title LIKE :word1 OR m.subtitle LIKE :word2) ORDER BY m.title ASC';
-                    } elseif ($typ == 2 && $word) {
-                        $qstr = '(m.description LIKE :word1) ORDER BY m.description ASC';
-                    } elseif ($typ == 3 && $word) {
-                        $qstr = '(m.director LIKE :word1) ORDER BY m.director ASC';
-                    } elseif ($typ == 4 && $word) {
-                        $qstr = '(m.roles LIKE :word1) ORDER BY m.roles ASC';
-                    } elseif ($typ == 5 && $word) {
-                        $qstr = '(m.year LIKE :word1) ORDER BY m.year ASC';
-                    } else {
-                        $qstr = '(m.title LIKE :word1 OR m.subtitle LIKE :word2 OR m.description LIKE :word3) ORDER BY m.time DESC';
-                    }
-                    $result = $db->getSqlQuery('SELECT m.id, m.name, m.title, m.subtitle, m.time, c.id, c.title, c.intro, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.time <= NOW() AND m.status != \'0\' AND '.$qstr.' LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
-                    while ([$id, $uname, $title, $subtitle, $date, $cid, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
-                        $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-                        $evurl = 'index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word);
-                        $title = '<a href="'.$evurl.'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($title, $word).'</a> '.new_graphic($date);
-                        [$date, $modul, $ctitle, $post, $edit] = getSearchRow($val, $afile, (int)$id, $date, (int)$cid, $ctitle, $cdesc, $nick, $uname, 'media_add', true, $evurl);
-                        $conts[] = [$a, $id, $title, $date, $modul, $ctitle, $post, $edit];
-                        $a++;
-                    }
-                } elseif ($val == 'shop') {
-                    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, c.id, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE time <= NOW() AND status = \'1\' AND (p.title LIKE :word1 OR p.intro LIKE :word2 OR p.body LIKE :word3) ORDER BY time DESC LIMIT :lim', ['word1' => '%'.$word.'%', 'word2' => '%'.$word.'%', 'word3' => '%'.$word.'%', 'lim' => $lim]);
-                    while ([$id, $date, $title, $cid, $ctitle, $cdesc] = $db->getSqlRow($result)) {
-                        $evurl = 'index.php?name='.$val.'&amp;op=view&amp;id='.$id.'&amp;word='.urlencode($word);
-                        $title = '<a href="'.$evurl.'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($title, $word).'</a> '.new_graphic($date);
-                        [$date, $modul, $ctitle, $post, $edit] = getSearchRow($val, $afile, (int)$id, $date, (int)$cid, $ctitle, $cdesc, '', '', 'shop_products_add', false, $evurl);
-                        $conts[] = [$a, $id, $title, $date, $modul, $ctitle, $post, $edit];
-                        $a++;
-                    }
-                }
-            }
-        }
-        $anum = $a - 1;
-        $set = ($num - 1) * $conf['search']['snum'];
-        $tnum = ($set) ? $conf['search']['snum'] + $set : $conf['search']['snum'];
-        for ($cnt = $set; $cnt < $tnum; $cnt++) {
-            if (isset($conts[$cnt]) && $conts[$cnt] != '') $cont .= setTemplateBasic('basic-search', ['{%n%}' => $conts[$cnt][0], '{%title%}' => $conts[$cnt][2], '{%date%}' => $conts[$cnt][3], '{%modul%}' => $conts[$cnt][4], '{%ctitle%}' => $conts[$cnt][5], '{%post%}' => $conts[$cnt][6], '{%admin%}' => $conts[$cnt][7]]);
-        }
-        if (!$anum) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOMATCHES]);
-        $pnum = ceil($anum / $conf['search']['snum']);
-        $lsear = ($typ) ? '&typ='.$typ : '';
-        $cont .= ($anum > $conf['search']['snum']) ? setPageNumbers('pagenum', $conf['name'], $anum, $pnum, $conf['search']['snum'], 'mod='.$mod.'&word='.urlencode($word).$lsear.'&', $conf['search']['snump']) : setNaviLower($conf['name']);
+    $cont .= getSearchForm($state);
+    if (!$state['stop'] && $state['word'] !== '') {
+        addSearchStat($state);
+        $cont .= getSearchList(getSearchRows($state), $state);
     } else {
-        $winfo = ($stop) ? $stop : _SEARCHINFO;
-        $wtyp = ($stop) ? 'warn' : 'info';
+        $winfo = ($state['stop']) ? $state['stop'] : _SEARCHINFO;
+        $wtyp = ($state['stop']) ? 'warn' : 'info';
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => $wtyp, 'text' => $winfo]);
     }
     echo $cont;

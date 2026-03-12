@@ -6,8 +6,10 @@
 
 return [
     'search' => [
+        'anum' => '50',
+        'anump' => '10',
         'asearch' => '0',
-        'mods' => 'auto_links,faq,files,forum,jokes,links,media,news,pages,shop',
+        'mods' => 'content,faq,files,forum,links,news,pages,shop',
         'slet' => '3',
         'slimit' => '500',
         'snum' => '25',
