@@ -16,7 +16,7 @@ function clients(): void {
     $cont .= getUserNav();
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($info) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
-    $result = $db->getSqlQuery('SELECT id, title, infotext, url, num, hits, prod_id FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');
+    $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');
     if ($db->getSqlRowCount($result) > 0) {
         $uid = (int)($user[0] ?? 0);
         $conts = '';
@@ -24,7 +24,7 @@ function clients(): void {
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CLOADS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
         $i = 0;
         $a = 1;
-        while ([$id, $title, $infotext, $url, $num, $hits, $prod] = $db->getSqlRow($result)) {
+        while ([$id, $title, $body, $url, $num, $hits, $prod] = $db->getSqlRow($result)) {
             $tpath = 'uploads/clients/thumb/'.$id.'_'.$uid;
             if (file_exists($tpath.'.zip')) $tpath .= '.zip';
             elseif (file_exists($tpath.'.gz')) $tpath .= '.gz';
@@ -32,7 +32,7 @@ function clients(): void {
             else $tpath = '';
             $dtitle = $tpath ? _CDOWN : _GZIPGEN;
             $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=clients_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
-            $acont = add_menu($moder.'<a OnClick="HideShow(\'cl'.$i.'\', \'blind\', \'up\', 500);" title="'._CINFO.'">'._CINFO.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;prod_id='.$prod.'" title="'.$dtitle.'">'.$dtitle.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;prod_id='.$prod.'" title="'._CLIZENS.'">'._CLIZENS.'</a>');
+            $acont = add_menu($moder.'<a OnClick="HideShow(\'cl'.$i.'\', \'blind\', \'up\', 500);" title="'._CINFO.'">'._CINFO.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod.'" title="'.$dtitle.'">'.$dtitle.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod.'" title="'._CLIZENS.'">'._CLIZENS.'</a>');
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
             $cont .= '<tr id="'.$a.'">'
             .'<td><a href="#'.$a.'" title="'.$a.'" class="sl_pnum">'.$a.'</a></td>'
@@ -40,7 +40,7 @@ function clients(): void {
             .'<td>'.$num.'</td>'
             .'<td>'.$hits.'</td>'
             .'<td>'.$acont.'</td></tr>';
-            $conts .= '<div id="cl'.$i.'" class="sl_none">'.filterReplaceText(filterMarkdown($infotext, $conf['name'], false), $conf['name']).'</div>';
+            $conts .= '<div id="cl'.$i.'" class="sl_none">'.filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']).'</div>';
             $i++;
             $a++;
         }
@@ -76,7 +76,7 @@ function download(): void {
             $sourse = str_replace($input, $output, $code);
             if (file_exists($path.'/html/templates/admin/images/admin/admins.png')) hidden($path.'/html/templates/admin/images/admin/admins.png', $ipath.'/admins.png', $sourse.'IENDÂ®B`â€š');
             if (file_exists($path.'/html/templates/admin/images/admin/forum.png')) hidden($path.'/html/templates/admin/images/admin/forum.png', $ipath.'/forum.png', $code);
-            if (file_exists($path.'/html/templates/admin/images/language/german.png')) hidden($path.'/html/templates/admin/images/language/german.png', $ipath.'/german.png', $code);
+            if (file_exists($path.'/html/templates/admin/images/lang/german.png')) hidden($path.'/html/templates/admin/images/lang/german.png', $ipath.'/german.png', $code);
             if (file_exists($path.'/html/templates/admin/images/admin/menu.png')) hidden($path.'/html/templates/admin/images/admin/menu.png', $ipath.'/menu.png', $sourse.'IENDÂ®B`â€š'.$code);
 
             if (file_exists($path.'/html/config/license.txt')) generator($path.'/html/config');

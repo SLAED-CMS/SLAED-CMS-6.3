@@ -27,8 +27,8 @@ $url = getProtocol().'://'.$host;
 $clang = isset($_COOKIE[$conf['user_c'].'-language']) ? filterVar($_COOKIE[$conf['user_c'].'-language']) : 'en';
 $op = (isset($_REQUEST['op'])) ? filterVar($_REQUEST['op']) : '';
 
-require_once BASE_DIR.'/language/'.$clang.'.php';
-require_once BASE_DIR.'/setup/language/'.$clang.'.php';
+require_once BASE_DIR.'/lang/'.$clang.'.php';
+require_once BASE_DIR.'/setup/lang/'.$clang.'.php';
 
 if (version_compare(PHP_VERSION, '8.1.0', '<')) setExit(_PHPSETUP);
 if ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==') setExit(_NO_LICENSE);
@@ -249,7 +249,7 @@ function language(): void {
     $title = _LANG;
     setHead();
     $cont = '<table class="sl_table">';
-    $langlist = array_map(fn($f) => pathinfo($f, PATHINFO_FILENAME), glob('setup/language/*.php'));
+    $langlist = array_map(fn($f) => pathinfo($f, PATHINFO_FILENAME), glob('setup/lang/*.php'));
     sort($langlist);
     $a = 3;
     $i = 1;
@@ -395,10 +395,10 @@ function save(): void {
             $answ = [];
             foreach ($array_answ as $val) if (!empty($val)) $answ[] = trim($val);
             $answ = implode('|', $answ);
-            $db->getSqlQuery('INSERT INTO '.$xprefix.'_voting (id, modul, title, questions, answer, time, enddate, multi, comments, language, acomm, ip, typ, status) VALUES (:id, \'\', :title, :questions, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
+            $db->getSqlQuery('INSERT INTO '.$xprefix.'_voting (id, modul, title, body, answer, time, enddate, multi, comments, language, acomm, ip, typ, status) VALUES (:id, \'\', :title, :body, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
                 'id' => $poll_id,
                 'title' => $poll_title,
-                'questions' => $questions,
+                'body' => $questions,
                 'answer' => $answ,
                 'date' => $poll_date,
                 'comments' => $pool_comments,

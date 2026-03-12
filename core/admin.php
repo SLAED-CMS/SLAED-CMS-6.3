@@ -658,14 +658,14 @@ function ajax_privat(int $obj = 0): string {
     $offset = intval(($cid - 1) * $newlistnum);
     list($fav_num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat'));
 
-    $result = $db->getSqlQuery('SELECT p.id, p.title, p.content, p.time, p.status, i.name, o.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.id) ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum));
+    $result = $db->getSqlQuery('SELECT p.id, p.title, p.body, p.time, p.status, i.name, o.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.id) ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum));
     if ($db->getSqlRowCount($result) > 0) {
         $cont = '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._PRSE.'</th><th>'._PRRE.'</th><th>'._DATE.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>';
-        while (list($id, $title, $content, $date, $status, $user_re, $user_se) = $db->getSqlRow($result)) {
+        while (list($id, $title, $body, $date, $status, $user_re, $user_se) = $db->getSqlRow($result)) {
             $unre = ($user_re) ? user_info($user_re) : _ANONYM;
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
-            $info = filterReplaceText(filterMarkdown($content, 'privat', false), 'privat');
+            $info = filterReplaceText(filterMarkdown($body, 'privat', false), 'privat');
             $cont .= '<tr>'
             .'<td>'.$id.'</td>'
             .'<td>'.title_tip($info).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 30).'</span></td>'

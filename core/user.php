@@ -39,27 +39,27 @@ function setMessageShow(): string {
         if ($conf['multilingual'] == 1) {
             $params['lang'] = $currentlang;
         }
-        $result = $db->getSqlQuery('SELECT id, title, content, expire, view FROM '.PREFIX_DB.'_message WHERE status = 1 '.$querylang, $params);
+        $result = $db->getSqlQuery('SELECT id, title, body, expire, view FROM '.PREFIX_DB.'_message WHERE status = 1 '.$querylang, $params);
         if ($db->getSqlRowCount($result) > 0) {
-            while ([$mid, $title, $content, $expire, $view] = $db->getSqlRow($result)) {
+            while ([$mid, $title, $body, $expire, $view] = $db->getSqlRow($result)) {
                 $mid = intval($mid);
                 if ($expire && $expire < time()) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = 0, expire = 0 WHERE id = :mid', ['mid' => $mid]);
-                $content = filterReplaceText(filterMarkdown($content, 'all', false), 'all');
+                $body = filterReplaceText(filterMarkdown($body, 'all', false), 'all');
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
                 $info = '| '._PURCHASED.': '.$exp.' | <a href="'.$afile.'.php?op=msg_add&amp;id='.$mid.'" title="'._EDIT.'">'._EDIT.'</a> ]</div>';
                 if ($view == 4 && is_moder()) {
-                    $content .= '<div class="sl_center">[ '._VIEW.': '._MVADMIN.' '.$info;
-                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $content]);
+                    $body .= '<div class="sl_center">[ '._VIEW.': '._MVADMIN.' '.$info;
+                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $body]);
                 } elseif (($view == 3 && is_user()) || ($view == 3 && is_user() && is_moder())) {
-                    if (is_moder()) $content .= '<div class="sl_center">[ '._VIEW.': '._MVUSERS.' '.$info;
-                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $content]);
+                    if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVUSERS.' '.$info;
+                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $body]);
                 } elseif (($view == 2 && !is_user()) || ($view == 2 && !is_user() && is_moder())) {
-                    if (is_moder()) $content .= '<div class="sl_center">[ '._VIEW.': '._MVANON.' '.$info;
-                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $content]);
+                    if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVANON.' '.$info;
+                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $body]);
                 } elseif ($view == 1) {
-                    if (is_moder()) $content .= '<div class="sl_center">[ '._VIEW.': '._MVALL.' '.$info;
-                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $content]);
+                    if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVALL.' '.$info;
+                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $body]);
                 }
             }
         }
@@ -389,9 +389,9 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
         }
         if ($id) {
             if ($cid == '2') {
-                [$idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.time, p.ip, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.id) WHERE p.id = :id AND p.uidout = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
+                [$idp, $uidin, $uidout, $title, $body, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.body, p.time, p.ip, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.id) WHERE p.id = :id AND p.uidout = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
             } else {
-                [$idp, $uidin, $uidout, $title, $content, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.content, p.time, p.ip, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE p.id = :id AND p.uidin = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
+                [$idp, $uidin, $uidout, $title, $body, $date, $ip_sender, $status, $user_name] = $db->getSqlRow($db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.body, p.time, p.ip, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE p.id = :id AND p.uidin = :uid LIMIT 1', ['id' => $id, 'uid' => $uid]));
                 if (!$status) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_privat SET status = 1 WHERE id = :id AND uidin = :uid AND status != 2', ['id' => $id, 'uid' => $uid]);
             }
             if ($idp) {
@@ -421,7 +421,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
 
                 
                 $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? add_menu("<a OnClick=\"AjaxLoad('GET', '0', '".$prmid."', 'go=1&amp;op=prmessdel&amp;id=".$idp.'&amp;typ='.$mod."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-                $cont .= setTemplateBasic('privat-message', ['{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%title%}' => cutstr($title, 35), '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => filterReplaceText(filterMarkdown($content, $conf['name'], false), $conf['name']), '{%sig%}' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_edit%}' => $edit]);
+                $cont .= setTemplateBasic('privat-message', ['{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%title%}' => cutstr($title, 35), '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']), '{%sig%}' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_edit%}' => $edit]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {
@@ -483,7 +483,7 @@ function addPmMsg() {
     if (!$stop && $conf['privat']['act'] && is_user()) {
         $title = filterHtml($title, 1);
         $text = filterHtml($text);
-        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_privat VALUES (NULL, :uidin, :uidout, :title, :content, NOW(), :ip, 0)', ['uidin' => $uidin, 'uidout' => $uidout, 'title' => $title, 'content' => $text, 'ip' => $ip]);
+        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_privat VALUES (NULL, :uidin, :uidout, :title, :body, NOW(), :ip, 0)', ['uidin' => $uidin, 'uidout' => $uidout, 'title' => $title, 'body' => $text, 'ip' => $ip]);
         update_points(45);
         if ($conf['privat']['newmail']) {
             [$user_email, $user_psmail] = $db->getSqlRow($db->getSqlQuery('SELECT email, fsmail FROM '.PREFIX_DB.'_users WHERE id = :uidin', ['uidin' => $uidin]));
@@ -696,7 +696,7 @@ function getRssChannel() {
     $id   = getVar('post', 'id',  'num', 0) ?: getVar('get', 'id',  'num', 0);
 
     if (($name == 'content') && $id) {
-        $result = $db->getSqlQuery('SELECT id, title, text, time FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
+        $result = $db->getSqlQuery('SELECT id, title, body, time FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
     } elseif ($name == 'faq') {
         $params = [];
         $where = $cat ? 'WHERE s.cid = :cat AND s.time <= NOW() AND s.status != 0' : 'WHERE s.time <= NOW() AND s.status != 0';

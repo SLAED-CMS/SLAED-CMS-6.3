@@ -19,11 +19,11 @@ function content(): void {
     $cont = setTemplateBasic('title', ['{%title%}' => _CONTENT]);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $limit;
-    $result = $db->getSqlQuery('SELECT id, title, text, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
+    $result = $db->getSqlQuery('SELECT id, title, body, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
-        while ([$id, $title, $text, $time, $counter]= $db->getSqlRow($result)) {
+        while ([$id, $title, $body, $time, $counter]= $db->getSqlRow($result)) {
             $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=content_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>||' : '';
             $edit = add_menu($moder.'<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._SHOW.'">'._SHOW.'</a>');
             $cont .= '<tr id="'.$id.'">'
@@ -45,20 +45,20 @@ function view(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
-    $result = $db->getSqlQuery('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
+    $result = $db->getSqlQuery('SELECT id, title, body, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
     if ($db->getSqlRowCount($result) == 1) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET counter = counter+1 WHERE id = :id', ['id' => $id]);
-        [$id, $title, $text, $field, $url, $time, $refresh] = $db->getSqlRow($result);
+        [$id, $title, $body, $field, $url, $time, $refresh] = $db->getSqlRow($result);
         if ($url) {
             $past = time() - $refresh;
             if (strtotime($time) < $past) {
                 $conf['content'] = rss_read($url, 1);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET text = :text, time = NOW() WHERE id = :id', ['text' => $conf['content'], 'id' => $id]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET body = :body, time = NOW() WHERE id = :id', ['body' => $conf['content'], 'id' => $id]);
             }
         }
         $fields = fields_out($field, $conf['name']);
         $fields = ($fields) ? '<br><br>'.$fields : '';
-        $hometext = $text.$fields;
+        $hometext = $body.$fields;
         $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);
         $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';

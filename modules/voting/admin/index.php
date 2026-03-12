@@ -60,14 +60,14 @@ function add(): void {
     $stop = $stop ?? '';
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->getSqlQuery('SELECT id, modul, title, questions, answer, time, enddate, multi, lang, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
-        [$id, $modul, $title, $questions, $answer, $date, $enddate, $multi, $lang, $acomm, $typ, $status] = $db->getSqlRow($result);
-        $questions = explode('|', $questions);
+        $result = $db->getSqlQuery('SELECT id, modul, title, body, answer, time, enddate, multi, lang, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id', ['id' => $id]);
+        [$id, $modul, $title, $body, $answer, $date, $enddate, $multi, $lang, $acomm, $typ, $status] = $db->getSqlRow($result);
+        $body = explode('|', $body);
         $answer = explode('|', $answer);
     } else {
         $modul = getVar('post', 'modul', 'text', '');
         $title = getVar('post', 'title', 'text', '');
-        $questions = getVar('post', 'questions', 'array', []);
+        $body = getVar('post', 'body', 'array', []);
         $answer = getVar('post', 'answer', 'array', []);
         $date = getVar('req', 'date', 'time');
         $enddate = getVar('req', 'enddate', 'time');
@@ -97,10 +97,10 @@ function add(): void {
     $i = 0;
     while ($i < $conf['voting']['answ']) {
         $a = $i + 1;
-        $question = $questions[$i] ?? '';
+        $question = $body[$i] ?? '';
         $ansval = $answer[$i] ?? '';
         $class = ($i != 0 && $question == '') ? ' class="sl_none"' : '';
-        $cont .= '<table id="vot'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'vot'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._POLLEACH.' - '.$a.':</a></td><td class="sl_form"><input type="text" name="questions[]" value="'.filterText($question).'" style="width: 375px;" class="sl_field" placeholder="'._POLLEACH.' - '.$a.'"> '._VOTES.': <input type="text" name="answer[]" value="'.filterText($ansval).'" style="width: 40px;" class="sl_field" placeholder="'._VOTES.'"></td></tr></table>';
+        $cont .= '<table id="vot'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'vot'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._POLLEACH.' - '.$a.':</a></td><td class="sl_form"><input type="text" name="body[]" value="'.filterText($question).'" style="width: 375px;" class="sl_field" placeholder="'._POLLEACH.' - '.$a.'"> '._VOTES.': <input type="text" name="answer[]" value="'.filterText($ansval).'" style="width: 40px;" class="sl_field" placeholder="'._VOTES.'"></td></tr></table>';
         $i++;
     }
     $cont .= '</td></tr>'
@@ -136,13 +136,13 @@ function save(): void {
     $id = getVar('post', 'id', 'num', 0);
     $modul = filterVar(getVar('post', 'modul', 'text', ''));
     $title = getVar('post', 'title', 'text', '');
-    $questions = getVar('post', 'questions', 'array', []);
+    $body = getVar('post', 'body', 'array', []);
     $answer = getVar('post', 'answer', 'array', []);
     $quest = [];
     $answ = [];
-    for ($q = 0; $q < count($questions); $q++) {
-        if ($questions[$q] != '') {
-            $quest[] = $questions[$q];
+    for ($q = 0; $q < count($body); $q++) {
+        if ($body[$q] != '') {
+            $quest[] = $body[$q];
             $answ[] = (is_numeric($answer[$q] ?? '')) ? (string)$answer[$q] : '0';
         }
     }
@@ -160,10 +160,10 @@ function save(): void {
     $posttype = getVar('post', 'posttype', 'var', '');
     if (!$stop && $posttype == 'save') {
         if ($id) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, questions = :quest, answer = :answ, time = :time, enddate = :enddate, multi = :multi, lang = :lang, acomm = :acomm, typ = :typ, status = :status WHERE id = :id', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET modul = :modul, title = :title, body = :quest, answer = :answ, time = :time, enddate = :enddate, multi = :multi, lang = :lang, acomm = :acomm, typ = :typ, status = :status WHERE id = :id', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'typ' => $typ, 'status' => $status, 'id' => $id]);
         } else {
             $ip = getIp();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, questions, answer, time, enddate, multi, lang, acomm, ip, typ, status) VALUES (NULL, :modul, :title, :quest, :answ, :time, :enddate, :multi, :lang, :acomm, :ip, :typ, :status)', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_voting (id, modul, title, body, answer, time, enddate, multi, lang, acomm, ip, typ, status) VALUES (NULL, :modul, :title, :quest, :answ, :time, :enddate, :multi, :lang, :acomm, :ip, :typ, :status)', ['modul' => $modul, 'title' => $title, 'quest' => $quest, 'answ' => $answ, 'time' => $date, 'enddate' => $enddate, 'multi' => $multi, 'lang' => $lang, 'acomm' => $acomm, 'ip' => $ip, 'typ' => $typ, 'status' => $status]);
         }
         setRedirect($afile.'.php?name=voting');
     } elseif ($posttype == 'delete') {

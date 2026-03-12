@@ -2621,7 +2621,7 @@ function getVoting(int $id = 0, string $votid = ''): string {
     }
     if (!$id)    $id    = getVar('get', 'id', 'num', 0);
     if (!$votid) $votid = filterVar(getVar('post', 'votid', 'text', 'voting')) ?: 'voting';
-    $result = $db->getSqlQuery('SELECT modul, title, questions, answer, enddate, multi, comments, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
+    $result = $db->getSqlQuery('SELECT modul, title, body, answer, enddate, multi, comments, acomm, typ, status FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->getSqlRowCount($result) > 0) {
         $ip = getIp();
         $past = time() - intval($conf['voting']['voting_t']);
@@ -2630,16 +2630,16 @@ function getVoting(int $id = 0, string $votid = ''): string {
         $uid = (is_user()) ? intval(substr($user[0], 0, 11)) : 0;
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
         list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
-        list($modul, $title, $questions, $answer, $enddate, $multi, $comments, $acomm, $typ, $status) = $db->getSqlRow($result);
+        list($modul, $title, $body, $answer, $enddate, $multi, $comments, $acomm, $typ, $status) = $db->getSqlRow($result);
         $rate = ($cookies == $id || $num > 0 || strtotime($enddate) <= time()) ? 1 : 0;
         if ($typ || !$typ && !$rate) {
-            $questions = explode('|', $questions);
+            $body = explode('|', $body);
             $answer = explode('|', $answer);
             $vote = array_sum($answer);
             $form = (!$rate) ? '<form name="voting" id="form'.$votid.'" method="post">' : '';
             $cont = setTemplateBasic('voting-open', ['{%form%}' => $form, '{%title%}' => $title]);
             $pn = 0;
-            for ($i = 0; $i < count($questions); $i++) {
+            for ($i = 0; $i < count($body); $i++) {
                 $pn++;
                 if ($pn > 5) $pn = 1;
                 $n = $i + 1;
@@ -2651,14 +2651,14 @@ function getVoting(int $id = 0, string $votid = ''): string {
                 }
                 if (!$rate) {
                     $itype = ($multi) ? 'checkbox' : 'radio';
-                    $cont .= setTemplateBasic('voting-post', ['{%id%}' => $id, '{%n%}' => $n, '{%itype%}' => $itype, '{%name%}' => 'questions[]', '{%text%}' => $questions[$i]]);
+                    $cont .= setTemplateBasic('voting-post', ['{%id%}' => $id, '{%n%}' => $n, '{%itype%}' => $itype, '{%name%}' => 'body[]', '{%text%}' => $body[$i]]);
                 } else {
-                    $cont .= setTemplateBasic('voting-view', ['{%text%}' => $questions[$i], '{%text_safe%}' => filterText($questions[$i]), '{%n%}' => $n, '{%pn%}' => $pn, '{%percent%}' => $procent, '{%votes_label%}' => _VOTES, '{%votes%}' => $answer[$i]]);
+                    $cont .= setTemplateBasic('voting-view', ['{%text%}' => $body[$i], '{%text_safe%}' => filterText($body[$i]), '{%n%}' => $n, '{%pn%}' => $pn, '{%percent%}' => $procent, '{%votes_label%}' => _VOTES, '{%votes%}' => $answer[$i]]);
                 }
             }
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
             $admin = (is_moder('voting') && $votid == 'voting') ? add_menu('<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$title."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $post = (!$rate) ? "<span OnClick=\"AjaxLoad('POST', '1', '".$votid."', 'go=1&amp;op=avoting_save&amp;id=".$id.'&amp;votid='.$votid."', { 'questions%5B%5D':'"._SEROR1."' }); return false;\" title=\""._VOTE.'" class="sl_but_blue">'._VOTE.'</span>' : '';
+            $post = (!$rate) ? "<span OnClick=\"AjaxLoad('POST', '1', '".$votid."', 'go=1&amp;op=avoting_save&amp;id=".$id.'&amp;votid='.$votid."', { 'body%5B%5D':'"._SEROR1."' }); return false;\" title=\""._VOTE.'" class="sl_but_blue">'._VOTE.'</span>' : '';
             $polls = ($vnum > 1) ? '<a href="index.php?name=voting" title="'._POLLS.'" class="sl_but">'._POLLS.'</a>' : '';
             $votes = (!$modul && $votid != 'voting') ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'" title="'._VOTES.'" class="sl_votes">'._VOTES.': '.$vote.'</a>' : '<span class="sl_votes">'._VOTES.': '.$vote.'</span>';
             $comm = (!$modul && $acomm) ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id.'" title="'._COMMENTS.'" class="sl_coms">'._COMMENTS.': '.$comments.'</a>' : '';
@@ -3014,16 +3014,16 @@ function filterSize(mixed $size): string {
 function updateNewsletter(): void {
  global $db, $conf;
     if ($conf['newsletter']) {
-        $result = $db->getSqlQuery('SELECT id, title, content, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
+        $result = $db->getSqlQuery('SELECT id, title, body, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
         if ($db->getSqlRowCount($result) > 0) {
-            list($id, $title, $content, $mails) = $db->getSqlRow($result);
+            list($id, $title, $body, $mails) = $db->getSqlRow($result);
             $ncount = intval($conf['newslettercount']);
             $id = intval($id);
             $mails = explode(',', $mails);
             $outmail = array_slice($mails, 0, $ncount);
             $inmail = implode(',', array_slice($mails, $ncount));
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id', ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
-            foreach ($outmail as $val) if ($val != '') addMail($val, $conf['adminmail'], $title, filterReplaceText(filterMarkdown($content, 'all', false), 'all'), 0, 3);
+            foreach ($outmail as $val) if ($val != '') addMail($val, $conf['adminmail'], $title, filterReplaceText(filterMarkdown($body, 'all', false), 'all'), 0, 3);
             if (!$inmail) {
                 $cont = ['newsletter' => '0'];
                 setConfigFile('global.php', $cont, $conf);
@@ -3169,12 +3169,12 @@ function user_geo_ip(string $ip, int $id = 4): string {
         } elseif ($id == 3) {
             $name = $ip;
             $img = str_replace(' ', '_', strtolower($name));
-            $imgl = (file_exists(img_find('language/'.$img.'.png'))) ? img_find('language/'.$img.'.png') : (($img == '?') ? img_find('language/white.png') : img_find('language/white.png'));
+            $imgl = (file_exists(img_find('lang/'.$img.'.png'))) ? img_find('lang/'.$img.'.png') : (($img == '?') ? img_find('lang/white.png') : img_find('lang/white.png'));
             $cont = '<img src="'.$imgl.'" alt="'.$name.'" title="'.$name.'" class="sl_flag">';
         } elseif ($id == 4) {
             $name = $ip;
             $img = str_replace(' ', '_', strtolower($name));
-            $imgl = (file_exists(img_find('language/'.$img.'.png'))) ? img_find('language/'.$img.'.png') : (($img == '?') ? img_find('language/white.png') : img_find('language/white.png'));
+            $imgl = (file_exists(img_find('lang/'.$img.'.png'))) ? img_find('lang/'.$img.'.png') : (($img == '?') ? img_find('lang/white.png') : img_find('lang/white.png'));
             $cont = '<img src="'.$imgl.'" alt="'.$name.'" title="'.$name.'" class="sl_flag"><a href="'.$conf['ip_link'].$ip.'" target="_blank" title="'._IP.': '.$ip.'">'.$ip.'</a>';
         }
     } else {
@@ -5173,7 +5173,7 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
 
 # Format language
 function language(string $lang = '', string $typ = ''): string {
-    $dir = opendir('language');
+    $dir = opendir('lang');
     $cont = (!$typ) ? '<option value="">'._ALL.'</option>' : '';
     while (false !== ($file = readdir($dir))) {
         if (preg_match("#^(.+)\.php#", $file, $matches)) {
@@ -5519,7 +5519,7 @@ function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0):
 function avoting_save(): void {
  global $db, $conf, $user, $locale;
     $id = getVar('post', 'id', 'num', 0);
-    $questions = isset($_POST['questions']) && is_array($_POST['questions']) ? $_POST['questions'] : [];
+    $body = isset($_POST['body']) && is_array($_POST['body']) ? $_POST['body'] : [];
     if ($conf['multilingual'] == 1) {
         $querylang = "(language = :locale OR language = '') AND time <= NOW() AND enddate >= NOW()";
         $qlang_params = ['locale' => $locale];
@@ -5529,7 +5529,7 @@ function avoting_save(): void {
     }
     $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->getSqlRowCount($result) > 0) {
-        if (!$questions) {
+        if (!$body) {
             $cont = setTemplateWarning('warn', ['text' => _SEROR1, 'url' => '?name=voting&amp;op=view&amp;id='.$id, 'time' => 3, 'id' => 'warn']);
         } else {
             $ip = getIp();
@@ -5550,7 +5550,7 @@ function avoting_save(): void {
                     $answer = explode('|', $answer);
                     for ($q = 0; $q < count($answer); $q++) {
                         if ($answer[$q] != '') {
-                            foreach ($questions as $val) {
+                            foreach ($body as $val) {
                                 if ($val != '' && $val == $q + 1) {
                                     $isansw = 1;
                                     break;

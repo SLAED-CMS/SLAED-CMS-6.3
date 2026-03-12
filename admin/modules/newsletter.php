@@ -43,12 +43,12 @@ function add(): void {
     global $db, $afile, $conf, $stop;
     $id = getVar('req', 'id', 'num');
     if ($id) {
-        $result = $db->getSqlQuery('SELECT title, content, mails FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]);
-        [$nid, $title, $content, $mails] = [$id, ...$db->getSqlRow($result)];
+        $result = $db->getSqlQuery('SELECT title, body, mails FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]);
+        [$nid, $title, $body, $mails] = [$id, ...$db->getSqlRow($result)];
     } else {
         $nid = getVar('post', 'nid', 'num', '');
         $title = getVar('post', 'title', 'title', '');
-        $content = getVar('post', 'content', 'text', $conf['mtemp']);
+        $body = getVar('post', 'body', 'text', $conf['mtemp']);
         $mails = getVar('post', 'mails', '', '');
     }
     $count = getVar('post', 'count', 'num', '');
@@ -56,7 +56,7 @@ function add(): void {
     setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-    if ($content) $cont .= preview($title, $content, '', '', 'all');
+    if ($body) $cont .= preview($title, $body, '', '', 'all');
     [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
     $sel = ($mails == 1) ? ' selected' : '';
     $option = '<option value="1"'.$sel.'>'._MASSMAIL.' - '.$num.'</option>';
@@ -180,7 +180,7 @@ function add(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" method="post" action="'.$afile.'.php"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="50" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'content', $content, 'all', '10', _TEXT, '1').'</td></tr>'
+    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'body', $body, 'all', '10', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._NLWHERE.':</td><td><select name="mails" class="sl_form">'.$option.'</select></td></tr>'
     .'<tr><td>'._NLCOUNT.':</td><td><select name="count" class="sl_form">';
     $xusnum = 1;
@@ -201,12 +201,12 @@ function save(): void {
     global $db, $afile, $conf, $stop;
     $nid = getVar('post', 'nid', 'num', 0);
     $title = getVar('post', 'title', 'title');
-    $content = getVar('post', 'content', 'text');
+    $body = getVar('post', 'body', 'text');
     $mails = getVar('post', 'mails', '');
     $count = getVar('post', 'count', 'num');
     $send = getVar('post', 'send', 'num', 0);
     if (!$title) $stop[] = _CERROR;
-    if (!$content) $stop[] = _CERROR1;
+    if (!$body) $stop[] = _CERROR1;
     if (!$stop && getVar('post', 'posttype') == 'save') {
         if ($mails == 1) {
             $result = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_users');
@@ -223,12 +223,12 @@ function save(): void {
         }
         $emails = ($send) ? $emails : '';
         if ($nid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET title = :title, content = :content, mails = :mails, send = 0, time = now(), endtime = 0 WHERE id = :id', [
-                'title' => $title, 'content' => $content, 'mails' => $emails, 'id' => $nid
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET title = :title, body = :body, mails = :mails, send = 0, time = now(), endtime = 0 WHERE id = :id', [
+                'title' => $title, 'body' => $body, 'mails' => $emails, 'id' => $nid
             ]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_newsletter (title, content, mails, send, time, endtime) VALUES (:title, :content, :mails, 0, now(), 0)', [
-                'title' => $title, 'content' => $content, 'mails' => $emails
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_newsletter (title, body, mails, send, time, endtime) VALUES (:title, :body, :mails, 0, now(), 0)', [
+                'title' => $title, 'body' => $body, 'mails' => $emails
             ]);
         }
         $cont = ['newsletter' => $send, 'newslettercount' => $count];

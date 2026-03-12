@@ -53,12 +53,12 @@ function add(): void {
     global $db, $afile, $stop;
     $id = getVar('req', 'id', 'num', 0);
     if ($id) {
-        $result = $db->getSqlQuery('SELECT id, title, text, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
-        [$cid, $title, $text, $field, $url, $time, $refresh] = $db->getSqlRow($result);
+        $result = $db->getSqlQuery('SELECT id, title, body, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
+        [$cid, $title, $body, $field, $url, $time, $refresh] = $db->getSqlRow($result);
     } else {
         $cid = getVar('post', 'cid', 'num', 0);
         $title = getVar('post', 'title', 'title', '');
-        $text = getVar('post', 'text', 'text', '');
+        $body = getVar('post', 'body', 'text', '');
         $field = getVar('post', 'field', 'field');
         $url = getVar('post', 'url', 'text', '');
         $time = getVar('req', 'time', 'time');
@@ -68,7 +68,7 @@ function add(): void {
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $fields = ($field) ? '<br><br>'.fields_out($field, 'content') : '';
-    if ($text) $cont .= preview($title, $text, '', $field, 'content');
+    if ($body) $cont .= preview($title, $body, '', $field, 'content');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
@@ -90,7 +90,7 @@ function add(): void {
     if ($refresh == '86400') $cont .= ' selected';
     $cont .= '>24 '._HOUR.'.</option>'
     .'</select></td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'text', $text.$fields, 'content', '25', _TEXT, '0').'</td></tr>'
+    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'body', $body.$fields, 'content', '25', _TEXT, '0').'</td></tr>'
     .fields_in($field, 'content')
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="content">'.ad_save('cid', $cid, 'save').'</td></tr></table></form>';
@@ -104,20 +104,20 @@ function save(): void {
     $cid = getVar('post', 'cid', 'num', 0);
     $title = getVar('post', 'title', 'title', '');
     $url = getVar('post', 'url', 'text', '');
-    $text = getVar('post', 'text', 'text', '');
-    $text = ($url) ? rss_read($url, 1) : $text;
+    $body = getVar('post', 'body', 'text', '');
+    $body = ($url) ? rss_read($url, 1) : $body;
     $field = getVar('post', 'field', 'field');
     $time = getVar('req', 'time', 'time');
     $refresh = getVar('post', 'refresh', 'num', 0);
     if (!$title) $stop[] = _CERROR;
-    if (!$text && !$url) $stop[] = _CERROR1;
-    if (!$text && $url) $stop[] = _RSSFAIL;
+    if (!$body && !$url) $stop[] = _CERROR1;
+    if (!$body && $url) $stop[] = _RSSFAIL;
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype == 'save') {
         if ($cid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET title = :title, text = :text, field = :field, url = :url, time = :time, refresh = :refresh WHERE id = :cid', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh, 'cid' => $cid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_content SET title = :title, body = :body, field = :field, url = :url, time = :time, refresh = :refresh WHERE id = :cid', ['title' => $title, 'body' => $body, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh, 'cid' => $cid]);
         } else {
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_content (title, text, field, url, time, refresh, counter) VALUES (:title, :text, :field, :url, :time, :refresh, \'0\')', ['title' => $title, 'text' => $text, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_content (title, body, field, url, time, refresh, counter) VALUES (:title, :body, :field, :url, :time, :refresh, \'0\')', ['title' => $title, 'body' => $body, 'field' => $field, 'url' => $url, 'time' => $time, 'refresh' => $refresh]);
         }
         setRedirect($afile.'.php?name=content');
     } elseif ($posttype == 'delete') {
