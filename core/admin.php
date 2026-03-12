@@ -30,18 +30,21 @@ function getStatistic(): void {
 
     imagefilledrectangle($image, 0, 252, 800, 340, $llgray);
 
+    $daysLog = COUNTER_DIR.'/days.log';
+    $statLog = COUNTER_DIR.'/statistic.log';
     if ($report) {
-        $f = (file_exists(COUNTER_DIR.'/days.log')) ? file(COUNTER_DIR.'/days.log') : file(COUNTER_DIR.'/statistic.log');
+        $f = (file_exists($daysLog) && is_readable($daysLog)) ? file($daysLog) : ((file_exists($statLog) && is_readable($statLog)) ? file($statLog) : []);
     } else {
         if ($file) {
-            $f = file(COUNTER_DIR.'/statistic/'.$file);
+            $path = COUNTER_DIR.'/statistic/'.$file;
+            $f = (is_file($path) && is_readable($path)) ? file($path) : [];
         } else {
-            if (file_exists(COUNTER_DIR.'/days.log')) {
-                $f = file(COUNTER_DIR.'/days.log');
-                $stat = file(COUNTER_DIR.'/statistic.log');
+            if (file_exists($daysLog) && is_readable($daysLog)) {
+                $f = file($daysLog);
+                $stat = (file_exists($statLog) && is_readable($statLog)) ? file($statLog) : false;
                 if ($stat !== false) $f = array_merge($f, $stat);
             } else {
-                $f = file(COUNTER_DIR.'/statistic.log');
+                $f = (file_exists($statLog) && is_readable($statLog)) ? file($statLog) : [];
             }
         }
     }
@@ -337,7 +340,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
     $where   = ($modul) ? 'WHERE a.modul = :modul' : '';
     $params  = ($modul) ? ['modul' => $modul] : [];
     $modlink = ($modul) ? '&amp;modul='.$modul : '';
-    $result  = $db->getSqlQuery('SELECT a.id, a.modul, a.title, a.description, a.img, a.lang, a.parent, a.ordern, a.status, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
+    $result  = $db->getSqlQuery('SELECT a.id, a.modul, a.title, a.intro, a.img, a.lang, a.parent, a.ordern, a.status, b.id, b.modul, b.ordern, c.id, c.modul, c.ordern FROM '.PREFIX_DB.'_categories AS a LEFT JOIN '.PREFIX_DB.'_categories AS b ON (b.modul = a.modul AND b.ordern = a.ordern-1) LEFT JOIN '.PREFIX_DB.'_categories AS c ON (c.modul = a.modul AND c.ordern = a.ordern+1) '.$where.' ORDER BY a.modul, a.ordern', $params);
     if ($db->getSqlRowCount($result) > 0) {
         while (list($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2) = $db->getSqlRow($result)) {
             $massiv[$id] = [$id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2];
@@ -404,7 +407,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
             $fcont .= ($con1) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_cat', 'go=5&amp;op=cat_order&amp;id=".$id.'&amp;cid='.$con1.'&amp;typ='.$ordernm.'&amp;mod='.$modul.'&amp;ordern='.$ordern."', ''); return false;\" title=\""._BLOCKUP.'" class="sl_bl_up"></span>' : '';
             $fcont .= ($con2) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_cat', 'go=5&amp;op=cat_order&amp;id=".$id.'&amp;cid='.$con2.'&amp;typ='.$ordernp.'&amp;mod='.$modul.'&amp;ordern='.$ordern."', ''); return false;\" title=\""._BLOCKDOWN.'" class="sl_bl_down"></span>' : '';
             $fcont .= '</td><td>'.ad_status('', $cstatus).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?op=cat_edit&amp;cid='.$id.$modlink.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$delete).'</td></tr>';
+            .'<td>'.add_menu('<a href="'.$afile.'.php?name=categories&amp;op=edit&amp;cid='.$id.$modlink.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$delete).'</td></tr>';
         }
         $cont = '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._CATEGORY.'</th><th>'.cutstr(_CONTENT, 3, 1).'</th><th>'.cutstr(_SUBCATEGORY, 3, 1).'</th><th>'.cutstr(_IMG, 2, 1).'</th><th colspan="2">'._WEIGHT.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>'.$fcont.'</tbody></table>';
     } else {
@@ -777,7 +780,7 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
     $class  = $extraClass ? 'sl_field '.$extraClass : 'sl_field';
     $params = ['modul' => $modul];
     if ($conf['multilingual'] == 1) {
-        $where  = "(language = :locale OR language = '') AND modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $where  = "(lang = :locale OR lang = '') AND modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
         $params['locale'] = $locale;
     } else {
         $where  = "modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";

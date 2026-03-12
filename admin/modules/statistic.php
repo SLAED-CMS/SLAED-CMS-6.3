@@ -42,7 +42,8 @@ function statistic(): void {
     $cont .= '<img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15" alt="'._STATGR.'" title="'._STATGR.'">';
     if ($file || date('d') > 15) {
         if ($file) {
-            $temp = file(COUNTER_DIR.'/statistic/'.$file);
+            $path = COUNTER_DIR.'/statistic/'.$file;
+            $temp = (is_file($path) && is_readable($path)) ? file($path) : [];
             $out = ($temp !== false) ? count($temp) : 0;
         } else {
             $out = date('d');
@@ -50,15 +51,18 @@ function statistic(): void {
         $cont .= '<hr><img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out.'" alt="'._STATGR.'" title="'._STATGR.'">';
     }
     $cont .= '<hr><table class="sl_table_list_sort"><thead><tr><th>'._DATE.'</th><th>'._UNIQUE.'</th><th>'._HITS.'</th><th>'._HOME.'</th><th>'._REFERERS.'</th><th>'._BOTSOPT.'</th><th>'._AUDIENCE.'</th><th class="{sorter: false}">'._USERS.'</th></tr></thead><tbody>';
+    $daysLog = COUNTER_DIR.'/days.log';
+    $statLog = COUNTER_DIR.'/statistic.log';
     if ($file) {
-        $f = file(COUNTER_DIR.'/statistic/'.$file);
+        $path = COUNTER_DIR.'/statistic/'.$file;
+        $f = (is_file($path) && is_readable($path)) ? file($path) : [];
     } else {
-        if (file_exists(COUNTER_DIR.'/days.log')) {
-            $f = file(COUNTER_DIR.'/days.log');
-            $stat = file(COUNTER_DIR.'/statistic.log');
+        if (file_exists($daysLog) && is_readable($daysLog)) {
+            $f = file($daysLog);
+            $stat = (file_exists($statLog) && is_readable($statLog)) ? file($statLog) : false;
             if ($stat !== false) $f = array_merge($f, $stat);
         } else {
-            $f = file(COUNTER_DIR.'/statistic.log');
+            $f = (file_exists($statLog) && is_readable($statLog)) ? file($statLog) : [];
         }
     }
     $f = ($f !== false) ? $f : [];

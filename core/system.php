@@ -1384,15 +1384,40 @@ function setHead(array $seo = []): void {
         $sreqhom = filterText($request);
         $spath = COUNTER_DIR.'/';
         $slog = $spath.'statistic.log';
-        $sdate = file_exists($slog) ? file($slog) : false;
+        $safeReadLines = static function(string $file) {
+            if (!is_file($file) || !is_readable($file)) return false;
+            set_error_handler(static function(): bool {
+                return true;
+            });
+            try {
+                $lines = file($file);
+            } finally {
+                restore_error_handler();
+            }
+            return $lines ?: false;
+        };
+        $safeOpen = static function(string $file, string $mode) {
+            set_error_handler(static function(): bool {
+                return true;
+            });
+            try {
+                $handle = fopen($file, $mode);
+            } finally {
+                restore_error_handler();
+            }
+            return $handle ?: false;
+        };
+        $sdate = $safeReadLines($slog);
         if ($sdate) {
             $con = explode('|', trim($sdate[0]));
             if (date('d.m.Y') != $con[0]) {
-                $fpd = fopen($spath.'days.log', 'ab');
-                flock($fpd, LOCK_EX);
-                fwrite($fpd, $sdate[0].PHP_EOL);
-                flock($fpd, LOCK_UN);
-                fclose($fpd);
+                $fpd = $safeOpen($spath.'days.log', 'ab');
+                if ($fpd && flock($fpd, LOCK_EX)) {
+                    fwrite($fpd, $sdate[0].PHP_EOL);
+                    fflush($fpd);
+                    flock($fpd, LOCK_UN);
+                }
+                if ($fpd) fclose($fpd);
                 if (file_exists($spath.'statistic.log')) unlink($spath.'statistic.log');
                 if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
                 if (file_exists($spath.'user.log')) unlink($spath.'user.log');
@@ -1418,14 +1443,14 @@ function setHead(array $seo = []): void {
                 $suser = ($checku && $conf['session'] && $guest == 2) ? intval(($con[7] ?? 0) + 1) : ($con[7] ?? 0);
                 $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
             }
-            $fps = fopen($spath.'statistic.log', 'wb');
-            if (flock($fps, LOCK_EX)) {
+            $fps = $safeOpen($spath.'statistic.log', 'wb');
+            if ($fps && flock($fps, LOCK_EX)) {
                 ftruncate($fps, 0);
                 fwrite($fps, $wc);
                 fflush($fps);
                 flock($fps, LOCK_UN);
             }
-            fclose($fps);
+            if ($fps) fclose($fps);
         } elseif (!file_exists($slog) || filemtime($slog) < strtotime('today midnight')) {
             if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
             if (file_exists($spath.'user.log')) unlink($spath.'user.log');
@@ -1433,11 +1458,13 @@ function setHead(array $seo = []): void {
             $srefer = ($sreferer) ? '1' : '0';
             $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
             $wc = date('d.m.Y').'|0|1|1|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
-            $fps = fopen($slog, 'wb');
-            flock($fps, LOCK_EX);
-            fwrite($fps, $wc);
-            flock($fps, LOCK_UN);
-            fclose($fps);
+            $fps = $safeOpen($slog, 'wb');
+            if ($fps && flock($fps, LOCK_EX)) {
+                fwrite($fps, $wc);
+                fflush($fps);
+                flock($fps, LOCK_UN);
+            }
+            if ($fps) fclose($fps);
         }
     }
     if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
@@ -2040,7 +2067,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                 list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_files WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INF;
             } elseif ($mod == 'help') {
-                $uid = intval($user[0]);
+                $uid = is_user() ? intval($user[0]) : 0;
                 list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_help WHERE cid IN ('.$cin.") AND time <= NOW() AND pid = '0' AND uid = :uid", array_merge($pm, ['uid' => $uid])));
                 $in = _INH;
             } elseif ($mod == 'jokes') {
@@ -2613,7 +2640,7 @@ function getCompressHtml(string $html): string {
 function getVoting(int $id = 0, string $votid = ''): string {
  global $db, $afile, $user, $locale, $conf;
     if ($conf['multilingual'] == 1) {
-        $querylang = "(language = :locale OR language = '') AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
+        $querylang = "(lang = :locale OR lang = '') AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
         $qlang_params = ['locale' => $locale];
     } else {
         $querylang = "time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
@@ -3264,6 +3291,8 @@ function user_sainfo(string $id = ''): string {
 function adminblock(): string {
  global $db, $afile;
     if (isAdmin()) {
+        $title = '';
+        $content = '';
         $cont = '<table class="sl_table_block"><tr><td><a href="'.$afile.'.php" title="'._ADMINMENU.'">'._ADMINMENU.'</a></td></tr>'
         .'<tr><td><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'">'._LOGOUT.'</a></td></tr></table>';
         if (isAdmin(true)) {
@@ -5521,7 +5550,7 @@ function avoting_save(): void {
     $id = getVar('post', 'id', 'num', 0);
     $body = isset($_POST['body']) && is_array($_POST['body']) ? $_POST['body'] : [];
     if ($conf['multilingual'] == 1) {
-        $querylang = "(language = :locale OR language = '') AND time <= NOW() AND enddate >= NOW()";
+        $querylang = "(lang = :locale OR lang = '') AND time <= NOW() AND enddate >= NOW()";
         $qlang_params = ['locale' => $locale];
     } else {
         $querylang = 'time <= NOW() AND enddate >= NOW()';
