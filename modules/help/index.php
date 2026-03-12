@@ -25,7 +25,7 @@ function navigate(string $title, string|int $cat = ''): string {
 function help(): void {
     global $db, $user, $conf, $home, $op;
     $cwhere = catmids($conf['name'], 's.cid');
-    $uid = intval($user[0]);
+    $uid = is_user() ? intval($user[0]) : 0;
     $unum = getUserNews($conf['help']['num']);
     $cat = getVar('get', 'cat', 'num');
     $ncat = $cat;

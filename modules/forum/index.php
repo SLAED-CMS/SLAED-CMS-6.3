@@ -399,9 +399,11 @@ function view(): void {
     }
 }
 
-function quickreply(int|string $id, int|string $catid, string $subject): string {
+function quickreply(int|string|null $id, int|string|null $catid, string $subject): string {
     global $conf;
-    if ($conf['forum']['qreply'] == 1) {
+    $id = (int)$id;
+    $catid = (int)$catid;
+    if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
         $cont = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
         $cont .= (!is_user()) ? '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>' : '';
         $cont .= '<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1').'</td></tr>'

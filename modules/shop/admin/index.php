@@ -601,7 +601,9 @@ function partnersdel(int $id = 0): void {
 
 function partnersdetails(): void {
     global $db, $afile, $conf;
-        $paid = getVar('get', 'paid', 'num');
+    $paid = getVar('get', 'paid', 'num');
+    $a = 0;
+    $partsumges = 0;
     setHead();
     $cont = navi(2, 2, 1, 1);
     $result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE id = :paid', ['paid' => $paid]);
@@ -894,7 +896,6 @@ switch($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-
 
 
 

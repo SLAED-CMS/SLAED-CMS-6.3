@@ -535,10 +535,11 @@ function deletePmMsg() {
 }
 
 # Render the favorites toggle button for an item (on/off/limit-reached state)
-function getFavorBtn(int $fid, string $mod) {
+function getFavorBtn(?int $fid, string $mod): string {
     global $db, $conf, $user;
+    $fid = (int)$fid;
     $uid = (is_user()) ? intval($user[0]) : 0;
-    if ($conf['favorites']['favact'] && $uid) {
+    if ($conf['favorites']['favact'] && $uid && $fid > 0) {
         [$fav] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]));
         if ($fav) {
             $content = '<span title="'._FAVOR.'" class="sl_favor sl_favor_on"></span>';
@@ -551,8 +552,9 @@ function getFavorBtn(int $fid, string $mod) {
                 $content = '<span id="rep'.$fid.$mod."\"><span OnClick=\"AjaxLoad('GET', '0', '".$fid.$mod."', 'go=1&amp;op=favoradd&amp;id=".$fid.'&amp;mod='.$mod."', ''); return false;\" title=\""._FAVOR_ADD.'" class="sl_favor"></span></span>';
             }
         }
-        return $content;
     }
+    if (!isset($content)) $content = '';
+    return $content;
 }
 
 # Add an item to the user's favorites list and echo the updated toggle button
