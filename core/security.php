@@ -1038,7 +1038,11 @@ function addMail(string $email, string $smail, string $subject, string $message,
     .'Return-Path: <'.$smail.">\n"
     .'X-Priority: '.$pr."\n"
     ."X-Mailer: SLAED CMS\n";
+    set_error_handler(static function (): bool {
+        return true;
+    }, E_WARNING);
     mail($email, $subject, base64_encode($message), $mheader);
+    restore_error_handler();
 }
 
 # Log a hack attempt: block IP, send alert email, append to hack.log, then exit

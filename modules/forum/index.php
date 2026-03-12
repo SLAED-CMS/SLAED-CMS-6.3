@@ -471,6 +471,14 @@ function add(): void {
     $form = false;
     $id = getVar('req', 'id', 'num');
     $pid = getVar('req', 'pid', 'num');
+    $qpid = 0;
+    $fid = 0;
+    $ftitle = '';
+    $ftext = '';
+    $field = '';
+    $status = 3;
+    $time = '';
+    $subh = 0;
     
     $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
     [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
@@ -600,6 +608,8 @@ function send(): void {
         $time = ($ismod) ? getVar('req', 'time', 'time') : date('Y-m-d H:i:s');
         $postid = (is_user()) ? intval($user[0]) : '';
         $ip = getIp();
+        $fpid = 0;
+        $lpid = 0;
         
         $stop = [];
         if (!$subject) $stop[] = _CERROR;
@@ -693,6 +703,7 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
     $hasargs = ($catid !== null || $id !== null);
     $catid = ($catid !== null && $catid !== '') ? $catid : getVar('req', 'cat', 'num');
     $id = ($id !== null && $id !== '') ? $id : getVar('req', 'id', 'num');
+    $lid = 0;
     if ($conf['forum']['add'] && $catid && $id) {
         [$authd, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $isdelete = is_acess($authd);

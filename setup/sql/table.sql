@@ -112,6 +112,21 @@ CREATE TABLE `{prefix}_clients` (
   KEY `email` (`email`(191))
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_clients_down` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(100) NOT NULL,
+  `body` MEDIUMTEXT NOT NULL,
+  `url` VARCHAR(100) NOT NULL DEFAULT '',
+  `num` VARCHAR(10) NOT NULL DEFAULT '',
+  `code` VARCHAR(100) NOT NULL DEFAULT '',
+  `hits` INT UNSIGNED NOT NULL DEFAULT 0,
+  `pid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `status` BOOLEAN NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `pid` (`pid`),
+  KEY `status` (`status`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_comment` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `cid` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -375,6 +390,22 @@ CREATE TABLE `{prefix}_message` (
   KEY `lang` (`lang`)
 ) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
 
+CREATE TABLE `{prefix}_money` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `sum` INT UNSIGNED NOT NULL DEFAULT 0,
+  `email` VARCHAR(255) NOT NULL,
+  `intro` TEXT NOT NULL,
+  `note` TEXT NOT NULL,
+  `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  `agent` VARCHAR(255) NOT NULL DEFAULT '',
+  `time` DATETIME DEFAULT NULL,
+  `status` BOOLEAN NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `email` (`email`(191)),
+  KEY `status` (`status`),
+  KEY `time` (`time`)
+) ENGINE={engine} DEFAULT CHARSET={charset} COLLATE={collate};
+
 CREATE TABLE `{prefix}_news` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `cid` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -595,7 +626,7 @@ CREATE TABLE `{prefix}_users` (
   `lastvis` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `lang` VARCHAR(255) NOT NULL DEFAULT 'russian',
   `points` INT UNSIGNED DEFAULT 0,
-  `lastip` VARCHAR(45) NOT NULL DEFAULT '',
+  `ip` VARCHAR(45) NOT NULL DEFAULT '',
   `warnings` TEXT NOT NULL,
   `access` BOOLEAN NOT NULL DEFAULT 0,
   `grp` INT NOT NULL DEFAULT 0,

@@ -21,7 +21,7 @@ function money(): void {
     $anum = $conf['money']['anum'] ?? 25;
     $anump = $conf['money']['anump'] ?? 10;
     $offset = (int)(($num - 1) * $anum);
-    $result = $db->getSqlQuery('SELECT id, sum, mail, info, com, ip, agent, date, status FROM '.PREFIX_DB.'_money ORDER BY date DESC LIMIT '.$offset.', '.$anum);
+    $result = $db->getSqlQuery('SELECT id, sum, email, intro, note, ip, agent, time, status FROM '.PREFIX_DB.'_money ORDER BY time DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_money'));
@@ -30,22 +30,22 @@ function money(): void {
         $numpages = ceil($numstories / $anum);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._SUM.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         $form = explode(',', $conf['money']['form'] ?? '');
-        while ([$id, $sum, $mail, $info, $com, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
+        while ([$id, $sum, $email, $intro, $note, $ip, $agent, $time, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
-            $info = explode('|', $info);
+            $intro = explode('|', $intro);
             $i = 0;
             $infos = '';
             foreach ($form as $val) {
                 if ($val != '') {
-                    $infos .= $val.': '.($info[$i] ?? '').'<br>';
+                    $infos .= $val.': '.($intro[$i] ?? '').'<br>';
                     $i++;
                 }
             }
             $cont .= '<tr><td>'.$id.'</td>'
             .'<td>'.$sum.' EUR</td>'
-            .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$com.'<br><br>'._BROWSER.': '.$agent).anti_spam($mail).'</td>'
+            .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email).'</td>'
             .'<td>'.user_geo_ip($ip, 4).'</td>'
-            .'<td>'.format_time($date, _TIMESTRING).'</td>'
+            .'<td>'.format_time($time, _TIMESTRING).'</td>'
             .'<td>'.ad_status('', $status).'</td>'
             .'<td>'.add_menu(ad_status($afile.'.php?name=money&amp;op=active&amp;id='.$id.'&amp;act='.$act, $status).'||<a href="'.$afile.'.php?name=money&amp;op=rechn&amp;id='.$id.'&amp;rnum='.$r.'" title="'._RECHN_B.'">'._RECHN_B.'</a>||<a href="'.$afile.'.php?name=money&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=money&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             $r--;
@@ -65,46 +65,46 @@ function add(): void {
         $id = getVar('req', 'id', 'num', 0);
     $mid = $id;
     if ($mid) {
-        $result = $db->getSqlQuery('SELECT sum, mail, info, com, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $mid]);
-        [$sum, $mail, $info, $com, $date] = $db->getSqlRow($result);
-        $info = explode('|', $info);
+        $result = $db->getSqlQuery('SELECT sum, email, intro, note, time FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $mid]);
+        [$sum, $email, $intro, $note, $time] = $db->getSqlRow($result);
+        $intro = explode('|', $intro);
     } else {
         $mid = getVar('post', 'mid', 'num', 0);
         $sum = getVar('post', 'sum', 'num', 0);
-        $mail = getVar('post', 'mail', 'text', '');
-        $info = getVar('post', 'info', 'array', []);
-        $com = getVar('post', 'com', 'text', '');
-        $date = getVar('req', 'date', 'time');
+        $email = getVar('post', 'email', 'text', '');
+        $intro = getVar('post', 'intro', 'array', []);
+        $note = getVar('post', 'note', 'text', '');
+        $time = getVar('req', 'time', 'time');
     }
     setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
-    if ($info) {
+    if ($intro) {
         $form = explode(',', $conf['money']['form'] ?? '');
         $i = 0;
         $infos = '';
         foreach ($form as $val) {
             if ($val != '') {
-                $infos .= $val.': '.($info[$i] ?? '').'<br>';
+                $infos .= $val.': '.($intro[$i] ?? '').'<br>';
                 $i++;
             }
         }
-        $cont .= preview($mail, $infos, _COMMENT.': '.$com, '', 'all');
+        $cont .= preview($email, $infos, _COMMENT.': '.$note, '', 'all');
     }
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._MA_17.':</td><td><input type="number" name="sum" value="'.$sum.'" class="sl_form" placeholder="'._MA_17.'" required></td></tr>'
-    .'<tr><td>'._MA_18.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_form" placeholder="'._MA_18.'" required></td></tr>';
+    .'<tr><td>'._MA_18.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._MA_18.'" required></td></tr>';
     $form = explode(',', $conf['money']['form'] ?? '');
     $i = 0;
     foreach ($form as $val) {
         if ($val != '') {
-            $cont .= '<tr><td>'.$val.':</td><td><input type="text" name="info[]" value="'.($info[$i] ?? '').'" maxlength="255" class="sl_form" placeholder="'.$val.'"></td></tr>';
+            $cont .= '<tr><td>'.$val.':</td><td><input type="text" name="intro[]" value="'.($intro[$i] ?? '').'" maxlength="255" class="sl_form" placeholder="'.$val.'"></td></tr>';
             $i++;
         }
     }
-    $cont .= '<tr><td>'._MA_19.':</td><td><textarea name="com" cols="65" rows="5" class="sl_form" placeholder="'._MA_19.'">'.$com.'</textarea></td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
+    $cont .= '<tr><td>'._MA_19.':</td><td><textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._MA_19.'">'.$note.'</textarea></td></tr>'
+    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="money">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -115,20 +115,20 @@ function save(): void {
     global $db, $afile, $stop;
     $mid = getVar('post', 'mid', 'num', 0);
     $sum = getVar('post', 'sum', 'num', 0);
-    $mail = getVar('post', 'mail', 'text', '');
-    $info = getVar('post', 'info', 'array', []);
-    $list = (!empty($info)) ? filterText(implode('|', $info)) : '';
-    $com = getVar('post', 'com', 'text', '');
-    $date = getVar('req', 'date', 'time');
-    checkemail($mail);
+    $email = getVar('post', 'email', 'text', '');
+    $intro = getVar('post', 'intro', 'array', []);
+    $list = (!empty($intro)) ? filterText(implode('|', $intro)) : '';
+    $note = getVar('post', 'note', 'text', '');
+    $time = getVar('req', 'time', 'time');
+    checkemail($email);
     $posttype = getVar('post', 'posttype', 'text', '');
     if (!$stop && $posttype === 'save') {
         if ($mid) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_money SET sum = :sum, mail = :mail, info = :info, com = :com, date = :date WHERE id = :mid', ['sum' => $sum, 'mail' => $mail, 'info' => $list, 'com' => $com, 'date' => $date, 'mid' => $mid]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_money SET sum = :sum, email = :email, intro = :intro, note = :note, time = :time WHERE id = :mid', ['sum' => $sum, 'email' => $email, 'intro' => $list, 'note' => $note, 'time' => $time, 'mid' => $mid]);
         } else {
             $ip = getip();
             $agent = getagent();
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_money VALUES (NULL, :sum, :mail, :info, :com, :ip, :agent, :date, \'1\')', ['sum' => $sum, 'mail' => $mail, 'info' => $list, 'com' => $com, 'ip' => $ip, 'agent' => $agent, 'date' => $date]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_money (`sum`, `email`, `intro`, `note`, `ip`, `agent`, `time`, `status`) VALUES (:sum, :email, :intro, :note, :ip, :agent, :time, \'1\')', ['sum' => $sum, 'email' => $email, 'intro' => $list, 'note' => $note, 'ip' => $ip, 'agent' => $agent, 'time' => $time]);
         }
         setRedirect($afile.'.php?name=money');
     } elseif ($posttype === 'delete') {
@@ -171,16 +171,16 @@ function billing(string $title, string $autor, string $infos, string $num, strin
 function rechn(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num', 0);
-    [$sum, $mail, $info, $com, $ip, $agent, $date] = $db->getSqlRow($db->getSqlQuery('SELECT sum, mail, info, com, ip, agent, date FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
+    [$sum, $email, $intro, $note, $ip, $agent, $time] = $db->getSqlRow($db->getSqlQuery('SELECT sum, email, intro, note, ip, agent, time FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
     $defis = urldecode($conf['defis'] ?? '%3E');
     $title = _RECHN.' '.$defis.' '._MONEY.' '.$defis.' '.($conf['sitename'] ?? '');
     $form = explode(',', $conf['money']['form'] ?? '');
-    $info = explode('|', $info);
+    $intro = explode('|', $intro);
     $i = 0;
     $infos = '';
     foreach ($form as $val) {
         if ($val != '') {
-            $infos .= $val.': '.($info[$i] ?? '').'<br>';
+            $infos .= $val.': '.($intro[$i] ?? '').'<br>';
             $i++;
         }
     }
@@ -189,7 +189,7 @@ function rechn(): void {
     $proz = (float)($conf['money']['proz'] ?? 0);
     $menge = ($sum / 100) * $kurs * (100 - $proz);
     $kurs = ($menge > 0) ? round($sum / $menge, 2) : 0;
-    billing($title, filterReplaceText(filterMarkdown($conf['money']['autor'] ?? '', 'money', false), 'money'), filterReplaceText(filterMarkdown($infos, 'money', false), 'money'), $rnum, format_time($date), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
+    billing($title, filterReplaceText(filterMarkdown($conf['money']['autor'] ?? '', 'money', false), 'money'), filterReplaceText(filterMarkdown($infos, 'money', false), 'money'), $rnum, format_time($time), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
 }
 
 function active(): void {
@@ -198,12 +198,12 @@ function active(): void {
     $id = getVar('get', 'id', 'num', 0);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_money SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
     if ($act) {
-        [$mail] = $db->getSqlRow($db->getSqlQuery('SELECT mail FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
+        [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
         $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._MONEY;
         $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
         $msg .= filterReplaceText(filterMarkdown($conf['money']['sendinfo'] ?? '', 'all', false), 'all');
-        addMail($mail, $amail, $subject, $msg, 0, 3);
+        addMail($email, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=money&send=1');
     }
     setRedirect($afile.'.php?name=money');
@@ -280,9 +280,6 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
-
-
 
 
 

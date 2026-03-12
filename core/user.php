@@ -431,7 +431,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             $stext = filterText(trim(getVar('post', 'text', 'raw', '')));
             $rpost = ($sname) ? $sname : (($user_name ?? '') ? $user_name : '');
             $rtitle = ($stitle) ? $stitle : (($title ?? '') ? _PRREP.': '.$title : '');
-            $rcontent = ($stext) ? $stext : (($content ?? '') ? '[quote]'.$content.'[/quote]' : '');
+            $rcontent = ($stext) ? $stext : (($body ?? '') ? '[quote]'.$body.'[/quote]' : '');
             
             $idp = ($id) ? '2' : '1';
             $cont .= '<form name="post" id="form'.$prmid.'" method="post">'
@@ -498,10 +498,10 @@ function addPmMsg() {
             }
         }
         $info = sprintf(_PRSENDED, $postname);
-        return getPmView(0, 0, $info, 4);
+        return getPmView(0, '', $info, 4);
     } else {
-        $stop = ($stop) ? $stop : _ERROR;
-        return getPmView(0, $stop, 0, 4);
+        $stop = ($stop) ? implode('<br>', (array)$stop) : _ERROR;
+        return getPmView(0, $stop, '', 4);
     }
 }
 
@@ -512,12 +512,12 @@ function setPmSaved() {
     $id = getVar('get', 'id', 'num', 0);
     [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status = 2', ['uid' => $uid]));
     $pr_numi = $pr_num + 1;
+    $stop = '';
+    $info = '';
     if ($pr_num >= $conf['privat']['messsav']) {
         $stop = sprintf(_PRSAVEEXIT, $conf['privat']['messsav']);
-        $info = 0;
     } elseif ($pr_numi >= ($conf['privat']['messsav'] / 2)) {
         $acmess = ($conf['privat']['messsav'] - $pr_numi);
-        $stop = 0;
         $info = sprintf(_PRSAVEMAX, $conf['privat']['messsav'], $pr_numi, $acmess);
     }
     if (!$stop && $conf['privat']['act'] && $uid && $id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_privat SET status = 2 WHERE id = :id AND uidin = :uid', ['id' => $id, 'uid' => $uid]);
@@ -531,7 +531,7 @@ function deletePmMsg() {
     $id  = getVar('get', 'id',  'num', 0);
     $typ = getVar('get', 'typ', 'num', 1);
     if ($conf['privat']['act'] && $uid && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE (id = :id_in AND uidin = :uid_in) OR (id = :id_out AND uidout = :uid_out AND status = 0)', ['id_in' => $id, 'uid_in' => $uid, 'id_out' => $id, 'uid_out' => $uid]);
-    return getPmView(0, 0, 0, $typ);
+    return getPmView(0, '', '', $typ);
 }
 
 # Render the favorites toggle button for an item (on/off/limit-reached state)

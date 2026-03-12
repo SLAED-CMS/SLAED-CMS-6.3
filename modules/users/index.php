@@ -25,7 +25,7 @@ function users(): void {
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $lim;
     $count = ($num) ? $offset + 1 : 1;
-        $result = $db->getSqlQuery('SELECT id, name, website, regdate, origin, lastvis, points, lastip, gender, votes, tvotes FROM '.PREFIX_DB.'_users ORDER BY points DESC LIMIT '.$offset.', '.$lim);
+        $result = $db->getSqlQuery('SELECT id, name, website, regdate, origin, lastvis, points, ip, gender, votes, tvotes FROM '.PREFIX_DB.'_users ORDER BY points DESC LIMIT '.$offset.', '.$lim);
         if ($db->getSqlRowCount($result) > 0) {
             $con = explode('|', (string)($conf['rating']['account'] ?? '0|0|0'));
             $rate = !empty($con[1]);
@@ -80,7 +80,7 @@ function stats(): void {
     global $db, $conf;
     setHead(['title' => _TU_STATS]);
     $cont = navigate(_TOPUSERS);
-    $result = $db->getSqlQuery('SELECT id, name, description, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points');
+    $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points');
     if ($result) {
         $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._RANK.'</th><th>'._DESCRIPTION.'</th><th>'._POINTS.'</th><th>'._TU_USERSCOUNT.'</th><th>'.cutstr(_SPEC, 4, 1).'</th></tr></thead><tbody class="sl_table_list_body">';

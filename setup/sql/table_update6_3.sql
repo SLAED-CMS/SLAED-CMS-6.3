@@ -4,17 +4,17 @@
 # Website: slaed.net
 # Compatible: MySQL 8.0+ & MariaDB 10.5+
 #
-# table_update6_3.sql — standalone public update from SLAED 6.2 to current schema
+# table_update6_3.sql — public update from SLAED 6.2 to SLAED 6.3 Phoenix
 #
 # Purpose:
-# - migrate a live SLAED 6.2 database to the normalized schema used by current code
-# - be safe on partially updated databases and re-runs
-# - finish structural alignment to setup/sql/table.sql without touching legacy side tables
+# - migrate a live SLAED 6.2 database to the normalized schema used by 6.3
+# - survive partial/manual refactors without crashing on already-renamed objects
+# - skip missing tables silently
 #
 # Usage:
-# 1. Back up the database
-# 2. Replace {prefix} with your real table prefix
-# 3. Run once; re-run is safe for all idempotent batches below
+# - executed by setup/index.php during the public 6.2 -> 6.3 update path
+# - back up the database before running the updater
+# - safe to re-run for idempotent rename/index batches below
 #
 # Important:
 # - this script covers column/index migration first
@@ -25,7 +25,9 @@ DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
-DROP PROCEDURE IF EXISTS copymoney;
+DROP PROCEDURE IF EXISTS mkuseruniq;
+DROP PROCEDURE IF EXISTS fixgrppk;
+DROP PROCEDURE IF EXISTS finalize_user_names;
 
 DELIMITER $$
 
@@ -171,60 +173,190 @@ BEGIN
     END IF;
 END$$
 
-CREATE PROCEDURE copymoney(IN pmoney VARCHAR(128), IN porder VARCHAR(128))
+CREATE PROCEDURE mkuseruniq(IN ptab VARCHAR(128))
 BEGIN
-    DECLARE cmoney INT DEFAULT 0;
-    DECLARE corder INT DEFAULT 0;
-    DECLARE smoney BIGINT DEFAULT 0;
-    DECLARE sorder BIGINT DEFAULT 0;
+    DECLARE ctab     INT DEFAULT 0;
+    DECLARE has_key  INT DEFAULT 0;
+    DECLARE has_uniq INT DEFAULT 0;
 
     SELECT COUNT(*)
-      INTO cmoney
+      INTO ctab
       FROM information_schema.tables
      WHERE table_schema = DATABASE()
-       AND table_name = pmoney;
+       AND table_name = ptab;
 
-    SELECT COUNT(*)
-      INTO corder
-      FROM information_schema.tables
-     WHERE table_schema = DATABASE()
-       AND table_name = porder;
+    IF ctab > 0 THEN
+        SELECT COUNT(DISTINCT index_name)
+          INTO has_uniq
+          FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND index_name = 'name'
+           AND non_unique = 0;
 
-    IF cmoney > 0 AND corder > 0 THEN
-        SET @cnt = 0;
-        SET @sql = CONCAT('SELECT COUNT(*) INTO @cnt FROM `', pmoney, '`');
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-        SET smoney = COALESCE(@cnt, 0);
-
-        SET @cnt = 0;
-        SET @sql = CONCAT('SELECT COUNT(*) INTO @cnt FROM `', porder, '`');
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-        SET sorder = COALESCE(@cnt, 0);
-
-        IF smoney > 0 AND sorder = 0 THEN
-            SET @sql = CONCAT(
-                'INSERT INTO `', porder, '` (`mail`, `info`, `com`, `ip`, `agent`, `time`, `status`) ',
-                'SELECT ',
-                'COALESCE(`mail`, ''''), ',
-                'CASE ',
-                'WHEN COALESCE(`sum`, 0) <> 0 AND COALESCE(`info`, '''') <> '''' THEN CONCAT(''[legacy money sum='', `sum`, ''] '', `info`) ',
-                'WHEN COALESCE(`sum`, 0) <> 0 THEN CONCAT(''[legacy money sum='', `sum`, '']'') ',
-                'ELSE COALESCE(`info`, '''') ',
-                'END, ',
-                'COALESCE(`com`, ''''), ',
-                'COALESCE(`ip`, ''''), ',
-                'COALESCE(`agent`, ''''), ',
-                'COALESCE(`date`, NOW()), ',
-                'COALESCE(`status`, 0) ',
-                'FROM `', pmoney, '`'
+        IF has_uniq = 0 THEN
+            SET @dups = 0;
+            SET @sql  = CONCAT(
+                'SELECT COUNT(*) INTO @dups FROM (',
+                'SELECT `name` FROM `', ptab, '` GROUP BY `name` HAVING COUNT(*) > 1) _d'
             );
             PREPARE stmt FROM @sql;
             EXECUTE stmt;
             DEALLOCATE PREPARE stmt;
+
+            IF @dups = 0 THEN
+                SELECT COUNT(DISTINCT index_name)
+                  INTO has_key
+                  FROM information_schema.statistics
+                 WHERE table_schema = DATABASE()
+                   AND table_name = ptab
+                   AND index_name = 'name';
+
+                IF has_key > 0 THEN
+                    SET @sql = CONCAT('ALTER TABLE `', ptab, '` DROP INDEX `name`');
+                    PREPARE stmt FROM @sql;
+                    EXECUTE stmt;
+                    DEALLOCATE PREPARE stmt;
+                END IF;
+
+                SET @sql = CONCAT('ALTER TABLE `', ptab, '` ADD UNIQUE KEY `name` (`name`)');
+                PREPARE stmt FROM @sql;
+                EXECUTE stmt;
+                DEALLOCATE PREPARE stmt;
+            END IF;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE fixgrppk(IN ptab VARCHAR(128))
+BEGIN
+    DECLARE ctab     INT DEFAULT 0;
+    DECLARE has_pk   INT DEFAULT 0;
+    DECLARE has_dupk INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ctab
+      FROM information_schema.tables
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab;
+
+    IF ctab > 0 THEN
+        SELECT COUNT(DISTINCT index_name)
+          INTO has_pk
+          FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND index_name = 'PRIMARY';
+
+        SELECT COUNT(DISTINCT index_name)
+          INTO has_dupk
+          FROM information_schema.statistics
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND index_name = 'id';
+
+        IF has_dupk > 0 AND has_pk > 0 THEN
+            SET @sql = CONCAT('ALTER TABLE `', ptab, '` DROP INDEX `id`');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ELSEIF has_dupk > 0 AND has_pk = 0 THEN
+            SET @sql = CONCAT('ALTER TABLE `', ptab, '` DROP INDEX `id`, ADD PRIMARY KEY (`id`)');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ELSEIF has_dupk = 0 AND has_pk = 0 THEN
+            SET @sql = CONCAT('ALTER TABLE `', ptab, '` ADD PRIMARY KEY (`id`)');
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        END IF;
+    END IF;
+END$$
+
+CREATE PROCEDURE finalize_user_names(IN ptab VARCHAR(128))
+BEGIN
+    DECLARE ctab     INT DEFAULT 0;
+    DECLARE ccol_id  INT DEFAULT 0;
+    DECLARE ccol_name INT DEFAULT 0;
+    DECLARE cconflict INT DEFAULT 0;
+
+    SELECT COUNT(*)
+      INTO ctab
+      FROM information_schema.tables
+     WHERE table_schema = DATABASE()
+       AND table_name = ptab;
+
+    IF ctab > 0 THEN
+        SELECT COUNT(*) INTO ccol_id
+          FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND column_name = 'id';
+
+        SELECT COUNT(*) INTO ccol_name
+          FROM information_schema.columns
+         WHERE table_schema = DATABASE()
+           AND table_name = ptab
+           AND column_name = 'name';
+
+        IF ccol_id > 0 AND ccol_name > 0 THEN
+            DROP TEMPORARY TABLE IF EXISTS tmp_user_name_fix;
+
+            CREATE TEMPORARY TABLE tmp_user_name_fix (
+                id INT UNSIGNED NOT NULL PRIMARY KEY,
+                old_name VARCHAR(25) NOT NULL,
+                new_name VARCHAR(25) NOT NULL
+            ) ENGINE=MEMORY;
+
+            SET @sql = CONCAT(
+                'INSERT INTO tmp_user_name_fix (`id`, `old_name`, `new_name`) ',
+                'SELECT src.`id`, src.`name`, ',
+                'CONCAT(LEFT(src.`name`, GREATEST(1, 25 - 1 - CHAR_LENGTH(src.`id`))), ''_'', src.`id`) ',
+                'FROM (SELECT `id`, `name`, ROW_NUMBER() OVER (PARTITION BY `name` ORDER BY `id`) AS rn FROM `', ptab, '`) src ',
+                'WHERE src.rn > 1'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+
+            SELECT COUNT(*)
+              INTO cconflict
+              FROM (
+                    SELECT new_name
+                      FROM tmp_user_name_fix
+                     GROUP BY new_name
+                    HAVING COUNT(*) > 1
+                   ) dupnames;
+
+            IF cconflict > 0 THEN
+                SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Duplicate username auto-rename produced conflicting new_name values';
+            END IF;
+
+            SET @cnt = 0;
+            SET @sql = CONCAT(
+                'SELECT COUNT(*) INTO @cnt ',
+                'FROM tmp_user_name_fix f JOIN `', ptab, '` u ON u.`name` = f.`new_name` AND u.`id` <> f.`id`'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+            SET cconflict = COALESCE(@cnt, 0);
+
+            IF cconflict > 0 THEN
+                SIGNAL SQLSTATE '45000'
+                    SET MESSAGE_TEXT = 'Duplicate username auto-rename collides with existing usernames';
+            END IF;
+
+            SET @sql = CONCAT(
+                'UPDATE `', ptab, '` u JOIN tmp_user_name_fix f ON f.`id` = u.`id` SET u.`name` = f.`new_name`'
+            );
+            PREPARE stmt FROM @sql;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+
+            DROP TEMPORARY TABLE IF EXISTS tmp_user_name_fix;
         END IF;
     END IF;
 END$$
@@ -237,7 +369,8 @@ DELIMITER ;
 
 CALL rencol('{prefix}_admins', 'lastvisit', 'lvisit');
 CALL renidx('{prefix}_admins', 'lastvisit', 'lvisit');
-CALL addidx('{prefix}_admins', 'name', '`name`', 1);
+CALL addidx('{prefix}_admins', 'name', '`name`', 0);
+CALL mkuseruniq('{prefix}_admins');
 CALL addidx('{prefix}_admins', 'email', '`email`(191)', 0);
 
 # =============================================================================
@@ -320,6 +453,15 @@ CALL addidx('{prefix}_faq', 'counter', '`counter`', 0);
 CALL addidx('{prefix}_faq', 'uid', '`uid`', 0);
 CALL addidx('{prefix}_faq', 'status', '`status`', 0);
 CALL addidx('{prefix}_faq', 'ihome', '`ihome`', 0);
+
+# =============================================================================
+# Batch G — _favorites
+# =============================================================================
+
+CALL addidx('{prefix}_favorites', 'uid',          '`uid`',                     0);
+CALL addidx('{prefix}_favorites', 'fid',          '`fid`',                     0);
+CALL addidx('{prefix}_favorites', 'modul',        '`modul`',                   0);
+CALL addidx('{prefix}_favorites', 'uid_fid_modul','`uid`, `fid`, `modul`',     1);
 
 # =============================================================================
 # Batch G — _files
@@ -451,9 +593,9 @@ CALL addidx('{prefix}_news', 'time', '`time`', 0);
 
 CREATE TABLE IF NOT EXISTS `{prefix}_order` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `mail` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
   `info` TEXT NOT NULL,
-  `com` TEXT NOT NULL,
+  `note` TEXT NOT NULL,
   `ip` VARCHAR(45) NOT NULL DEFAULT '',
   `agent` VARCHAR(255) NOT NULL DEFAULT '',
   `time` DATETIME DEFAULT NULL,
@@ -461,10 +603,12 @@ CREATE TABLE IF NOT EXISTS `{prefix}_order` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CALL rencol('{prefix}_order', 'date', 'time');
-CALL renidx('{prefix}_order', 'date', 'time');
+CALL rencol('{prefix}_order', 'date',  'time');
+CALL rencol('{prefix}_order', 'mail',  'email');
+CALL rencol('{prefix}_order', 'com',   'note');
+CALL renidx('{prefix}_order', 'date',  'time');
 CALL addidx('{prefix}_order', 'status', '`status`', 0);
-CALL addidx('{prefix}_order', 'time', '`time`', 0);
+CALL addidx('{prefix}_order', 'time',   '`time`',   0);
 
 # =============================================================================
 # Batch K — _pages
@@ -478,6 +622,7 @@ CALL addidx('{prefix}_pages', 'cid', '`cid`', 0);
 CALL addidx('{prefix}_pages', 'uid', '`uid`', 0);
 CALL addidx('{prefix}_pages', 'status', '`status`', 0);
 CALL addidx('{prefix}_pages', 'ihome', '`ihome`', 0);
+CALL delidx('{prefix}_pages', 'counter');
 
 # =============================================================================
 # Batch K — _partners
@@ -574,7 +719,7 @@ CALL addidx('{prefix}_voting', 'modul', '`modul`', 0);
 CALL addidx('{prefix}_voting', 'status', '`status`', 0);
 
 # =============================================================================
-# Batch M — missing target tables and legacy data bridge
+# Batch M — missing target tables and legacy side tables
 # =============================================================================
 
 CREATE TABLE IF NOT EXISTS `{prefix}_jokes` (
@@ -584,7 +729,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_jokes` (
   `time` DATETIME DEFAULT NULL,
   `title` VARCHAR(100) NOT NULL,
   `cid` INT UNSIGNED NOT NULL DEFAULT 0,
-  `hometext` TEXT NOT NULL,
+  `body` TEXT NOT NULL,
   `rating` VARCHAR(100) NOT NULL DEFAULT '0',
   `ratetot` VARCHAR(100) NOT NULL DEFAULT '0',
   `ip` VARCHAR(45) NOT NULL DEFAULT '',
@@ -606,7 +751,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_media` (
   `year` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   `director` VARCHAR(100) NOT NULL DEFAULT '',
   `roles` VARCHAR(255) NOT NULL DEFAULT '',
-  `description` TEXT NOT NULL,
+  `intro` TEXT NOT NULL,
   `author` VARCHAR(100) NOT NULL DEFAULT '',
   `duration` VARCHAR(100) NOT NULL DEFAULT '',
   `lang` VARCHAR(100) NOT NULL DEFAULT '',
@@ -621,7 +766,7 @@ CREATE TABLE IF NOT EXISTS `{prefix}_media` (
   `acomm` BOOLEAN NOT NULL DEFAULT 0,
   `votes` INT UNSIGNED NOT NULL DEFAULT 0,
   `tvotes` INT UNSIGNED NOT NULL DEFAULT 0,
-  `tcom` INT UNSIGNED NOT NULL DEFAULT 0,
+  `comments` INT UNSIGNED NOT NULL DEFAULT 0,
   `hits` INT UNSIGNED NOT NULL DEFAULT 0,
   `ip` VARCHAR(45) NOT NULL DEFAULT '',
   `status` BOOLEAN NOT NULL DEFAULT 0,
@@ -633,7 +778,36 @@ CALL addidx('{prefix}_media', 'title', '`title`', 0);
 CALL addidx('{prefix}_media', 'uid', '`uid`', 0);
 CALL addidx('{prefix}_media', 'status', '`status`', 0);
 
-CALL copymoney('{prefix}_money', '{prefix}_order');
+CREATE TABLE IF NOT EXISTS `{prefix}_clients_down` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(100) NOT NULL,
+  `body` MEDIUMTEXT NOT NULL,
+  `url` VARCHAR(100) NOT NULL DEFAULT '',
+  `num` VARCHAR(10) NOT NULL DEFAULT '',
+  `code` VARCHAR(100) NOT NULL DEFAULT '',
+  `hits` INT UNSIGNED NOT NULL DEFAULT 0,
+  `pid` INT UNSIGNED NOT NULL DEFAULT 0,
+  `status` BOOLEAN NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `pid` (`pid`),
+  KEY `status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `{prefix}_money` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `sum` INT UNSIGNED NOT NULL DEFAULT 0,
+  `email` VARCHAR(255) NOT NULL,
+  `intro` TEXT NOT NULL,
+  `note` TEXT NOT NULL,
+  `ip` VARCHAR(45) NOT NULL DEFAULT '',
+  `agent` VARCHAR(255) NOT NULL DEFAULT '',
+  `time` DATETIME DEFAULT NULL,
+  `status` BOOLEAN NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `email` (`email`(191)),
+  KEY `status` (`status`),
+  KEY `time` (`time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 # =============================================================================
 # Batch L — _users
@@ -662,7 +836,8 @@ CALL rencol('{prefix}_users', 'user_psmail', 'psmail');
 CALL rencol('{prefix}_users', 'user_lastvisit', 'lastvis');
 CALL rencol('{prefix}_users', 'user_lang', 'lang');
 CALL rencol('{prefix}_users', 'user_points', 'points');
-CALL rencol('{prefix}_users', 'user_last_ip', 'lastip');
+CALL rencol('{prefix}_users', 'user_last_ip', 'ip');
+CALL rencol('{prefix}_users', 'lastip', 'ip');
 CALL rencol('{prefix}_users', 'user_warnings', 'warnings');
 CALL rencol('{prefix}_users', 'user_acess', 'access');
 CALL rencol('{prefix}_users', 'user_group', 'grp');
@@ -678,13 +853,16 @@ CALL renidx('{prefix}_users', 'user_email', 'email');
 CALL renidx('{prefix}_users', 'user_group', 'grp');
 CALL renidx('{prefix}_users', 'user_points', 'points');
 CALL renidx('{prefix}_users', 'user_lastvisit', 'lastvis');
-# live legacy DBs may contain duplicate usernames; keep search/admin performance
-# but do not force a UNIQUE constraint during structural migration
+# add non-unique key first; mkuseruniq below upgrades to UNIQUE if no duplicates exist
 CALL addidx('{prefix}_users', 'name', '`name`', 0);
 CALL addidx('{prefix}_users', 'email', '`email`(191)', 0);
 CALL addidx('{prefix}_users', 'grp', '`grp`', 0);
 CALL addidx('{prefix}_users', 'points', '`points`', 0);
 CALL addidx('{prefix}_users', 'lastvis', '`lastvis`', 0);
+# resolve duplicate usernames before attempting UNIQUE constraint
+CALL finalize_user_names('{prefix}_users');
+# upgrade KEY name → UNIQUE KEY name; skipped silently if duplicate usernames exist
+CALL mkuseruniq('{prefix}_users');
 
 # =============================================================================
 # Batch L — _users_temp
@@ -698,7 +876,8 @@ CALL rencol('{prefix}_users_temp', 'user_regdate', 'regdate');
 CALL rencol('{prefix}_users_temp', 'check_num', 'code');
 CALL renidx('{prefix}_users_temp', 'user_name', 'name');
 CALL renidx('{prefix}_users_temp', 'check_num', 'code');
-CALL addidx('{prefix}_users_temp', 'name', '`name`', 1);
+CALL addidx('{prefix}_users_temp', 'name', '`name`', 0);
+CALL mkuseruniq('{prefix}_users_temp');
 CALL addidx('{prefix}_users_temp', 'code', '`code`', 0);
 
 # =============================================================================
@@ -707,10 +886,36 @@ CALL addidx('{prefix}_users_temp', 'code', '`code`', 0);
 # =============================================================================
 
 # _groups: restore PRIMARY KEY lost during column migration on some engines
-# The DROP + ADD must be a single ALTER to satisfy AUTO_INCREMENT constraint
-ALTER TABLE `{prefix}_groups`
-  DROP KEY IF EXISTS `id`,
-  ADD PRIMARY KEY IF NOT EXISTS (`id`);
+# fixgrppk handles all 4 states via information_schema (MySQL 8.0+ & MariaDB 10+ compatible)
+CALL fixgrppk('{prefix}_groups');
+CALL addidx('{prefix}_groups', 'name', '`name`(191)', 0);
+
+# _whois: rename legacy status columns before type normalization
+# Must run here (Batch N) because the MODIFY below references sdomain/shost/sdc
+CALL rencol('{prefix}_whois', 'st_domain', 'sdomain');
+CALL rencol('{prefix}_whois', 'st_host',   'shost');
+CALL rencol('{prefix}_whois', 'st_dc',     'sdc');
+
+# _whois: normalize types from legacy schema to match table.sql
+UPDATE `{prefix}_whois` SET `name`   = '' WHERE `name`   IS NULL;
+UPDATE `{prefix}_whois` SET `ip`     = '' WHERE `ip`     IS NULL;
+UPDATE `{prefix}_whois` SET `domain` = '' WHERE `domain` IS NULL;
+UPDATE `{prefix}_whois` SET `host`   = '' WHERE `host`   IS NULL;
+UPDATE `{prefix}_whois` SET `dc`     = '' WHERE `dc`     IS NULL;
+ALTER TABLE `{prefix}_whois`
+  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `uid`     INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `name`    VARCHAR(25) NOT NULL DEFAULT '',
+  MODIFY `ip`      VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `time`    DATETIME DEFAULT NULL,
+  MODIFY `domain`  VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `host`    VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `dc`      VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `body`    MEDIUMTEXT,
+  MODIFY `sdomain` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `shost`   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `sdc`     TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `status`  TINYINT UNSIGNED NOT NULL DEFAULT 0;
 
 # _users: normalize legacy zero-dates before changing column defaults
 UPDATE `{prefix}_users` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
@@ -721,7 +926,7 @@ UPDATE `{prefix}_users` SET `network` = '' WHERE `network` IS NULL;
 ALTER TABLE `{prefix}_users`
   MODIFY `id`        INT UNSIGNED NOT NULL AUTO_INCREMENT,
   MODIFY `password`  VARCHAR(255) NOT NULL,
-  MODIFY `lastip`    VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `ip`        VARCHAR(45) NOT NULL DEFAULT '',
   MODIFY `regdate`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   MODIFY `lastvis`   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   MODIFY `newslet`   TINYINT(1) NOT NULL DEFAULT 1,
@@ -862,11 +1067,369 @@ CALL rencol('{prefix}_categories', 'auth_mod',    'pmod');
 
 CALL rencol('{prefix}_clients_down', 'infotext',   'body');
 CALL rencol('{prefix}_clients_down', 'prod_id',    'pid');
+CALL addidx('{prefix}_clients_down', 'pid',    '`pid`',    0);
+CALL addidx('{prefix}_clients_down', 'status', '`status`', 0);
 CALL rencol('{prefix}_content',      'text',       'body');
+CALL addidx('{prefix}_content',      'counter', '`counter`',   0);
+CALL addidx('{prefix}_content',      'url',     '`url`(191)',  0);
 CALL rencol('{prefix}_message',      'content',    'body');
 CALL rencol('{prefix}_newsletter',   'content',    'body');
+CALL addidx('{prefix}_newsletter',   'time',    '`time`',      0);
 CALL rencol('{prefix}_privat',       'content',    'body');
 CALL rencol('{prefix}_voting',       'questions',  'body');
+
+# _money: rename legacy columns to the normalized 6.3 schema
+CALL rencol('{prefix}_money', 'mail', 'email');
+CALL rencol('{prefix}_money', 'info', 'intro');
+CALL rencol('{prefix}_money', 'com',  'note');
+CALL rencol('{prefix}_money', 'date', 'time');
+CALL renidx('{prefix}_money', 'date', 'time');
+CALL addidx('{prefix}_money', 'email',  '`email`(191)', 0);
+CALL addidx('{prefix}_money', 'status', '`status`',     0);
+CALL addidx('{prefix}_money', 'time',   '`time`',       0);
+
+# =============================================================================
+# Final type alignment to setup/sql/table.sql
+# =============================================================================
+
+ALTER TABLE `{prefix}_admins`
+  MODIFY `id`       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `name`     VARCHAR(25) NOT NULL,
+  MODIFY `title`    VARCHAR(50) DEFAULT NULL,
+  MODIFY `url`      VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `email`    VARCHAR(255) NOT NULL,
+  MODIFY `password` VARCHAR(255) DEFAULT NULL,
+  MODIFY `super`    BOOLEAN DEFAULT NULL,
+  MODIFY `editor`   BOOLEAN DEFAULT NULL,
+  MODIFY `smail`    BOOLEAN DEFAULT NULL,
+  MODIFY `modules`  VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `lang`     VARCHAR(30) NOT NULL DEFAULT '',
+  MODIFY `ip`       VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `regdate`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  MODIFY `lastvis`  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE `{prefix}_auto_links`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `intro` VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `url` VARCHAR(100) NOT NULL,
+  MODIFY `email` VARCHAR(100) NOT NULL,
+  MODIFY `hits` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `outs` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `added` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE `{prefix}_blocks`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title` VARCHAR(60) NOT NULL,
+  MODIFY `content` TEXT NOT NULL,
+  MODIFY `url` VARCHAR(200) NOT NULL DEFAULT '',
+  MODIFY `bpos` CHAR(1) NOT NULL DEFAULT '',
+  MODIFY `weight` SMALLINT UNSIGNED NOT NULL DEFAULT 1,
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 1,
+  MODIFY `refresh` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `time` VARCHAR(14) NOT NULL DEFAULT '0',
+  MODIFY `lang` VARCHAR(30) NOT NULL DEFAULT '',
+  MODIFY `bfile` VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `view` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `expire` VARCHAR(14) NOT NULL DEFAULT '0',
+  MODIFY `action` CHAR(1) NOT NULL DEFAULT '',
+  MODIFY `which` TEXT NOT NULL;
+
+ALTER TABLE `{prefix}_categories`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `modul` VARCHAR(50) NOT NULL,
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `intro` TEXT NOT NULL,
+  MODIFY `img` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `lang` VARCHAR(30) NOT NULL DEFAULT '',
+  MODIFY `parent` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `ordern` INT UNSIGNED NOT NULL DEFAULT 0;
+
+ALTER TABLE `{prefix}_clients`
+  MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `name` VARCHAR(255) NOT NULL,
+  MODIFY `addr` VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `phone` VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `email` VARCHAR(255) NOT NULL,
+  MODIFY `website` VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `info` VARCHAR(255) NOT NULL DEFAULT '';
+
+UPDATE `{prefix}_clients_down` SET `body` = '' WHERE `body` IS NULL;
+UPDATE `{prefix}_clients_down` SET `url`  = '' WHERE `url`  IS NULL;
+UPDATE `{prefix}_clients_down` SET `num`  = '' WHERE `num`  IS NULL;
+UPDATE `{prefix}_clients_down` SET `code` = '' WHERE `code` IS NULL;
+
+ALTER TABLE `{prefix}_clients_down`
+  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title`  VARCHAR(100) NOT NULL,
+  MODIFY `body`   MEDIUMTEXT NOT NULL,
+  MODIFY `url`    VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `num`    VARCHAR(10) NOT NULL DEFAULT '',
+  MODIFY `code`   VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `hits`   INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `pid`    INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
+
+ALTER TABLE `{prefix}_comment`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `modul` VARCHAR(60) NOT NULL,
+  MODIFY `body` TEXT NOT NULL;
+
+ALTER TABLE `{prefix}_content`
+  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title`   VARCHAR(100) DEFAULT NULL,
+  MODIFY `body`    MEDIUMTEXT NOT NULL,
+  MODIFY `field`   TEXT NOT NULL,
+  MODIFY `url`     VARCHAR(200) NOT NULL,
+  MODIFY `time`    DATETIME DEFAULT NULL,
+  MODIFY `refresh` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `counter` INT UNSIGNED NOT NULL DEFAULT 0;
+
+ALTER TABLE `{prefix}_favorites`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `{prefix}_faq`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `body` TEXT;
+
+ALTER TABLE `{prefix}_files`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `intro` TEXT NOT NULL,
+  MODIFY `body` TEXT NOT NULL,
+  MODIFY `url` VARCHAR(100) NOT NULL;
+
+ALTER TABLE `{prefix}_forum`
+  MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `name` VARCHAR(25) NOT NULL,
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `body` TEXT,
+  MODIFY `field` TEXT NOT NULL;
+
+ALTER TABLE `{prefix}_groups`
+  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `name`   VARCHAR(255) NOT NULL,
+  MODIFY `intro`  TEXT NOT NULL,
+  MODIFY `points` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `extra`  BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `rank`   VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `color`  VARCHAR(7) NOT NULL DEFAULT '';
+
+ALTER TABLE `{prefix}_help`
+  MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `body` TEXT,
+  MODIFY `field` TEXT NOT NULL;
+
+ALTER TABLE `{prefix}_jokes`
+  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `name`    VARCHAR(25) NOT NULL,
+  MODIFY `title`   VARCHAR(100) NOT NULL,
+  MODIFY `body`    TEXT NOT NULL,
+  MODIFY `rating`  VARCHAR(100) NOT NULL DEFAULT '0',
+  MODIFY `ratetot` VARCHAR(100) NOT NULL DEFAULT '0',
+  MODIFY `ip`      VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `status`  BOOLEAN NOT NULL DEFAULT 0;
+
+ALTER TABLE `{prefix}_links`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `intro` TEXT NOT NULL,
+  MODIFY `body` TEXT NOT NULL,
+  MODIFY `url` VARCHAR(100) NOT NULL;
+
+UPDATE `{prefix}_media` SET `name`     = '' WHERE `name`     IS NULL;
+UPDATE `{prefix}_media` SET `title`    = '' WHERE `title`    IS NULL;
+UPDATE `{prefix}_media` SET `subtitle` = '' WHERE `subtitle` IS NULL;
+UPDATE `{prefix}_media` SET `director` = '' WHERE `director` IS NULL;
+UPDATE `{prefix}_media` SET `roles`    = '' WHERE `roles`    IS NULL;
+UPDATE `{prefix}_media` SET `intro`    = '' WHERE `intro`    IS NULL;
+UPDATE `{prefix}_media` SET `author`   = '' WHERE `author`   IS NULL;
+UPDATE `{prefix}_media` SET `duration` = '' WHERE `duration` IS NULL;
+UPDATE `{prefix}_media` SET `lang`     = '' WHERE `lang`     IS NULL;
+UPDATE `{prefix}_media` SET `note`     = '' WHERE `note`     IS NULL;
+UPDATE `{prefix}_media` SET `format`   = '' WHERE `format`   IS NULL;
+UPDATE `{prefix}_media` SET `quality`  = '' WHERE `quality`  IS NULL;
+UPDATE `{prefix}_media` SET `size`     = '' WHERE `size`     IS NULL;
+UPDATE `{prefix}_media` SET `released` = '' WHERE `released` IS NULL;
+UPDATE `{prefix}_media` SET `links`    = '' WHERE `links`    IS NULL;
+UPDATE `{prefix}_media` SET `ip`       = '' WHERE `ip`       IS NULL;
+
+ALTER TABLE `{prefix}_media`
+  MODIFY `id`       INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `cid`      INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `uid`      INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `name`     VARCHAR(25) NOT NULL,
+  MODIFY `title`    VARCHAR(100) NOT NULL,
+  MODIFY `subtitle` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `year`     SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `director` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `roles`    VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `intro`    TEXT NOT NULL,
+  MODIFY `author`   VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `duration` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `lang`     VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `note`     TEXT NOT NULL,
+  MODIFY `format`   VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `quality`  VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `size`     VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `released` VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY `links`    TEXT NOT NULL,
+  MODIFY `time`     DATETIME DEFAULT NULL,
+  MODIFY `ihome`    BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `acomm`    BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `votes`    INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `tvotes`   INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `comments` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `hits`     INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `ip`       VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `status`   BOOLEAN NOT NULL DEFAULT 0;
+
+ALTER TABLE `{prefix}_message`
+  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title`  VARCHAR(100) NOT NULL,
+  MODIFY `body`   TEXT NOT NULL,
+  MODIFY `expire` INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 1,
+  MODIFY `view`   BOOLEAN NOT NULL DEFAULT 1,
+  MODIFY `lang`   VARCHAR(30) NOT NULL DEFAULT '';
+
+UPDATE `{prefix}_money` SET `email` = '' WHERE `email` IS NULL;
+UPDATE `{prefix}_money` SET `intro` = '' WHERE `intro` IS NULL;
+UPDATE `{prefix}_money` SET `note`  = '' WHERE `note`  IS NULL;
+UPDATE `{prefix}_money` SET `ip`    = '' WHERE `ip`    IS NULL;
+UPDATE `{prefix}_money` SET `agent` = '' WHERE `agent` IS NULL;
+
+ALTER TABLE `{prefix}_money`
+  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `sum`    INT UNSIGNED NOT NULL DEFAULT 0,
+  MODIFY `email`  VARCHAR(255) NOT NULL,
+  MODIFY `intro`  TEXT NOT NULL,
+  MODIFY `note`   TEXT NOT NULL,
+  MODIFY `ip`     VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `agent`  VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `time`   DATETIME DEFAULT NULL,
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
+
+ALTER TABLE `{prefix}_news`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `intro` TEXT,
+  MODIFY `body` TEXT NOT NULL,
+  MODIFY `field` TEXT NOT NULL,
+  MODIFY `assoc` TEXT NOT NULL;
+
+ALTER TABLE `{prefix}_newsletter`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title` VARCHAR(50) NOT NULL,
+  MODIFY `body` TEXT,
+  MODIFY `mails` MEDIUMTEXT;
+
+UPDATE `{prefix}_order` SET `ip`    = '' WHERE `ip`    IS NULL;
+UPDATE `{prefix}_order` SET `agent` = '' WHERE `agent` IS NULL;
+
+ALTER TABLE `{prefix}_order`
+  MODIFY `id`     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `email`  VARCHAR(255) NOT NULL,
+  MODIFY `info`   TEXT NOT NULL,
+  MODIFY `note`   TEXT NOT NULL,
+  MODIFY `ip`     VARCHAR(45) NOT NULL DEFAULT '',
+  MODIFY `agent`  VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `time`   DATETIME DEFAULT NULL,
+  MODIFY `status` BOOLEAN NOT NULL DEFAULT 0;
+
+ALTER TABLE `{prefix}_pages`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `intro` TEXT,
+  MODIFY `body` MEDIUMTEXT NOT NULL;
+
+ALTER TABLE `{prefix}_partners`
+  MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `name` VARCHAR(255) NOT NULL,
+  MODIFY `email` VARCHAR(255) NOT NULL;
+
+ALTER TABLE `{prefix}_privat`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `body` TEXT NOT NULL;
+
+ALTER TABLE `{prefix}_products`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `title` VARCHAR(100) NOT NULL,
+  MODIFY `intro` TEXT NOT NULL,
+  MODIFY `body` TEXT NOT NULL,
+  MODIFY `assoc` TEXT NOT NULL;
+
+ALTER TABLE `{prefix}_rating`
+  MODIFY `id`    INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `modul` VARCHAR(50) NOT NULL,
+  MODIFY `time` VARCHAR(14) NOT NULL;
+
+UPDATE `{prefix}_referer` SET `referer` = '' WHERE `referer` IS NULL;
+UPDATE `{prefix}_referer` SET `url`     = '' WHERE `url`     IS NULL;
+
+ALTER TABLE `{prefix}_referer`
+  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `referer` VARCHAR(2048) NOT NULL DEFAULT '',
+  MODIFY `url`     VARCHAR(2048) NOT NULL DEFAULT '';
+
+UPDATE `{prefix}_session` SET `url` = '' WHERE `url` IS NULL;
+
+ALTER TABLE `{prefix}_search`
+  MODIFY `id`  INT UNSIGNED NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `{prefix}_session`
+  MODIFY `id`  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `url` VARCHAR(2048) NOT NULL DEFAULT '';
+
+# NULL-safety before widening _users columns (may be NULL in legacy schema)
+UPDATE `{prefix}_users` SET `email`    = '' WHERE `email`    IS NULL;
+UPDATE `{prefix}_users` SET `website`  = '' WHERE `website`  IS NULL;
+UPDATE `{prefix}_users` SET `avatar`   = '' WHERE `avatar`   IS NULL;
+UPDATE `{prefix}_users` SET `block`    = '' WHERE `block`    IS NULL;
+UPDATE `{prefix}_users` SET `warnings` = '' WHERE `warnings` IS NULL;
+UPDATE `{prefix}_users` SET `field`    = '' WHERE `field`    IS NULL;
+UPDATE `{prefix}_users` SET `interest` = '' WHERE `interest` IS NULL;
+UPDATE `{prefix}_users` SET `theme`    = '' WHERE `theme`    IS NULL;
+UPDATE `{prefix}_users` SET `agent`    = '' WHERE `agent`    IS NULL;
+
+ALTER TABLE `{prefix}_users`
+  MODIFY `name`     VARCHAR(25) NOT NULL,
+  MODIFY `email`    VARCHAR(255) NOT NULL,
+  MODIFY `website`  VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `avatar`   VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `occ`      VARCHAR(100) DEFAULT NULL,
+  MODIFY `origin`   VARCHAR(100) DEFAULT NULL,
+  MODIFY `interest` VARCHAR(150) NOT NULL DEFAULT '',
+  MODIFY `sig`      VARCHAR(255) DEFAULT NULL,
+  MODIFY `viewmail` BOOLEAN DEFAULT NULL,
+  MODIFY `blockon`  BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `block`    TEXT NOT NULL,
+  MODIFY `theme`    VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `lang`     VARCHAR(255) NOT NULL DEFAULT 'russian',
+  MODIFY `access`   BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `birthday` DATE DEFAULT NULL,
+  MODIFY `gender`   BOOLEAN NOT NULL DEFAULT 0,
+  MODIFY `warnings` TEXT NOT NULL,
+  MODIFY `field`    TEXT NOT NULL,
+  MODIFY `agent`    VARCHAR(255) NOT NULL DEFAULT '',
+  MODIFY `points`   INT UNSIGNED DEFAULT 0;
+
+UPDATE `{prefix}_users_temp` SET `regdate` = '1970-01-01 00:00:01' WHERE `regdate` = '0000-00-00 00:00:00';
+
+ALTER TABLE `{prefix}_users_temp`
+  MODIFY `id`      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `name`    VARCHAR(25) NOT NULL,
+  MODIFY `email`   VARCHAR(255) NOT NULL,
+  MODIFY `password` VARCHAR(255) NOT NULL,
+  MODIFY `regdate` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  MODIFY `code`    VARCHAR(50) NOT NULL,
+  MODIFY `time`    VARCHAR(14) NOT NULL;
+
+ALTER TABLE `{prefix}_voting`
+  MODIFY `id`   INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  MODIFY `body` TEXT NOT NULL,
+  MODIFY `answer` TEXT NOT NULL;
 
 # =============================================================================
 # Cleanup
@@ -876,334 +1439,20 @@ DROP PROCEDURE IF EXISTS rencol;
 DROP PROCEDURE IF EXISTS renidx;
 DROP PROCEDURE IF EXISTS delidx;
 DROP PROCEDURE IF EXISTS addidx;
-DROP PROCEDURE IF EXISTS copymoney;
-
-# =============================================================================
-# Batch U — final schema reconciliation to setup/sql/table.sql
-# =============================================================================
-# Notes:
-# - current code expects unique sport_users.name
-# - if duplicates exist, the first row by lowest id keeps its original name
-# - each later duplicate is renamed deterministically to LEFT(name, 25 - 1 - CHAR_LENGTH(id)) + '_' + id
-
-DROP PROCEDURE IF EXISTS delidx;
-DROP PROCEDURE IF EXISTS ensure_unique_idx;
-DROP PROCEDURE IF EXISTS finalize_user_names;
-
-DELIMITER $$
-
-CREATE PROCEDURE delidx(IN ptab VARCHAR(128), IN pidx VARCHAR(128))
-BEGIN
-    DECLARE ctab INT DEFAULT 0;
-    DECLARE cidx INT DEFAULT 0;
-
-    SELECT COUNT(*)
-      INTO ctab
-      FROM information_schema.tables
-     WHERE table_schema = DATABASE()
-       AND table_name = ptab;
-
-    IF ctab > 0 THEN
-        SELECT COUNT(DISTINCT index_name)
-          INTO cidx
-          FROM information_schema.statistics
-         WHERE table_schema = DATABASE()
-           AND table_name = ptab
-           AND index_name = pidx;
-
-        IF cidx > 0 THEN
-            SET @sql = CONCAT(
-                'ALTER TABLE `', ptab, '` ',
-                'DROP INDEX `', pidx, '`'
-            );
-            PREPARE stmt FROM @sql;
-            EXECUTE stmt;
-            DEALLOCATE PREPARE stmt;
-        END IF;
-    END IF;
-END$$
-
-CREATE PROCEDURE ensure_unique_idx(IN ptab VARCHAR(128), IN pidx VARCHAR(128), IN pexp TEXT)
-BEGIN
-    DECLARE ctab INT DEFAULT 0;
-    DECLARE cidx INT DEFAULT 0;
-    DECLARE cuni INT DEFAULT 1;
-
-    SELECT COUNT(*)
-      INTO ctab
-      FROM information_schema.tables
-     WHERE table_schema = DATABASE()
-       AND table_name = ptab;
-
-    IF ctab > 0 THEN
-        SELECT COUNT(DISTINCT index_name), COALESCE(MIN(non_unique), 1)
-          INTO cidx, cuni
-          FROM information_schema.statistics
-         WHERE table_schema = DATABASE()
-           AND table_name = ptab
-           AND index_name = pidx;
-
-        IF cidx = 0 THEN
-            SET @sql = CONCAT(
-                'ALTER TABLE `', ptab, '` ',
-                'ADD UNIQUE KEY `', pidx, '` (', pexp, ')'
-            );
-            PREPARE stmt FROM @sql;
-            EXECUTE stmt;
-            DEALLOCATE PREPARE stmt;
-        ELSEIF cuni <> 0 THEN
-            SET @sql = CONCAT(
-                'ALTER TABLE `', ptab, '` ',
-                'DROP INDEX `', pidx, '`, ',
-                'ADD UNIQUE KEY `', pidx, '` (', pexp, ')'
-            );
-            PREPARE stmt FROM @sql;
-            EXECUTE stmt;
-            DEALLOCATE PREPARE stmt;
-        END IF;
-    END IF;
-END$$
-
-CREATE PROCEDURE finalize_user_names(IN ptab VARCHAR(128))
-BEGIN
-    DECLARE ctab INT DEFAULT 0;
-    DECLARE ccol_id INT DEFAULT 0;
-    DECLARE ccol_name INT DEFAULT 0;
-    DECLARE cconflict INT DEFAULT 0;
-
-    SELECT COUNT(*)
-      INTO ctab
-      FROM information_schema.tables
-     WHERE table_schema = DATABASE()
-       AND table_name = ptab;
-
-    IF ctab > 0 THEN
-        SELECT COUNT(*) INTO ccol_id
-          FROM information_schema.columns
-         WHERE table_schema = DATABASE()
-           AND table_name = ptab
-           AND column_name = 'id';
-
-        SELECT COUNT(*) INTO ccol_name
-          FROM information_schema.columns
-         WHERE table_schema = DATABASE()
-           AND table_name = ptab
-           AND column_name = 'name';
-
-        IF ccol_id > 0 AND ccol_name > 0 THEN
-            DROP TEMPORARY TABLE IF EXISTS tmp_user_name_fix;
-
-            CREATE TEMPORARY TABLE tmp_user_name_fix (
-                id INT UNSIGNED NOT NULL PRIMARY KEY,
-                old_name VARCHAR(25) NOT NULL,
-                new_name VARCHAR(25) NOT NULL
-            ) ENGINE=MEMORY;
-
-            SET @sql = CONCAT(
-                'INSERT INTO tmp_user_name_fix (`id`, `old_name`, `new_name`) ',
-                'SELECT src.`id`, src.`name`, ',
-                'CONCAT(LEFT(src.`name`, GREATEST(1, 25 - 1 - CHAR_LENGTH(src.`id`))), ''_'', src.`id`) ',
-                'FROM (',
-                '  SELECT `id`, `name`, ROW_NUMBER() OVER (PARTITION BY `name` ORDER BY `id`) AS rn ',
-                '  FROM `', ptab, '`',
-                ') src WHERE src.rn > 1'
-            );
-            PREPARE stmt FROM @sql;
-            EXECUTE stmt;
-            DEALLOCATE PREPARE stmt;
-
-            SELECT COUNT(*)
-              INTO cconflict
-              FROM (
-                    SELECT new_name
-                      FROM tmp_user_name_fix
-                     GROUP BY new_name
-                    HAVING COUNT(*) > 1
-                   ) dupnames;
-
-            IF cconflict > 0 THEN
-                SIGNAL SQLSTATE '45000'
-                    SET MESSAGE_TEXT = 'Duplicate username auto-rename produced conflicting new_name values';
-            END IF;
-
-            SET @cnt = 0;
-            SET @sql = CONCAT(
-                'SELECT COUNT(*) INTO @cnt ',
-                'FROM tmp_user_name_fix f ',
-                'JOIN `', ptab, '` u ON u.`name` = f.`new_name` AND u.`id` <> f.`id`'
-            );
-            PREPARE stmt FROM @sql;
-            EXECUTE stmt;
-            DEALLOCATE PREPARE stmt;
-            SET cconflict = COALESCE(@cnt, 0);
-
-            IF cconflict > 0 THEN
-                SIGNAL SQLSTATE '45000'
-                    SET MESSAGE_TEXT = 'Duplicate username auto-rename collides with existing usernames';
-            END IF;
-
-            SET @sql = CONCAT(
-                'UPDATE `', ptab, '` u ',
-                'JOIN tmp_user_name_fix f ON f.`id` = u.`id` ',
-                'SET u.`name` = f.`new_name`'
-            );
-            PREPARE stmt FROM @sql;
-            EXECUTE stmt;
-            DEALLOCATE PREPARE stmt;
-
-            DROP TEMPORARY TABLE IF EXISTS tmp_user_name_fix;
-        END IF;
-    END IF;
-END$$
-
-DELIMITER ;
-
-CALL finalize_user_names('{prefix}_users');
-CALL ensure_unique_idx('{prefix}_users', 'name', '`name`');
-CALL delidx('{prefix}_pages', 'counter');
-
-ALTER TABLE `{prefix}_users`
-  MODIFY `access` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `gender` BOOLEAN NOT NULL DEFAULT 0,
-  MODIFY `block` TEXT NOT NULL,
-  MODIFY `warnings` TEXT NOT NULL,
-  MODIFY `field` TEXT NOT NULL,
-  MODIFY `email` VARCHAR(255) NOT NULL,
-  MODIFY `points` INT UNSIGNED DEFAULT 0;
-
-ALTER TABLE `{prefix}_admins`
-  MODIFY `name`     VARCHAR(25) NOT NULL,
-  MODIFY `title`    VARCHAR(50) DEFAULT NULL,
-  MODIFY `email`    VARCHAR(255) NOT NULL,
-  MODIFY `password` VARCHAR(255) DEFAULT NULL;
-
-ALTER TABLE `{prefix}_blocks`
-  MODIFY `title`   VARCHAR(60) NOT NULL,
-  MODIFY `content` TEXT NOT NULL,
-  MODIFY `which`   TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_categories`
-  MODIFY `modul` VARCHAR(50) NOT NULL,
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_clients`
-  MODIFY `name`  VARCHAR(255) NOT NULL,
-  MODIFY `email` VARCHAR(255) NOT NULL;
-
-ALTER TABLE `{prefix}_comment`
-  MODIFY `modul` VARCHAR(60) NOT NULL,
-  MODIFY `body`  TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_content`
-  MODIFY `body`  MEDIUMTEXT NOT NULL,
-  MODIFY `field` TEXT NOT NULL,
-  MODIFY `url`   VARCHAR(200) NOT NULL;
-
-ALTER TABLE `{prefix}_faq`
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body`  TEXT;
-
-ALTER TABLE `{prefix}_files`
-  MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body`  TEXT NOT NULL,
-  MODIFY `url`   VARCHAR(100) NOT NULL;
-
-ALTER TABLE `{prefix}_forum`
-  MODIFY `name`  VARCHAR(25) NOT NULL,
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body`  TEXT,
-  MODIFY `field` TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_groups`
-  MODIFY `name`  VARCHAR(255) NOT NULL,
-  MODIFY `intro` TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_help`
-  MODIFY `body`  TEXT,
-  MODIFY `field` TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_links`
-  MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body`  TEXT NOT NULL,
-  MODIFY `url`   VARCHAR(100) NOT NULL;
-
-ALTER TABLE `{prefix}_message`
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body`  TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_news`
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` TEXT,
-  MODIFY `body`  TEXT NOT NULL,
-  MODIFY `field` TEXT NOT NULL,
-  MODIFY `assoc` TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_newsletter`
-  MODIFY `title` VARCHAR(50) NOT NULL,
-  MODIFY `body`  TEXT,
-  MODIFY `mails` MEDIUMTEXT;
-
-ALTER TABLE `{prefix}_order`
-  MODIFY `info` TEXT NOT NULL,
-  MODIFY `note` TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_pages`
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` TEXT,
-  MODIFY `body`  MEDIUMTEXT NOT NULL;
-
-ALTER TABLE `{prefix}_partners`
-  MODIFY `name`  VARCHAR(255) NOT NULL,
-  MODIFY `email` VARCHAR(255) NOT NULL;
-
-ALTER TABLE `{prefix}_privat`
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `body`  TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_products`
-  MODIFY `title` VARCHAR(100) NOT NULL,
-  MODIFY `intro` TEXT NOT NULL,
-  MODIFY `body`  TEXT NOT NULL,
-  MODIFY `assoc` TEXT NOT NULL;
-
-ALTER TABLE `{prefix}_rating`
-  MODIFY `modul` VARCHAR(50) NOT NULL,
-  MODIFY `time`  VARCHAR(14) NOT NULL;
-
-ALTER TABLE `{prefix}_users_temp`
-  MODIFY `name`  VARCHAR(25) NOT NULL,
-  MODIFY `email` VARCHAR(255) NOT NULL,
-  MODIFY `code`  VARCHAR(50) NOT NULL,
-  MODIFY `time`  VARCHAR(14) NOT NULL;
-
-ALTER TABLE `{prefix}_voting`
-  MODIFY `body`   TEXT NOT NULL,
-  MODIFY `answer` TEXT NOT NULL;
-
-UPDATE `{prefix}_whois` SET `ip` = '' WHERE `ip` IS NULL;
-ALTER TABLE `{prefix}_whois`
-  MODIFY `id`        INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  MODIFY `uid`       INT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `ip`        VARCHAR(45) NOT NULL DEFAULT '',
-  MODIFY `sdomain`   TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `shost`     TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `sdc`       TINYINT UNSIGNED NOT NULL DEFAULT 0,
-  MODIFY `status`    TINYINT UNSIGNED NOT NULL DEFAULT 0;
-
-DROP PROCEDURE IF EXISTS delidx;
-DROP PROCEDURE IF EXISTS ensure_unique_idx;
+DROP PROCEDURE IF EXISTS mkuseruniq;
+DROP PROCEDURE IF EXISTS fixgrppk;
 DROP PROCEDURE IF EXISTS finalize_user_names;
 
 # =============================================================================
 # Manual follow-up after this script
 # =============================================================================
 #
-# 1. Legacy side tables remain intentionally untouched:
-#    - `{prefix}_money`
-#    - `{prefix}_clients_down`
-#    - `{prefix}_modules`
+# 1. Legacy side tables handled by this script:
+#    - `{prefix}_money`        — columns renamed, types aligned, indexes added
+#    - `{prefix}_clients_down` — columns renamed, types aligned, indexes added
+#    - `{prefix}_modules` is outside this migration
 #
-# 2. If duplicate usernames existed before upgrade, this script may rename
-#    later duplicates deterministically to `<oldname>_<id>` before adding
-#    UNIQUE KEY `name`.
+# 2. Password hashing migration (PHP side — already done in current codebase):
+#    - passwords are now stored as bcrypt via getPassHash() / password_hash()
+#    - existing md5_salt hashes are upgraded transparently on next user login
+#    - no bulk SQL re-hash needed

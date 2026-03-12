@@ -103,12 +103,49 @@ function getCrypt(string $pass): string {
     return $crypt;
 }
 
+function getSqlStatements(string $content): array {
+    $lines = preg_split("/\\r\\n|\\n|\\r/", $content);
+    $delimiter = ';';
+    $buffer = '';
+    $queries = [];
+
+    foreach ($lines as $line) {
+        $trim = trim($line);
+        if (preg_match('/^DELIMITER\\s+(.+)$/i', $trim, $match)) {
+            if (trim($buffer) !== '') {
+                $queries[] = trim($buffer);
+                $buffer = '';
+            }
+            $delimiter = $match[1];
+            continue;
+        }
+
+        $buffer .= $line.PHP_EOL;
+
+        if ($trim !== '' && str_ends_with($trim, $delimiter)) {
+            $query = substr(rtrim($buffer), 0, -strlen($delimiter));
+            $query = trim($query);
+            if ($query !== '') {
+                $queries[] = $query;
+            }
+            $buffer = '';
+        }
+    }
+
+    $tail = trim($buffer);
+    if ($tail !== '') {
+        $queries[] = $tail;
+    }
+
+    return $queries;
+}
+
 function getSqlFile(string $file, string $prefix, string $engine, string $charset, string $collate, $db): string {
     $file = BASE_DIR.'/'.$file;
     if (!file_exists($file)) return '';
 
     $content = file_get_contents($file);
-    $queries = explode(';', $content);
+    $queries = getSqlStatements($content);
     $output = '';
 
     foreach ($queries as $query) {

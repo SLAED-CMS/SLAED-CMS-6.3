@@ -85,7 +85,7 @@ function getMemoryInfoWindows(): array {
     $cachekey = 'slaed_monitor_memory_windows_v1';
     if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
         $ok = false;
-        $cached = call_user_func('apcu_fetch', $cachekey, $ok);
+        $cached = apcu_fetch($cachekey, $ok);
         if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
             $reqcache = $cached['data'];
             return $reqcache;
@@ -106,7 +106,7 @@ function getMemoryInfoWindows(): array {
     }
     if ($total > 0 && $free > 0) {
         $reqcache = [$total, $free];
-        if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) call_user_func('apcu_store', $cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
+        if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) apcu_store($cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
         return $reqcache;
     }
     $outtot = [];
@@ -128,7 +128,7 @@ function getMemoryInfoWindows(): array {
         }
     }
     $reqcache = [$total, $free];
-    if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) call_user_func('apcu_store', $cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
+    if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) apcu_store($cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
     return $reqcache;
 }
 
@@ -540,7 +540,7 @@ function getCpuDetails(): array {
     $cachekey = 'slaed_monitor_cpu_details_v1';
     if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
         $ok = false;
-        $cached = call_user_func('apcu_fetch', $cachekey, $ok);
+        $cached = apcu_fetch($cachekey, $ok);
         if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
             $reqcache = $cached['data'];
             return $reqcache;
@@ -549,7 +549,7 @@ function getCpuDetails(): array {
     $fresh = getCpuDetailsRaw();
     $reqcache = $fresh;
     if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        call_user_func('apcu_store', $cachekey, ['ts' => time(), 'data' => $fresh], $ttl);
+        apcu_store($cachekey, ['ts' => time(), 'data' => $fresh], $ttl);
     }
     return $fresh;
 }
@@ -877,7 +877,7 @@ function getMonitorPanelSnapshot(): array {
     $cachekey = 'slaed_monitor_panel_snapshot_v1';
     if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
         $ok = false;
-        $cached = call_user_func('apcu_fetch', $cachekey, $ok);
+        $cached = apcu_fetch($cachekey, $ok);
         if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
             $reqcache = $cached['data'];
             return $reqcache;
@@ -921,7 +921,7 @@ function getMonitorPanelSnapshot(): array {
         'path_ram_line' => $ramline,
     ];
     if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        call_user_func('apcu_store', $cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
+        apcu_store($cachekey, ['ts' => time(), 'data' => $reqcache], $ttl);
     }
     return $reqcache;
 }
@@ -1074,7 +1074,7 @@ function getMonitorRuntimeExtras(): array {
     $cachekey = 'slaed_monitor_runtime_extras_v1';
     if (is_callable('apcu_fetch') && is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
         $ok = false;
-        $cached = call_user_func('apcu_fetch', $cachekey, $ok);
+        $cached = apcu_fetch($cachekey, $ok);
         if ($ok && is_array($cached) && isset($cached['data'], $cached['ts']) && (time() - (int)$cached['ts']) <= $ttl) {
             $reqcache = $cached['data'];
             return $reqcache;
@@ -1091,7 +1091,7 @@ function getMonitorRuntimeExtras(): array {
     ];
     $reqcache = $fresh;
     if (is_callable('apcu_store') && (bool)ini_get('apc.enabled')) {
-        call_user_func('apcu_store', $cachekey, ['ts' => time(), 'data' => $fresh], $ttl);
+        apcu_store($cachekey, ['ts' => time(), 'data' => $fresh], $ttl);
     }
     return $fresh;
 }

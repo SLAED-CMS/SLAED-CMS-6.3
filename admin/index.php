@@ -142,7 +142,7 @@ function add_admin() {
                 $auser_avatar = 'default/00.gif';
                 $user_exist = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB."_users WHERE name = '".$aname."'"));
                 if ($user_exist) $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_users WHERE name='".$aname."'");
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_users (id, name, email, website, avatar, regdate, password, lang, lastip, block, warnings, field) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."', '', '', '')");
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB."_users (id, name, email, website, avatar, regdate, password, lang, ip, block, warnings, field) VALUES (NULL, '".$aname."', '".$aemail."', '".$aurl."', '".$auser_avatar."', now(), '".$apwd."', '".$alang."', '".$aip."', '', '', '')");
             }
             header('Location: '.$afile.'.php');
         } else {

@@ -281,7 +281,7 @@ function getSearchShop(array $state): array {
     global $db, $afile;
     $rows = [];
     $pars = ['worda' => '%'.$state['word'].'%', 'wordb' => '%'.$state['word'].'%', 'wordc' => '%'.$state['word'].'%', 'lim' => $state['lim']];
-    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, c.id, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE time <= NOW() AND status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY time DESC LIMIT :lim', $pars);
+    $result = $db->getSqlQuery('SELECT p.id, p.time, p.title, c.id, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE p.time <= NOW() AND p.status = \'1\' AND (p.title LIKE :worda OR p.intro LIKE :wordb OR p.body LIKE :wordc) ORDER BY p.time DESC LIMIT :lim', $pars);
     while ([$mid, $time, $titl, $cid, $ctit, $cdes] = $db->getSqlRow($result)) {
         $url = 'index.php?name=shop&amp;op=view&amp;id='.$mid.'&amp;word='.urlencode($state['word']);
         $titl = '<a href="'.$url.'" title="'.htmlspecialchars($titl, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($titl, $state['word']).'</a> '.new_graphic($time);

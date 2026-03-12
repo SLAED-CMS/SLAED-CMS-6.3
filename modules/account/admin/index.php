@@ -47,8 +47,8 @@ function account(): void {
         $order = 'ORDER BY u.email ASC';
         $params['search'] = '%'.$chng.'%';
     } elseif ($search == 4 && $chng) {
-        $where = 'lastip LIKE :search';
-        $order = 'ORDER BY u.lastip ASC';
+        $where = 'u.ip LIKE :search';
+        $order = 'ORDER BY u.ip ASC';
         $params['search'] = '%'.$chng.'%';
     } elseif ($search == 5 && $chng) {
         $where = 'website LIKE :search';
@@ -69,7 +69,7 @@ function account(): void {
     $pars = $params;
     $params['offset'] = $offset;
     $params['limit'] = $conf['users']['anum'];
-    $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.lastip, u.gender, u.agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
+    $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
     $res = $db->getSqlQuery($sql,$params);
     if ($db->getSqlRowCount($res) > 0) {
         $cont .= setTemplateBasic('open');

@@ -92,7 +92,7 @@ function add(): void {
         }
     }
     if (is_active('money')) {
-        $result7 = $db->getSqlQuery('SELECT mail FROM '.PREFIX_DB.'_money WHERE status = 1');
+        $result7 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_money WHERE status = 1');
         if ($db->getSqlRowCount($result7) > 0) {
             $aemail = [];
             while ([$user_email] = $db->getSqlRow($result7)) $aemail[] = $user_email;

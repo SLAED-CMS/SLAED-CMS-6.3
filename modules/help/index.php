@@ -274,7 +274,7 @@ function send(): void {
         if (!$hometext && !$pid) $stop[] = _CERROR1;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {
             $postid = intval($user[0]);
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (id, pid, cid, uid, aid, title, time, body, field, ip, status) VALUES (NULL, :pid, :cid, :postid, :postid, :title, NOW(), :body, :field, :ip, \'0\')', ['pid' => $pid, 'cid' => $cid, 'postid' => $postid, 'title' => $title, 'body' => $hometext, 'field' => $field, 'ip' => getIp()]);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_help (id, pid, cid, uid, aid, title, time, body, field, ip, status) VALUES (NULL, :pid, :cid, :uid, :aid, :title, NOW(), :body, :field, :ip, \'0\')', ['pid' => $pid, 'cid' => $cid, 'uid' => $postid, 'aid' => $postid, 'title' => $title, 'body' => $hometext, 'field' => $field, 'ip' => getIp()]);
             if ($pid) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_help SET comments = comments+1, status = :status WHERE id = :pid', ['status' => $status, 'pid' => $pid]);
             $puname = (is_user()) ? $user[1] : '';
             addAdminMail($conf['help']['addmail'], $conf['name'], $puname, _HELP);

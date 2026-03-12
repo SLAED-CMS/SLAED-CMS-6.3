@@ -1326,7 +1326,7 @@ function setHead(array $seo = []): void {
             if (!defined('ADMIN_FILE') && is_user()) {
                 $uagent = getAgent();
                 $uid= intval($user[0]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
             }
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session WHERE uname = :uname', ['uname' => $uname]));
             if ($num >= 1) {
@@ -3473,6 +3473,9 @@ function show_files(): void {
     $num = ($cid) ? $cid : '1';
     $uname = (is_user()) ? intval($user[0]) : 0;
     $path = 'uploads/'.$dir.'/';
+    $files = [];
+    $contents = [];
+    $a = 0;
     if (is_moder($dir) && $file && $dir) {
         if (!$cid) {
             unlink($path.$file);
@@ -3486,7 +3489,6 @@ function show_files(): void {
     }
     closedir($dh);
     if ($files) {
-        $a = 0;
         rsort($files);
         foreach ($files as $entry) {
             preg_match("#([a-zA-Z0-9]+)\-([a-zA-Z0-9]+)\-([0-9]+)\.([a-zA-Z0-9]+)#", $entry[1], $date);
@@ -3512,12 +3514,12 @@ function show_files(): void {
             if ($eallf && $a == $eallf) break;
         }
     }
-    $numpages = ceil($a / $connum);
+    $numpages = ($a > 0) ? ceil($a / $connum) : 0;
     $offset = ($num - 1) * $connum;
     $tnum = ($offset) ? $connum + $offset : $connum;
     $cont = '';
     for ($i = $offset; $i < $tnum; $i++) {
-        if ($contents[$i] != '') $cont .= $contents[$i];
+        if (!empty($contents[$i])) $cont .= $contents[$i];
     }
     $contnum = ($a > $connum) ? num_ajax('pagenum', $a, $numpages, $connum, 8, $num, '0', 1, 'show_files', 'f'.$id, $id, '', $dir) : '';
     $content = ($cont) ? '<table class="sl_table_ajax"><thead class="sl_table_ajax_head"><tr><th>'.cutstr(_IMG, 4, 1).'</th><th>'._FILE.'</th><th>'._SIZE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_ajax_body">'.$cont.'</tbody></table>'.$contnum : '';
@@ -3910,8 +3912,8 @@ function is_user(string $usr = ''): int {
                     return 1;
                 }
             } else {
-                list($pass, $last_ip) = $db->getSqlRow($db->getSqlQuery('SELECT password, lastip FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
-                if ($pass == $pwd && $pass != '' && $last_ip == $ip && $last_ip != '') {
+                list($pass, $userip) = $db->getSqlRow($db->getSqlQuery('SELECT password, ip FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
+                if ($pass == $pwd && $pass != '' && $userip == $ip && $userip != '') {
                     $usertrue = 1;
                     return 1;
                 }

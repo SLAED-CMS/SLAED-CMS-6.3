@@ -195,13 +195,13 @@ function network(): void {
             if ($db->getSqlRowCount($result) == 1) {
                 setCookies('account', time() + intval($conf['user_c_t']), [$uid, $nick, $pass, $story, $blockon, $theme]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastip = :lastip, lastvis = NOW(), agent = :agent WHERE id = :id', ['lastip' => $uip, 'agent' => $uagent, 'id' => $uid]);
+                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => $uagent, 'id' => $uid]);
                 login_report(0, 1, $nick, '');
                 setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
             } else {
                 $uemail = isset($ulog['email']) ? mb_strtolower($ulog['email']) : '';
                 $upass = getPassHash(getPass(32));
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, lastip, agent, network, block, warnings, field) VALUES (NULL, :name, :email, :avatar, NOW(), :password, :lastip, :agent, :network, :block, :warnings, :field)', ['name' => $uname, 'email' => $uemail, 'avatar' => 'default/00.gif', 'password' => $upass, 'lastip' => $uip, 'agent' => $uagent, 'network' => $network, 'block' => '', 'warnings' => '', 'field' => '']);
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, email, avatar, regdate, password, ip, agent, network, block, warnings, field) VALUES (NULL, :name, :email, :avatar, NOW(), :password, :ip, :agent, :network, :block, :warnings, :field)', ['name' => $uname, 'email' => $uemail, 'avatar' => 'default/00.gif', 'password' => $upass, 'ip' => $uip, 'agent' => $uagent, 'network' => $network, 'block' => '', 'warnings' => '', 'field' => '']);
                 [$uid, $nick, $pass, $story, $blockon, $theme] = $db->getSqlRow($db->getSqlQuery('SELECT id, name, password, storynum, blockon, theme FROM '.PREFIX_DB.'_users WHERE network = :network', ['network' => $network]));
                 setCookies('account', time() + intval($conf['user_c_t']), [$uid, $nick, $pass, $story, $blockon, $theme]);
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
@@ -244,7 +244,7 @@ function activate(): void {
             $uip = getIp();
             $uagent = getAgent();
             $rank = '';
-            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, lastip, agent, network, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => 'default/00.gif', 'regdate' => $reg, 'pwd' => md5_salt($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, network, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => 'default/00.gif', 'regdate' => $reg, 'pwd' => md5_salt($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
             echo setTemplateBasic('title', ['{%title%}' => _ACTIVATIONYES]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ACTMSG]);
@@ -269,7 +269,7 @@ function view(): void {
             $where = 'u.id = :uid';
             $params['uid'] = getVar('get', 'id', 'num');
         }
-        $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.lastip, u.warnings, u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where, $params);
+        $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.occ, u.origin, u.interest, u.sig, u.viewmail, u.lastvis, u.lang, u.points, u.ip, u.warnings, u.birthday, u.gender, u.votes, u.tvotes, u.field, u.agent, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where, $params);
         if ($db->getSqlRowCount($result) > 0) {
             [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $last, $lang, $point, $ip, $warn, $birth, $gender, $votes, $total, $field, $agent, $gname, $grank, $gcolor] = $db->getSqlRow($result);
             $seotitle  = $nick;
@@ -673,7 +673,7 @@ function login(): void {
         $uip = getIp();
         $uagent = getAgent();
         $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = :guest', ['uname' => $uip, 'guest' => 0]);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET lastip = :lastip, lastvis = NOW(), agent = :agent WHERE id = :id', ['lastip' => $uip, 'agent' => $uagent, 'id' => $uid]);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :id', ['ip' => $uip, 'agent' => $uagent, 'id' => $uid]);
         login_report(0, 1, $uname, '');
         setRedirect('index.php?name='.$conf['name'].'&op=profil', true);
     } else {
@@ -709,7 +709,7 @@ function edithome(): void {
         $userinfo['theme'] = (!$userinfo['theme']) ? $conf['theme'] : $userinfo['theme'];
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]) : '';
         $change = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
-        .'<tr><td>'._IP.':</td><td>'.$userinfo['lastip'].'</td></tr>'
+        .'<tr><td>'._IP.':</td><td>'.$userinfo['ip'].'</td></tr>'
         .'<tr><td>'._REG.':</td><td>'.format_time($userinfo['regdate']).'</td></tr>';
         if ($conf['users']['point']) $change .= '<tr><td>'._POINTS.':</td><td>'.$userinfo['points'].'</td></tr>';
         $change .= '<tr><td>'._YOURNAME.':</td><td>'.$userinfo['name'].'</td></tr>'
@@ -830,8 +830,8 @@ function savehome(): void {
             $gender = getVar('post', 'gender', 'num');
             $field = getVar('post', 'field', 'field');
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET email = :email, website = :website, viewmail = :viewmail, occ = :occ, origin = :origin, interest = :interest, sig = :sig, storynum = :storynum, blockon = :blockon, block = :block, theme = :theme, newslet = :newslet, fsmail = :fsmail, psmail = :psmail, birthday = :birthday, gender = :gender, field = :field WHERE id = :id', ['email' => $mail, 'website' => $site, 'viewmail' => $view, 'occ' => $occ, 'origin' => $from, 'interest' => $inter, 'sig' => $sig, 'storynum' => $story, 'blockon' => $blockon, 'block' => $block, 'theme' => $theme, 'newslet' => $news, 'fsmail' => $fsmail, 'psmail' => $psmail, 'birthday' => $birth, 'gender' => $gender, 'field' => $field, 'id' => $uid]);
-            $userinfo = getUserInfo();
-            setCookies('account', time() + intval($conf['user_c_t']), [$userinfo['id'], $userinfo['name'], $userinfo['password'], $userinfo['storynum'], $userinfo['blockon'], $userinfo['theme']]);
+            $theme = $theme ?: ($conf['theme'] ?? '');
+            setCookies('account', time() + intval($conf['user_c_t']), [$uid, $name, $pass, $story, $blockon, $theme]);
             setRedirect('index.php?name='.$conf['name'].'&op=edithome');
         }
     } else {
