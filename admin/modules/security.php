@@ -285,6 +285,7 @@ function conf(): void {
     .'<tr><td>'._SEC_WARN_STAT.'</td><td>'.radio_form($conf['security']['write_w'], 'write_w').'</td></tr>'
     .'<tr><td>'._SEC_LOG.'</td><td>'.radio_form($conf['security']['log'], 'log').'</td></tr>'
     .'<tr><td>'._SEC_LOG_D.'</td><td>'.radio_form($conf['security']['log_d'], 'log_d').'</td></tr>'
+    .'<tr><td>'._SEC_DUMP_SKIP.':<div class="sl_small">'._SEC_DUMP_SKIP_INFO.'</div></td><td><textarea name="dump_skip" cols="65" rows="8" class="sl_conf" placeholder="'._SEC_DUMP_SKIP_INFO.'">'.htmlspecialchars((string)($conf['security']['dump_skip'] ?? ''), ENT_QUOTES, 'UTF-8').'</textarea></td></tr>'
     .'<tr><td>'._SEC_LOG_A.'</td><td>'.radio_form($conf['security']['log_a'], 'log_a').'</td></tr>'
     .'<tr><td>'._SEC_LOG_U.'</td><td>'.radio_form($conf['security']['log_u'], 'log_u').'</td></tr>'
     .'<tr><td>'._SEC_WARN_BLOCK.'</td><td>'.radio_form($conf['security']['block'], 'block').'</td></tr>'
@@ -304,6 +305,20 @@ function confsave(): void {
     $log_size = getVar('post', 'log_size', 'num', '1048576');
     $sess_d = getVar('post', 'sess_d', 'num', 1440) * 60;
     $sess_b = getVar('post', 'sess_b', 'num', 1440) * 60;
+    $rawskip = str_replace(["\r\n", "\r"], "\n", (string)getVar('post', 'dump_skip', 'raw', ''));
+    $lines = explode("\n", $rawskip);
+    $dskip = [];
+    foreach ($lines as $line) {
+        $line = trim(str_replace('\\', '/', (string)$line));
+        $line = preg_replace('#/+#', '/', $line);
+        $line = preg_replace('#^\./#', '', (string)$line);
+        $line = trim((string)$line, " \t\n\r\0\x0B");
+        if ($line === '' || $line === '.' || $line === './') continue;
+        if (str_contains($line, '..')) continue;
+        if (!str_ends_with($line, '/')) $line .= '/';
+        $dskip[] = $line;
+    }
+    $dskip = array_values(array_unique($dskip));
     $cont = [
         'flood' => getVar('post', 'flood', 'num'),
         'error' => getVar('post', 'error', 'num'),
@@ -326,6 +341,7 @@ function confsave(): void {
         'write_w' => getVar('post', 'write_w', 'num'),
         'log' => getVar('post', 'log', 'num'),
         'log_d' => getVar('post', 'log_d', 'num'),
+        'dump_skip' => implode("\n", $dskip),
         'log_a' => getVar('post', 'log_a', 'num'),
         'log_u' => getVar('post', 'log_u', 'num'),
         'block' => getVar('post', 'block', 'num')

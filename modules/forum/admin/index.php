@@ -15,21 +15,21 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
 function forum(): void {
     global $db;
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost = \'0\' WHERE modul = \'forum\'');
-    $result = $db->getSqlQuery('SELECT id, parent FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
-    $massiv = [];
-    while ([$id, $parentid] = $db->getSqlRow($result)) {
-        $massiv[$id] = [$parentid];
+    $query = $db->getSqlQuery('SELECT id, parent FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
+    $cats = [];
+    while ([$id, $parent] = $db->getSqlRow($query)) {
+        $cats[$id] = [$parent];
     }
-    foreach ($massiv as $key => $val) {
-        [$topics] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid = \'0\' AND cid = :key', ['key' => $key]));
-        [$posts] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid != \'0\' AND cid = :key', ['key' => $key]));
-        [$id, $pid] = $db->getSqlRow($db->getSqlQuery('SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE cid = :key AND ((pid != \'0\' AND status = \'1\') OR (pid = \'0\' AND status > \'1\')) ORDER BY id DESC LIMIT 1', ['key' => $key]));
+    foreach ($cats as $catid => $row) {
+        [$topics] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid = \'0\' AND cid = :catid', ['catid' => $catid]));
+        [$posts] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_forum WHERE pid != \'0\' AND cid = :catid', ['catid' => $catid]));
+        [$id, $pid] = $db->getSqlRow($db->getSqlQuery('SELECT id, pid FROM '.PREFIX_DB.'_forum WHERE cid = :catid AND ((pid != \'0\' AND status = \'1\') OR (pid = \'0\' AND status > \'1\')) ORDER BY id DESC LIMIT 1', ['catid' => $catid]));
         $lid = ($pid) ? $pid : ($id ?? 0);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost = :lid WHERE id = :key AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'key' => $key]);
-        $flag = $val[0];
-        while ($flag != 0) {
-            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+:topics, posts = posts+:posts, lpost = :lid WHERE id = :flag AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'flag' => $flag]);
-            $flag = (int)($massiv[$flag][0] ?? 0);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = :topics, posts = :posts, lpost = :lid WHERE id = :catid AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'catid' => $catid]);
+        $upcat = $row[0];
+        while ($upcat != 0) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+:topics, posts = posts+:posts, lpost = :lid WHERE id = :upcat AND modul = \'forum\'', ['topics' => $topics, 'posts' => $posts, 'lid' => $lid, 'upcat' => $upcat]);
+            $upcat = (int)($cats[$upcat][0] ?? 0);
         }
     }
     setHead();
@@ -37,11 +37,11 @@ function forum(): void {
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHIN]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._FORUM.'</th><th>'._NEWTOPICS.'</th><th>'._MESSAGES.'</th><th class="{sorter: false}">'._STATUS.'</th></tr></thead><tbody>';
-    $result = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
-    while ([$id, $title, $description, $cstatus, $topics, $posts] = $db->getSqlRow($result)) {
-        $descript = ($description) ? $description : _NO;
-        $ltitle = title_tip(_DESCRIPTION.': '.$descript).'<a href="index.php?name=forum&amp;cat='.$id.'" target="_blank" title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</a>';
-        $cont .= '<tr><td>'.$id.'</td><td>'.$ltitle.'</td><td>'.$topics.'</td><td>'.$posts.'</td><td>'.ad_status('', $cstatus).'</td></tr>';
+    $query = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
+    while ([$id, $title, $intro, $state, $topics, $posts] = $db->getSqlRow($query)) {
+        $detail = ($intro) ? $intro : _NO;
+        $link = title_tip(_DESCRIPTION.': '.$detail).'<a href="index.php?name=forum&amp;cat='.$id.'" target="_blank" title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</a>';
+        $cont .= '<tr><td>'.$id.'</td><td>'.$link.'</td><td>'.$topics.'</td><td>'.$posts.'</td><td>'.ad_status('', $state).'</td></tr>';
     }
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
@@ -51,7 +51,7 @@ function forum(): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = navi(0, 1, 0, 0);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
@@ -129,5 +129,3 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
-

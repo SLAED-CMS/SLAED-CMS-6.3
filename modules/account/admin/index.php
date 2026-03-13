@@ -32,34 +32,42 @@ function account(): void {
     $cont = navi(0, 0, 0, 0);
     if (getVar('get','send','num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $where = '1 = 1';
+    $wcnt = '1 = 1';
     $order = 'ORDER BY u.id DESC';
     $params = [];
     if ($search == 1 && $chng) {
-        $where = 'id LIKE :search';
+        $where = 'u.id LIKE :search';
+        $wcnt = 'id LIKE :search';
         $order = 'ORDER BY u.id ASC';
         $params['search'] = '%'.$chng.'%';
     } elseif ($search == 2 && $chng) {
-        $where = 'name LIKE :search';
+        $where = 'u.name LIKE :search';
+        $wcnt = 'name LIKE :search';
         $order = 'ORDER BY u.name ASC';
         $params['search'] = '%'.$chng.'%';
     } elseif ($search == 3 && $chng) {
-        $where = 'email LIKE :search';
+        $where = 'u.email LIKE :search';
+        $wcnt = 'email LIKE :search';
         $order = 'ORDER BY u.email ASC';
         $params['search'] = '%'.$chng.'%';
     } elseif ($search == 4 && $chng) {
         $where = 'u.ip LIKE :search';
+        $wcnt = 'ip LIKE :search';
         $order = 'ORDER BY u.ip ASC';
         $params['search'] = '%'.$chng.'%';
     } elseif ($search == 5 && $chng) {
-        $where = 'website LIKE :search';
+        $where = 'u.website LIKE :search';
+        $wcnt = 'website LIKE :search';
         $order = 'ORDER BY u.website ASC';
         $params['search'] = '%'.$chng.'%';
     } elseif ($search == 6 && $chng) {
-        $where = 'grp = :grp';
+        $where = 'u.grp = :grp';
+        $wcnt = 'grp = :grp';
         $order = 'ORDER BY u.id ASC';
         $params['grp'] = $chng;
     } elseif ($search == 7 && $chng) {
-        $where = 'points >= :pts';
+        $where = 'u.points >= :pts';
+        $wcnt = 'points >= :pts';
         $order = 'ORDER BY u.id ASC';
         $params['pts'] = $chng;
     }
@@ -83,7 +91,7 @@ function account(): void {
         $cont .= '</tbody></table>';
         $lsear = $search ? '&amp;search='.$search : '';
         $lchg = $chng ? '&amp;chng='.$chng : '';
-        $cont .= setArticleNumbers('pagenum', '', $conf['users']['anum'], 'name=account'.$lsear.$lchg.'&amp;', 'id', '_users', '', $where, $conf['users']['anump'], $pars);
+        $cont .= setArticleNumbers('pagenum', '', $conf['users']['anum'], 'name=account'.$lsear.$lchg.'&amp;', 'id', '_users', '', $wcnt, $conf['users']['anump'], $pars);
         $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _USERNOEXIST]);
@@ -94,39 +102,57 @@ function account(): void {
 
 function add(): void {
     global $db, $afile, $conf, $stop;
-        $id = getVar('req', 'id', 'num');
-    if (is_numeric($id)) {
+    $id = getVar('req', 'id', 'num');
+    if ($id > 0) {
         $result = $db->getSqlQuery('SELECT id, name, rank, email, website, avatar, regdate, occ, origin, interest, sig, viewmail, password, storynum, blockon, block, theme, newslet, lang, points, warnings, access, grp, birthday, gender, field FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
         [$uid, $uname, $rank, $email, $site, $avatar, $reg, $occ, $from, $inter, $sig, $view, $pass, $story, $blockon, $block, $theme, $news, $lang, $point, $warn, $access, $group, $birth, $gender, $field] = $db->getSqlRow($result);
         $warn = ($warn) ? explode('|', $warn) : [];
     } else {
-        $uid = getVar('post', 'uid', 'num');
-        $uname = getVar('post', 'uname', 'name');
-        $rank = getVar('post', 'rank');
-        $email = getVar('post', 'email');
+        $uid = getVar('post', 'uid', 'num', 0);
+        $uname = getVar('post', 'uname', 'name', '');
+        $rank = getVar('post', 'rank', 'text', '');
+        $email = getVar('post', 'email', 'text', '');
         $site = getVar('post', 'site', 'url', 'http://');
-        $avatar = getVar('post', 'avatar');
-        $reg = getVar('post', 'reg');
-        $occ = getVar('post', 'occ');
-        $from = getVar('post', 'from');
-        $inter = getVar('post', 'inter');
-        $sig = getVar('post', 'sig', 'text');
-        $view = getVar('post', 'view', 'num');
-        $pass = getVar('post', 'pass');
-        $story = getVar('post', 'story', 'num');
-        $blockon = getVar('post', 'blockon', 'num');
-        $block = getVar('post', 'block', 'text');
-        $theme = getVar('post', 'theme');
-        $news = getVar('post', 'news', 'num');
-        $lang = getVar('post', 'lang');
-        $point = getVar('post', 'point');
-        $warn = getVar('post', 'warn');
-        $access = getVar('post', 'access', 'num');
-        $group = getVar('post', 'group');
-        $birth = getVar('post', 'birth');
-        $gender = getVar('post', 'gender');
-        $field = getVar('post', 'field', 'field');
+        $avatar = getVar('post', 'avatar', 'text', '');
+        $reg = getVar('post', 'reg', 'time', date('Y-m-d H:i:s'));
+        $occ = getVar('post', 'occ', 'text', '');
+        $from = getVar('post', 'from', 'text', '');
+        $inter = getVar('post', 'inter', 'text', '');
+        $sig = getVar('post', 'sig', 'text', '');
+        $view = getVar('post', 'view', 'num', 0);
+        $pass = getVar('post', 'pass', 'text', '');
+        $story = getVar('post', 'story', 'num', (int)($conf['news']['num'] ?? 10));
+        $blockon = getVar('post', 'blockon', 'num', 0);
+        $block = getVar('post', 'block', 'text', '');
+        $theme = getVar('post', 'theme', 'text', '');
+        $news = getVar('post', 'news', 'num', 0);
+        $lang = getVar('post', 'lang', 'text', '');
+        $point = getVar('post', 'point', 'text', '0');
+        $warn = getVar('post', 'warn', '', []);
+        $access = getVar('post', 'access', 'num', 0);
+        $group = getVar('post', 'group', 'num', 0);
+        $birth = getVar('post', 'birth', 'time', '');
+        $gender = getVar('post', 'gender', 'num', 0);
+        $field = getVar('post', 'field', 'field', '');
     }
+    $uname = (string)$uname;
+    $rank = (string)$rank;
+    $email = (string)$email;
+    $site = (string)$site;
+    $avatar = (string)$avatar;
+    $reg = (string)$reg;
+    $occ = (string)$occ;
+    $from = (string)$from;
+    $inter = (string)$inter;
+    $sig = (string)$sig;
+    $pass = (string)$pass;
+    $block = (string)$block;
+    $theme = (string)$theme;
+    $lang = (string)$lang;
+    $point = (string)$point;
+    $birth = (string)$birth;
+    $field = (string)$field;
+    $warn = is_array($warn) ? $warn : [];
     setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);

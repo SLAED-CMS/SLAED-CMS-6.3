@@ -137,6 +137,25 @@ function getMemoryInfoLinux(): array {
     $total = 0;
     $free = 0;
     $data = getFileSafe('/proc/meminfo');
+    if (($data === false || $data === '') && function_exists('exec')) {
+        $out = [];
+        exec('cat /proc/meminfo 2>/dev/null', $out);
+        if (!empty($out)) $data = implode("\n", $out);
+    }
+    if (($data === false || $data === '') && function_exists('exec')) {
+        $out = [];
+        exec('LC_ALL=C free -b 2>/dev/null', $out);
+        if (!empty($out)) {
+            foreach ($out as $line) {
+                $line = trim((string)$line);
+                if (!preg_match('/^Mem:\s+(\d+)\s+\d+\s+\d+\s+\d+\s+\d+\s+(\d+)/', $line, $mx)) continue;
+                $total = (int)$mx[1];
+                $free = (int)$mx[2];
+                break;
+            }
+        }
+    }
+    if ($total > 0) return [$total, max($free, 0)];
     if (!$data) return [$total, $free];
     $mem = [];
     foreach (explode("\n", $data) as $line) {
@@ -183,9 +202,26 @@ function getCpuCores(): int {
         }
     } else {
         $info = getFileSafe('/proc/cpuinfo');
+        if (($info === false || $info === '') && function_exists('exec')) {
+            $out = [];
+            exec('cat /proc/cpuinfo 2>/dev/null', $out);
+            if (!empty($out)) $info = implode("\n", $out);
+        }
         if ($info !== false) {
             preg_match_all('/^processor\s*:/m', $info, $matches);
             if (!empty($matches[0])) $cores = count($matches[0]);
+        }
+        if ($cores <= 0 && function_exists('exec')) {
+            $out = [];
+            exec('nproc 2>/dev/null', $out);
+            $val = trim((string)($out[0] ?? ''));
+            if (is_numeric($val)) $cores = (int)$val;
+        }
+        if ($cores <= 0 && function_exists('exec')) {
+            $out = [];
+            exec('getconf _NPROCESSORS_ONLN 2>/dev/null', $out);
+            $val = trim((string)($out[0] ?? ''));
+            if (is_numeric($val)) $cores = (int)$val;
         }
     }
     return ($cores > 0) ? $cores : 1;
@@ -223,6 +259,11 @@ function getNetworkStatsLinux(): array {
     $tx = 0.0;
     $parsed = false;
     $data = getFileSafe('/proc/net/dev');
+    if (($data === false || $data === '') && function_exists('exec')) {
+        $out = [];
+        exec('cat /proc/net/dev 2>/dev/null', $out);
+        if (!empty($out)) $data = implode("\n", $out);
+    }
     if ($data !== false && $data !== '') [$rx, $tx, $parsed] = getNetDevStats($data);
     if (!$parsed && isPathAllowed('/sys/class/net')) {
         $rxfiles = glob('/sys/class/net/*/statistics/rx_bytes') ?: [];
@@ -265,6 +306,17 @@ function getNetDevStats(string $data): array {
 
 # Returns the absolute metrics storage file path used for persisting monitor history snapshots
 function getMetricStorePath(): string {
+    $dirs = [];
+    if (defined('LOGS_DIR')) $dirs[] = (string)LOGS_DIR;
+    if (defined('CACHE_DIR')) $dirs[] = (string)CACHE_DIR;
+    $tmp = sys_get_temp_dir();
+    if (is_string($tmp) && $tmp !== '') $dirs[] = rtrim($tmp, '/\\');
+    foreach ($dirs as $dir) {
+        if ($dir === '') continue;
+        if (is_dir($dir) && is_writable($dir)) return $dir.'/monitor_metrics.json';
+        $base = dirname($dir);
+        if (!is_dir($dir) && $base !== '' && is_dir($base) && is_writable($base)) return $dir.'/monitor_metrics.json';
+    }
     return LOGS_DIR.'/monitor_metrics.json';
 }
 
@@ -281,7 +333,9 @@ function getMetricStore(): array {
 # Writes monitor metrics to JSON storage when logs directory is writable and available
 function setMetricStore(array $data): void {
     $file = getMetricStorePath();
-    if (!is_dir(LOGS_DIR) || !is_writable(LOGS_DIR)) return;
+    $dir = dirname($file);
+    if (!is_dir($dir) && !mkdir($dir, 0777, true) && !is_dir($dir)) return;
+    if (!is_writable($dir)) return;
     file_put_contents($file, json_encode($data, JSON_UNESCAPED_UNICODE), LOCK_EX);
 }
 
@@ -507,6 +561,13 @@ function getCpuDetailsRaw(): array {
         }
     } else {
         $cpuinfo = getFileSafe('/proc/cpuinfo');
+        $corespersocket = 0;
+        $sockets = 0;
+        if (($cpuinfo === false || $cpuinfo === '') && function_exists('exec')) {
+            $out = [];
+            exec('cat /proc/cpuinfo 2>/dev/null', $out);
+            if (!empty($out)) $cpuinfo = implode("\n", $out);
+        }
         if ($cpuinfo !== false) {
             preg_match_all('/^physical id\s*:\s*(\d+)/m', $cpuinfo, $physids);
             preg_match_all('/^core id\s*:\s*(\d+)/m', $cpuinfo, $coreids);
@@ -523,6 +584,24 @@ function getCpuDetailsRaw(): array {
             }
             preg_match('/^cpu MHz\s*:\s*([0-9.]+)/m', $cpuinfo, $mhz);
             if (!empty($mhz[1])) $freq = round(((float)$mhz[1]) / 1000, 2).' GHz';
+        }
+        if (($physical <= 0 || $freq === 'N/A') && function_exists('exec')) {
+            $out = [];
+            exec('LC_ALL=C lscpu 2>/dev/null', $out);
+            if (!empty($out)) {
+                foreach ($out as $line) {
+                    if ($physical <= 0 && preg_match('/^Core\\(s\\) per socket:\\s*(\\d+)/i', $line, $mx)) {
+                        $corespersocket = (int)$mx[1];
+                    }
+                    if ($physical <= 0 && preg_match('/^Socket\\(s\\):\\s*(\\d+)/i', $line, $mx)) {
+                        $sockets = (int)$mx[1];
+                    }
+                    if ($freq === 'N/A' && preg_match('/^(CPU max MHz|CPU MHz):\\s*([0-9.]+)/i', $line, $mx)) {
+                        $freq = round(((float)$mx[2]) / 1000, 2).' GHz';
+                    }
+                }
+                if ($physical <= 0 && !empty($corespersocket) && !empty($sockets)) $physical = $corespersocket * $sockets;
+            }
         }
     }
     return [
@@ -1052,11 +1131,29 @@ function getMonitorServerStats(): array {
     $https = strtolower(getServerValue('HTTPS', ''));
     $ishttps = ($https === 'on' || $https === '1') || ((int)$srvport === 443);
     $srvhttps = $ishttps ? '<span style="color:#21c45d">enabled</span>' : '<span style="color:#ef4444">disabled</span>';
+    $loaded = get_loaded_extensions();
+    $ext_dir = ini_get('extension_dir');
+    $off = [];
+    if ($ext_dir && is_dir($ext_dir)) {
+        $files = array_merge(glob($ext_dir.'/*.so') ?: [], glob($ext_dir.'/*.dll') ?: []);
+        $loaded_lower = array_map('strtolower', $loaded);
+        foreach ($files as $f) {
+            $name = strtolower(str_replace(['php_', '.dll', '.so'], '', basename($f)));
+            if ($name !== '' && !in_array($name, $loaded_lower, true)) {
+                $off[] = $name;
+            }
+        }
+    }
+    
+    $extlist_on = getTooltipText(implode(', ', $loaded), 25);
+    $extlist_off = !empty($off) ? getTooltipText(implode(', ', $off), 25) : 'None / N/A';
+
     return [
         'servsw' => $servsw,
         'servname' => $servname,
         'servver' => $servver,
-        'extlist' => getTooltipText(implode(', ', get_loaded_extensions()), 25),
+        'extlist_on' => $extlist_on,
+        'extlist_off' => $extlist_off,
         'srvprot' => getServerValue('SERVER_PROTOCOL', 'N/A'),
         'srvname' => getServerValue('SERVER_NAME', 'N/A'),
         'srvport' => $srvport,
@@ -1206,7 +1303,8 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             '{%phpsapi%}'   => htmlspecialchars(php_sapi_name(), ENT_QUOTES, 'UTF-8'),
             '{%zend_eng%}'  => htmlspecialchars((string)(function_exists('zend_version') ? zend_version() : 'N/A'), ENT_QUOTES, 'UTF-8'),
             '{%php_char%}'  => htmlspecialchars((string)(ini_get('default_charset') ?: 'N/A'), ENT_QUOTES, 'UTF-8'),
-            '{%php_exts%}'  => $ctx['extlist'],
+            '{%extlist_on%}'=> $ctx['extlist_on'],
+            '{%extlist_off%}'=> $ctx['extlist_off'],
             '{%gdver%}'     => htmlspecialchars((string)$ctx['gdver'], ENT_QUOTES, 'UTF-8'),
             '{%opcache_on%}'=> $status($ctx['opcacheon']),
             '{%opcache_mem%}'=> htmlspecialchars((string)$ctx['opmem'], ENT_QUOTES, 'UTF-8'),

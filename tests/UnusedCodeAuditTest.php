@@ -363,9 +363,6 @@ final class UnusedCodeAuditTest extends TestCase
             $path = $f->getPathname();
             $rel = str_replace(self::$base_path.DIRECTORY_SEPARATOR, '', $path);
             $normalized = str_replace('\\', '/', $rel);
-            if ($normalized === 'modules/clients/pclzip.lib.php') {
-                continue; // Third-party library, excluded from local-unused heuristics.
-            }
             $parts = preg_split('#[/\\\\]+#', $rel);
             if (array_intersect($excluded_top_dirs, $parts)) {
                 continue;

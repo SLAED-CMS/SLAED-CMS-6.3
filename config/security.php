@@ -1,41 +1,45 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright (c) 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 return [
     'security' => [
-        'admin_ip'       => '',
-        'afile'          => 'admin',
-        'block'          => '1',
+        'admin_ip' => '',
+        'afile' => 'admin',
+        'block' => '1',
         'blocker_cookie' => 'banned',
-        'blocker_ip'     => '',
-        'blocker_user'   => '',
-        'error'          => '2',
-        'error_db'       => '1',
-        'error_java'     => '0',
-        'error_log'      => '1',
-        'flood'          => '0',
-        'flood_t'        => '1',
-        'log'            => '0',
-        'log_a'          => '1',
-        'log_b'          => '0',
-        'log_d'          => '1',
-        'log_size'       => '1048576',
-        'log_u'          => '0',
-        'login'          => '',
-        'mail'           => '1',
-        'mail_d'         => '1',
-        'mail_w'         => '0',
-        'max_vars'       => '4000',
-        'password'       => '',
-        'ref_post'       => '1',
-        'sess_b'         => '86400',
-        'sess_d'         => '86400',
-        'url_get'        => '1',
-        'url_post'       => '0',
-        'write_h'        => '1',
-        'write_w'        => '0',
+        'blocker_ip' => '',
+        'blocker_user' => '',
+        'dump_skip' => '.git/
+vendor/
+storage/logs/
+config/cache/
+.agents/
+.claude/',
+        'error' => '2',
+        'error_java' => '0',
+        'error_log' => '1',
+        'flood' => '0',
+        'flood_t' => '1',
+        'log' => '0',
+        'log_a' => '1',
+        'log_b' => '0',
+        'log_d' => '1',
+        'log_size' => '10485760',
+        'log_u' => '0',
+        'login' => '',
+        'mail' => '1',
+        'mail_d' => '1',
+        'mail_w' => '0',
+        'password' => '',
+        'ref_post' => '1',
+        'sess_b' => '86400',
+        'sess_d' => '86400',
+        'url_get' => '1',
+        'url_post' => '0',
+        'write_h' => '1',
+        'write_w' => '0',
     ],
 ];

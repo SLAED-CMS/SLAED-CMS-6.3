@@ -286,10 +286,11 @@ function save(): void {
         $xadmin_c = 'admin-'.$xadmin_c;
     }
 
-    $module = getVar('post', 'module', 'var');
+    $module = getVar('post', 'module[]', 'var');
+    $module = is_array($module) ? array_values(array_filter(array_map('strval', $module), static fn(string $val): bool => $val !== '')) : [];
     $xmodule = $module ? implode(',', $module) : '0';
 
-    $variables = getVar('post', 'variables', 'var');
+    $variables = getVar('post', 'variables[]', 'var');
     $variables = $variables ? array_map('strval', (array)$variables) : [];
     $xvariables = [];
     for ($i = 0; $i < 9; $i++) $xvariables[] = in_array((string)$i, $variables, true) ? '1' : '0';

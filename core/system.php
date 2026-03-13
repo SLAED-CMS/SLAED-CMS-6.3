@@ -500,6 +500,7 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                 $ext  = strtolower((string)substr((string)strrchr($fn, '.'), 1));
                 $file = 'uploads/'.$mod.'/'.$fn;
                 $timg = $file;
+                if ($tl === '' || strtolower($tl) === 'title') $tl = $fn;
 
                 if (in_array($ext, $img, true)) {
                     $tfile = 'uploads/'.$mod.'/thumb/'.$fn;
@@ -511,7 +512,12 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                     } else {
                         $timg = $tfile;
                     }
-                    if (file_exists($file)) [$wd, $hg] = getimagesize($file);
+                    if (file_exists($file)) {
+                        [$wd, $hg] = getimagesize($file);
+                    } else {
+                        $file = img_find('misc/no-image.png');
+                        $timg = $file;
+                    }
                 }
 
                 $tmp = $conf['filetype'][$ext] ?? '<a href="[src]" target="_blank" title="[title]">[title]</a>';
@@ -756,7 +762,6 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
         // Inlines: Markdown + BB
 
         private function filterInlines(string $src, bool $safe): string {
-
             // BB inline
 
             // ed2k links - must come BEFORE generic [url] patterns
@@ -877,8 +882,12 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                     $url  = trim($this->filterDec($m[1]));
                     if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
                     $src2 = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    $alt  = $this->filterEsc($url);
-                    return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img">');
+                    $path = parse_url($url, PHP_URL_PATH);
+                    $path = is_string($path) && $path !== '' ? $path : $url;
+                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
+                    $alt  = $file;
+                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                    return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
                 },
                 $src
             ) ?? $src;
@@ -891,8 +900,12 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                     $url   = trim($this->filterDec($m[2]));
                     if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
                     $src2  = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    $alt   = $this->filterEsc($url);
-                    return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img">');
+                    $path = parse_url($url, PHP_URL_PATH);
+                    $path = is_string($path) && $path !== '' ? $path : $url;
+                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
+                    $alt   = $file;
+                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                    return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
                 },
                 $src
             ) ?? $src;
@@ -900,11 +913,16 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
             $src = preg_replace_callback(
                 '/\[img\s+alt=([\pL0-9_\-\.\"\s]+)\](.*?)\[\/img\]/siu',
                 function(array $m) use ($safe): string {
-                    $alt  = $this->filterEsc(trim($this->filterDec($m[1])));
+                    $alt  = trim($this->filterDec($m[1]));
                     $url  = trim($this->filterDec($m[2]));
                     if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
                     $src2 = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img">');
+                    $path = parse_url($url, PHP_URL_PATH);
+                    $path = is_string($path) && $path !== '' ? $path : $url;
+                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
+                    $alt  = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
+                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                    return $this->addStash('<img src="'.$src2.'" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
                 },
                 $src
             ) ?? $src;
@@ -914,11 +932,16 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                 function(array $m) use ($safe): string {
                     $align = strtolower(trim($m[1]));
                     if (!in_array($align, ['left', 'right'], true)) $align = 'left';
-                    $alt   = $this->filterEsc(trim($this->filterDec($m[2])));
+                    $alt   = trim($this->filterDec($m[2]));
                     $url   = trim($this->filterDec($m[3]));
                     if (preg_match('/^www\./i', $url)) $url = 'https://'.$url;
                     $src2  = $this->filterEsc($safe ? $this->filterUrl($url) : $url);
-                    return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img">');
+                    $path = parse_url($url, PHP_URL_PATH);
+                    $path = is_string($path) && $path !== '' ? $path : $url;
+                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
+                    $alt   = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
+                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                    return $this->addStash('<img src="'.$src2.'" style="float:'.$align.';" alt="'.$alt.'" title="'.$alt.'" class="sl_img"'.$err.'>');
                 },
                 $src
             ) ?? $src;
@@ -926,18 +949,25 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
             // Markdown inline
 
             $src = preg_replace_callback(
-                '/!\[([^\]]*)\]\(([^\s)]+)(?:\s+"([^"]*)")?\)/',
+                '/!\[([^\]]*)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
                 function($m) use ($safe) {
-                    $url = $this->filterEsc($safe ? $this->filterUrl($this->filterDec($m[2])) : $this->filterDec($m[2]));
-                    $alt = $this->filterEsc($this->filterDec($m[1]));
-                    $ttl = isset($m[3]) ? ' title="'.$this->filterEsc($this->filterDec($m[3])).'"' : '';
-                    return $this->addStash('<img src="'.$url.'" alt="'.$alt.'"'.$ttl.'>');
+                    $raw = $this->filterDec($m[2]);
+                    $url = $this->filterEsc($safe ? $this->filterUrl($raw) : $raw);
+                    $path = parse_url($raw, PHP_URL_PATH);
+                    $path = is_string($path) && $path !== '' ? $path : $raw;
+                    $file = $this->filterEsc(basename(rawurldecode($path)) ?: 'image');
+                    $alt = trim($this->filterDec($m[1]));
+                    $alt = ($alt === '' || strtolower($alt) === 'title' || strtolower($alt) === 'alt') ? $file : $this->filterEsc($alt);
+                    $ttl = isset($m[3]) ? trim($this->filterDec($m[3])) : '';
+                    $ttl = ($ttl === '' || strtolower($ttl) === 'title' || strtolower($ttl) === 'alt') ? ' title="'.$file.'"' : ' title="'.$this->filterEsc($ttl).'"';
+                    $err  = ' onerror="this.onerror=null;this.src=\''.img_find('misc/no-image.png').'\';this.alt=\''.$file.'\';this.title=\''.$file.'\'"';
+                    return $this->addStash('<img src="'.$url.'" alt="'.$alt.'"'.$ttl.$err.'>');
                 },
                 $src
             ) ?? $src;
 
             $src = preg_replace_callback(
-                '/\[([^\]]+)\]\(([^\s)]+)(?:\s+"([^"]*)")?\)/',
+                '/\[([^\]]+)\]\(([^\s)]+)(?:\s+(?:"|&quot;)(.*?)(?:"|&quot;))?\)/',
                 function($m) use ($safe) {
                     $href = $this->filterEsc($safe ? $this->filterUrl($this->filterDec($m[2])) : $this->filterDec($m[2]));
                     $ttl  = isset($m[3]) ? ' title="'.$this->filterEsc($this->filterDec($m[3])).'"' : '';
@@ -1580,10 +1610,18 @@ function setHead(array $seo = []): void {
     $head = str_replace(['{%META%}', '{%LINK%}', '{%SCRIPT%}'], [$strmeta, $strlink, $script], addblocks($head));
     $cron = 0;
     if ($conf['security']['log_d']) {
-        $sess_f = 'config/counter/dump.txt';
-        $sess_d = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
+        $sess_f = LOGS_DIR.'/dump.json';
+        $sess_d = 0;
+        $state = [];
+        if (file_exists($sess_f) && filesize($sess_f) != 0) {
+            $json = file_get_contents($sess_f);
+            $state = $json ? json_decode($json, true) : [];
+            if (!is_array($state)) $state = [];
+            $sess_d = (int)($state['last_run'] ?? 0);
+        }
+        $lockok = !empty($state['running']) && !empty($state['started_at']) && ($ctime - (int)$state['started_at']) < max(600, min((int)$conf['security']['sess_d'], 3600));
         $past = $ctime - intval($conf['security']['sess_d']);
-        if ($sess_d < $past) {
+        if ($sess_d < $past && !$lockok) {
             $head = preg_replace('#<body(.*?)>#si', "<body OnLoad=\"AjaxLoad('GET', '0', 'filereport', 'go=3&amp;op=filereport', ''); return false;\"$1>", $head);
             $cron = 1;
         } else {
@@ -2117,6 +2155,7 @@ function setArticleNumbers(string $name, string $mod, int $limit, string $url, s
     }
     $sql = 'SELECT COUNT('.$cntfld.') FROM '.PREFIX_DB.$tbl.$where;
     list($cnt) = $db->getSqlRow($db->getSqlQuery($sql,$params));
+    $cnt = (int)$cnt;
     $pages = $cnt > 0 ? (int)ceil($cnt / $limit) : 1;
     return setPageNumbers($name, $mod, $cnt, $pages, $limit, $url, $maxpg);
 }
@@ -4046,14 +4085,25 @@ function check_user(): ?bool {
 }
 
 # Log files report
-function create_dump(string $dir, array &$log): void {
+function create_dump(string $dir, array &$log, array $skip = []): void {
     if (is_dir($dir)) {
         if ($dh = opendir($dir)) {
             while (($file = readdir($dh)) !== false) {
                 if ($file == '.' || $file == '..') continue;
                 $location = $dir.$file;
+                $relative = ltrim(str_replace('\\', '/', $location), './');
+                $ignore = false;
+                foreach ($skip as $path) {
+                    $path = trim(str_replace('\\', '/', (string)$path), '/');
+                    if ($path === '') continue;
+                    if ($relative === $path || str_starts_with($relative, $path.'/')) {
+                        $ignore = true;
+                        break;
+                    }
+                }
+                if ($ignore) continue;
                 if (filetype($location) == 'dir') {
-                    create_dump($location.'/', $log);
+                    create_dump($location.'/', $log, $skip);
                 } else {
                     if (is_readable($location)) $log[$location] = md5_file($location);
                 }
@@ -4078,32 +4128,49 @@ function write_dump(array $dump, string $file): bool {
 function write_log(mixed $log, string $file): bool {
     global $conf;
     if ($fp = fopen($file, 'ab')) {
-        if (filesize($file) > $conf['security']['log_size']) {
-            addCompress(LOGS_DIR, $file, 'dump_log_'.date('Y-m-d_H-i').'.log', 'auto', true);
-        }
         $log = ($log) ? implode("\n", $log) : _NO;
         flock($fp, 2);
         fwrite($fp, $log."\n"._DATE.': '.date(_TIMESTRING)."\n---\n");
         flock($fp, 3);
         fclose($fp);
+        if (file_exists($file) && filesize($file) > $conf['security']['log_size']) {
+            addCompress(LOGS_DIR, $file, 'dump_log_'.date('Y-m-d_H-i').'.log', 'auto', true);
+        }
     }
     return ($fp) ? true : false;
 }
 
-function diff_dump(array $dump, array $old): array|false {
+function diff_dump(array $dump, array $old, array $skip = []): array|false {
     $log = [];
+    $skip = array_map(static fn($path): string => trim(str_replace('\\', '/', (string)$path), '/'), $skip);
     foreach ($old as $string) {
         list($location, $md5) = explode('||', trim($string));
+        $relative = ltrim(str_replace('\\', '/', $location), './');
+        $ignore = false;
+        foreach ($skip as $path) {
+            if ($path === '') continue;
+            if ($relative === $path || str_starts_with($relative, $path.'/')) {
+                $ignore = true;
+                break;
+            }
+        }
+        if ($ignore) continue;
         $new[$location] = $md5;
     }
     foreach ($new as $location => $md5) {
         if (!isset($dump[$location])) $log[] = _D_DEL.': '.$location;
     }
-    $filedump = 'storage/logs/dump.log';
-    $filelog = 'storage/logs/dump_log.log';
     foreach ($dump as $location => $md5) {
         $relative = ltrim(str_replace('\\', '/', $location), './');
-        if ($relative === $filedump || $relative === $filelog) continue;
+        $ignore = false;
+        foreach ($skip as $path) {
+            if ($path === '') continue;
+            if ($relative === $path || str_starts_with($relative, $path.'/')) {
+                $ignore = true;
+                break;
+            }
+        }
+        if ($ignore) continue;
         if (!isset($new[$location])) {
             $log[] = _D_NEW.': '.$location;
         } elseif ($new[$location] != $dump[$location]) {
@@ -4116,29 +4183,58 @@ function diff_dump(array $dump, array $old): array|false {
 function filereport(): void {
  global $conf;
     if ($conf['security']['log_d']) {
-        $sess_f = 'config/counter/dump.txt';
-        $sess_d = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
+        $sess_f = LOGS_DIR.'/dump.json';
+        $sess_d = 0;
+        $state = [];
+        if (file_exists($sess_f) && filesize($sess_f) != 0) {
+            $json = file_get_contents($sess_f);
+            $state = $json ? json_decode($json, true) : [];
+            if (!is_array($state)) $state = [];
+            $sess_d = (int)($state['last_run'] ?? 0);
+        }
+        $now = time();
+        $lockok = !empty($state['running']) && !empty($state['started_at']) && ($now - (int)$state['started_at']) < max(600, min((int)$conf['security']['sess_d'], 3600));
         $past = time() - intval($conf['security']['sess_d']);
-        if ($sess_d < $past) {
-            unlink($sess_f);
-            $fp = fopen($sess_f, 'wb');
-            fwrite($fp, time());
-            fclose($fp);
-
+        if ($sess_d < $past && !$lockok) {
+            $state['running'] = 1;
+            $state['started_at'] = $now;
+            if (!isset($state['last_run'])) $state['last_run'] = $sess_d;
+            file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
             $safe = ini_get('safe_mode') == '1' ? 1 : 0;
             if (!$safe && function_exists('set_time_limit')) set_time_limit(600);
 
             $dump = [];
-            create_dump('./', $dump);
+            $skip = [
+                ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', LOGS_DIR.'/dump.log')), '/'),
+                ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', LOGS_DIR.'/dump_log.log')), '/')
+            ];
+            $rawskip = str_replace(["\r\n", "\r"], "\n", (string)($conf['security']['dump_skip'] ?? ''));
+            foreach (explode("\n", $rawskip) as $line) {
+                $line = trim(str_replace('\\', '/', (string)$line));
+                $line = preg_replace('#/+#', '/', $line);
+                $line = preg_replace('#^\./#', '', (string)$line);
+                $line = trim((string)$line, " \t\n\r\0\x0B");
+                if ($line === '' || $line === '.' || $line === './') continue;
+                if (str_contains($line, '..')) continue;
+                $skip[] = $line;
+            }
+            $skip = array_values(array_unique($skip));
+            create_dump('./', $dump, $skip);
             $dumpPath = LOGS_DIR.'/dump.log';
             $dumpLogPath = LOGS_DIR.'/dump_log.log';
             if (file_exists($dumpPath) && filesize($dumpPath) != 0) {
-                if ($log = diff_dump($dump, file($dumpPath))) sort($log);
+                if ($log = diff_dump($dump, file($dumpPath), $skip)) sort($log);
             } else {
                 $log = false;
             }
             write_log($log, $dumpLogPath);
             write_dump($dump, $dumpPath);
+            $state['last_run'] = time();
+            $state['running'] = 0;
+            $state['started_at'] = 0;
+            $state['last_count'] = count($dump);
+            $state['last_size'] = file_exists($dumpPath) ? (int)filesize($dumpPath) : 0;
+            file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
             if ($conf['security']['mail_d']) {
                 $log = ($log) ? implode('<br>', $log) : _NO;
                 $subject = $conf['sitename'].' - '._SECURITY;

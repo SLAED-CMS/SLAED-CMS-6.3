@@ -424,7 +424,7 @@ if ($conf['security']['error_log']) {
 
 # Checking URL, GET, POST, COOKIE, FILES variables for safety
 if (!isAdmin(true)) {
-    $ruri = mb_strlen($_SERVER['REQUEST_URI'], 'utf-8');
+    $ruri = mb_strlen((string)($_SERVER['REQUEST_URI'] ?? ''), 'utf-8');
     if ($ruri > 2048) addWarnReport('Spam in URL - '.$ruri.' > 2048');
     if (isset($_GET)) {
         function checkGet($name, $val) {

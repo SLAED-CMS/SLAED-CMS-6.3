@@ -11,53 +11,53 @@ if (!defined('MODULE_FILE')) {
 
 function forum(): void {
     global $db, $conf, $locale;
-    $massiv = [];
+    $rows = [];
     $mod = ($conf['name']) ? filterVar($conf['name']) : 0;
     $cat = getVar('req', 'cat', 'num');
     $id = $cat;
-    $params = ['mod' => $mod];
+    $pars = ['mod' => $mod];
     if ($id) {
-        $where = 'WHERE c.modul = :mod AND (c.parent = :parentid OR c.id = :cid)';
-        $params['parentid'] = $id;
-        $params['cid'] = $id;
+        $where = 'WHERE c.modul = :mod AND (c.parent = :parent OR c.id = :catid)';
+        $pars['parent'] = $id;
+        $pars['catid'] = $id;
         if ($conf['multilingual']) {
             $where .= ' AND (c.lang = :locale OR c.lang = \'\')';
-            $params['locale'] = $locale;
+            $pars['locale'] = $locale;
         }
     } elseif ($conf['multilingual']) {
         $where = 'WHERE c.modul = :mod AND (c.lang = :locale OR c.lang = \'\')';
-        $params['locale'] = $locale;
+        $pars['locale'] = $locale;
     } else {
         $where = 'WHERE c.modul = :mod';
     }
-    $result = $db->getSqlQuery('SELECT c.id, c.title, c.intro, c.img, c.parent, c.status, c.ordern, c.topics, c.posts, c.lpost, c.pview, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod, f.title, f.luid, f.lname, f.lpost, f.ltime FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost = f.id) '.$where.' ORDER BY c.ordern', $params);
-    while ([$cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime] = $db->getSqlRow($result)) {
-        $massiv[] = [$cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime];
-        unset($cid, $title, $description, $img, $parentid, $status, $ordern, $topics, $posts, $lpid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime);
+    $query = $db->getSqlQuery('SELECT c.id, c.title, c.intro, c.img, c.parent, c.status, c.ordern, c.topics, c.posts, c.lpost, c.pview, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod, f.title, f.luid, f.lname, f.lpost, f.ltime FROM '.PREFIX_DB.'_categories AS c LEFT JOIN '.PREFIX_DB.'_forum AS f ON (c.lpost = f.id) '.$where.' ORDER BY c.ordern', $pars);
+    while ([$cid, $title, $intro, $img, $parent, $status, $order, $topics, $posts, $lastid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime] = $db->getSqlRow($query)) {
+        $rows[] = [$cid, $title, $intro, $img, $parent, $status, $order, $topics, $posts, $lastid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime];
+        unset($cid, $title, $intro, $img, $parent, $status, $order, $topics, $posts, $lastid, $authv, $authr, $authp, $authy, $authe, $authd, $authm, $ftitle, $fuid, $fname, $flid, $fltime);
     }
-    if ($massiv) {
-        $isview = is_acess($massiv[0][10]);
-        $isread = is_acess($massiv[0][11]);
-        $istopic = is_acess($massiv[0][12]);
-        $isreply = is_acess($massiv[0][13]);
-        $isedit = is_acess($massiv[0][14]);
-        $isdelete = is_acess($massiv[0][15]);
-        $ismod = is_acess($massiv[0][16]);
-        $userinfo = getUserInfo();
-        $ulastvisit = (is_array($userinfo) && !empty($userinfo['lastvis'])) ? intval($userinfo['lastvis']) : 0;
-        $pagetitle = ($id) ? _FORUM.' '.$massiv[0][1] : _FORUM;
-        setHead(['title' => $pagetitle]);
-        $a = 0;
-        foreach ($massiv as $val) {
+    if ($rows) {
+        $isview = is_acess($rows[0][10]);
+        $isread = is_acess($rows[0][11]);
+        $istopic = is_acess($rows[0][12]);
+        $isreply = is_acess($rows[0][13]);
+        $isedit = is_acess($rows[0][14]);
+        $isdelete = is_acess($rows[0][15]);
+        $ismod = is_acess($rows[0][16]);
+        $uinfo = getUserInfo();
+        $ulast = (is_array($uinfo) && !empty($uinfo['lastvis'])) ? intval($uinfo['lastvis']) : 0;
+        $head = ($id) ? _FORUM.' '.$rows[0][1] : _FORUM;
+        setHead(['title' => $head]);
+        $cnt = 0;
+        foreach ($rows as $val) {
             if ($val[4] == $id && is_acess($val[10])) {
                 if ($id) {
-                    $cont = (!$a) ? setTemplateBasic('forum-cat-open', ['{%heading%}' => '<a href="index.php?name='.$conf['name'].'" title="'._FORUM.'">'._FORUM.'</a> '.urldecode($conf['forum']['defis']).' <a href="index.php?name='.$mod.'&amp;cat='.$massiv[0][0].'" title="'.$massiv[0][1].'">'.$massiv[0][1].'</a>', '{%col_forum%}' => _FORUM, '{%col_topics%}' => _NEWTOPICS, '{%col_messages%}' => cutstr(_MESSAGES, 5, 1), '{%col_last%}' => _LASTMESSAGE]) : '';
-                    $ttitle= ($val[2]) ? $val[2] : $val[1];
-                    $tlink = ($val[5] || is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'.$ttitle.'">'.$val[1].'</a>' : $val[1];
+                    $cont = (!$cnt) ? setTemplateBasic('forum-cat-open', ['{%heading%}' => '<a href="index.php?name='.$conf['name'].'" title="'._FORUM.'">'._FORUM.'</a> '.urldecode($conf['forum']['defis']).' <a href="index.php?name='.$mod.'&amp;cat='.$rows[0][0].'" title="'.$rows[0][1].'">'.$rows[0][1].'</a>', '{%col_forum%}' => _FORUM, '{%col_topics%}' => _NEWTOPICS, '{%col_messages%}' => cutstr(_MESSAGES, 5, 1), '{%col_last%}' => _LASTMESSAGE]) : '';
+                    $ttit = ($val[2]) ? $val[2] : $val[1];
+                    $tlink = ($val[5] || is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'.$ttit.'">'.$val[1].'</a>' : $val[1];
                     if (!$val[5]) {
                         $imglink = ($val[3]) ? '<img src="'.img_find('categories/'.$val[3]).'" alt="'._FCLOSED.'" title="'._FCLOSED.'" class="sl_hidden">' : '<span title="'._FCLOSED.'" class="sl_f_clos"></span>';
                         $timg = (is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'._FCLOSED.'">'.$imglink.'</a>' : $imglink;
-                    } elseif ($val[21] > $ulastvisit) {
+                    } elseif ($val[21] > $ulast) {
                         $imglink = ($val[3]) ? '<img src="'.img_find('categories/'.$val[3]).'" alt="'._ISNEWPOST.'" title="'._ISNEWPOST.'">' : '<span title="'._ISNEWPOST.'" class="sl_f_new"></span>';
                         $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'._ISNEWPOST.'">'.$imglink.'</a>';
                     } else {
@@ -79,64 +79,64 @@ function forum(): void {
                     echo $cont;
                 } else {
                     $cont = setTemplateBasic('forum-cat-open', ['{%heading%}' => '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'.$val[1].'">'.$val[1].'</a>', '{%col_forum%}' => _FORUM, '{%col_topics%}' => _NEWTOPICS, '{%col_messages%}' => cutstr(_MESSAGES, 5, 1), '{%col_last%}' => _LASTMESSAGE]);
-                    foreach ($massiv as $val2) {
-                        if ($val[0] == $val2[4] && is_acess($val2[10])) {
-                            $ttitle= ($val2[2]) ? $val2[2] : $val2[1];
-                            $tlink = ($val2[5] || is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$val2[0].'" title="'.$ttitle.'">'.$val2[1].'</a>' : $val2[1];
-                            if (!$val2[5]) {
-                                $imglink = ($val2[3]) ? '<img src="'.img_find('categories/'.$val2[3]).'" alt="'._FCLOSED.'" title="'._FCLOSED.'" class="sl_hidden">' : '<span title="'._FCLOSED.'" class="sl_f_clos"></span>';
-                                $timg = (is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$val2[0].'" title="'._FCLOSED.'">'.$imglink.'</a>' : $imglink;
-                            } elseif ($val2[21] > $ulastvisit) {
-                                $imglink = ($val2[3]) ? '<img src="'.img_find('categories/'.$val2[3]).'" alt="'._ISNEWPOST.'" title="'._ISNEWPOST.'">' : '<span title="'._ISNEWPOST.'" class="sl_f_new"></span>';
-                                $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$val2[0].'" title="'._ISNEWPOST.'">'.$imglink.'</a>';
+                    foreach ($rows as $valb) {
+                        if ($val[0] == $valb[4] && is_acess($valb[10])) {
+                            $ttit = ($valb[2]) ? $valb[2] : $valb[1];
+                            $tlink = ($valb[5] || is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$valb[0].'" title="'.$ttit.'">'.$valb[1].'</a>' : $valb[1];
+                            if (!$valb[5]) {
+                                $imglink = ($valb[3]) ? '<img src="'.img_find('categories/'.$valb[3]).'" alt="'._FCLOSED.'" title="'._FCLOSED.'" class="sl_hidden">' : '<span title="'._FCLOSED.'" class="sl_f_clos"></span>';
+                                $timg = (is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$valb[0].'" title="'._FCLOSED.'">'.$imglink.'</a>' : $imglink;
+                            } elseif ($valb[21] > $ulast) {
+                                $imglink = ($valb[3]) ? '<img src="'.img_find('categories/'.$valb[3]).'" alt="'._ISNEWPOST.'" title="'._ISNEWPOST.'">' : '<span title="'._ISNEWPOST.'" class="sl_f_new"></span>';
+                                $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$valb[0].'" title="'._ISNEWPOST.'">'.$imglink.'</a>';
                             } else {
-                                $imglink = ($val2[3]) ? '<img src="'.img_find('categories/'.$val2[3]).'" alt="'._NONEWPOST.'" title="'._NONEWPOST.'" class="sl_hidden">' : '<span title="'._NONEWPOST.'" class="sl_f_old"></span>';
-                                $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$val2[0].'" title="'._NONEWPOST.'">'.$imglink.'</a>';
+                                $imglink = ($valb[3]) ? '<img src="'.img_find('categories/'.$valb[3]).'" alt="'._NONEWPOST.'" title="'._NONEWPOST.'" class="sl_hidden">' : '<span title="'._NONEWPOST.'" class="sl_f_old"></span>';
+                                $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$valb[0].'" title="'._NONEWPOST.'">'.$imglink.'</a>';
                             }
-                            if ($val2[9]) {
-                                $data = _DATE.': '.format_time($val2[21], _TIMESTRING);
-                                $topic = ($val2[5]) ? _TOPIC.': <a href="index.php?name='.$mod.'&amp;op=view&amp;id='.$val2[9].'" title="'.$val2[17].'">'.cutstr($val2[17], 14).'</a>' : _TOPIC.': '.cutstr($val2[17], 14);
-                                $post = ($val2[18]) ? user_info($val2[19]) : $val2[19];
+                            if ($valb[9]) {
+                                $data = _DATE.': '.format_time($valb[21], _TIMESTRING);
+                                $topic = ($valb[5]) ? _TOPIC.': <a href="index.php?name='.$mod.'&amp;op=view&amp;id='.$valb[9].'" title="'.$valb[17].'">'.cutstr($valb[17], 14).'</a>' : _TOPIC.': '.cutstr($valb[17], 14);
+                                $post = ($valb[18]) ? user_info($valb[19]) : $valb[19];
                                 $post = _POSTER.': '.$post;
-                                $lid = ($val2[20]) ? $val2[20] : $val2[9];
-                                $lpost = ($val2[5]) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$val2[9].'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
+                                $lid = ($valb[20]) ? $valb[20] : $valb[9];
+                                $lpost = ($valb[5]) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$valb[9].'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
                             } else {
                                 $data = _NO_INFO;
                                 $topic = $post = $lpost = '';
                             }
-                            $cont .= setTemplateBasic('forum-cat-basic', ['{%icon%}' => $timg, '{%link%}' => $tlink, '{%desc%}' => $val2[2], '{%topics%}' => $val2[7], '{%posts%}' => $val2[8], '{%date%}' => $data, '{%last_topic%}' => $topic, '{%last_post%}' => $post, '{%last_link%}' => $lpost]);
+                            $cont .= setTemplateBasic('forum-cat-basic', ['{%icon%}' => $timg, '{%link%}' => $tlink, '{%desc%}' => $valb[2], '{%topics%}' => $valb[7], '{%posts%}' => $valb[8], '{%date%}' => $data, '{%last_topic%}' => $topic, '{%last_post%}' => $post, '{%last_link%}' => $lpost]);
                         }
                     }
                     $cont .= setTemplateBasic('forum-cat-close', []);
                     echo $cont;
                 }
-                $a++;
+                $cnt++;
             }
         }
-        $teml = true;
+        $show = true;
         unset($cont);
         if ($id) {
-            if (!$a) {
+            if (!$cnt) {
                 if ($isview) {
                     $cat = intval($id);
                     $lang = ($conf['multilingual']) ? 'AND (c.lang = :locale OR c.lang = \'\') AND s.cid = :cat' : 'AND s.cid = :cat';
-                    $listparams = ['cat' => $cat];
+                    $lpars = ['cat' => $cat];
                     if ($conf['multilingual']) {
-                        $listparams['locale'] = $locale;
+                        $lpars['locale'] = $locale;
                     }
                     $listnum = intval($conf['forum']['listnum']);
                     $ordern = (is_moder($conf['name'])) ? "WHERE s.pid = '0'" : "WHERE s.pid = '0' AND s.time <= NOW() AND s.status != '0'";
                     $num = getVar('req', 'num', 'num') ?: 1;
                     $offset = ($num-1) * $listnum;
                     $offset = intval($offset);
-                    $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.body, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $listparams);
-                    $newtop = ($istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$massiv[0][0].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
-                    $cont = setTemplateBasic('forum-list-open', ['{%button%}' => $newtop, '{%cat%}' => '<a href="index.php?name='.$mod.'&amp;cat='.$massiv[0][0].'" title="'.$massiv[0][1].'">'.$massiv[0][1].'</a>']);
-                    if ($db->getSqlRowCount($result) > 0) {
-                        $b = 0;
+                    $query = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.body, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $lpars);
+                    $newbt = ($istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][0].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
+                    $cont = setTemplateBasic('forum-list-open', ['{%button%}' => $newbt, '{%cat%}' => '<a href="index.php?name='.$mod.'&amp;cat='.$rows[0][0].'" title="'.$rows[0][1].'">'.$rows[0][1].'</a>']);
+                    if ($db->getSqlRowCount($query) > 0) {
+                        $mark = 0;
                         $cont .= setTemplateBasic('forum-list-basic-open', ['{%col_topics%}' => _NEWTOPICS, '{%col_posts%}' => _POSTS, '{%col_poster%}' => _POSTER, '{%col_views%}' => cutstr(_TVIEWS, 5, 1), '{%col_last%}' => _LASTMESSAGE]);
                         $cont .= ($ismod) ? '<form action="index.php?name='.$conf['name'].'" method="post">' : '';
-                        while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
+                        while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($query)) {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
                             $view = 0;
                             if (!$status && is_moder($conf['name'])) {
@@ -161,7 +161,7 @@ function forum(): void {
                                 $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
                                 $view = 1;
                             } elseif ($status == 3 && $time <= date('Y-m-d H:i:s')) {
-                                if ($ltime > $ulastvisit) {
+                                if ($ltime > $ulast) {
                                     $timg = ($comments > $conf['forum']['pop']) ? '<a href="'.$thref.'" title="'.$title.'"><span title="'._TPOPN.'" class="sl_t_pop"></span></a>' : '<a href="'.$thref.'" title="'.$title.'"><span title="'._ISNEWPOST.'" class="sl_t_new"></span></a>';
                                 } else {
                                     $timg = ($comments > $conf['forum']['pop']) ? '<a href="'.$thref.'" title="'.$title.'"><span title="'._TPOP.'" class="sl_t_pold"></span></a>' : '<a href="'.$thref.'" title="'.$title.'"><span title="'._NONEWPOST.'" class="sl_t_old"></span></a>';
@@ -184,8 +184,8 @@ function forum(): void {
                             $post = ($nick) ? user_info($nick) : $uname.' ('._ANONYM.')';
                             $lposter = ($luid) ? _POSTER.': '.user_info($lname) : _POSTER.': '.$lname;
                             if ($ismod) {
-                                $checkb = (!$b) ? '<br>'._CHECKALL." <input type=\"checkbox\" name=\"markcheck\" id=\"markcheck\" OnClick=\"CheckBox('#markcheck', '.sl_check')\"> | <input type=\"checkbox\" name=\"id[]\" class=\"sl_check\" value=\"".$id.'">' : ' <input type="checkbox" name="id[]" class="sl_check" value="'.$id.'">';
-                                $b++;
+                                $checkb = (!$mark) ? '<br>'._CHECKALL." <input type=\"checkbox\" name=\"markcheck\" id=\"markcheck\" OnClick=\"CheckBox('#markcheck', '.sl_check')\"> | <input type=\"checkbox\" name=\"id[]\" class=\"sl_check\" value=\"".$id.'">' : ' <input type="checkbox" name="id[]" class="sl_check" value="'.$id.'">';
+                                $mark++;
                             } else {
                                 $checkb = '';
                             }
@@ -199,9 +199,9 @@ function forum(): void {
                     } else {
                         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
                     }
-                    $ordernum = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$cat."'" : "pid = '0' AND cid = '".$cat."' AND time <= NOW() AND status != '0'";
-                    $pnum = setArticleNumbers('forum-pagenum', $conf['name'], $listnum, 'cat='.$cat.'&', 'id', '_forum', 'cid', $ordernum, $conf['forum']['pnum']);
-                    $cont .= setTemplateBasic('forum-list-close', ['{%button%}' => $newtop, '{%pager%}' => $pnum]);
+                    $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$cat."'" : "pid = '0' AND cid = '".$cat."' AND time <= NOW() AND status != '0'";
+                    $pnum = setArticleNumbers('forum-pagenum', $conf['name'], $listnum, 'cat='.$cat.'&', 'id', '_forum', 'cid', $order, $conf['forum']['pnum']);
+                    $cont .= setTemplateBasic('forum-list-close', ['{%button%}' => $newbt, '{%pager%}' => $pnum]);
                     $infov = ($isview) ? sprintf(_ACINFOV, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOV, '<b>'._NOTCAN.'</b>');
                     $infor = ($isread) ? sprintf(_ACINFOR, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOR, '<b>'._NOTCAN.'</b>');
                     $infot = ($istopic) ? sprintf(_ACINFOT, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOT, '<b>'._NOTCAN.'</b>');
@@ -213,14 +213,14 @@ function forum(): void {
                 } else {
                     $cont = setTemplateWarning('warn', ['text' => _NOVIEW, 'url' => '?name='.$conf['name'], 'time' => 5, 'id' => 'warn']);
                 }
-                $teml = false;
+                $show = false;
             } else {
                 $cont = setTemplateBasic('forum-cat-close', []);
             }
         } else {
             $cont = '';
         }
-        if ($teml) $cont .= setTemplateBasic('forum-cat-info', ['{%new%}' => '<span title="'._ISNEWPOST.'" class="sl_f_new">'._ISNEWPOST.'</span>', '{%nonew%}' => '<span title="'._NONEWPOST.'" class="sl_f_old">'._NONEWPOST.'</span>', '{%closed%}' => '<span title="'._FCLOSED.'" class="sl_f_clos">'._FCLOSED.'</span>']);
+        if ($show) $cont .= setTemplateBasic('forum-cat-info', ['{%new%}' => '<span title="'._ISNEWPOST.'" class="sl_f_new">'._ISNEWPOST.'</span>', '{%nonew%}' => '<span title="'._NONEWPOST.'" class="sl_f_old">'._NONEWPOST.'</span>', '{%closed%}' => '<span title="'._FCLOSED.'" class="sl_f_clos">'._FCLOSED.'</span>']);
         echo $cont;
     } else {
         setHead(['title' => _FORUM]);
@@ -231,15 +231,15 @@ function forum(): void {
 
 function view(): void {
     global $db, $user, $conf;
-    $cmassiv = [];
+    $rows = [];
     $where = [];
-    $umassiv = [];
-    $id = getVar('req', 'id', 'num');
+    $users = [];
+    $topic = getVar('req', 'id', 'num');
     $last = (filter_input(INPUT_GET, 'last', FILTER_DEFAULT) !== null) ? 1 : 0;
     $ordern = (is_moder($conf['name'])) ? 'WHERE (id = :id1 OR pid = :id2)' : "WHERE (id = :id1 OR pid = :id2) AND time <= NOW() AND status != '0'";
-    $orderparams = ['id1' => $id, 'id2' => $id];
-    [$numfor] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum '.$ordern, $orderparams));
-    if ($id && $numfor > 0) {
+    $opars = ['id1' => $topic, 'id2' => $topic];
+    [$numfor] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum '.$ordern, $opars));
+    if ($topic && $numfor > 0) {
         $fornum = getUserNews($conf['forum']['num']);
         $numpages = ceil($numfor / $fornum);
         $num = getVar('req', 'num', 'num') ?: 1;
@@ -247,57 +247,57 @@ function view(): void {
         $offset = ($num-1) * $fornum;
         if ($conf['forum']['sort']) {
             $sort = 'ASC';
-            $a = ($num) ? $offset+1 : 1;
+            $pos = ($num) ? $offset+1 : 1;
         } else {
             $sort = 'DESC';
-            $a = $numfor;
-            if ($numfor > $offset) $a -= $offset;
+            $pos = $numfor;
+            if ($numfor > $offset) $pos -= $offset;
         }
         $word = getVar('req', 'word', 'word');
         $orderw = (is_moder($conf['name'])) ? 'WHERE (s.id = :id1 OR s.pid = :id2)' : "WHERE (s.id = :id1 OR s.pid = :id2) AND s.time <= NOW() AND s.status != '0'";
-        $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.name, s.title, s.time, s.body, s.field, s.comments, s.counter, s.score, s.ratings, s.ip, s.euid, s.eip, s.etime, s.status, c.title, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$orderw.' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum, $orderparams);
-        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET counter=counter+1 WHERE id = :id', ['id' => $id]);
-        while ([$id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm] = $db->getSqlRow($result)) {
-            $cmassiv[] = [$id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm];
+        $query = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.name, s.title, s.time, s.body, s.field, s.comments, s.counter, s.score, s.ratings, s.ip, s.euid, s.eip, s.etime, s.status, c.title, c.pread, c.ppost, c.preply, c.pedit, c.pdelete, c.pmod FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) '.$orderw.' ORDER BY s.time '.$sort.' LIMIT '.$offset.', '.$fornum, $opars);
+        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET counter=counter+1 WHERE id = :id', ['id' => $topic]);
+        while ([$id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm] = $db->getSqlRow($query)) {
+            $rows[] = [$id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm];
             if ($uid) $where[] = $uid;
             unset($id, $pid, $cid, $uid, $name, $title, $time, $hometext, $field, $comments, $counter, $score, $ratings, $ipsend, $euid, $eip, $etime, $status, $ctitle, $authr, $authp, $authy, $authe, $authd, $authm);
         }
         if ($where) {
-            $result2 = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC');
-            while ([$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor] = $db->getSqlRow($result2)) {
-                $umassiv[] = [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor];
+            $query = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id IN ('.implode(', ', $where).') ORDER BY g.extra ASC, g.points ASC');
+            while ([$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor] = $db->getSqlRow($query)) {
+                $users[] = [$uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor];
                 unset($uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor);
             }
         }
         if ($num == 1) {
-            $tstatus = $cmassiv[0][17];
+            $tstatus = $rows[0][17];
         } else {
-            [$tstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
+            [$tstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $topic]));
         }
-        $isread = is_acess($cmassiv[0][19]);
-        $istopic = is_acess($cmassiv[0][20]);
-        $isreply = is_acess($cmassiv[0][21]);
-        $isedit = is_acess($cmassiv[0][22]);
-        $isdelete = is_acess($cmassiv[0][23]);
-        $ismod = is_acess($cmassiv[0][24]);
-        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($cmassiv[0][7], $conf['name'], false), $conf['name']))), 160);
-        $seoimg  = getImgText($cmassiv[0][7], '', false);
-        $seoimg  = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
+        $isread = is_acess($rows[0][19]);
+        $istopic = is_acess($rows[0][20]);
+        $isreply = is_acess($rows[0][21]);
+        $isedit = is_acess($rows[0][22]);
+        $isdelete = is_acess($rows[0][23]);
+        $ismod = is_acess($rows[0][24]);
+        $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($rows[0][7], $conf['name'], false), $conf['name']))), 160);
+        $seoimg = getImgText($rows[0][7], '', false);
+        $seoimg = $seoimg ? $conf['homeurl'].'/'.$seoimg : '';
         setHead([
-            'title' => $cmassiv[0][5],
-            'ctitle' => $cmassiv[0][18],
+            'title' => $rows[0][5],
+            'ctitle' => $rows[0][18],
             'desc' => $seodesc,
             'img' => $seoimg,
-            'time' => $cmassiv[0][6],
-            'author' => $cmassiv[0][4] ?: $conf['sitename'],
+            'time' => $rows[0][6],
+            'author' => $rows[0][4] ?: $conf['sitename'],
         ]);
         if ($ismod || ($isread && $tstatus > 1)) {
-            $atopic = (is_moder($conf['name']) || $istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$cmassiv[0][2].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
-            $areply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$cmassiv[0][2].'&amp;pid='.$id.'" title="'._TOPICREPLY.'" class="sl_but">'._REPLY.'</a>' : '<span title="'.sprintf(_ACINFOP, _NOTCAN).'" class="sl_but sl_hidden">'._REPLY.'</span>';
-            $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$id.'&', $conf['forum']['pnum'], $num);
-            $favor = getFavorBtn($id, $conf['name']);
-            $cont = setTemplateBasic('forum-view-open', ['{%atopic%}' => $atopic, '{%areply%}' => $areply, '{%title%}' => filterTextHighlight($cmassiv[0][5], $word), '{%favor%}' => $favor]);
-            foreach ($cmassiv as $val) {
+            $atopic = (is_moder($conf['name']) || $istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
+            $areply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'&amp;pid='.$topic.'" title="'._TOPICREPLY.'" class="sl_but">'._REPLY.'</a>' : '<span title="'.sprintf(_ACINFOP, _NOTCAN).'" class="sl_but sl_hidden">'._REPLY.'</span>';
+            $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
+            $favor = getFavorBtn($topic, $conf['name']);
+            $cont = setTemplateBasic('forum-view-open', ['{%atopic%}' => $atopic, '{%areply%}' => $areply, '{%title%}' => filterTextHighlight($rows[0][5], $word), '{%favor%}' => $favor]);
+            foreach ($rows as $val) {
                 $fid = $val[0];
                 $fcat = $val[2];
                 /*
@@ -321,36 +321,36 @@ function view(): void {
                 $status = $val[17];
                 */
                 unset($uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor);
-                if (!empty($umassiv) && is_array($umassiv)) {
-                    foreach ($umassiv as $val2) {
-                        if (strtolower($val[3]) == strtolower($val2[0])) {
-                            $uid = $val2[0];
-                            $nick = $val2[1];
-                            $rank = $val2[2];
-                            $mail = $val2[3];
-                            $site = $val2[4];
-                            $avatar = $val2[5];
-                            $reg = $val2[6];
-                            $from = $val2[7];
-                            $sig = $val2[8];
-                            $view = $val2[9];
-                            $point = $val2[10];
-                            $warn = $val2[11];
-                            $gender = $val2[12];
-                            $votes = $val2[13];
-                            $total = $val2[14];
-                            $gname = $val2[15];
-                            $grank = $val2[16];
-                            $gcolor = $val2[17];
+                if (!empty($users) && is_array($users)) {
+                    foreach ($users as $urow) {
+                        if (strtolower($val[3]) == strtolower($urow[0])) {
+                            $uid = $urow[0];
+                            $nick = $urow[1];
+                            $rank = $urow[2];
+                            $mail = $urow[3];
+                            $site = $urow[4];
+                            $avatar = $urow[5];
+                            $reg = $urow[6];
+                            $from = $urow[7];
+                            $sig = $urow[8];
+                            $view = $urow[9];
+                            $point = $urow[10];
+                            $warn = $urow[11];
+                            $gender = $urow[12];
+                            $votes = $urow[13];
+                            $total = $urow[14];
+                            $gname = $urow[15];
+                            $grank = $urow[16];
+                            $gcolor = $urow[17];
                         }
                     }
                 }
                 $avname = (!empty($nick)) ? $nick : $val[4].' ('._ANONYM.')';
                 $avatar = (!empty($nick)) ? (($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
                 $date = (($ismod || $conf['forum']['ledit']) && $val[16]) ? '<span title="'._PADD.'" class="sl_t_post">'.format_time($val[6], _TIMESTRING).'</span><span title="'._PEDIT.'" class="sl_t_edit">'.format_time($val[16], _TIMESTRING).'</span>' : '<span title="'._PADD.'" class="sl_t_post">'.format_time($val[6], _TIMESTRING).'</span>';
-                $rating = ($a == 1) ? ajax_rating(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
+                $rating = ($pos == 1) ? ajax_rating(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
                 $ip = ($ismod && $val[13]) ? user_geo_ip($val[13], 4) : '';
-                $amess = '<a href="#'.$fid.'" title="'._MESSAGE.': '.$a.'" class="sl_pnum">'.$a.'</a>';
+                $amess = '<a href="#'.$fid.'" title="'._MESSAGE.': '.$pos.'" class="sl_pnum">'.$pos.'</a>';
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
                 $rlink = (!empty($grank) && file_exists(img_find('ranks/'.$grank))) ? '<img src="'.img_find('ranks/'.$grank).'" alt="'.$trank.'" title="'.$trank.'">' : '';
@@ -373,22 +373,22 @@ function view(): void {
                 $warn = '';
                 $thank = '';
                 
-                $qreply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$id.'&amp;qid='.$fid.'" title="'._QREPLY.'" class="sl_but_blue">'._REPLY.'</a>' : '';
-                $edit = ($ismod || ($isedit && $val[3] == intval($user[0]) && $tstatus)) ? "<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'for".$fid."', 'go=1&amp;op=editpost&amp;id=".$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name']."', ''); return false;\" title=\""._ONEDIT.'">'._ONEDIT.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;id='.$fid.'&amp;pid='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
+                $qreply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$topic.'&amp;qid='.$fid.'" title="'._QREPLY.'" class="sl_but_blue">'._REPLY.'</a>' : '';
+                $edit = ($ismod || ($isedit && $val[3] == intval($user[0]) && $tstatus)) ? "<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'for".$fid."', 'go=1&amp;op=editpost&amp;id=".$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name']."', ''); return false;\" title=\""._ONEDIT.'">'._ONEDIT.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;id='.$fid.'&amp;pid='.$topic.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
                 $edit .= ($ismod || ($isdelete && $val[3] == intval($user[0]))) ? '<a href="index.php?name='.$conf['name'].'&amp;op=delete&amp;cat='.$fcat.'&amp;id='.$fid."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$val[5]."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>' : '';
                 $edit = ($edit) ? add_menu($edit) : '';
                 $hclass = (!$val[17]) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
                 $text = ($fields) ? '<div id="repfor'.$fid.'">'.filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>'.filterTextHighlight(filterReplaceText(filterMarkdown('<br><br>'.$fields, $conf['name'], false), $conf['name']), $word) : '<div id="repfor'.$fid.'">'.filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>';
                 $cont .= setTemplateBasic('forum-view-basic', ['{%id%}' => $fid, '{%username%}' => $avname, '{%date%}' => $date, '{%rating%}' => $rating, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_reply%}' => $qreply, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass]);
-                if ($conf['forum']['sort']) { $a++; } else { $a--; }
+                if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
-            $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$id.'&', $conf['forum']['pnum'], $num);
+            $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
             $cont .= setTemplateBasic('forum-view-close', ['{%atopic%}' => $atopic, '{%areply%}' => $areply, '{%pager%}' => $pnum]);
             if ($ismod) {
-                $selmm = '<form action="index.php?name='.$conf['name'].'" method="post">'.tmoder(1).' <input type="hidden" name="op" value="move"><input type="hidden" name="cat" value="'.$cmassiv[0][2].'"><input type="hidden" name="id[]" value="'.$id.'"> <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+                $selmm = '<form action="index.php?name='.$conf['name'].'" method="post">'.tmoder(1).' <input type="hidden" name="op" value="move"><input type="hidden" name="cat" value="'.$rows[0][2].'"><input type="hidden" name="id[]" value="'.$topic.'"> <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
                 $cont .= setTemplateBasic('forum-view-change', ['{%title%}' => _OPMOD.': ', '{%content%}' => $selmm]);
             }
-            if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($id, $cmassiv[0][2], $cmassiv[0][5]);
+            if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         } else {
             $cont = setTemplateWarning('warn', ['text' => _NOVIEW, 'url' => '?name='.$conf['name'], 'time' => 5, 'id' => 'warn']);
         }
@@ -489,15 +489,15 @@ function add(): void {
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             $subh = ($qpid) ? 1 : 0;
             $info = _EDITS.': '.$subject;
-            $pagetitle = $conf['defis'].' '._FORUM.' '.$conf['defis'].' '.$ctitle.' '.$conf['defis'].' '.$info;
+            $head = $conf['defis'].' '._FORUM.' '.$conf['defis'].' '.$ctitle.' '.$conf['defis'].' '.$info;
             $form = true;
         }
-        $oldsubject = $subject;
+        $subold = $subject;
         $subject = getVar('post', 'subject', 'text');
-        $subject = ($subject) ? filterHtml($subject, 1) : $oldsubject;
-        $oldhometext = $hometext;
+        $subject = ($subject) ? filterHtml($subject, 1) : $subold;
+        $txtold = $hometext;
         $hometext = getVar('post', 'hometext', 'text');
-        $hometext = ($hometext) ? filterHtml($hometext) : $oldhometext;
+        $hometext = ($hometext) ? filterHtml($hometext) : $txtold;
 
     } elseif ($conf['forum']['add'] && ($istopic || $isreply)) {
         $fid = getVar('post', 'fid', 'num');
@@ -522,11 +522,11 @@ function add(): void {
         $status = getVar('post', 'status', 'num', 3);
         $time = getVar('req', 'time', 'time');
         $info = (!empty($ftext)) ? _PUBLICIN.': '.$ftitle : _PUBLICIN.': '.$ctitle;
-        $pagetitle = _FORUM.' '.$ctitle.' '.$info;
+        $head = _FORUM.' '.$ctitle.' '.$info;
         
     }
     if ($form) {
-        setHead(['title' => $pagetitle]);
+        setHead(['title' => $head]);
         $cont = ($stop) ? setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']) : '';
         $psubject = (!$subh) ? $subject : '';
         if ($hometext) $cont .= preview($psubject, $hometext, '', $field, $conf['name']);
@@ -546,8 +546,8 @@ function add(): void {
         .ad_save('', '', 'send').'</td></tr></table></form>';
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
-        $pagetitle = _FORUM.' '.$ctitle.' '.$ctitle;
-        setHead(['title' => $pagetitle]);
+        $head = _FORUM.' '.$ctitle.' '.$ctitle;
+        setHead(['title' => $head]);
         $cont = setTemplateBasic('forum-all-open', ['{%title%}' => $ctitle]);
         $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '?name='.$conf['name'], 'time' => 5, 'id' => 'warn']);
     }
@@ -599,14 +599,14 @@ function send(): void {
         $hometext = getVar('post', 'hometext', 'text');
 
         $checks = str_replace(["\n", "\r", "\t"], ' ', $hometext);
-        $e = explode(' ', $checks);
-        for ($a = 0; $a < count($e); $a++) $o = strlen($e[$a]);
+        $words = explode(' ', $checks);
+        for ($ix = 0; $ix < count($words); $ix++) $size = strlen($words[$ix]);
         $hometext = filterHtml($hometext);
         $status = getVar('post', 'status', 'num', 0);
         
         $field = getVar('post', 'field', 'field');
         $time = ($ismod) ? getVar('req', 'time', 'time') : date('Y-m-d H:i:s');
-        $postid = (is_user()) ? intval($user[0]) : '';
+        $postid = (is_user()) ? intval($user[0]) : 0;
         $ip = getIp();
         $fpid = 0;
         $lpid = 0;
@@ -614,7 +614,7 @@ function send(): void {
         $stop = [];
         if (!$subject) $stop[] = _CERROR;
         if (!$hometext) $stop[] = _CERROR1;
-        if ($o > $conf['forum']['letter']) $stop[] = _CERROR2;
+        if ($size > $conf['forum']['letter']) $stop[] = _CERROR2;
         if (!$postname && !is_user()) $stop[] = _CERROR3;
 
         if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
@@ -668,8 +668,8 @@ function send(): void {
                             if ($postid != $muid) {
                                 [$mail, $fsmail] = $db->getSqlRow($db->getSqlQuery('SELECT email, fsmail FROM '.PREFIX_DB.'_users WHERE id = :muid', ['muid' => $muid]));
                                 if ($mail && $fsmail) {
-                                    $finishlink = $conf['homeurl'].'/index.php?name=forum&amp;op=view&amp;id='.$pid.'#'.$lpid;
-                                    $link = '<a href="'.$finishlink.'">'.$finishlink.'</a>';
+                                    $finurl = $conf['homeurl'].'/index.php?name=forum&amp;op=view&amp;id='.$pid.'#'.$lpid;
+                                    $link = '<a href="'.$finurl.'">'.$finurl.'</a>';
                                     $subject = $conf['sitename'].' - '._FORUM;
                                     $message = str_replace('[text]', sprintf(_ADDMAILF, $postname, $link), $conf['mtemp']);
                                     addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);

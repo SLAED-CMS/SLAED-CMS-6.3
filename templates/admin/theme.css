@@ -301,7 +301,7 @@ ul.nav li img { vertical-align: middle; margin-right: 5px; }
 .prev a.sl_num:hover { background-position: -243px -145px; }
 
 .forum-foot .pagelink { float: left; border-top-width: 0; padding: 0; height: auto; } 
-.forum-foot .pager { float: left; padding-top: 0; text-align: left; font-size: 1.2em; }
+.forum-foot .pager { float: left; padding-top: 0; text-align: left; font-size: 1.0em; }
 .forum-foot .next-prev { float: left; margin-left: 20px; }
 .forum-foot .next-prev * { display: block; width: 30px; height: 30px; }
 .forum-foot .next-prev span { opacity: .4; }

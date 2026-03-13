@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright (c) 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -39,7 +39,7 @@ return [
     'db_t' => '1',
     'dbsync' => '0',
     'defis' => '-',
-    'dev_mode' => false,
+    'dev_mode' => '0',
     'dletter' => '160',
     'fbots' => '21.by,a-counter.com.ua,about.com,acoon.com,aeiwi.com,all.by,alltheweb.com,altavista.com,amfibi.com,aolsearch.aol.com,aport.ru,ask.com,atlasua.net,ay.com.ua,baidu.com,belarusinfo.by,bigmir.net,bing.com,br.by,britannica.com,catalog.bel.biz,catalog.svich.com,codavr.ru,date.bs,dmoz.org,dogpile.com,entireweb.com,euroseek.net,exactseek.com,exalead.frsearch,excite.com,filesearch.ru,gala.net,gde.ru,genon.ru,gigablast.com,google.com,google.com.ua,google.de,google.net,google.ru,gugle.by,holmes.adamant.ua,hotbot.com,imhalal.com,info.com,infospace.com,ixquick.com,km.ru,links2go.com,list.np.by,liveinternet.ru,looksmart.com,lycos.com,lycos.ru,mail.ru,mamma.com,meta.ua,metabot.ru,metacrawler.com,minskin.net,myahint.com,mysearch.com,myway.com,najdivse.com,netoteka.ru,netsearch.org,nigma.ru,nol9.ru,online.ua,open.by,pepesearch.com,qango.com,qs.kiev.ua,rambler.ru,ru.yahoo.com,scrubtheweb.com,search.aol.com,search.com,search.com.ua,search.msn.com,search.yippy.com,searchking.com,sova.com.ua,teoma.com,tinEye.com,tit.by,tut.by,ualist.com,uaport.net,uaportal.com,ukrbiznes.com,ukrweb.com.ua,url.by,usluga.by,walhello.info,webalta.ru,webcrawler.com,websearch.com,webwombat.com.au,wisenut.com,ya.ru,yahoo.com,yandex.ru,zoneru.org,zubr.com',
     'flags' => '1',
@@ -133,7 +133,7 @@ support@slaed.net',
     'sess_t' => '900',
     'session' => '1',
     'site_logo' => 'slaed_logo_256x340.png',
-    'sitekey' => 'vhTzLwf02NHKldQGRT2nCt0kH',
+    'sitekey' => 'WxwfBdHOXS1WXWnGAzqRmVUmT',
     'sitename' => 'Название сайта',
     'slogan' => 'SLAED CMS - Современная система управления содержимым динамичных сайтов и мощная система управления интернет-порталами.',
     'startdate' => '2013-06-17 00:00:00',
@@ -144,6 +144,6 @@ support@slaed.net',
     'user_c' => 'slaed',
     'user_c_t' => '2592000',
     'var_view' => '1',
-    'variables' => '0,0,1,1,1,0,0,0,1',
+    'variables' => '0,1,1,1,1,1,1,1,1',
     'version' => '6.3.0 Phoenix',
 ];

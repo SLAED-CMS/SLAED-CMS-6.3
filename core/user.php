@@ -232,7 +232,7 @@ function updatePost() {
                 $content = ($typ) ? textareae('for'.$id, '1', 'editpost', $id, $cid, '0', $mod, $hometext, '15') : filterReplaceText(filterMarkdown($hometext, $mod, false), $mod);
                 echo $content;
             } else {
-                $postid = (is_user()) ? intval($user[0]) : '';
+                $postid = (is_user()) ? intval($user[0]) : 0;
                 $ip = getip();
                 $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
                 $e = explode(' ', $checks);

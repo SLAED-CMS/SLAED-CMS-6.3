@@ -430,6 +430,8 @@ define('_SEC_LOG','Die Statistik der eingehenden Information zu fьhren?');
 define('_SEC_LOGIN','Zusätzliches Login des Verwalters');
 define('_SEC_LOG_A','Statistik der Eingänge der Administratoren zu führen?');
 define('_SEC_LOG_D','Die Statistik der Modifikationen der Dateien zu führen?');
+define('_SEC_DUMP_SKIP','Ausnahmeliste fuer Dateistruktur-Pruefung');
+define('_SEC_DUMP_SKIP_INFO','Ein relativer Pfad pro Zeile, Verzeichnisse optional mit / am Ende, z.B. .git/ oder vendor/cache/');
 define('_SEC_LOG_DB','Der Zeitraum des Kopierens der Datenbank, in den Minuten');
 define('_SEC_LOG_DS','Die Uhrzeit der Prüfung der Dateien auf die Modifikation, in den Minuten');
 define('_SEC_LOG_SIZE','Die maximale Größe der Dateien der Statistik, in den Bytes');

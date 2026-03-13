@@ -437,7 +437,7 @@ return [
         ],
         'search' => [
             'lang' => '_SEARCH',
-            'img' => 'gears.png',
+            'img' => 'find.png',
             'active' => '1',
             'view' => '0',
             'menu' => '1',

@@ -833,9 +833,13 @@ function getAdminInfo(): string {
             : "admin/info/{$name}/{$locale}";
         $fpdir   = $fdoc($base) ?: $base.'.html';
         if ($content) {
+            $dir = dirname($fpdir);
+            if (!is_dir($dir)) mkdir($dir, 0777, true);
             $fp = fopen($fpdir, 'wb');
-            fwrite($fp, $content);
-            fclose($fp);
+            if ($fp !== false) {
+                fwrite($fp, $content);
+                fclose($fp);
+            }
         }
         $thefile = file_exists($fpdir) ? file_get_contents($fpdir) : _NO_INFO;
     } else {

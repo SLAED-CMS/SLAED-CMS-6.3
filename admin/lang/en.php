@@ -430,6 +430,8 @@ define('_SEC_LOG','To conduct statistics of all acting information?');
 define('_SEC_LOGIN','Additional login of manager');
 define('_SEC_LOG_A','To conduct statistics of inputs of managers?');
 define('_SEC_LOG_D','To conduct statistics of updatings of files?');
+define('_SEC_DUMP_SKIP','Exclude list for file structure scan');
+define('_SEC_DUMP_SKIP_INFO','One relative path per line, directories may optionally end with /, for example .git/ or vendor/cache/');
 define('_SEC_LOG_DB','Time interval of copying of a database, in minutes');
 define('_SEC_LOG_DS','Time of check of files for updatings, in minutes');
 define('_SEC_LOG_SIZE','The maximal size of files of statistics, in bytes');
