@@ -1134,7 +1134,13 @@ function getMonitorServerStats(): array {
     $loaded = get_loaded_extensions();
     $ext_dir = ini_get('extension_dir');
     $off = [];
-    if ($ext_dir && is_dir($ext_dir)) {
+    $ob = ini_get('open_basedir');
+    $ext_accessible = !$ob || array_reduce(
+        explode(PATH_SEPARATOR, $ob),
+        static fn(bool $c, string $d) => $c || str_starts_with($ext_dir, rtrim($d, '/\\')),
+        false
+    );
+    if ($ext_dir && $ext_accessible && is_dir($ext_dir)) {
         $files = array_merge(glob($ext_dir.'/*.so') ?: [], glob($ext_dir.'/*.dll') ?: []);
         $loaded_lower = array_map('strtolower', $loaded);
         foreach ($files as $f) {

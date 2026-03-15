@@ -432,7 +432,7 @@ if (!isAdmin(true)) {
             $links = '#^(http\:\/\/|https\:\/\/|ftp\:\/\/|php\:\/\/|\/\/)#i';
             $script = '#<.*?(script|body|object|iframe|applet|meta|form|style|img).*?>#i';
             $char = '#\([^>]*\"?[^)]*\)#';
-            $quote = '#\'|\.\.\/#';
+            $quote = '#\'|\.\.[/\\\\%]#';
             $string = '#ALTER|DROP|INSERT|OUTFILE|SELECT|TRUNCATE|UNION|'.PREFIX_DB.'_admins|'.PREFIX_DB.'_users|admins_show|admins_add|admins_save|admins_del#i';
             $decode = base64_decode($val);
             $slash = preg_replace('#\/\*.*?\*\/#', '', $val);

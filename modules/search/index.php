@@ -26,7 +26,7 @@ function getSearchRow(string $mod, string $afile, int $mid, string $time, int $c
 function getSearchMods(): array {
     global $conf;
     $mods = [];
-    foreach (explode(',', (string)$conf['search']['mods']) as $mod) {
+    foreach (explode(',', is_array($conf['search']) ? (string)($conf['search']['mods'] ?? '') : '') as $mod) {
         $mod = trim($mod);
         if ($mod === '' || !is_active($mod)) continue;
         $mods[] = $mod;
