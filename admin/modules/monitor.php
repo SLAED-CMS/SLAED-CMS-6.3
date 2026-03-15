@@ -307,17 +307,17 @@ function getNetDevStats(string $data): array {
 # Returns the absolute metrics storage file path used for persisting monitor history snapshots
 function getMetricStorePath(): string {
     $dirs = [];
-    if (defined('LOGS_DIR')) $dirs[] = (string)LOGS_DIR;
-    if (defined('CACHE_DIR')) $dirs[] = (string)CACHE_DIR;
+    if (defined('LOGS_DIR')) $dirs[] = LOGS_DIR;
+    if (defined('CACHE_DIR')) $dirs[] = CACHE_DIR;
     $tmp = sys_get_temp_dir();
     if (is_string($tmp) && $tmp !== '') $dirs[] = rtrim($tmp, '/\\');
     foreach ($dirs as $dir) {
         if ($dir === '') continue;
-        if (is_dir($dir) && is_writable($dir)) return $dir.'/monitor_metrics.json';
+        if (is_dir($dir) && is_writable($dir)) return $dir.'/monitor.json';
         $base = dirname($dir);
-        if (!is_dir($dir) && $base !== '' && is_dir($base) && is_writable($base)) return $dir.'/monitor_metrics.json';
+        if (!is_dir($dir) && $base !== '' && is_dir($base) && is_writable($base)) return $dir.'/monitor.json';
     }
-    return LOGS_DIR.'/monitor_metrics.json';
+    return LOGS_DIR.'/monitor.json';
 }
 
 # Loads persisted monitor metrics from JSON store and returns an array with safe empty fallback

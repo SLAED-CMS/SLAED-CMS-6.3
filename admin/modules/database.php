@@ -16,7 +16,7 @@ function checkDbtoken(): bool {
 }
 
 function addDblog(string $text): void {
-    $path = BASE_DIR.'/storage/logs/database_migration.log';
+    $path = LOGS_DIR.'/database.log';
     $line = '['.date('Y-m-d H:i:s').'] '.$text.PHP_EOL;
     file_put_contents($path, $line, FILE_APPEND | LOCK_EX);
 }
@@ -195,7 +195,7 @@ function getSqlsum(array $items, string $mode, string $name): string {
     return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $text]);
 }
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function navi(int $tab = 0, int $subtab = 0): string {
     $ops = ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
     $lang = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
     return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
@@ -208,7 +208,7 @@ function database(): void {
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
         setHead();
-        echo navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _ERROR]);
+        echo navi().setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _ERROR]);
         setFoot();
         return;
     }
@@ -242,18 +242,18 @@ function database(): void {
         $tabloc = $info['Collation'];
         $crtime = $info['Create_time'];
         $rows = (int) $info['Rows'];
-        $res = $db->getSqlQuery('SELECT COUNT(*) AS cnt FROM `'.$conf['db']['name'].'`.`'.$name.'`');
+        $res = $db->getSqlQuery('SELECT COUNT(*) AS cnt FROM `'.$dbname.'`.`'.$name.'`');
         if ($res && $row = $db->getSqlRow($res)) $rows = (int) $row['cnt'];
         $allrows += $rows;
 
-        // --- Table  und free space size ---
+        // --- Table and free space size ---
         $tabsize = (int) $info['Data_length'] + (int) $info['Index_length'];
         $tabfree = (int) ($info['Data_free'] ?: 0);
 
         $total += $tabsize;
         $sumfree += $tabfree;
 
-        // Darstellung Data_free
+        // Free space display
         if ($tabeng === 'InnoDB') {
             $freetag = '<div class="sl_hidden">'.filterSize($tabfree).'</div>';
         } else {
@@ -262,7 +262,7 @@ function database(): void {
                 : '<div class="sl_green">'.filterSize($tabfree).'</div>';
         }
 
-        // --- Status / Actions depending on mode ---
+        // --- Status / actions depending on mode ---
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
             continue;
         }
@@ -291,13 +291,13 @@ function database(): void {
             }
 
         } else {
-            // Standardansicht mit Aktionen
+            // Default view with actions
             $stattag = add_menu(
-                '<a href="'.$afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1" '
+                '<a href="'.$afile.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=1" '
                 .'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._CLEAN.'">'._CLEAN.'</a>'
                 .'||'
-                .'<a href="'.$afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2" '
+                .'<a href="'.$afile.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=2" '
                 .'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._ONDELETE.'">'._ONDELETE.'</a>'
             );
@@ -318,7 +318,7 @@ function database(): void {
                   .'</tr>';
     }
 
-    // --- Gesamtzeile wie in phpMyAdmin ---
+    // --- Totals row ---
     $content .= '<tr>'
               .'<td><strong>'.$item.'</strong></td>'
               .'<td>&nbsp;</td>'
@@ -352,7 +352,7 @@ function database(): void {
 
     // Navigation + Info-Boxen
     if (empty($type)) {
-        $cont  = navi(0, 0, 0, 0);
+        $cont  = navi();
         $cont .= setTemplateWarning('warn', [
             'time' => '',
             'url'  => '',
@@ -368,7 +368,7 @@ function database(): void {
 
     } elseif ($type === 'optimize') {
         $db->getSqlQuery('FLUSH TABLES');
-        $cont = navi(0, 1, 0, 0);
+        $cont = navi(1);
 
         $info = _OPTIMIZE.': '.$conf['db']['name']
                   .'<br>'._TOTALSPACE.': '.filterSize($total)
@@ -382,7 +382,7 @@ function database(): void {
         ]);
 
     } elseif ($type === 'repair') {
-        $cont = navi(0, 2, 0, 0);
+        $cont = navi(2);
 
         $info = _REPAIR.': '.$conf['db']['name']
                   .'<br>'._TOTALSPACE.': '.filterSize($total)
@@ -407,10 +407,10 @@ function database(): void {
 function dump(): void {
     global $db, $conf, $afile;
     $type = getVar('post', 'type', 'var', '');
-    $string = filter_input(INPUT_POST, 'string', FILTER_UNSAFE_RAW) ?? '';
+    $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
     setHead();
-    $cont = navi(0, 3, 0, 0);
+    $cont = navi(3);
     if (($action === 'parse' || $action === 'dump') && !checkDbtoken()) {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
     } elseif ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
@@ -448,11 +448,11 @@ function dump(): void {
                     }
                 }
             } else {
-                    foreach ($items as $index => $sql) {
-                        $info = getSqlinfo($sql);
-                        $reslist[] = ['num' => $index + 1, 'type' => $info['type'], 'table' => $info['table'], 'ok' => true, 'error' => '', 'sql' => $sql];
-                    }
+                foreach ($items as $index => $sql) {
+                    $info = getSqlinfo($sql);
+                    $reslist[] = ['num' => $index + 1, 'type' => $info['type'], 'table' => $info['table'], 'ok' => true, 'error' => '', 'sql' => $sql];
                 }
+            }
             $cont .= getSqlsum($reslist, $action, $conf['db']['name']);
             $cont .= setTemplateBasic('open');
             $cont .= getSqltable($reslist);
@@ -487,11 +487,11 @@ function dump(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 4, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo navi(4).'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
-function delete(): void {
+function del(): void {
     global $db, $afile;
     $tb = getVar('get', 'tb', 'var');
     $id = getVar('get', 'id', 'num');
@@ -507,7 +507,6 @@ function delete(): void {
 switch ($op) {
     default: database(); break;
     case 'dump': dump(); break;
-    case 'del': delete(); break;
-    case 'delete': delete(); break;
+    case 'del': del(); break;
     case 'info': info(); break;
 }
