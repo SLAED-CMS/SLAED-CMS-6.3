@@ -102,6 +102,477 @@ function setConfigFingerprint(string $local_file, string $fingerprint): void {
     }
 }
 
+# Returns the scheduler configuration with guaranteed top-level defaults
+function getSchedulerConfig(): array {
+    global $conf;
+    $cfg = $conf['scheduler'] ?? [];
+    if (!is_array($cfg)) $cfg = [];
+    $cfg['active'] = (string)($cfg['active'] ?? '1');
+    $cfg['pseudo'] = (string)($cfg['pseudo'] ?? '1');
+    $cfg['token'] = (string)($cfg['token'] ?? '');
+    $cfg['cron_timeout'] = (string)($cfg['cron_timeout'] ?? '600');
+    $cfg['trigger_cooldown'] = (string)($cfg['trigger_cooldown'] ?? '60');
+    $cfg['lock_timeout'] = (string)($cfg['lock_timeout'] ?? '1800');
+    $cfg['jobs'] = (isset($cfg['jobs']) && is_array($cfg['jobs'])) ? $cfg['jobs'] : [];
+    return $cfg;
+}
+
+# Returns the scheduler runtime directory and creates it on demand
+function getSchedulerDir(): string {
+    $path = LOGS_DIR.'/scheduler';
+    if (!is_dir($path)) mkdir($path, 0750, true);
+    return $path;
+}
+
+# Returns the scheduler state file path for a named job
+function getSchedulerFile(string $name): string {
+    return getSchedulerDir().'/'.preg_replace('#[^a-z]#', '', strtolower($name)).'.json';
+}
+
+# Returns the scheduler heartbeat file path
+function getSchedulerBeat(): string {
+    return getSchedulerDir().'/heartbeat.json';
+}
+
+# Returns the default runtime state structure for any scheduler job
+function getSchedulerBase(): array {
+    return [
+        'running' => 0,
+        'started_at' => 0,
+        'last_run' => 0,
+        'last_success' => 0,
+        'last_status' => 'idle',
+        'last_message' => '',
+        'last_error' => '',
+        'last_duration' => 0,
+        'last_trigger' => '',
+        'fail_count' => 0,
+    ];
+}
+
+# Returns a normalized scheduler job config
+function getSchedulerJob(string $name): array {
+    $cfg = getSchedulerConfig();
+    $job = $cfg['jobs'][$name] ?? [];
+    if (!is_array($job)) $job = [];
+    $job['name'] = $name;
+    $job['title'] = (string)($job['title'] ?? $name);
+    $job['type'] = (string)($job['type'] ?? 'system');
+    $job['active'] = (string)($job['active'] ?? '0');
+    $job['handler'] = (string)($job['handler'] ?? '');
+    $job['schedule'] = trim((string)($job['schedule'] ?? ''));
+    $job['priority'] = (string)($job['priority'] ?? '100');
+    $job['lock_timeout'] = (string)($job['lock_timeout'] ?? $cfg['lock_timeout']);
+    $job['manual'] = (string)($job['manual'] ?? '1');
+    $job['settings'] = (isset($job['settings']) && is_array($job['settings'])) ? $job['settings'] : [];
+    return $job;
+}
+
+function getSchedulerSettings(string $name): array {
+    $job = getSchedulerJob($name);
+    return (isset($job['settings']) && is_array($job['settings'])) ? $job['settings'] : [];
+}
+
+# Returns a normalized 5-part cron schedule or an empty string when invalid
+function getSchedulerSchedule(array|string $job): string {
+    $schedule = is_array($job) ? (string)($job['schedule'] ?? '') : (string)$job;
+    $schedule = trim(preg_replace('#\s+#', ' ', $schedule));
+    if ($schedule === '') return '';
+    $parts = explode(' ', $schedule);
+    if (count($parts) !== 5) return '';
+    [$min, $hour, $mday, $mon, $wday] = $parts;
+    if (!checkSchedulerCronField($min, 0, 59)) return '';
+    if (!checkSchedulerCronField($hour, 0, 23)) return '';
+    if (!checkSchedulerCronField($mday, 1, 31)) return '';
+    if (!checkSchedulerCronField($mon, 1, 12)) return '';
+    if (!checkSchedulerCronField($wday, 0, 7)) return '';
+    return implode(' ', [$min, $hour, $mday, $mon, $wday]);
+}
+
+# Returns whether a cron field contains only supported segments in range
+function checkSchedulerCronField(string $field, int $min, int $max): bool {
+    if ($field === '') return false;
+    foreach (explode(',', $field) as $part) {
+        $part = trim($part);
+        if ($part === '') return false;
+        $step = 1;
+        if (str_contains($part, '/')) {
+            [$part, $steps] = explode('/', $part, 2);
+            if (!ctype_digit($steps) || (int)$steps < 1) return false;
+            $step = (int)$steps;
+        }
+        if ($part === '*') continue;
+        if (str_contains($part, '-')) {
+            [$from, $to] = explode('-', $part, 2);
+            if (!ctype_digit($from) || !ctype_digit($to)) return false;
+            $from = (int)$from;
+            $to = (int)$to;
+            if ($from < $min || $to > $max || $from > $to || $step < 1) return false;
+            continue;
+        }
+        if (!ctype_digit($part)) return false;
+        $num = (int)$part;
+        if ($num < $min || $num > $max) return false;
+    }
+    return true;
+}
+
+# Returns whether a value matches a cron field
+function checkSchedulerCronValue(string $field, int $value, int $min, int $max): bool {
+    foreach (explode(',', $field) as $part) {
+        $part = trim($part);
+        if ($part === '') continue;
+        $step = 1;
+        if (str_contains($part, '/')) {
+            [$part, $steps] = explode('/', $part, 2);
+            $step = max(1, (int)$steps);
+        }
+        if ($part === '*') {
+            if ((($value - $min) % $step) === 0) return true;
+            continue;
+        }
+        if (str_contains($part, '-')) {
+            [$from, $to] = explode('-', $part, 2);
+            $from = (int)$from;
+            $to = (int)$to;
+            if ($value >= $from && $value <= $to && (($value - $from) % $step) === 0) return true;
+            continue;
+        }
+        if ((int)$part === $value) return true;
+    }
+    return false;
+}
+
+# Returns whether a unix timestamp matches a scheduler cron expression
+function checkSchedulerCronMatch(string $schedule, int $time): bool {
+    $schedule = getSchedulerSchedule($schedule);
+    if ($schedule === '') return false;
+    [$min, $hour, $mday, $mon, $wday] = explode(' ', $schedule);
+    $mins = (int)date('i', $time);
+    $hourn = (int)date('G', $time);
+    $mdayn = (int)date('j', $time);
+    $monn = (int)date('n', $time);
+    $wdayn = (int)date('w', $time);
+    if (!checkSchedulerCronValue($min, $mins, 0, 59)) return false;
+    if (!checkSchedulerCronValue($hour, $hourn, 0, 23)) return false;
+    $domany = ($mday === '*');
+    $dowany = ($wday === '*');
+    $domok = checkSchedulerCronValue($mday, $mdayn, 1, 31);
+    $dowok = checkSchedulerCronValue($wday, $wdayn, 0, 7) || ($wdayn === 0 && checkSchedulerCronValue($wday, 7, 0, 7));
+    if (!checkSchedulerCronValue($mon, $monn, 1, 12)) return false;
+    if ($domany && $dowany) return true;
+    if ($domany) return $dowok;
+    if ($dowany) return $domok;
+    if (!$domok && !$dowok) return false;
+    return true;
+}
+
+# Returns the next runtime timestamp for a scheduler job from its cron schedule
+function getSchedulerNextTime(array $job, array $state = [], ?int $from = null): int {
+    $schedule = getSchedulerSchedule($job);
+    if ($schedule === '') return 0;
+    $from = $from ?? time();
+    $next = $from - ($from % 60) + 60;
+    $max = $next + (60 * 60 * 24 * 366 * 5);
+    while ($next <= $max) {
+        if (checkSchedulerCronMatch($schedule, $next)) return $next;
+        $next += 60;
+    }
+    return 0;
+}
+
+# Returns the current planned run timestamp for a scheduler job based on last execution or current time
+function getSchedulerPlannedTime(array $job, array $state = []): int {
+    $last = (int)($state['last_run'] ?? 0);
+    $from = ($last > 0) ? $last : time();
+    return getSchedulerNextTime($job, $state, $from);
+}
+
+# Returns all scheduler jobs normalized and sorted by priority and key
+function getSchedulerJobs(): array {
+    $cfg = getSchedulerConfig();
+    $arr = [];
+    foreach ($cfg['jobs'] as $key => $val) {
+        if (!is_string($key) || $key === '') continue;
+        $arr[$key] = getSchedulerJob($key);
+    }
+    uasort($arr, static function (array $aaa, array $bbb): int {
+        $one = (int)($aaa['priority'] ?? 100);
+        $two = (int)($bbb['priority'] ?? 100);
+        if ($one === $two) return strcmp((string)($aaa['name'] ?? ''), (string)($bbb['name'] ?? ''));
+        return $one <=> $two;
+    });
+    return $arr;
+}
+
+# Returns the runtime state for a scheduler job merged with defaults
+function getSchedulerState(string $name): array {
+    $file = getSchedulerFile($name);
+    $state = getSchedulerBase();
+    if (!is_file($file) || filesize($file) === 0) return $state;
+    $json = file_get_contents($file);
+    if ($json === false || $json === '') return $state;
+    $data = json_decode($json, true);
+    if (!is_array($data)) return $state;
+    return array_replace($state, $data);
+}
+
+# Writes the runtime state for a scheduler job atomically
+function setSchedulerState(string $name, array $state): bool {
+    $file = getSchedulerFile($name);
+    $json = json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($json)) return false;
+    return file_put_contents($file, $json, LOCK_EX) !== false;
+}
+
+# Returns whether the scheduler job lock is still valid
+function checkSchedulerLock(string $name, array $job = [], array $state = []): bool {
+    if ($job === []) $job = getSchedulerJob($name);
+    if ($state === []) $state = getSchedulerState($name);
+    if (empty($state['running']) || empty($state['started_at'])) return false;
+    $time = max(60, (int)($job['lock_timeout'] ?? 0));
+    return (time() - (int)$state['started_at']) < $time;
+}
+
+# Returns whether the scheduler job is due for execution
+function checkSchedulerDue(string $name, array $job = [], array $state = []): bool {
+    if ($job === []) $job = getSchedulerJob($name);
+    if ($state === []) $state = getSchedulerState($name);
+    if ((int)($job['active'] ?? 0) !== 1) return false;
+    if (checkSchedulerLock($name, $job, $state)) return false;
+    $next = getSchedulerPlannedTime($job, $state);
+    return $next > 0 && $next <= time();
+}
+
+# Acquires the scheduler lock for a named job and persists trigger metadata
+function addSchedulerLock(string $name, string $type): bool {
+    $job = getSchedulerJob($name);
+    $state = getSchedulerState($name);
+    if (checkSchedulerLock($name, $job, $state)) return false;
+    $state['running'] = 1;
+    $state['started_at'] = time();
+    $state['last_run'] = time();
+    $state['last_trigger'] = $type;
+    $state['last_status'] = 'running';
+    $state['last_message'] = '';
+    $state['last_error'] = '';
+    return setSchedulerState($name, $state);
+}
+
+# Releases the scheduler lock and persists final status plus any extra runtime data
+function deleteSchedulerLock(string $name, string $stat, string $mess = '', array $extra = []): bool {
+    $job = getSchedulerJob($name);
+    $state = array_replace(getSchedulerState($name), $extra);
+    $done = time();
+    $start = (int)($state['started_at'] ?? 0);
+    $state['running'] = 0;
+    $state['started_at'] = 0;
+    $state['last_status'] = $stat;
+    $state['last_message'] = $mess;
+    $state['last_duration'] = ($start > 0) ? round($done - $start, 2) : 0;
+    if ($stat === 'success') {
+        $state['last_success'] = $done;
+        $state['fail_count'] = 0;
+        $state['last_error'] = '';
+    } else {
+        $state['fail_count'] = (int)($state['fail_count'] ?? 0) + 1;
+        if ($mess !== '') $state['last_error'] = $mess;
+    }
+    return setSchedulerState($name, $state);
+}
+
+# Writes a scheduler heartbeat marker for cron, pseudo-cron, or manual triggers
+function addSchedulerHeartbeat(string $type): void {
+    $data = [
+        'trigger' => $type,
+        'time' => time(),
+    ];
+    $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (is_string($json)) file_put_contents(getSchedulerBeat(), $json, LOCK_EX);
+}
+
+# Returns whether a recent cron heartbeat exists within the configured timeout
+function checkSchedulerCronAlive(): bool {
+    $cfg = getSchedulerConfig();
+    $file = getSchedulerBeat();
+    if (!is_file($file) || filesize($file) === 0) return false;
+    $json = file_get_contents($file);
+    if ($json === false || $json === '') return false;
+    $data = json_decode($json, true);
+    if (!is_array($data) || (($data['trigger'] ?? '') !== 'cron')) return false;
+    return (time() - (int)($data['time'] ?? 0)) < max(60, (int)$cfg['cron_timeout']);
+}
+
+# Returns whether the current request may execute the scheduler runner
+function checkSchedulerAccess(string $type, string $stok): bool {
+    global $conf;
+    if (isAdmin(true)) return true;
+    $scfg = getSchedulerConfig();
+    $stkn = (string)($scfg['token'] ?? '');
+    $psok = ($type === 'pseudo' && hash_equals(md5_salt((string)($conf['sitekey'] ?? '')), $stok));
+    $tkok = ($stkn !== '' && hash_equals($stkn, $stok));
+    return $psok || $tkok;
+}
+
+# Returns the pseudo-trigger throttle file path
+function getSchedulerTrig(): string {
+    return getSchedulerDir().'/trigger.json';
+}
+
+# Returns a signed pseudo-trigger URL when the next due job should be started asynchronously
+function addSchedulerTrigger(): string {
+    global $conf;
+    $cfg = getSchedulerConfig();
+    if ((int)$cfg['active'] !== 1 || (int)$cfg['pseudo'] !== 1) return '';
+    if (checkSchedulerCronAlive()) return '';
+    $job = getSchedulerNextJob();
+    if (!$job) return '';
+    $file = getSchedulerTrig();
+    $last = 0;
+    if (is_file($file) && filesize($file) !== 0) {
+        $json = file_get_contents($file);
+        $data = $json ? json_decode($json, true) : [];
+        if (is_array($data)) $last = (int)($data['time'] ?? 0);
+    }
+    $cool = max(15, (int)$cfg['trigger_cooldown']);
+    if ($last > 0 && (time() - $last) < $cool) return '';
+    $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
+    $tokn = md5_salt((string)($conf['sitekey'] ?? ''));
+    return 'index.php?go=3&op=scheduler&trigger=pseudo&token='.rawurlencode($tokn);
+}
+
+# Fetches a remote scheduler target through a safe GET request and captures transport errors
+function getSchedulerFetch(string $url): array {
+    $head = "User-Agent: SLAED Scheduler\r\nAccept: application/json, text/plain, */*\r\n";
+    $opts = [
+        'http' => [
+            'method' => 'GET',
+            'timeout' => 15,
+            'ignore_errors' => true,
+            'header' => $head,
+        ],
+    ];
+    $ctx = stream_context_create($opts);
+    $errs = [];
+    set_error_handler(static function (int $errno, string $errstr) use (&$errs): bool {
+        $errs[] = $errstr;
+        return true;
+    });
+    $link = fopen($url, 'rb', false, $ctx);
+    $body = ($link !== false) ? stream_get_contents($link) : false;
+    $meta = ($link !== false) ? stream_get_meta_data($link) : [];
+    if (is_resource($link)) fclose($link);
+    restore_error_handler();
+    $code = 0;
+    $wrap = (isset($meta['wrapper_data']) && is_array($meta['wrapper_data'])) ? $meta['wrapper_data'] : [];
+    foreach ($wrap as $line) {
+            if (preg_match('#^HTTP/\S+\s+(\d{3})#', (string)$line, $mat)) {
+                $code = (int)$mat[1];
+                break;
+            }
+    }
+    return [
+        'ok' => ($body !== false),
+        'code' => $code,
+        'body' => ($body === false) ? '' : (string)$body,
+        'error' => implode('; ', $errs),
+    ];
+}
+
+# Executes a custom scheduler job by requesting its configured URL target
+function addSchedulerCustom(array $job): array {
+    global $conf;
+    $url = trim((string)($job['settings']['url'] ?? ''));
+    if ($url === '') return ['status' => 'failed', 'message' => 'Custom job URL is empty'];
+    if (!preg_match('#^https?://#i', $url)) {
+        $base = rtrim((string)($conf['homeurl'] ?? ''), '/');
+        if ($base !== '') $url = $base.'/'.ltrim($url, '/');
+    }
+    $data = getSchedulerFetch($url);
+    if (!$data['ok']) {
+        $text = ($data['error'] !== '') ? $data['error'] : 'Custom job request failed';
+        return ['status' => 'failed', 'message' => $text];
+    }
+    $text = ($data['code'] > 0) ? 'HTTP '.$data['code'] : 'Request completed';
+    return [
+        'status' => ($data['code'] >= 400) ? 'failed' : 'success',
+        'message' => $text,
+        'extra' => [
+            'last_remote_code' => $data['code'],
+            'last_remote_url' => $url,
+        ],
+    ];
+}
+
+# Returns the next due scheduler job or null when nothing can run
+function getSchedulerNextJob(?string $name = null): ?array {
+    if ($name !== null && $name !== '') {
+        $job = getSchedulerJob($name);
+        if ($job['handler'] === '') return null;
+        return checkSchedulerDue($name, $job) ? $job : null;
+    }
+    foreach (getSchedulerJobs() as $job) {
+        $name = (string)($job['name'] ?? '');
+        if ($name === '' || $job['handler'] === '') continue;
+        if (checkSchedulerDue($name, $job)) return $job;
+    }
+    return null;
+}
+
+# Executes the next due scheduler job or a named job and returns a structured result
+function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
+    $cfg = getSchedulerConfig();
+    if ((int)$cfg['active'] !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled'];
+    if ($name !== null && $name !== '' && $type === 'manual') {
+        $job = getSchedulerJob($name);
+        if (($job['handler'] ?? '') === '' && ($job['type'] ?? '') !== 'custom') $job = null;
+    } else {
+        $job = getSchedulerNextJob($name);
+    }
+    if (!$job) return ['status' => 'idle', 'message' => 'No due jobs'];
+    $name = (string)$job['name'];
+    if (!addSchedulerLock($name, $type)) return ['status' => 'locked', 'message' => 'Job is already running', 'job' => $name];
+    addSchedulerHeartbeat($type);
+    $func = (string)$job['handler'];
+    try {
+        if (($job['type'] ?? '') === 'custom') {
+            $data = addSchedulerCustom($job);
+        } else {
+            $data = function_exists($func) ? $func() : ['status' => 'failed', 'message' => 'Handler not found'];
+        }
+        if (!is_array($data)) $data = ['status' => 'failed', 'message' => 'Invalid handler result'];
+    } catch (Throwable $error) {
+        $data = ['status' => 'failed', 'message' => $error->getMessage()];
+    }
+    $stat = (string)($data['status'] ?? 'failed');
+    $mess = (string)($data['message'] ?? '');
+    $extra = (isset($data['extra']) && is_array($data['extra'])) ? $data['extra'] : [];
+    deleteSchedulerLock($name, $stat, $mess, $extra);
+    $data['job'] = $name;
+    return $data;
+}
+
+# Executes the scheduler database backup task and returns runtime metadata
+function addSchedulerBackup(): array {
+    return addBackupTask();
+}
+
+# Executes the scheduler file scan task and returns runtime metadata
+function addSchedulerFilescan(): array {
+    return addFilescanTask();
+}
+
+# Executes the scheduler sitemap task and returns runtime metadata
+function addSchedulerSitemap(): array {
+    return doSitemap(true);
+}
+
+# Executes the scheduler newsletter task and returns runtime metadata
+function addSchedulerNewsletter(): array {
+    return updateNewsletter(true);
+}
+
 # System file include
 require_once BASE_DIR.'/core/security.php';
 
@@ -1034,21 +1505,13 @@ function filterReplaceText(string $sourse, string $mod): string {
     return $sourse;
 }
 
-# Backup DB for MySQL 8.0+ & MariaDB 10+
-function addBackupDb(): bool {
+# Executes a database backup task and returns scheduler metadata
+function addBackupTask(): array {
     global $db, $conf;
-    if (!$conf['security']['log_b']) return false;
+    if (empty($conf['security']['log_b'])) return ['status' => 'failed', 'message' => 'Database backup is disabled'];
     $backup_start = microtime(true);
 
     $sess_f = COUNTER_DIR.'/backup.log';
-    $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
-    $past = time() - intval($conf['security']['sess_b']);
-
-    if ($sess_b >= $past) {
-        return false; // Not yet time for Backup
-    }
-
-    // Timestamp-Datei aktualisieren
     if (file_exists($sess_f)) unlink($sess_f);
     $fp_time = fopen($sess_f, 'wb');
     if ($fp_time) {
@@ -1099,7 +1562,7 @@ function addBackupDb(): bool {
         $bmysql_ver = isset($m[1]) ? sprintf('%d%02d%02d', $m[1], $m[2], $m[3]) : 0;
     } catch (Exception $e) {
         error_log('Backup failed: Cannot get MySQL version - '.$e->getMessage());
-        return false;
+        return ['status' => 'failed', 'message' => 'Cannot get MySQL version'];
     }
 
     $bonly_create = explode(',', $conlycreate);
@@ -1169,7 +1632,7 @@ function addBackupDb(): bool {
 
     if (empty($tables)) {
         error_log('Backup failed: No tables found to backup');
-        return false;
+        return ['status' => 'failed', 'message' => 'No tables found to backup'];
     }
 
     $tabs = count($tables);
@@ -1205,7 +1668,7 @@ function addBackupDb(): bool {
     if (!is_dir($backup_dir)) {
         if (!mkdir($backup_dir, 0750, true)) {
             error_log('Backup failed: Cannot create backup directory');
-            return false;
+            return ['status' => 'failed', 'message' => 'Cannot create backup directory'];
         }
     }
 
@@ -1215,7 +1678,7 @@ function addBackupDb(): bool {
     $fp = fopen($filepath, 'wb');
     if (!$fp) {
         error_log('Backup failed: Cannot create file '.$filepath);
-        return false;
+        return ['status' => 'failed', 'message' => 'Cannot create backup file'];
     }
 
     // Header schreiben
@@ -1302,12 +1765,23 @@ function addBackupDb(): bool {
     }
 
     fclose($fp);
-    if (!addCompress($backup_dir, $filepath, $name, 'auto', true)) return false;
+    if (!addCompress($backup_dir, $filepath, $name, 'auto', true)) {
+        return ['status' => 'failed', 'message' => 'Cannot compress backup file'];
+    }
 
     // Performance-Logging
     $duration = round(microtime(true) - $backup_start, 2);
     error_log("Backup completed: {$tabs} tables, ".round($bsize/1048576, 2)."MB in {$duration}s");
-    return true;
+    $archive = $backup_dir.$name.'.sql.gz';
+    return [
+        'status' => 'success',
+        'message' => 'Database backup completed',
+        'extra' => [
+            'last_backup_file' => basename(file_exists($archive) ? $archive : $filepath),
+            'last_backup_size' => file_exists($archive) ? (int)filesize($archive) : (file_exists($filepath) ? (int)filesize($filepath) : 0),
+            'last_table_count' => $tabs,
+        ],
+    ];
 }
 
 # Get admin module names (stored as names)
@@ -1608,50 +2082,10 @@ function setHead(array $seo = []): void {
     }
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
     $head = str_replace(['{%META%}', '{%LINK%}', '{%SCRIPT%}'], [$strmeta, $strlink, $script], addblocks($head));
-    $cron = 0;
-    if ($conf['security']['log_d']) {
-        $sess_f = LOGS_DIR.'/dump.json';
-        $sess_d = 0;
-        $state = [];
-        if (file_exists($sess_f) && filesize($sess_f) != 0) {
-            $json = file_get_contents($sess_f);
-            $state = $json ? json_decode($json, true) : [];
-            if (!is_array($state)) $state = [];
-            $sess_d = (int)($state['last_run'] ?? 0);
-        }
-        $lockok = !empty($state['running']) && !empty($state['started_at']) && ($ctime - (int)$state['started_at']) < max(600, min((int)$conf['security']['sess_d'], 3600));
-        $past = $ctime - intval($conf['security']['sess_d']);
-        if ($sess_d < $past && !$lockok) {
-            $head = preg_replace('#<body(.*?)>#si', "<body OnLoad=\"AjaxLoad('GET', '0', 'filereport', 'go=3&amp;op=filereport', ''); return false;\"$1>", $head);
-            $cron = 1;
-        } else {
-            $cron = 0;
-        }
-    }
-    if ($conf['security']['log_b'] && !$cron) {
-        $sess_f = COUNTER_DIR.'/backup.log';
-        $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
-        $past = $ctime - intval($conf['security']['sess_b']);
-        if ($sess_b < $past) {
-            $head = preg_replace('#<body(.*?)>#si', "<body OnLoad=\"AjaxLoad('GET', '0', 'backup', 'go=3&amp;op=backup', ''); return false;\"$1>", $head);
-            $cron = 1;
-        } else {
-            $cron = 0;
-        }
-    }
-    if (!empty($conf['sitemap']['auto']) && !$cron) {
-        $sess_f = 'sitemap.xml';
-        $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
-        $past = $ctime - intval($conf['sitemap']['auto_t'] ?? 0);
-        if ($sess_b < $past) {
-            $head = preg_replace('#<body(.*?)>#si', "<body OnLoad=\"AjaxLoad('GET', '0', 'sitemap', 'go=3&amp;op=sitemap', ''); return false;\"$1>", $head);
-            $cron = 1;
-        } else {
-            $cron = 0;
-        }
-    }
-    if ($conf['newsletter'] && !$cron) {
-        $head = preg_replace('#<body(.*?)>#si', "<body OnLoad=\"AjaxLoad('GET', '0', 'newsletter', 'go=3&amp;op=newsletter', ''); return false;\"$1>", $head);
+    $surl = (!defined('ADMIN_FILE')) ? addSchedulerTrigger() : '';
+    if ($surl !== '') {
+        $js = '<script>window.addEventListener("load",function(){window.setTimeout(function(){fetch("'.$surl.'",{credentials:"same-origin"});},1);});</script>';
+        $head = preg_replace('#<body(.*?)>#si', '<body$1>'.$js, $head, 1);
     }
     echo setTemplateHead($head);
     unset($head);
@@ -2397,13 +2831,13 @@ function doCss(): string {
 }
 
 # Create a sitemap
-function doSitemap(): void {
+function doSitemap(bool $force = false): array {
  global $db, $conf;
-    if (defined('ADMIN_FILE') || !empty($conf['sitemap']['auto'])) {
+    if ($force || defined('ADMIN_FILE') || !empty($conf['sitemap']['auto'])) {
         $sess_f = 'sitemap.xml';
         $sess_b = (file_exists($sess_f) && filesize($sess_f) != 0) ? filemtime($sess_f) : 0;
         $past = time() - intval($conf['sitemap']['auto_t'] ?? 0);
-        if (defined('ADMIN_FILE') || $sess_b < $past) {
+        if ($force || defined('ADMIN_FILE') || $sess_b < $past) {
             $date = date('Y-m-d');
             $modules_raw = (string)($conf['sitemap']['mod'] ?? '');
             $mod = ($modules_raw === '') ? ['0'] : explode(',', $modules_raw);
@@ -2555,8 +2989,18 @@ function doSitemap(): void {
                 $cont = preg_replace('#<loc>(.*?)</loc>#is', '<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
             }
             file_put_contents('sitemap.xml', $cont);
+            return [
+                'status' => 'success',
+                'message' => 'Sitemap generation completed',
+                'extra' => [
+                    'last_map_size' => file_exists('sitemap.xml') ? (int)filesize('sitemap.xml') : 0,
+                    'last_url_count' => count(array_filter($array, 'strlen')),
+                    'last_output' => 'sitemap.xml',
+                ],
+            ];
         }
     }
+    return ['status' => 'idle', 'message' => 'Sitemap generation was skipped'];
 }
 
 # Navigation tabs (compact, synchronized & sequential IDs)
@@ -3077,25 +3521,35 @@ function filterSize(mixed $size): string {
 }
 
 # Newsletter send
-function updateNewsletter(): void {
+function updateNewsletter(bool $force = false): array {
  global $db, $conf;
-    if ($conf['newsletter']) {
+    if ($force || $conf['newsletter']) {
         $result = $db->getSqlQuery('SELECT id, title, body, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
         if ($db->getSqlRowCount($result) > 0) {
             list($id, $title, $body, $mails) = $db->getSqlRow($result);
             $ncount = intval($conf['newslettercount']);
             $id = intval($id);
             $mails = explode(',', $mails);
-            $outmail = array_slice($mails, 0, $ncount);
+            $outmail = array_values(array_filter(array_slice($mails, 0, $ncount), 'strlen'));
             $inmail = implode(',', array_slice($mails, $ncount));
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id', ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
-            foreach ($outmail as $val) if ($val != '') addMail($val, $conf['adminmail'], $title, filterReplaceText(filterMarkdown($body, 'all', false), 'all'), 0, 3);
+            foreach ($outmail as $val) addMail($val, $conf['adminmail'], $title, filterReplaceText(filterMarkdown($body, 'all', false), 'all'), 0, 3);
             if (!$inmail) {
                 $cont = ['newsletter' => '0'];
                 setConfigFile('global.php', $cont, $conf);
             }
+            return [
+                'status' => 'success',
+                'message' => 'Newsletter batch completed',
+                'extra' => [
+                    'last_newsletter_id' => $id,
+                    'last_batch_count' => count($outmail),
+                    'remaining_count' => $inmail === '' ? 0 : count(array_filter(explode(',', $inmail), 'strlen')),
+                ],
+            ];
         }
     }
+    return ['status' => 'idle', 'message' => 'No pending newsletter batches'];
 }
 
 # Resolve a PHP constant by name; return the name itself if undefined
@@ -4180,69 +4634,73 @@ function diff_dump(array $dump, array $old, array $skip = []): array|false {
     return (count($log) > 0) ? $log : false;
 }
 
-function filereport(): void {
+# Executes a file scan task and returns scheduler metadata
+function addFilescanTask(): array {
  global $conf;
-    if ($conf['security']['log_d']) {
-        $sess_f = LOGS_DIR.'/dump.json';
-        $sess_d = 0;
-        $state = [];
-        if (file_exists($sess_f) && filesize($sess_f) != 0) {
-            $json = file_get_contents($sess_f);
-            $state = $json ? json_decode($json, true) : [];
-            if (!is_array($state)) $state = [];
-            $sess_d = (int)($state['last_run'] ?? 0);
-        }
-        $now = time();
-        $lockok = !empty($state['running']) && !empty($state['started_at']) && ($now - (int)$state['started_at']) < max(600, min((int)$conf['security']['sess_d'], 3600));
-        $past = time() - intval($conf['security']['sess_d']);
-        if ($sess_d < $past && !$lockok) {
-            $state['running'] = 1;
-            $state['started_at'] = $now;
-            if (!isset($state['last_run'])) $state['last_run'] = $sess_d;
-            file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
-            $safe = ini_get('safe_mode') == '1' ? 1 : 0;
-            if (!$safe && function_exists('set_time_limit')) set_time_limit(600);
-
-            $dump = [];
-            $skip = [
-                ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', LOGS_DIR.'/dump.log')), '/'),
-                ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', LOGS_DIR.'/dump_log.log')), '/')
-            ];
-            $rawskip = str_replace(["\r\n", "\r"], "\n", (string)($conf['security']['dump_skip'] ?? ''));
-            foreach (explode("\n", $rawskip) as $line) {
-                $line = trim(str_replace('\\', '/', (string)$line));
-                $line = preg_replace('#/+#', '/', $line);
-                $line = preg_replace('#^\./#', '', (string)$line);
-                $line = trim((string)$line, " \t\n\r\0\x0B");
-                if ($line === '' || $line === '.' || $line === './') continue;
-                if (str_contains($line, '..')) continue;
-                $skip[] = $line;
-            }
-            $skip = array_values(array_unique($skip));
-            create_dump('./', $dump, $skip);
-            $dumpPath = LOGS_DIR.'/dump.log';
-            $dumpLogPath = LOGS_DIR.'/dump_log.log';
-            if (file_exists($dumpPath) && filesize($dumpPath) != 0) {
-                if ($log = diff_dump($dump, file($dumpPath), $skip)) sort($log);
-            } else {
-                $log = false;
-            }
-            write_log($log, $dumpLogPath);
-            write_dump($dump, $dumpPath);
-            $state['last_run'] = time();
-            $state['running'] = 0;
-            $state['started_at'] = 0;
-            $state['last_count'] = count($dump);
-            $state['last_size'] = file_exists($dumpPath) ? (int)filesize($dumpPath) : 0;
-            file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
-            if ($conf['security']['mail_d']) {
-                $log = ($log) ? implode('<br>', $log) : _NO;
-                $subject = $conf['sitename'].' - '._SECURITY;
-                $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'.$log.'<br>'._DATE.': '.date(_TIMESTRING);
-                addMail($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
-            }
-        }
+    if (empty($conf['security']['log_d'])) return ['status' => 'failed', 'message' => 'File scan is disabled'];
+    $sess_f = LOGS_DIR.'/dump_map.json';
+    $state = [];
+    if (file_exists($sess_f) && filesize($sess_f) != 0) {
+        $json = file_get_contents($sess_f);
+        $state = $json ? json_decode($json, true) : [];
+        if (!is_array($state)) $state = [];
     }
+    $now = time();
+    $state['running'] = 1;
+    $state['started_at'] = $now;
+    if (!isset($state['last_run'])) $state['last_run'] = 0;
+    file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    $safe = ini_get('safe_mode') == '1' ? 1 : 0;
+    if (!$safe && function_exists('set_time_limit')) set_time_limit(600);
+
+    $dump = [];
+    $skip = [
+        ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', LOGS_DIR.'/dump.log')), '/'),
+        ltrim(str_replace('\\', '/', str_replace(BASE_DIR, '', LOGS_DIR.'/dump_log.log')), '/')
+    ];
+    $rawskip = str_replace(["\r\n", "\r"], "\n", (string)($conf['security']['dump_skip'] ?? ''));
+    foreach (explode("\n", $rawskip) as $line) {
+        $line = trim(str_replace('\\', '/', (string)$line));
+        $line = preg_replace('#/+#', '/', $line);
+        $line = preg_replace('#^\./#', '', (string)$line);
+        $line = trim((string)$line, " \t\n\r\0\x0B");
+        if ($line === '' || $line === '.' || $line === './') continue;
+        if (str_contains($line, '..')) continue;
+        $skip[] = $line;
+    }
+    $skip = array_values(array_unique($skip));
+    create_dump('./', $dump, $skip);
+    $dumpp = LOGS_DIR.'/dump.log';
+    $logpp = LOGS_DIR.'/dump_log.log';
+    if (file_exists($dumpp) && filesize($dumpp) != 0) {
+        if ($log = diff_dump($dump, file($dumpp), $skip)) sort($log);
+    } else {
+        $log = false;
+    }
+    write_log($log, $logpp);
+    write_dump($dump, $dumpp);
+    $state['last_run'] = time();
+    $state['running'] = 0;
+    $state['started_at'] = 0;
+    $state['last_count'] = count($dump);
+    $state['last_size'] = file_exists($dumpp) ? (int)filesize($dumpp) : 0;
+    $state['last_changes'] = is_array($log) ? count($log) : 0;
+    file_put_contents($sess_f, json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    if ($conf['security']['mail_d']) {
+        $mail = ($log) ? implode('<br>', $log) : _NO;
+        $subj = $conf['sitename'].' - '._SECURITY;
+        $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'.$mail.'<br>'._DATE.': '.date(_TIMESTRING);
+        addMail($conf['adminmail'], $conf['adminmail'], $subj, $mmsg, 0, 1);
+    }
+    return [
+        'status' => 'success',
+        'message' => 'File scan completed',
+        'extra' => [
+            'last_count' => count($dump),
+            'last_size' => file_exists($dumpp) ? (int)filesize($dumpp) : 0,
+            'last_changes' => is_array($log) ? count($log) : 0,
+        ],
+    ];
 }
 
 # User and admin login report

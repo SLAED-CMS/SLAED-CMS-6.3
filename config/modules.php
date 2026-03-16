@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright (c) 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -434,6 +434,17 @@ return [
             'side' => '2',
             'top' => '0',
             'type' => '1',
+        ],
+        'scheduler' => [
+            'lang' => '_SCHEDULER',
+            'img' => 'remote.png',
+            'active' => '1',
+            'view' => '0',
+            'menu' => '1',
+            'group' => '0',
+            'side' => '0',
+            'top' => '0',
+            'type' => '0',
         ],
         'search' => [
             'lang' => '_SEARCH',

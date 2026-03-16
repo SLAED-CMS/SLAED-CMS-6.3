@@ -107,7 +107,7 @@ if (empty($go)) {
     }
 } elseif (is_numeric($go)) {
     $fdsize = isset($_FILES['file']['size']) ? $_FILES['file']['size'] : '';
-    if (!intval($fdsize) && !stristr(getenv('HTTP_REFERER'), getHost())) die('Illegal file access');
+    if (!intval($fdsize) && !stristr((string)getenv('HTTP_REFERER'), getHost())) die('Illegal file access');
     if ($go == 1) {
         setCache('0');
         switch($op) {
@@ -141,10 +141,18 @@ if (empty($go)) {
     } elseif ($go == 3) {
         setCache('0');
         switch($op) {
-            case 'filereport': filereport(); break;
-            case 'backup': addBackupDb(); break;
-            case 'sitemap': doSitemap(); break;
-            case 'newsletter': updateNewsletter(); break;
+            case 'scheduler':
+            $name = getVar('req', 'job', 'var');
+            $type = getVar('req', 'trigger', 'var', 'manual');
+            $stok = getVar('req', 'token', 'text');
+            if (!checkSchedulerAccess($type, $stok)) {
+                header('Content-Type: application/json; charset=UTF-8');
+                echo json_encode(['status' => 'denied', 'message' => 'Access denied'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                exit;
+            }
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(addSchedulerRun($name ?: null, $type), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            exit;
         }
     } elseif ($go == 4) {
         setCache('0');
