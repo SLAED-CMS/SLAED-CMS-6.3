@@ -101,7 +101,9 @@ function conf(): void {
     $cont .= '<tr><td>'._MAP_FR_H.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_h" class="sl_conf">'.$h.'</select></td></tr>'
     .'<tr><td>'._MAP_FR_M.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_m" class="sl_conf">'.$m.'</select></td></tr>'
     .'<tr><td>'._MAP_FR_C.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_c" class="sl_conf">'.$c.'</select></td></tr>'
-    .'<tr><td>'._MAP_FR_P.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_p" class="sl_conf">'.$popt.'</select></td></tr>';
+    .'<tr><td>'._MAP_FR_P.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_p" class="sl_conf">'.$popt.'</select></td></tr>'
+    .'<tr><td>'._MAP_AUTO_T.':</td><td><input type="number" name="auto_t" value="'.intval(($conf['sitemap']['auto_t'] ?? 0) / 3600).'" class="sl_conf" placeholder="'._MAP_AUTO_T.'" required></td></tr>'
+    .'<tr><td>'._MAP_AUTO.'</td><td>'.radio_form($conf['sitemap']['auto'] ?? 0, 'auto').'</td></tr>';
     $prs = ['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0'];
     $h = $m = $c = $popt = '';
     foreach ($prs as $val) {
@@ -118,8 +120,6 @@ function conf(): void {
     .'<tr><td>'._MAP_PR_M.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_m" class="sl_conf">'.$m.'</select></td></tr>'
     .'<tr><td>'._MAP_PR_C.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_c" class="sl_conf">'.$c.'</select></td></tr>'
     .'<tr><td>'._MAP_PR_P.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_p" class="sl_conf">'.$popt.'</select></td></tr>'
-    .'<tr><td>'._MAP_AUTO_T.':</td><td><input type="number" name="auto_t" value="'.(int)(($conf['sitemap']['auto_t'] ?? 0) / 3600).'" class="sl_conf" placeholder="'._MAP_AUTO_T.'" required></td></tr>'
-    .'<tr><td>'._MAP_AUTO.'</td><td>'.radio_form($conf['sitemap']['auto'] ?? 0, 'auto').'</td></tr>'
     .'<tr><td>'._MAP_DAT_H.'</td><td>'.radio_form($conf['sitemap']['dat_h'] ?? 0, 'dat_h').'</td></tr>'
     .'<tr><td>'._MAP_DAT_M.'</td><td>'.radio_form($conf['sitemap']['dat_m'] ?? 0, 'dat_m').'</td></tr>'
     .'<tr><td>'._MAP_DAT_C.'</td><td>'.radio_form($conf['sitemap']['dat_c'] ?? 0, 'dat_c').'</td></tr>'
@@ -141,6 +141,8 @@ function saveconf(): void {
     $mod = getVar('post', 'mod', 'num', []);
     $cont = [
         'mod' => empty($mod[0]) ? '0' : implode(',', $mod),
+        'auto_t' => getVar('post', 'auto_t', 'num', 1) * 3600,
+        'auto' => getVar('post', 'auto', 'num', 0),
         'fr_h' => getVar('post', 'fr_h', 'var', '0'),
         'fr_m' => getVar('post', 'fr_m', 'var', '0'),
         'fr_c' => getVar('post', 'fr_c', 'var', '0'),
@@ -149,8 +151,6 @@ function saveconf(): void {
         'pr_m' => getVar('post', 'pr_m', 'var', '0'),
         'pr_c' => getVar('post', 'pr_c', 'var', '0'),
         'pr_p' => getVar('post', 'pr_p', 'var', '0'),
-        'auto_t' => getVar('post', 'auto_t', 'num', 1) * 3600,
-        'auto' => getVar('post', 'auto', 'num', 0),
         'dat_h' => getVar('post', 'dat_h', 'num', 0),
         'dat_m' => getVar('post', 'dat_m', 'num', 0),
         'dat_c' => getVar('post', 'dat_c', 'num', 0),
@@ -181,7 +181,4 @@ switch ($op) {
     case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }
-
-
-
 

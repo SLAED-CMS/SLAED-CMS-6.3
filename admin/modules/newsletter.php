@@ -231,8 +231,7 @@ function save(): void {
                 'title' => $title, 'body' => $body, 'mails' => $emails
             ]);
         }
-        $cont = ['newsletter' => $send, 'newslettercount' => $count];
-        setConfigFile('global.php', $cont, $conf);
+        setConfigFile('global.php', ['newsletter' => $send, 'newslettercount' => $count]);
         setRedirect($afile.'.php?name=newsletter');
     } else {
         add();
