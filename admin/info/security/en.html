@@ -7,8 +7,7 @@ To clear a statistics file, click on the value (Delete object).<br>
 To view the storage path and name of the statistics file on the server, click on the icon (i) to the left of the corresponding statistics name.<br>
 <br>
 [b][i][color=orangered]Modified files statistics[/color][/i][/b]<br>
-Depending on the time specified in the settings ("Configurations" tab, parameter "File modification check interval, <br>
-in minutes"), the system checks all system files for deletions, modifications, and new additions.<br>
+The system checks all website files for deletions, modifications, and new additions according to the schedule configured in the «Scheduler» module for the filescan job.<br>
 Collecting this statistics is useful for security purposes: the actions described above with files can be tracked.<br>
 <br>
 [b][i][color=orangered]Dynamic errors statistics[/color][/i][/b]<br>
@@ -45,8 +44,7 @@ Tracks server errors. Records detailed information (error description, link, and
 <br>
 [b][i][color=orangered]File structure[/color][/i][/b]<br>
 Displays the entire file structure in the website directory: folders and the files they contain.<br>
-Updated depending on the setting: File modification check interval, <br>
-in minutes (specified in the "Configurations" tab).<br>
+Updated according to the schedule configured in the «Scheduler» module for the filescan job.<br>
 <br>
 [color=green][b]"Blocking" tab[/b][/color]<br>
 You can block any project visitor by IP address or IP network mask, by the browser used, as well as by the username of a user registered on the website. The number of blocked visitors is unlimited. <br>
@@ -99,9 +97,7 @@ HTTP authentication is only possible when running PHP as an Apache module or in 
 In this tab, the main security system settings are configured. Explanations for some settings:<br>
 [li] [b][i]Maximum statistics file size, in bytes[/i][/b] – if the set size is reached, the file is packed into a gZip archive, the name of which is generated according to the packing date. <br>
 A new file is created. Applies to all statistics files displayed in the "Main" tab.<br>
-[li] [b][i]Database backup interval, in minutes[/i][/b] – the system can create backup copies of the database automatically. The interval between <br>
-DB backups is specified in minutes. The database copy is packed into a gZip archive and receives a name according to the creation time.<br>
-[li] [b][i]Automatic database backup?[/i][/b] – create DB backup copies or not.<br>
+[li] Database backup and file scan schedules are now configured in the «Scheduler» module, where you can enable jobs, set cron schedules, and run them manually.<br>
 [li] [b][i]Show error messages?[/i][/b] – responsible for displaying PHP system errors. We recommend disabling this (increases the security level) <br>
 if the website is running in normal mode. If the website is running in debug mode (e.g., testing, creating custom modules, blocks), we recommend enabling display to track errors and their causes. In disabled mode, errors are not shown even if they exist.<br>
 [li] [b][i]Show JavaScript error messages?[/i][/b] – similar to PHP errors (see the point above).<br>

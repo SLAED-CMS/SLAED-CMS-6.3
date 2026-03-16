@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright (c) 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -12,12 +12,6 @@ return [
         'blocker_cookie' => 'banned',
         'blocker_ip' => '',
         'blocker_user' => '',
-        'dump_skip' => '.git/
-vendor/
-storage/logs/
-config/cache/
-.agents/
-.claude/',
         'error' => '2',
         'error_java' => '0',
         'error_log' => '1',
@@ -26,13 +20,14 @@ config/cache/
         'log' => '0',
         'log_a' => '1',
         'log_b' => '0',
-        'log_d' => '1',
+        'log_d' => '0',
         'log_size' => '10485760',
         'log_u' => '0',
         'login' => '',
         'mail' => '1',
         'mail_d' => '1',
         'mail_w' => '0',
+        'dump_skip' => '',
         'password' => '',
         'ref_post' => '1',
         'sess_b' => '86400',

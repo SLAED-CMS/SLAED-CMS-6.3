@@ -7,8 +7,7 @@ Aby wyczyścić plik statystyk, kliknij na wartosc (Usun obiekt).<br>
 Aby wyswietlic sciezke przechowywania i nazwe pliku statystyk na serwerze, kliknij na ikone (i) po lewej stronie od nazwy odpowiedniej statystyki.<br>
 <br>
 [b][i][color=orangered]Statystyki zmodyfikowanych plikow[/color][/i][/b]<br>
-W zaleznosci od czasu podanego w ustawieniach (Zakladka "Konfiguracje", parametr "Czas sprawdzania plikow <br>
-pod katem modyfikacji, w minutach") system sprawdza wszystkie pliki systemowe pod katem usuniec, zmian i nowych dodatkow.<br>
+System sprawdza wszystkie pliki strony pod katem usuniec, zmian i nowych dodatkow zgodnie z harmonogramem skonfigurowanym w module "Scheduler" dla zadania filescan.<br>
 Zbieranie tych statystyk jest przydatne z punktu widzenia bezpieczenstwa: mozna sledzic opisane powyzej dzialania na plikach.<br>
 <br>
 [b][i][color=orangered]Statystyki bledow dynamicznych[/color][/i][/b]<br>
@@ -45,8 +44,7 @@ Sledzi bledy serwera. Zapisuje szczegolowe informacje (opis bledu, link i czas w
 <br>
 [b][i][color=orangered]Struktura plikow[/color][/i][/b]<br>
 Wyswietla cala strukture plikow w katalogu strony: foldery i zawarte w nich pliki.<br>
-Aktualizowana w zaleznosci od ustawienia: Czas sprawdzania plikow pod <br>
-katem modyfikacji, w minutach (podawany w zakladce "Konfiguracje").<br>
+Aktualizowana zgodnie z harmonogramem skonfigurowanym w module "Scheduler" dla zadania filescan.<br>
 <br>
 [color=green][b]Zakladka "Blokowanie"[/b][/color]<br>
 Mozna zablokowac dowolnego odwiedzajacego projekt wedlug adresu IP lub maski sieci IP, wedlug uzywanej przegladarki, a takze wedlug nazwy uzytkownika zarejestrowanego na stronie. Liczba zablokowanych odwiedzajacych jest nieograniczona. <br>
@@ -99,8 +97,7 @@ Uwierzytelnianie HTTP jest mozliwe tylko przy uruchomieniu PHP jako modulu Apach
 W tej zakladce ustawiane sa glowne ustawienia systemu bezpieczenstwa. Objasnienia do niektorych ustawien:<br>
 [li] [b][i]Maksymalny rozmiar plikow statystyk, w bajtach[/i][/b] – jesli ustawiony rozmiar zostanie osiagniety, plik jest pakowany do archiwum gZip, ktorego nazwa jest generowana zgodnie z data pakowania. <br>
 Tworzony jest nowy plik. Dotyczy wszystkich plikow statystyk wyswietlanych w zakladce "Glowna".<br>
-[li] [b][i]Odstep czasu kopiowania bazy danych, w minutach[/i][/b] – system moze tworzyc kopie zapasowe bazy danych automatycznie. Odstep miedzy <br>
-tworzeniami kopii BD podawany jest w minutach. Kopia bazy danych jest pakowana do archiwum gZip i otrzymuje nazwe zgodnie z czasem utworzenia.<br>
+[li] Harmonogram kopii zapasowych bazy danych i skanowania plikow jest teraz konfigurowany w module "Scheduler", gdzie mozna wlaczac zadania, ustawiac harmonogramy cron i uruchamiac je recznie.<br>
 [li] [b][i]Automatyczne kopiowanie bazy danych?[/i][/b] – tworzyc kopie zapasowe BD czy nie.<br>
 [li] [b][i]Pokazywac komunikaty o bledach?[/i][/b] – odpowiada za wyswietlanie bledow systemowych PHP. Zalecamy wylaczenie (zwieksza poziom <br>
 bezpieczenstwa), jesli strona dziala w normalnym trybie. Jesli strona dziala w trybie debugowania (np.: testowanie, tworzenie wlasnych modulow, blokow), zalecamy wlaczenie wyswietlania, aby sledzic bledy i ich przyczyny. W wylaczonym trybie bledy nie sa wyswietlane, nawet jesli istnieja.<br>

@@ -7,8 +7,7 @@ Pour effacer un fichier de statistiques, cliquez sur la valeur (Supprimer l'obje
 Pour afficher le chemin de stockage et le nom du fichier de statistiques sur le serveur, cliquez sur l'icone (i) a gauche du nom de la statistique correspondante.<br>
 <br>
 [b][i][color=orangered]Statistiques des fichiers modifies[/color][/i][/b]<br>
-En fonction du temps indique dans les parametres (Onglet "Configurations", parametre "Intervalle de verification des modifications de fichiers, <br>
-en minutes"), le systeme verifie tous les fichiers systeme pour les suppressions, modifications et ajouts de nouveaux fichiers.<br>
+Le systeme verifie tous les fichiers du site pour detecter les suppressions, modifications et nouveaux ajouts selon la planification configuree dans le module « Scheduler » pour la tache filescan.<br>
 La collecte de ces statistiques est utile en termes de securite : les actions decrites ci-dessus sur les fichiers peuvent etre suivies.<br>
 <br>
 [b][i][color=orangered]Statistiques des erreurs dynamiques[/color][/i][/b]<br>
@@ -45,8 +44,7 @@ Suit les erreurs du serveur. Enregistre des informations detaillees (description
 <br>
 [b][i][color=orangered]Structure des fichiers[/color][/i][/b]<br>
 Affiche l'integralite de la structure des fichiers dans le repertoire du site : dossiers et fichiers qu'ils contiennent.<br>
-Mise a jour en fonction du parametre : Intervalle de verification des modifications de fichiers, <br>
-en minutes (indique dans l'onglet "Configurations").<br>
+Mise a jour selon le calendrier configure dans le module « Scheduler » pour la tache filescan.<br>
 <br>
 [color=green][b]Onglet "Blocage"[/b][/color]<br>
 Tout visiteur du projet peut etre bloque par adresse IP ou masque de reseau IP, par navigateur utilise, ainsi que par nom d'utilisateur enregistre sur le site. Le nombre de visiteurs bloques est illimite. <br>
@@ -99,8 +97,7 @@ L'authentification HTTP n'est possible que lorsque PHP fonctionne en tant que mo
 Dans cet onglet, les parametres principaux du systeme de securite sont configures. Explications pour certains parametres :<br>
 [li] [b][i]Taille maximale des fichiers de statistiques, en octets[/i][/b] – si la taille definie est atteinte, le fichier est compresse dans une archive gZip dont le nom est genere en fonction de la date de compression. <br>
 Un nouveau fichier est cree. S'applique a tous les fichiers de statistiques affiches dans l'onglet "Principal".<br>
-[li] [b][i]Intervalle de sauvegarde de la base de donnees, en minutes[/i][/b] – le systeme peut creer des copies de sauvegarde de la base de donnees automatiquement. L'intervalle entre <br>
-les sauvegardes de la BD est indique en minutes. La copie de la base de donnees est compressee dans une archive gZip et recoit un nom en fonction de l'heure de creation.<br>
+[li] La planification des sauvegardes de la base de donnees et de l'analyse des fichiers est maintenant configuree dans le module « Scheduler », ou vous pouvez activer les taches, definir les expressions cron et les lancer manuellement.<br>
 [li] [b][i]Sauvegarde automatique de la base de donnees ?[/i][/b] – creer des copies de sauvegarde de la BD ou non.<br>
 [li] [b][i]Afficher les messages d'erreur ?[/i][/b] – responsable de l'affichage des erreurs systeme PHP. Nous recommandons de desactiver (augmente le niveau de <br>
 securite) si le site fonctionne en mode normal. Si le site fonctionne en mode debogage (par exemple : tests, creation de modules personnalises, blocs), nous recommandons d'activer l'affichage pour suivre les erreurs et leurs causes. En mode desactive, les erreurs ne sont pas affichees meme si elles existent.<br>

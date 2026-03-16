@@ -7,17 +7,25 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 $labels = [
-    'dump' => _SEC_STAT_DUM,
-    'dump_log' => _SEC_STAT_DUML,
-    'error_php' => _SEC_STAT_ERROR_D,
+    'database'   => _SEC_STAT_DB,
+    'dump'       => _SEC_STAT_DUM,
+    'dump_log'   => _SEC_STAT_DUML,
+    'dump_map'   => _SEC_STAT_DMAP,
     'error_file' => _SEC_STAT_ERROR_FILE,
+    'error_php'  => _SEC_STAT_ERROR_D,
     'error_site' => _SEC_STAT_ERROR_S,
-    'error_sql' => _SEC_STAT_ERROR_SQL,
-    'hack' => _SEC_STAT_HACK,
-    'log' => _SEC_STAT_LOG,
-    'log_admin' => _SEC_STAT_A,
-    'log_user' => _SEC_STAT_U,
-    'warn' => _SEC_STAT_WARN
+    'error_sql'  => _SEC_STAT_ERROR_SQL,
+    'hack'       => _SEC_STAT_HACK,
+    'log'        => _SEC_STAT_LOG,
+    'log_admin'  => _SEC_STAT_A,
+    'log_user'   => _SEC_STAT_U,
+    'monitor'    => _SEC_STAT_MON,
+    'warn'       => _SEC_STAT_WARN,
+];
+
+$ext = [
+    'dump_map' => 'json',
+    'monitor'  => 'json',
 ];
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
@@ -36,17 +44,18 @@ function security(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SIZE.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     $files = is_dir(LOGS_DIR) ? scandir(LOGS_DIR) : [];
+    $skip = ['.', '..', '.htaccess', 'index.html'];
     foreach ($files as $file) {
-        if (preg_match('#(.*)\.log$#', $file)) {
-            $name = (string)pathinfo($file, PATHINFO_FILENAME);
-            $title = $labels[$name];
-            $path = LOGS_DIR.'/'.$file;
-            $filesize = filesize($path);
-            $cont .= '<tr><td>'.title_tip(_FILE.': storage/logs/'.$file).$title.'</td>'
-            .'<td>'.filterSize($filesize).'</td>'
-            .'<td>'.date(_TIMESTRING, filemtime($path)).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=file&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>||<a href="'.$afile.'.php?name=security&amp;op=down&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>||<a href="'.$afile.'.php?name=security&amp;op=del&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
-        }
+        if (in_array($file, $skip, true)) continue;
+        $name = (string)pathinfo($file, PATHINFO_FILENAME);
+        if (!isset($labels[$name])) continue;
+        $title = $labels[$name];
+        $path = LOGS_DIR.'/'.$file;
+        $filesize = filesize($path);
+        $cont .= '<tr><td>'.title_tip(_FILE.': storage/logs/'.$file).$title.'</td>'
+        .'<td>'.filterSize($filesize).'</td>'
+        .'<td>'.date(_TIMESTRING, filemtime($path)).'</td>'
+        .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=file&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>||<a href="'.$afile.'.php?name=security&amp;op=down&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>||<a href="'.$afile.'.php?name=security&amp;op=del&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
     }
     $cont .= '</tbody></table>';
     $cont .= setTemplateBasic('close');
@@ -55,13 +64,13 @@ function security(): void {
 }
 
 function fileview(): void {
-    global $labels;
+    global $labels, $ext;
     setHead();
     $cont = navi(0, 0, 0, 0, 'security');
     $file = getVar('get', 'file', 'var');
     if ($file) {
         $title = $labels[$file];
-        $path = LOGS_DIR.'/'.$file.'.log';
+        $path = LOGS_DIR.'/'.$file.'.'.($ext[$file] ?? 'log');
         $content = (is_file($path) && is_readable($path)) ? file_get_contents($path) : false;
         if ($content === false) {
             $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
@@ -270,9 +279,6 @@ function conf(): void {
     .'<tr><td>'._SEC_COOKIE.':</td><td><input type="text" name="blocker_cookie" value="'.$conf['security']['blocker_cookie'].'" maxlength="255" class="sl_conf" placeholder="'._SEC_COOKIE.'" required></td></tr>'
     .'<tr><td>'._ADMIN_FILE.':<div class="sl_small">'.$ainfo.'</div></td><td><input type="text" name="afile" value="'.$conf['security']['afile'].'" maxlength="255" class="sl_conf" placeholder="'._ADMIN_FILE.'" required></td></tr>'
     .'<tr><td>'._SEC_LOG_SIZE.':</td><td><input type="number" name="log_size" value="'.$conf['security']['log_size'].'" class="sl_conf" placeholder="'._SEC_LOG_SIZE.'" required></td></tr>'
-    .'<tr><td>'._SEC_LOG_DS.':</td><td><input type="number" name="sess_d" value="'.intval($conf['security']['sess_d'] / 60).'" class="sl_conf" placeholder="'._SEC_LOG_DS.'" required></td></tr>'
-    .'<tr><td>'._SEC_LOG_DB.':</td><td><input type="number" name="sess_b" value="'.intval($conf['security']['sess_b'] / 60).'" class="sl_conf" placeholder="'._SEC_LOG_DB.'" required></td></tr>'
-    .'<tr><td>'._SEC_DB.'</td><td>'.radio_form($conf['security']['log_b'], 'log_b').'</td></tr>'
     .'<tr><td>'._SEC_VIEW_JAVA.'</td><td>'.radio_form($conf['security']['error_java'], 'error_java').'</td></tr>'
     .'<tr><td>'._SEC_STAT.'</td><td>'.radio_form($conf['security']['error_log'], 'error_log').'</td></tr>'
     .'<tr><td>'._SEC_URL_GET.'</td><td>'.radio_form($conf['security']['url_get'], 'url_get').'</td></tr>'
@@ -281,11 +287,10 @@ function conf(): void {
     .'<tr><td>'._SEC_MAIL_SEND.'</td><td>'.radio_form($conf['security']['mail'], 'mail').'</td></tr>'
     .'<tr><td>'._SEC_MAIL_W_SEND.'</td><td>'.radio_form($conf['security']['mail_w'], 'mail_w').'</td></tr>'
     .'<tr><td>'._SEC_MAIL_D_SEND.'</td><td>'.radio_form($conf['security']['mail_d'], 'mail_d').'</td></tr>'
+    .'<tr><td>'._SEC_DUMP_SKIP.':<div class="sl_small">'._SEC_DUMP_SKIP_INFO.'</div></td><td><textarea name="dump_skip" cols="65" rows="8" class="sl_conf" placeholder="'._SEC_DUMP_SKIP_INFO.'">'.$conf['security']['dump_skip'].'</textarea></td></tr>'
     .'<tr><td>'._SEC_HACK_STAT.'</td><td>'.radio_form($conf['security']['write_h'], 'write_h').'</td></tr>'
     .'<tr><td>'._SEC_WARN_STAT.'</td><td>'.radio_form($conf['security']['write_w'], 'write_w').'</td></tr>'
     .'<tr><td>'._SEC_LOG.'</td><td>'.radio_form($conf['security']['log'], 'log').'</td></tr>'
-    .'<tr><td>'._SEC_LOG_D.'</td><td>'.radio_form($conf['security']['log_d'], 'log_d').'</td></tr>'
-    .'<tr><td>'._SEC_DUMP_SKIP.':<div class="sl_small">'._SEC_DUMP_SKIP_INFO.'</div></td><td><textarea name="dump_skip" cols="65" rows="8" class="sl_conf" placeholder="'._SEC_DUMP_SKIP_INFO.'">'.htmlspecialchars((string)($conf['security']['dump_skip'] ?? ''), ENT_QUOTES, 'UTF-8').'</textarea></td></tr>'
     .'<tr><td>'._SEC_LOG_A.'</td><td>'.radio_form($conf['security']['log_a'], 'log_a').'</td></tr>'
     .'<tr><td>'._SEC_LOG_U.'</td><td>'.radio_form($conf['security']['log_u'], 'log_u').'</td></tr>'
     .'<tr><td>'._SEC_WARN_BLOCK.'</td><td>'.radio_form($conf['security']['block'], 'block').'</td></tr>'
@@ -303,22 +308,8 @@ function confsave(): void {
     if ($afile != $tafile) rename($tafile.'.php', $afile.'.php');
     $afile = (file_exists($afile.'.php')) ? $afile : $tafile;
     $log_size = getVar('post', 'log_size', 'num', '1048576');
-    $sess_d = getVar('post', 'sess_d', 'num', 1440) * 60;
-    $sess_b = getVar('post', 'sess_b', 'num', 1440) * 60;
-    $rawskip = str_replace(["\r\n", "\r"], "\n", (string)getVar('post', 'dump_skip', 'raw', ''));
-    $lines = explode("\n", $rawskip);
-    $dskip = [];
-    foreach ($lines as $line) {
-        $line = trim(str_replace('\\', '/', (string)$line));
-        $line = preg_replace('#/+#', '/', $line);
-        $line = preg_replace('#^\./#', '', (string)$line);
-        $line = trim((string)$line, " \t\n\r\0\x0B");
-        if ($line === '' || $line === '.' || $line === './') continue;
-        if (str_contains($line, '..')) continue;
-        if (!str_ends_with($line, '/')) $line .= '/';
-        $dskip[] = $line;
-    }
-    $dskip = array_values(array_unique($dskip));
+    $dump_skip = getVar('post', 'dump_skip', 'text');
+    $dump_skip = str_replace(["\r\n", "\r"], "\n", trim($dump_skip));
     $cont = [
         'flood' => getVar('post', 'flood', 'num'),
         'error' => getVar('post', 'error', 'num'),
@@ -326,9 +317,6 @@ function confsave(): void {
         'blocker_cookie' => getVar('post', 'blocker_cookie', 'text'),
         'afile' => $afile,
         'log_size' => $log_size,
-        'sess_d' => $sess_d,
-        'sess_b' => $sess_b,
-        'log_b' => getVar('post', 'log_b', 'num'),
         'error_java' => getVar('post', 'error_java', 'num'),
         'error_log' => getVar('post', 'error_log', 'num'),
         'url_get' => getVar('post', 'url_get', 'num'),
@@ -337,11 +325,10 @@ function confsave(): void {
         'mail' => getVar('post', 'mail', 'num'),
         'mail_w' => getVar('post', 'mail_w', 'num'),
         'mail_d' => getVar('post', 'mail_d', 'num'),
+        'dump_skip' => $dump_skip,
         'write_h' => getVar('post', 'write_h', 'num'),
         'write_w' => getVar('post', 'write_w', 'num'),
         'log' => getVar('post', 'log', 'num'),
-        'log_d' => getVar('post', 'log_d', 'num'),
-        'dump_skip' => implode("\n", $dskip),
         'log_a' => getVar('post', 'log_a', 'num'),
         'log_u' => getVar('post', 'log_u', 'num'),
         'block' => getVar('post', 'block', 'num')
@@ -351,6 +338,10 @@ function confsave(): void {
     $cont['admin_ip'] = $conf['security']['admin_ip'];
     $cont['login'] = $conf['security']['login'];
     $cont['password'] = $conf['security']['password'];
+    $cont['sess_d'] = $conf['security']['sess_d'];
+    $cont['sess_b'] = $conf['security']['sess_b'];
+    $cont['log_b'] = $conf['security']['log_b'];
+    $cont['log_d'] = $conf['security']['log_d'];
     setConfigFile('security.php', $cont);
     setRedirect($afile.'.php?name=security&op=conf');
 }
@@ -362,12 +353,13 @@ function info(): void {
 }
 
 function down(): void {
-    global $afile;
+    global $afile, $ext;
     $file = getVar('get', 'file', 'var');
     if ($file) {
-        $path = LOGS_DIR.'/'.$file.'.log';
+        $fext = $ext[$file] ?? 'log';
+        $path = LOGS_DIR.'/'.$file.'.'.$fext;
         if (is_file($path)) {
-            stream($path, date('d.m.Y').'_'.$file.'.log');
+            stream($path, date('d.m.Y').'_'.$file.'.'.$fext);
             return;
         }
         setRedirect($afile.'.php?name=security');
@@ -377,10 +369,10 @@ function down(): void {
 }
 
 function del(): void {
-    global $afile;
+    global $afile, $ext;
     $file = getVar('get', 'file', 'var');
     if ($file) {
-        $path = LOGS_DIR.'/'.$file.'.log';
+        $path = LOGS_DIR.'/'.$file.'.'.($ext[$file] ?? 'log');
         if (is_file($path)) unlink($path);
     }
     setRedirect($afile.'.php?name=security');

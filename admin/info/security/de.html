@@ -7,8 +7,7 @@ Um die Statistikdatei zu loeschen, klicken Sie auf den Wert (Objekt loeschen).<b
 Um den Speicherpfad und den Namen der Statistikdatei auf dem Server anzuzeigen, klicken Sie auf das Symbol (i) links neben dem Namen der entsprechenden Statistik.<br>
 <br>
 [b][i][color=orangered]Statistik der modifizierten Dateien[/color][/i][/b]<br>
-Abhaengig von der in den Einstellungen angegebenen Zeit (Registerkarte "Konfigurationen", Parameter "Zeitintervall fuer die Dateimodifikationspruefung, <br>
-in Minuten") prueft das System alle Systemdateien auf Loeschungen, Aenderungen und neue Hinzufuegungen.<br>
+Das System prueft alle Website-Dateien auf Loeschungen, Aenderungen und neue Hinzufuegungen gemaess dem Zeitplan, der im Modul "Scheduler" fuer den Job "filescan" konfiguriert ist.<br>
 Die Erfassung dieser Statistik ist in Bezug auf die Sicherheit nuetzlich: Die oben beschriebenen Aktionen mit Dateien koennen nachverfolgt werden.<br>
 <br>
 [b][i][color=orangered]Statistik dynamischer Fehler[/color][/i][/b]<br>
@@ -45,8 +44,7 @@ Verfolgt Serverfehler. Zeichnet detaillierte Informationen (Fehlerbeschreibung, 
 <br>
 [b][i][color=orangered]Dateistruktur[/color][/i][/b]<br>
 Zeigt die gesamte Dateistruktur im Website-Verzeichnis an: Ordner und die darin enthaltenen Dateien.<br>
-Wird abhaengig von der Einstellung aktualisiert: Zeitintervall fuer die Dateimodifikationspruefung, <br>
-in Minuten (angegeben in der Registerkarte "Konfigurationen").<br>
+Wird gemaess dem Zeitplan aktualisiert, der im Modul "Scheduler" fuer den Job "filescan" konfiguriert ist.<br>
 <br>
 [color=green][b]Registerkarte "Blockierung"[/b][/color]<br>
 Jeder Besucher des Projekts kann nach IP-Adresse oder IP-Netzmaske, nach verwendetem Browser sowie nach dem Benutzernamen eines auf der Website registrierten Benutzers blockiert werden. Die Anzahl der blockierten Besucher ist unbegrenzt. <br>
@@ -99,8 +97,7 @@ HTTP-Authentifizierung ist nur moeglich, wenn PHP als Apache-Modul oder im FastC
 In dieser Registerkarte werden die grundlegenden Einstellungen des Sicherheitssystems festgelegt. Erlaeuterungen zu einigen Einstellungen:<br>
 [li] [b][i]Maximale Groesse der Statistikdateien, in Bytes[/i][/b] – wenn die eingestellte Groesse erreicht ist, wird die Datei in ein gZip-Archiv gepackt, dessen Name entsprechend dem Packdatum generiert wird. <br>
 Eine neue Datei wird erstellt. Gilt fuer alle Statistikdateien, die in der Registerkarte "Hauptseite" angezeigt werden.<br>
-[li] [b][i]Zeitintervall fuer die Datenbanksicherung, in Minuten[/i][/b] – das System kann automatisch Sicherungskopien der Datenbank erstellen. Das Intervall zwischen <br>
-den DB-Sicherungen wird in Minuten angegeben. Die Datenbankkopie wird in ein gZip-Archiv gepackt und erhaelt einen Namen entsprechend dem Erstellungszeitpunkt.<br>
+[li] Die Zeitplaene fuer Datenbanksicherung und Dateipruefung werden jetzt im Modul "Scheduler" konfiguriert. Dort koennen Sie Jobs aktivieren, Cron-Zeitplaene festlegen und sie manuell starten.<br>
 [li] [b][i]Automatische Datenbanksicherung?[/i][/b] – Sicherungskopien der DB erstellen oder nicht.<br>
 [li] [b][i]Fehlermeldungen anzeigen?[/i][/b] – verantwortlich fuer die Anzeige von PHP-Systemfehlern. Wir empfehlen die Deaktivierung (erhoeht das Sicherheitsniveau), <br>
 wenn die Website im Normalbetrieb laeuft. Wenn die Website im Debug-Modus laeuft (z.B. Tests, Erstellung eigener Module, Bloecke), empfehlen wir die Aktivierung, um Fehler und ihre Ursachen zu verfolgen. Im deaktivierten Modus werden Fehler nicht angezeigt, selbst wenn sie vorhanden sind.<br>
