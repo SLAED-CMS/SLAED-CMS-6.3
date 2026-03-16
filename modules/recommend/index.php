@@ -11,7 +11,7 @@ if (!defined('MODULE_FILE')) {
 
 function recommend(): void {
     global $conf, $stop;
-    $unkey = md5_salt($conf['sitekey']);
+    $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
     if (is_user()) {
         $userinfo = getUserInfo();
         $sname = getVar('post', $unkey, 'name', $userinfo['name']);
@@ -39,7 +39,7 @@ function recommend(): void {
 
 function send(): void {
     global $conf, $stop;
-    $unkey = md5_salt($conf['sitekey']);
+    $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
     $sname = getVar('post', $unkey, 'name');
     $semail = getVar('post', 'semail', 'text');
     $fname = getVar('post', 'fname', 'name');

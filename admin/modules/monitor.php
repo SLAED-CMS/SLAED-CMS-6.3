@@ -1294,7 +1294,7 @@ function getMonitorTemplateVars(?array $snapshot, array $ctx, array $conf, objec
             '{%opmode%}'    => $status(!($conf['close'] ?? 0)),
             '{%statact%}'   => $status(is_active('stat')),
             '{%referact%}'  => $status(is_active('referers')),
-            '{%newslet%}'   => $status((bool)($conf['newsletter'] ?? 0)),
+            '{%newslet%}'   => $status((bool)($conf['newsletter']['active'] ?? 0)),
             '{%cache%}'     => $status((bool)($conf['cache'] ?? 0)),
             '{%rewrite%}'   => $status((bool)($conf['rewrite'] ?? 0)),
             '{%cmsver%}'    => htmlspecialchars((string)($conf['version'] ?? ''), ENT_QUOTES, 'UTF-8'),

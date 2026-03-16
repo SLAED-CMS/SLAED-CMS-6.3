@@ -12,6 +12,9 @@ return [
         'blocker_cookie' => 'banned',
         'blocker_ip' => '',
         'blocker_user' => '',
+        'dump_skip' => '.git/
+tests/
+vendor/',
         'error' => '2',
         'error_java' => '0',
         'error_log' => '1',
@@ -27,7 +30,6 @@ return [
         'mail' => '1',
         'mail_d' => '1',
         'mail_w' => '0',
-        'dump_skip' => '',
         'password' => '',
         'ref_post' => '1',
         'sess_b' => '86400',

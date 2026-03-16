@@ -437,7 +437,7 @@ return [
         ],
         'scheduler' => [
             'lang' => '_SCHEDULER',
-            'img' => 'remote.png',
+            'img' => 'scheduler.png',
             'active' => '1',
             'view' => '0',
             'menu' => '1',

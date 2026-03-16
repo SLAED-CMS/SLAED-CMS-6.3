@@ -15,7 +15,7 @@ return [
                 'active' => '0',
                 'handler' => 'addSchedulerBackup',
                 'schedule' => '30 3 * * *',
-                'priority' => '50',
+                'priority' => '4',
                 'lock_timeout' => '1800',
                 'manual' => '1',
                 'settings' => [
@@ -27,7 +27,7 @@ return [
                 'active' => '1',
                 'handler' => 'addSchedulerFilescan',
                 'schedule' => '0 3 * * *',
-                'priority' => '40',
+                'priority' => '2',
                 'lock_timeout' => '1800',
                 'manual' => '1',
                 'settings' => [
@@ -38,8 +38,8 @@ return [
                 'type' => 'system',
                 'active' => '0',
                 'handler' => 'addSchedulerNewsletter',
-                'schedule' => '* * * * *',
-                'priority' => '20',
+                'schedule' => '1 * * * *',
+                'priority' => '1',
                 'lock_timeout' => '900',
                 'manual' => '1',
                 'settings' => [
@@ -51,7 +51,7 @@ return [
                 'active' => '0',
                 'handler' => 'addSchedulerSitemap',
                 'schedule' => '15 3 * * *',
-                'priority' => '30',
+                'priority' => '3',
                 'lock_timeout' => '1800',
                 'manual' => '1',
                 'settings' => [

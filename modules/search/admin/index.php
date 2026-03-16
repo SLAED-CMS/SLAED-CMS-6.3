@@ -6,16 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('search')) die('Illegal file access');
 
-function getSearchtoken(): string {
-    static $token = '';
-    if ($token === '') $token = hash('sha256', session_id().'|search-admin');
-    return $token;
-}
-
-function checkSearchtoken(): bool {
-    return hash_equals(getSearchtoken(), getVar('post', 'token', 'raw', ''));
-}
-
 function getSearchmods(string $cmod = ''): string {
     global $conf;
     $mods = explode(',', $conf['search']['mods']);
@@ -159,7 +149,7 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
 
 function getSearchwhere(): array {
     global $conf;
-    $find = trim((string)getVar('req', 'find', 'text', ''));
+    $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
     $mods = array_map('trim', explode(',', $conf['search']['mods']));
     if ($fmod !== '' && !in_array($fmod, $mods, true)) $fmod = '';
@@ -194,7 +184,7 @@ function getSearchbox(string $view = 'search'): string {
     if ($view !== 'search' && $view !== 'top') return '';
     $sort = getVar('req', 'sort', 'num', 3);
     $order = getVar('req', 'order', 'num', 2);
-    $find = trim((string)getVar('req', 'find', 'text', ''));
+    $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
     $box = '<form method="post" action="'.$afile.'.php"><span style="white-space: nowrap;">'._SORTE.': <select name="sort" style="width: 110px;">';
     $list = [1 => _SWORD, 2 => _MODUL, 3 => _DATE, 4 => _HITS];
@@ -285,7 +275,7 @@ function search(): void {
                 .'<input type="hidden" name="num" value="'.$num.'"><input type="hidden" name="find" value="'
                 .htmlspecialchars($find, ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="fmod" value="'
                 .htmlspecialchars($fmod, ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="token" value="'
-                .htmlspecialchars(getSearchtoken(), ENT_QUOTES, 'UTF-8').'"></form>';
+                .htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'"></form>';
             $edit = '<a href="'.$afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>';
             $drop .= '<a href="#" OnClick="if (DelCheck(this, \''._DELETE.' &quot;'.$show.'&quot;?\')) document.getElementById(\'drop'.$id
                 .'\').submit(); return false;" title="'._ONDELETE.'">'._ONDELETE.'</a>';
@@ -350,7 +340,7 @@ function top(): void {
                 .'<input type="hidden" name="num" value="'.$num.'"><input type="hidden" name="find" value="'
                 .htmlspecialchars($find ?? '', ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="fmod" value="'
                 .htmlspecialchars($fmod ?? '', ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="token" value="'
-                .htmlspecialchars(getSearchtoken(), ENT_QUOTES, 'UTF-8').'"></form>';
+                .htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'"></form>';
             $edit = '<a href="'.$afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>';
             $drop .= '<a href="#" OnClick="if (DelCheck(this, \''._DELETE.' &quot;'.$show.'&quot;?\')) document.getElementById(\'drop'.$id
                 .'\').submit(); return false;" title="'._ONDELETE.'">'._ONDELETE.'</a>';
@@ -386,7 +376,7 @@ function conf(): void {
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=search" method="post"><input type="hidden" name="op" value="save">'
-        .'<input type="hidden" name="token" value="'.htmlspecialchars(getSearchtoken(), ENT_QUOTES, 'UTF-8').'">'
+        .'<input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'">'
         .'<table class="sl_table_conf">'
         .'<tr><td>'._SMODULE.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'
         .modul('search', 'sl_conf', $conf['search']['mods'], 1, $allow).'</td></tr>'
@@ -407,7 +397,7 @@ function conf(): void {
         ._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= '<h3>'._SEARCHENABLED.'</h3>'.getSearchauditTable($elist, 'enabled');
     $cont .= '<h3>'._SEARCHREADY.'</h3><form action="'.$afile.'.php?name=search" method="post">'
-        .'<input type="hidden" name="op" value="addmods"><input type="hidden" name="token" value="'.htmlspecialchars(getSearchtoken(), ENT_QUOTES, 'UTF-8').'">'
+        .'<input type="hidden" name="op" value="addmods"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'">'
         .getSearchauditTable($rlist, 'ready').'<table class="sl_table_conf"><tr><td>'._SEARCHAUTO.':<div class="sl_small">'._SEARCHAUTOINFO.'</div></td></tr>'
         .'<tr><td class="sl_center"><input type="submit" value="'._SEARCHADDSEL.'" class="sl_but_blue"> <button type="submit" name="all" value="1" class="sl_but_blue">'._SEARCHADDALL.'</button></td></tr></table></form>';
     $cont .= '<h3>'._SEARCHINVALID.'</h3>'.getSearchauditTable($ilist, 'invalid');
@@ -418,7 +408,7 @@ function conf(): void {
 
 function save(): void {
     global $afile;
-    if (!checkSearchtoken()) {
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         echo navi(2, 0, 0, 'search', 'conf').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
@@ -440,7 +430,7 @@ function save(): void {
 
 function auto(): void {
     global $afile, $conf;
-    if (!checkSearchtoken()) {
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         echo navi(2, 0, 0, 'search', 'conf').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
@@ -465,7 +455,7 @@ function auto(): void {
 
 function addmods(): void {
     global $afile, $conf;
-    if (!checkSearchtoken()) {
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         echo navi(2, 0, 0, 'search', 'conf').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
@@ -503,7 +493,7 @@ function edit(): void {
     $sort = getVar('req', 'sort', 'num', 3);
     $order = getVar('req', 'order', 'num', 2);
     $num = getVar('get', 'num', 'num', 1);
-    $find = trim((string)getVar('req', 'find', 'text', ''));
+    $find = trim(getVar('req', 'find', 'text', ''));
     $fmod = getVar('req', 'fmod', 'var', '');
     $result = $db->getSqlQuery('SELECT word, modul, time, score FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id]);
     setHead();
@@ -525,7 +515,7 @@ function edit(): void {
             .' value="'.$order.'"><input type="hidden" name="num" value="'.$num.'"><input type="hidden" name="find" value="'
             .htmlspecialchars($find, ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="fmod" value="'
             .htmlspecialchars($fmod, ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="token" value="'
-            .htmlspecialchars(getSearchtoken(), ENT_QUOTES, 'UTF-8').'"><input type="submit" value="'
+            .htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'"><input type="submit" value="'
             ._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
     } else {
@@ -541,15 +531,15 @@ function editsave(): void {
     $sort = getVar('post', 'sort', 'num', 3);
     $order = getVar('post', 'order', 'num', 2);
     $num = getVar('post', 'num', 'num', 1);
-    $find = trim((string)getVar('post', 'find', 'text', ''));
+    $find = trim(getVar('post', 'find', 'text', ''));
     $fmod = getVar('post', 'fmod', 'var', '');
-    if (!checkSearchtoken()) {
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         echo navi(0, 0, 0, 'search', 'search').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
-    $word = trim((string)getVar('post', 'word', 'text', ''));
+    $word = trim(getVar('post', 'word', 'text', ''));
     $mod = getVar('post', 'modul', 'var', '');
     $time = getVar('post', 'time', 'time');
     $hits = getVar('post', 'hits', 'num', 1);
@@ -580,7 +570,7 @@ function del(): void {
         .'<tr><td>'._MODUL.':</td><td><select name="cmod" class="sl_form">'.getSearchmods('').'</select></td></tr>'
         .'<tr><td>'._DAYS.':</td><td><input type="number" name="days" value="30" min="1" class="sl_form" placeholder="'._DAYS.'" required></td></tr>'
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="clear"><input type="hidden" name="token" value="'
-        .htmlspecialchars(getSearchtoken(), ENT_QUOTES, 'UTF-8').'"><input type="submit" value="'._DELETE.'" class="sl_but_red"></td></tr></table></form>';
+        .htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'"><input type="submit" value="'._DELETE.'" class="sl_but_red"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
@@ -588,7 +578,7 @@ function del(): void {
 
 function clear(): void {
     global $db, $afile;
-    if (!checkSearchtoken()) {
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         echo navi(3, 0, 0, 'search', 'del').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
@@ -615,9 +605,9 @@ function drop(): void {
     $sort = getVar('post', 'sort', 'num', 3);
     $order = getVar('post', 'order', 'num', 2);
     $num = getVar('post', 'num', 'num', 1);
-    $find = trim((string)getVar('post', 'find', 'text', ''));
+    $find = trim(getVar('post', 'find', 'text', ''));
     $fmod = getVar('post', 'fmod', 'var', '');
-    if (checkSearchtoken() && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id]);
+    if (checkSiteToken(getVar('post', 'token', 'raw', ''), 'search') && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?'.getSearchlink($sort, $order, $num, $find, $fmod));
 }
 

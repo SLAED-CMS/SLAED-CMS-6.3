@@ -409,7 +409,7 @@ function checkSchedulerAccess(string $type, string $stok): bool {
     if (isAdmin(true)) return true;
     $scfg = getSchedulerConfig();
     $stkn = (string)($scfg['token'] ?? '');
-    $psok = ($type === 'pseudo' && hash_equals(md5_salt((string)($conf['sitekey'] ?? '')), $stok));
+    $psok = ($type === 'pseudo' && checkSiteToken($stok, 'scheduler'));
     $tkok = ($stkn !== '' && hash_equals($stkn, $stok));
     return $psok || $tkok;
 }
@@ -438,8 +438,7 @@ function addSchedulerTrigger(): string {
     if ($last > 0 && (time() - $last) < $cool) return '';
     $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
-    $tokn = md5_salt((string)($conf['sitekey'] ?? ''));
-    return 'index.php?go=3&op=scheduler&trigger=pseudo&token='.rawurlencode($tokn);
+    return 'index.php?go=3&op=scheduler&trigger=pseudo&token='.rawurlencode(getSiteToken('scheduler'));
 }
 
 # Fetches a remote scheduler target through a safe GET request and captures transport errors
@@ -2004,7 +2003,8 @@ function setHead(array $seo = []): void {
     $head = (isset($head[1])) ? $head[1] : die('Error in Head!');
     preg_match('#{%MODULE%}(.*)$#iUs', $index, $index);
     $index = (isset($index[1])) ? $index[1] : die('Error in Foot!');
-    $strmeta = '<meta charset="'._CHARSET.'">'."\n";
+    $strmeta = '<meta charset="'._CHARSET.'">'."\n"
+        .'<meta name="htmx-config" content=\'{"defaultHXHeaders":{"X-CSRF-Token":"'.getSiteToken('ajax').'"}}\'>'."\n";
     $strlink = $stscript = '';
     $sep = urldecode($conf['defis']);
     if (!defined('ADMIN_FILE')) {
@@ -2649,6 +2649,9 @@ function setCache($id=''): void {
     }
     header('X-Powered-By: SLAED CMS');
     header('X-Powered-CMS: SLAED CMS');
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
 }
 
 # Set cached script file
@@ -3523,11 +3526,11 @@ function filterSize(mixed $size): string {
 # Newsletter send
 function updateNewsletter(bool $force = false): array {
  global $db, $conf;
-    if ($force || $conf['newsletter']) {
+    if ($force || $conf['newsletter']['active']) {
         $result = $db->getSqlQuery('SELECT id, title, body, mails FROM '.PREFIX_DB."_newsletter WHERE mails != ''");
         if ($db->getSqlRowCount($result) > 0) {
             list($id, $title, $body, $mails) = $db->getSqlRow($result);
-            $ncount = intval($conf['newslettercount']);
+            $ncount = intval($conf['newsletter']['count']);
             $id = intval($id);
             $mails = explode(',', $mails);
             $outmail = array_values(array_filter(array_slice($mails, 0, $ncount), 'strlen'));
@@ -3535,8 +3538,8 @@ function updateNewsletter(bool $force = false): array {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET mails = :mails, send = send + :cnt, endtime = NOW() WHERE id = :id', ['mails' => $inmail, 'cnt' => $ncount, 'id' => $id]);
             foreach ($outmail as $val) addMail($val, $conf['adminmail'], $title, filterReplaceText(filterMarkdown($body, 'all', false), 'all'), 0, 3);
             if (!$inmail) {
-                $cont = ['newsletter' => '0'];
-                setConfigFile('global.php', $cont, $conf);
+                $cont = ['active' => '0'];
+                setConfigFile('newsletter.php', $cont, $conf['newsletter']);
             }
             return [
                 'status' => 'success',
@@ -3574,10 +3577,12 @@ function getPassHash(string $pass): string {
     return password_hash($pass, PASSWORD_BCRYPT);
 }
 
-# Verify a user password; supports current bcrypt and legacy md5_salt hashes transparently
+# Verify a user password; supports current bcrypt and legacy md5 hashes transparently.
+# Legacy branch will be removed once all stored hashes have been upgraded via transparent rehashing.
 function checkPassHash(string $pass, string $hash): bool {
+    global $conf;
     if (password_verify($pass, $hash)) return true;
-    if (strlen($hash) === 32 && ctype_xdigit($hash)) return md5_salt($pass) === $hash;
+    if (strlen($hash) === 32 && ctype_xdigit($hash)) return md5(md5((string)($conf['lic_f'] ?? '')).md5($pass)) === $hash;
     return false;
 }
 
@@ -4395,18 +4400,18 @@ function is_user(string $usr = ''): int {
     if (!isset($usertrue) && $user) {
         $uid = intval(substr($user[0], 0, 11));
         $una = htmlspecialchars(substr($user[1], 0, 25));
-        $pwd = htmlspecialchars(substr($user[2], 0, 255));
+        $pwd = $user[2];
         $ip = getIp();
         if ($uid != '' && $pwd != '') {
             if ($conf['users']['check'] == '0') {
                 list($pass) = $db->getSqlRow($db->getSqlQuery('SELECT password FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
-                if ($pass == $pwd && $pass != '') {
+                if ($pass != '' && hash_equals($pass, $pwd)) {
                     $usertrue = 1;
                     return 1;
                 }
             } else {
                 list($pass, $userip) = $db->getSqlRow($db->getSqlQuery('SELECT password, ip FROM '.PREFIX_DB.'_users WHERE id = :uid AND name = :name', ['uid' => $uid, 'name' => $una]));
-                if ($pass == $pwd && $pass != '' && $userip == $ip && $userip != '') {
+                if ($pass != '' && hash_equals($pass, $pwd) && $userip != '' && $userip == $ip) {
                     $usertrue = 1;
                     return 1;
                 }
@@ -5344,7 +5349,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
                         for (var x = 0; x < ins; x++) {
                             form_data.append('file[]', document.getElementById('file_upload').files[x]);
                         }
-                        form_data.append('token', '".md5_salt($conf['sitekey'])."');
+                        form_data.append('token', '".getSiteToken('upload')."');
                         $.ajax({
                             url: 'index.php?go=4&mod=".$mod.'&userid='.intval($user[0] ?? 0)."',
                             type: 'POST',
@@ -5605,12 +5610,6 @@ function check_size(string $file, int $width, int $height): string {
     return '';
 }
 
-# Crypted md5 and salt — legacy, kept for tokens and transparent upgrade
-function md5_salt(string $pass): string {
- global $conf;
-    $crypt = md5(md5($conf['lic_f']).md5($pass));
-    return $crypt;
-}
 
 # Upload file
 function upload(int $typ, string $directory, string $typefile, int $maxsize, string $namefile, int $width, int $height, string $userid = '', string $url = ''): mixed {
@@ -5651,7 +5650,7 @@ function upload(int $typ, string $directory, string $typefile, int $maxsize, str
             return 0;
         }
     } elseif ($typ == 2) {
-        if (isset($_FILES['file']) && !empty($_FILES['file']) && getVar('post', 'token', 'raw', '') == md5_salt($conf['sitekey'])) {
+        if (isset($_FILES['file']) && !empty($_FILES['file']) && checkSiteToken(getVar('post', 'token', 'raw', ''), 'upload')) {
             $files = count($_FILES['file']['name']);
             for ($i = 0; $i < $files; $i++) {
                 if ($_FILES['file']['size'][$i] > $maxsize) {

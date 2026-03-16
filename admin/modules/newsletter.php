@@ -7,8 +7,8 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=info'];
-    $lang = [_HOME, _ADD, _INFO];
+    $ops = ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=conf', 'name=newsletter&amp;op=info'];
+    $lang = [_HOME, _ADD, _PREFERENCES, _INFO];
     return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
 }
 
@@ -22,7 +22,7 @@ function newsletter(): void {
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._NLEND.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $title, $mails, $sended, $time, $endtime] = $db->getSqlRow($result)) {
             $sendtime = ($endtime > $time) ? strtotime($endtime) - strtotime($time) : 0;
-            $active = ($mails && $sended && $conf['newsletter']) ? 1 : 0;
+            $active = ($mails && $sended && $conf['newsletter']['active']) ? 1 : 0;
             $cont .= '<tr>'
             .'<td>'.$id.'</td>'
             .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.getDuration($sendtime)).$title.'</td>'
@@ -51,8 +51,6 @@ function add(): void {
         $body = getVar('post', 'body', 'text', $conf['mtemp']);
         $mails = getVar('post', 'mails', '', '');
     }
-    $count = getVar('post', 'count', 'num', '');
-    $send = getVar('post', 'send', '', '');
     setHead();
     $cont = navi(0, 1, 0, 0);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
@@ -182,15 +180,6 @@ function add(): void {
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="50" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'body', $body, 'all', '10', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._NLWHERE.':</td><td><select name="mails" class="sl_form">'.$option.'</select></td></tr>'
-    .'<tr><td>'._NLCOUNT.':</td><td><select name="count" class="sl_form">';
-    $xusnum = 1;
-    while ($xusnum <= 25) {
-        $sel = ($xusnum == $count) ? ' selected' : '';
-        $cont .= '<option value="'.$xusnum.'"'.$sel.'>'.$xusnum.'</option>';
-        $xusnum++;
-    }
-    $cont .= '</select></td></tr>';
-    $cont .= '<tr><td>'._NLSEND.'</td><td>'.radio_form($send, 'send').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="nid" value="'.$nid.'"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -198,13 +187,11 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $conf, $stop;
+    global $db, $afile, $stop;
     $nid = getVar('post', 'nid', 'num', 0);
     $title = getVar('post', 'title', 'title');
     $body = getVar('post', 'body', 'text');
     $mails = getVar('post', 'mails', '');
-    $count = getVar('post', 'count', 'num');
-    $send = getVar('post', 'send', 'num', 0);
     if (!$title) $stop[] = _CERROR;
     if (!$body) $stop[] = _CERROR1;
     if (!$stop && getVar('post', 'posttype') == 'save') {
@@ -221,7 +208,6 @@ function save(): void {
         } else {
             $emails = $mails;
         }
-        $emails = ($send) ? $emails : '';
         if ($nid) {
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_newsletter SET title = :title, body = :body, mails = :mails, send = 0, time = now(), endtime = 0 WHERE id = :id', [
                 'title' => $title, 'body' => $body, 'mails' => $emails, 'id' => $nid
@@ -231,7 +217,6 @@ function save(): void {
                 'title' => $title, 'body' => $body, 'mails' => $emails
             ]);
         }
-        setConfigFile('global.php', ['newsletter' => $send, 'newslettercount' => $count]);
         setRedirect($afile.'.php?name=newsletter');
     } else {
         add();
@@ -244,9 +229,34 @@ function del(): void {
     setRedirect($afile.'.php?name=newsletter');
 }
 
+function conf(): void {
+    global $afile, $conf;
+    setHead();
+    $cont = navi(0, 2, 0, 0);
+    $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
+    $cont .= setTemplateBasic('open');
+    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
+       .'<tr><td>'._NLSEND.'<div class="sl_small">'._NLSENDI.'</div></td><td>'.radio_form($conf['newsletter']['active'], 'active').'</td></tr>'
+       .'<tr><td>'._NLCOUNT.':</td><td><input type="number" name="count" value="'.$conf['newsletter']['count'].'" class="sl_conf" placeholder="'._NLCOUNT.'" required></td></tr>'
+       .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('close');
+    echo $cont;
+    setFoot();
+}
+
+function saveconf(): void {
+    global $afile;
+    $content = [
+        'active' => getVar('post', 'active', 'num', 0),
+        'count'  => getVar('post', 'count', 'num', 4),
+    ];
+    setConfigFile('newsletter.php', $content);
+    setRedirect($afile.'.php?name=newsletter&op=conf');
+}
+
 function info(): void {
     setHead();
-    echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
@@ -255,5 +265,7 @@ switch ($op) {
     case 'add': add(); break;
     case 'save': save(); break;
     case 'delete': del(); break;
+    case 'conf': conf(); break;
+    case 'saveconf': saveconf(); break;
     case 'info': info(); break;
 }

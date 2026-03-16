@@ -6,15 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function getAdmintoken(): string {
-    static $token = '';
-    if ($token === '') $token = hash('sha256', session_id().'|admins-admin');
-    return $token;
-}
-
-function checkAdmintoken(): bool {
-    return hash_equals(getAdmintoken(), (string)getVar('post', 'token', 'raw', ''));
-}
 
 function getAdminself(): int {
     global $admin;
@@ -80,7 +71,7 @@ function adlist(): void {
     setHead();
     $cont = navi(0, 0, 0, 0);
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
-    if ($msg = trim((string)getVar('get', 'msg', 'text', ''))) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $msg]);
+    if ($msg = trim(getVar('get', 'msg', 'text', ''))) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $msg]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE
         .'</th><th>'._SUPERUSER.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -92,7 +83,7 @@ function adlist(): void {
         $show = htmlspecialchars((string)$name, ENT_QUOTES, 'UTF-8');
         $drop = '<form id="drop'.$aid.'" action="'.$afile.'.php?name=admins&amp;op=del" method="post" style="display:none;">'
             .'<input type="hidden" name="op" value="del"><input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="token" value="'
-            .htmlspecialchars(getAdmintoken(), ENT_QUOTES, 'UTF-8').'"></form>';
+            .htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8').'"></form>';
         $edit = '<a href="'.$afile.'.php?name=admins&amp;op=add&amp;id='.$aid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>';
         $drop .= '<a href="#" OnClick="if (DelCheck(this, \''._DELETE.' &quot;'.$show.'&quot;?\')) document.getElementById(\'drop'.$aid
             .'\').submit(); return false;" title="'._ONDELETE.'">'._ONDELETE.'</a>';
@@ -139,7 +130,7 @@ function adform(): void {
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php?name=admins&amp;op=save" method="post"><input type="hidden" name="op" value="save">'
         .'<input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="token" value="'
-        .htmlspecialchars(getAdmintoken(), ENT_QUOTES, 'UTF-8').'"><table class="sl_table_form">'
+        .htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8').'"><table class="sl_table_form">'
         .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('aname', (string)$name, 25, 'sl_form', '1').'</td></tr>'
         .'<tr><td>'._URANK.':</td><td><input type="text" name="title" value="'.htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')
         .'" maxlength="50" class="sl_form" placeholder="'._URANK.'"></td></tr>'
@@ -189,7 +180,7 @@ function adform(): void {
 
 function adsave(): void {
     global $db, $afile, $conf, $stop;
-    if (!checkAdmintoken()) {
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
         echo navi(0, 1, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _TOKENMISS]);
         setFoot();
@@ -228,7 +219,7 @@ function adsave(): void {
     if (!$stop) {
         if ($aid) {
             if ($pwd !== '') {
-                $pass = md5_salt($pwd);
+                $pass = getPassHash($pwd);
                 $db->getSqlQuery(
                     'UPDATE '.PREFIX_DB.'_admins SET name = :name, title = :title, url = :url, email = :email, password = :pass, super = :super, editor = :edit, smail = :smail, modules = :mods, lang = :lang WHERE id = :id',
                     ['name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pass' => $pass, 'super' => $super, 'edit' => $edit, 'smail' => $smail, 'mods' => $mods, 'lang' => $lang, 'id' => $aid]
@@ -240,7 +231,7 @@ function adsave(): void {
                 );
             }
         } else {
-            $pass = md5_salt($pwd);
+            $pass = getPassHash($pwd);
             $db->getSqlQuery(
                 'INSERT INTO '.PREFIX_DB.'_admins (name, title, url, email, password, super, editor, smail, modules, lang, regdate) VALUES (:name, :title, :url, :email, :pass, :super, :edit, :smail, :mods, :lang, now())',
                 ['name' => $name, 'title' => $title, 'url' => $url, 'email' => $email, 'pass' => $pass, 'super' => $super, 'edit' => $edit, 'smail' => $smail, 'mods' => $mods, 'lang' => $lang]
@@ -261,7 +252,7 @@ function adsave(): void {
 
 function addrop(): void {
     global $db, $afile;
-    if (!checkAdmintoken()) {
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
         echo navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _TOKENMISS]);
         setFoot();

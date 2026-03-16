@@ -570,7 +570,7 @@ function isAdmin(bool $super = false): bool {
     if (empty($admin)) return $cache[0] = $cache[1] = false;
     $id = intval(substr($admin[0], 0, 11));
     $name = substr($admin[1], 0, 25);
-    $pwd = substr($admin[2], 0, 40);
+    $pwd = $admin[2];
     $ip = getIp();
     if ($id && $name && $pwd && $ip) {
         [$aname, $apwd, $aip, $asuper] = $db->getSqlRow($db->getSqlQuery('SELECT name, password, ip, super FROM '.PREFIX_DB.'_admins WHERE id = :id', ['id' => $id])) ?? ['', '', '', '0'];
@@ -732,6 +732,21 @@ function getHost(): string {
     return getenv('HTTP_HOST') ?: getenv('SERVER_NAME') ?: '';
 }
 
+# Returns a session-bound HMAC-SHA256 CSRF token scoped to the given context.
+# Token is valid for the lifetime of the PHP session; invalidated when sitekey changes.
+function getSiteToken(string $scope = 'ajax'): string {
+    global $conf;
+    $sid  = session_id();
+    $data = $sid !== '' ? $scope.'|'.$sid : $scope;
+    return hash_hmac('sha256', $data, (string)($conf['sitekey'] ?? ''));
+}
+
+# Validates a CSRF token for the given scope using timing-safe comparison.
+function checkSiteToken(string $tok, string $scope = 'ajax'): bool {
+    if ($tok === '') return false;
+    return hash_equals(getSiteToken($scope), $tok);
+}
+
 # Return external HTTP referer URL, or empty string if internal/invalid/unknown
 function getReferer(): string {
     $referer = filterText(getenv('HTTP_REFERER'));
@@ -885,7 +900,7 @@ function getVar(string $var, string $key, string $type = '', mixed $default = ''
     } else {
         if (is_string($value)) $value = trim($value);
     }
-    return ($value !== '' && $value !== null) ? $value : false;
+    return ($value !== '' && $value !== null) ? $value : $default;
 }
 
 # Is there any content in the array

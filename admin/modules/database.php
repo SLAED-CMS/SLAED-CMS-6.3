@@ -6,14 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function getDbtoken(): string {
-    global $conf;
-    return md5_salt($conf['sitekey'] ?? '');
-}
-
-function checkDbtoken(): bool {
-    return hash_equals(getDbtoken(), getVar('post', 'token', 'raw', ''));
-}
 
 function addDblog(string $text): void {
     $path = LOGS_DIR.'/database.log';
@@ -411,7 +403,7 @@ function dump(): void {
     $action = getVar('post', 'action', 'var', '');
     setHead();
     $cont = navi(3);
-    if (($action === 'parse' || $action === 'dump') && !checkDbtoken()) {
+    if (($action === 'parse' || $action === 'dump') && !checkSiteToken(getVar('post', 'token', 'raw', ''), 'db')) {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
     } elseif ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
         $subst = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
@@ -473,7 +465,7 @@ function dump(): void {
                     <input type="hidden" name="name" value="database">
                     <input type="hidden" name="op" value="dump">
                     <input type="hidden" name="type" value="dump">
-                    <input type="hidden" name="token" value="'.htmlspecialchars(getDbtoken()).'">
+                    <input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('db')).'">
                     <button type="submit" name="action" value="parse" class="sl_but_blue">'._DB_PARSE.'</button>
                     <button type="submit" name="action" value="dump" class="sl_but_blue">'._EXECUTE.'</button>
                 </td>

@@ -37,7 +37,7 @@ function getSearchMods(): array {
 function getSearchState(): array {
     global $conf;
     $mods = getSearchMods();
-    $word = trim((string)getVar('req', 'word', 'word', ''));
+    $word = trim(getVar('req', 'word', 'word', ''));
     $mod = getVar('req', 'mod', 'var', '');
     $mod = in_array($mod, $mods, true) ? $mod : '';
     $typ = getVar('req', 'typ', 'num', 0);

@@ -142,8 +142,9 @@ function liste(): void {
             $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $post, '{%time%}' => format_time($time)]);
         }
         $cont .= setTemplateBasic('liste-close');
-        $onum = ($let) ? "title LIKE BINARY '".$let."%' AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
-        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_links', 'cid', $onum, $conf['links']['nump']);
+        $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
+        $params = ($let) ? ['let' => $let.'%'] : [];
+        $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_links', 'cid', $onum, $conf['links']['nump'], $params);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }

@@ -376,8 +376,6 @@ function save(): void {
         'script_b' => getVar('post', 'script_b', 'num'),
         'mtemp' => getVar('post', 'mtemp', 'raw'),
         'dev_mode' => getVar('post', 'dev_mode', 'num'),
-        'newsletter' => $conf['newsletter'],
-        'newslettercount' => $conf['newslettercount'],
         'sitekey' => getPass(25),
         'lic_h' => 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt',
         'lic_f' => 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg=='

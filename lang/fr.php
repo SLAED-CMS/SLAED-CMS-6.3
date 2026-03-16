@@ -475,6 +475,7 @@ define('_SPEC_GROUP','Groupe spécial');
 define('_SPOILER','Becquet');
 define('_STARTDATE','La date de la découverte du site');
 define('_STATUS','Statut');
+define('_ACTIV','Activé');
 define('_SUBMIT',"S'il vous plaît publiez vos informations en remplissant toutes les formes suggérées. N'oubliez pas de vérifier la grammaire et l'orthographe. Vérifiez vue générale de la en mode de prévisualisation. Matériel sera publié seulement avec la permission d'un administrateur.");
 define('_SUBTEXT',"Merci pour l'information! Bientôt l'administration vérifie ajouté le matériel que Vous, et si elle répond à nos exigences, alors la publier.");
 define('_SUM','Somme');

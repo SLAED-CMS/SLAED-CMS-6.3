@@ -8,15 +8,6 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('changelog')) die('Illegal file ac
 
 require_once __DIR__.'/../common.php';
 
-function chlogToken(): string {
-    global $conf;
-    return md5_salt($conf['sitekey'] ?? '');
-}
-
-function chlogTokenValid(): bool {
-    return hash_equals(chlogToken(), getVar('post', 'token', 'raw', ''));
-}
-
 // ============================================================================
 // MAIN FUNCTIONS
 // ============================================================================
@@ -132,7 +123,7 @@ function conf(): void {
     $cont .= '<tr><td colspan="2" class="sl_center">';
     $cont .= '<input type="hidden" name="name" value="changelog">';
     $cont .= '<input type="hidden" name="op" value="saveconf">';
-    $cont .= '<input type="hidden" name="token" value="'.chlogEsc(chlogToken()).'">';
+    $cont .= '<input type="hidden" name="token" value="'.chlogEsc(getSiteToken('changelog')).'">';
     $cont .= '<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>';
     $cont .= '</table>';
 
@@ -154,7 +145,7 @@ function conf(): void {
 function saveconf(): void {
     global $afile;
 
-    if (!chlogTokenValid()) {
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'changelog')) {
         setHead();
         echo navi(0, 1).setTemplateWarning('warn', [
             'time' => '',
