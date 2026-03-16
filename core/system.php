@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Ã‚Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 

@@ -112,11 +112,19 @@ final class LanguageConstantsUsageTest extends TestCase
         ksort($defs, SORT_STRING);
         $use = array_fill_keys(array_keys($defs), 0);
 
+        $configDir = self::$basePath.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR;
         foreach ($phpFiles as $path) {
+            $isConfig = str_starts_with($path, $configDir);
             $tokens = token_get_all(file_get_contents($path));
             foreach ($tokens as $tok) {
-                if (is_array($tok) && $tok[0] === T_STRING && isset($use[$tok[1]])) {
+                if (!is_array($tok)) continue;
+                if ($tok[0] === T_STRING && isset($use[$tok[1]])) {
                     $use[$tok[1]]++;
+                } elseif ($isConfig && $tok[0] === T_CONSTANT_ENCAPSED_STRING) {
+                    $val = self::unquotePhpString($tok[1]);
+                    if (isset($use[$val])) {
+                        $use[$val]++;
+                    }
                 }
             }
         }
