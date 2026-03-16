@@ -6,9 +6,10 @@
 
 if (!defined('SETUP_FILE')) die('Illegal File Access');
 define('FUNC_FILE', true);
+define('CONFIG_DIR', BASE_DIR.'/config');
 
-require_once BASE_DIR.'/config/global.php';
-require_once BASE_DIR.'/config/security.php';
+$conf = require CONFIG_DIR.'/global.php';
+$conf = array_merge($conf, require CONFIG_DIR.'/security.php');
 
 if ($conf['security']['error'] == 2) {
     ini_set('display_errors', 1);
@@ -24,7 +25,7 @@ if ($conf['security']['error'] == 2) {
 if (function_exists('set_time_limit')) set_time_limit(1800);
 $host = getenv('HTTP_HOST') ? getenv('HTTP_HOST') : getenv('SERVER_NAME');
 $url = getProtocol().'://'.$host;
-$clang = isset($_COOKIE[$conf['user_c'].'-language']) ? filterVar($_COOKIE[$conf['user_c'].'-language']) : 'en';
+$clang = isset($_COOKIE[$conf['user_c'].'-lang']) ? filterVar($_COOKIE[$conf['user_c'].'-lang']) : 'en';
 $op = (isset($_REQUEST['op'])) ? filterVar($_REQUEST['op']) : '';
 
 require_once BASE_DIR.'/lang/'.$clang.'.php';
@@ -32,7 +33,7 @@ require_once BASE_DIR.'/setup/lang/'.$clang.'.php';
 
 if (version_compare(PHP_VERSION, '8.1.0', '<')) setExit(_PHPSETUP);
 if ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==') setExit(_NO_LICENSE);
-$copyright = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
+$copy = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
 
 # Saving configurations to a file
 function setConfigFile(string $fp, array $arr, array $act = []): void {
@@ -41,7 +42,7 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     ksort($arr);
     $norm = function ($val) use (&$norm) {
         if (is_array($val)) {
-            foreach ($val as $k => $vv) $val[$k] = $norm($vv);
+            foreach ($val as $kk => $vv) $val[$kk] = $norm($vv);
             return $val;
         }
         if (is_bool($val)) return (string)(int)$val;
@@ -51,9 +52,9 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
         return (string)$val;
     };
     foreach ($arr as $key => $val) $arr[$key] = $norm($val);
-    $key  = pathinfo(basename($fp), PATHINFO_FILENAME);
+    $key = pathinfo(basename($fp), PATHINFO_FILENAME);
     $data = ($key === 'global') ? $arr : [$key => $arr];
-    $exp  = function (array $arr, int $dep = 0) use (&$exp): string {
+    $exp = function (array $arr, int $dep = 0) use (&$exp): string {
         $pad = str_repeat('    ', $dep);
         $ind = $pad.'    ';
         $out = '['.PHP_EOL;
@@ -90,7 +91,7 @@ function getProtocol(): string {
 
 function getPass(int $m): string {
     $pass = '';
-    for ($i = 0; $i < $m; $i++) {
+    for ($ix = 0; $ix < $m; $ix++) {
         $te = mt_rand(48, 122);
         if (($te > 57 && $te < 65) || ($te > 90 && $te < 97)) $te = $te - 9;
         $pass .= chr($te);
@@ -105,7 +106,7 @@ function getCrypt(string $pass): string {
 
 function getSqlStatements(string $content): array {
     $lines = preg_split("/\\r\\n|\\n|\\r/", $content);
-    $delimiter = ';';
+    $delim = ';';
     $buffer = '';
     $queries = [];
 
@@ -116,14 +117,14 @@ function getSqlStatements(string $content): array {
                 $queries[] = trim($buffer);
                 $buffer = '';
             }
-            $delimiter = $match[1];
+            $delim = $match[1];
             continue;
         }
 
         $buffer .= $line.PHP_EOL;
 
-        if ($trim !== '' && str_ends_with($trim, $delimiter)) {
-            $query = substr(rtrim($buffer), 0, -strlen($delimiter));
+        if ($trim !== '' && str_ends_with($trim, $delim)) {
+            $query = substr(rtrim($buffer), 0, -strlen($delim));
             $query = trim($query);
             if ($query !== '') {
                 $queries[] = $query;
@@ -192,7 +193,7 @@ function getInfo(string $table, mixed $id): string {
 }
 
 function setHead(): void {
- global $title, $conf;
+    global $title, $conf;
     echo '<!doctype html>'.PHP_EOL
     .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
     .'<head>'.PHP_EOL
@@ -223,14 +224,14 @@ function setHead(): void {
 }
 
 function setFoot(): void {
- global $copyright;
+    global $copy;
     echo '</div>'
     .'</div>'
     .'</div>'
     .'<div id="footer">'
     .'<div id="footer-r">'
     .'<div id="footer-l">'
-    .'<div id="copyright">'.$copyright.'</div>'
+    .'<div id="copyright">'.$copy.'</div>'
     .'</div>'
     .'</div>'
     .'</div>'
@@ -240,7 +241,7 @@ function setFoot(): void {
 }
 
 function setExit(string $msg, string $typ = ''): never {
- global $conf;
+    global $conf;
     $cont = '<!doctype html>'.PHP_EOL
     .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
     .'<head>'.PHP_EOL
@@ -262,8 +263,8 @@ function setExit(string $msg, string $typ = ''): never {
     die($cont);
 }
 
-function filterVar(string $v): string {
-    return preg_match('#[^a-zA-Z0-9_\-]#', $v) ? '' : $v;
+function filterVar(string $vl): string {
+    return preg_match('#[^a-zA-Z0-9_\-]#', $vl) ? '' : $vl;
 }
 
 function checkWritableConfig(string $file): void {
@@ -272,7 +273,7 @@ function checkWritableConfig(string $file): void {
         $permsdir = decoct(fileperms($file));
         $perms = substr($permsdir, -3);
         if ($perms != '666') {
- global $title;
+            global $title;
             $title = _FILE.' '.$file.' '._SERRORPERM.' CHMOD - 666';
             setHead();
             setFoot();
@@ -282,24 +283,24 @@ function checkWritableConfig(string $file): void {
 }
 
 function language(): void {
- global $title, $clang;
+    global $title, $clang;
     $title = _LANG;
     setHead();
     $cont = '<table class="sl_table">';
     $langlist = array_map(fn($f) => pathinfo($f, PATHINFO_FILENAME), glob('setup/lang/*.php'));
     sort($langlist);
-    $a = 3;
-    $i = 1;
-    $tdwidth = intval(100/$a);
+    $col = 3;
+    $ix = 1;
+    $tdwidth = intval(100/$col);
     foreach ($langlist as $val) {
         $altlang = getLang($val);
-        if (($i - 1) % $a == 0) $cont .= '<tr>';
+        if (($ix - 1) % $col == 0) $cont .= '<tr>';
         $cont .= '<td style="width: '.$tdwidth.'%;" class="sl_center"><a href="setup.php?op=lang&amp;id='.$val.'" title="'.$altlang.'"><img src="setup/templates/images/'.$val.'.png" alt="'.$altlang.'"><br><b>'.$altlang.'</b></a></td>';
-        if ($i % $a == 0) $cont .= '</tr>'.PHP_EOL;
-        $i++;
+        if ($ix % $col == 0) $cont .= '</tr>'.PHP_EOL;
+        $ix++;
     }
     if ($clang) {
-        $cont .= '<tr><td colspan="'.$a.'" class="sl_center"><form action="setup.php" method="post"><input type="hidden" name="op" value="config"><input type="submit" value="'._NEXT_SE.'" class="sl_but_blue"></form></td></tr>';
+        $cont .= '<tr><td colspan="'.$col.'" class="sl_center"><form action="setup.php" method="post"><input type="hidden" name="op" value="config"><input type="submit" value="'._NEXT_SE.'" class="sl_but_blue"></form></td></tr>';
     }
     $cont .= '</table>';
     echo $cont;
@@ -307,22 +308,22 @@ function language(): void {
 }
 
 function lang(): void {
- global $conf, $url;
+    global $conf, $url;
     $time = time() + 3600;
     $lang = (preg_match('#[^a-zA-Z0-9_]#', $_GET['id'])) ? 'en' : $_GET['id'];
     $url = parse_url($url);
     $sec = ($url['scheme'] == 'http') ? false : true;
     $options = ['expires' => $time, 'path' => '/', 'domain' => $url['host'], 'secure' => $sec, 'httponly' => true, 'samesite' => 'Lax'];
-    setcookie($conf['user_c'].'-language', $lang, $options);
+    setcookie($conf['user_c'].'-lang', $lang, $options);
     header('Location: setup.php');
 }
 
 function config(): void {
- global $title, $conf;
+    global $title, $conf;
     $title = _CONFIG;
-    checkWritableConfig(BASE_DIR.'/config/db.php');
-    checkWritableConfig(BASE_DIR.'/config/global.php');
-    require_once BASE_DIR.'/config/db.php';
+    checkWritableConfig(CONFIG_DIR.'/db.php');
+    checkWritableConfig(CONFIG_DIR.'/global.php');
+    $conf = array_merge($conf, require CONFIG_DIR.'/db.php');
     $xhost = ($conf['db']['host']) ? $conf['db']['host'] : 'localhost';
     $xuname = ($conf['db']['uname']) ? $conf['db']['uname'] : '';
     $xpass = ($conf['db']['pass']) ? $conf['db']['pass'] : '';
@@ -356,7 +357,7 @@ function config(): void {
 }
 
 function save(): void {
- global $title, $clang, $conf, $url;
+    global $title, $clang, $conf, $url;
     $setup = (isset($_POST['setup'])) ? $_POST['setup'] : '';
     $xhost = (isset($_POST['xhost'])) ? $_POST['xhost'] : '';
     $xuname = (isset($_POST['xuname'])) ? $_POST['xuname'] : '';
@@ -370,8 +371,8 @@ function save(): void {
     $xafile = (isset($_POST['xafile'])) ? $_POST['xafile'] : 'admin';
 
     $cont = ['language' => $clang, 'homeurl' => $url];
-    setConfigFile('global.php', $conf, $cont);
-    require_once BASE_DIR.'/config/global.php';
+    setConfigFile('global.php', array_diff_key($conf, ['security' => '', 'db' => '']), $cont);
+    $conf = array_merge($conf, require CONFIG_DIR.'/global.php');
 
     $tafile = ($conf['security']['afile']) ? $conf['security']['afile'] : 'admin';
     if (file_exists($tafile.'.php') && !file_exists($xafile.'.php')) {
@@ -383,13 +384,13 @@ function save(): void {
     }
     $cont = ['afile' => $xafile];
     setConfigFile('security.php', $conf['security'], $cont);
-    require_once BASE_DIR.'/config/security.php';
+    $conf = array_merge($conf, require CONFIG_DIR.'/security.php');
     
-    require_once BASE_DIR.'/config/db.php';
+    $conf = array_merge($conf, require CONFIG_DIR.'/db.php');
     $cont = ['host' => $xhost, 'uname' => $xuname, 'pass' => $xpass, 'name' => $xname, 'engine' => $xengine, 'charset' => $xcharset, 'collate' => $xcollate, 'prefix' => $xprefix, 'sync' => $xsync];
     setConfigFile('db.php', $conf['db'], $cont);
 
-    require_once 'core/classes/pdo.php';
+    require_once BASE_DIR.'/core/classes/pdo.php';
     $db = new Database($xhost, $xuname, $xpass, $xname, $xcharset);
     
     $bodytext = '';
@@ -409,15 +410,15 @@ function save(): void {
     } elseif ($setup == 'update5_0') {
         $title = _SAVE_UPDATE;
         $result = $db->getSqlQuery('SELECT id, password FROM '.$xprefix.'_admins');
-        while (list($a_id, $a_pwd) = $db->getSqlRow($result)) {
-            $pwd_hash = getCrypt($a_pwd);
-            $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET password = :password WHERE id = :id', ['password' => $pwd_hash, 'id' => $a_id]);
+        while (list($aid, $apwd) = $db->getSqlRow($result)) {
+            $pwdhash = getCrypt($apwd);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET password = :password WHERE id = :id', ['password' => $pwdhash, 'id' => $aid]);
         }
         $bodytext .= getInfo($xprefix.'_admins', $result);
         $result = $db->getSqlQuery('SELECT id, password FROM '.$xprefix.'_users');
-        while (list($user_id, $user_password) = $db->getSqlRow($result)) {
-            $pwd_hash = getCrypt($user_password);
-            $db->getSqlQuery('UPDATE '.$xprefix.'_users SET password = :pwd WHERE id = :uid', ['pwd' => $pwd_hash, 'uid' => $user_id]);
+        while (list($uid, $upwd) = $db->getSqlRow($result)) {
+            $pwdhash = getCrypt($upwd);
+            $db->getSqlQuery('UPDATE '.$xprefix.'_users SET password = :pwd WHERE id = :uid', ['pwd' => $pwdhash, 'uid' => $uid]);
         }
         $bodytext .= getInfo($xprefix.'_users', $result);
         $bodytext .= getSqlFile('setup/sql/table_update5_0.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
@@ -426,20 +427,29 @@ function save(): void {
         $bodytext .= getSqlFile('setup/sql/table_update5_1.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
 
         $result = $db->getSqlQuery('SELECT poll_id, poll_date, poll_title, poll_questions, poll_answer_1, poll_answer_2, poll_answer_3, poll_answer_4, poll_answer_5, poll_answer_6, poll_answer_7, poll_answer_8, poll_answer_9, poll_answer_10, poll_answer_11, poll_answer_12, pool_comments, planguage, acomm FROM '.$xprefix.'_voting_temp');
-        while (list($poll_id, $poll_date, $poll_title, $poll_questions, $poll_answer_1, $poll_answer_2, $poll_answer_3, $poll_answer_4, $poll_answer_5, $poll_answer_6, $poll_answer_7, $poll_answer_8, $poll_answer_9, $poll_answer_10, $poll_answer_11, $poll_answer_12, $pool_comments, $planguage, $acomm) = $db->getSqlRow($result)) {
-            $questions = substr($poll_questions, 0, -1);
-            $array_answ = [$poll_answer_1, $poll_answer_2, $poll_answer_3, $poll_answer_4, $poll_answer_5, $poll_answer_6, $poll_answer_7, $poll_answer_8, $poll_answer_9, $poll_answer_10, $poll_answer_11, $poll_answer_12];
-            $answ = [];
-            foreach ($array_answ as $val) if (!empty($val)) $answ[] = trim($val);
-            $answ = implode('|', $answ);
+        while ($row = $db->getSqlRow($result)) {
+            $pid = $row['poll_id'];
+            $pdate = $row['poll_date'];
+            $ptitle = $row['poll_title'];
+            $pquest = $row['poll_questions'];
+            $pcomm = $row['pool_comments'];
+            $plang = $row['planguage'];
+            $acomm = $row['acomm'];
+            $pansw = [];
+            for ($ix = 1; $ix <= 12; $ix++) {
+                $av = trim($row['poll_answer_'.$ix] ?? '');
+                if ($av !== '') $pansw[] = $av;
+            }
+            $quest = substr($pquest, 0, -1);
+            $answ = implode('|', $pansw);
             $db->getSqlQuery('INSERT INTO '.$xprefix.'_voting (id, modul, title, body, answer, time, enddate, multi, comments, language, acomm, ip, typ, status) VALUES (:id, \'\', :title, :body, :answer, :date, \'2020-05-23 20:58:00\', 0, :comments, :language, :acomm, :ip, 1, 1)', [
-                'id' => $poll_id,
-                'title' => $poll_title,
-                'body' => $questions,
+                'id' => $pid,
+                'title' => $ptitle,
+                'body' => $quest,
                 'answer' => $answ,
-                'date' => $poll_date,
-                'comments' => $pool_comments,
-                'language' => $planguage,
+                'date' => $pdate,
+                'comments' => $pcomm,
+                'language' => $plang,
                 'acomm' => $acomm,
                 'ip' => getIp()
             ]);
@@ -448,11 +458,11 @@ function save(): void {
         $bodytext .= getInfo($xprefix.'_voting', $result);
 
         $result = $db->getSqlQuery('SELECT id, assoc FROM '.$xprefix.'_news');
-        while (list($id, $associated) = $db->getSqlRow($result)) {
-            $associated = explode('-', $associated);
-            if (is_array($associated)) {
+        while (list($id, $raw) = $db->getSqlRow($result)) {
+            $raw = explode('-', $raw);
+            if (is_array($raw)) {
                 $assoc = [];
-                foreach ($associated as $val) {
+                foreach ($raw as $val) {
                     if (!empty($val)) $assoc[] = trim($val);
                 }
                 $assoc = implode(',', $assoc);
@@ -464,11 +474,11 @@ function save(): void {
         $bodytext .= getInfo($xprefix.'_news', $result);
 
         $result = $db->getSqlQuery('SELECT id, assoc FROM '.$xprefix.'_products');
-        while (list($id, $associated) = $db->getSqlRow($result)) {
-            $associated = explode('-', $associated);
-            if (is_array($associated)) {
+        while (list($id, $raw) = $db->getSqlRow($result)) {
+            $raw = explode('-', $raw);
+            if (is_array($raw)) {
                 $assoc = [];
-                foreach ($associated as $val) {
+                foreach ($raw as $val) {
                     if (!empty($val)) $assoc[] = trim($val);
                 }
                 $assoc = implode(',', $assoc);
@@ -486,50 +496,50 @@ function save(): void {
         $bodytext .= getSqlFile('setup/sql/table_update6_2.sql', $xprefix, $xengine, $xcharset, $xcollate, $db);
     } elseif ($setup == 'update6_3') {
         $cont = [];
-        $admin_path = BASE_DIR.'/admin/modules';
-        if (is_dir($admin_path) && ($handle = opendir($admin_path))) {
+        $apath = BASE_DIR.'/admin/modules';
+        if (is_dir($apath) && ($handle = opendir($apath))) {
             while (false !== ($file = readdir($handle))) {
                 if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) {
                     $module = $matches[1];
                     $cont[$module] = [
-                        'lang'   => '_'.strtoupper($module),
-                        'img'    => strtolower($module).'.png',
+                        'lang' => '_'.strtoupper($module),
+                        'img' => strtolower($module).'.png',
                         'active' => 1,
-                        'view'   => 0,
-                        'menu'   => 1,
-                        'group'  => 0,
-                        'side'   => 0,
-                        'top'    => 0,
-                        'type'   => 0,
+                        'view' => 0,
+                        'menu' => 1,
+                        'group' => 0,
+                        'side' => 0,
+                        'top' => 0,
+                        'type' => 0,
                     ];
                 }
             }
             closedir($handle);
         }
-        $modules_path = BASE_DIR.'/modules';
-        if (is_dir($modules_path) && ($handle = opendir($modules_path))) {
+        $mpath = BASE_DIR.'/modules';
+        if (is_dir($mpath) && ($handle = opendir($mpath))) {
             while (false !== ($file = readdir($handle))) {
-                if (!preg_match('/\./', $file) && (file_exists($modules_path.'/'.$file.'/index.php') || file_exists($modules_path.'/'.$file.'/admin/index.php'))) {
+                if (!preg_match('/\./', $file) && (file_exists($mpath.'/'.$file.'/index.php') || file_exists($mpath.'/'.$file.'/admin/index.php'))) {
                     $cont[$file] = [
-                        'lang'   => '_'.strtoupper($file),
-                        'img'    => strtolower($file).'.png',
+                        'lang' => '_'.strtoupper($file),
+                        'img' => strtolower($file).'.png',
                         'active' => 0,
-                        'view'   => 0,
-                        'menu'   => 1,
-                        'group'  => 0,
-                        'side'   => 0,
-                        'top'    => 0,
-                        'type'   => 1,
+                        'view' => 0,
+                        'menu' => 1,
+                        'group' => 0,
+                        'side' => 0,
+                        'top' => 0,
+                        'type' => 1,
                     ];
                 }
             }
             closedir($handle);
         }
-        $has_modules = false;
+        $hasmod = false;
         $tbl = $xprefix.'_modules';
-        $tbl_res = $db->getSqlQuery('SHOW TABLES LIKE :tbl', ['tbl' => $tbl]);
-        if ($tbl_res && $db->getSqlRowCount($tbl_res) > 0) $has_modules = true;
-        if ($has_modules) {
+        $tblres = $db->getSqlQuery('SHOW TABLES LIKE :tbl', ['tbl' => $tbl]);
+        if ($tblres && $db->getSqlRowCount($tblres) > 0) $hasmod = true;
+        if ($hasmod) {
             $map = [];
             $result = $db->getSqlQuery('SELECT mid, title, active, view, inmenu, mod_group, blocks, blocks_c FROM '.$tbl);
             while ($row = $db->getSqlRow($result)) {
@@ -537,15 +547,15 @@ function save(): void {
                 $map[(string)$row['mid']] = $title;
                 if (!isset($cont[$title])) {
                     $cont[$title] = [
-                        'lang'   => '_'.strtoupper($title),
-                        'img'    => strtolower($title).'.png',
+                        'lang' => '_'.strtoupper($title),
+                        'img' => strtolower($title).'.png',
                         'active' => 0,
-                        'view'   => 0,
-                        'menu'   => 1,
-                        'group'  => 0,
-                        'side'   => 0,
-                        'top'    => 0,
-                        'type'   => 1,
+                        'view' => 0,
+                        'menu' => 1,
+                        'group' => 0,
+                        'side' => 0,
+                        'top' => 0,
+                        'type' => 1,
                     ];
                 }
                 $cont[$title]['active'] = $row['active'];
@@ -569,15 +579,21 @@ function save(): void {
                         }
                     }
                     $names = array_values(array_unique($names));
-                    $new_modules = implode(',', $names);
-                    if ($new_modules !== $modules) {
+                    $newmod = implode(',', $names);
+                    if ($newmod !== $modules) {
                         $db->getSqlQuery('UPDATE '.$xprefix.'_admins SET modules = :modules WHERE id = :id', [
-                            'modules' => $new_modules,
+                            'modules' => $newmod,
                             'id' => $row['id'],
                         ]);
                     }
                 }
             }
+        }
+        $exfile = CONFIG_DIR.'/modules.php';
+        if (file_exists($exfile)) {
+            $exdata = require $exfile;
+            $existing = $exdata['modules'] ?? [];
+            $cont = array_merge($cont, $existing);
         }
         setConfigFile('modules.php', $cont);
         $title = _SAVE_UPDATE;
