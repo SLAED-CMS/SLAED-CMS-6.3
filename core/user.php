@@ -15,7 +15,6 @@ function setComShow(int $id = 0, int $cid = 0): string {
     } else {
         $userinfo = getUserInfo();
         if ($cid == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE]);
-        $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" id="formcsave" method="post">'
         .'<table class="sl_table_form">';
         if (is_user()) {
@@ -25,7 +24,6 @@ function setComShow(int $id = 0, int $cid = 0): string {
         }
         $cont .= '<tr><td>'._COMMENT.':</td><td>'.textarea(1, 'text', '', $conf['name'], '5').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" OnClick="AjaxLoad(\'POST\', \'0\', \'csave\', \'go=1&amp;op=savecom&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'\', { \'text\':\''._CERROR1.'\' }); ClearForm(formcsave); return false;" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
     }
     return $cont;
 }

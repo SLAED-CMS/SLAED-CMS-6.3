@@ -20,19 +20,15 @@ function order(): void {
     $field = getVar('post', 'field', 'field');
     setHead(['title' => _ORDER]);
     $cont = setTemplateBasic('title', ['{%title%}' => _ORDER]);
-    $cont .= setTemplateBasic('open');
     $cont .= filterReplaceText(filterMarkdown($conf['order']['text'], 'all', false), 'all');
-    $cont .= setTemplateBasic('close');
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-        $cont .= setTemplateBasic('open');
         $cont .= '<h2>'._OR_1.'</h2><form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
         .'<tr><td>'._OR_2.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._OR_2.'" required></td></tr>'
         .fields_in($field, $conf['name'])
         .'<tr><td>'._OR_3.':</td><td><textarea name="note" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$note.'</textarea></td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="hidden" name="op" value="send"><input type="submit" value="'._OR_4.'" class="sl_but_blue"></td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MO_11]);
     }

@@ -21,7 +21,6 @@ function content(): void {
     $offset = ($num - 1) * $limit;
     $result = $db->getSqlQuery('SELECT id, title, body, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
         while ([$id, $title, $body, $time, $counter]= $db->getSqlRow($result)) {
             $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=content_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>||' : '';
@@ -33,7 +32,6 @@ function content(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', $conf['name'], $limit, '', 'id', '_content', '', '', $nump);
-        $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -69,7 +67,7 @@ function view(): void {
             'time' => $time,
             'author' => $conf['sitename'],
         ]);
-        echo setTemplateBasic('title', ['if_flag' => ['is_view' => true], '{%title%}' => $title]).setTemplateBasic('open').filterTextHighlight(filterMarkdown($hometext, $conf['name'], false), $word).setTemplateBasic('close');
+        echo setTemplateBasic('title', ['if_flag' => ['is_view' => true], '{%title%}' => $title]).filterTextHighlight(filterMarkdown($hometext, $conf['name'], false), $word);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);

@@ -49,13 +49,13 @@ function info(): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="info"><input type="submit" value="'._RSS_INFO_CODE.'" class="sl_but_blue"></td></tr></table></form>';
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);
     $cont = setTemplateBasic('title', ['{%title%}' => _RSS]);
-    $cont .= setTemplateBasic('open').$content.setTemplateBasic('close');
+    $cont .= $content;
     if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';
         $content = '<hr><form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form"><tr><td>'._SELECTASITE.':</td><td><select name="url" class="sl_field '.$conf['style'].'">'.rss_select().'</select></td><td><input type="submit" value="'._OK.'" class="sl_but_blue"></td></tr></table></form>'
         .'<form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form"><tr><td>'._ORTYPEURL.':</td><td><input type="url" name="url" value="'.$link.'" maxlength="200" class="sl_field '.$conf['style'].'" placeholder="'._ORTYPEURL.'"></td><td><input type="submit" value="'._OK.'" class="sl_but_blue"></td></tr></table></form>';
         $content .= rss_read($url, '');
-        $cont .= setTemplateBasic('open').$content.setTemplateBasic('close');
+        $cont .= $content;
     }
     echo $cont;
     setFoot();

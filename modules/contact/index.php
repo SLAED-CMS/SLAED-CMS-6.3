@@ -77,10 +77,10 @@ function contact(): void {
             $cont .= setTemplateWarning('warn', ['time' => '5', 'url' => '', 'id' => 'info', 'text' => _FBMAILSENT]);
         } else {
             $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-            $cont .= setTemplateBasic('open').$form.setTemplateBasic('close');
+            $cont .= $form;
         }
     } else {
-        $cont .= setTemplateBasic('open').$form.setTemplateBasic('close');
+        $cont .= $form;
     }
     echo $cont;
     setFoot();

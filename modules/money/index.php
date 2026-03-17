@@ -21,10 +21,7 @@ function money(): void {
     setHead(['title' => _MONEY]);
     $cont = setTemplateBasic('title', ['{%title%}' => _MONEY]);
     $cont .= ($conf['money']['an']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MO_11]);
-    $cont .= setTemplateBasic('open');
     $cont .= filterReplaceText(filterMarkdown(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), 'all', false), 'all');
-    $cont .= setTemplateBasic('close');
-    $cont .= setTemplateBasic('open');
     $cont .= '<script>
     function Rechner(form) {
         a = form.a.value;
@@ -56,13 +53,11 @@ function money(): void {
     .'<form name="form"><table class="sl_table_form"><tr><td>'._MO_2.': <input type="number" name="a" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td>'._MO_3.' Z: <input name="total" style="width: 65px;" class="sl_field '.$conf['style'].'"> USD</td><td><input type="button" value="'._MO_4.'" class="sl_but_blue" OnClick=Rechner(this.form)></td></tr></table></form>'
     .'<form name="form"><table class="sl_table_form"><tr><td>'._MO_2.': <input type="number" name="a" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td>'._MO_3.' R: <input name="total" style="width: 65px;" class="sl_field '.$conf['style'].'"> RUB</td><td><input type="button" value="'._MO_4.'" class="sl_but_blue" OnClick=Rechner1(this.form)></td></tr></table></form>'
     .'<form name="form"><table class="sl_table_form"><tr><td>'._MO_2.': <input type="number" name="a" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td>'._MO_3.' E: <input name="total" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td><input type="button" value="'._MO_4.'" class="sl_but_blue" OnClick=Rechner2(this.form)></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $intro = getVar('post', 'intro', 'array', []);
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-        $cont .= setTemplateBasic('open');
         $cont .= '<h2>'._MO_6.'</h2><form action="index.php?name='.$conf['name'].'" method="post">'
         .'<table class="sl_table_form">'
         .'<tr><td>'._MO_7.':</td><td><input type="number" name="sum" value="'.$sum.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_7.'" required></td></tr>'
@@ -77,7 +72,6 @@ function money(): void {
         }
         $cont .= '<tr><td>'._MO_9.':</td><td><textarea name="note" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$note.'</textarea></td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="hidden" name="op" value="send"><input type="submit" value="'._MO_10.'" class="sl_but_blue"></td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
     }
     echo $cont;
     setFoot();

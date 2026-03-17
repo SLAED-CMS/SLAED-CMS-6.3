@@ -16,7 +16,7 @@ function sitemap(): void {
     $cont = setTemplateBasic('title', ['{%title%}' => _SITEMAP]);
     if (is_readable($path)) {
         $map = file_get_contents($path);
-        $cont .= setTemplateBasic('open').($map !== false ? $map : '').setTemplateBasic('close');
+        $cont .= ($map !== false ? $map : '');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }

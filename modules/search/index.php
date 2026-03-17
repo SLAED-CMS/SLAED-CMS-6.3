@@ -77,8 +77,7 @@ function getSearchTypeList(int $typ): string {
 
 function getSearchForm(array $state): string {
     global $conf;
-    $cont = setTemplateBasic('open');
-    $cont .= '<form action="index.php?name='.htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8').'" method="post"><table class="sl_table_form">'
+    $cont = '<form action="index.php?name='.htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8').'" method="post"><table class="sl_table_form">'
         .'<tr><td>'._MODUL.':</td><td><select name="mod" onchange="submit()" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'"><option value="">'._SEARCHALL.'</option>'
         .getSearchModList($state['mods'], (string)$state['mod']).'</select></td></tr>';
     if ($state['mod'] === 'media') {
@@ -86,7 +85,6 @@ function getSearchForm(array $state): string {
     }
     $cont .= '<tr><td>'._SEARCH.':</td><td><input type="text" name="word" value="'.htmlspecialchars((string)$state['word'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'" placeholder="'._SEARCH.'" required></td></tr>'
         .'<tr><td colspan="2" class="sl_center"><input type="submit" title="'._SEARCH.'" value="'._SEARCH.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
     return $cont;
 }
 

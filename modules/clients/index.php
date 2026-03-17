@@ -20,7 +20,6 @@ function clients(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $uid = (int)($user[0] ?? 0);
         $conts = '';
-        $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CLOADS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
         $i = 0;
         $a = 1;
@@ -45,7 +44,6 @@ function clients(): void {
             $a++;
         }
         $cont .= '</tbody></table>'.$conts;
-        $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }

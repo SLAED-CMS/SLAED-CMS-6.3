@@ -25,14 +25,12 @@ function recommend(): void {
     setHead(['title' => _RECOMMTITLE]);
     $cont = setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-    $cont .= setTemplateBasic('open');
     $cont .= '<form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
     .'<tr><td>'._YOURNAME.':</td><td><input type="text" name="'.$unkey.'" value="'.$sname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>'
     .'<tr><td>'._YOUREMAIL.':</td><td><input type="email" name="semail" value="'.$semail.'" class="sl_field '.$conf['style'].'" placeholder="'._YOUREMAIL.'" required></td></tr>'
     .'<tr><td>'._FFRIENDNAME.':</td><td><input type="text" name="fname" value="'.$fname.'" class="sl_field '.$conf['style'].'" placeholder="'._FFRIENDNAME.'" required></td></tr>'
     .'<tr><td>'._FFRIENDEMAIL.':</td><td><input type="email" name="femail" value="'.$femail.'" class="sl_field '.$conf['style'].'" placeholder="'._FFRIENDEMAIL.'" required></td></tr>'
     .'<tr><td colspan="2" class="sl_center">'.getCaptcha(2).'<input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
 }

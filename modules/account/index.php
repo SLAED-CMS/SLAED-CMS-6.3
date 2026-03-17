@@ -18,7 +18,6 @@ function account(): void {
         $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
         $cont = setTemplateBasic('title', ['{%title%}' => _USERREGLOGIN]);
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-        $cont .= setTemplateBasic('open');
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post">'
         .'<table class="sl_table_form">'
         .'<tr><td>'._NICKNAME.':</td><td><input type="text" name="user_name" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._NICKNAME.'" required></td></tr>'
@@ -27,7 +26,6 @@ function account(): void {
         .'<tr><td colspan="2" class="sl_center"><a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']).'" title="'._PASSWORDLOST.'" class="sl_but_foot">'._PASSWORDLOST.'</a><a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']).'" title="'._REGNEWUSER.'" class="sl_but_foot">'._REGNEWUSER.'</a></td></tr>';
         $cont .= ($conf['users']['network']) ? '<tr><td colspan="2" class="sl_center">'._LOGINNETWORK.'</td></tr><tr><td colspan="2" class="sl_center">'.getNetworks().'</td></tr>' : '';
         $cont .= '</table></form>';
-        $cont .= setTemplateBasic('close');
         echo $cont;
         setFoot();
     }
@@ -71,7 +69,6 @@ function newuser(): void {
             $mail = getVar('post', 'mail', 'text');
             $mail = ($mail) ? filterText($mail) : '';
             $captcha = ($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-            $cont .= setTemplateBasic('open');
             $cont .= '<form action="index.php?name='.$conf['name'].'" method="post">'
             .'<table class="sl_table_form">'
             .'<tr><td>'._NICKNAME.':</td><td><input type="text" name="'.$unkey.'" value="'.$nick.'" maxlength="25" class="sl_field '.$conf['style'].'" placeholder="'._NICKNAME.'" required></td></tr>'
@@ -86,7 +83,6 @@ function newuser(): void {
             .'<tr><td colspan="2" class="sl_center"><a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._USERLOGIN.'" class="sl_but_foot">'._USERLOGIN.'</a><a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']).'" title="'._PASSWORDLOST.'" class="sl_but_foot">'._PASSWORDLOST.'</a></td></tr>';
             $cont .= ($conf['users']['network']) ? '<tr><td colspan="2" class="sl_center">'._LOGINNETWORK.'</td></tr><tr><td colspan="2" class="sl_center">'.getNetworks().'</td></tr>' : '';
             $cont .= '</table></form>';
-            $cont .= setTemplateBasic('close');
         }
         echo $cont;
         setFoot();
@@ -129,13 +125,11 @@ function finnewuser(): void {
             if ($conf['users']['nomail'] == 1) {
                 $cont = setTemplateBasic('title', ['{%title%}' => _ACCOUNTCREATED]);
                 $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TOFINISHUSERN]);
-                $cont .= setTemplateBasic('open');
                 $cont .= '<form action="index.php" method="get">'
                 .'<table class="sl_table_form">'
                 .'<tr><td>'._UNICKNAME.':</td><td>'.$nick.'</td></tr>'
                 .'<tr><td>'._UPASSWORD.':</td><td>'.$pass.'</td></tr>'
                 .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="'.$conf['name'].'"><input type="hidden" name="op" value="activate"><input type="hidden" name="user" value="'.urlencode($nick).'"><input type="hidden" name="num" value="'.$check.'"><input type="submit" value="'._ACTIVATIONSUB.'" class="sl_but_blue"></td></tr></table></form>';
-                $cont .= setTemplateBasic('close');
             } else {
                 $link = '<a href="'.$finishlink.'" target="_blank" title="'._ACTIVATIONSUB.'">'.str_replace('&amp;', '&', $finishlink).'</a>';
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
@@ -573,7 +567,7 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo setTemplateBasic('title', ['{%title%}' => _FAVORITES]).getUserNav().setTemplateBasic('open').'<div id="repfavorliste">'.getFavorList(1).'</div>'.setTemplateBasic('close');
+        echo setTemplateBasic('title', ['{%title%}' => _FAVORITES]).getUserNav().'<div id="repfavorliste">'.getFavorList(1).'</div>';
         setFoot();
     } else {
         account();
@@ -595,14 +589,12 @@ function passlost(): void {
         $send = ($email) ? _SENDPASSWORD : _SEND;
         if ($stop) $cont .= setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
         $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'info']);
-        $cont .= setTemplateBasic('open');
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post">'
         .'<table class="sl_table_form">'
         .'<tr><td>'._EMAIL.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._EMAIL.'" required></td></tr>';
         if ($email) $cont .= '<tr><td>'._CONFIRMATIONCODE.':</td><td><input type="text" name="code" value="'.$code.'" maxlength="10" class="sl_field '.$conf['style'].'" placeholder="'._CONFIRMATIONCODE.'" required></td></tr>';
         $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="passmail"><input type="submit" value="'.$send.'" class="sl_but_blue"></td></tr>'
         .'<tr><td colspan="2" class="sl_center"><a href="index.php?name='.$conf['name'].'" title="'._USERLOGIN.'" class="sl_but_foot">'._USERLOGIN.'</a><a href="index.php?name='.$conf['name'].'&amp;op=newuser" title="'._REGNEWUSER.'" class="sl_but_foot">'._REGNEWUSER.'</a></td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
         echo $cont;
         setFoot();
     } elseif (is_user()) {
