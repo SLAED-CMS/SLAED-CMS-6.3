@@ -737,14 +737,9 @@ function getLatestFileMTime(string $dir): int|null {
 
 # Returns formatted timestamp of latest backup file or N/A when no backups are found
 function getLastBackupRunLabel(): string {
-    $bakfile = (defined('COUNTER_DIR') ? COUNTER_DIR : BASE_DIR.'/storage/counter').'/backup.log';
-    if (is_file($bakfile) && is_readable($bakfile)) {
-        $raw = trim((string)file_get_contents($bakfile));
-        if ($raw !== '' && ctype_digit($raw)) {
-            $ts = (int)$raw;
-            if ($ts > 0) return date('Y-m-d H:i:s', $ts);
-        }
-    }
+    $state = getSchedulerState('dbbackup');
+    $ts = (int)($state['last_success'] ?? 0);
+    if ($ts > 0) return date('Y-m-d H:i:s', $ts);
     $bakdir = defined('BACKUP_DIR') ? (string)BACKUP_DIR : BASE_DIR.'/storage/backup';
     $mtime = getLatestFileMTime($bakdir);
     if ($mtime !== null) return date('Y-m-d H:i:s', $mtime);
