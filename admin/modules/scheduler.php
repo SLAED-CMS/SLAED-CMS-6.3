@@ -13,9 +13,13 @@ function navi(int $tab = 0, int $subtab = 0, int $legacy = 0): string {
 }
 
 function scheduler(): void {
-    global $afile;
+    global $afile, $conf;
     $jobs = getSchedulerJobs();
-    $cont = '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SCHEDULER_NEXT_RUN.'</th><th>'._SCHEDULER_RESULT.'</th><th>'._SCHEDULER_PRIORITY.'</th><th>'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+    $cont = navi(0, 0, 0);
+    $seclink = ' <a href="'.$afile.'.php?name=security&amp;op=conf">'.htmlspecialchars(_SCHEDULER_WARN_GO, ENT_QUOTES, 'UTF-8').'</a>.';
+    $cont .= (!$conf['security']['log_b']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SCHEDULER_WARN_DB.$seclink]) : '';
+    $cont .= (!$conf['security']['log_d']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SCHEDULER_WARNLOG.$seclink]) : '';
+    $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SCHEDULER_NEXTRUN.'</th><th>'._SCHEDULER_RESULT.'</th><th>'._SCHEDULER_PRIO.'</th><th>'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     foreach ($jobs as $job) {
         $name = $job['name'];
         $state = getSchedulerState($name);
@@ -42,12 +46,12 @@ function scheduler(): void {
         $tip = _SCHEDULER_JOBKEY.': '.$name;
         $tip .= '<br>'._TYPE.': '.$type;
         $tip .= '<br>'._STATUS.': '.$stat;
-        if ($sched !== '') $tip .= '<br>'._SCHEDULER_SCHEDULE.': '.$sched;
-        $tip .= '<br>'._SCHEDULER_LAST_RUN.': '.$last;
+        if ($sched !== '') $tip .= '<br>'._SCHEDULER_SCHED.': '.$sched;
+        $tip .= '<br>'._SCHEDULER_LASTRUN.': '.$last;
         $tip .= '<br>'._SCHEDULER_LAST_OK.': '.$lastok;
-        $tip .= '<br>'._SCHEDULER_NEXT_RUN.': '.$nextr;
+        $tip .= '<br>'._SCHEDULER_NEXTRUN.': '.$nextr;
         $tip .= '<br>'._SCHEDULER_TRIGGER.': '.($trig !== '' ? $trig : _NO);
-        $tip .= '<br>'._SCHEDULER_DURATION.': '.$time;
+        $tip .= '<br>'._SCHEDULER_RUNTIME.': '.$time;
         $tip .= '<br>'._SCHEDULER_FAILS.': '.$fail;
         if ($note !== '') $tip .= '<br>'._DESCRIPTION.': '.$note;
         $title = $job['title'];
@@ -72,7 +76,7 @@ function scheduler(): void {
     }
     $cont .= '</tbody></table>';
     setHead();
-    echo navi(0, 0, 0).setTemplateBasic('open').$cont.setTemplateBasic('close');
+    echo setTemplateBasic('open').$cont.setTemplateBasic('close');
     setFoot();
 }
 
@@ -92,7 +96,7 @@ function add(string $name = ''): void {
     $key = $isnew ? '' : $job['name'];
     $url = $job['settings']['url'] ?? '';
     $schedule = htmlspecialchars((string)($job['schedule'] ?? ''), ENT_QUOTES, 'UTF-8');
-    $info = $iscustom ? _SCHEDULER_URL_INFO : _SCHEDULER_SYSTEM_INFO;
+    $info = $iscustom ? _SCHEDULER_URLINFO : _SCHEDULER_SYSINFO;
     $readonly = $isnew ? '' : ' readonly';
     $cont = checkPerms(CONFIG_DIR.'/scheduler.php');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
@@ -105,8 +109,8 @@ function add(string $name = ''): void {
     } else {
         $cont .= '<tr><td>'._SCHEDULER_SYSTEM.':</td><td><input type="text" value="'.htmlspecialchars((string)($job['system'] ?? ''), ENT_QUOTES, 'UTF-8').'" class="sl_form" disabled></td></tr>';
     }
-    $cont .= '<tr><td>'._SCHEDULER_SCHEDULE.':<div class="sl_small">'._SCHEDULER_SCHEDULE_INFO.'</div></td><td><input type="text" name="schedule" value="'.$schedule.'" maxlength="100" class="sl_form" placeholder="0 2 * * *" required></td></tr>'
-    .'<tr><td>'._SCHEDULER_PRIORITY.':<div class="sl_small">'._SCHEDULER_PRIORITY_INFO.'</div></td><td><input type="number" name="priority" value="'.htmlspecialchars((string)$job['priority'], ENT_QUOTES, 'UTF-8').'" class="sl_form" min="1" max="999" required></td></tr>'
+    $cont .= '<tr><td>'._SCHEDULER_SCHED.':<div class="sl_small">'._SCHEDULER_CRONFMT.'</div></td><td><input type="text" name="schedule" value="'.$schedule.'" maxlength="100" class="sl_form" placeholder="0 2 * * *" required></td></tr>'
+    .'<tr><td>'._SCHEDULER_PRIO.':<div class="sl_small">'._SCHEDULER_PRIOTIP.'</div></td><td><input type="number" name="priority" value="'.htmlspecialchars((string)$job['priority'], ENT_QUOTES, 'UTF-8').'" class="sl_form" min="1" max="999" required></td></tr>'
     .'<tr><td>'._SCHEDULER_LOCK.':</td><td><input type="number" name="lock_timeout" value="'.htmlspecialchars((string)$job['lock_timeout'], ENT_QUOTES, 'UTF-8').'" class="sl_form" min="60" required></td></tr>'
     .'<tr><td>'._ACTIVATE2.'</td><td>'.radio_form((int)$job['active'], 'active').'</td></tr>'
     .'<tr><td>'._SCHEDULER_MANUAL.':</td><td>'.radio_form((int)$job['manual'], 'manual').'</td></tr>'
@@ -170,7 +174,7 @@ function unlock(): void {
     if ($name !== '') {
         $state = getSchedulerState($name);
         $state['running'] = 0; $state['started_at'] = 0;
-        $state['last_status'] = 'idle'; $state['last_message'] = _SCHEDULER_UNLOCKED;
+        $state['last_status'] = 'idle'; $state['last_message'] = _SCHEDULER_UNLOCKD;
         setSchedulerState($name, $state);
     }
     setRedirect($afile.'.php?name=scheduler');
