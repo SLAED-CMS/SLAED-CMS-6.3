@@ -475,7 +475,6 @@ define('_SPEC_GROUP','Die spezielle Gruppe');
 define('_SPOILER','Spoiler');
 define('_STARTDATE','Seiten-Startdatum');
 define('_STATUS','Status');
-define('_ACTIV','Aktiviert');
 define('_SUBMIT','Bitte benutzen Sie dieses Formular für Ihren Artikel und überprüfen Sie ihren Eintrag sorgfältig. Anschliessend wird der Artikel vom Admin bestätigt und ggf. überarbeitet.');
 define('_SUBTEXT','Herzlichen Dank für Ihren Beitrag! Ihr Artikel wurde empfangen und in Kürze von uns gesichtet und veröffentlicht werden.');
 define('_SUM','Summe');

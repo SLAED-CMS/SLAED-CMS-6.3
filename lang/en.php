@@ -475,7 +475,6 @@ define('_SPEC_GROUP','Special group');
 define('_SPOILER','Spoiler');
 define('_STARTDATE','Site start date');
 define('_STATUS','Status');
-define('_ACTIV','Enabled');
 define('_SUBMIT',"Please write your article/story filling the following form and double check your submission. You're advised that not all submissions will be posted. Your submission will be checked for proper grammar and maybe edited by our staff.");
 define('_SUBTEXT','Thanks for your submission! We will check your submission in the next few hours, if it is interesting and relevant we will publish it soon.');
 define('_SUM','Sum');

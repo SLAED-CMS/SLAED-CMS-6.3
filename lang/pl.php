@@ -475,7 +475,6 @@ define('_SPEC_GROUP','Specjalna grupa');
 define('_SPOILER','Spoiler');
 define('_STARTDATE','Data otwarcia strony');
 define('_STATUS','Status');
-define('_ACTIV','Włączony');
 define('_SUBMIT','Prosimy przesyłać swoje informacje, wypełniając wszystkie proponowane formy. Nie zapomnij sprawdzić, gramatykę i pisownię. Sprawdzaj widok ogólny w trybie podglądu. Materiał zostanie opublikowana tylko za zgodą admina.');
 define('_SUBTEXT','Dzięki za informacje! W najbliższym czasie administracja sprawdza dodanego przez Was rzeczy i jeśli odpowiada on naszym wymaganiom, to opublikuje go.');
 define('_SUM','Suma');
