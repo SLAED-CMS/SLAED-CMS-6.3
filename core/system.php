@@ -102,76 +102,18 @@ function setConfigFingerprint(string $local_file, string $fingerprint): void {
     }
 }
 
-# Returns the scheduler configuration with guaranteed top-level defaults
-function getSchedulerConfig(): array {
-    global $conf;
-    $cfg = $conf['scheduler'] ?? [];
-    if (!is_array($cfg)) $cfg = [];
-    $cfg['active'] = (string)($cfg['active'] ?? '1');
-    $cfg['pseudo'] = (string)($cfg['pseudo'] ?? '1');
-    $cfg['token'] = (string)($cfg['token'] ?? '');
-    $cfg['cron_timeout'] = (string)($cfg['cron_timeout'] ?? '600');
-    $cfg['trigger_cooldown'] = (string)($cfg['trigger_cooldown'] ?? '60');
-    $cfg['lock_timeout'] = (string)($cfg['lock_timeout'] ?? '1800');
-    $cfg['jobs'] = (isset($cfg['jobs']) && is_array($cfg['jobs'])) ? $cfg['jobs'] : [];
-    return $cfg;
+# System file include
+require_once BASE_DIR.'/core/security.php';
+
+if (defined('MODULE_FILE')) {
+    require_once BASE_DIR.'/core/user.php';
+} elseif (defined('ADMIN_FILE')) {
+    require_once BASE_DIR.'/core/admin.php';
 }
 
-# Returns the scheduler runtime directory and creates it on demand
-function getSchedulerDir(): string {
-    $path = LOGS_DIR.'/scheduler';
-    if (!is_dir($path)) mkdir($path, 0750, true);
-    return $path;
-}
-
-# Returns the scheduler state file path for a named job
-function getSchedulerFile(string $name): string {
-    return getSchedulerDir().'/'.preg_replace('#[^a-z]#', '', strtolower($name)).'.json';
-}
-
-# Returns the scheduler heartbeat file path
-function getSchedulerBeat(): string {
-    return getSchedulerDir().'/heartbeat.json';
-}
-
-# Returns the default runtime state structure for any scheduler job
-function getSchedulerBase(): array {
-    return [
-        'running' => 0,
-        'started_at' => 0,
-        'last_run' => 0,
-        'last_success' => 0,
-        'last_status' => 'idle',
-        'last_message' => '',
-        'last_error' => '',
-        'last_duration' => 0,
-        'last_trigger' => '',
-        'fail_count' => 0,
-    ];
-}
-
-# Returns a normalized scheduler job config
-function getSchedulerJob(string $name): array {
-    $cfg = getSchedulerConfig();
-    $job = $cfg['jobs'][$name] ?? [];
-    if (!is_array($job)) $job = [];
-    $job['name'] = $name;
-    $job['title'] = (string)($job['title'] ?? $name);
-    $job['type'] = (string)($job['type'] ?? 'system');
-    $job['active'] = (string)($job['active'] ?? '0');
-    $job['system'] = (string)($job['system'] ?? '');
-    $job['schedule'] = trim((string)($job['schedule'] ?? ''));
-    $job['priority'] = (string)($job['priority'] ?? '100');
-    $job['lock_timeout'] = (string)($job['lock_timeout'] ?? $cfg['lock_timeout']);
-    $job['manual'] = (string)($job['manual'] ?? '1');
-    $job['settings'] = (isset($job['settings']) && is_array($job['settings'])) ? $job['settings'] : [];
-    return $job;
-}
-
-function getSchedulerSettings(string $name): array {
-    $job = getSchedulerJob($name);
-    return (isset($job['settings']) && is_array($job['settings'])) ? $job['settings'] : [];
-}
+$theme = getTheme();
+if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
+require_once BASE_DIR.'/core/template.php';
 
 # Returns a normalized 5-part cron schedule or an empty string when invalid
 function getSchedulerSchedule(array|string $job): string {
@@ -267,12 +209,13 @@ function checkSchedulerCronMatch(string $schedule, int $time): bool {
     return true;
 }
 
-# Returns the next runtime timestamp for a scheduler job from its cron schedule
-function getSchedulerNextTime(array $job, array $state = [], ?int $from = null): int {
+# Returns the current planned run timestamp for a scheduler job based on last execution or current time
+function getSchedulerPlannedTime(array $job, array $state = []): int {
     $schedule = getSchedulerSchedule($job);
     if ($schedule === '') return 0;
-    $from = $from ?? time();
-    $next = $from - ($from % 60) + 60;
+    $last = (int)($state['last_run'] ?? 0);
+    $next = ($last > 0 ? $last : time());
+    $next = $next - ($next % 60) + 60;
     $max = $next + (60 * 60 * 24 * 366 * 5);
     while ($next <= $max) {
         if (checkSchedulerCronMatch($schedule, $next)) return $next;
@@ -281,20 +224,13 @@ function getSchedulerNextTime(array $job, array $state = [], ?int $from = null):
     return 0;
 }
 
-# Returns the current planned run timestamp for a scheduler job based on last execution or current time
-function getSchedulerPlannedTime(array $job, array $state = []): int {
-    $last = (int)($state['last_run'] ?? 0);
-    $from = ($last > 0) ? $last : time();
-    return getSchedulerNextTime($job, $state, $from);
-}
-
 # Returns all scheduler jobs normalized and sorted by priority and key
 function getSchedulerJobs(): array {
-    $cfg = getSchedulerConfig();
+    global $conf;
     $arr = [];
-    foreach ($cfg['jobs'] as $key => $val) {
+    foreach ($conf['scheduler']['jobs'] ?? [] as $key => $val) {
         if (!is_string($key) || $key === '') continue;
-        $arr[$key] = getSchedulerJob($key);
+        $arr[$key] = $val + ['name' => $key];
     }
     uasort($arr, static function (array $aaa, array $bbb): int {
         $one = (int)($aaa['priority'] ?? 100);
@@ -307,8 +243,8 @@ function getSchedulerJobs(): array {
 
 # Returns the runtime state for a scheduler job merged with defaults
 function getSchedulerState(string $name): array {
-    $file = getSchedulerFile($name);
-    $state = getSchedulerBase();
+    $file = LOGS_DIR.'/scheduler/'.$name.'.json';
+    $state = ['running' => 0, 'started_at' => 0, 'last_run' => 0, 'last_success' => 0, 'last_status' => 'idle', 'last_message' => '', 'last_error' => '', 'last_duration' => 0, 'last_trigger' => '', 'fail_count' => 0];
     if (!is_file($file) || filesize($file) === 0) return $state;
     $json = file_get_contents($file);
     if ($json === false || $json === '') return $state;
@@ -319,7 +255,7 @@ function getSchedulerState(string $name): array {
 
 # Writes the runtime state for a scheduler job atomically
 function setSchedulerState(string $name, array $state): bool {
-    $file = getSchedulerFile($name);
+    $file = LOGS_DIR.'/scheduler/'.$name.'.json';
     $json = json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (!is_string($json)) return false;
     return file_put_contents($file, $json, LOCK_EX) !== false;
@@ -327,7 +263,8 @@ function setSchedulerState(string $name, array $state): bool {
 
 # Returns whether the scheduler job lock is still valid
 function checkSchedulerLock(string $name, array $job = [], array $state = []): bool {
-    if ($job === []) $job = getSchedulerJob($name);
+    global $conf;
+    if ($job === []) $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
     if ($state === []) $state = getSchedulerState($name);
     if (empty($state['running']) || empty($state['started_at'])) return false;
     $time = max(60, (int)($job['lock_timeout'] ?? 0));
@@ -336,7 +273,8 @@ function checkSchedulerLock(string $name, array $job = [], array $state = []): b
 
 # Returns whether the scheduler job is due for execution
 function checkSchedulerDue(string $name, array $job = [], array $state = []): bool {
-    if ($job === []) $job = getSchedulerJob($name);
+    global $conf;
+    if ($job === []) $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
     if ($state === []) $state = getSchedulerState($name);
     if ((int)($job['active'] ?? 0) !== 1) return false;
     if (checkSchedulerLock($name, $job, $state)) return false;
@@ -346,7 +284,8 @@ function checkSchedulerDue(string $name, array $job = [], array $state = []): bo
 
 # Acquires the scheduler lock for a named job and persists trigger metadata
 function addSchedulerLock(string $name, string $type): bool {
-    $job = getSchedulerJob($name);
+    global $conf;
+    $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
     $state = getSchedulerState($name);
     if (checkSchedulerLock($name, $job, $state)) return false;
     $state['running'] = 1;
@@ -361,7 +300,6 @@ function addSchedulerLock(string $name, string $type): bool {
 
 # Releases the scheduler lock and persists final status plus any extra runtime data
 function deleteSchedulerLock(string $name, string $stat, string $mess = '', array $extra = []): bool {
-    $job = getSchedulerJob($name);
     $state = array_replace(getSchedulerState($name), $extra);
     $done = time();
     $start = (int)($state['started_at'] ?? 0);
@@ -383,58 +321,49 @@ function deleteSchedulerLock(string $name, string $stat, string $mess = '', arra
 
 # Writes a scheduler heartbeat marker for cron, pseudo-cron, or manual triggers
 function addSchedulerHeartbeat(string $type): void {
-    $data = [
-        'trigger' => $type,
-        'time' => time(),
-    ];
-    $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    if (is_string($json)) file_put_contents(getSchedulerBeat(), $json, LOCK_EX);
+    $json = json_encode(['trigger' => $type, 'time' => time()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $file = LOGS_DIR.'/scheduler/heartbeat.json';
+    if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
 }
 
 # Returns whether a recent cron heartbeat exists within the configured timeout
 function checkSchedulerCronAlive(): bool {
-    $cfg = getSchedulerConfig();
-    $file = getSchedulerBeat();
+    global $conf;
+    $file = LOGS_DIR.'/scheduler/heartbeat.json';
     if (!is_file($file) || filesize($file) === 0) return false;
     $json = file_get_contents($file);
     if ($json === false || $json === '') return false;
     $data = json_decode($json, true);
     if (!is_array($data) || (($data['trigger'] ?? '') !== 'cron')) return false;
-    return (time() - (int)($data['time'] ?? 0)) < max(60, (int)$cfg['cron_timeout']);
+    return (time() - (int)($data['time'] ?? 0)) < max(60, (int)($conf['scheduler']['cron_timeout'] ?? 600));
 }
 
 # Returns whether the current request may execute the scheduler runner
 function checkSchedulerAccess(string $type, string $stok): bool {
     global $conf;
     if (isAdmin(true)) return true;
-    $scfg = getSchedulerConfig();
-    $stkn = (string)($scfg['token'] ?? '');
+    $stkn = (string)($conf['scheduler']['token'] ?? '');
     $psok = ($type === 'pseudo' && checkSiteToken($stok, 'scheduler'));
     $tkok = ($stkn !== '' && hash_equals($stkn, $stok));
     return $psok || $tkok;
 }
 
-# Returns the pseudo-trigger throttle file path
-function getSchedulerTrig(): string {
-    return getSchedulerDir().'/trigger.json';
-}
 
 # Returns a signed pseudo-trigger URL when the next due job should be started asynchronously
 function addSchedulerTrigger(): string {
     global $conf;
-    $cfg = getSchedulerConfig();
-    if ((int)$cfg['active'] !== 1 || (int)$cfg['pseudo'] !== 1) return '';
+    if ((int)($conf['scheduler']['active'] ?? 0) !== 1 || (int)($conf['scheduler']['pseudo'] ?? 0) !== 1) return '';
     if (checkSchedulerCronAlive()) return '';
     $job = getSchedulerNextJob();
     if (!$job) return '';
-    $file = getSchedulerTrig();
+    $file = LOGS_DIR.'/scheduler/trigger.json';
     $last = 0;
     if (is_file($file) && filesize($file) !== 0) {
         $json = file_get_contents($file);
         $data = $json ? json_decode($json, true) : [];
         if (is_array($data)) $last = (int)($data['time'] ?? 0);
     }
-    $cool = max(15, (int)$cfg['trigger_cooldown']);
+    $cool = max(15, (int)($conf['scheduler']['trigger_cooldown'] ?? 15));
     if ($last > 0 && (time() - $last) < $cool) return '';
     $json = json_encode(['time' => time(), 'job' => (string)($job['name'] ?? '')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (is_string($json)) file_put_contents($file, $json, LOCK_EX);
@@ -466,10 +395,10 @@ function getSchedulerFetch(string $url): array {
     $code = 0;
     $wrap = (isset($meta['wrapper_data']) && is_array($meta['wrapper_data'])) ? $meta['wrapper_data'] : [];
     foreach ($wrap as $line) {
-            if (preg_match('#^HTTP/\S+\s+(\d{3})#', (string)$line, $mat)) {
-                $code = (int)$mat[1];
-                break;
-            }
+        if (preg_match('#^HTTP/\S+\s+(\d{3})#', (string)$line, $mat)) {
+            $code = (int)$mat[1];
+            break;
+        }
     }
     return [
         'ok' => ($body !== false),
@@ -506,8 +435,9 @@ function addSchedulerCustom(array $job): array {
 
 # Returns the next due scheduler job or null when nothing can run
 function getSchedulerNextJob(?string $name = null): ?array {
+    global $conf;
     if ($name !== null && $name !== '') {
-        $job = getSchedulerJob($name);
+        $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
         if (($job['type'] ?? '') !== 'custom' && ($job['system'] ?? '') === '') return null;
         return checkSchedulerDue($name, $job) ? $job : null;
     }
@@ -532,10 +462,10 @@ function addSchedulerSystemJob(string $name): array {
 
 # Executes the next due scheduler job or a named job and returns a structured result
 function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
-    $cfg = getSchedulerConfig();
-    if ((int)$cfg['active'] !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled'];
+    global $conf;
+    if ((int)($conf['scheduler']['active'] ?? 0) !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled'];
     if ($name !== null && $name !== '' && $type === 'manual') {
-        $job = getSchedulerJob($name);
+        $job = ($conf['scheduler']['jobs'][$name] ?? []) + ['name' => $name];
         if (($job['system'] ?? '') === '' && ($job['type'] ?? '') !== 'custom') $job = null;
     } else {
         $job = getSchedulerNextJob($name);
@@ -561,19 +491,6 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     $data['job'] = $name;
     return $data;
 }
-
-# System file include
-require_once BASE_DIR.'/core/security.php';
-
-if (defined('MODULE_FILE')) {
-    require_once BASE_DIR.'/core/user.php';
-} elseif (defined('ADMIN_FILE')) {
-    require_once BASE_DIR.'/core/admin.php';
-}
-
-$theme = getTheme();
-if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
-require_once BASE_DIR.'/core/template.php';
 
 # Format block
 function getBlocks(string $side, string $fly = ''): void {
@@ -1499,14 +1416,6 @@ function addBackupTask(): array {
     global $db, $conf;
     if (empty($conf['security']['log_b'])) return ['status' => 'failed', 'message' => 'Database backup is disabled'];
     $backup_start = microtime(true);
-
-    $sess_f = COUNTER_DIR.'/backup.log';
-    if (file_exists($sess_f)) unlink($sess_f);
-    $fp_time = fopen($sess_f, 'wb');
-    if ($fp_time) {
-        fwrite($fp_time, time());
-        fclose($fp_time);
-    }
 
     // FIX: Memory-Management
     ini_set('memory_limit', '512M');
