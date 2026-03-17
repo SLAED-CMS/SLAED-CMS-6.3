@@ -48,7 +48,7 @@ function sitemap(): void {
 
 function add(): void {
     global $afile;
-    doSitemap();
+    addSchedulerRun('sitemap', 'manual');
     setRedirect($afile.'.php?name=sitemap');
 }
 

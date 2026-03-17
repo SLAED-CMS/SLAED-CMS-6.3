@@ -83,7 +83,7 @@ function add(string $name = ''): void {
     $jobs = getSchedulerJobs();
     $job = ($name !== '' && isset($jobs[$name])) ? $jobs[$name] : [
         'name' => '', 'title' => '', 'type' => 'custom', 'active' => '1',
-        'handler' => 'custom', 'schedule' => '*/5 * * * *', 'priority' => '100',
+        'system' => '', 'schedule' => '*/5 * * * *', 'priority' => '100',
         'lock_timeout' => (string)($conf['scheduler']['lock_timeout'] ?? '1800'),
         'manual' => '1', 'settings' => ['url' => ''],
     ];
@@ -94,7 +94,8 @@ function add(string $name = ''): void {
     $schedule = htmlspecialchars((string)($job['schedule'] ?? ''), ENT_QUOTES, 'UTF-8');
     $info = $iscustom ? _SCHEDULER_URL_INFO : _SCHEDULER_SYSTEM_INFO;
     $readonly = $isnew ? '' : ' readonly';
-    $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
+    $cont = checkPerms(CONFIG_DIR.'/scheduler.php');
+    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._SCHEDULER_JOBKEY.':</td><td><input type="text" name="job" value="'.htmlspecialchars($key, ENT_QUOTES, 'UTF-8').'" maxlength="32" class="sl_form"'.$readonly.' required></td></tr>'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.htmlspecialchars((string)$job['title'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_form" required></td></tr>'
@@ -102,7 +103,7 @@ function add(string $name = ''): void {
     if ($iscustom) {
         $cont .= '<tr><td>'._SCHEDULER_URL.':</td><td><input type="text" name="url" value="'.htmlspecialchars($url, ENT_QUOTES, 'UTF-8').'" maxlength="255" class="sl_form" placeholder="https://example.com/task" required></td></tr>';
     } else {
-        $cont .= '<tr><td>'._SCHEDULER_HANDLER.':</td><td><input type="text" value="'.htmlspecialchars((string)$job['handler'], ENT_QUOTES, 'UTF-8').'" class="sl_form" disabled></td></tr>';
+        $cont .= '<tr><td>'._SCHEDULER_SYSTEM.':</td><td><input type="text" value="'.htmlspecialchars((string)($job['system'] ?? ''), ENT_QUOTES, 'UTF-8').'" class="sl_form" disabled></td></tr>';
     }
     $cont .= '<tr><td>'._SCHEDULER_SCHEDULE.':<div class="sl_small">'._SCHEDULER_SCHEDULE_INFO.'</div></td><td><input type="text" name="schedule" value="'.$schedule.'" maxlength="100" class="sl_form" placeholder="0 2 * * *" required></td></tr>'
     .'<tr><td>'._SCHEDULER_PRIORITY.':<div class="sl_small">'._SCHEDULER_PRIORITY_INFO.'</div></td><td><input type="number" name="priority" value="'.htmlspecialchars((string)$job['priority'], ENT_QUOTES, 'UTF-8').'" class="sl_form" min="1" max="999" required></td></tr>'
@@ -138,7 +139,7 @@ function save(): void {
         'title' => $title,
         'type' => $issys ? 'system' : 'custom',
         'active' => getVar('post', 'active', 'num', 0),
-        'handler' => $issys ? ($curr['handler'] ?? '') : 'custom',
+        'system' => $issys ? ($curr['system'] ?? '') : '',
         'schedule' => $sched,
         'priority' => $priority,
         'lock_timeout' => getVar('post', 'lock_timeout', 'num', 1800),

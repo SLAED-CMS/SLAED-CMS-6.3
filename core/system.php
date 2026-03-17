@@ -159,7 +159,7 @@ function getSchedulerJob(string $name): array {
     $job['title'] = (string)($job['title'] ?? $name);
     $job['type'] = (string)($job['type'] ?? 'system');
     $job['active'] = (string)($job['active'] ?? '0');
-    $job['handler'] = (string)($job['handler'] ?? '');
+    $job['system'] = (string)($job['system'] ?? '');
     $job['schedule'] = trim((string)($job['schedule'] ?? ''));
     $job['priority'] = (string)($job['priority'] ?? '100');
     $job['lock_timeout'] = (string)($job['lock_timeout'] ?? $cfg['lock_timeout']);
@@ -508,15 +508,26 @@ function addSchedulerCustom(array $job): array {
 function getSchedulerNextJob(?string $name = null): ?array {
     if ($name !== null && $name !== '') {
         $job = getSchedulerJob($name);
-        if ($job['handler'] === '') return null;
+        if (($job['type'] ?? '') !== 'custom' && ($job['system'] ?? '') === '') return null;
         return checkSchedulerDue($name, $job) ? $job : null;
     }
     foreach (getSchedulerJobs() as $job) {
         $name = (string)($job['name'] ?? '');
-        if ($name === '' || $job['handler'] === '') continue;
+        if ($name === '' || (($job['type'] ?? '') !== 'custom' && ($job['system'] ?? '') === '')) continue;
         if (checkSchedulerDue($name, $job)) return $job;
     }
     return null;
+}
+
+# Dispatches a named system scheduler job by key and returns runtime metadata
+function addSchedulerSystemJob(string $name): array {
+    return match ($name) {
+        'backup' => addBackupTask(),
+        'filescan' => addFilescanTask(),
+        'sitemap' => addSitemapTask(),
+        'newsletter' => updateNewsletter(true),
+        default => ['status' => 'failed', 'message' => 'Unknown system job: '.$name],
+    };
 }
 
 # Executes the next due scheduler job or a named job and returns a structured result
@@ -525,7 +536,7 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     if ((int)$cfg['active'] !== 1) return ['status' => 'disabled', 'message' => 'Scheduler is disabled'];
     if ($name !== null && $name !== '' && $type === 'manual') {
         $job = getSchedulerJob($name);
-        if (($job['handler'] ?? '') === '' && ($job['type'] ?? '') !== 'custom') $job = null;
+        if (($job['system'] ?? '') === '' && ($job['type'] ?? '') !== 'custom') $job = null;
     } else {
         $job = getSchedulerNextJob($name);
     }
@@ -533,12 +544,11 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     $name = (string)$job['name'];
     if (!addSchedulerLock($name, $type)) return ['status' => 'locked', 'message' => 'Job is already running', 'job' => $name];
     addSchedulerHeartbeat($type);
-    $func = (string)$job['handler'];
     try {
         if (($job['type'] ?? '') === 'custom') {
             $data = addSchedulerCustom($job);
         } else {
-            $data = function_exists($func) ? $func() : ['status' => 'failed', 'message' => 'Handler not found'];
+            $data = addSchedulerSystemJob($job['system'] ?? '');
         }
         if (!is_array($data)) $data = ['status' => 'failed', 'message' => 'Invalid handler result'];
     } catch (Throwable $error) {
@@ -550,26 +560,6 @@ function addSchedulerRun(?string $name = null, string $type = 'manual'): array {
     deleteSchedulerLock($name, $stat, $mess, $extra);
     $data['job'] = $name;
     return $data;
-}
-
-# Executes the scheduler database backup task and returns runtime metadata
-function addSchedulerBackup(): array {
-    return addBackupTask();
-}
-
-# Executes the scheduler file scan task and returns runtime metadata
-function addSchedulerFilescan(): array {
-    return addFilescanTask();
-}
-
-# Executes the scheduler sitemap task and returns runtime metadata
-function addSchedulerSitemap(): array {
-    return doSitemap(true);
-}
-
-# Executes the scheduler newsletter task and returns runtime metadata
-function addSchedulerNewsletter(): array {
-    return updateNewsletter(true);
 }
 
 # System file include
@@ -2834,7 +2824,7 @@ function doCss(): string {
 }
 
 # Create a sitemap
-function doSitemap(bool $force = false): array {
+function addSitemapTask(bool $force = false): array {
  global $db, $conf;
     if ($force || defined('ADMIN_FILE') || !empty($conf['sitemap']['auto'])) {
         $sess_f = 'sitemap.xml';
