@@ -2565,9 +2565,42 @@ function setCss(): void {
     readfile('config/cache/'.md5(getTheme().'style').'.txt');
 }
 
+# Build module navigation — defaults from $conf[$conf['name']], any $p key overrides
+function setModuleNavi(array $p): string {
+    global $conf;
+    $mconf = $conf[$conf['name']] ?? [];
+    $cat = getVar('get', 'cat', 'num');
+    $cpar = $cat ? ['cat' => $cat] : [];
+    $title = $p['title'] ?? '';
+    $htitle = $p['htitle'] ?? $title;
+    $bop = $p['bop'] ?? 'best';
+    $always = $p['always'] ?? false;
+    $addquest = $p['addquest'] ?? true;
+    $showrate = $always || !empty($mconf['rate']);
+    $canadd = (is_user() && ($mconf['add'] ?? 0) == 1)
+           || (!is_user() && $addquest && ($mconf['addquest'] ?? 0) == 1);
+    return setTemplateBasic('navi', [
+        '{%title%}' => $title,
+        '{%htitle%}' => $htitle,
+        '{%lbl_home%}' => _HOME,
+        '{%home_href%}' => $p['home_href'] ?? getSeoUrl(['name' => $conf['name']]),
+        '{%best_href%}' => $p['best_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => $bop]) : ''),
+        '{%lbl_best%}' => $p['btitle'] ?? _BEST,
+        '{%pop_href%}' => $p['pop_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']) : ''),
+        '{%lbl_pop%}' => $p['ptitle'] ?? _POP,
+        '{%liste_href%}' => $p['liste_href'] ?? getSeoUrl(['name' => $conf['name'], 'op' => 'liste']),
+        '{%lbl_liste%}' => _LIST,
+        '{%add_href%}' => $p['add_href'] ?? ($canadd ? getSeoUrl(['name' => $conf['name'], 'op' => 'add']) : ''),
+        '{%lbl_add%}' => _ADD,
+        '{%catshow%}' => $p['catshow'] ?? $cat,
+        '{%lbl_catvorh%}' => _CATVORH,
+        '{%lbl_cats%}' => _CATEGORIES,
+    ]);
+}
+
 # Set bottom navigation
 function setNaviLower(string $mod): string {
-    return setTemplateBasic('open').'<span class="sl_pos_center"><a href="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_foot">'._BACK.'</a><a href="index.php?name='.$mod.'" title="'._PAGEHOME.'" class="sl_but_foot">'._PAGEHOME.'</a><a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="sl_but_foot">'._PAGETOP.'</a></span>'.setTemplateBasic('close');
+    return '<span class="sl_pos_center"><a href="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_foot">'._BACK.'</a><a href="index.php?name='.$mod.'" title="'._PAGEHOME.'" class="sl_but_foot">'._PAGEHOME.'</a><a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="sl_but_foot">'._PAGETOP.'</a></span>';
 }
 
 # Load configuration file or directory and return chmod warning if needed
@@ -5891,7 +5924,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
             $cont .= setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&', $plnum, 0, '#comm', 'com');
-            $out = setTemplateBasic('title', ['{%title%}' => _COMMENTS]).setTemplateBasic('open').$cont.setTemplateBasic('close');
+            $out = setTemplateBasic('title', ['{%title%}' => _COMMENTS]).$cont;
         }
     } else {
         $winfo = (defined('ADMIN_FILE')) ? _NO_INFO : _NOCOMMENTS;

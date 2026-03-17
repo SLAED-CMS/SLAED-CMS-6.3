@@ -9,18 +9,10 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function navigate(string $title, string|int $cat=''): string {
-    global $conf;
-    $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._TOPUSERS.'" class="sl_but_navi">'._HOME.'</a>';
-    $rules = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'rules']).'" title="'._TU_RULES.'" class="sl_but_navi">'._TU_RULES.'</a>';
-    $stats = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'stats']).'" title="'._TU_STATS.'" class="sl_but_navi">'._TU_STATS.'</a>';
-    return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $rules, '{%pop%}' => $stats, '{%liste%}' => '', '{%add%}' => '', '{%catshow%}' => '']);
-}
-
 function users(): void {
     global $db, $conf;
     setHead(['title' => _TOPUSERS]);
-    $cont = navigate(_TOPUSERS);
+    $cont = setModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $lim = 50;
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $lim;
@@ -31,7 +23,6 @@ function users(): void {
             $rate = !empty($con[1]);
             $head = (is_moder($conf['name'])) ? _IP : _REG;
             $sort = $rate ? _RATING : _LOCALITYLANG;
-        $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'.$head.'</th><th>'._GENDER.'</th><th>'.$sort.'</th><th>'._POINTS.'</th></tr></thead><tbody class="sl_table_list_body">';
         while ([$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total] = $db->getSqlRow($result)) {
             $site = ($site) ? '<br>'._SITE.': '.$site : '';
@@ -48,7 +39,6 @@ function users(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', $conf['name'], $lim, '', 'id', '_users', '', '', '5');
-        $cont .= setTemplateBasic('close');
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }
@@ -59,8 +49,7 @@ function users(): void {
 function rules(): void {
     global $conf;
     setHead(['title' => _TU_RULES]);
-    $cont = navigate(_TOPUSERS);
-    $cont .= setTemplateBasic('open');
+    $cont = setModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TYPE.'</th><th>'._DESCRIPTION.'</th><th>'._POINTS.'</th></tr></thead><tbody class="sl_table_list_body">';
     $p = [_POINTS01, _POINTS02, _POINTS03, _POINTS04, _POINTS05, _POINTS06, _POINTS07, _POINTS08, _POINTS09, _POINTS10, _POINTS11, _POINTS12, _POINTS13, _POINTS14, _POINTS15, _POINTS16, _POINTS17, _POINTS18, _POINTS19, _POINTS20, _POINTS21, _POINTS22, _POINTS23, _POINTS24, _POINTS25, _POINTS26, _POINTS27, _POINTS28, _POINTS29, _POINTS30, _POINTS31, _POINTS32, _POINTS33, _POINTS34, _POINTS35, _POINTS36, _POINTS37, _POINTS38, _POINTS39, _POINTS40, _POINTS41, _POINTS42, _POINTS43, _POINTS44, _POINTS45];
     $d = [_DESC01, _DESC02, _DESC03, _DESC04, _DESC05, _DESC06, _DESC07, _DESC08, _DESC09, _DESC10, _DESC11, _DESC12, _DESC13, _DESC14, _DESC15, _DESC16, _DESC17, _DESC18, _DESC19, _DESC20, _DESC21, _DESC22, _DESC23, _DESC24, _DESC25, _DESC26, _DESC27, _DESC28, _DESC29, _DESC30, _DESC31, _DESC32, _DESC33, _DESC34, _DESC35, _DESC36, _DESC37, _DESC38, _DESC39, _DESC40, _DESC41, _DESC42, _DESC43, _DESC44, _DESC45];
@@ -70,7 +59,6 @@ function rules(): void {
         $cont .= '<tr id="'.$a.'"><td><a href="#'.$a.'" title="'.$a.'" class="sl_pnum">'.$a.'</a></td><td>'.$p[$i].'</td><td>'.$d[$i].'</td><td>'.$points[$i].'</td></tr>';
     }
     $cont .= '</tbody></table>';
-    $cont .= setTemplateBasic('close');
     $cont .= setNaviLower($conf['name']);
     echo $cont;
     setFoot();
@@ -79,10 +67,9 @@ function rules(): void {
 function stats(): void {
     global $db, $conf;
     setHead(['title' => _TU_STATS]);
-    $cont = navigate(_TOPUSERS);
+    $cont = setModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points');
     if ($result) {
-        $cont .= setTemplateBasic('open');
         $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._RANK.'</th><th>'._DESCRIPTION.'</th><th>'._POINTS.'</th><th>'._TU_USERSCOUNT.'</th><th>'.cutstr(_SPEC, 4, 1).'</th></tr></thead><tbody class="sl_table_list_body">';
         while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
             if (intval($extra)) {
@@ -101,7 +88,6 @@ function stats(): void {
             .'<td>'.$extra.'</td></tr>';
         }
         $cont .= '</tbody></table>';
-        $cont .= setTemplateBasic('close');
         $cont .= setNaviLower($conf['name']);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);

@@ -50,44 +50,55 @@ if (!function_exists('getTemplateVars')) {
     }
 }
 
-# Apply minimal {% if FLAG %} ... {% else %} ... {% endif %} (no elseif)
+# Apply {% if [!]flag %} ... {% elseif [!]flag %} ... {% else %} ... {% endif %}
+# Supports negation (!flag), elseif chains, and non-empty variable checks ({%if var%})
 if (!function_exists('setTemplateIf')) {
-    function setTemplateIf(string $html, array $flags): string {
+    function setTemplateIf(string $html, array $flags, array $vars = []): string {
         if ($html === '' || !str_contains($html, '{%')) return $html;
         foreach ($flags as $k => $v) {
             if ($v === 'true') $flags[$k] = true;
             if ($v === 'false') $flags[$k] = false;
         }
-        $re = '/(\{\%\s*(?:if\s+[a-zA-Z0-9_]+|else|endif)\s*\%\})/';
+        $resolve = static function(string $name, bool $neg, array $flags, array $vars): bool {
+            $val = array_key_exists($name, $flags)
+                ? !empty($flags[$name])
+                : !empty($vars['{%'.$name.'%}']);
+            return $neg ? !$val : $val;
+        };
+        $re = '/(\{\%\s*(?:(?:else)?if\s+!?[a-zA-Z0-9_]+|else|endif)\s*\%\})/';
         $parts = preg_split($re, $html, -1, PREG_SPLIT_DELIM_CAPTURE);
         if (!is_array($parts) || count($parts) < 2) return $html;
         $out = '';
         $stack = [];
         $emit = true;
         foreach ($parts as $p) {
-            if (preg_match('/^\{\%\s*if\s+([a-zA-Z0-9_]+)\s*\%\}$/', $p, $m)) {
-                $name = $m[1];
-                $cond = !empty($flags[$name]);
-                $parent = $emit;
-                $stack[] = ['active' => $cond, 'seen' => false, 'parent' => $parent];
-                $emit = $parent && $cond;
+            if (preg_match('/^\{\%\s*if\s+(!?)([a-zA-Z0-9_]+)\s*\%\}$/', $p, $m)) {
+                $cond = $resolve($m[2], $m[1] === '!', $flags, $vars);
+                $stack[] = ['active' => $cond, 'seen' => $cond, 'parent' => $emit];
+                $emit = $emit && $cond;
+                continue;
+            }
+            if (preg_match('/^\{\%\s*elseif\s+(!?)([a-zA-Z0-9_]+)\s*\%\}$/', $p, $m)) {
+                if ($stack === []) continue;
+                $i = count($stack) - 1;
+                if ($stack[$i]['seen']) { $emit = false; continue; }
+                $cond = $resolve($m[2], $m[1] === '!', $flags, $vars);
+                $stack[$i]['active'] = $cond;
+                $stack[$i]['seen'] = $cond;
+                $emit = $stack[$i]['parent'] && $cond;
                 continue;
             }
             if (preg_match('/^\{\%\s*else\s*\%\}$/', $p)) {
                 if ($stack === []) continue;
                 $i = count($stack) - 1;
-                if ($stack[$i]['seen']) continue;
+                if ($stack[$i]['seen']) { $emit = false; continue; }
                 $stack[$i]['seen'] = true;
                 $emit = $stack[$i]['parent'] && !$stack[$i]['active'];
                 continue;
             }
             if (preg_match('/^\{\%\s*endif\s*\%\}$/', $p)) {
                 if ($stack === []) continue;
-                array_pop($stack);
-                $emit = true;
-                foreach ($stack as $fr) {
-                    $emit = $emit && $fr['parent'] && ($fr['seen'] ? !$fr['active'] : $fr['active']);
-                }
+                $emit = array_pop($stack)['parent'];
                 continue;
             }
             if ($emit) $out .= $p;
@@ -144,7 +155,7 @@ if (!function_exists('setTemplateBasic')) {
             $flags = $val['if_flag'];
             unset($val['if_flag']);
         }
-        $raw = setTemplateIf($raw, $flags);
+        $raw = setTemplateIf($raw, $flags, $val + $vars);
         return strtr($raw, $val + $vars);
     }
 }
@@ -179,7 +190,7 @@ if (!function_exists('setTemplateBlock')) {
                 }
             }
             if ($rawtpl !== null) {
-                $rawtpl = setTemplateIf($rawtpl, $flags);
+                $rawtpl = setTemplateIf($rawtpl, $flags, $val + ['{%theme%}' => $theme]);
                 return strtr($rawtpl, $val + ['{%theme%}' => $theme]);
             }
         }

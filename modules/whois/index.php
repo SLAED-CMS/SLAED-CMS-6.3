@@ -9,12 +9,8 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function navigate(string $title, string|int $cat=''): string {
-	global $conf;
-	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._WHOIS_LIC.'" class="sl_but_navi">'._HOME.'</a>';
-	$add = ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
-	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => '', '{%pop%}' => '', '{%liste%}' => '', '{%add%}' => $add, '{%catshow%}' => '']);
-}
+const WHOIS_NAVI = ['htitle' => _WHOIS_LIC, 'best_href' => '', 'pop_href' => '', 'liste_href' => ''];
+
 
 function mwhois(): void {
 	global $db, $afile, $user, $conf, $home, $locale;
@@ -74,8 +70,7 @@ function mwhois(): void {
 	
 	$option = getVar('req', 'option', 'var');
 	setHead(['title' => _WHOIS_LIC]);
-	$cont = navigate(_WHOIS_LIC);
-	$cont .= setTemplateBasic('open');
+	$cont = setModuleNavi(['title' => _WHOIS_LIC] + WHOIS_NAVI);
 	$cont .= $licensopt;
 	if ($option == 'licens' && !namecheck($domainlicens)) {
 		$result = $db->getSqlQuery('SELECT website FROM '.PREFIX_DB.'_clients WHERE status != \'2\'');
@@ -101,8 +96,6 @@ function mwhois(): void {
 	} elseif ($option == 'licens') {
 		$cont .= printresults(namecheck($domainlicens), 1);
 	}
-	$cont .= setTemplateBasic('close');
-	$cont .= setTemplateBasic('open');
 	if ($option != 'check' && $option != 'whois') {
 		$cont .= $domainopt._WHOIS_TEXT;
 	} else {
@@ -120,7 +113,6 @@ function mwhois(): void {
 			$cont .= printresults(namecheck($domainwhois), 0);
 		}
 	}
-	$cont .= setTemplateBasic('close');
 	echo $cont;
 	setFoot();
 }
@@ -129,11 +121,10 @@ function add(): void {
 	global $db, $user, $conf, $stop;
 	if ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) {
 		setHead(['title' => _WHOIS_LICENS_SEND]);
-		$cont = navigate(_WHOIS_LICENS_SEND);
+		$cont = setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI);
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ABMIT]);
 		$hometext = getVar('post', 'hometext', 'text');
-		$cont .= setTemplateBasic('open');
 		$cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
 		if (is_user()) {
 			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
@@ -151,7 +142,6 @@ function add(): void {
 		.'<tr><td>'._DC.':</td><td><input type="url" name="dc" value="'.$dc.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._DC.'"></td></tr>'
 		.'<tr><td>'._COMMENT.':</td><td><textarea name="hometext" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._COMMENT.'">'.$hometext.'</textarea></td></tr>'
 		.'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
-		$cont .= setTemplateBasic('close');
 		echo $cont;
 		setFoot();
 	} else {
@@ -179,7 +169,7 @@ function send(): void {
 			$puname = (is_user()) ? $user[1] : $postname;
 			addAdminMail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
 			setHead(['title' => _WHOIS_LICENS_SEND]);
-			echo navigate(_WHOIS_LICENS_SEND).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ABTEXT]);
+			echo setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ABTEXT]);
 			setFoot();
 		} else {
 			add();

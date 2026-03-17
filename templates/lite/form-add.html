@@ -1,0 +1,47 @@
+<form action="index.php?name={%name%}" method="post" name="post" enctype="multipart/form-data">
+<table class="sl_table_form">
+{%if has_name%}
+    {%if is_user%}
+    <tr><td>{%lbl_name%}:</td><td>{%username%}</td></tr>
+    {%else%}
+    <tr><td>{%lbl_name%}:</td><td>
+        <input type="text" name="postname" value="{%postname%}"
+            class="sl_field {%style%}" placeholder="{%lbl_name%}" required>
+    </td></tr>
+    {%endif%}
+{%endif%}
+{%if emailval%}
+<tr><td>{%lbl_email%}:</td><td>
+    <input type="text" name="mail" value="{%emailval%}" maxlength="100"
+        class="sl_field {%style%}" placeholder="{%lbl_email%}" required>
+</td></tr>
+{%endif%}
+{%if titleval%}
+<tr><td>{%lbl_title%}:</td><td>
+    <input type="text" name="title" value="{%titleval%}" maxlength="100"
+        class="sl_field {%style%}" placeholder="{%lbl_title%}" required>
+</td></tr>
+{%endif%}
+{%if catselect%}
+<tr><td>{%lbl_cat%}:</td><td>{%catselect%}</td></tr>
+{%endif%}
+{%if hometext%}
+<tr><td>{%lbl_text%}:</td><td>{%hometext%}</td></tr>
+{%endif%}
+{%if bodytext%}
+<tr><td>{%lbl_body%}:</td><td>{%bodytext%}</td></tr>
+{%endif%}
+{%if siteval%}
+<tr><td>{%lbl_site%}:</td><td>
+    <input type="text" name="{%site_attr%}" value="{%siteval%}" maxlength="100"
+        class="sl_field {%style%}" placeholder="{%lbl_site%}">
+</td></tr>
+{%endif%}
+{%if extrafields%}{%extrafields%}{%endif%}
+{%if fields%}{%fields%}{%endif%}
+{%if captcha%}
+<tr><td colspan="2" class="sl_center">{%captcha%}{%submit%}</td></tr>
+{%else%}
+<tr><td colspan="2" class="sl_center">{%submit%}</td></tr>
+{%endif%}
+</table></form>

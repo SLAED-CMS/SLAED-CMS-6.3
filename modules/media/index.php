@@ -1,25 +1,12 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
     header('Location: ../../index.php');
     exit;
-}
-
-function navigate(string $title, string|int $cat = ''): string {
-    global $conf;
-    $cat = getVar('get', 'cat', 'num');
-    $cpar = $cat ? ['cat' => $cat] : [];
-    $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._MEDIA.'" class="sl_but_navi">'._HOME.'</a>';
-    $best = ($conf['media']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-    $pop = ($conf['media']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-    $liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-    $add = ((is_user() && $conf['media']['add'] == 1) || (!is_user() && $conf['media']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
-    $catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-    return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow]);
 }
 
 function media(): void {
@@ -73,7 +60,7 @@ function media(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['media']['homcat'])) {
-        $cont = navigate($ntitle, $caton);
+        $cont = setModuleNavi(['title' => $ntitle, 'htitle' => _MEDIA]);
         if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], $ncat);
     }
@@ -126,7 +113,7 @@ function liste(): void {
     $offset = intval($offset);
     $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.time, c.title, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid=u.id) '.$order.' '.$cwhere.' ORDER BY time DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
-    $cont = navigate(_LIST);
+    $cont = setModuleNavi(['title' => _LIST, 'htitle' => _MEDIA]);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['media']['letter']) ? letter($conf['name']) : '';
         $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
@@ -173,7 +160,7 @@ function view(): void {
             'time' => $seotime,
             'author' => $seoauthor,
         ]);
-        $cont = navigate(_MEDIA, $conf['media']['viewcat']);
+        $cont = setModuleNavi(['title' => _MEDIA]);
         if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = ($cdesc) ? $cdesc : $ctitle;
@@ -282,11 +269,10 @@ function add(): void {
         $postname = getVar('post', 'postname', 'name');
         
         setHead(['title' => _ADD]);
-        $cont = navigate(_ADD);
+        $cont = setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]);
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         if ($description) $cont .= preview($mtitle, $description, $note, '', $conf['name']);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADDNOTEM]);
-        $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
         if (is_user()) {
             $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
@@ -347,7 +333,6 @@ function add(): void {
         }
         $cont .= '</td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
         echo $cont;
         setFoot();
     } else {
@@ -390,7 +375,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
             setHead(['title' => _MEDIA.' '._ADD, 'desc' => _UPLOADFINISHM]);
-            echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHM]);
+            echo setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHM]);
             setFoot();
         } else {
             add();
@@ -406,7 +391,7 @@ function broken(): void {
     if ($conf['media']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCMEDIA]);
-        echo navigate(_BROCMEDIA).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEM]);
+        echo setModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEM]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);

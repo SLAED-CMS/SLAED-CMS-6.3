@@ -1,25 +1,12 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
     header('Location: ../../index.php');
     exit;
-}
-
-function navigate(string $title, string|int $cat = ''): string {
-    global $conf;
-    $cat = getVar('get', 'cat', 'num');
-    $cpar = $cat ? ['cat' => $cat] : [];
-    $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._LINKS.'" class="sl_but_navi">'._HOME.'</a>';
-    $best = ($conf['links']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-    $pop = ($conf['links']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-    $liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-    $add = ((is_user() && $conf['links']['add'] == 1) || (!is_user() && $conf['links']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
-    $catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-    return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow]);
 }
 
 function links(): void {
@@ -73,7 +60,7 @@ function links(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['links']['homcat'])) {
-        $cont .= navigate($ntitle, $caton);
+        $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _LINKS]);
         if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], $ncat);
     }
@@ -128,7 +115,7 @@ function liste(): void {
     $offset = intval($offset);
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, c.title, c.intro, u.name FROM '.PREFIX_DB.'_links AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) '.$order.' '.$cwhere.' ORDER BY time DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
-    $cont = navigate(_LIST);
+    $cont = setModuleNavi(['title' => _LIST, 'htitle' => _LINKS]);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['links']['letter']) ? letter($conf['name']) : '';
         $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
@@ -177,7 +164,7 @@ function view(): void {
             'time' => $seotime,
             'author' => $seoauthor,
         ]);
-        $cont = navigate(_LINKS, $conf['links']['viewcat']);
+        $cont = setModuleNavi(['title' => _LINKS]);
         if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
@@ -246,26 +233,35 @@ function add(): void {
             $site = getVar('post', 'site', 'url', 'http://');
         }
         setHead(['title' => _ADD]);
-        $cont = navigate(_ADD);
+        $cont = setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]);
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         if ($description) $cont .= preview($title, $description, $bodytext, '', $conf['name']);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADDFNOTE]);
-        $cont .= setTemplateBasic('open');
-        $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
-        if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
-        } else {
-            $postname = ($postname) ? $postname : _ANONYM;
-            $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
-        }
-        $cont .= '<tr><td>'._AUEMAIL.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._AUEMAIL.'" required></td></tr>'
-        .'<tr><td>'._SITENAME.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._SITENAME.'" required></td></tr>'
-        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-        .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1').'</td></tr>'
-        .'<tr><td>'._ENDTEXT.':</td><td>'.textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0').'</td></tr>'
-        .'<tr><td>'._URL.':</td><td><input type="url" name="site" value="'.$site.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._URL.'" required></td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
+        if (!is_user()) $postname = $postname ?: _ANONYM;
+        $cont .= setTemplateBasic('form-add', [
+            'if_flag'       => ['has_name' => true, 'is_user' => is_user()],
+            '{%name%}'      => $conf['name'],
+            '{%style%}'     => $conf['style'],
+            '{%lbl_name%}'  => _YOURNAME,
+            '{%lbl_email%}' => _AUEMAIL,
+            '{%lbl_title%}' => _SITENAME,
+            '{%lbl_cat%}'   => _CATEGORY,
+            '{%lbl_text%}'  => _TEXT,
+            '{%lbl_body%}'  => _ENDTEXT,
+            '{%lbl_site%}'  => _URL,
+            '{%username%}'  => filterText(substr($user[1], 0, 25)),
+            '{%postname%}'  => $postname,
+            '{%emailval%}'  => $mail,
+            '{%titleval%}'  => $title,
+            '{%catselect%}' => getcat($conf['name'], $cid, 'cid', $conf['style'],
+                '<option value="">'._HOMECAT.'</option>'),
+            '{%hometext%}'  => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
+            '{%bodytext%}'  => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
+            '{%siteval%}'   => $site,
+            '{%site_attr%}' => 'site',
+            '{%captcha%}'   => getCaptcha(1),
+            '{%submit%}'    => ad_save('', '', 'send'),
+        ]);
         echo $cont;
         setFoot();
     } else {
@@ -299,7 +295,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['links']['addmail'], $conf['name'], $puname, _LINKS);
             setHead(['title' => _ADD]);
-            echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHL]);
+            echo setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHL]);
             setFoot();
         } else {
             add();
@@ -315,7 +311,7 @@ function broken(): void {
     if ($conf['links']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCLINK]);
-        echo navigate(_BROCLINK).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEL]);
+        echo setModuleNavi(['title' => _BROCLINK, 'htitle' => _LINKS]).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEL]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);
@@ -331,7 +327,7 @@ function loading(): void {
         update_points(23);
         $info = sprintf(_NOTELINKLOAD, $title, domain($url));
         setHead(['title' => _LINKS]);
-        $cont = navigate(_LINKS);
+        $cont = setModuleNavi(['title' => _LINKS]);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
         $cont .= setNaviLower($conf['name']);
         echo $cont;

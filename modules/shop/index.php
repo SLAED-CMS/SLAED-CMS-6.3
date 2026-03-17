@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -9,18 +9,8 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function navigate(string $title, string|int $cat=''): string {
-	global $conf;
-	$cat = getVar('get', 'cat', 'num');
-	$ncat = $cat;
-	$cpar = $ncat ? ['cat' => $ncat] : [];
-	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._SHOP.'" class="sl_but_navi">'._HOME.'</a>';
-	$best = ($conf['shop']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-	$pop = ($conf['shop']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-	$liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-	$catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => '', '{%catshow%}' => $catshow]);
-}
+const SHOP_NAVI = ['htitle' => _SHOP, 'add_href' => ''];
+
 
 function shop(): void {
 	global $db, $conf, $afile, $home, $user, $op;
@@ -74,7 +64,7 @@ function shop(): void {
 	$cont = '';
 	if (!$home || ($home && $conf['shop']['homcat'])) {
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
-		$cont .= navigate($ntitle, $caton);
+		$cont .= setModuleNavi(['title' => $ntitle] + SHOP_NAVI);
 		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $defis, _SHOP)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], $ncat);
 	}
@@ -154,7 +144,7 @@ function liste(): void {
 	$offset = intval($offset);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, c.title, c.intro FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' '.$cwhere.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$listnum, $params);
 	setHead(['title' => _LIST]);
-	$cont = navigate(_LIST);
+	$cont = setModuleNavi(['title' => _LIST] + SHOP_NAVI);
 	if ($db->getSqlRowCount($result) > 0) {
 		$letter = ($conf['shop']['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _PREIS, '{%date%}' => _DATE]);
@@ -203,7 +193,7 @@ function view(): void {
 			'time' => $seotime,
 			'author' => $seoauthor,
 		]);
-		$cont = navigate(_SHOP, $conf['shop']['viewcat']);
+		$cont = setModuleNavi(['title' => _SHOP] + SHOP_NAVI);
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $defis, _SHOP)]);
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
@@ -298,10 +288,10 @@ function kasse(): void {
 	.'<tr><td>'._C_MESSAGE.':</td><td><textarea name="smsg" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._C_MESSAGE.'">'.$smsg.'</textarea></td></tr>'
 	.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="opi" value="1"><input type="hidden" name="op" value="kasse"><input type="submit" value="'._C_SEND.'" class="sl_but_blue"></td></tr></table></form>';
 	setHead(['title' => _C_TITLE]);
-	$cont = navigate(_C_TITLE);
+	$cont = setModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
 		$cont .= '<div id="repkasse">'.show_kasse().'</div>';
-		$cont .= setTemplateBasic('title', ['{%title%}' => _C_TITLE]).setTemplateBasic('open').$form.setTemplateBasic('close');
+		$cont .= setTemplateBasic('title', ['{%title%}' => _C_TITLE]).$form;
 	} elseif ($opi && $cookies) {
 		$stop = [];
 		checkemail($smail);
@@ -368,7 +358,7 @@ function kasse(): void {
 		} else {
 			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 			$cont .= '<div id="repkasse">'.show_kasse().'</div>';
-			$cont .= setTemplateBasic('open').$form.setTemplateBasic('close');
+			$cont .= $form;
 		}
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => $stop]);
@@ -389,11 +379,10 @@ function clients(): void {
 	if (is_user() && is_active('shop')) {
 		$uid = intval($user[0]);
 		setHead(['title' => _CLIENTINFO]);
-		$cont = navigate(_CLIENTINFO);
+		$cont = setModuleNavi(['title' => _CLIENTINFO] + SHOP_NAVI);
 		$cont .= getUserNav();
 		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.uid = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
-			$cont .= setTemplateBasic('open');
 			$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._L_DATE.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
 			while([$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $pprice] = $db->getSqlRow($result)) {
 				$website = ($cwebsite) ? '<br>'._SITE.': '.$cwebsite : '';
@@ -408,9 +397,8 @@ function clients(): void {
 				.'<td>'.$rechn.'</td></tr>';
 			}
 			$cont .= '</tbody></table>';
-			$cont .= setTemplateBasic('close');
 		}
-		$cont .= setTemplateBasic('open').filterReplaceText(filterMarkdown($conf['shop']['userinfo'], $conf['name'], false), $conf['name']).setTemplateBasic('close');
+		$cont .= filterReplaceText(filterMarkdown($conf['shop']['userinfo'], $conf['name'], false), $conf['name']);
 		echo $cont;
 		setFoot();
 	} else {
@@ -462,7 +450,7 @@ function partners(): void {
 		$smail = $userinfo['email'];
 		$sdom = $userinfo['website'];
 		setHead(['title' => _PARTNERINFO]);
-		$cont = navigate(_PARTNERINFO);
+		$cont = setModuleNavi(['title' => _PARTNERINFO] + SHOP_NAVI);
 		$cont .= getUserNav();
 		$result = $db->getSqlQuery('SELECT id, uid, name, addr, phone, email, website, webmoney, paypal, regdate, rest, bek, status FROM '.PREFIX_DB.'_partners WHERE uid = :user_id', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
@@ -487,23 +475,18 @@ function partners(): void {
 						.'<td>'.$partsum.' '.$conf['shop']['valute'].'</td></tr>';
 						$a++;
 					}
-					$cont .= setTemplateBasic('open');
 					$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PRODUCT.'</th><th>'._PERCENT.'</th><th>'._SUM.'</th></tr></thead><tbody class="sl_table_list_body">'.$content.'</tbody></table>';
-					$cont .= setTemplateBasic('close');
 				}
-				$cont .= setTemplateBasic('open');
 				$cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._CLIENTEN.'</th><th>'._WEBMONEY.'</th><th>'._PAYPAL.'</th><th>'._PARTNERGES.'</th><th>'._PARTNERREST.'</th><th>'._PARTNERBEK.'</th></tr></thead><tbody class="sl_table_list_body">'
 				.'<tr><td>'.$a.'</td><td>'.$pawebmoney.'</td><td>'.$papaypal.'</td>'
 				.'<td>'.$partsumges.' '.$conf['shop']['valute'].'</td><td>'.$parest.' '.$conf['shop']['valute'].'</td><td>'.$pabek.' '.$conf['shop']['valute'].'</td></tr></tbody></table>';
-				$cont .= setTemplateBasic('close');
 				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
-				$cont .= setTemplateBasic('open').filterReplaceText(filterMarkdown(str_replace('[id]', $uid, $conf['shop']['partinfo2']), $conf['name'], false), $conf['name']).setTemplateBasic('close');
+				$cont .= filterReplaceText(filterMarkdown(str_replace('[id]', $uid, $conf['shop']['partinfo2']), $conf['name'], false), $conf['name']);
 			}
 		} else {
 			if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-			$cont .= setTemplateBasic('open').filterReplaceText(filterMarkdown($conf['shop']['partinfo'], $conf['name'], false), $conf['name']).setTemplateBasic('close');
+			$cont .= filterReplaceText(filterMarkdown($conf['shop']['partinfo'], $conf['name'], false), $conf['name']);
 			$cont .= setTemplateBasic('title', ['{%title%}' => _PARTNERADD]);
-			$cont .= setTemplateBasic('open');
 			$cont .= '<form method="post" action="index.php?name='.$conf['name'].'"><table class="sl_table_form">'
 			.'<tr><td>'._C_PIN.':</td><td><input type="text" name="paname" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_PINB.'" required></td></tr>'
 			.'<tr><td>'._C_PIP.':</td><td><input type="text" name="paaddr" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_PIPB.'" required></td></tr>'
@@ -513,7 +496,6 @@ function partners(): void {
 			.'<tr><td>'._WEBMONEY.':</td><td><input type="text" name="pawebmoney" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_WEBMONEYB.'"></td></tr>'
 			.'<tr><td>'._PAYPAL.':</td><td><input type="text" name="papaypal" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._C_MAILB.'"></td></tr>'
 			.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="puid" value="'.$uid.'"><input type="hidden" name="op" value="partners_send"><input type="submit" value="'._PARTNERSEND.'" class="sl_but_blue"></td></tr></table></form>';
-			$cont .= setTemplateBasic('close');
 		}
 		echo $cont;
 		setFoot();

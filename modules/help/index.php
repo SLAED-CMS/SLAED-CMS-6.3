@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -9,18 +9,7 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function navigate(string $title, string|int $cat = ''): string {
-    global $conf;
-    $cat = getVar('get', 'cat', 'num');
-    $cpar = $cat ? ['cat' => $cat] : [];
-    $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._HELP.'" class="sl_but_navi">'._HOME.'</a>';
-    $closed = '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'closed']).'" title="'._CLOSED.'" class="sl_but_navi">'._CLOSED.'</a>';
-    $pop = '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>';
-    $liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-    $add = ($conf['help']['add'] == 1) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
-    $catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-    return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $closed, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow]);
-}
+const HELP_NAVI = ['htitle' => _HELP, 'bop' => 'closed', 'btitle' => _CLOSED, 'always' => true, 'addquest' => false];
 
 function help(): void {
     global $db, $user, $conf, $home, $op;
@@ -82,7 +71,7 @@ function help(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home) {
-        $cont .= navigate($ntitle, $caton);
+        $cont .= setModuleNavi(['title' => $ntitle] + HELP_NAVI);
         if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['help']['defis'], _HELP)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['help']['subcat'], $conf['help']['catdesc'], $ncat);
     }
@@ -133,7 +122,7 @@ function liste(): void {
     $offset = intval($offset);
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.status, c.title, c.intro FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) '.$order.' '.$cwhere.' ORDER BY s.time DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
-    $cont = navigate(_LIST);
+    $cont = setModuleNavi(['title' => _LIST] + HELP_NAVI);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['help']['letter']) ? letter($conf['name']) : '';
         $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _STATUS, '{%date%}' => _DATE]);
@@ -184,7 +173,7 @@ function view(): void {
             'time' => $seotime,
             'author' => $seoauthor,
         ]);
-        $cont = navigate(_HELPINFO);
+        $cont = setModuleNavi(['title' => _HELPINFO] + HELP_NAVI);
         $a = 0;
         while ([$hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
@@ -223,12 +212,10 @@ function addview(int $id): string {
     if ((is_user() && $conf['help']['add'] == 1)) {
         $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$cid, $status] = $db->getSqlRow($result);
-        $cont = setTemplateBasic('open');
-        $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
+        $cont = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
         .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1').'</td></tr>'
         .'<tr><td>'._HELPGLOS.'</td><td>'.radio_form($status, 'status').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="catid" value="'.$cid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
         return $cont;
     }
     return '';
@@ -242,18 +229,23 @@ function add(): void {
         $hometext = getVar('post', 'hometext', 'text');
         $field = getVar('post', 'field', 'field');
         setHead(['title' => _ADD]);
-        $cont = navigate(_ADD);
+        $cont = setModuleNavi(['title' => _ADD] + HELP_NAVI);
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         if ($hometext) $cont .= preview($title, $hometext, '', $field, $conf['name']);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _HSUBMIT]);
-        $cont .= setTemplateBasic('open');
-        $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
-        .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._TITLE.'" required></td></tr>'
-        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($conf['name'], $cid, 'catid', $conf['style'], '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-        .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', $hometext, $conf['name'], '10', _TEXT, '1').'</td></tr>'
-        .fields_in($field, $conf['name'])
-        .'<tr><td colspan="2" class="sl_center">'.ad_save('', '', 'send').'</td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
+        $cont .= setTemplateBasic('form-add', [
+            '{%name%}'      => $conf['name'],
+            '{%style%}'     => $conf['style'],
+            '{%lbl_title%}' => _TITLE,
+            '{%lbl_cat%}'   => _CATEGORY,
+            '{%lbl_text%}'  => _TEXT,
+            '{%titleval%}'  => $title,
+            '{%catselect%}' => getcat($conf['name'], $cid, 'catid', $conf['style'],
+                '<option value="">'._HOMECAT.'</option>'),
+            '{%hometext%}'  => textarea('1', 'hometext', $hometext, $conf['name'], '10', _TEXT, '1'),
+            '{%fields%}'    => fields_in($field, $conf['name']),
+            '{%submit%}'    => ad_save('', '', 'send'),
+        ]);
         echo $cont;
         setFoot();
     } else {
@@ -280,7 +272,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : '';
             addAdminMail($conf['help']['addmail'], $conf['name'], $puname, _HELP);
             setHead(['title' => _ADD]);
-            echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _HSUBTEXT]);
+            echo setModuleNavi(['title' => _ADD] + HELP_NAVI).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _HSUBTEXT]);
             setFoot();
         } else {
             add();

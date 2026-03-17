@@ -1,25 +1,12 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
     header('Location: ../../index.php');
     exit;
-}
-
-function navigate(string $title, string|int $cat = ''): string {
-    global $conf;
-    $cat = getVar('get', 'cat', 'num');
-    $cpar = $cat ? ['cat' => $cat] : [];
-    $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._FILES.'" class="sl_but_navi">'._HOME.'</a>';
-    $best = ($conf['files']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-    $pop = ($conf['files']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-    $liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-    $add = ((is_user() && $conf['files']['add'] == 1) || (!is_user() && $conf['files']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
-    $catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-    return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow]);
 }
 
 function files(): void {
@@ -73,7 +60,7 @@ function files(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['files']['homcat'])) {
-        $cont .= navigate($ntitle, $caton);
+        $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _FILES]);
         if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['files']['defis'], _FILES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], $ncat);
     }
@@ -128,7 +115,7 @@ function liste(): void {
     $offset = intval($offset);
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, c.title, c.intro, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) '.$order.' '.$cwhere.' ORDER BY time DESC LIMIT '.$offset.', '.$listnum, $params);
     setHead(['title' => _LIST]);
-    $cont = navigate(_LIST);
+    $cont = setModuleNavi(['title' => _LIST, 'htitle' => _FILES]);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['files']['letter']) ? letter($conf['name']) : '';
         $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
@@ -177,7 +164,7 @@ function view(): void {
             'time' => $seotime,
             'author' => $seoauthor,
         ]);
-        $cont = navigate(_FILES, $conf['files']['viewcat']);
+        $cont = setModuleNavi(['title' => _FILES]);
         if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['files']['defis'], _FILES)]);
         if ($conf['files']['viewcat']) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], 0);
         $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
@@ -256,30 +243,50 @@ function add(): void {
         if ($conf['files']['upload'] == 1) $info .= sprintf(_ADDFNOTE2, str_replace(',', ', ', $conf['files']['typefile']), filterSize($conf['files']['max_size']));
         $info .= ' '._ADDFNOTE3;
         setHead(['title' => _ADD]);
-        $cont = navigate(_ADD);
+        $cont = setModuleNavi(['title' => _ADD, 'htitle' => _FILES]);
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         if ($description) $cont .= preview($title, $description, $bodytext, '', $conf['name']);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
-        $cont .= setTemplateBasic('open');
-        $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
-        if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
-        } else {
-            $postname = ($postname) ? $postname : _ANONYM;
-            $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
+        if (!is_user()) $postname = $postname ?: _ANONYM;
+        $extra = '';
+        if ($conf['files']['upload'] == 1) {
+            $extra .= '<tr><td>'._FILE_USER.':</td><td>'
+                .'<input type="file" name="userfile" class="sl_field '.$conf['style'].'"></td></tr>';
         }
-        $cont .= '<tr><td>'._AUEMAIL.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._AUEMAIL.'" required></td></tr>'
-        .'<tr><td>'._NAME.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._NAME.'" required></td></tr>'
-        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-        .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1').'</td></tr>'
-        .'<tr><td>'._ENDTEXT.':</td><td>'.textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0').'</td></tr>'
-        .'<tr><td>'._SITE.':</td><td><input type="url" name="home" value="'.$home.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._SITE.'"></td></tr>';
-        if ($conf['files']['upload'] == 1) $cont .= '<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_field '.$conf['style'].'"></td></tr>';
-        $cont .= '<tr><td>'._URL.':</td><td><input type="url" name="url" value="'.$url.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._URL.'"></td></tr>'
-        .'<tr><td>'._VERSION.':</td><td><input type="text" name="fversion" value="'.$fversion.'" maxlength="10" class="sl_field '.$conf['style'].'" placeholder="'._VERSION.'"></td></tr>'
-        .'<tr><td>'._SIZE.':</td><td><input type="text" name="fsize" value="'.$fsize.'" maxlength="10" class="sl_field '.$conf['style'].'" placeholder="'._SIZE.'"></td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
+        $extra .= '<tr><td>'._URL.':</td><td>'
+            .'<input type="url" name="url" value="'.$url.'" maxlength="100"'
+            .' class="sl_field '.$conf['style'].'" placeholder="'._URL.'"></td></tr>'
+            .'<tr><td>'._VERSION.':</td><td>'
+            .'<input type="text" name="fversion" value="'.$fversion.'" maxlength="10"'
+            .' class="sl_field '.$conf['style'].'" placeholder="'._VERSION.'"></td></tr>'
+            .'<tr><td>'._SIZE.':</td><td>'
+            .'<input type="text" name="fsize" value="'.$fsize.'" maxlength="10"'
+            .' class="sl_field '.$conf['style'].'" placeholder="'._SIZE.'"></td></tr>';
+        $cont .= setTemplateBasic('form-add', [
+            'if_flag'         => ['has_name' => true, 'is_user' => is_user()],
+            '{%name%}'        => $conf['name'],
+            '{%style%}'       => $conf['style'],
+            '{%lbl_name%}'    => _YOURNAME,
+            '{%lbl_email%}'   => _AUEMAIL,
+            '{%lbl_title%}'   => _NAME,
+            '{%lbl_cat%}'     => _CATEGORY,
+            '{%lbl_text%}'    => _TEXT,
+            '{%lbl_body%}'    => _ENDTEXT,
+            '{%lbl_site%}'    => _SITE,
+            '{%username%}'    => filterText(substr($user[1], 0, 25)),
+            '{%postname%}'    => $postname,
+            '{%emailval%}'    => $mail,
+            '{%titleval%}'    => $title,
+            '{%catselect%}'   => getcat($conf['name'], $cid, 'cid', $conf['style'],
+                '<option value="">'._HOMECAT.'</option>'),
+            '{%hometext%}'    => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
+            '{%bodytext%}'    => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
+            '{%siteval%}'     => $home,
+            '{%site_attr%}'   => 'home',
+            '{%extrafields%}' => $extra,
+            '{%captcha%}'     => getCaptcha(1),
+            '{%submit%}'      => ad_save('', '', 'send'),
+        ]);
         echo $cont;
         setFoot();
     } else {
@@ -324,7 +331,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
             setHead(['title' => _ADD]);
-            echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISH]);
+            echo setModuleNavi(['title' => _ADD, 'htitle' => _FILES]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISH]);
             setFoot();
         } else {
             add();
@@ -340,7 +347,7 @@ function broken(): void {
     if ($conf['files']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET status = '2' WHERE id = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCFILE]);
-        echo navigate(_BROCFILE).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTE]);
+        echo setModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTE]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);
@@ -362,7 +369,7 @@ function loading(): void {
         } else {
             $info = sprintf(_NOTEDOWNLOAD, $stitle, '<a href="'.$url.'" target="_blank" title="'._UPLOAD.': '.$stitle.'">'.$url.'</a>');
             setHead(['title' => _FILES]);
-            $cont = navigate(_FILES);
+            $cont = setModuleNavi(['title' => _FILES]);
             $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
             $cont .= setNaviLower($conf['name']);
             echo $cont;

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -9,14 +9,8 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function navigate(string $title): string {
-    global $conf;
-    $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._A_LINKS.'" class="sl_but_navi">'._HOME.'</a>';
-    $new = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'new']).'" title="'._NEW.'" class="sl_but_navi">'._NEW.'</a>';
-    $pop = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>';
-    $add = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>';
-    return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $new, '{%pop%}' => $pop, '{%liste%}' => '', '{%add%}' => $add, '{%catshow%}' => '']);
-}
+const AUTO_LINKS_NAVI = ['htitle' => _A_LINKS, 'liste_href' => ''];
+
 
 function autolink(): void {
     global $db, $afile, $user, $conf, $home, $op;
@@ -44,7 +38,7 @@ function autolink(): void {
     $result = $db->getSqlQuery('SELECT id, title, intro, hits, outs, added FROM '.PREFIX_DB.'_auto_links WHERE hits != \'0\' ORDER BY '.$order.' DESC LIMIT '.$offset.', '.$unum);
     setHead(['title' => $ntitle]);
     $cont = '';
-    if (!$home) $cont .= navigate($ntitle);
+    if (!$home) $cont .= setModuleNavi(['title' => $ntitle, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $sitename, $intro, $hits, $outs, $time] = $db->getSqlRow($result)) {
             $title = filterTextHighlight($sitename, $word).' '.new_graphic($time);
@@ -97,18 +91,16 @@ function add(): void {
     $desc = getVar('post', 'desc', 'text');
     
     setHead(['title' => _ADD]);
-    $cont = navigate(_ADD);
+    $cont = setModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($desc) $cont .= preview($name, $desc, '', '', $conf['name']);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_I]);
-    $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
     .'<tr><td>'._SITENAME.':</td><td><input type="text" name="name" value="'.$name.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SITENAME.'" required></td></tr>'
     .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="mail" value="'.$email.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_E.'" required></td></tr>'
     .'<tr><td>'._A_LINKS_TEXT.':</td><td>'.textarea('1', 'desc', $desc, $conf['name'], '5', _A_LINKS_TEXT, '1').'</td></tr>'
     .'<tr><td>'._A_LINKS_L.':</td><td><input type="url" name="site" value="'.$site.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_L.'" required></td></tr>'
     .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
 }
@@ -128,7 +120,7 @@ function send(): void {
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $site])) > 0) $stop[] = _LINKEXIST;
     if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
         setHead(['title' => _ADD]);
-        $cont = navigate(_ADD);
+        $cont = setModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
         $db->getSqlQuery(
             'INSERT INTO '.PREFIX_DB.'_auto_links (title, intro, url, email, hits, outs, added) VALUES (:title, :intro, :url, :email, 0, 0, NOW())',
             ['title' => $name, 'intro' => $desc, 'url' => $site, 'email' => $email]
@@ -136,7 +128,6 @@ function send(): void {
         $puname = (is_user()) ? $user[1] : '';
         addAdminMail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_OK]);
-        $cont .= setTemplateBasic('open');
         $code = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['slogan'].'&quot;>'.$conf['sitename'].'</a>';
         $cont .= '<table class="sl_table_form">'
         .'<tr><td>'._A_LINKS_M.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$code.'</textarea></td></tr>';
@@ -149,7 +140,6 @@ function send(): void {
             }
         }
         $cont .= '</table>';
-        $cont .= setTemplateBasic('close');
         echo $cont;
         setFoot();
     } else {

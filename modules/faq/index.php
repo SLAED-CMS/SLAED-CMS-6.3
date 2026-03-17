@@ -1,25 +1,12 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
 if (!defined('MODULE_FILE')) {
     header('Location: ../../index.php');
     exit;
-}
-
-function navigate(string $title, string|int $cat = ''): string {
-	global $conf;
-	$cat = getVar('get', 'cat', 'num');
-	$cpar = $cat ? ['cat' => $cat] : [];
-	$home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._FAQ.'" class="sl_but_navi">'._HOME.'</a>';
-	$best = ($conf['faq']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-	$pop = ($conf['faq']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-	$liste = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'liste']).'" title="'._LIST.'" class="sl_but_navi">'._LIST.'</a>';
-	$add = ((is_user() && $conf['faq']['add'] == 1) || (!is_user() && $conf['faq']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
-	$catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-	return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => $liste, '{%add%}' => $add, '{%catshow%}' => $catshow]);
 }
 
 function faq(): void {
@@ -75,17 +62,15 @@ function faq(): void {
 	setHead(['title' => $ntitle]);
 	$cont = '';
 	if (!$home || ($home && $conf['faq']['homcat'])) {
-		$cont .= navigate($ntitle, $caton);
+		$cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _FAQ]);
 		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['faq']['defis'], _FAQ)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], $ncat);
 	}
 	if ($ncat) {
-		$cont .= setTemplateBasic('open');
 		$cont .= '<table class="sl_table_faq">';
 		$result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq WHERE cid = :ncat AND time <= NOW() AND status != \'0\' ORDER BY '.$orderbyf, ['ncat' => $ncat]);
 		while ([$fid, $ftitle] = $db->getSqlRow($result)) $cont .= '<tr><td><a href="#'.$fid.'" title="'.$ftitle.'" class="sl_faq">'.filterTextHighlight($ftitle, $word).'</a></td></tr>';
 		$cont .= '</table>';
-		$cont .= setTemplateBasic('close');
 	}
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
@@ -138,7 +123,7 @@ function liste(): void {
 	$offset = intval($offset);
 	$result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, c.title, c.intro, u.name FROM '.PREFIX_DB.'_faq AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) '.$order.' '.$cwhere.' ORDER BY time DESC LIMIT '.$offset.', '.$listnum, $params);
 	setHead(['title' => _LIST]);
-	$cont = navigate(_LIST);
+	$cont = setModuleNavi(['title' => _LIST, 'htitle' => _FAQ]);
 	if ($db->getSqlRowCount($result) > 0) {
 		$letter = ($conf['faq']['letter']) ? letter($conf['name']) : '';
 		$cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _QUESTION, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
@@ -189,7 +174,7 @@ function view(): void {
 			'time' => $seotime,
 			'author' => $seoauthor,
 		]);
-		$cont = navigate(_FAQ, $conf['faq']['viewcat']);
+		$cont = setModuleNavi(['title' => _FAQ]);
 		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['faq']['defis'], _FAQ)]);
 		if ($conf['faq']['viewcat']) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], 0);
 		$conpag = explode('[pagebreak]', $hometext);
@@ -244,11 +229,10 @@ function add(): void {
 		$hometext = getVar('post', 'hometext', 'text');
 		$postname = getVar('post', 'postname', 'name');
 		setHead(['title' => _ADD]);
-		$cont = navigate(_ADD);
+		$cont = setModuleNavi(['title' => _ADD, 'htitle' => _FAQ]);
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		if ($hometext) $cont .= preview($title, $hometext, '', '', $conf['name']);
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SUBMIT.' '._PAGENOTE]);
-		$cont .= setTemplateBasic('open');
 		$cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
 		if (is_user()) {
 			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
@@ -260,7 +244,6 @@ function add(): void {
 		.'<tr><td>'._CATEGORY.':</td><td>'.getcat($conf['name'], $cid, 'catid', $conf['style'], '<option value="">'._HOMECAT.'</option>').'</td></tr>'
 		.'<tr><td>'._ANSWER.':</td><td>'.textarea('1', 'hometext', $hometext, $conf['name'], '10', _ANSWER, '1').'</td></tr>'
 		.'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
-		$cont .= setTemplateBasic('close');
 		echo $cont;
 		setFoot();
 	} else {
@@ -287,7 +270,7 @@ function send(): void {
 			$puname = (is_user()) ? $user[1] : $postname;
 			addAdminMail($conf['faq']['addmail'], $conf['name'], $puname, _FAQ);
 			setHead(['title' => _ADD]);
-			echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT]);
+			echo setModuleNavi(['title' => _ADD, 'htitle' => _FAQ]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT]);
 			setFoot();
 		} else {
 			add();

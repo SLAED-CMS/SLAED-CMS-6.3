@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -9,17 +9,8 @@ if (!defined('MODULE_FILE')) {
     exit;
 }
 
-function navigate(string $title, string|int $cat = ''): string {
-    global $conf;
-    $cat = getVar('get', 'cat', 'num');
-    $cpar = $cat ? ['cat' => $cat] : [];
-    $home = '<a href="'.getSeoUrl(['name' => $conf['name']]).'" title="'._JOKES.'" class="sl_but_navi">'._HOME.'</a>';
-    $best = ($conf['jokes']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'best']).'" title="'._BEST.'" class="sl_but_navi">'._BEST.'</a>' : '';
-    $pop = ($conf['jokes']['rate']) ? '<a href="'.getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']).'" title="'._POP.'" class="sl_but_navi">'._POP.'</a>' : '';
-    $add = ((is_user() && $conf['jokes']['add'] == 1) || (!is_user() && $conf['jokes']['addquest'] == 1)) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'add']).'" title="'._ADD.'" class="sl_but_navi">'._ADD.'</a>' : '';
-    $catshow = ($cat) ? '<a OnClick="CloseOpen(\'sl_close_1\', 1);" title="'._CATVORH.'" class="sl_but_navi">'._CATEGORIES.'</a>' : '';
-    return setTemplateBasic('navi', ['{%title%}' => $title, '{%name%}' => $conf['name'], '{%home%}' => $home, '{%best%}' => $best, '{%pop%}' => $pop, '{%liste%}' => '', '{%add%}' => $add, '{%catshow%}' => $catshow]);
-}
+const JOKES_NAVI = ['htitle' => _JOKES, 'liste_href' => ''];
+
 
 function jokes(): void {
     global $db, $afile, $user, $conf, $home, $op;
@@ -71,7 +62,7 @@ function jokes(): void {
     setHead(['title' => $ntitle]);
     $cont = '';
     if (!$home || ($home && $conf['jokes']['homcat'])) {
-        $cont .= navigate($ntitle, $caton);
+        $cont .= setModuleNavi(['title' => $ntitle] + JOKES_NAVI);
         if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['jokes']['subcat'], $conf['jokes']['catdesc'], $ncat);
     }
@@ -108,11 +99,10 @@ function add(): void {
         $joke = getVar('post', 'joke', 'text');
         $postname = filterText(substr(getVar('post', 'postname', 'name'), 0, 25));
         setHead(['title' => _ADD]);
-        $cont = navigate(_ADD);
+        $cont = setModuleNavi(['title' => _ADD] + JOKES_NAVI);
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         if ($joke) $cont .= preview($title, $joke, '', '', 'all');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADD_JNOTE]);
-        $cont .= setTemplateBasic('open');
         $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
         if (is_user()) {
             $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
@@ -124,7 +114,6 @@ function add(): void {
         .'<tr><td>'._CATEGORY.':</td><td>'.getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>').'</td></tr>'
         .'<tr><td>'._JOKE.':</td><td>'.textarea('1', 'joke', $joke, $conf['name'], '10', _JOKE, '1').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
         echo $cont;
         setFoot();
     } else {
@@ -153,7 +142,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
             setHead(['title' => _JOKES.' '._ADD, 'desc' => _UPLOADFINISHJ]);
-            echo navigate(_ADD).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHJ]);
+            echo setModuleNavi(['title' => _ADD] + JOKES_NAVI).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHJ]);
             setFoot();
         } else {
             add();
