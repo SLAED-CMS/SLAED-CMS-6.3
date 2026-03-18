@@ -86,13 +86,24 @@ function conf(): void {
     $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-       .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['referers']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-       .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['referers']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-       .'<tr><td>'._REFER_T.':</td><td><input type="number" name="refer_t" value="'.intval($conf['referers']['refer_t'] / 86400).'" class="sl_conf" placeholder="'._REFER_T.'" required></td></tr>'
-       .'<tr><td>'._REFER.'</td><td>'.radio_form($conf['referers']['refer'], 'refer').'</td></tr>'
-       .'<tr><td>'._REFERB.'</td><td>'.radio_form($conf['referers']['referb'], 'referb').'</td></tr>'
-       .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'    => $afile,
+        '{%module%}'   => 'referers',
+        '{%op%}'       => 'save',
+        '{%save%}'     => _SAVECHANGES,
+        '{%fields%}'   => '',
+        '{%_c34%}'     => _C_34,
+        '{%anum%}'     => $conf['referers']['anum'],
+        '{%_c36%}'     => _C_36,
+        '{%anump%}'    => $conf['referers']['anump'],
+        '{%_refer_t%}' => _REFER_T,
+        '{%refer_t%}'  => intval($conf['referers']['refer_t'] / 86400),
+        '{%_refer%}'   => _REFER,
+        '{%r_refer%}'  => radio_form($conf['referers']['refer'], 'refer'),
+        '{%_referb%}'  => _REFERB,
+        '{%r_referb%}' => radio_form($conf['referers']['referb'], 'referb'),
+        'if_flag'      => ['referers' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

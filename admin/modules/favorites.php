@@ -20,14 +20,26 @@ function conf(): void {
     $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=conf', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['favorites']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['favorites']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['favorites']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['favorites']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._FAVOR_UMAX.':</td><td><input type="number" name="favorites" value="'.$conf['favorites']['favorites'].'" class="sl_conf" placeholder="'._FAVOR_UMAX.'" required></td></tr>'
-    .'<tr><td>'._FAVOR_ACT.'</td><td>'.radio_form($conf['favorites']['favact'], 'favact').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="favorites"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'       => $afile,
+        '{%module%}'      => 'favorites',
+        '{%op%}'          => 'save',
+        '{%save%}'        => _SAVECHANGES,
+        '{%fields%}'      => '',
+        '{%_c33%}'        => _C_33,
+        '{%num%}'         => $conf['favorites']['num'],
+        '{%_c34%}'        => _C_34,
+        '{%anum%}'        => $conf['favorites']['anum'],
+        '{%_c35%}'        => _C_35,
+        '{%nump%}'        => $conf['favorites']['nump'],
+        '{%_c36%}'        => _C_36,
+        '{%anump%}'       => $conf['favorites']['anump'],
+        '{%_favor_umax%}' => _FAVOR_UMAX,
+        '{%favorites%}'   => $conf['favorites']['favorites'],
+        '{%_favor_act%}'  => _FAVOR_ACT,
+        '{%r_favact%}'    => radio_form($conf['favorites']['favact'], 'favact'),
+        'if_flag'         => ['favorites' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

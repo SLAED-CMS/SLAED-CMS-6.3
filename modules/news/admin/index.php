@@ -211,33 +211,60 @@ function admin(int|array $ids = 0, string $vtyp = ''): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=conf', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['news']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._BASCOL.':</td><td><input type="number" name="bascol" value="'.($conf['news']['bascol'] ?? 1).'" class="sl_conf" placeholder="'._BASCOL.'" required></td></tr>'
-    .'<tr><td>'._C_11.':</td><td><input type="number" name="asocnum" value="'.($conf['news']['asocnum'] ?? 10).'" class="sl_conf" placeholder="'._C_11.'" required></td></tr>'
-    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($conf['news']['listnum'] ?? 10).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['news']['num'] ?? 25).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['news']['anum'] ?? 25).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($conf['news']['nump'] ?? 10).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['news']['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($conf['news']['homcat'] ?? 0, 'homcat').'</td></tr>'
-    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($conf['news']['viewcat'] ?? 0, 'viewcat').'</td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['news']['catdesc'] ?? 0, 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['news']['subcat'] ?? 0, 'subcat').'</td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['news']['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._C_39.'</td><td>'.radio_form($conf['news']['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._C_40.'</td><td>'.radio_form($conf['news']['addquest'] ?? 0, 'addquest').'</td></tr>'
-    .'<tr><td>'._C_37.'</td><td>'.radio_form($conf['news']['autor'] ?? 0, 'autor').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['news']['date'] ?? 0, 'date').'</td></tr>'
-    .'<tr><td>'._C_18.'</td><td>'.radio_form($conf['news']['read'] ?? 0, 'read').'</td></tr>'
-    .'<tr><td>'._C_19.'</td><td>'.radio_form($conf['news']['rate'] ?? 0, 'rate').'</td></tr>'
-    .'<tr><td>'._C_20.'</td><td>'.radio_form($conf['news']['letter'] ?? 0, 'letter').'</td></tr>'
-    .'<tr><td>'._C_23.'</td><td>'.radio_form($conf['news']['assoc'] ?? 0, 'assoc').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="news"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'        => $afile,
+        '{%module%}'       => 'news',
+        '{%op%}'           => 'saveconf',
+        '{%save%}'         => _SAVECHANGES,
+        '{%fields%}'       => '',
+        '{%_cdefis%}'      => _CDEFIS,
+        '{%defis%}'        => urldecode($conf['news']['defis'] ?? ''),
+        '{%_bascol%}'      => _BASCOL,
+        '{%bascol%}'       => $conf['news']['bascol'] ?? 1,
+        '{%_c11%}'         => _C_11,
+        '{%asocnum%}'      => $conf['news']['asocnum'] ?? 10,
+        '{%_c13%}'         => _C_13,
+        '{%listnum%}'      => $conf['news']['listnum'] ?? 10,
+        '{%_c33%}'         => _C_33,
+        '{%num%}'          => $conf['news']['num'] ?? 25,
+        '{%_c34%}'         => _C_34,
+        '{%anum%}'         => $conf['news']['anum'] ?? 25,
+        '{%_c35%}'         => _C_35,
+        '{%nump%}'         => $conf['news']['nump'] ?? 10,
+        '{%_c36%}'         => _C_36,
+        '{%anump%}'        => $conf['news']['anump'] ?? 10,
+        '{%_homcat%}'      => _HOMCAT,
+        '{%r_homcat%}'     => radio_form($conf['news']['homcat'] ?? 0, 'homcat'),
+        '{%_viewcat%}'     => _VIEWCAT,
+        '{%r_viewcat%}'    => radio_form($conf['news']['viewcat'] ?? 0, 'viewcat'),
+        '{%_c32%}'         => _C_32,
+        '{%r_catdesc%}'    => radio_form($conf['news']['catdesc'] ?? 0, 'catdesc'),
+        '{%_c15%}'         => _C_15,
+        '{%r_subcat%}'     => radio_form($conf['news']['subcat'] ?? 0, 'subcat'),
+        '{%_addamail%}'    => _ADDAMAIL,
+        '{%r_addmail%}'    => radio_form($conf['news']['addmail'] ?? 0, 'addmail'),
+        '{%_c39%}'         => _C_39,
+        '{%r_add%}'        => radio_form($conf['news']['add'] ?? 0, 'add'),
+        '{%_c40%}'         => _C_40,
+        '{%r_addquest%}'   => radio_form($conf['news']['addquest'] ?? 0, 'addquest'),
+        '{%_c37%}'         => _C_37,
+        '{%r_autor%}'      => radio_form($conf['news']['autor'] ?? 0, 'autor'),
+        '{%_c17%}'         => _C_17,
+        '{%r_date%}'       => radio_form($conf['news']['date'] ?? 0, 'date'),
+        '{%_c18%}'         => _C_18,
+        '{%r_read%}'       => radio_form($conf['news']['read'] ?? 0, 'read'),
+        '{%_c19%}'         => _C_19,
+        '{%r_rate%}'       => radio_form($conf['news']['rate'] ?? 0, 'rate'),
+        '{%_c20%}'         => _C_20,
+        '{%r_letter%}'     => radio_form($conf['news']['letter'] ?? 0, 'letter'),
+        '{%_c23%}'         => _C_23,
+        '{%r_assoc%}'      => radio_form($conf['news']['assoc'] ?? 0, 'assoc'),
+        'if_flag'          => ['news' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

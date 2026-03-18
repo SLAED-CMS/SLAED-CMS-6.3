@@ -130,16 +130,26 @@ function del(int $cid = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=conf', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['content']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['content']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['content']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['content']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="content"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'  => $afile,
+        '{%module%}' => 'content',
+        '{%op%}'     => 'saveconf',
+        '{%save%}'   => _SAVECHANGES,
+        '{%fields%}' => '',
+        '{%_c33%}'   => _C_33,
+        '{%num%}'    => $conf['content']['num'],
+        '{%_c34%}'   => _C_34,
+        '{%anum%}'   => $conf['content']['anum'],
+        '{%_c35%}'   => _C_35,
+        '{%nump%}'   => $conf['content']['nump'],
+        '{%_c36%}'   => _C_36,
+        '{%anump%}'  => $conf['content']['anump'],
+        'if_flag'    => ['content' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

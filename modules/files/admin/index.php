@@ -208,51 +208,82 @@ function ignore(): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=conf', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
+    $stream_sel = '<select name="stream" class="sl_conf">'
+        .'<option value="0"'.(($conf['files']['stream'] ?? null) == '0' ? ' selected' : '').'>'._STREAM_NO.'</option>'
+        .'<option value="1"'.(($conf['files']['stream'] ?? null) == '1' ? ' selected' : '').'>'._STREAM_1.'</option>'
+        .'<option value="2"'.(($conf['files']['stream'] ?? null) == '2' ? ' selected' : '').'>'._STREAM_2.'</option>'
+        .'</select>';
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['files']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._F_0.':</td><td><input type="text" name="temp" value="'.($conf['files']['temp'] ?? '').'" class="sl_conf" placeholder="'._F_0.'" required></td></tr>'
-    .'<tr><td>'._F_1.':</td><td><input type="text" name="path" value="'.($conf['files']['path'] ?? '').'" class="sl_conf" placeholder="'._F_1.'" required></td></tr>'
-    .'<tr><td>'._FSIZE._FIN.':</td><td><input type="number" name="maxsize" value="'.($conf['files']['max_size'] ?? 0).'" class="sl_conf" placeholder="'._FSIZE._FIN.'" required></td></tr>'
-    .'<tr><td>'._FTYPE.':<div class="sl_small">'._NOKOMA.'</div></td><td><input type="text" name="typefile" value="'.($conf['files']['typefile'] ?? '').'" class="sl_conf" placeholder="'._FTYPE.'" required></td></tr>'
-    .'<tr><td>'._PAGELINKNUM.':</td><td><input type="number" name="linknum" value="'.($conf['files']['linknum'] ?? 0).'" class="sl_conf" placeholder="'._PAGELINKNUM.'" required></td></tr>'
-    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($conf['files']['listnum'] ?? 0).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['files']['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['files']['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($conf['files']['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['files']['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._STREAM.':</td><td><select name="stream" class="sl_conf">'
-    .'<option value="0"';
-    if (($conf['files']['stream'] ?? null) == '0') $cont .= ' selected';
-    $cont .= '>'._STREAM_NO.'</option>'
-    .'<option value="1"';
-    if (($conf['files']['stream'] ?? null) == '1') $cont .= ' selected';
-    $cont .= '>'._STREAM_1.'</option>'
-    .'<option value="2"';
-    if (($conf['files']['stream'] ?? null) == '2') $cont .= ' selected';
-    $cont .= '>'._STREAM_2.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($conf['files']['homcat'] ?? 0, 'homcat').'</td></tr>'
-    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($conf['files']['viewcat'] ?? 0, 'viewcat').'</td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['files']['catdesc'] ?? 0, 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['files']['subcat'] ?? 0, 'subcat').'</td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['files']['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._F_8.'</td><td>'.radio_form($conf['files']['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._F_9.'</td><td>'.radio_form($conf['files']['addquest'] ?? 0, 'addquest').'</td></tr>'
-    .'<tr><td>'._F_11.'</td><td>'.radio_form($conf['files']['broc'] ?? 0, 'broc').'</td></tr>'
-    .'<tr><td>'._F_12.'</td><td>'.radio_form($conf['files']['down'] ?? 0, 'down').'</td></tr>'
-    .'<tr><td>'._UPFILE.'</td><td>'.radio_form($conf['files']['upload'] ?? 0, 'upload').'</td></tr>'
-    .'<tr><td>'._C_37.'</td><td>'.radio_form($conf['files']['autor'] ?? 0, 'autor').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['files']['date'] ?? 0, 'date').'</td></tr>'
-    .'<tr><td>'._C_18.'</td><td>'.radio_form($conf['files']['read'] ?? 0, 'read').'</td></tr>'
-    .'<tr><td>'._F_2.'</td><td>'.radio_form($conf['files']['hits'] ?? 0, 'hits').'</td></tr>'
-    .'<tr><td>'._C_19.'</td><td>'.radio_form($conf['files']['rate'] ?? 0, 'rate').'</td></tr>'
-    .'<tr><td>'._C_20.'</td><td>'.radio_form($conf['files']['letter'] ?? 0, 'letter').'</td></tr>'
-    .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($conf['files']['link'] ?? 0, 'link').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="files"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'        => $afile,
+        '{%module%}'       => 'files',
+        '{%op%}'           => 'saveconf',
+        '{%save%}'         => _SAVECHANGES,
+        '{%fields%}'       => '',
+        '{%_cdefis%}'      => _CDEFIS,
+        '{%defis%}'        => urldecode($conf['files']['defis'] ?? ''),
+        '{%_f0%}'          => _F_0,
+        '{%temp%}'         => $conf['files']['temp'] ?? '',
+        '{%_f1%}'          => _F_1,
+        '{%path%}'         => $conf['files']['path'] ?? '',
+        '{%_fsize_fin%}'   => _FSIZE._FIN,
+        '{%maxsize%}'      => $conf['files']['max_size'] ?? 0,
+        '{%_nokoma%}'      => _NOKOMA,
+        '{%_ftype%}'       => _FTYPE,
+        '{%typefile%}'     => $conf['files']['typefile'] ?? '',
+        '{%_pagelinknum%}' => _PAGELINKNUM,
+        '{%linknum%}'      => $conf['files']['linknum'] ?? 0,
+        '{%_c13%}'         => _C_13,
+        '{%listnum%}'      => $conf['files']['listnum'] ?? 0,
+        '{%_c33%}'         => _C_33,
+        '{%num%}'          => $conf['files']['num'] ?? 0,
+        '{%_c34%}'         => _C_34,
+        '{%anum%}'         => $conf['files']['anum'] ?? 0,
+        '{%_c35%}'         => _C_35,
+        '{%nump%}'         => $conf['files']['nump'] ?? 0,
+        '{%_c36%}'         => _C_36,
+        '{%anump%}'        => $conf['files']['anump'] ?? 0,
+        '{%_stream%}'      => _STREAM,
+        '{%s_stream%}'     => $stream_sel,
+        '{%_homcat%}'      => _HOMCAT,
+        '{%r_homcat%}'     => radio_form($conf['files']['homcat'] ?? 0, 'homcat'),
+        '{%_viewcat%}'     => _VIEWCAT,
+        '{%r_viewcat%}'    => radio_form($conf['files']['viewcat'] ?? 0, 'viewcat'),
+        '{%_c32%}'         => _C_32,
+        '{%r_catdesc%}'    => radio_form($conf['files']['catdesc'] ?? 0, 'catdesc'),
+        '{%_c15%}'         => _C_15,
+        '{%r_subcat%}'     => radio_form($conf['files']['subcat'] ?? 0, 'subcat'),
+        '{%_addamail%}'    => _ADDAMAIL,
+        '{%r_addmail%}'    => radio_form($conf['files']['addmail'] ?? 0, 'addmail'),
+        '{%_f8%}'          => _F_8,
+        '{%r_add%}'        => radio_form($conf['files']['add'] ?? 0, 'add'),
+        '{%_f9%}'          => _F_9,
+        '{%r_addquest%}'   => radio_form($conf['files']['addquest'] ?? 0, 'addquest'),
+        '{%_f11%}'         => _F_11,
+        '{%r_broc%}'       => radio_form($conf['files']['broc'] ?? 0, 'broc'),
+        '{%_f12%}'         => _F_12,
+        '{%r_down%}'       => radio_form($conf['files']['down'] ?? 0, 'down'),
+        '{%_upfile%}'      => _UPFILE,
+        '{%r_upload%}'     => radio_form($conf['files']['upload'] ?? 0, 'upload'),
+        '{%_c37%}'         => _C_37,
+        '{%r_autor%}'      => radio_form($conf['files']['autor'] ?? 0, 'autor'),
+        '{%_c17%}'         => _C_17,
+        '{%r_date%}'       => radio_form($conf['files']['date'] ?? 0, 'date'),
+        '{%_c18%}'         => _C_18,
+        '{%r_read%}'       => radio_form($conf['files']['read'] ?? 0, 'read'),
+        '{%_f2%}'          => _F_2,
+        '{%r_hits%}'       => radio_form($conf['files']['hits'] ?? 0, 'hits'),
+        '{%_c19%}'         => _C_19,
+        '{%r_rate%}'       => radio_form($conf['files']['rate'] ?? 0, 'rate'),
+        '{%_c20%}'         => _C_20,
+        '{%r_letter%}'     => radio_form($conf['files']['letter'] ?? 0, 'letter'),
+        '{%_pagelink%}'    => _PAGELINK,
+        '{%r_link%}'       => radio_form($conf['files']['link'] ?? 0, 'link'),
+        'if_flag'          => ['files' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

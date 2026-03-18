@@ -131,25 +131,44 @@ function del(int $fid = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=conf', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/jokes.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['jokes']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['jokes']['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['jokes']['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($conf['jokes']['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['jokes']['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($conf['jokes']['homcat'] ?? 0, 'homcat').'</td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['jokes']['catdesc'] ?? 0, 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['jokes']['subcat'] ?? 0, 'subcat').'</td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['jokes']['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._J_1.'</td><td>'.radio_form($conf['jokes']['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._J_2.'</td><td>'.radio_form($conf['jokes']['addquest'] ?? 0, 'addquest').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['jokes']['date'] ?? 0, 'date').'</td></tr>'
-    .'<tr><td>'._C_19.'</td><td>'.radio_form($conf['jokes']['rate'] ?? 0, 'rate').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="jokes"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'      => $afile,
+        '{%module%}'     => 'jokes',
+        '{%op%}'         => 'saveconf',
+        '{%save%}'       => _SAVECHANGES,
+        '{%fields%}'     => '',
+        '{%_cdefis%}'    => _CDEFIS,
+        '{%defis%}'      => urldecode($conf['jokes']['defis'] ?? ''),
+        '{%_c33%}'       => _C_33,
+        '{%num%}'        => $conf['jokes']['num'] ?? 0,
+        '{%_c34%}'       => _C_34,
+        '{%anum%}'       => $conf['jokes']['anum'] ?? 0,
+        '{%_c35%}'       => _C_35,
+        '{%nump%}'       => $conf['jokes']['nump'] ?? 0,
+        '{%_c36%}'       => _C_36,
+        '{%anump%}'      => $conf['jokes']['anump'] ?? 0,
+        '{%_homcat%}'    => _HOMCAT,
+        '{%r_homcat%}'   => radio_form($conf['jokes']['homcat'] ?? 0, 'homcat'),
+        '{%_c32%}'       => _C_32,
+        '{%r_catdesc%}'  => radio_form($conf['jokes']['catdesc'] ?? 0, 'catdesc'),
+        '{%_c15%}'       => _C_15,
+        '{%r_subcat%}'   => radio_form($conf['jokes']['subcat'] ?? 0, 'subcat'),
+        '{%_addamail%}'  => _ADDAMAIL,
+        '{%r_addmail%}'  => radio_form($conf['jokes']['addmail'] ?? 0, 'addmail'),
+        '{%_j1%}'        => _J_1,
+        '{%r_add%}'      => radio_form($conf['jokes']['add'] ?? 0, 'add'),
+        '{%_j2%}'        => _J_2,
+        '{%r_addquest%}' => radio_form($conf['jokes']['addquest'] ?? 0, 'addquest'),
+        '{%_c17%}'       => _C_17,
+        '{%r_date%}'     => radio_form($conf['jokes']['date'] ?? 0, 'date'),
+        '{%_c19%}'       => _C_19,
+        '{%r_rate%}'     => radio_form($conf['jokes']['rate'] ?? 0, 'rate'),
+        'if_flag'        => ['jokes' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

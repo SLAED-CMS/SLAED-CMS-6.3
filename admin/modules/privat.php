@@ -20,21 +20,40 @@ function conf(): void {
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=conf', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['privat']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['privat']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['privat']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['privat']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._COMLETTER.':</td><td><input type="number" name="letter" value="'.$conf['privat']['letter'].'" class="sl_conf" placeholder="'._COMLETTER.'" required></td></tr>'
-    .'<tr><td>'._CSEND.':</td><td><input type="number" name="send" value="'.$conf['privat']['send'].'" class="sl_conf" placeholder="'._CSEND.'" required></td></tr>'
-    .'<tr><td>'._PRINM.':</td><td><input type="number" name="messin" value="'.$conf['privat']['messin'].'" class="sl_conf" placeholder="'._PRINM.'" required></td></tr>'
-    .'<tr><td>'._PRSAVEM.':</td><td><input type="number" name="messsav" value="'.$conf['privat']['messsav'].'" class="sl_conf" placeholder="'._PRSAVEM.'" required></td></tr>'
-    .'<tr><td>'._PRMAIL.'</td><td>'.radio_form($conf['privat']['newmail'], 'newmail').'</td></tr>'
-    .'<tr><td>'._PRSELF.'</td><td>'.radio_form($conf['privat']['himself'], 'himself').'</td></tr>'
-    .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($conf['privat']['profil'], 'profil').'</td></tr>'
-    .'<tr><td>'._VWEB.'</td><td>'.radio_form($conf['privat']['web'], 'web').'</td></tr>'
-    .'<tr><td>'._PRACT.'</td><td>'.radio_form($conf['privat']['act'], 'act').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="privat"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'     => $afile,
+        '{%module%}'    => 'privat',
+        '{%op%}'        => 'save',
+        '{%save%}'      => _SAVECHANGES,
+        '{%fields%}'    => '',
+        '{%_c33%}'      => _C_33,
+        '{%num%}'       => $conf['privat']['num'],
+        '{%_c34%}'      => _C_34,
+        '{%anum%}'      => $conf['privat']['anum'],
+        '{%_c35%}'      => _C_35,
+        '{%nump%}'      => $conf['privat']['nump'],
+        '{%_c36%}'      => _C_36,
+        '{%anump%}'     => $conf['privat']['anump'],
+        '{%_comletter%}' => _COMLETTER,
+        '{%letter%}'    => $conf['privat']['letter'],
+        '{%_csend%}'    => _CSEND,
+        '{%send%}'      => $conf['privat']['send'],
+        '{%_prinm%}'    => _PRINM,
+        '{%messin%}'    => $conf['privat']['messin'],
+        '{%_prsavem%}'  => _PRSAVEM,
+        '{%messsav%}'   => $conf['privat']['messsav'],
+        '{%_prmail%}'   => _PRMAIL,
+        '{%r_newmail%}' => radio_form($conf['privat']['newmail'], 'newmail'),
+        '{%_prself%}'   => _PRSELF,
+        '{%r_himself%}' => radio_form($conf['privat']['himself'], 'himself'),
+        '{%_vprofil%}'  => _VPROFIL,
+        '{%r_profil%}'  => radio_form($conf['privat']['profil'], 'profil'),
+        '{%_vweb%}'     => _VWEB,
+        '{%r_web%}'     => radio_form($conf['privat']['web'], 'web'),
+        '{%_pract%}'    => _PRACT,
+        '{%r_act%}'     => radio_form($conf['privat']['act'], 'act'),
+        'if_flag'       => ['privat' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

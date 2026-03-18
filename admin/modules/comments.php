@@ -45,50 +45,62 @@ function conf(): void {
     $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['comments']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['comments']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['comments']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['comments']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._COMLETTER.':</td><td><input type="number" name="letter" value="'.$conf['comments']['letter'].'" class="sl_conf" placeholder="'._COMLETTER.'" required></td></tr>'
-    .'<tr><td>'._CEDITT.':</td><td><input type="number" name="edit" value="'.intval($conf['comments']['edit'] / 60).'" class="sl_conf" placeholder="'._CEDITT.'" required></td></tr>'
-    .'<tr><td>'._CSEND.':</td><td><input type="number" name="send" value="'.$conf['comments']['send'].'" class="sl_conf" placeholder="'._CSEND.'" required></td></tr>'
-    .'<tr><td>'._SORT.':</td><td><select name="sort" class="sl_conf">'
-    .'<option value="1"';
-    if ($conf['comments']['sort'] == '1') $cont .= ' selected';
-    $cont .= '>'._ASC.'</option>'
-    .'<option value="0"';
-    if ($conf['comments']['sort'] == '0') $cont .= ' selected';
-    $cont .= '>'._DESC.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._ALLOWANONPOST.'</td><td>'.com_access('anonpost', $conf['comments']['anonpost'], 'sl_conf').'</td></tr>'
-    .'<tr><td>'._NOLINKP.':<div class="sl_small">'._NOAUM.'</div></td><td><select name="link" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['comments']['link'] == '0') $cont .= ' selected';
-    $cont .= '>'._NO.'</option>'
-    .'<option value="1"';
-    if ($conf['comments']['link'] == '1') $cont .= ' selected';
-    $cont .= '>'._ANONIMP.'</option>'
-    .'<option value="2"';
-    if ($conf['comments']['link'] == '2') $cont .= ' selected';
-    $cont .= '>'._ALLUSER.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._NOALINKP.':<div class="sl_small">'._NOAUM.'</div></td><td><select name="alink" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['comments']['alink'] == '0') $cont .= ' selected';
-    $cont .= '>'._NO.'</option>'
-    .'<option value="1"';
-    if ($conf['comments']['alink'] == '1') $cont .= ' selected';
-    $cont .= '>'._ANONIMP.'</option>'
-    .'<option value="2"';
-    if ($conf['comments']['alink'] == '2') $cont .= ' selected';
-    $cont .= '>'._ALLUSER.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['comments']['addmail'], 'addmail').'</td></tr>'
-    .'<tr><td>'._VPRIVAT.'</td><td>'.radio_form($conf['comments']['privat'], 'privat').'</td></tr>'
-    .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($conf['comments']['profil'], 'profil').'</td></tr>'
-    .'<tr><td>'._VWEB.'</td><td>'.radio_form($conf['comments']['web'], 'web').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $sval = (string)($conf['comments']['sort'] ?? '1');
+    $sort_sel = '<select name="sort" class="sl_conf">'
+        .'<option value="1"'.($sval === '1' ? ' selected' : '').'>'._ASC.'</option>'
+        .'<option value="0"'.($sval === '0' ? ' selected' : '').'>'._DESC.'</option>'
+        .'</select>';
+    $lval = (string)($conf['comments']['link'] ?? '0');
+    $link_sel = '<select name="link" class="sl_conf">'
+        .'<option value="0"'.($lval === '0' ? ' selected' : '').'>'._NO.'</option>'
+        .'<option value="1"'.($lval === '1' ? ' selected' : '').'>'._ANONIMP.'</option>'
+        .'<option value="2"'.($lval === '2' ? ' selected' : '').'>'._ALLUSER.'</option>'
+        .'</select>';
+    $alval = (string)($conf['comments']['alink'] ?? '0');
+    $alink_sel = '<select name="alink" class="sl_conf">'
+        .'<option value="0"'.($alval === '0' ? ' selected' : '').'>'._NO.'</option>'
+        .'<option value="1"'.($alval === '1' ? ' selected' : '').'>'._ANONIMP.'</option>'
+        .'<option value="2"'.($alval === '2' ? ' selected' : '').'>'._ALLUSER.'</option>'
+        .'</select>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'          => $afile,
+        '{%module%}'         => 'comments',
+        '{%op%}'             => 'save',
+        '{%save%}'           => _SAVECHANGES,
+        '{%fields%}'         => '',
+        '{%_c33%}'           => _C_33,
+        '{%num%}'            => $conf['comments']['num'],
+        '{%_c34%}'           => _C_34,
+        '{%anum%}'           => $conf['comments']['anum'],
+        '{%_c35%}'           => _C_35,
+        '{%nump%}'           => $conf['comments']['nump'],
+        '{%_c36%}'           => _C_36,
+        '{%anump%}'          => $conf['comments']['anump'],
+        '{%_comletter%}'     => _COMLETTER,
+        '{%letter%}'         => $conf['comments']['letter'],
+        '{%_ceditt%}'        => _CEDITT,
+        '{%edit%}'           => intval($conf['comments']['edit'] / 60),
+        '{%_csend%}'         => _CSEND,
+        '{%send%}'           => $conf['comments']['send'],
+        '{%_sort%}'          => _SORT,
+        '{%s_sort%}'         => $sort_sel,
+        '{%_allowanonpost%}' => _ALLOWANONPOST,
+        '{%s_anonpost%}'     => com_access('anonpost', $conf['comments']['anonpost'], 'sl_conf'),
+        '{%_nolinkp%}'       => _NOLINKP,
+        '{%_noaum%}'         => _NOAUM,
+        '{%s_link%}'         => $link_sel,
+        '{%_noalinkp%}'      => _NOALINKP,
+        '{%s_alink%}'        => $alink_sel,
+        '{%_addamail%}'      => _ADDAMAIL,
+        '{%r_addmail%}'      => radio_form($conf['comments']['addmail'], 'addmail'),
+        '{%_vprivat%}'       => _VPRIVAT,
+        '{%r_privat%}'       => radio_form($conf['comments']['privat'], 'privat'),
+        '{%_vprofil%}'       => _VPROFIL,
+        '{%r_profil%}'       => radio_form($conf['comments']['profil'], 'profil'),
+        '{%_vweb%}'          => _VWEB,
+        '{%r_web%}'          => radio_form($conf['comments']['web'], 'web'),
+        'if_flag'            => ['comments' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

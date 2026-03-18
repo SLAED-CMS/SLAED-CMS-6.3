@@ -230,10 +230,19 @@ function conf(): void {
     $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=conf', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-       .'<tr><td>'._NLSEND.'<div class="sl_small">'._NLSENDI.'</div></td><td>'.radio_form($conf['newsletter']['active'], 'active').'</td></tr>'
-       .'<tr><td>'._NLCOUNT.':</td><td><input type="number" name="count" value="'.$conf['newsletter']['count'].'" class="sl_conf" placeholder="'._NLCOUNT.'" required></td></tr>'
-       .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'    => $afile,
+        '{%module%}'   => 'newsletter',
+        '{%op%}'       => 'saveconf',
+        '{%save%}'     => _SAVECHANGES,
+        '{%fields%}'   => '',
+        '{%_nlsend%}'  => _NLSEND,
+        '{%_nlsendi%}' => _NLSENDI,
+        '{%r_active%}' => radio_form($conf['newsletter']['active'], 'active'),
+        '{%_nlcount%}' => _NLCOUNT,
+        '{%count%}'    => $conf['newsletter']['count'],
+        'if_flag'      => ['newsletter' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

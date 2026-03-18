@@ -126,21 +126,36 @@ function active(): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=conf', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._OR_1.':</td><td><input type="email" name="mail" value="'.($conf['order']['mail'] ?? '').'" maxlength="255" class="sl_conf" placeholder="'._OR_1.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['order']['anum'] ?? 25).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['order']['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._OR_2.'</td><td>'.radio_form($conf['order']['an'] ?? 0, 'an').'</td></tr>'
-    .'<tr><td>'._OR_3.'</td><td>'.radio_form($conf['order']['pr'] ?? 0, 'pr').'</td></tr>'
-    .'<tr><td>'._OR_4.'</td><td>'.radio_form($conf['order']['ad'] ?? 0, 'ad').'</td></tr>'
-    .'<tr><td>'._OR_5.':</td><td>'.textarea('1', 'text', $conf['order']['text'] ?? '', 'all', '5', _OR_5, '1').'</td></tr>'
-    .'<tr><td>'._OR_6.':</td><td>'.textarea('2', 'info', $conf['order']['info'] ?? '', 'all', '5', _OR_6, '1').'</td></tr>'
-    .'<tr><td>'._OR_7.':</td><td>'.textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', '5', _OR_7, '1').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'    => $afile,
+        '{%module%}'   => 'order',
+        '{%op%}'       => 'saveconf',
+        '{%save%}'     => _SAVECHANGES,
+        '{%fields%}'   => '',
+        '{%_or1%}'     => _OR_1,
+        '{%mail%}'     => $conf['order']['mail'] ?? '',
+        '{%_c34%}'     => _C_34,
+        '{%anum%}'     => $conf['order']['anum'] ?? 25,
+        '{%_c36%}'     => _C_36,
+        '{%anump%}'    => $conf['order']['anump'] ?? 10,
+        '{%_or2%}'     => _OR_2,
+        '{%r_an%}'     => radio_form($conf['order']['an'] ?? 0, 'an'),
+        '{%_or3%}'     => _OR_3,
+        '{%r_pr%}'     => radio_form($conf['order']['pr'] ?? 0, 'pr'),
+        '{%_or4%}'     => _OR_4,
+        '{%r_ad%}'     => radio_form($conf['order']['ad'] ?? 0, 'ad'),
+        '{%_or5%}'     => _OR_5,
+        '{%t_text%}'   => textarea('1', 'text', $conf['order']['text'] ?? '', 'all', '5', _OR_5, '1'),
+        '{%_or6%}'     => _OR_6,
+        '{%t_info%}'   => textarea('2', 'info', $conf['order']['info'] ?? '', 'all', '5', _OR_6, '1'),
+        '{%_or7%}'     => _OR_7,
+        '{%t_sendinfo%}' => textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', '5', _OR_7, '1'),
+        'if_flag'      => ['order' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

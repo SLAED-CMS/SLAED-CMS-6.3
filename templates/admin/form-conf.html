@@ -1,0 +1,343 @@
+<form name="post" action="{%route%}.php" method="post"><table class="sl_table_conf">
+{%if account%}
+<tr><td>{%_adir%}:</td><td><input type="text" name="adirectory" value="{%adirectory%}" class="sl_conf" placeholder="{%_adir%}" required></td></tr>
+<tr><td>{%_atype%}:</td><td><input type="text" name="atypefile" value="{%atypefile%}" class="sl_conf" placeholder="{%_atype%}" required></td></tr>
+<tr><td>{%_asize%}:</td><td><input type="number" name="amaxsize" value="{%amaxsize%}" class="sl_conf" placeholder="{%_asize%}" required></td></tr>
+<tr><td>{%_awidthin%}:</td><td><input type="number" name="awidth" value="{%awidth%}" class="sl_conf" placeholder="{%_awidthin%}" required></td></tr>
+<tr><td>{%_aheightin%}:</td><td><input type="number" name="aheight" value="{%aheight%}" class="sl_conf" placeholder="{%_aheightin%}" required></td></tr>
+<tr><td>{%_voting_time%}:</td><td><input type="number" name="user" value="{%user%}" class="sl_conf" placeholder="{%_voting_time%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_passwdlen%}:</td><td>{%s_minpass%}</td></tr>
+<tr><td>{%_loginfl%}:</td><td>{%s_enter%}</td></tr>
+<tr><td>{%_update_points%}</td><td>{%r_point%}</td></tr>
+<tr><td>{%_aupload%}</td><td>{%r_aupload%}</td></tr>
+<tr><td>{%_no_mail_reg%}</td><td>{%r_nomail%}</td></tr>
+<tr><td>{%_usershomenum%}</td><td>{%r_news%}</td></tr>
+<tr><td>{%_useripcheck%}</td><td>{%r_check%}</td></tr>
+<tr><td>{%_regact%}</td><td>{%r_reg%}</td></tr>
+<tr><td>{%_seltheme%}</td><td>{%r_theme%}</td></tr>
+<tr><td>{%_profact%}</td><td>{%r_prof%}</td></tr>
+<tr><td>{%_networkactive%}</td><td>{%r_network%}</td></tr>
+<tr><td>{%_rulact%}</td><td>{%r_rule%}</td></tr>
+<tr><td>{%_rules%}:</td><td><textarea name="rules" cols="65" rows="10" class="sl_conf" placeholder="{%_rules%}">{%rules%}</textarea></td></tr>
+<tr><td>{%_networkcode%}:</td><td>{%t_code%}</td></tr>
+<tr><td>{%_name_block%}:<div class="sl_small">{%_nokoma%}</div></td><td><textarea name="name" cols="65" rows="5" class="sl_conf" placeholder="{%_name_block%}">{%name_b%}</textarea></td></tr>
+<tr><td>{%_mail_block%}:<div class="sl_small">{%_nokoma%}</div></td><td><textarea name="mail" cols="65" rows="5" class="sl_conf" placeholder="{%_mail_block%}">{%mail_b%}</textarea></td></tr>
+{%elseif comments%}
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_comletter%}:</td><td><input type="number" name="letter" value="{%letter%}" class="sl_conf" placeholder="{%_comletter%}" required></td></tr>
+<tr><td>{%_ceditt%}:</td><td><input type="number" name="edit" value="{%edit%}" class="sl_conf" placeholder="{%_ceditt%}" required></td></tr>
+<tr><td>{%_csend%}:</td><td><input type="number" name="send" value="{%send%}" class="sl_conf" placeholder="{%_csend%}" required></td></tr>
+<tr><td>{%_sort%}:</td><td>{%s_sort%}</td></tr>
+<tr><td>{%_allowanonpost%}</td><td>{%s_anonpost%}</td></tr>
+<tr><td>{%_nolinkp%}:<div class="sl_small">{%_noaum%}</div></td><td>{%s_link%}</td></tr>
+<tr><td>{%_noalinkp%}:<div class="sl_small">{%_noaum%}</div></td><td>{%s_alink%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_vprivat%}</td><td>{%r_privat%}</td></tr>
+<tr><td>{%_vprofil%}</td><td>{%r_profil%}</td></tr>
+<tr><td>{%_vweb%}</td><td>{%r_web%}</td></tr>
+{%elseif content%}
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+{%elseif faq%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_pagelinknum%}:</td><td><input type="number" name="linknum" value="{%linknum%}" class="sl_conf" placeholder="{%_pagelinknum%}" required></td></tr>
+<tr><td>{%_c13%}:</td><td><input type="number" name="listnum" value="{%listnum%}" class="sl_conf" placeholder="{%_c13%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_homcat%}</td><td>{%r_homcat%}</td></tr>
+<tr><td>{%_viewcat%}</td><td>{%r_viewcat%}</td></tr>
+<tr><td>{%_c32%}</td><td>{%r_catdesc%}</td></tr>
+<tr><td>{%_c15%}</td><td>{%r_subcat%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_c39%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_c40%}</td><td>{%r_addquest%}</td></tr>
+<tr><td>{%_c37%}</td><td>{%r_autor%}</td></tr>
+<tr><td>{%_c17%}</td><td>{%r_date%}</td></tr>
+<tr><td>{%_c18%}</td><td>{%r_read%}</td></tr>
+<tr><td>{%_c19%}</td><td>{%r_rate%}</td></tr>
+<tr><td>{%_c20%}</td><td>{%r_letter%}</td></tr>
+<tr><td>{%_pagelink%}</td><td>{%r_link%}</td></tr>
+{%elseif favorites%}
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_favor_umax%}:</td><td><input type="number" name="favorites" value="{%favorites%}" class="sl_conf" placeholder="{%_favor_umax%}" required></td></tr>
+<tr><td>{%_favor_act%}</td><td>{%r_favact%}</td></tr>
+{%elseif files%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_f0%}:</td><td><input type="text" name="temp" value="{%temp%}" class="sl_conf" placeholder="{%_f0%}" required></td></tr>
+<tr><td>{%_f1%}:</td><td><input type="text" name="path" value="{%path%}" class="sl_conf" placeholder="{%_f1%}" required></td></tr>
+<tr><td>{%_fsize_fin%}:</td><td><input type="number" name="maxsize" value="{%maxsize%}" class="sl_conf" placeholder="{%_fsize_fin%}" required></td></tr>
+<tr><td>{%_ftype%}:<div class="sl_small">{%_nokoma%}</div></td><td><input type="text" name="typefile" value="{%typefile%}" class="sl_conf" placeholder="{%_ftype%}" required></td></tr>
+<tr><td>{%_pagelinknum%}:</td><td><input type="number" name="linknum" value="{%linknum%}" class="sl_conf" placeholder="{%_pagelinknum%}" required></td></tr>
+<tr><td>{%_c13%}:</td><td><input type="number" name="listnum" value="{%listnum%}" class="sl_conf" placeholder="{%_c13%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_stream%}:</td><td>{%s_stream%}</td></tr>
+<tr><td>{%_homcat%}</td><td>{%r_homcat%}</td></tr>
+<tr><td>{%_viewcat%}</td><td>{%r_viewcat%}</td></tr>
+<tr><td>{%_c32%}</td><td>{%r_catdesc%}</td></tr>
+<tr><td>{%_c15%}</td><td>{%r_subcat%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_f8%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_f9%}</td><td>{%r_addquest%}</td></tr>
+<tr><td>{%_f11%}</td><td>{%r_broc%}</td></tr>
+<tr><td>{%_f12%}</td><td>{%r_down%}</td></tr>
+<tr><td>{%_upfile%}</td><td>{%r_upload%}</td></tr>
+<tr><td>{%_c37%}</td><td>{%r_autor%}</td></tr>
+<tr><td>{%_c17%}</td><td>{%r_date%}</td></tr>
+<tr><td>{%_c18%}</td><td>{%r_read%}</td></tr>
+<tr><td>{%_f2%}</td><td>{%r_hits%}</td></tr>
+<tr><td>{%_c19%}</td><td>{%r_rate%}</td></tr>
+<tr><td>{%_c20%}</td><td>{%r_letter%}</td></tr>
+<tr><td>{%_pagelink%}</td><td>{%r_link%}</td></tr>
+{%elseif forum%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_fo1%}:</td><td><input type="number" name="listnum" value="{%listnum%}" class="sl_conf" placeholder="{%_fo1%}" required></td></tr>
+<tr><td>{%_fo2%}:</td><td><input type="number" name="pop" value="{%pop%}" class="sl_conf" placeholder="{%_fo2%}" required></td></tr>
+<tr><td>{%_comletter%}:</td><td><input type="number" name="letter" value="{%letter%}" class="sl_conf" placeholder="{%_comletter%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="pnum" value="{%pnum%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_fo5%}:</td><td>{%s_recycle%}</td></tr>
+<tr><td>{%_sort%}:</td><td>{%s_sort%}</td></tr>
+<tr><td>{%_allowanonpost%}<div class="sl_small">{%_fo6%}</div></td><td>{%s_anonpost%}</td></tr>
+<tr><td>{%_fo7%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_fo8%}</td><td>{%r_qreply%}</td></tr>
+<tr><td>{%_fo9%}</td><td>{%r_ledit%}</td></tr>
+<tr><td>{%_fo10%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_vprivat%}</td><td>{%r_privat%}</td></tr>
+<tr><td>{%_vprofil%}</td><td>{%r_profil%}</td></tr>
+<tr><td>{%_vweb%}</td><td>{%r_web%}</td></tr>
+{%elseif help%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_c13%}:</td><td><input type="number" name="listnum" value="{%listnum%}" class="sl_conf" placeholder="{%_c13%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_c32%}</td><td>{%r_catdesc%}</td></tr>
+<tr><td>{%_c15%}</td><td>{%r_subcat%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_helpadd%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_c17%}</td><td>{%r_date%}</td></tr>
+<tr><td>{%_c18%}</td><td>{%r_read%}</td></tr>
+<tr><td>{%_c20%}</td><td>{%r_letter%}</td></tr>
+{%elseif jokes%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_homcat%}</td><td>{%r_homcat%}</td></tr>
+<tr><td>{%_c32%}</td><td>{%r_catdesc%}</td></tr>
+<tr><td>{%_c15%}</td><td>{%r_subcat%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_j1%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_j2%}</td><td>{%r_addquest%}</td></tr>
+<tr><td>{%_c17%}</td><td>{%r_date%}</td></tr>
+<tr><td>{%_c19%}</td><td>{%r_rate%}</td></tr>
+{%elseif lang%}
+<tr><td>{%_langkey%}:</td><td><input type="text" name="key" value="{%key%}" class="sl_conf" placeholder="{%_langkey%}" required></td></tr>
+<tr><td>{%_langtr%}:</td><td>{%s_lang%}</td></tr>
+<tr><td>{%_langcount%}:</td><td><input type="number" name="count" value="{%count%}" class="sl_conf" placeholder="{%_langcount%}" required></td></tr>
+<tr><td>Konstanten pro Seite:<div class="sl_small">Max. Konstanten pro Seite (empfohlen: 100)</div></td><td><input type="number" name="per_page" value="{%per_page%}" class="sl_conf" placeholder="100" min="10" max="500" required></td></tr>
+{%elseif links%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_pagelinknum%}:</td><td><input type="number" name="linknum" value="{%linknum%}" class="sl_conf" placeholder="{%_pagelinknum%}" required></td></tr>
+<tr><td>{%_c13%}:</td><td><input type="number" name="listnum" value="{%listnum%}" class="sl_conf" placeholder="{%_c13%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_homcat%}</td><td>{%r_homcat%}</td></tr>
+<tr><td>{%_viewcat%}</td><td>{%r_viewcat%}</td></tr>
+<tr><td>{%_c32%}</td><td>{%r_catdesc%}</td></tr>
+<tr><td>{%_c15%}</td><td>{%r_subcat%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_l8%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_l9%}</td><td>{%r_addquest%}</td></tr>
+<tr><td>{%_l11%}</td><td>{%r_broc%}</td></tr>
+<tr><td>{%_l12%}</td><td>{%r_links%}</td></tr>
+<tr><td>{%_c37%}</td><td>{%r_autor%}</td></tr>
+<tr><td>{%_c17%}</td><td>{%r_date%}</td></tr>
+<tr><td>{%_c18%}</td><td>{%r_read%}</td></tr>
+<tr><td>{%_l1%}</td><td>{%r_hits%}</td></tr>
+<tr><td>{%_c19%}</td><td>{%r_rate%}</td></tr>
+<tr><td>{%_c20%}</td><td>{%r_letter%}</td></tr>
+<tr><td>{%_pagelink%}</td><td>{%r_link%}</td></tr>
+{%elseif media%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_pagelinknum%}:</td><td><input type="number" name="linknum" value="{%linknum%}" class="sl_conf" placeholder="{%_pagelinknum%}" required></td></tr>
+<tr><td>{%_c13%}:</td><td><input type="number" name="listnum" value="{%listnum%}" class="sl_conf" placeholder="{%_c13%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_m1%}:<div class="sl_small">{%_nokoma%}</div></td><td><input type="text" name="lang" value="{%mlang%}" class="sl_conf" placeholder="{%_m1%}" required></td></tr>
+<tr><td>{%_m2%}:<div class="sl_small">{%_nokoma%}</div></td><td><input type="text" name="format" value="{%format%}" class="sl_conf" placeholder="{%_m2%}" required></td></tr>
+<tr><td>{%_m3%}:<div class="sl_small">{%_nokoma%}</div></td><td><input type="text" name="quality" value="{%quality%}" class="sl_conf" placeholder="{%_m3%}" required></td></tr>
+<tr><td>{%_m4%}:</td><td><input type="number" name="links" value="{%links%}" class="sl_conf" placeholder="{%_m4%}" required></td></tr>
+<tr><td>{%_defis%}:</td><td><input type="text" name="mdefis" value="{%mdefis%}" maxlength="25" class="sl_conf" placeholder="{%_defis%}" required></td></tr>
+<tr><td>{%_homcat%}</td><td>{%r_homcat%}</td></tr>
+<tr><td>{%_viewcat%}</td><td>{%r_viewcat%}</td></tr>
+<tr><td>{%_c32%}</td><td>{%r_catdesc%}</td></tr>
+<tr><td>{%_c15%}</td><td>{%r_subcat%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_m7%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_m8%}</td><td>{%r_addquest%}</td></tr>
+<tr><td>{%_m9%}</td><td>{%r_broc%}</td></tr>
+<tr><td>{%_m10%}</td><td>{%r_hide%}</td></tr>
+<tr><td>{%_c37%}</td><td>{%r_autor%}</td></tr>
+<tr><td>{%_c17%}</td><td>{%r_date%}</td></tr>
+<tr><td>{%_c18%}</td><td>{%r_read%}</td></tr>
+<tr><td>{%_c19%}</td><td>{%r_rate%}</td></tr>
+<tr><td>{%_c20%}</td><td>{%r_letter%}</td></tr>
+<tr><td>{%_pagelink%}</td><td>{%r_link%}</td></tr>
+{%elseif money%}
+<tr><td>{%_ma3%}:</td><td><input type="text" name="proz" value="{%proz%}" maxlength="25" class="sl_conf" placeholder="{%_ma3%}" required></td></tr>
+<tr><td>{%_ma4_usd%}</td><td><input type="text" name="kurs" value="{%kurs%}" maxlength="25" class="sl_conf" placeholder="{%_ma4_usd%}" required></td></tr>
+<tr><td>{%_ma4_rub%}</td><td><input type="text" name="kurs2" value="{%kurs2%}" maxlength="25" class="sl_conf" placeholder="{%_ma4_rub%}" required></td></tr>
+<tr><td>{%_ma5%}:</td><td><input type="text" name="bal" value="{%bal%}" maxlength="25" class="sl_conf" placeholder="{%_ma5%}" required></td></tr>
+<tr><td>{%_ma6%}:</td><td><input type="email" name="mail" value="{%mail%}" maxlength="255" class="sl_conf" placeholder="{%_ma6%}" required></td></tr>
+<tr><td>{%_ma7%}:</td><td><textarea name="form" cols="65" rows="5" class="sl_conf" placeholder="{%_ma7%}" required>{%form%}</textarea></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_ma8%}</td><td>{%r_an%}</td></tr>
+<tr><td>{%_ma9%}</td><td>{%r_pr%}</td></tr>
+<tr><td>{%_ma10%}</td><td>{%r_ad%}</td></tr>
+<tr><td>{%_ma11%}:</td><td>{%t_text%}</td></tr>
+<tr><td>{%_ma12%}:</td><td>{%t_info%}</td></tr>
+<tr><td>{%_ma13%}:</td><td>{%t_sendinfo%}</td></tr>
+<tr><td>{%_ma14%}:</td><td>{%t_autor%}</td></tr>
+{%elseif newsletter%}
+<tr><td>{%_nlsend%}<div class="sl_small">{%_nlsendi%}</div></td><td>{%r_active%}</td></tr>
+<tr><td>{%_nlcount%}:</td><td><input type="number" name="count" value="{%count%}" class="sl_conf" placeholder="{%_nlcount%}" required></td></tr>
+{%elseif news%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_bascol%}:</td><td><input type="number" name="bascol" value="{%bascol%}" class="sl_conf" placeholder="{%_bascol%}" required></td></tr>
+<tr><td>{%_c11%}:</td><td><input type="number" name="asocnum" value="{%asocnum%}" class="sl_conf" placeholder="{%_c11%}" required></td></tr>
+<tr><td>{%_c13%}:</td><td><input type="number" name="listnum" value="{%listnum%}" class="sl_conf" placeholder="{%_c13%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_homcat%}</td><td>{%r_homcat%}</td></tr>
+<tr><td>{%_viewcat%}</td><td>{%r_viewcat%}</td></tr>
+<tr><td>{%_c32%}</td><td>{%r_catdesc%}</td></tr>
+<tr><td>{%_c15%}</td><td>{%r_subcat%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_c39%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_c40%}</td><td>{%r_addquest%}</td></tr>
+<tr><td>{%_c37%}</td><td>{%r_autor%}</td></tr>
+<tr><td>{%_c17%}</td><td>{%r_date%}</td></tr>
+<tr><td>{%_c18%}</td><td>{%r_read%}</td></tr>
+<tr><td>{%_c19%}</td><td>{%r_rate%}</td></tr>
+<tr><td>{%_c20%}</td><td>{%r_letter%}</td></tr>
+<tr><td>{%_c23%}</td><td>{%r_assoc%}</td></tr>
+{%elseif order%}
+<tr><td>{%_or1%}:</td><td><input type="email" name="mail" value="{%mail%}" maxlength="255" class="sl_conf" placeholder="{%_or1%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_or2%}</td><td>{%r_an%}</td></tr>
+<tr><td>{%_or3%}</td><td>{%r_pr%}</td></tr>
+<tr><td>{%_or4%}</td><td>{%r_ad%}</td></tr>
+<tr><td>{%_or5%}:</td><td>{%t_text%}</td></tr>
+<tr><td>{%_or6%}:</td><td>{%t_info%}</td></tr>
+<tr><td>{%_or7%}:</td><td>{%t_sendinfo%}</td></tr>
+{%elseif pages%}
+<tr><td>{%_cdefis%}:</td><td><input type="text" name="defis" value="{%defis%}" maxlength="25" class="sl_conf" placeholder="{%_cdefis%}" required></td></tr>
+<tr><td>{%_pagelinknum%}:</td><td><input type="number" name="linknum" value="{%linknum%}" class="sl_conf" placeholder="{%_pagelinknum%}" required></td></tr>
+<tr><td>{%_c13%}:</td><td><input type="number" name="listnum" value="{%listnum%}" class="sl_conf" placeholder="{%_c13%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_homcat%}</td><td>{%r_homcat%}</td></tr>
+<tr><td>{%_viewcat%}</td><td>{%r_viewcat%}</td></tr>
+<tr><td>{%_c32%}</td><td>{%r_catdesc%}</td></tr>
+<tr><td>{%_c15%}</td><td>{%r_subcat%}</td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_c39%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_c40%}</td><td>{%r_addquest%}</td></tr>
+<tr><td>{%_c37%}</td><td>{%r_autor%}</td></tr>
+<tr><td>{%_c17%}</td><td>{%r_date%}</td></tr>
+<tr><td>{%_c18%}</td><td>{%r_read%}</td></tr>
+<tr><td>{%_c19%}</td><td>{%r_rate%}</td></tr>
+<tr><td>{%_c20%}</td><td>{%r_letter%}</td></tr>
+<tr><td>{%_pagelink%}</td><td>{%r_link%}</td></tr>
+{%elseif privat%}
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_comletter%}:</td><td><input type="number" name="letter" value="{%letter%}" class="sl_conf" placeholder="{%_comletter%}" required></td></tr>
+<tr><td>{%_csend%}:</td><td><input type="number" name="send" value="{%send%}" class="sl_conf" placeholder="{%_csend%}" required></td></tr>
+<tr><td>{%_prinm%}:</td><td><input type="number" name="messin" value="{%messin%}" class="sl_conf" placeholder="{%_prinm%}" required></td></tr>
+<tr><td>{%_prsavem%}:</td><td><input type="number" name="messsav" value="{%messsav%}" class="sl_conf" placeholder="{%_prsavem%}" required></td></tr>
+<tr><td>{%_prmail%}</td><td>{%r_newmail%}</td></tr>
+<tr><td>{%_prself%}</td><td>{%r_himself%}</td></tr>
+<tr><td>{%_vprofil%}</td><td>{%r_profil%}</td></tr>
+<tr><td>{%_vweb%}</td><td>{%r_web%}</td></tr>
+<tr><td>{%_pract%}</td><td>{%r_act%}</td></tr>
+{%elseif referers%}
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_refer_t%}:</td><td><input type="number" name="refer_t" value="{%refer_t%}" class="sl_conf" placeholder="{%_refer_t%}" required></td></tr>
+<tr><td>{%_refer%}</td><td>{%r_refer%}</td></tr>
+<tr><td>{%_referb%}</td><td>{%r_referb%}</td></tr>
+{%elseif sitemap%}
+<tr><td>{%_modules%}:<div class="sl_small">{%_ctrlinfo%}</div></td><td>{%s_mod%}</td></tr>
+<tr><td>{%_map_fr_h%}:<div class="sl_small">{%_info_no%}</div></td><td>{%s_fr_h%}</td></tr>
+<tr><td>{%_map_fr_m%}:<div class="sl_small">{%_info_no%}</div></td><td>{%s_fr_m%}</td></tr>
+<tr><td>{%_map_fr_c%}:<div class="sl_small">{%_info_no%}</div></td><td>{%s_fr_c%}</td></tr>
+<tr><td>{%_map_fr_p%}:<div class="sl_small">{%_info_no%}</div></td><td>{%s_fr_p%}</td></tr>
+<tr><td>{%_map_auto_t%}:</td><td><input type="number" name="auto_t" value="{%auto_t%}" class="sl_conf" placeholder="{%_map_auto_t%}" required></td></tr>
+<tr><td>{%_map_auto%}</td><td>{%r_auto%}</td></tr>
+<tr><td>{%_map_pr_h%}:<div class="sl_small">{%_info_null%}</div></td><td>{%s_pr_h%}</td></tr>
+<tr><td>{%_map_pr_m%}:<div class="sl_small">{%_info_null%}</div></td><td>{%s_pr_m%}</td></tr>
+<tr><td>{%_map_pr_c%}:<div class="sl_small">{%_info_null%}</div></td><td>{%s_pr_c%}</td></tr>
+<tr><td>{%_map_pr_p%}:<div class="sl_small">{%_info_null%}</div></td><td>{%s_pr_p%}</td></tr>
+<tr><td>{%_map_dat_h%}</td><td>{%r_dat_h%}</td></tr>
+<tr><td>{%_map_dat_m%}</td><td>{%r_dat_m%}</td></tr>
+<tr><td>{%_map_dat_c%}</td><td>{%r_dat_c%}</td></tr>
+<tr><td>{%_map_dat_p%}</td><td>{%r_dat_p%}</td></tr>
+<tr><td>{%_map_gen_h%}</td><td>{%r_gen_h%}</td></tr>
+<tr><td>{%_map_gen_m%}</td><td>{%r_gen_m%}</td></tr>
+<tr><td>{%_map_gen_c%}</td><td>{%r_gen_c%}</td></tr>
+<tr><td>{%_map_gen_p%}</td><td>{%r_gen_p%}</td></tr>
+<tr><td>{%_map_xsl%}</td><td>{%r_xsl%}</td></tr>
+<tr><td>{%_map_site%}</td><td>{%r_txt%}</td></tr>
+{%elseif statistic%}
+<tr><td>{%_statbet%}:</td><td><input type="number" name="bet" value="{%bet%}" class="sl_conf" placeholder="{%_statbet%}" required></td></tr>
+<tr><td>{%_statshi%}:</td><td><input type="number" name="shi" value="{%shi%}" class="sl_conf" placeholder="{%_statshi%}" required></td></tr>
+<tr><td>{%_statact%}</td><td>{%r_stat%}</td></tr>
+{%elseif voting%}
+<tr><td>{%_voting_time%}:</td><td><input type="number" name="time" value="{%time%}" class="sl_conf" placeholder="{%_voting_time%}" required></td></tr>
+<tr><td>{%_c33%}:</td><td><input type="number" name="num" value="{%num%}" class="sl_conf" placeholder="{%_c33%}" required></td></tr>
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c35%}:</td><td><input type="number" name="nump" value="{%nump%}" class="sl_conf" placeholder="{%_c35%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_vansw%}:</td><td><input type="number" name="answ" value="{%answ%}" class="sl_conf" placeholder="{%_vansw%}" required></td></tr>
+<tr><td>{%_vblock%}:</td><td>{%s_block%}</td></tr>
+{%elseif whois%}
+<tr><td>{%_c34%}:</td><td><input type="number" name="anum" value="{%anum%}" class="sl_conf" placeholder="{%_c34%}" required></td></tr>
+<tr><td>{%_c36%}:</td><td><input type="number" name="anump" value="{%anump%}" class="sl_conf" placeholder="{%_c36%}" required></td></tr>
+<tr><td>{%_addamail%}</td><td>{%r_addmail%}</td></tr>
+<tr><td>{%_whoisadd%}</td><td>{%r_add%}</td></tr>
+<tr><td>{%_whoisaddg%}</td><td>{%r_addquest%}</td></tr>
+{%endif%}
+{%fields%}
+	<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="{%module%}"><input type="hidden" name="op" value="{%op%}"><input type="submit" value="{%save%}" class="sl_but_blue"></td></tr>
+</table></form>

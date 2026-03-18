@@ -418,48 +418,75 @@ function conf(): void {
         'tab'  => 4,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/users.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._ADIR.':</td><td><input type="text" name="adirectory" value="'.$conf['users']['adirectory'].'" class="sl_conf" placeholder="'._ADIR.'" required></td></tr>'
-    .'<tr><td>'._ATYPE.':</td><td><input type="text" name="atypefile" value="'.$conf['users']['atypefile'].'" class="sl_conf" placeholder="'._ATYPE.'" required></td></tr>'
-    .'<tr><td>'._ASIZE.':</td><td><input type="number" name="amaxsize" value="'.$conf['users']['amaxsize'].'" class="sl_conf" placeholder="'._ASIZE.'" required></td></tr>'
-    .'<tr><td>'._AWIDTH._AIN.':</td><td><input type="number" name="awidth" value="'.$conf['users']['awidth'].'" class="sl_conf" placeholder="'._AWIDTH._AIN.'" required></td></tr>'
-    .'<tr><td>'._AHEIGHT._AIN.':</td><td><input type="number" name="aheight" value="'.$conf['users']['aheight'].'" class="sl_conf" placeholder="'._AHEIGHT._AIN.'" required></td></tr>'
-    .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="user" value="'.intval($conf['users']['user_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['users']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['users']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._PASSWDLEN.':</td><td><select name="minpass" class="sl_conf">';
+    $minpass_opts = '';
     $xminpass = 3;
     while ($xminpass <= 10) {
-        $sel = ($xminpass == $conf['users']['minpass']) ? ' selected' : '';
-        $cont .= '<option value="'.$xminpass.'"'.$sel.'>'.$xminpass.'</option>';
+        $minpass_opts .= '<option value="'.$xminpass.'"'.($xminpass == $conf['users']['minpass'] ? ' selected' : '').'>'.$xminpass.'</option>';
         $xminpass++;
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._LOGINFL.':</td><td>'
-    .'<select name="enter" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['users']['enter'] == '0') $cont .= ' selected';
-    $cont .= '>'._LOGINL.'</option>'
-    .'<option value="1"';
-    if ($conf['users']['enter'] == '1') $cont .= ' selected';
-    $cont .= '>'._LOGINF.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._UPDATE_POINTS.'</td><td>'.radio_form($conf['users']['point'], 'point').'</td></tr>'
-    .'<tr><td>'._AUPLOAD.'</td><td>'.radio_form($conf['users']['aupload'], 'aupload').'</td></tr>'
-    .'<tr><td>'._NO_MAIL_REG.'</td><td>'.radio_form($conf['users']['nomail'], 'nomail').'</td></tr>'
-    .'<tr><td>'._USERSHOMENUM.'</td><td>'.radio_form($conf['users']['news'], 'news').'</td></tr>'
-    .'<tr><td>'._USERIPCHECK.'</td><td>'.radio_form($conf['users']['check'], 'check').'</td></tr>'
-    .'<tr><td>'._REGACT.'</td><td>'.radio_form($conf['users']['reg'], 'reg').'</td></tr>'
-    .'<tr><td>'._SELTHEME.'</td><td>'.radio_form($conf['users']['theme'], 'theme').'</td></tr>'
-    .'<tr><td>'._PROFACT.'</td><td>'.radio_form($conf['users']['prof'], 'prof').'</td></tr>'
-    .'<tr><td>'._NETWORKACTIVE.'</td><td>'.radio_form($conf['users']['network'], 'network').'</td></tr>'
-    .'<tr><td>'._RULACT.'</td><td>'.radio_form($conf['users']['rule'], 'rule').'</td></tr>'
-    .'<tr><td>'._RULES.':</td><td><textarea name="rules" cols="65" rows="10" class="sl_conf" placeholder="'._RULES.'">'.$conf['users']['rules'].'</textarea></td></tr>'
-    .'<tr><td>'._NETWORKCODE.':</td><td>'.textarea_code('code', 'network', 'sl_conf', 'text/html', $conf['users']['network_c']).'</td></tr>'
-    .'<tr><td>'._NAME_BLOCK.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="name" cols="65" rows="5" class="sl_conf" placeholder="'._NAME_BLOCK.'">'.$conf['users']['name_b'].'</textarea></td></tr>'
-    .'<tr><td>'._MAIL_BLOCK.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="mail" cols="65" rows="5" class="sl_conf" placeholder="'._MAIL_BLOCK.'">'.$conf['users']['mail_b'].'</textarea></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $minpass_sel = '<select name="minpass" class="sl_conf">'.$minpass_opts.'</select>';
+    $enter_sel = '<select name="enter" class="sl_conf">'
+        .'<option value="0"'.($conf['users']['enter'] == '0' ? ' selected' : '').'>'._LOGINL.'</option>'
+        .'<option value="1"'.($conf['users']['enter'] == '1' ? ' selected' : '').'>'._LOGINF.'</option>'
+        .'</select>';
+    $cont .= setTemplateBasic('open');
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'           => $afile,
+        '{%module%}'          => 'account',
+        '{%op%}'              => 'save',
+        '{%save%}'            => _SAVECHANGES,
+        '{%fields%}'          => '',
+        '{%_adir%}'           => _ADIR,
+        '{%adirectory%}'      => $conf['users']['adirectory'],
+        '{%_atype%}'          => _ATYPE,
+        '{%atypefile%}'       => $conf['users']['atypefile'],
+        '{%_asize%}'          => _ASIZE,
+        '{%amaxsize%}'        => $conf['users']['amaxsize'],
+        '{%_awidthin%}'       => _AWIDTH._AIN,
+        '{%awidth%}'          => $conf['users']['awidth'],
+        '{%_aheightin%}'      => _AHEIGHT._AIN,
+        '{%aheight%}'         => $conf['users']['aheight'],
+        '{%_voting_time%}'    => _VOTING_TIME,
+        '{%user%}'            => intval($conf['users']['user_t'] / 86400),
+        '{%_c34%}'            => _C_34,
+        '{%anum%}'            => $conf['users']['anum'],
+        '{%_c36%}'            => _C_36,
+        '{%anump%}'           => $conf['users']['anump'],
+        '{%_passwdlen%}'      => _PASSWDLEN,
+        '{%s_minpass%}'       => $minpass_sel,
+        '{%_loginfl%}'        => _LOGINFL,
+        '{%s_enter%}'         => $enter_sel,
+        '{%_update_points%}'  => _UPDATE_POINTS,
+        '{%r_point%}'         => radio_form($conf['users']['point'], 'point'),
+        '{%_aupload%}'        => _AUPLOAD,
+        '{%r_aupload%}'       => radio_form($conf['users']['aupload'], 'aupload'),
+        '{%_no_mail_reg%}'    => _NO_MAIL_REG,
+        '{%r_nomail%}'        => radio_form($conf['users']['nomail'], 'nomail'),
+        '{%_usershomenum%}'   => _USERSHOMENUM,
+        '{%r_news%}'          => radio_form($conf['users']['news'], 'news'),
+        '{%_useripcheck%}'    => _USERIPCHECK,
+        '{%r_check%}'         => radio_form($conf['users']['check'], 'check'),
+        '{%_regact%}'         => _REGACT,
+        '{%r_reg%}'           => radio_form($conf['users']['reg'], 'reg'),
+        '{%_seltheme%}'       => _SELTHEME,
+        '{%r_theme%}'         => radio_form($conf['users']['theme'], 'theme'),
+        '{%_profact%}'        => _PROFACT,
+        '{%r_prof%}'          => radio_form($conf['users']['prof'], 'prof'),
+        '{%_networkactive%}'  => _NETWORKACTIVE,
+        '{%r_network%}'       => radio_form($conf['users']['network'], 'network'),
+        '{%_rulact%}'         => _RULACT,
+        '{%r_rule%}'          => radio_form($conf['users']['rule'], 'rule'),
+        '{%_rules%}'          => _RULES,
+        '{%rules%}'           => $conf['users']['rules'],
+        '{%_networkcode%}'    => _NETWORKCODE,
+        '{%t_code%}'          => textarea_code('code', 'network', 'sl_conf', 'text/html', $conf['users']['network_c']),
+        '{%_name_block%}'     => _NAME_BLOCK,
+        '{%_nokoma%}'         => _NOKOMA,
+        '{%name_b%}'          => $conf['users']['name_b'],
+        '{%_mail_block%}'     => _MAIL_BLOCK,
+        '{%mail_b%}'          => $conf['users']['mail_b'],
+        'if_flag'             => ['account' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

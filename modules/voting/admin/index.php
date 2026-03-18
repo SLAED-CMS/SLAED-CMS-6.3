@@ -182,29 +182,36 @@ function conf(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
+    $bval = (string)($conf['voting']['block'] ?? '0');
+    $block_sel = '<select name="block" class="sl_conf">'
+        .'<option value="0"'.($bval === '0' ? ' selected' : '').'>'._VLASTACT.'</option>'
+        .'<option value="1"'.($bval === '1' ? ' selected' : '').'>'._VLASTCLO.'</option>'
+        .'<option value="2"'.($bval === '2' ? ' selected' : '').'>'._VRANACT.'</option>'
+        .'<option value="3"'.($bval === '3' ? ' selected' : '').'>'._VRANCLO.'</option>'
+        .'</select>';
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._VOTING_TIME.':</td><td><input type="number" name="time" value="'.intval($conf['voting']['voting_t'] / 86400).'" class="sl_conf" placeholder="'._VOTING_TIME.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.$conf['voting']['num'].'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.$conf['voting']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.$conf['voting']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.$conf['voting']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._VANSW.':</td><td><input type="number" name="answ" value="'.$conf['voting']['answ'].'" class="sl_conf" placeholder="'._VANSW.'" required></td></tr>'
-    .'<tr><td>'._VBLOCK.':</td><td><select name="block" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['voting']['block'] == '0') $cont .= ' selected';
-    $cont .= '>'._VLASTACT.'</option>'
-    .'<option value="1"';
-    if ($conf['voting']['block'] == '1') $cont .= ' selected';
-    $cont .= '>'._VLASTCLO.'</option>'
-    .'<option value="2"';
-    if ($conf['voting']['block'] == '2') $cont .= ' selected';
-    $cont .= '>'._VRANACT.'</option>'
-    .'<option value="3"';
-    if ($conf['voting']['block'] == '3') $cont .= ' selected';
-    $cont .= '>'._VRANCLO.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="voting"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'         => $afile,
+        '{%module%}'        => 'voting',
+        '{%op%}'            => 'saveconf',
+        '{%save%}'          => _SAVECHANGES,
+        '{%fields%}'        => '',
+        '{%_voting_time%}'  => _VOTING_TIME,
+        '{%time%}'          => intval($conf['voting']['voting_t'] / 86400),
+        '{%_c33%}'          => _C_33,
+        '{%num%}'           => $conf['voting']['num'],
+        '{%_c34%}'          => _C_34,
+        '{%anum%}'          => $conf['voting']['anum'],
+        '{%_c35%}'          => _C_35,
+        '{%nump%}'          => $conf['voting']['nump'],
+        '{%_c36%}'          => _C_36,
+        '{%anump%}'         => $conf['voting']['anump'],
+        '{%_vansw%}'        => _VANSW,
+        '{%answ%}'          => $conf['voting']['answ'],
+        '{%_vblock%}'       => _VBLOCK,
+        '{%s_block%}'       => $block_sel,
+        'if_flag'           => ['voting' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

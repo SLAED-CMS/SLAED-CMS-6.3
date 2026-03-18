@@ -148,17 +148,28 @@ function del(int $id = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=conf', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-        .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['whois']['anum'] ?? 10).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-        .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['whois']['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-        .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['whois']['addmail'] ?? 0, 'addmail').'</td></tr>'
-        .'<tr><td>'._WHOISADD.'</td><td>'.radio_form($conf['whois']['add'] ?? 0, 'add').'</td></tr>'
-        .'<tr><td>'._WHOISADDG.'</td><td>'.radio_form($conf['whois']['addquest'] ?? 0, 'addquest').'</td></tr>'
-        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="whois"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'      => $afile,
+        '{%module%}'     => 'whois',
+        '{%op%}'         => 'saveconf',
+        '{%save%}'       => _SAVECHANGES,
+        '{%fields%}'     => '',
+        '{%_c34%}'       => _C_34,
+        '{%anum%}'       => $conf['whois']['anum'] ?? 10,
+        '{%_c36%}'       => _C_36,
+        '{%anump%}'      => $conf['whois']['anump'] ?? 10,
+        '{%_addamail%}'  => _ADDAMAIL,
+        '{%r_addmail%}'  => radio_form($conf['whois']['addmail'] ?? 0, 'addmail'),
+        '{%_whoisadd%}'  => _WHOISADD,
+        '{%r_add%}'      => radio_form($conf['whois']['add'] ?? 0, 'add'),
+        '{%_whoisaddg%}' => _WHOISADDG,
+        '{%r_addquest%}' => radio_form($conf['whois']['addquest'] ?? 0, 'addquest'),
+        'if_flag'        => ['whois' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

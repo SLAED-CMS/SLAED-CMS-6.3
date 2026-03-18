@@ -49,39 +49,56 @@ function conf(): void {
     $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=conf', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
+    $sort_sel = '<select name="sort" class="sl_conf">'
+        .'<option value="1"'.(($conf['forum']['sort'] ?? null) == '1' ? ' selected' : '').'>'._ASC.'</option>'
+        .'<option value="0"'.(($conf['forum']['sort'] ?? null) == '0' ? ' selected' : '').'>'._DESC.'</option>'
+        .'</select>';
+    $anon_sel = '<select name="anonpost" class="sl_conf">'
+        .'<option value="0"'.(($conf['forum']['anonpost'] ?? null) == '0' ? ' selected' : '').'>'._APOSTMOD.'</option>'
+        .'<option value="1"'.(($conf['forum']['anonpost'] ?? null) == '1' ? ' selected' : '').'>'._APOSTNOMOD.'</option>'
+        .'</select>';
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['forum']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._FO_1.':</td><td><input type="number" name="listnum" value="'.($conf['forum']['listnum'] ?? 0).'" class="sl_conf" placeholder="'._FO_1.'" required></td></tr>'
-    .'<tr><td>'._FO_2.':</td><td><input type="number" name="pop" value="'.($conf['forum']['pop'] ?? 0).'" class="sl_conf" placeholder="'._FO_2.'" required></td></tr>'
-    .'<tr><td>'._COMLETTER.':</td><td><input type="number" name="letter" value="'.($conf['forum']['letter'] ?? 0).'" class="sl_conf" placeholder="'._COMLETTER.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['forum']['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="pnum" value="'.($conf['forum']['pnum'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._FO_5.':</td><td>'.getcat('forum', $conf['forum']['recycle'] ?? 0, 'recycle', 'sl_conf', '<option value="0">'._NO.'</option>').'</td></tr>'
-    .'<tr><td>'._SORT.':</td><td><select name="sort" class="sl_conf">'
-    .'<option value="1"';
-    if (($conf['forum']['sort'] ?? null) == '1') $cont .= ' selected';
-    $cont .= '>'._ASC.'</option>'
-    .'<option value="0"';
-    if (($conf['forum']['sort'] ?? null) == '0') $cont .= ' selected';
-    $cont .= '>'._DESC.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._ALLOWANONPOST.'<div class="sl_small">'._FO_6.'</div></td><td><select name="anonpost" class="sl_conf">'
-    .'<option value="0"';
-    if (($conf['forum']['anonpost'] ?? null) == '0') $cont .= ' selected';
-    $cont .= '>'._APOSTMOD.'</option>'
-    .'<option value="1"';
-    if (($conf['forum']['anonpost'] ?? null) == '1') $cont .= ' selected';
-    $cont .= '>'._APOSTNOMOD.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._FO_7.'</td><td>'.radio_form($conf['forum']['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._FO_8.'</td><td>'.radio_form($conf['forum']['qreply'] ?? 0, 'qreply').'</td></tr>'
-    .'<tr><td>'._FO_9.'</td><td>'.radio_form($conf['forum']['ledit'] ?? 0, 'ledit').'</td></tr>'
-    .'<tr><td>'._FO_10.'</td><td>'.radio_form($conf['forum']['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._VPRIVAT.'</td><td>'.radio_form($conf['forum']['privat'] ?? 0, 'privat').'</td></tr>'
-    .'<tr><td>'._VPROFIL.'</td><td>'.radio_form($conf['forum']['profil'] ?? 0, 'profil').'</td></tr>'
-    .'<tr><td>'._VWEB.'</td><td>'.radio_form($conf['forum']['web'] ?? 0, 'web').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="forum"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'          => $afile,
+        '{%module%}'         => 'forum',
+        '{%op%}'             => 'saveconf',
+        '{%save%}'           => _SAVECHANGES,
+        '{%fields%}'         => '',
+        '{%_cdefis%}'        => _CDEFIS,
+        '{%defis%}'          => urldecode($conf['forum']['defis'] ?? ''),
+        '{%_fo1%}'           => _FO_1,
+        '{%listnum%}'        => $conf['forum']['listnum'] ?? 0,
+        '{%_fo2%}'           => _FO_2,
+        '{%pop%}'            => $conf['forum']['pop'] ?? 0,
+        '{%_comletter%}'     => _COMLETTER,
+        '{%letter%}'         => $conf['forum']['letter'] ?? 0,
+        '{%_c33%}'           => _C_33,
+        '{%num%}'            => $conf['forum']['num'] ?? 0,
+        '{%_c35%}'           => _C_35,
+        '{%pnum%}'           => $conf['forum']['pnum'] ?? 0,
+        '{%_fo5%}'           => _FO_5,
+        '{%s_recycle%}'      => getcat('forum', $conf['forum']['recycle'] ?? 0, 'recycle', 'sl_conf', '<option value="0">'._NO.'</option>'),
+        '{%_sort%}'          => _SORT,
+        '{%s_sort%}'         => $sort_sel,
+        '{%_allowanonpost%}' => _ALLOWANONPOST,
+        '{%_fo6%}'           => _FO_6,
+        '{%s_anonpost%}'     => $anon_sel,
+        '{%_fo7%}'           => _FO_7,
+        '{%r_add%}'          => radio_form($conf['forum']['add'] ?? 0, 'add'),
+        '{%_fo8%}'           => _FO_8,
+        '{%r_qreply%}'       => radio_form($conf['forum']['qreply'] ?? 0, 'qreply'),
+        '{%_fo9%}'           => _FO_9,
+        '{%r_ledit%}'        => radio_form($conf['forum']['ledit'] ?? 0, 'ledit'),
+        '{%_fo10%}'          => _FO_10,
+        '{%r_addmail%}'      => radio_form($conf['forum']['addmail'] ?? 0, 'addmail'),
+        '{%_vprivat%}'       => _VPRIVAT,
+        '{%r_privat%}'       => radio_form($conf['forum']['privat'] ?? 0, 'privat'),
+        '{%_vprofil%}'       => _VPROFIL,
+        '{%r_profil%}'       => radio_form($conf['forum']['profil'] ?? 0, 'profil'),
+        '{%_vweb%}'          => _VWEB,
+        '{%r_web%}'          => radio_form($conf['forum']['web'] ?? 0, 'web'),
+        'if_flag'            => ['forum' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

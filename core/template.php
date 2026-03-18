@@ -155,7 +155,7 @@ if (!function_exists('setTemplateBasic')) {
             $flags = $val['if_flag'];
             unset($val['if_flag']);
         }
-        $raw = setTemplateIf($raw, $flags, $val + $vars);
+        $raw = setTemplateIf($raw, $flags, $val);
         return strtr($raw, $val + $vars);
     }
 }

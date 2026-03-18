@@ -3565,13 +3565,14 @@ function new_graphic(string $time): string {
 
 # Format radio form
 function radio_form(mixed $var, string $name, string $id = ''): string {
+    $state = ($var === 0 || $var === '0') ? '0' : (($var === 1 || $var === '1') ? '1' : '');
     if ($id == 1) {
-        $sel1 = (!$var) ? 'checked' : '';
-        $sel2 = ($var) ? 'checked' : '';
+        $sel1 = ($state !== '1') ? 'checked' : '';
+        $sel2 = ($state === '1') ? 'checked' : '';
         $content = '<label><input type="radio" name="'.$name.'" value="0" '.$sel1.'> '._YES.' </label><label><input type="radio" name="'.$name.'" value="1" '.$sel2.'> '._NO.'</label>';
     } else {
-        $sel1 = ($var || !$var) ? 'checked' : '';
-        $sel2 = ($var == '0') ? 'checked' : '';
+        $sel1 = ($state !== '0') ? 'checked' : '';
+        $sel2 = ($state === '0') ? 'checked' : '';
         $content = '<label><input type="radio" name="'.$name.'" value="1" '.$sel1.'> '._YES.' </label><label><input type="radio" name="'.$name.'" value="0" '.$sel2.'> '._NO.'</label>';
     }
     return $content;

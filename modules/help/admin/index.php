@@ -197,25 +197,44 @@ function del(int $fid = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=conf', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['help']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($conf['help']['listnum'] ?? 0).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['help']['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['help']['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($conf['help']['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['help']['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['help']['catdesc'] ?? 0, 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['help']['subcat'] ?? 0, 'subcat').'</td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['help']['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._HELPADD.'</td><td>'.radio_form($conf['help']['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['help']['date'] ?? 0, 'date').'</td></tr>'
-    .'<tr><td>'._C_18.'</td><td>'.radio_form($conf['help']['read'] ?? 0, 'read').'</td></tr>'
-    .'<tr><td>'._C_20.'</td><td>'.radio_form($conf['help']['letter'] ?? 0, 'letter').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'     => $afile,
+        '{%module%}'    => 'help',
+        '{%op%}'        => 'saveconf',
+        '{%save%}'      => _SAVECHANGES,
+        '{%fields%}'    => '',
+        '{%_cdefis%}'   => _CDEFIS,
+        '{%defis%}'     => urldecode($conf['help']['defis'] ?? ''),
+        '{%_c13%}'      => _C_13,
+        '{%listnum%}'   => $conf['help']['listnum'] ?? 0,
+        '{%_c33%}'      => _C_33,
+        '{%num%}'       => $conf['help']['num'] ?? 0,
+        '{%_c34%}'      => _C_34,
+        '{%anum%}'      => $conf['help']['anum'] ?? 0,
+        '{%_c35%}'      => _C_35,
+        '{%nump%}'      => $conf['help']['nump'] ?? 0,
+        '{%_c36%}'      => _C_36,
+        '{%anump%}'     => $conf['help']['anump'] ?? 0,
+        '{%_c32%}'      => _C_32,
+        '{%r_catdesc%}' => radio_form($conf['help']['catdesc'] ?? 0, 'catdesc'),
+        '{%_c15%}'      => _C_15,
+        '{%r_subcat%}'  => radio_form($conf['help']['subcat'] ?? 0, 'subcat'),
+        '{%_addamail%}' => _ADDAMAIL,
+        '{%r_addmail%}' => radio_form($conf['help']['addmail'] ?? 0, 'addmail'),
+        '{%_helpadd%}'  => _HELPADD,
+        '{%r_add%}'     => radio_form($conf['help']['add'] ?? 0, 'add'),
+        '{%_c17%}'      => _C_17,
+        '{%r_date%}'    => radio_form($conf['help']['date'] ?? 0, 'date'),
+        '{%_c18%}'      => _C_18,
+        '{%r_read%}'    => radio_form($conf['help']['read'] ?? 0, 'read'),
+        '{%_c20%}'      => _C_20,
+        '{%r_letter%}'  => radio_form($conf['help']['letter'] ?? 0, 'letter'),
+        'if_flag'       => ['help' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

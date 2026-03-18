@@ -94,11 +94,20 @@ function conf(): void {
     $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._STATBET.':</td><td><input type="number" name="bet" value="'.$conf['statistic']['bet'].'" class="sl_conf" placeholder="'._STATBET.'" required></td></tr>'
-    .'<tr><td>'._STATSHI.':</td><td><input type="number" name="shi" value="'.$conf['statistic']['shi'].'" class="sl_conf" placeholder="'._STATSHI.'" required></td></tr>'
-    .'<tr><td>'._STATACT.'</td><td>'.radio_form($conf['statistic']['stat'], 'stat').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="statistic"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'    => $afile,
+        '{%module%}'   => 'statistic',
+        '{%op%}'       => 'save',
+        '{%save%}'     => _SAVECHANGES,
+        '{%fields%}'   => '',
+        '{%_statbet%}' => _STATBET,
+        '{%bet%}'      => $conf['statistic']['bet'],
+        '{%_statshi%}' => _STATSHI,
+        '{%shi%}'      => $conf['statistic']['shi'],
+        '{%_statact%}' => _STATACT,
+        '{%r_stat%}'   => radio_form($conf['statistic']['stat'], 'stat'),
+        'if_flag'      => ['statistic' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

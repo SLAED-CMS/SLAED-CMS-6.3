@@ -165,35 +165,64 @@ function del(int $dfid = 0): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=conf', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/links.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['links']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
-    .'<tr><td>'._PAGELINKNUM.':</td><td><input type="number" name="linknum" value="'.($conf['links']['linknum'] ?? 0).'" class="sl_conf" placeholder="'._PAGELINKNUM.'" required></td></tr>'
-    .'<tr><td>'._C_13.':</td><td><input type="number" name="listnum" value="'.($conf['links']['listnum'] ?? 0).'" class="sl_conf" placeholder="'._C_13.'" required></td></tr>'
-    .'<tr><td>'._C_33.':</td><td><input type="number" name="num" value="'.($conf['links']['num'] ?? 0).'" class="sl_conf" placeholder="'._C_33.'" required></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['links']['anum'] ?? 0).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_35.':</td><td><input type="number" name="nump" value="'.($conf['links']['nump'] ?? 0).'" class="sl_conf" placeholder="'._C_35.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['links']['anump'] ?? 0).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._HOMCAT.'</td><td>'.radio_form($conf['links']['homcat'] ?? 0, 'homcat').'</td></tr>'
-    .'<tr><td>'._VIEWCAT.'</td><td>'.radio_form($conf['links']['viewcat'] ?? 0, 'viewcat').'</td></tr>'
-    .'<tr><td>'._C_32.'</td><td>'.radio_form($conf['links']['catdesc'] ?? 0, 'catdesc').'</td></tr>'
-    .'<tr><td>'._C_15.'</td><td>'.radio_form($conf['links']['subcat'] ?? 0, 'subcat').'</td></tr>'
-    .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['links']['addmail'] ?? 0, 'addmail').'</td></tr>'
-    .'<tr><td>'._L_8.'</td><td>'.radio_form($conf['links']['add'] ?? 0, 'add').'</td></tr>'
-    .'<tr><td>'._L_9.'</td><td>'.radio_form($conf['links']['addquest'] ?? 0, 'addquest').'</td></tr>'
-    .'<tr><td>'._L_11.'</td><td>'.radio_form($conf['links']['broc'] ?? 0, 'broc').'</td></tr>'
-    .'<tr><td>'._L_12.'</td><td>'.radio_form($conf['links']['links'] ?? 0, 'links').'</td></tr>'
-    .'<tr><td>'._C_37.'</td><td>'.radio_form($conf['links']['autor'] ?? 0, 'autor').'</td></tr>'
-    .'<tr><td>'._C_17.'</td><td>'.radio_form($conf['links']['date'] ?? 0, 'date').'</td></tr>'
-    .'<tr><td>'._C_18.'</td><td>'.radio_form($conf['links']['read'] ?? 0, 'read').'</td></tr>'
-    .'<tr><td>'._L_1.'</td><td>'.radio_form($conf['links']['hits'] ?? 0, 'hits').'</td></tr>'
-    .'<tr><td>'._C_19.'</td><td>'.radio_form($conf['links']['rate'] ?? 0, 'rate').'</td></tr>'
-    .'<tr><td>'._C_20.'</td><td>'.radio_form($conf['links']['letter'] ?? 0, 'letter').'</td></tr>'
-    .'<tr><td>'._PAGELINK.'</td><td>'.radio_form($conf['links']['link'] ?? 0, 'link').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="links"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'        => $afile,
+        '{%module%}'       => 'links',
+        '{%op%}'           => 'saveconf',
+        '{%save%}'         => _SAVECHANGES,
+        '{%fields%}'       => '',
+        '{%_cdefis%}'      => _CDEFIS,
+        '{%defis%}'        => urldecode($conf['links']['defis'] ?? ''),
+        '{%_pagelinknum%}' => _PAGELINKNUM,
+        '{%linknum%}'      => $conf['links']['linknum'] ?? 0,
+        '{%_c13%}'         => _C_13,
+        '{%listnum%}'      => $conf['links']['listnum'] ?? 0,
+        '{%_c33%}'         => _C_33,
+        '{%num%}'          => $conf['links']['num'] ?? 0,
+        '{%_c34%}'         => _C_34,
+        '{%anum%}'         => $conf['links']['anum'] ?? 0,
+        '{%_c35%}'         => _C_35,
+        '{%nump%}'         => $conf['links']['nump'] ?? 0,
+        '{%_c36%}'         => _C_36,
+        '{%anump%}'        => $conf['links']['anump'] ?? 0,
+        '{%_homcat%}'      => _HOMCAT,
+        '{%r_homcat%}'     => radio_form($conf['links']['homcat'] ?? 0, 'homcat'),
+        '{%_viewcat%}'     => _VIEWCAT,
+        '{%r_viewcat%}'    => radio_form($conf['links']['viewcat'] ?? 0, 'viewcat'),
+        '{%_c32%}'         => _C_32,
+        '{%r_catdesc%}'    => radio_form($conf['links']['catdesc'] ?? 0, 'catdesc'),
+        '{%_c15%}'         => _C_15,
+        '{%r_subcat%}'     => radio_form($conf['links']['subcat'] ?? 0, 'subcat'),
+        '{%_addamail%}'    => _ADDAMAIL,
+        '{%r_addmail%}'    => radio_form($conf['links']['addmail'] ?? 0, 'addmail'),
+        '{%_l8%}'          => _L_8,
+        '{%r_add%}'        => radio_form($conf['links']['add'] ?? 0, 'add'),
+        '{%_l9%}'          => _L_9,
+        '{%r_addquest%}'   => radio_form($conf['links']['addquest'] ?? 0, 'addquest'),
+        '{%_l11%}'         => _L_11,
+        '{%r_broc%}'       => radio_form($conf['links']['broc'] ?? 0, 'broc'),
+        '{%_l12%}'         => _L_12,
+        '{%r_links%}'      => radio_form($conf['links']['links'] ?? 0, 'links'),
+        '{%_c37%}'         => _C_37,
+        '{%r_autor%}'      => radio_form($conf['links']['autor'] ?? 0, 'autor'),
+        '{%_c17%}'         => _C_17,
+        '{%r_date%}'       => radio_form($conf['links']['date'] ?? 0, 'date'),
+        '{%_c18%}'         => _C_18,
+        '{%r_read%}'       => radio_form($conf['links']['read'] ?? 0, 'read'),
+        '{%_l1%}'          => _L_1,
+        '{%r_hits%}'       => radio_form($conf['links']['hits'] ?? 0, 'hits'),
+        '{%_c19%}'         => _C_19,
+        '{%r_rate%}'       => radio_form($conf['links']['rate'] ?? 0, 'rate'),
+        '{%_c20%}'         => _C_20,
+        '{%r_letter%}'     => radio_form($conf['links']['letter'] ?? 0, 'letter'),
+        '{%_pagelink%}'    => _PAGELINK,
+        '{%r_link%}'       => radio_form($conf['links']['link'] ?? 0, 'link'),
+        'if_flag'          => ['links' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

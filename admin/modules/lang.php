@@ -200,13 +200,23 @@ function conf(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
+    $s_lang = '<select name="lang" class="sl_conf">'.language($conf['lang']['lang'], 1).'</select>';
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._LANGKEY.':</td><td><input type="text" name="key" value="'.$conf['lang']['key'].'" class="sl_conf" placeholder="'._LANGKEY.'" required></td></tr>'
-    .'<tr><td>'._LANGTR.':</td><td><select name="lang" class="sl_conf">'.language($conf['lang']['lang'], 1).'</select></td></tr>'
-    .'<tr><td>'._LANGCOUNT.':</td><td><input type="number" name="count" value="'.$conf['lang']['count'].'" class="sl_conf" placeholder="'._LANGCOUNT.'" required></td></tr>'
-    .'<tr><td>Konstanten pro Seite:<div class="sl_small">Max. Konstanten pro Seite (empfohlen: 100)</div></td><td><input type="number" name="per_page" value="'.($conf['lang']['per_page'] ?? 100).'" class="sl_conf" placeholder="100" min="10" max="500" required></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="lang"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'      => $afile,
+        '{%module%}'     => 'lang',
+        '{%op%}'         => 'confsave',
+        '{%save%}'       => _SAVECHANGES,
+        '{%fields%}'     => '',
+        '{%_langkey%}'   => _LANGKEY,
+        '{%key%}'        => $conf['lang']['key'],
+        '{%_langtr%}'    => _LANGTR,
+        '{%s_lang%}'     => $s_lang,
+        '{%_langcount%}' => _LANGCOUNT,
+        '{%count%}'      => $conf['lang']['count'],
+        '{%per_page%}'   => $conf['lang']['per_page'] ?? 100,
+        'if_flag'        => ['lang' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

@@ -26,7 +26,13 @@ function ratings(): void {
         $i++;
     }
     $cont .= setTemplateBasic('open');
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'.$content.'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="ratings"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'  => $afile,
+        '{%module%}' => 'ratings',
+        '{%op%}'     => 'save',
+        '{%save%}'   => _SAVECHANGES,
+        '{%fields%}' => $content,
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

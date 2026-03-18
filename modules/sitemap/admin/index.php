@@ -74,12 +74,9 @@ function xslsave(): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._MODULES.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.modul('mod', 'sl_conf', $conf['sitemap']['mod'] ?? '', 1).'</td></tr>';
     $frs = ['0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY, 'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER];
     $h = $m = $c = $popt = '';
     foreach ($frs as $key => $val) {
@@ -92,12 +89,10 @@ function conf(): void {
         $sp = (($conf['sitemap']['fr_p'] ?? '0') === (string)$key) ? ' selected' : '';
         $popt .= '<option value="'.$key.'"'.$sp.'>'.$val.'</option>';
     }
-    $cont .= '<tr><td>'._MAP_FR_H.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_h" class="sl_conf">'.$h.'</select></td></tr>'
-    .'<tr><td>'._MAP_FR_M.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_m" class="sl_conf">'.$m.'</select></td></tr>'
-    .'<tr><td>'._MAP_FR_C.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_c" class="sl_conf">'.$c.'</select></td></tr>'
-    .'<tr><td>'._MAP_FR_P.':<div class="sl_small">'._INFO_NO.'</div></td><td><select name="fr_p" class="sl_conf">'.$popt.'</select></td></tr>'
-    .'<tr><td>'._MAP_AUTO_T.':</td><td><input type="number" name="auto_t" value="'.intval(($conf['sitemap']['auto_t'] ?? 0) / 3600).'" class="sl_conf" placeholder="'._MAP_AUTO_T.'" required></td></tr>'
-    .'<tr><td>'._MAP_AUTO.'</td><td>'.radio_form($conf['sitemap']['auto'] ?? 0, 'auto').'</td></tr>';
+    $s_fr_h = '<select name="fr_h" class="sl_conf">'.$h.'</select>';
+    $s_fr_m = '<select name="fr_m" class="sl_conf">'.$m.'</select>';
+    $s_fr_c = '<select name="fr_c" class="sl_conf">'.$c.'</select>';
+    $s_fr_p = '<select name="fr_p" class="sl_conf">'.$popt.'</select>';
     $prs = ['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0'];
     $h = $m = $c = $popt = '';
     foreach ($prs as $val) {
@@ -110,21 +105,60 @@ function conf(): void {
         $sp = (($conf['sitemap']['pr_p'] ?? '0') === (string)$val) ? ' selected' : '';
         $popt .= '<option value="'.$val.'"'.$sp.'>'.$val.'</option>';
     }
-    $cont .= '<tr><td>'._MAP_PR_H.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_h" class="sl_conf">'.$h.'</select></td></tr>'
-    .'<tr><td>'._MAP_PR_M.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_m" class="sl_conf">'.$m.'</select></td></tr>'
-    .'<tr><td>'._MAP_PR_C.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_c" class="sl_conf">'.$c.'</select></td></tr>'
-    .'<tr><td>'._MAP_PR_P.':<div class="sl_small">'._INFO_NULL.'</div></td><td><select name="pr_p" class="sl_conf">'.$popt.'</select></td></tr>'
-    .'<tr><td>'._MAP_DAT_H.'</td><td>'.radio_form($conf['sitemap']['dat_h'] ?? 0, 'dat_h').'</td></tr>'
-    .'<tr><td>'._MAP_DAT_M.'</td><td>'.radio_form($conf['sitemap']['dat_m'] ?? 0, 'dat_m').'</td></tr>'
-    .'<tr><td>'._MAP_DAT_C.'</td><td>'.radio_form($conf['sitemap']['dat_c'] ?? 0, 'dat_c').'</td></tr>'
-    .'<tr><td>'._MAP_DAT_P.'</td><td>'.radio_form($conf['sitemap']['dat_p'] ?? 0, 'dat_p').'</td></tr>'
-    .'<tr><td>'._MAP_GEN_H.'</td><td>'.radio_form($conf['sitemap']['gen_h'] ?? 0, 'gen_h').'</td></tr>'
-    .'<tr><td>'._MAP_GEN_M.'</td><td>'.radio_form($conf['sitemap']['gen_m'] ?? 0, 'gen_m').'</td></tr>'
-    .'<tr><td>'._MAP_GEN_C.'</td><td>'.radio_form($conf['sitemap']['gen_c'] ?? 0, 'gen_c').'</td></tr>'
-    .'<tr><td>'._MAP_GEN_P.'</td><td>'.radio_form($conf['sitemap']['gen_p'] ?? 0, 'gen_p').'</td></tr>'
-    .'<tr><td>'._MAP_XSL.'</td><td>'.radio_form($conf['sitemap']['xsl'] ?? 0, 'xsl').'</td></tr>'
-    .'<tr><td>'._MAP_SITE.'</td><td>'.radio_form($conf['sitemap']['txt'] ?? 0, 'txt').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('open');
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'       => $afile,
+        '{%module%}'      => 'sitemap',
+        '{%op%}'          => 'saveconf',
+        '{%save%}'        => _SAVECHANGES,
+        '{%fields%}'      => '',
+        '{%_modules%}'    => _MODULES,
+        '{%_ctrlinfo%}'   => _CTRLINFO,
+        '{%s_mod%}'       => modul('mod', 'sl_conf', $conf['sitemap']['mod'] ?? '', 1),
+        '{%_map_fr_h%}'   => _MAP_FR_H,
+        '{%_info_no%}'    => _INFO_NO,
+        '{%s_fr_h%}'      => $s_fr_h,
+        '{%_map_fr_m%}'   => _MAP_FR_M,
+        '{%s_fr_m%}'      => $s_fr_m,
+        '{%_map_fr_c%}'   => _MAP_FR_C,
+        '{%s_fr_c%}'      => $s_fr_c,
+        '{%_map_fr_p%}'   => _MAP_FR_P,
+        '{%s_fr_p%}'      => $s_fr_p,
+        '{%_map_auto_t%}' => _MAP_AUTO_T,
+        '{%auto_t%}'      => intval(($conf['sitemap']['auto_t'] ?? 0) / 3600),
+        '{%_map_auto%}'   => _MAP_AUTO,
+        '{%r_auto%}'      => radio_form($conf['sitemap']['auto'] ?? 0, 'auto'),
+        '{%_map_pr_h%}'   => _MAP_PR_H,
+        '{%_info_null%}'  => _INFO_NULL,
+        '{%s_pr_h%}'      => '<select name="pr_h" class="sl_conf">'.$h.'</select>',
+        '{%_map_pr_m%}'   => _MAP_PR_M,
+        '{%s_pr_m%}'      => '<select name="pr_m" class="sl_conf">'.$m.'</select>',
+        '{%_map_pr_c%}'   => _MAP_PR_C,
+        '{%s_pr_c%}'      => '<select name="pr_c" class="sl_conf">'.$c.'</select>',
+        '{%_map_pr_p%}'   => _MAP_PR_P,
+        '{%s_pr_p%}'      => '<select name="pr_p" class="sl_conf">'.$popt.'</select>',
+        '{%_map_dat_h%}'  => _MAP_DAT_H,
+        '{%r_dat_h%}'     => radio_form($conf['sitemap']['dat_h'] ?? 0, 'dat_h'),
+        '{%_map_dat_m%}'  => _MAP_DAT_M,
+        '{%r_dat_m%}'     => radio_form($conf['sitemap']['dat_m'] ?? 0, 'dat_m'),
+        '{%_map_dat_c%}'  => _MAP_DAT_C,
+        '{%r_dat_c%}'     => radio_form($conf['sitemap']['dat_c'] ?? 0, 'dat_c'),
+        '{%_map_dat_p%}'  => _MAP_DAT_P,
+        '{%r_dat_p%}'     => radio_form($conf['sitemap']['dat_p'] ?? 0, 'dat_p'),
+        '{%_map_gen_h%}'  => _MAP_GEN_H,
+        '{%r_gen_h%}'     => radio_form($conf['sitemap']['gen_h'] ?? 0, 'gen_h'),
+        '{%_map_gen_m%}'  => _MAP_GEN_M,
+        '{%r_gen_m%}'     => radio_form($conf['sitemap']['gen_m'] ?? 0, 'gen_m'),
+        '{%_map_gen_c%}'  => _MAP_GEN_C,
+        '{%r_gen_c%}'     => radio_form($conf['sitemap']['gen_c'] ?? 0, 'gen_c'),
+        '{%_map_gen_p%}'  => _MAP_GEN_P,
+        '{%r_gen_p%}'     => radio_form($conf['sitemap']['gen_p'] ?? 0, 'gen_p'),
+        '{%_map_xsl%}'    => _MAP_XSL,
+        '{%r_xsl%}'       => radio_form($conf['sitemap']['xsl'] ?? 0, 'xsl'),
+        '{%_map_site%}'   => _MAP_SITE,
+        '{%r_txt%}'       => radio_form($conf['sitemap']['txt'] ?? 0, 'txt'),
+        'if_flag'         => ['sitemap' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();

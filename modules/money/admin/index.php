@@ -205,27 +205,48 @@ function active(): void {
 
 function conf(): void {
     global $afile, $conf;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=conf', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
     $cont .= setTemplateBasic('open');
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._MA_3.':</td><td><input type="text" name="proz" value="'.($conf['money']['proz'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_3.'" required></td></tr>'
-    .'<tr><td>'._MA_4.': EUR > USD</td><td><input type="text" name="kurs" value="'.($conf['money']['kurs'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_4.'" required></td></tr>'
-    .'<tr><td>'._MA_4.': EUR > RUB</td><td><input type="text" name="kurs2" value="'.($conf['money']['kurs2'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_4.'" required></td></tr>'
-    .'<tr><td>'._MA_5.':</td><td><input type="text" name="bal" value="'.($conf['money']['bal'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._MA_5.'" required></td></tr>'
-    .'<tr><td>'._MA_6.':</td><td><input type="email" name="mail" value="'.($conf['money']['mail'] ?? '').'" maxlength="255" class="sl_conf" placeholder="'._MA_6.'" required></td></tr>'
-    .'<tr><td>'._MA_7.':</td><td><textarea name="form" cols="65" rows="5" class="sl_conf" placeholder="'._MA_7.'" required>'.($conf['money']['form'] ?? '').'</textarea></td></tr>'
-    .'<tr><td>'._C_34.':</td><td><input type="number" name="anum" value="'.($conf['money']['anum'] ?? 25).'" class="sl_conf" placeholder="'._C_34.'" required></td></tr>'
-    .'<tr><td>'._C_36.':</td><td><input type="number" name="anump" value="'.($conf['money']['anump'] ?? 10).'" class="sl_conf" placeholder="'._C_36.'" required></td></tr>'
-    .'<tr><td>'._MA_8.'</td><td>'.radio_form($conf['money']['an'] ?? 0, 'an').'</td></tr>'
-    .'<tr><td>'._MA_9.'</td><td>'.radio_form($conf['money']['pr'] ?? 0, 'pr').'</td></tr>'
-    .'<tr><td>'._MA_10.'</td><td>'.radio_form($conf['money']['ad'] ?? 0, 'ad').'</td></tr>'
-    .'<tr><td>'._MA_11.':</td><td>'.textarea('1', 'text', $conf['money']['text'] ?? '', 'all', '5', _MA_11, '1').'</td></tr>'
-    .'<tr><td>'._MA_12.':</td><td>'.textarea('2', 'info', $conf['money']['info'] ?? '', 'all', '5', _MA_12, '1').'</td></tr>'
-    .'<tr><td>'._MA_13.':</td><td>'.textarea('3', 'sendinfo', $conf['money']['sendinfo'] ?? '', 'all', '5', _MA_13, '1').'</td></tr>'
-    .'<tr><td>'._MA_14.':</td><td>'.textarea('4', 'autor', $conf['money']['autor'] ?? '', 'all', '5', _MA_14, '1').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="money"><input type="hidden" name="op" value="saveconf"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('form-conf', [
+        '{%route%}'      => $afile,
+        '{%module%}'     => 'money',
+        '{%op%}'         => 'saveconf',
+        '{%save%}'       => _SAVECHANGES,
+        '{%fields%}'     => '',
+        '{%_ma3%}'       => _MA_3,
+        '{%proz%}'       => $conf['money']['proz'] ?? '',
+        '{%_ma4_usd%}'   => _MA_4.': EUR > USD',
+        '{%kurs%}'       => $conf['money']['kurs'] ?? '',
+        '{%_ma4_rub%}'   => _MA_4.': EUR > RUB',
+        '{%kurs2%}'      => $conf['money']['kurs2'] ?? '',
+        '{%_ma5%}'       => _MA_5,
+        '{%bal%}'        => $conf['money']['bal'] ?? '',
+        '{%_ma6%}'       => _MA_6,
+        '{%mail%}'       => $conf['money']['mail'] ?? '',
+        '{%_ma7%}'       => _MA_7,
+        '{%form%}'       => $conf['money']['form'] ?? '',
+        '{%_c34%}'       => _C_34,
+        '{%anum%}'       => $conf['money']['anum'] ?? 25,
+        '{%_c36%}'       => _C_36,
+        '{%anump%}'      => $conf['money']['anump'] ?? 10,
+        '{%_ma8%}'       => _MA_8,
+        '{%r_an%}'       => radio_form($conf['money']['an'] ?? 0, 'an'),
+        '{%_ma9%}'       => _MA_9,
+        '{%r_pr%}'       => radio_form($conf['money']['pr'] ?? 0, 'pr'),
+        '{%_ma10%}'      => _MA_10,
+        '{%r_ad%}'       => radio_form($conf['money']['ad'] ?? 0, 'ad'),
+        '{%_ma11%}'      => _MA_11,
+        '{%t_text%}'     => textarea('1', 'text', $conf['money']['text'] ?? '', 'all', '5', _MA_11, '1'),
+        '{%_ma12%}'      => _MA_12,
+        '{%t_info%}'     => textarea('2', 'info', $conf['money']['info'] ?? '', 'all', '5', _MA_12, '1'),
+        '{%_ma13%}'      => _MA_13,
+        '{%t_sendinfo%}' => textarea('3', 'sendinfo', $conf['money']['sendinfo'] ?? '', 'all', '5', _MA_13, '1'),
+        '{%_ma14%}'      => _MA_14,
+        '{%t_autor%}'    => textarea('4', 'autor', $conf['money']['autor'] ?? '', 'all', '5', _MA_14, '1'),
+        'if_flag'        => ['money' => true],
+    ]);
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
