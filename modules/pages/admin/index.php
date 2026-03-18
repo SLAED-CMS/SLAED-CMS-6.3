@@ -6,12 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('pages')) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=conf', 'name=pages&amp;op=info'];
-    $lang = [_HOME, _ADD, _NEW, _PREFERENCES, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
-}
-
 function pages(): void {
     global $db, $afile, $conf;
         setHead();
@@ -23,12 +17,12 @@ function pages(): void {
         $status = '0';
         $field = 'name=pages&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = navi(0, 2, 0, 0);
+        $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=conf', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
     } else {
         $status = '1';
         $field = 'name=pages&amp;';
         $refer = '';
-        $cont = navi(0, 0, 0, 0);
+        $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=conf', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -81,7 +75,7 @@ function add(): void {
         $ihome = getVar('post', 'ihome', 'num', 0);
     }
     setHead();
-    $cont = navi(0, 1, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=conf', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($hometext) $cont .= preview($subject, $hometext, $bodytext, '', 'pages');
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PAGENOTE]);
@@ -149,7 +143,7 @@ function del(int $did = 0): void {
 function conf(): void {
     global $afile, $conf;
         setHead();
-    $cont = navi(0, 3, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=conf', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/pages.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -209,7 +203,8 @@ function saveconf(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 4, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=conf', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

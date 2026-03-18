@@ -6,41 +6,15 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('auto_links')) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $afile, $conf;
-    $id = getVar('req', 'id', 'num');
-    $ops = ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'];
-    $lang = [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO];
-    $box = '';
-    if ($id) {
-        $box = '<form method="post" action="'.$afile.'.php?name=auto_links">'._SORTE.': <select name="sort">';
-        $list = [_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF];
-        foreach ($list as $key => $value) {
-            $sort = $key + 1;
-            $sel = (getVar('post', 'sort', 'num') == $sort) ? ' selected' : '';
-            $box .= '<option value="'.$sort.'"'.$sel.'>'.$value.'</option>';
-        }
-        $box .= '</select><select name="order">';
-        $list = [_ASC, _DESC];
-        foreach ($list as $key => $value) {
-            $sort = $key + 1;
-            $sel = (getVar('post', 'order', 'num') == $sort) ? ' selected' : '';
-            $box .= '<option value="'.$sort.'"'.$sel.'>'.$value.'</option>';
-        }
-        $box .= '</select> <input type="hidden" name="op" value="stats">'
-           .'<input type="hidden" name="id" value="'.$id.'">'
-           .'<input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-        $box = setTemplateBasic('searchbox', ['{%searchbox%}' => $box]);
-    }
-    $cont = getAdminTabs($box, $ops, $lang, [], [], $tab, (bool)$subtab);
-    $cont .= (!$conf['referers']['refer']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]) : '';
-    return $cont;
-}
 
 function auto_links(): void {
     global $db, $afile, $conf;
     setHead();
-    $cont = navi(0, 0, 0, 0);
+    $cont = setAdminNavi([
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+    ]);
+    if (!$conf['referers']['refer']) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]);
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['auto_links']['anum'];
     $result = $db->getSqlQuery('SELECT id, title, url, hits, outs, added FROM '.PREFIX_DB.'_auto_links ORDER BY hits ASC LIMIT '.$offset.', '.$conf['auto_links']['anum']);
@@ -76,7 +50,7 @@ function auto_links(): void {
 }
 
 function stats(): void {
-    global $db, $conf;
+    global $db, $afile, $conf;
     $id = getVar('req', 'id', 'num');
     $sort = getVar('req', 'sort', 'num');
     $order = getVar('req', 'order', 'num');
@@ -96,7 +70,28 @@ function stats(): void {
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
     $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer WHERE lid = :lid GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc, ['lid' => $id]);
     setHead();
-    $cont = navi(0, 0, 0, 0);
+    $_id = getVar('req', 'id', 'num');
+    $_box = '';
+    if ($_id) {
+        $_box = '<form method="post" action="'.$afile.'.php?name=auto_links">'._SORTE.': <select name="sort">';
+        foreach ([_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF] as $_k => $_v) {
+            $_sort = $_k + 1;
+            $_box .= '<option value="'.$_sort.'"'.(getVar('post', 'sort', 'num') == $_sort ? ' selected' : '').'>'.$_v.'</option>';
+        }
+        $_box .= '</select><select name="order">';
+        foreach ([_ASC, _DESC] as $_k => $_v) {
+            $_sort = $_k + 1;
+            $_box .= '<option value="'.$_sort.'"'.(getVar('post', 'order', 'num') == $_sort ? ' selected' : '').'>'.$_v.'</option>';
+        }
+        $_box .= '</select> <input type="hidden" name="op" value="stats"><input type="hidden" name="id" value="'.$_id.'"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+        $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    }
+    $cont = setAdminNavi([
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'sub'  => $_box,
+    ]);
+    if (!$conf['referers']['refer']) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]);
     $list = [];
     $a = 0;
     while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
@@ -148,7 +143,11 @@ function add(): void {
         $outs = getVar('post', 'outs', 'num', 0);
     }
     setHead();
-    $cont = navi(0, 1, 0, 0);
+    $cont = setAdminNavi([
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'tab'  => 1,
+    ]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
     if ($desc) $cont .= preview($name, $desc, '', '', 'auto_links');
     $cont .= setTemplateBasic('open');
@@ -219,7 +218,12 @@ function noindel(): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 4, 0, 0);
+    $cont = setAdminNavi([
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'tab'  => 4,
+    ]);
+    if (!$conf['referers']['refer']) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]);
     $cont .= checkPerms(CONFIG_DIR.'/auto_links.php');
     $cont .= setTemplateBasic('open');
     $path = 'templates/'.$conf['theme'].'/images/banners/';
@@ -267,7 +271,12 @@ function saveconf(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi([
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
+        'tab'  => 5,
+    ]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

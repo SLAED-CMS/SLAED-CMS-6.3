@@ -20,18 +20,10 @@ $labels = [
     'warn' => _SEC_STAT_WARN
 ];
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    $ops = ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'];
-    $lang = [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO];
-    $sops = ['', ''];
-    $slang = [_BANNED_IP, _BANNED_USERS];
-    return getAdminTabs('', $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
-}
-
 function security(): void {
     global $afile, $labels;
     setHead();
-    $cont = navi(0, 0, 0, 0, 'security');
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SIZE.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -57,7 +49,7 @@ function security(): void {
 function fileview(): void {
     global $labels;
     setHead();
-    $cont = navi(0, 0, 0, 0, 'security');
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $file = getVar('get', 'file', 'var');
     if ($file) {
         $title = $labels[$file];
@@ -85,7 +77,7 @@ function block(): void {
     $hash = getVar('req', 'hash', 'text');
     $cidr = getVar('req', 'cidr', 'text');
     setHead();
-    $cont = navi(0, 1, 1, 0, 'security');
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 1, 'subtab' => 1, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
@@ -205,7 +197,7 @@ function blocksave(): void {
 function pass(): void {
     global $conf, $afile;
     setHead();
-    $cont = navi(0, 2, 0, 0, 'security');
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 2, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$conf['security']['login'] || !$conf['security']['password']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEC_AUTH_INFO]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEC_AUTH_OK]);
     $cont .= setTemplateBasic('open');
@@ -250,7 +242,7 @@ function passsave(): void {
 function conf(): void {
     global $conf, $afile;
     setHead();
-    $cont = navi(0, 3, 0, 0, 'security');
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 3, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
     $cont .= setTemplateBasic('open');
@@ -357,7 +349,8 @@ function confsave(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 4, 0, 0, 'security').'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 4, 'id' => 'security']);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

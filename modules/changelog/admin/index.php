@@ -17,7 +17,14 @@ function changelog(): void {
 
     setHead();
 
-    $cont = navi(0, 0);
+    $_exporten = $conf['changelog']['exporten'] ?? true;
+    $cont = setAdminNavi($_exporten ? [
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
+    ] : [
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+    ]);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
 
     $page = max(1, getVar('get', 'page', 'num', 1));
@@ -88,7 +95,16 @@ function changelog(): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 1);
+    $_exporten = $conf['changelog']['exporten'] ?? true;
+    $cont = setAdminNavi($_exporten ? [
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
+        'tab'  => 1,
+    ] : [
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+        'tab'  => 1,
+    ]);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">';
@@ -143,11 +159,21 @@ function conf(): void {
 }
 
 function saveconf(): void {
-    global $afile;
+    global $afile, $conf;
 
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'changelog')) {
         setHead();
-        echo navi(0, 1).setTemplateWarning('warn', [
+        $_exporten = $conf['changelog']['exporten'] ?? true;
+        $cont = setAdminNavi($_exporten ? [
+            'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+            'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
+            'tab'  => 1,
+        ] : [
+            'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'],
+            'tabs' => [_HOME, _PREFERENCES, _INFO],
+            'tab'  => 1,
+        ]);
+        echo $cont.setTemplateWarning('warn', [
             'time' => '',
             'url' => '',
             'id' => 'warn',
@@ -192,32 +218,22 @@ function export(): void {
 }
 
 function info(): void {
+    global $conf;
     setHead();
-    echo navi(0, 4).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $_exporten = $conf['changelog']['exporten'] ?? true;
+    $cont = setAdminNavi($_exporten ? [
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
+        'tab'  => 4,
+    ] : [
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'],
+        'tabs' => [_HOME, _PREFERENCES, _INFO],
+        'tab'  => 4,
+    ]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    global $conf;
-
-    $exporten = $conf['changelog']['exporten'] ?? true;
-
-    if ($exporten) {
-        $ops = [
-            'name=changelog',
-            'name=changelog&amp;op=conf',
-            'name=changelog&amp;op=export&amp;id=txt',
-            'name=changelog&amp;op=export&amp;id=md',
-            'name=changelog&amp;op=info'
-        ];
-        $lang = [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO];
-    } else {
-        $ops = ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'];
-        $lang = [_HOME, _PREFERENCES, _INFO];
-    }
-
-    return getAdminTabs('', $ops, $lang, [], [], $tab, (bool)$subtab);
-}
 
 function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $filters): string {
     $query = http_build_query(array_filter([

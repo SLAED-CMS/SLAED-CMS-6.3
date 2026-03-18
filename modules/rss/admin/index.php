@@ -6,16 +6,10 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('rss')) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    $ops = ($opt == 1) ? ['name=rss', 'name=rss', 'name=rss&amp;op=info'] : ['', '', 'name=rss&amp;op=info'];
-    $lang = [_RSS, _PREFERENCES, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
-}
-
 function rss(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 0, 0, 0, 'rss');
+    $cont = setAdminNavi(['ops' => ['', '', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'id' => 'rss']);
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
     $content = '';
     $fieldc = explode('||', $conf['rss']['rss']);
@@ -89,7 +83,8 @@ function save(): void {
 }
 function info(): void {
     setHead();
-    echo navi(1, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=rss', 'name=rss', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'tab' => 2]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

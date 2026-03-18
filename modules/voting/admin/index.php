@@ -6,16 +6,10 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('voting')) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'];
-    $lang = [_HOME, _ADD, _PREFERENCES, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, (bool)$subtab);
-}
-
 function voting(): void {
     global $db, $afile, $conf;
     setHead();
-    $cont = navi(0, 0, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['voting']['anum'];
     $offset = intval($offset);
@@ -78,7 +72,7 @@ function add(): void {
         $status = getVar('post', 'status', 'num', 0);
     }
     setHead();
-    $cont = navi(0, 1, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($id) $cont .= setTemplateBasic('open').'<div id="repvoting">'.getVoting($id, 'voting').'</div>'.setTemplateBasic('close');
     $cont .= setTemplateBasic('open');
@@ -186,7 +180,7 @@ function delete(int $id = 0): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 2, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -233,7 +227,8 @@ function saveconf(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

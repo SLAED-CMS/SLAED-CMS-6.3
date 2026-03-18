@@ -6,16 +6,12 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'];
-    $lang = [_HOME, _WAITINGCONT, _PREFERENCES, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
-}
 
 function comments(): void {
     setHead();
     $status = getVar('get', 'status', 'num') ? 1 : 0;
-    echo navi(0, $status, 0, 0).ashowcom();
+    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => $status]);
+    echo $cont.ashowcom();
     setFoot();
 }
 
@@ -23,7 +19,7 @@ function edit(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     setHead();
-    $cont = navi(0, 0, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, modul, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
     $cont .= setTemplateBasic('open');
@@ -46,7 +42,7 @@ function editsave(): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 2, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -161,7 +157,8 @@ function del(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 3]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

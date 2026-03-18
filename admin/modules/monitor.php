@@ -6,12 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-# Builds admin navigation tabs for monitor module screens and returns rendered tab header HTML
-function navi(int $tab = 0): string {
-    $ops = ['name=monitor', 'name=monitor&op=info'];
-    $lang = [_HOME, _INFO];
-    return getAdminTabs('', $ops, $lang, act: $tab);
-}
 
 # Checks whether a filesystem path is permitted by open_basedir restrictions before any file operations
 function isPathAllowed(string $path): bool {
@@ -1384,7 +1378,8 @@ function getMonitorDashboardContext(object $db, array $conf, ?array $snapshot = 
 function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot = null): void {
     $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
     $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
-    echo navi().setTemplateBasic('open').setTemplateBasic('basic-monitor', $vars).setTemplateBasic('close');
+    $navi = setAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO]]);
+    echo $navi.setTemplateBasic('open').setTemplateBasic('basic-monitor', $vars).setTemplateBasic('close');
 }
 
 # Renders the main monitor page including navigation, panels, and full dashboard layout
@@ -1398,7 +1393,8 @@ function monitor(): void {
 # Renders monitor information page with standard admin info block and navigation tabs
 function info(): void {
     setHead();
-    echo navi(1).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

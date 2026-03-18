@@ -190,8 +190,8 @@ function setUnauthorized() {
     setExit(_LOGININCOR);
 }
 
-# Build admin tabs navigation with automatic module title and icon fallback
-function getAdminTabs(string $sub, array $ops, array $tabs, array $sops = [], array $stabs = [], int $act = 0, bool $hassub = false, int $actsub = 0, string $mtab = 'menutab'): string {
+# Build admin tabs navigation — accepts named array, reads module title/icon from config automatically
+function setAdminNavi(array $p): string {
     global $afile, $conf;
     $ttl = _ADMINMENU;
     $ico = 'components.png';
@@ -202,6 +202,15 @@ function getAdminTabs(string $sub, array $ops, array $tabs, array $sops = [], ar
         $img = basename(trim($conf['modules'][$name]['img'] ?? ''));
         if ($img !== '' && file_exists(BASE_DIR.'/templates/admin/images/admin/'.$img)) $ico = $img;
     }
+    $ops    = $p['ops']    ?? [];
+    $tabs   = $p['tabs']   ?? [];
+    $sops   = $p['sops']   ?? [];
+    $stabs  = $p['stabs']  ?? [];
+    $sub    = $p['sub']    ?? '';
+    $act    = $p['tab']    ?? 0;
+    $hassub = (bool)($p['subtab'] ?? false);
+    $actsub = $p['legacy'] ?? 0;
+    $mtab   = $p['id']     ?? 'menutab';
     $cnt = '<ul id="'.$mtab.'" class="reset tabmenu">';
     $scnt = '';
     $k = 0;

@@ -6,16 +6,10 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    $ops = ($opt == 1) ? ['name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields&amp;op=info'] : ['', '', '', '', '', '', 'name=fields&amp;op=info'];
-    $lang = [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
-}
-
 function fields(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 0, 0, 0, 'fields');
+    $cont = setAdminNavi(['ops' => ['', '', '', '', '', '', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'id' => 'fields']);
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
     $content = '';
@@ -94,7 +88,8 @@ function save(): void {
 
 function info(): void {
     setHead();
-    echo navi(1, 6, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'tab' => 6]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

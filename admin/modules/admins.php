@@ -60,16 +60,11 @@ function getAdmintext(array $stop): string {
     return implode('<br>', array_filter($stop, 'strlen'));
 }
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'];
-    $lang = [_HOME, _ADD, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
-}
 
 function adlist(): void {
     global $db, $afile;
     setHead();
-    $cont = navi(0, 0, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     if ($msg = trim(getVar('get', 'msg', 'text', ''))) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $msg]);
     $cont .= setTemplateBasic('open');
@@ -125,7 +120,7 @@ function adform(): void {
     $hint = $aid ? '<div class="sl_small">'._ADMINPASSKEEP.'</div>' : '';
     $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
     setHead();
-    $cont = navi(0, 1, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => getAdmintext($stop)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php?name=admins&amp;op=save" method="post"><input type="hidden" name="op" value="save">'
@@ -182,7 +177,8 @@ function adsave(): void {
     global $db, $afile, $conf, $stop;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
-        echo navi(0, 1, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _TOKENMISS]);
+        $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _TOKENMISS]);
         setFoot();
         return;
     }
@@ -254,7 +250,8 @@ function addrop(): void {
     global $db, $afile;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
-        echo navi(0, 0, 0, 0).setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _TOKENMISS]);
+        $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _TOKENMISS]);
         setFoot();
         return;
     }
@@ -277,7 +274,8 @@ function addrop(): void {
 
 function adinfo(): void {
     setHead();
-    echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

@@ -6,16 +6,10 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    $ops = ($opt == 1) ? ['name=replace', 'name=replace', 'name=replace&amp;op=info'] : ['', '', 'name=replace&amp;op=info'];
-    $lang = [_CONTENT, _NEWS, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
-}
-
 function replace(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 0, 0, 0, 'replace');
+    $cont = setAdminNavi(['ops' => ['', '', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'id' => 'replace']);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _REPLACEINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/replace.php');
     $mods = ['content', 'news'];
@@ -76,7 +70,8 @@ function save(): void {
 
 function info(): void {
     setHead();
-    echo navi(1, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=replace', 'name=replace', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'tab' => 2]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

@@ -6,10 +6,8 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function getRefererSearch(): string {
     global $afile;
-    $ops = ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'];
-    $lang = [_HOME, _PREFERENCES, _DELETE, _INFO];
     $search = '<form method="post" action="'.$afile.'.php">'._SORTE.': <select name="sort">';
     $priv = [_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF];
     $sort = getVar('post', 'sort', 'num', 0);
@@ -27,8 +25,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
         $search .= '<option value="'.$idx.'"'.$sel.'>'.$value.'</option>';
     }
     $search .= '</select> <input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="referers"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs($search, $ops, $lang, [], [], $tab, $subtab);
+    return setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
 }
 
 function referers(): void {
@@ -50,7 +47,7 @@ function referers(): void {
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
     $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     setHead();
-    $cont = navi(0, 0, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'sub' => getRefererSearch()]);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $a = 0;
@@ -86,7 +83,7 @@ function referers(): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 1, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -122,7 +119,8 @@ function del(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 3, 'sub' => getRefererSearch()]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

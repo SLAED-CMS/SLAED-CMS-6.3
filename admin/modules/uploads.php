@@ -6,13 +6,9 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
+function getUploadsSearch(): string {
     global $afile, $conf;
     $dir = getVar('post', 'dir', 'var', $conf['uploads']['dir']);
-    $ops = ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'];
-    $lang = [_FILES, _TEMPLATES, _PREFERENCES, _INFO];
-    $sops = ($opt == 1) ? ['', ''] : ['', '', ''];
-    $slang = ($opt == 1) ? [_GENPREF, _MODULES] : [_EUPLOAD, '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f1\', \'go=5&amp;op=ashow_files&amp;id=1&amp;dir='.$dir.'\', \'\'); return false;">'._DGEN.'</span>', '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f2\', \'go=5&amp;op=ashow_files&amp;id=2&amp;dir='.$dir.'\', \'\'); return false;">'._DTHUMB.'</span>'];
     $search = '<form method="post" action="'.$afile.'.php">'._DIR.': <select name="dir" OnChange="submit()">';
     $handle = opendir('uploads');
     if ($handle !== false) {
@@ -25,8 +21,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, stri
         closedir($handle);
     }
     $search .= '</select><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploads"></form>';
-    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs($search, $ops, $lang, $sops, $slang, $tab, $subtab, $legacy, $id);
+    return setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
 }
 
 function uploads(): void {
@@ -34,7 +29,7 @@ function uploads(): void {
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
     setHead();
-    $cont = navi(0, 0, 1, 0, 'uploads');
+    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f1\', \'go=5&amp;op=ashow_files&amp;id=1&amp;dir='.$dir.'\', \'\'); return false;">'._DGEN.'</span>', '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f2\', \'go=5&amp;op=ashow_files&amp;id=2&amp;dir='.$dir.'\', \'\'); return false;">'._DTHUMB.'</span>'], 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $cont .= '<div id="tabcs0" class="tabcont">';
@@ -116,7 +111,7 @@ function uploadsave(): void {
 function templconf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 1, 0, 0, 'templconf');
+    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 1, 'sub' => getUploadsSearch(), 'id' => 'templconf']);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
     $typm = explode(',', $conf['uploads']['typ']);
@@ -143,7 +138,7 @@ function templsave(): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(1, 2, 1, 0, 'conf');
+    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_GENPREF, _MODULES], 'tab' => 2, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'conf']);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $handle = opendir('uploads');
     $directory = '';
@@ -254,7 +249,8 @@ function confsave(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 3, 0, 0, '').'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 3, 'sub' => getUploadsSearch()]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

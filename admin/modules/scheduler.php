@@ -6,16 +6,12 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'];
-    $lang = [_HOME, _ADD, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
-}
 
 function scheduler(): void {
     global $afile, $conf;
     $jobs = getSchedulerJobs();
-    $cont = navi(0, 0, 0);
+    $navi = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+    $cont = '';
     $seclink = ' <a href="'.$afile.'.php?name=security&amp;op=conf">'.htmlspecialchars(_SCHEDULER_WARN_GO, ENT_QUOTES, 'UTF-8').'</a>.';
     $cont .= (!$conf['security']['log_b']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SCHEDULER_WARN_DB.$seclink]) : '';
     $cont .= (!$conf['security']['log_d']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SCHEDULER_WARNLOG.$seclink]) : '';
@@ -76,7 +72,7 @@ function scheduler(): void {
     }
     $cont .= '</tbody></table>';
     setHead();
-    echo setTemplateBasic('open').$cont.setTemplateBasic('close');
+    echo $navi.setTemplateBasic('open').$cont.setTemplateBasic('close');
     setFoot();
 }
 
@@ -116,7 +112,8 @@ function add(string $name = ''): void {
     .'<tr><td>'._SCHEDULER_MANUAL.':</td><td>'.radio_form((int)$job['manual'], 'manual').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="scheduler"><input type="hidden" name="op" value="save"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('scheduler'), ENT_QUOTES, 'UTF-8').'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     setHead();
-    echo navi(1, 0, 0).setTemplateBasic('open').$cont.setTemplateBasic('close');
+    $navi = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+    echo $navi.setTemplateBasic('open').$cont.setTemplateBasic('close');
     setFoot();
 }
 
@@ -196,7 +193,8 @@ function del(): void {
 
 function info(): void {
     setHead();
-    echo navi(2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

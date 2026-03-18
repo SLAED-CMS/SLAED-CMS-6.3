@@ -6,17 +6,11 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('sitemap')) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
-    $ops = ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'];
-    $lang = [_HOME, _TEMPLATE, _PREFERENCES, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab, $legacy);
-}
-
 function sitemap(): void {
     global $afile, $conf;
     setHead();
     $file = 'sitemap.xml';
-    $cont = navi(0, 0, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO]]);
     $cont .= checkPerms(BASE_DIR.'/'.$file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $f = $asize = 0;
@@ -56,7 +50,7 @@ function xsl(): void {
     global $afile;
     setHead();
     $file = SITEMAP_DIR.'/sitemap.xsl';
-    $cont = navi(0, 1, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_XSL_INFO, $file)]);
@@ -81,7 +75,7 @@ function xslsave(): void {
 function conf(): void {
     global $afile, $conf;
         setHead();
-    $cont = navi(0, 2, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -168,7 +162,8 @@ function saveconf(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 3, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 3]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

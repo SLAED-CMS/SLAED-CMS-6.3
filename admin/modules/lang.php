@@ -6,11 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $tab = 0, int $subtab = 0): string {
-    $ops = ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'];
-    $lang = [_HOME, _PREFERENCES, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
-}
 
 function getLangPath(string $mod = '', string $typ = ''): string {
     $base = BASE_DIR;
@@ -36,7 +31,7 @@ function lang(): void {
     }
 
     setHead();
-    $cont = navi(0, 0);
+    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     $sys_admin = '<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
@@ -73,7 +68,7 @@ function lang(): void {
 function editfile(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 0);
+    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
@@ -203,8 +198,8 @@ function save(): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    checkPerms(CONFIG_DIR.'/lang.php');
-    $cont = navi(1, 0);
+    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._LANGKEY.':</td><td><input type="text" name="key" value="'.$conf['lang']['key'].'" class="sl_conf" placeholder="'._LANGKEY.'" required></td></tr>'
@@ -231,7 +226,8 @@ function confsave(): void {
 
 function info(): void {
     setHead();
-    echo navi(2, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

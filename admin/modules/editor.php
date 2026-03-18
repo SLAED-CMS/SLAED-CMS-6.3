@@ -6,11 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0): string {
-    $ops = ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'];
-    $lang = [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
-}
 
 function getEdittxt(string $file, bool $trim = false): string {
     $text = is_readable($file) ? file_get_contents($file) : '';
@@ -21,7 +16,7 @@ function getEdittxt(string $file, bool $trim = false): string {
 
 function getEditbox(string $file, string $info, string $warn, string $mtype, string $edit, int $tab, bool $trim = false): string {
     global $afile;
-    $cont = navi(0, $tab, 0);
+    $cont = setAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => $tab]);
     $text = getEdittxt($file, $trim);
     $cont .= checkPerms($file);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
@@ -67,7 +62,8 @@ function robots(): void {
 
 function info(): void {
     setHead();
-    echo navi(1, 4, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => 4]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

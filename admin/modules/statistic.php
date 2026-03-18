@@ -6,15 +6,13 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): string {
+function getStatisticSearch(): string {
     global $afile;
     $file = getVar('post', 'file', 'text');
-    $ops = ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'];
-    $lang = [_HOME, _PREFERENCES, _INFO];
     $files = [];
     $handle = opendir(COUNTER_DIR.'/statistic/');
     if ($handle !== false) {
-        while (false !== ($file = readdir($handle))) $files[] = $file;
+        while (false !== ($f = readdir($handle))) $files[] = $f;
         closedir($handle);
     }
     rsort($files);
@@ -26,8 +24,7 @@ function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0): str
         }
     }
     $search .= '</select> <input type="hidden" name="name" value="statistic"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
-    return getAdminTabs($search, $ops, $lang, [], [], $tab, $subtab, $legacy);
+    return setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
 }
 
 function statistic(): void {
@@ -35,7 +32,7 @@ function statistic(): void {
     $file = getVar('post', 'file', 'text');
     $pfile = $file ? '&amp;file='.$file : '';
     setHead();
-    $cont = navi(0, 0, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
     $cont .= setTemplateBasic('open');
@@ -94,7 +91,7 @@ function add(): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 1, 0, 0);
+    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -120,7 +117,8 @@ function save(): void {
 
 function info(): void {
     setHead();
-    echo navi(0, 2, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2, 'sub' => getStatisticSearch()]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

@@ -187,11 +187,6 @@ function getSqlsum(array $items, string $mode, string $name): string {
     return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $text]);
 }
 
-function navi(int $tab = 0, int $subtab = 0): string {
-    $ops = ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
-    $lang = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
-    return getAdminTabs('', $ops, $lang, [], [], $tab, $subtab);
-}
 
 function database(): void {
     global $db, $conf, $afile;
@@ -200,7 +195,8 @@ function database(): void {
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
         setHead();
-        echo navi().setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _ERROR]);
+        $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _ERROR]);
         setFoot();
         return;
     }
@@ -344,7 +340,7 @@ function database(): void {
 
     // Navigation + Info-Boxen
     if (empty($type)) {
-        $cont  = navi();
+        $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
         $cont .= setTemplateWarning('warn', [
             'time' => '',
             'url'  => '',
@@ -360,7 +356,7 @@ function database(): void {
 
     } elseif ($type === 'optimize') {
         $db->getSqlQuery('FLUSH TABLES');
-        $cont = navi(1);
+        $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 1]);
 
         $info = _OPTIMIZE.': '.$conf['db']['name']
                   .'<br>'._TOTALSPACE.': '.filterSize($total)
@@ -374,7 +370,7 @@ function database(): void {
         ]);
 
     } elseif ($type === 'repair') {
-        $cont = navi(2);
+        $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 2]);
 
         $info = _REPAIR.': '.$conf['db']['name']
                   .'<br>'._TOTALSPACE.': '.filterSize($total)
@@ -402,7 +398,7 @@ function dump(): void {
     $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
     setHead();
-    $cont = navi(3);
+    $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 3]);
     if (($action === 'parse' || $action === 'dump') && !checkSiteToken(getVar('post', 'token', 'raw', ''), 'db')) {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
     } elseif ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
@@ -479,7 +475,8 @@ function dump(): void {
 
 function info(): void {
     setHead();
-    echo navi(4).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 4]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

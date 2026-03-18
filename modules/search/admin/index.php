@@ -230,12 +230,6 @@ function getSearchsum(string $where, array $pars): string {
     return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $text]);
 }
 
-function navi(int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = '', string $view = 'search'): string {
-    $ops = ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'];
-    $lang = [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO];
-    return getAdminTabs(getSearchbox($view), $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
-}
-
 function search(): void {
     global $db, $afile, $conf;
     $sort = getVar('req', 'sort', 'num', 3);
@@ -255,7 +249,7 @@ function search(): void {
     $result = $db->getSqlQuery($query, $pars);
     [$all] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_search'.$where, $pars));
     setHead();
-    $cont = navi(0, 0, 0, 'search', 'search');
+    $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('search'), 'id' => 'search']);
     $cont .= getSearchsum($where, $pars);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
@@ -320,7 +314,7 @@ function top(): void {
     $result = $db->getSqlQuery($query, $pars);
     [$all] = $db->getSqlRow($db->getSqlQuery('SELECT Count(DISTINCT word) FROM '.PREFIX_DB.'_search'.$where, $pars));
     setHead();
-    $cont = navi(1, 0, 0, 'search', 'top');
+    $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('top'), 'tab' => 1, 'id' => 'search']);
     $cont .= getSearchsum($where, $pars);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
@@ -370,7 +364,7 @@ function conf(): void {
     $rlist = getSearchready($audit);
     $ilist = getSearchinvalid($audit);
     setHead();
-    $cont = navi(2, 0, 0, 'search', 'conf');
+    $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('conf'), 'tab' => 2, 'id' => 'search']);
     if (getVar('get', 'auto', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'auto', 'num', 0))]);
     if (getVar('get', 'pick', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))]);
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
@@ -410,7 +404,8 @@ function save(): void {
     global $afile;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
-        echo navi(2, 0, 0, 'search', 'conf').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('conf'), 'tab' => 2, 'id' => 'search']);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -432,7 +427,8 @@ function auto(): void {
     global $afile, $conf;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
-        echo navi(2, 0, 0, 'search', 'conf').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('conf'), 'tab' => 2, 'id' => 'search']);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -457,7 +453,8 @@ function addmods(): void {
     global $afile, $conf;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
-        echo navi(2, 0, 0, 'search', 'conf').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('conf'), 'tab' => 2, 'id' => 'search']);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -497,7 +494,7 @@ function edit(): void {
     $fmod = getVar('req', 'fmod', 'var', '');
     $result = $db->getSqlQuery('SELECT word, modul, time, score FROM '.PREFIX_DB.'_search WHERE id = :id', ['id' => $id]);
     setHead();
-    $cont = navi(0, 0, 0, 'search', 'search');
+    $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('search'), 'id' => 'search']);
     if ($db->getSqlRowCount($result) > 0) {
         [$word, $mod, $time, $score] = $db->getSqlRow($result);
         $hits = max(intval($score), 1);
@@ -535,7 +532,8 @@ function editsave(): void {
     $fmod = getVar('post', 'fmod', 'var', '');
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
-        echo navi(0, 0, 0, 'search', 'search').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('search'), 'id' => 'search']);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -546,7 +544,8 @@ function editsave(): void {
     $hits = ($hits > 0) ? $hits : 1;
     if ($word === '') {
         setHead();
-        echo navi(0, 0, 0, 'search', 'search').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SWORD]);
+        $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('search'), 'id' => 'search']);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SWORD]);
         setFoot();
         return;
     }
@@ -560,7 +559,7 @@ function editsave(): void {
 function del(): void {
     global $afile;
     setHead();
-    $cont = navi(3, 0, 0, 'search', 'del');
+    $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('del'), 'tab' => 3, 'id' => 'search']);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEARCHCLEARINFO]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=search" method="post"><table class="sl_table_conf">'
@@ -580,7 +579,8 @@ function clear(): void {
     global $db, $afile;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
-        echo navi(3, 0, 0, 'search', 'del').setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('del'), 'tab' => 3, 'id' => 'search']);
+        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -613,7 +613,8 @@ function drop(): void {
 
 function info(): void {
     setHead();
-    echo navi(4, 0, 0, 'search', 'info').'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=top', 'name=search&amp;op=conf', 'name=search&amp;op=del', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'tab' => 4, 'id' => 'search']);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 

@@ -6,30 +6,25 @@
 
 if (!defined('ADMIN_FILE') || !is_admin_modul('account')) die('Illegal file access');
 
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    global $afile;
-    $search = getVar('post', 'search');
-    $chng = getVar('post', 'chng');
-    $ops = ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'];
-    $lang = [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO];
-    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
-    $priv = [_ID, _NICKNAME, _EMAIL, _IP, _URL];
-    foreach ($priv as $key => $value) {
-        $sort = $key + 1;
-        $sel = ($search == $sort || (!$search && $sort == 2)) ? ' selected' : '';
-        $box .= '<option value="'.$sort.'"'.$sel.'>'.$value.'</option>';
-    }
-    $box .= '</select> '.get_user_search('chng', $chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $box = setTemplateBasic('searchbox', ['{%searchbox%}' => $box]);
-    return getAdminTabs($box, $ops, $lang, [], [], $tab, $subtab, $legacy, $id);
-}
 
 function account(): void {
     global $db, $afile, $conf;
     $search = getVar('req', 'search', 'num');
     $chng = getVar('req', 'chng');
     setHead();
-    $cont = navi(0, 0, 0, 0);
+    $_search = getVar('post', 'search');
+    $_chng = getVar('post', 'chng');
+    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
+        $_sort = $_k + 1;
+        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+    }
+    $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $cont = setAdminNavi([
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
+    ]);
     if (getVar('get','send','num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $where = '1 = 1';
     $wcnt = '1 = 1';
@@ -154,7 +149,20 @@ function add(): void {
     $field = (string)$field;
     $warn = is_array($warn) ? $warn : [];
     setHead();
-    $cont = navi(0, 1, 0, 0);
+    $_search = getVar('post', 'search');
+    $_chng = getVar('post', 'chng');
+    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
+        $_sort = $_k + 1;
+        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+    }
+    $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $cont = setAdminNavi([
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
+        'tab'  => 1,
+    ]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
@@ -312,7 +320,20 @@ function addsave(): void {
 function newuser(): void {
     global $db, $afile, $conf;
     setHead();
-    $cont = navi(0, 2, 0, 0);
+    $_search = getVar('post', 'search');
+    $_chng = getVar('post', 'chng');
+    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
+        $_sort = $_k + 1;
+        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+    }
+    $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $cont = setAdminNavi([
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
+        'tab'  => 2,
+    ]);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $conf['users']['anum'];
     $result = $db->getSqlQuery('SELECT id, name, email, password, regdate, code FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $conf['users']['anum']]);
@@ -340,7 +361,20 @@ function newuser(): void {
 function nullpoints(): void {
     global $afile;
     setHead();
-    $cont = navi(0, 3, 0, 0);
+    $_search = getVar('post', 'search');
+    $_chng = getVar('post', 'chng');
+    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
+        $_sort = $_k + 1;
+        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+    }
+    $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $cont = setAdminNavi([
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
+        'tab'  => 3,
+    ]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._POINTS.':</td><td>'.radio_form(0, 'points').'</td></tr>'
@@ -369,7 +403,20 @@ function nullsave(): void {
 function conf(): void {
     global $afile, $conf;
     setHead();
-    $cont = navi(0, 4, 0, 0);
+    $_search = getVar('post', 'search');
+    $_chng = getVar('post', 'chng');
+    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
+        $_sort = $_k + 1;
+        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+    }
+    $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $cont = setAdminNavi([
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
+        'tab'  => 4,
+    ]);
     $cont .= checkPerms(CONFIG_DIR.'/users.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
@@ -471,8 +518,23 @@ function del(): void {
 }
 
 function info(): void {
+    global $afile;
     setHead();
-    echo navi(0, 5, 0, 0).'<div id="repadm_info">'.getAdminInfo().'</div>';
+    $_search = getVar('post', 'search');
+    $_chng = getVar('post', 'chng');
+    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
+        $_sort = $_k + 1;
+        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+    }
+    $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $cont = setAdminNavi([
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
+        'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
+        'tab'  => 5,
+    ]);
+    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
