@@ -204,6 +204,7 @@ location /storage {
 - [x] `adm_info()` replaced by `getAdminInfo()` — no params, auto-detects info file from `$_GET['name']`
 - [x] Admin info file structure: flat `admin/info/{module}-{locale}.html` → subdirectory `admin/info/{module}/{locale}.html`
 - [x] Database class `sql_db` renamed to `Database`; all 15 methods renamed to `getSql*` prefix (`getSqlQuery()`, `getSqlRow()`, `getSqlRowCount()`, …)
+- [x] `getAdminInfo()` auto-detects info file from `$_GET['name']`; checks both `.html` and `.md` extensions in `admin/info/{name}/` and `modules/{name}/admin/info/`
 
 **Renamed Functions (`core/security.php`):**
 
@@ -254,7 +255,7 @@ All legacy snake_case function names have been replaced with camelCase `VerbNoun
 
 | Module | Status | Notes |
 |--------|--------|-------|
-| Admin Panel | ✅ Secured | All 23 admin modules protected |
+| Admin Panel | ✅ Secured | All 24 admin modules protected (incl. scheduler) |
 | User Authentication | ✅ Secured | Session management improved |
 | Forum | ✅ Secured | High-priority public module |
 | Search | ✅ Secured | Previously main attack target |

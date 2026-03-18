@@ -213,11 +213,11 @@ slaed-cms/
 - `tpl_eval()` and `tpl_func()` removed (used `eval()`, security risk)
 - `setRedirect()` replaces inline `header() + exit;` in admin modules
 - `filterMarkdown()` — self-contained Markdown→HTML parser added to `core/system.php`
-- `adm_info()` → `getAdminInfo()`: auto-detects info file from `$_GET['name']`, no parameters
-- Admin info file structure: `admin/info/{module}-{locale}.html` → `admin/info/{module}/{locale}.html`
+- `adm_info()` → `getAdminInfo()`: auto-detects info file from `$_GET['name']`, no parameters; supports both `.html` and `.md` info files
+- Admin info file structure: `admin/info/{module}-{locale}.html` → `admin/info/{module}/{locale}.html` (or `.md`)
 - Database class: `sql_db` → `Database`; all methods renamed to `getSql*` prefix (`getSqlQuery()`, `getSqlRow()`, `getSqlRowCount()`, etc.)
 
-**Modernized Admin Modules (23/23 - 100%):**
+**Modernized Admin Modules (24/24 - 100%):**
 - `admins.php` - Administrator management
 - `blocks.php` - Block management
 - `categories.php` - Category management
@@ -237,6 +237,7 @@ slaed-cms/
 - `ratings.php` - Ratings system
 - `referers.php` - Referers tracking
 - `replace.php` - Text replacement
+- `scheduler.php` - Scheduled tasks management
 - `security.php` - Security settings
 - `statistic.php` - Statistics
 - `template.php` - Template management

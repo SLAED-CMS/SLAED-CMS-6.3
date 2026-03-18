@@ -304,15 +304,29 @@ function list(): void {
 
 When working on admin modules, follow these specific conventions:
 
-#### Navigation Function
+#### Navigation
+
+Admin modules use `setAdminNavi(array $p): string` — callable directly from any handler function; no per-module `navi()` wrapper is required.
 
 ```php
-// Always use navi() - not moduleNavi() or similar
-function navi(int $opt = 0, int $tab = 0, int $subtab = 0, int $legacy = 0, string $id = ''): string {
-    $ops = ['name=modules', 'name=modules&amp;op=info'];
-    $lang = [_HOME, _INFO];
-    return getAdminTabs(_MODULES, 'modules.png', '', $ops, $lang, [], [], $tab, (bool)$subtab);
-}
+// In any handler function, call setAdminNavi() directly:
+$cont = setAdminNavi([
+    'ops'  => ['name=modules', 'name=modules&amp;op=info'],
+    'tabs' => [_HOME, _INFO],
+]);
+
+// With sub-tabs and searchbox:
+$cont = setAdminNavi([
+    'ops'    => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=info'],
+    'tabs'   => [_HOME, _BANNED, _INFO],
+    'sops'   => ['', ''],
+    'stabs'  => [_BANNED_IP, _BANNED_USERS],
+    'sub'    => $searchboxHtml,
+    'tab'    => $tab,
+    'subtab' => $subtab,
+    'legacy' => $legacy,
+    'id'     => 'security',
+]);
 ```
 
 #### Global Variables
@@ -385,16 +399,16 @@ getAdminInfo(): string
 ```
 
 - Reads `$_GET['name']` to determine which module's info to display.
-- Checks `modules/{name}/admin/info/{locale}.html` first (module-specific help).
-- Falls back to `admin/info/{name}/{locale}.html` (core admin module help).
+- Checks `modules/{name}/admin/info/{locale}.html` and `modules/{name}/admin/info/{locale}.md` first.
+- Falls back to `admin/info/{name}/{locale}.html` and `admin/info/{name}/{locale}.md`.
 - When `adminfo` is enabled in config, also renders an in-page editor form.
 
 **Info file locations:**
 
 | Path | Purpose |
 |------|---------|
-| `modules/{name}/admin/info/{locale}.html` | Module-specific help (e.g. `modules/news/admin/info/en.html`) |
-| `admin/info/{name}/{locale}.html` | Core admin module help (e.g. `admin/info/categories/en.html`) |
+| `modules/{name}/admin/info/{locale}.html` or `.md` | Module-specific help (e.g. `modules/news/admin/info/en.html`) |
+| `admin/info/{name}/{locale}.html` or `.md` | Core admin module help (e.g. `admin/info/categories/en.html`) |
 
 > [!NOTE]
 > Info files use 2-letter locale codes (`en`, `de`, `fr`, `pl`, `ru`, `uk`).

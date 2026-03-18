@@ -273,9 +273,10 @@ Admin panel info files were reorganized from flat filenames to subdirectories:
 
 The pattern applies to all admin module info files under `admin/info/*/`.
 Locale codes remain 2-letter (`en`, `de`, `fr`, `pl`, `ru`, `uk`).
+Both `.html` and `.md` extensions are supported (`.html` takes priority; `.md` is checked as fallback).
 
 The helper `getAdminInfo()` auto-detects the correct path from `$_GET['name']` and also checks
-`modules/{name}/admin/info/{locale}.html` for frontend module admin areas.
+`modules/{name}/admin/info/{locale}.html` (and `.md`) for frontend module admin areas.
 
 #### SQL Query Changes
 
@@ -360,7 +361,8 @@ The admin info helper has been refactored:
 | `adm_info(1, 'mod', 0)` | `getAdminInfo()` |
 
 `getAdminInfo(): string` — takes no parameters; auto-detects the info file path from `$_GET['name']`
-and checks both `admin/info/{name}/{locale}.html` and `modules/{name}/admin/info/{locale}.html`.
+and checks both `admin/info/{name}/{locale}.html`, `admin/info/{name}/{locale}.md`,
+`modules/{name}/admin/info/{locale}.html`, and `modules/{name}/admin/info/{locale}.md`.
 
 ---
 
@@ -571,11 +573,13 @@ rm -rf storage/cache/*
 - 99 deprecated insecure functions removed
 - 1282 legacy code constructs updated
 
-**Modernized Admin Modules (23/23 - 100%):**
-- All admin modules have been modernized with `navi()` function
+**Modernized Admin Modules (24/24 - 100%):**
+- All admin modules have been modernized with `navi()` or `setAdminNavi()` navigation
 - Key modules: `admins.php`, `blocks.php`, `categories.php`, `comments.php`
 - `config.php`, `database.php`, `editor.php`, `fields.php`, `groups.php`
-- `lang.php`, `messages.php`, `modules.php`, `security.php`, `uploads.php`
+- `lang.php`, `messages.php`, `modules.php`, `monitor.php`, `security.php`
+- `newsletter.php`, `privat.php`, `ratings.php`, `referers.php`, `replace.php`
+- `scheduler.php`, `statistic.php`, `template.php`, `uploads.php`
 
 **Removed Files:**
 - `config/config_db.php` → use `config/db.php`
