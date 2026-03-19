@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('money')) die('Illegal file access
 function money(): void {
     global $db, $afile, $conf;
         setHead();
-    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=conf', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     if (getVar('get', 'send', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MA_15]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['money']['anum'] ?? 25;
@@ -41,7 +41,7 @@ function money(): void {
             .'<td>'.user_geo_ip($ip, 4).'</td>'
             .'<td>'.format_time($time, _TIMESTRING).'</td>'
             .'<td>'.ad_status('', $status).'</td>'
-            .'<td>'.add_menu(ad_status($afile.'.php?name=money&amp;op=active&amp;id='.$id.'&amp;act='.$act, $status).'||<a href="'.$afile.'.php?name=money&amp;op=rechn&amp;id='.$id.'&amp;rnum='.$r.'" title="'._RECHN_B.'">'._RECHN_B.'</a>||<a href="'.$afile.'.php?name=money&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=money&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu(ad_status($afile.'.php?name=money&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status).'||<a href="'.$afile.'.php?name=money&amp;op=invoice&amp;id='.$id.'&amp;rnum='.$r.'" title="'._RECHN_B.'">'._RECHN_B.'</a>||<a href="'.$afile.'.php?name=money&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=money&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             $r--;
         }
         $cont .= '</tbody></table>';
@@ -71,7 +71,7 @@ function add(): void {
         $time = getVar('req', 'time', 'time');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=conf', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($intro) {
         $form = explode(',', $conf['money']['form'] ?? '');
@@ -126,13 +126,13 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=money');
     } elseif ($posttype === 'delete') {
-        del($mid);
+        delete($mid);
     } else {
         add();
     }
 }
 
-function del(int $did = 0): void {
+function delete(int $did = 0): void {
     global $db, $afile;
     $id = $did ? $did : getVar('req', 'id', 'num', 0);
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]);
@@ -162,7 +162,7 @@ function billing(string $title, string $autor, string $infos, string $num, strin
     echo str_replace(array_keys($replacements), array_values($replacements), $template);
 }
 
-function rechn(): void {
+function invoice(): void {
     global $db, $conf;
     $id = getVar('get', 'id', 'num', 0);
     [$sum, $email, $intro, $note, $ip, $agent, $time] = $db->getSqlRow($db->getSqlQuery('SELECT sum, email, intro, note, ip, agent, time FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
@@ -186,7 +186,7 @@ function rechn(): void {
     billing($title, filterReplaceText(filterMarkdown($conf['money']['autor'] ?? '', 'money', false), 'money'), filterReplaceText(filterMarkdown($infos, 'money', false), 'money'), $rnum, format_time($time), (string)round($menge, 2), $kurs.' EUR', $sum.' EUR');
 }
 
-function active(): void {
+function activate(): void {
     global $db, $afile, $conf;
         $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
@@ -203,16 +203,16 @@ function active(): void {
     setRedirect($afile.'.php?name=money');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=conf', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'      => $afile,
         '{%module%}'     => 'money',
-        '{%op%}'         => 'saveconf',
+        '{%op%}'         => 'configsave',
         '{%save%}'       => _SAVECHANGES,
         '{%fields%}'     => '',
         '{%_ma3%}'       => _MA_3,
@@ -252,7 +252,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $xkurs = str_replace(',', '.', getVar('post', 'kurs', 'text', '0'));
     $xkurs2 = str_replace(',', '.', getVar('post', 'kurs2', 'text', '0'));
@@ -275,12 +275,12 @@ function saveconf(): void {
         'autor' => getVar('post', 'autor', 'text', ''),
     ];
     setConfigFile('money.php', $cont);
-    setRedirect($afile.'.php?name=money&op=conf');
+    setRedirect($afile.'.php?name=money&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=conf', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -289,11 +289,11 @@ switch ($op) {
     default: money(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'active': active(); break;
-    case 'del': del(); break;
-    case 'rechn': rechn(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'activate': activate(); break;
+    case 'delete': delete(); break;
+    case 'invoice': invoice(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function comments(): void {
     setHead();
     $status = getVar('get', 'status', 'num') ? 1 : 0;
-    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => $status]);
+    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => $status]);
     echo $cont.ashowcom();
     setFoot();
 }
@@ -19,7 +19,7 @@ function edit(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, modul, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
     $cont .= setTemplateBasic('open');
@@ -39,10 +39,10 @@ function editsave(): void {
     setRedirect($afile.'.php?name=comments');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $cont .= setTemplateBasic('open');
     $sval = (string)($conf['comments']['sort'] ?? '1');
@@ -126,10 +126,10 @@ function save(): void {
         'web' => getVar('post', 'web', 'num'),
     ];
     setConfigFile('comments.php', $cont);
-    setRedirect($afile.'.php?name=comments&op=conf');
+    setRedirect($afile.'.php?name=comments&op=config');
 }
 
-function act(): void {
+function approve(): void {
     global $db, $afile;
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id', 'num', []);
@@ -148,7 +148,7 @@ function act(): void {
     setRedirect($afile.'.php?name=comments', true);
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile;
     $get_id = getVar('get', 'id', 'num');
     $id = getVar('post', 'id', 'num', []);
@@ -169,7 +169,7 @@ function del(): void {
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=conf', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 3]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -178,9 +178,9 @@ switch ($op) {
     default: comments(); break;
     case 'edit': edit(); break;
     case 'editsave': editsave(); break;
-    case 'conf': conf(); break;
+    case 'config': config(); break;
     case 'save': save(); break;
-    case 'act': act(); break;
-    case 'del': del(); break;
+    case 'approve': approve(); break;
+    case 'delete': delete(); break;
     case 'info': info(); break;
 }

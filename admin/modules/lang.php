@@ -31,11 +31,11 @@ function lang(): void {
     }
 
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
-    $sys_admin = '<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
-    $sys_modul = '<a href="'.$afile.'.php?name=lang&amp;op=editfile" title="'._FULLEDIT.'">'._MODUL.'</a>';
+    $sys_admin = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
+    $sys_modul = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit" title="'._FULLEDIT.'">'._MODUL.'</a>';
     $cont .= '<tr><td>1</td><td>'._SYSTEM.'</td><td>'._ALL.'</td><td>'._MVALL.'</td><td>'.ad_status('', 1).'</td><td>'.add_menu($sys_admin.'||'.$sys_modul).'</td></tr>';
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
@@ -52,10 +52,10 @@ function lang(): void {
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $eadmin = '';
         $emodul = '';
-        if (is_dir($mod_path.'/admin/lang')) $eadmin = '<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
+        if (is_dir($mod_path.'/admin/lang')) $eadmin = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
         if (is_dir($mod_path.'/lang')) {
             $sep = $eadmin ? '||' : '';
-            $emodul = $sep.'<a href="'.$afile.'.php?name=lang&amp;op=editfile&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
+            $emodul = $sep.'<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
         }
         $cont .= '<td>'.add_menu($eadmin.$emodul).'</td></tr>';
     }
@@ -65,10 +65,10 @@ function lang(): void {
     setFoot();
 }
 
-function editfile(): void {
+function fileedit(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
@@ -142,7 +142,7 @@ function editfile(): void {
     $cont .= '<input type="hidden" name="op" value="save">';
     $cont .= '<input type="hidden" name="refer" value="1">';
     $cont .= '<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $url = 'name=lang&op=editfile&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
+    $url = 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
     $cont .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');
     $cont .= setTemplateBasic('close');
     echo $cont;
@@ -191,21 +191,21 @@ function save(): void {
         fwrite($handle, $lng_str);
         fclose($handle);
     }
-    $url = $afile.'.php?name=lang&op=editfile&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
+    $url = $afile.'.php?name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&page='.$page;
     setRedirect($url);
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = '<select name="lang" class="sl_conf">'.language($conf['lang']['lang'], 1).'</select>';
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'      => $afile,
         '{%module%}'     => 'lang',
-        '{%op%}'         => 'confsave',
+        '{%op%}'         => 'configsave',
         '{%save%}'       => _SAVECHANGES,
         '{%fields%}'     => '',
         '{%_langkey%}'   => _LANGKEY,
@@ -222,7 +222,7 @@ function conf(): void {
     setFoot();
 }
 
-function confsave(): void {
+function configsave(): void {
     global $afile, $conf;
     $cont = [
         'key' => getVar('post', 'key', 'text', ''),
@@ -231,21 +231,21 @@ function confsave(): void {
         'per_page' => getVar('post', 'per_page', 'num', 100)
     ];
     setConfigFile('lang.php', $cont, $conf['lang']);
-    setRedirect($afile.'.php?name=lang&op=conf');
+    setRedirect($afile.'.php?name=lang&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=conf', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
 switch ($op) {
     default: lang(); break;
-    case 'editfile': editfile(); break;
+    case 'fileedit': fileedit(); break;
     case 'save': save(); break;
-    case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }

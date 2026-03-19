@@ -23,7 +23,7 @@ $labels = [
 function security(): void {
     global $afile, $labels;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SIZE.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -37,7 +37,7 @@ function security(): void {
             $cont .= '<tr><td>'.title_tip(_FILE.': storage/logs/'.$file).$title.'</td>'
             .'<td>'.filterSize($filesize).'</td>'
             .'<td>'.date(_TIMESTRING, filemtime($path)).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=file&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>||<a href="'.$afile.'.php?name=security&amp;op=down&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>||<a href="'.$afile.'.php?name=security&amp;op=del&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=logview&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>||<a href="'.$afile.'.php?name=security&amp;op=download&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>||<a href="'.$afile.'.php?name=security&amp;op=delete&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
     }
     $cont .= '</tbody></table>';
@@ -46,10 +46,10 @@ function security(): void {
     setFoot();
 }
 
-function fileview(): void {
+function logview(): void {
     global $labels;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $file = getVar('get', 'file', 'var');
     if ($file) {
         $title = $labels[$file];
@@ -70,14 +70,14 @@ function fileview(): void {
     setFoot();
 }
 
-function block(): void {
+function banlist(): void {
     global $conf, $afile;
     $time = getVar('req', 'time', 'num');
     $info = getVar('req', 'info', 'text');
     $hash = getVar('req', 'hash', 'text');
     $cidr = getVar('req', 'cidr', 'text');
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 1, 'subtab' => 1, 'id' => 'security']);
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 1, 'subtab' => 1, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
@@ -92,7 +92,7 @@ function block(): void {
                 $tcidr = getIpCidr($binfo[0]);
                 if ($tcidr === false) continue;
                 [$tip, $tmask] = explode('/', $tcidr, 2);
-                $l = '<a href="'.$afile.'.php?name=security&amp;op=blocksave&amp;cidr='.urlencode($tcidr).'&amp;hash='.urlencode($binfo[1]).'&amp;time='.(int)$binfo[2].'&amp;id=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$tcidr.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>';
+                $l = '<a href="'.$afile.'.php?name=security&amp;op=bansave&amp;cidr='.urlencode($tcidr).'&amp;hash='.urlencode($binfo[1]).'&amp;time='.(int)$binfo[2].'&amp;id=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$tcidr.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>';
                 $cont .= '<tr><td>'.title_tip(_BANN_REAS.': '.$binfo[3]).user_geo_ip($tip, 4).'</td>'
                 .'<td>/'.$tmask.'</td>'
                 .'<td>'.$binfo[1].'</td>'
@@ -107,7 +107,7 @@ function block(): void {
     .'<tr><td>'._HASH.':</td><td><input type="text" name="hash" value="'.$hash.'" maxlength="255" class="sl_form" placeholder="'._HASH.'"></td></tr>'
     .'<tr><td>'._TIME.':</td><td><input type="number" name="time" value="'.$time.'" class="sl_form" placeholder="'._TIME.'" required></td></tr>'
     .'<tr><td>'._BANN_REAS.':</td><td><textarea name="info" cols="65" rows="5" class="sl_form" placeholder="'._BANN_REAS.'" required>'.$info.'</textarea></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="blocksave"><input type="hidden" name="id" value="2"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="bansave"><input type="hidden" name="id" value="2"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
     .'</div>';
     $cont .= '<div id="tabcs1" class="tabcont">';
     $bip = explode('||', $conf['security']['blocker_user']);
@@ -119,7 +119,7 @@ function block(): void {
                 $cont .= '<tr><td>'.user_info($binfo[0]).'</td>'
                 .'<td>'.$binfo[2].'</td>'
                 .'<td>'.getTimeLeft($binfo[1]).'</td>'
-                .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=blocksave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+                .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=bansave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             }
         }
         $cont .= '</tbody></table><hr>';
@@ -133,7 +133,7 @@ function block(): void {
     .'<tr><td>'._BANN_REAS.':</td><td><textarea name="info" cols="65" rows="5" class="sl_form" placeholder="'._BANN_REAS.'" required>'.$info.'</textarea></td></tr>'
     .'<tr><td>'._MAIL_SENDE.'</td><td><input type="checkbox" name="mail" value="1" OnClick="CloseOpen(\''.$cookie.'\', 0);"'.$check.'></td></tr>'
     .'<tr><td colspan="2"><div id="'.$cookie.'" class="data" data-all=\'{"id": "'.$cookie.'"}\'><table class="sl_table_form"><tr><td>'._MAIL_TEXT.':<div class="sl_small">'._MAIL_INFO.'</div></td><td>'.textarea('1', 'mailtext', replace_break(str_replace('[text]', _BANN_INFO.PHP_EOL.PHP_EOL._BANN_TERM.': [time]'.PHP_EOL._BANN_REAS.': [info]', $conf['mtemp'])), 'all', '10').'</td></tr></table></div></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="blocksave"><input type="hidden" name="id" value="4"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="bansave"><input type="hidden" name="id" value="4"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
     .'</div>'
     .'<script>
         var countries=new ddtabcontent("securitys")
@@ -146,7 +146,7 @@ function block(): void {
     setFoot();
 }
 
-function blocksave(): void {
+function bansave(): void {
     global $db, $conf, $afile;
     $send = '';
     $id = getVar('req', 'id', 'num');
@@ -191,13 +191,13 @@ function blocksave(): void {
         }
     }
     setConfigFile('security.php', $cont);
-    setRedirect($afile.'.php?name=security&op=block'.$send);
+    setRedirect($afile.'.php?name=security&op=banlist'.$send);
 }
 
-function pass(): void {
+function passwd(): void {
     global $conf, $afile;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 2, 'id' => 'security']);
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 2, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$conf['security']['login'] || !$conf['security']['password']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEC_AUTH_INFO]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEC_AUTH_OK]);
     $cont .= setTemplateBasic('open');
@@ -236,13 +236,13 @@ function passsave(): void {
     $cont['login'] = $xlogin;
     $cont['password'] = $xpassword;
     setConfigFile('security.php', $cont);
-    setRedirect($afile.'.php?name=security&op=pass');
+    setRedirect($afile.'.php?name=security&op=passwd');
 }
 
-function conf(): void {
+function config(): void {
     global $conf, $afile;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 3, 'id' => 'security']);
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 3, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
     $cont .= setTemplateBasic('open');
@@ -281,13 +281,13 @@ function conf(): void {
     .'<tr><td>'._SEC_LOG_A.'</td><td>'.radio_form($conf['security']['log_a'], 'log_a').'</td></tr>'
     .'<tr><td>'._SEC_LOG_U.'</td><td>'.radio_form($conf['security']['log_u'], 'log_u').'</td></tr>'
     .'<tr><td>'._SEC_WARN_BLOCK.'</td><td>'.radio_form($conf['security']['block'], 'block').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="configsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
 }
 
-function confsave(): void {
+function configsave(): void {
     global $conf, $afile;
     $flood_t = getVar('post', 'flood_t', 'num', '1');
     $afile = getVar('post', 'afile', 'text');
@@ -344,17 +344,17 @@ function confsave(): void {
     $cont['login'] = $conf['security']['login'];
     $cont['password'] = $conf['security']['password'];
     setConfigFile('security.php', $cont);
-    setRedirect($afile.'.php?name=security&op=conf');
+    setRedirect($afile.'.php?name=security&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=pass', 'name=security&amp;op=conf', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 4, 'id' => 'security']);
+    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 4, 'id' => 'security']);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
-function down(): void {
+function download(): void {
     global $afile;
     $file = getVar('get', 'file', 'var');
     if ($file) {
@@ -369,7 +369,7 @@ function down(): void {
     }
 }
 
-function del(): void {
+function delete(): void {
     global $afile;
     $file = getVar('get', 'file', 'var');
     if ($file) {
@@ -381,14 +381,14 @@ function del(): void {
 
 switch ($op) {
     default: security(); break;
-    case 'file': fileview(); break;
-    case 'down': down(); break;
-    case 'del': del(); break;
-    case 'block': block(); break;
-    case 'blocksave': blocksave(); break;
-    case 'pass': pass(); break;
+    case 'logview': logview(); break;
+    case 'download': download(); break;
+    case 'delete': delete(); break;
+    case 'banlist': banlist(); break;
+    case 'bansave': bansave(); break;
+    case 'passwd': passwd(); break;
     case 'passsave': passsave(); break;
-    case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }

@@ -18,11 +18,11 @@ function whois(): void {
     if ($status == 1) {
         $status = 0;
         $field = 'name=whois&amp;status=1&amp;';
-        $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=conf', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
     } else {
         $status = 1;
         $field = 'name=whois&amp;';
-        $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=conf', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
     }
 
     $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
@@ -35,11 +35,11 @@ function whois(): void {
             $hometext = $hometext ?: _NO;
             $host = $host ? domain($host) : _NO_INFO;
             $dc = $dc ? domain($dc) : _NO_INFO;
-            $actions = ad_status($afile.'.php?name=whois&amp;op=act&amp;id='.$id.'&amp;fid=1&amp;refer=1', $statusDomain, '', _SITE)
-                .'||'.ad_status($afile.'.php?name=whois&amp;op=act&amp;id='.$id.'&amp;fid=2&amp;refer=1', $statusHost, '', _HOST)
-                .'||'.ad_status($afile.'.php?name=whois&amp;op=act&amp;id='.$id.'&amp;fid=3&amp;refer=1', $statusDc, '', _DC)
+            $actions = ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=1&amp;refer=1', $statusDomain, '', _SITE)
+                .'||'.ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=2&amp;refer=1', $statusHost, '', _HOST)
+                .'||'.ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=3&amp;refer=1', $statusDc, '', _DC)
                 .'||<a href="'.$afile.'.php?name=whois&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'
-                .'||<a href="'.$afile.'.php?name=whois&amp;op=del&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$domain.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>';
+                .'||<a href="'.$afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$domain.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>';
             $cont .= '<tr><td>'.$id.'</td>'
                 .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ipSender.'<br>'._COMMENT.': '.$hometext).$post.'</td>'
                 .'<td>'.domain($domain).'</td><td>'.ad_status('', $statusDomain).'</td>'
@@ -57,7 +57,7 @@ function whois(): void {
     setFoot();
 }
 
-function act(): void {
+function toggle(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $fid = getVar('get', 'fid', 'num');
@@ -93,7 +93,7 @@ function add(): void {
         $hometext = getVar('post', 'hometext', 'text', '');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=conf', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
@@ -133,29 +133,29 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=whois');
     } elseif ($posttype == 'delete') {
-        del($wid);
+        delete($wid);
     } else {
         add();
     }
 }
 
-function del(int $id = 0): void {
+function delete(int $id = 0): void {
     global $db, $afile;
     if (!$id) $id = getVar('req', 'id', 'num');
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_whois WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=whois', true);
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=conf', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'      => $afile,
         '{%module%}'     => 'whois',
-        '{%op%}'         => 'saveconf',
+        '{%op%}'         => 'configsave',
         '{%save%}'       => _SAVECHANGES,
         '{%fields%}'     => '',
         '{%_c34%}'       => _C_34,
@@ -175,7 +175,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'anum' => getVar('post', 'anum', 'num', 10),
@@ -185,24 +185,24 @@ function saveconf(): void {
         'addquest' => getVar('post', 'addquest', 'num', 0),
     ];
     setConfigFile('whois.php', $cont);
-    setRedirect($afile.'.php?name=whois&op=conf');
+    setRedirect($afile.'.php?name=whois&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=conf', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
 switch ($op) {
     default: whois(); break;
-    case 'act': act(); break;
+    case 'toggle': toggle(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

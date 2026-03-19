@@ -18,17 +18,17 @@ function files(): void {
         $st = '0';
         $field = 'name=files&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=conf', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 2]);
     } elseif ($status == 2) {
         $st = '2';
         $field = 'name=files&amp;status=2&amp;';
         $refer = '';
-        $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=conf', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 3]);
+        $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 3]);
     } else {
         $st = '1';
         $field = 'name=files&amp;';
         $refer = '';
-        $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=conf', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO]]);
+        $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, c.title, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -38,7 +38,7 @@ function files(): void {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
-            $broc = ($st == '2') ? '<a href="'.$afile.'.php?name=files&amp;op=ignore&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
+            $broc = ($st == '2') ? '<a href="'.$afile.'.php?name=files&amp;op=approve&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
             if ($st == '1' && time() >= strtotime($date)) {
                 $view = '<a href="index.php?name=files&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
@@ -50,7 +50,7 @@ function files(): void {
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.$broc.'<a href="'.$afile.'.php?name=files&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=files&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.$broc.'<a href="'.$afile.'.php?name=files&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=files&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_files', '', 'status = \''.$st.'\'', $anump);
@@ -89,7 +89,7 @@ function add(): void {
         $website = getVar('post', 'website', 'url', 'http://');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=conf', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($description) $cont .= preview($title, $description, $bodytext, '', 'files');
     $link = ($url) ? '<a href="'.$url.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
@@ -177,13 +177,13 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=files');
     } elseif ($posttype === 'delete') {
-        del($fid);
+        delete($fid);
     } else {
         add();
     }
 }
 
-function del(int $fid = 0): void {
+function delete(int $fid = 0): void {
     global $db, $afile;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     if ($id) {
@@ -197,7 +197,7 @@ function del(int $fid = 0): void {
     setRedirect($afile.'.php?name=files'.$refer);
 }
 
-function ignore(): void {
+function approve(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
     if ($id) {
@@ -206,10 +206,10 @@ function ignore(): void {
     setRedirect($afile.'.php?name=files&status=2');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=conf', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
     $stream_sel = '<select name="stream" class="sl_conf">'
         .'<option value="0"'.(($conf['files']['stream'] ?? null) == '0' ? ' selected' : '').'>'._STREAM_NO.'</option>'
@@ -220,7 +220,7 @@ function conf(): void {
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'        => $afile,
         '{%module%}'       => 'files',
-        '{%op%}'           => 'saveconf',
+        '{%op%}'           => 'configsave',
         '{%save%}'         => _SAVECHANGES,
         '{%fields%}'       => '',
         '{%_cdefis%}'      => _CDEFIS,
@@ -289,7 +289,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $typefile = getVar('post', 'typefile', 'text', '');
@@ -325,12 +325,12 @@ function saveconf(): void {
         'link' => getVar('post', 'link', 'num', 0),
     ];
     setConfigFile('files.php', $cont);
-    setRedirect($afile.'.php?name=files&op=conf');
+    setRedirect($afile.'.php?name=files&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=conf', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 5]);
+    $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 5]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -339,10 +339,10 @@ switch ($op) {
     default: files(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
-    case 'ignore': ignore(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'approve': approve(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

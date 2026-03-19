@@ -237,7 +237,7 @@ function filecode(): void {
         echo $cont;
         setFoot();
     } else {
-        setRedirect($afile.'.php?name=blocks&op=file');
+        setRedirect($afile.'.php?name=blocks&op=logview');
     }
 }
 
@@ -510,7 +510,7 @@ function change(): void {
     setRedirect($afile.'.php?name=blocks');
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     [$bpos, $weight] = $db->getSqlRow($db->getSqlQuery('SELECT bpos, weight FROM '.PREFIX_DB.'_blocks WHERE id = :id', ['id' => $id]));
@@ -542,6 +542,6 @@ switch ($op) {
     case 'filecode': filecode(); break;
     case 'filecodesave': filecodesave(); break;
     case 'fix': fix(); break;
-    case 'del': del(); break;
+    case 'delete': delete(); break;
     case 'info': info(); break;
 }

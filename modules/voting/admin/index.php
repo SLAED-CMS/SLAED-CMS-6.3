@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('voting')) die('Illegal file acces
 function voting(): void {
     global $db, $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['voting']['anum'];
     $offset = intval($offset);
@@ -72,7 +72,7 @@ function add(): void {
         $status = getVar('post', 'status', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($id) $cont .= setTemplateBasic('open').'<div id="repvoting">'.getVoting($id, 'voting').'</div>'.setTemplateBasic('close');
     $cont .= setTemplateBasic('open');
@@ -177,10 +177,10 @@ function delete(int $id = 0): void {
     setRedirect($afile.'.php?name=voting', true);
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $bval = (string)($conf['voting']['block'] ?? '0');
     $block_sel = '<select name="block" class="sl_conf">'
@@ -193,7 +193,7 @@ function conf(): void {
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'         => $afile,
         '{%module%}'        => 'voting',
-        '{%op%}'            => 'saveconf',
+        '{%op%}'            => 'configsave',
         '{%save%}'          => _SAVECHANGES,
         '{%fields%}'        => '',
         '{%_voting_time%}'  => _VOTING_TIME,
@@ -217,7 +217,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'voting_t' => getVar('post', 'time', 'num', 1) * 86400,
@@ -229,12 +229,12 @@ function saveconf(): void {
         'block' => getVar('post', 'block', 'num', 0),
     ];
     setConfigFile('voting.php', $cont);
-    setRedirect($afile.'.php?name=voting&op=conf');
+    setRedirect($afile.'.php?name=voting&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=conf', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -244,8 +244,8 @@ switch ($op) {
     case 'add': add(); break;
     case 'save': save(); break;
     case 'delete': delete(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

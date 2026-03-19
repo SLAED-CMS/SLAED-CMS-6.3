@@ -12,7 +12,7 @@ function scheduler(): void {
     $jobs = getSchedulerJobs();
     $navi = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $cont = '';
-    $seclink = ' <a href="'.$afile.'.php?name=security&amp;op=conf">'.htmlspecialchars(_SCHEDULER_WARN_GO, ENT_QUOTES, 'UTF-8').'</a>.';
+    $seclink = ' <a href="'.$afile.'.php?name=security&amp;op=config">'.htmlspecialchars(_SCHEDULER_WARN_GO, ENT_QUOTES, 'UTF-8').'</a>.';
     $cont .= (!$conf['security']['log_b']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SCHEDULER_WARN_DB.$seclink]) : '';
     $cont .= (!$conf['security']['log_d']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SCHEDULER_WARNLOG.$seclink]) : '';
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SCHEDULER_NEXTRUN.'</th><th>'._SCHEDULER_RESULT.'</th><th>'._SCHEDULER_PRIO.'</th><th>'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -177,7 +177,7 @@ function unlock(): void {
     setRedirect($afile.'.php?name=scheduler');
 }
 
-function del(): void {
+function delete(): void {
     global $conf, $afile;
     $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'scheduler')) { setRedirect($afile.'.php?name=scheduler'); return; }
@@ -204,6 +204,6 @@ switch ($op) {
     case 'save': save(); break;
     case 'run': run(); break;
     case 'unlock': unlock(); break;
-    case 'del': del(); break;
+    case 'delete': delete(); break;
     case 'info': info(); break;
 }

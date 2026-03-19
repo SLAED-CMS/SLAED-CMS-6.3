@@ -17,12 +17,12 @@ function help(): void {
         $status = '1';
         $field = 'name=help&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=conf', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 1]);
+        $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 1]);
     } else {
         $status = '0';
         $field = 'name=help&amp;';
         $refer = '';
-        $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=conf', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+        $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -38,7 +38,7 @@ function help(): void {
             .'<td>'.$post.'</td>'
             .'<td>'.$comments.'</td>'
             .'<td>'.ad_status('', $stat).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?name=help&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=help&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu('<a href="'.$afile.'.php?name=help&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
@@ -55,7 +55,7 @@ function view(): void {
     $id = getVar('get', 'id', 'num', 0);
     $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id]);
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=conf', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     $cont .= setTemplateBasic('open');
     $a = 0;
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
@@ -76,7 +76,7 @@ function view(): void {
             $ctitle = '';
             $reads =  '';
         }
-        $admin = add_menu('<a href="'.$afile.'.php?name=help&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=help&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
+        $admin = add_menu('<a href="'.$afile.'.php?name=help&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=help&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
         $cont .= setTemplateBasic('basic', ['{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin]);
         $a++;
     }
@@ -120,7 +120,7 @@ function add(): void {
     }
     $status = getVar('post', 'status', 'num', 0) ? getVar('post', 'status', 'num', 0) : ($status ?? 0);
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=conf', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
     $cont .= setTemplateBasic('open');
@@ -179,13 +179,13 @@ function save(): void {
             setRedirect($afile.'.php?name=help');
         }
     } elseif ($posttype === 'delete') {
-        del($id);
+        delete($id);
     } else {
         add();
     }
 }
 
-function del(int $fid = 0): void {
+function delete(int $fid = 0): void {
     global $db, $afile;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     if ($id) {
@@ -195,16 +195,16 @@ function del(int $fid = 0): void {
     setRedirect($afile.'.php?name=help');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=conf', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'     => $afile,
         '{%module%}'    => 'help',
-        '{%op%}'        => 'saveconf',
+        '{%op%}'        => 'configsave',
         '{%save%}'      => _SAVECHANGES,
         '{%fields%}'    => '',
         '{%_cdefis%}'   => _CDEFIS,
@@ -240,7 +240,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -258,12 +258,12 @@ function saveconf(): void {
         'letter' => getVar('post', 'letter', 'num', 0),
     ];
     setConfigFile('help.php', $cont);
-    setRedirect($afile.'.php?name=help&op=conf');
+    setRedirect($afile.'.php?name=help&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=conf', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 3]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -273,9 +273,9 @@ switch ($op) {
     case 'view': view(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

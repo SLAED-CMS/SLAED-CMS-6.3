@@ -28,7 +28,7 @@ function clients(): void {
             .'<td>'.ad_status('', $status).'</td>'
             .'<td>'.add_menu(ad_status($afile.'.php?name=clients&amp;op=status&amp;id='.$id.'&amp;act='.$act, $status)
             .'||<a href="'.$afile.'.php?name=clients&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'
-            .'||<a href="'.$afile.'.php?name=clients&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>')
+            .'||<a href="'.$afile.'.php?name=clients&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>')
             .'</td></tr>';
         }
         $cont .= '</tbody></table>';
@@ -100,13 +100,13 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=clients');
     } elseif ($posttype === 'delete') {
-        del($cid);
+        delete($cid);
     } else {
         add();
     }
 }
 
-function del(int $id = 0): void {
+function delete(int $id = 0): void {
     global $db, $afile;
     if (!$id) $id = getVar('req', 'id', 'num');
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
@@ -133,7 +133,7 @@ switch ($op) {
     case 'add': add(); break;
     case 'save': save(); break;
     case 'status': status(); break;
-    case 'del': del(); break;
+    case 'delete': delete(); break;
     case 'info': info(); break;
 }
 

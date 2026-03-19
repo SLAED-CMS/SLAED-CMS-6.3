@@ -32,7 +32,7 @@ function groups(): void {
                .'<td>'.$points.'</td>'
                .'<td>'.$users_num.'</td>'
                .'<td>'.$extra.'</td>'
-               .'<td>'.add_menu('<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=groups&amp;op=add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=groups&amp;op=del&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+               .'<td>'.add_menu('<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=groups&amp;op=add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=groups&amp;op=delete&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setTemplateBasic('close');
@@ -146,7 +146,7 @@ function pointssave(): void {
     setRedirect($afile.'.php?name=groups&op=points');
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile, $conf;
     $id = getVar('get', 'id', 'num');
     if ($id) {
@@ -174,7 +174,7 @@ switch ($op) {
     default: groups(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
+    case 'delete': delete(); break;
     case 'points': points(); break;
     case 'pointssave': pointssave(); break;
     case 'info': info(); break;

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('content')) die('Illegal file acce
 function content(): void {
     global $db, $afile, $conf;
         setHead();
-    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=conf', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['content']['anum'] ?? 10;
     $anump = $conf['content']['anump'] ?? 10;
@@ -31,7 +31,7 @@ function content(): void {
             .'<td>'.format_time($time, _TIMESTRING).'</td>'
             .'<td>'.$counter.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=content&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=content&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=content&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=content&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, 'name=content&amp;', 'id', '_content', '', '', $anump);
@@ -59,7 +59,7 @@ function add(): void {
         $refresh = getVar('post', 'refresh', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=conf', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $fields = ($field) ? '<br><br>'.fields_out($field, 'content') : '';
     if ($body) $cont .= preview($title, $body, '', $field, 'content');
@@ -115,29 +115,29 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=content');
     } elseif ($posttype == 'delete') {
-        del($cid);
+        delete($cid);
     } else {
         add();
     }
 }
 
-function del(int $cid = 0): void {
+function delete(int $cid = 0): void {
     global $db, $afile;
     $id = $cid ? $cid : getVar('req', 'id', 'num', 0);
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=content');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=conf', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'  => $afile,
         '{%module%}' => 'content',
-        '{%op%}'     => 'saveconf',
+        '{%op%}'     => 'configsave',
         '{%save%}'   => _SAVECHANGES,
         '{%fields%}' => '',
         '{%_c33%}'   => _C_33,
@@ -155,7 +155,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'num' => getVar('post', 'num', 'num', 25),
@@ -164,12 +164,12 @@ function saveconf(): void {
         'anump' => getVar('post', 'anump', 'num', 10),
     ];
     setConfigFile('content.php', $cont);
-    setRedirect($afile.'.php?name=content&op=conf');
+    setRedirect($afile.'.php?name=content&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=conf', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -178,9 +178,9 @@ switch ($op) {
     default: content(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

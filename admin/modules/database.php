@@ -281,11 +281,11 @@ function database(): void {
         } else {
             // Default view with actions
             $stattag = add_menu(
-                '<a href="'.$afile.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=1" '
+                '<a href="'.$afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1" '
                 .'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._CLEAN.'">'._CLEAN.'</a>'
                 .'||'
-                .'<a href="'.$afile.'.php?name=database&amp;op=del&amp;tb='.$name.'&amp;id=2" '
+                .'<a href="'.$afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2" '
                 .'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" '
                 .'title="'._ONDELETE.'">'._ONDELETE.'</a>'
             );
@@ -480,7 +480,7 @@ function info(): void {
     setFoot();
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile;
     $tb = getVar('get', 'tb', 'var');
     $id = getVar('get', 'id', 'num');
@@ -496,6 +496,6 @@ function del(): void {
 switch ($op) {
     default: database(); break;
     case 'dump': dump(); break;
-    case 'del': del(); break;
+    case 'delete': delete(); break;
     case 'info': info(); break;
 }

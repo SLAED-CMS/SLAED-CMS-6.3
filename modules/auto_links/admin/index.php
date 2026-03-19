@@ -11,7 +11,7 @@ function auto_links(): void {
     global $db, $afile, $conf;
     setHead();
     $cont = setAdminNavi([
-        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
     ]);
     if (!$conf['referers']['refer']) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]);
@@ -27,7 +27,7 @@ function auto_links(): void {
         while ([$id, $name, $url, $hits, $outs, $added] = $db->getSqlRow($result)) {
             $vhits = ($hits) ? '<a href="'.$afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||' : '';
             $edit = '<a href="'.$afile.'.php?name=auto_links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>';
-            $drop = '<a href="'.$afile.'.php?name=auto_links&amp;op=del&amp;id='.$id.'&amp;refer=1"'
+            $drop = '<a href="'.$afile.'.php?name=auto_links&amp;op=delete&amp;id='.$id.'&amp;refer=1"'
                .' OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');"'
                .' title="'._ONDELETE.'">'._ONDELETE.'</a>';
             $cont .= '<tr>'
@@ -87,7 +87,7 @@ function stats(): void {
         $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
     }
     $cont = setAdminNavi([
-        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'sub'  => $_box,
     ]);
@@ -144,7 +144,7 @@ function add(): void {
     }
     setHead();
     $cont = setAdminNavi([
-        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 1,
     ]);
@@ -186,13 +186,13 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=auto_links');
     } elseif ($posttype === 'delete') {
-        del($id);
+        delete($id);
     } else {
         add();
     }
 }
 
-function del(int $id = 0): void {
+function delete(int $id = 0): void {
     global $db, $afile;
     if (!$id) $id = getVar('req', 'id', 'num');
     if ($id) {
@@ -202,24 +202,24 @@ function del(int $id = 0): void {
     setRedirect($afile.'.php?name=auto_links');
 }
 
-function nullhits(): void {
+function hitreset(): void {
     global $db, $afile;
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = 0, outs = 0');
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid != 0');
     setRedirect($afile.'.php?name=auto_links');
 }
 
-function noindel(): void {
+function zerodel(): void {
     global $db, $afile;
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_auto_links WHERE hits = 0');
     setRedirect($afile.'.php?name=auto_links');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
     $cont = setAdminNavi([
-        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 4,
     ]);
@@ -245,7 +245,7 @@ function conf(): void {
        .'<tr><td>'._A_5.':</td><td><input type="number" name="limit" value="'.$conf['auto_links']['limit'].'" class="sl_conf" placeholder="'._A_5.'" required></td></tr>'
        .'<tr><td>'._ADDAMAIL.'</td><td>'.radio_form($conf['auto_links']['addmail'], 'addmail').'</td></tr>'
        .'<tr><td colspan="2" class="sl_center">'
-       .'<input type="hidden" name="op" value="saveconf">'
+       .'<input type="hidden" name="op" value="configsave">'
        .'<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">'
        .'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
@@ -253,7 +253,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile, $conf;
     $cont = [
         'img' => str_replace('templates/'.$conf['theme'].'/images/banners/', '', getVar('post', 'img', 'var', '')),
@@ -266,13 +266,13 @@ function saveconf(): void {
         'addmail' => getVar('post', 'addmail', 'num', 0),
     ];
     setConfigFile('auto_links.php', $cont);
-    setRedirect($afile.'.php?name=auto_links&op=conf');
+    setRedirect($afile.'.php?name=auto_links&op=config');
 }
 
 function info(): void {
     setHead();
     $cont = setAdminNavi([
-        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=nullhits', 'name=auto_links&amp;op=noindel', 'name=auto_links&amp;op=conf', 'name=auto_links&amp;op=info'],
+        'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 5,
     ]);
@@ -285,11 +285,11 @@ switch ($op) {
     case 'stats': stats(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
-    case 'nullhits': nullhits(); break;
-    case 'noindel': noindel(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'hitreset': hitreset(); break;
+    case 'zerodel': zerodel(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

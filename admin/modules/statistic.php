@@ -32,7 +32,7 @@ function statistic(): void {
     $file = getVar('post', 'file', 'text');
     $pfile = $file ? '&amp;file='.$file : '';
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
+    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
     $cont .= setTemplateBasic('open');
@@ -88,10 +88,10 @@ function add(): void {
     getStatistic();
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
+    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
@@ -121,12 +121,12 @@ function save(): void {
         'stat' => getVar('post', 'stat', 'num')
     ];
     setConfigFile('statistic.php', $cont);
-    setRedirect($afile.'.php?name=statistic&op=conf');
+    setRedirect($afile.'.php?name=statistic&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=conf', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2, 'sub' => getStatisticSearch()]);
+    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2, 'sub' => getStatisticSearch()]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -134,7 +134,7 @@ function info(): void {
 switch ($op) {
     default: statistic(); break;
     case 'add': add(); break;
-    case 'conf': conf(); break;
+    case 'config': config(); break;
     case 'save': save(); break;
     case 'info': info(); break;
 }

@@ -29,7 +29,7 @@ function uploads(): void {
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f1\', \'go=5&amp;op=ashow_files&amp;id=1&amp;dir='.$dir.'\', \'\'); return false;">'._DGEN.'</span>', '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f2\', \'go=5&amp;op=ashow_files&amp;id=2&amp;dir='.$dir.'\', \'\'); return false;">'._DTHUMB.'</span>'], 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
+    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f1\', \'go=5&amp;op=ashow_files&amp;id=1&amp;dir='.$dir.'\', \'\'); return false;">'._DGEN.'</span>', '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f2\', \'go=5&amp;op=ashow_files&amp;id=2&amp;dir='.$dir.'\', \'\'); return false;">'._DTHUMB.'</span>'], 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $cont .= '<div id="tabcs0" class="tabcont">';
@@ -108,10 +108,10 @@ function uploadsave(): void {
     }
 }
 
-function templconf(): void {
+function tplconfig(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 1, 'sub' => getUploadsSearch(), 'id' => 'templconf']);
+    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 1, 'sub' => getUploadsSearch(), 'id' => 'tplconfig']);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
     $typm = explode(',', $conf['uploads']['typ']);
@@ -120,25 +120,25 @@ function templconf(): void {
         $hr = ($i == 0) ? '' : '<hr>';
         $conts .= $hr.'<table class="sl_table_edit"><tr><td><h5>'._TPFOR.': '.$typm[$i].'</h5></td></tr><tr><td>'.textarea_code('code_'.$i.'', 'tmp[]', 'sl_form', 'text/html', $conf['filetype'][$typm[$i]] ?? '').'</td></tr></table>';
     }
-    $cont .= setTemplateBasic('open').'<form action="'.$afile.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="templsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.setTemplateBasic('close');
+    $cont .= setTemplateBasic('open').'<form action="'.$afile.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="tplsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.setTemplateBasic('close');
     echo $cont;
     setFoot();
 }
 
-function templsave(): void {
+function tplsave(): void {
     global $afile, $conf;
     $cont = [];
     $typm = explode(',', $conf['uploads']['typ']);
     $tmp = getVar('post', 'tmp', 'raw');
     for ($i = 0; $i < count($typm); $i++) $cont[$typm[$i]] = $tmp[$i];
     setConfigFile('filetype.php', $cont);
-    setRedirect($afile.'.php?name=uploads&op=templconf');
+    setRedirect($afile.'.php?name=uploads&op=tplconfig');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_GENPREF, _MODULES], 'tab' => 2, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'conf']);
+    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_GENPREF, _MODULES], 'tab' => 2, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'config']);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
     $handle = opendir('uploads');
     $directory = '';
@@ -192,13 +192,13 @@ function conf(): void {
         countries.setselectedClassTarget("link")
         countries.init()
     </script>'
-    .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="confsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="configsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
 }
 
-function confsave(): void {
+function configsave(): void {
     global $afile;
     $protect = ["\n" => '', "\t" => '', "\r" => '', ' ' => ''];
     $ttyp = getVar('post', 'ttyp', 'text');
@@ -244,12 +244,12 @@ function confsave(): void {
         }
     }
     setConfigFile('uploads.php', $cont);
-    setRedirect($afile.'.php?name=uploads&op=conf');
+    setRedirect($afile.'.php?name=uploads&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=templconf', 'name=uploads&amp;op=conf', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 3, 'sub' => getUploadsSearch()]);
+    $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 3, 'sub' => getUploadsSearch()]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -257,9 +257,9 @@ function info(): void {
 switch ($op) {
     default: uploads(); break;
     case 'uploadsave': uploadsave(); break;
-    case 'templconf': templconf(); break;
-    case 'templsave': templsave(); break;
-    case 'conf': conf(); break;
-    case 'confsave': confsave(); break;
+    case 'tplconfig': tplconfig(); break;
+    case 'tplsave': tplsave(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }

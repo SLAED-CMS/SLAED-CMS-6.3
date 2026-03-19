@@ -18,17 +18,17 @@ function links(): void {
         $status = '0';
         $field = 'name=links&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=conf', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 2]);
     } elseif ($status == 2) {
         $status = '2';
         $field = 'name=links&amp;status=2&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=conf', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 3]);
+        $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 3]);
     } else {
         $status = '1';
         $field = 'name=links&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=conf', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO]]);
+        $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT l.id, l.cid, l.name, l.title, l.url, l.time, l.ip, c.title, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.status = :status ORDER BY l.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -38,7 +38,7 @@ function links(): void {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
-            $broc = ($status == 2) ? '<a href="'.$afile.'.php?name=links&amp;op=ignore&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
+            $broc = ($status == 2) ? '<a href="'.$afile.'.php?name=links&amp;op=approve&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
             if ($status && time() >= strtotime($date)) {
                 $view = '<a href="index.php?name=links&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
                 $active = '1';
@@ -51,7 +51,7 @@ function links(): void {
             .'<td>'.domain($url).'</td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.$broc.'<a href="'.$afile.'.php?name=links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=links&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.$broc.'<a href="'.$afile.'.php?name=links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=links&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_links', '', 'status = \''.$status.'\'', $anump);
@@ -85,7 +85,7 @@ function add(): void {
         $email = getVar('post', 'email', 'text', '');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=conf', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if (!empty($description)) $cont .= preview($title, $description, $bodytext, '', 'links');
     $link = (!empty($site) && $site !== 'http://') ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
@@ -137,13 +137,13 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=links');
     } elseif ($posttype === 'delete') {
-        del($fid);
+        delete($fid);
     } else {
         add();
     }
 }
 
-function ignore(): void {
+function approve(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num', 0);
     if ($id) {
@@ -152,7 +152,7 @@ function ignore(): void {
     setRedirect($afile.'.php?name=links&status=2');
 }
 
-function del(int $dfid = 0): void {
+function delete(int $dfid = 0): void {
     global $db, $afile;
     $id = $dfid ? $dfid : getVar('req', 'id', 'num', 0);
     if ($id) {
@@ -163,16 +163,16 @@ function del(int $dfid = 0): void {
     setRedirect($afile.'.php?name=links');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=conf', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/links.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'        => $afile,
         '{%module%}'       => 'links',
-        '{%op%}'           => 'saveconf',
+        '{%op%}'           => 'configsave',
         '{%save%}'         => _SAVECHANGES,
         '{%fields%}'       => '',
         '{%_cdefis%}'      => _CDEFIS,
@@ -228,7 +228,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -256,12 +256,12 @@ function saveconf(): void {
         'link' => getVar('post', 'link', 'num', 0),
     ];
     setConfigFile('links.php', $cont);
-    setRedirect($afile.'.php?name=links&op=conf');
+    setRedirect($afile.'.php?name=links&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=conf', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 5]);
+    $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 5]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -270,10 +270,10 @@ switch ($op) {
     default: links(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
-    case 'ignore': ignore(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'approve': approve(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

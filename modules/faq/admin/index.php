@@ -17,12 +17,12 @@ function faq(): void {
         $status = '0';
         $field = 'name=faq&amp;status=1&amp;';
         $refer = '&op=faq&status=1';
-        $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=conf', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
     } else {
         $status = '1';
         $field = 'name=faq&amp;';
         $refer = '';
-        $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=conf', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, t.title, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -43,7 +43,7 @@ function faq(): void {
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=faq&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=faq&amp;op=del&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=faq&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=faq&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_faq', '', 'status = \''.$status.'\'', $anump);
@@ -74,7 +74,7 @@ function add(): void {
         $acomm = getVar('post', 'acomm', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=conf', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PAGENOTE]);
     if ($hometext) $cont .= preview($subject, $hometext, '', '', 'faq');
@@ -119,13 +119,13 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=faq');
     } elseif ($posttype == 'delete') {
-        del($fid);
+        delete($fid);
     } else {
         add();
     }
 }
 
-function del(int $fid = 0): void {
+function delete(int $fid = 0): void {
     global $db, $afile;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     if ($id) {
@@ -137,16 +137,16 @@ function del(int $fid = 0): void {
     setRedirect($afile.'.php?name=faq'.$refer);
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=conf', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/faq.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'        => $afile,
         '{%module%}'       => 'faq',
-        '{%op%}'           => 'saveconf',
+        '{%op%}'           => 'configsave',
         '{%save%}'         => _SAVECHANGES,
         '{%fields%}'       => '',
         '{%_cdefis%}'      => _CDEFIS,
@@ -196,7 +196,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -221,12 +221,12 @@ function saveconf(): void {
         'link' => getVar('post', 'link', 'num', 0),
     ];
     setConfigFile('faq.php', $cont);
-    setRedirect($afile.'.php?name=faq&op=conf');
+    setRedirect($afile.'.php?name=faq&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=conf', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -235,9 +235,9 @@ switch ($op) {
     default: faq(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

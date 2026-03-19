@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('order')) die('Illegal file access
 function order(): void {
     global $db, $afile, $conf;
         setHead();
-    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=conf', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     if (getVar('get', 'send', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _OR_8]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['order']['anum'] ?? 25;
@@ -31,7 +31,7 @@ function order(): void {
             .'<td>'.user_geo_ip($ip, 4).'</td>'
             .'<td>'.format_time($date, _TIMESTRING).'</td>'
             .'<td>'.ad_status('', $status).'</td>'
-            .'<td>'.add_menu(ad_status($afile.'.php?name=order&amp;op=active&amp;id='.$id.'&amp;act='.$act, $status).'||<a href="'.$afile.'.php?name=order&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=order&amp;op=del&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu(ad_status($afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status).'||<a href="'.$afile.'.php?name=order&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=order&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             $r--;
         }
         $cont .= '</tbody></table>';
@@ -60,7 +60,7 @@ function add(): void {
         $date = getVar('req', 'date', 'time');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=conf', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
     $cont .= setTemplateBasic('open');
@@ -94,20 +94,20 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=order');
     } elseif ($posttype === 'delete') {
-        del($mid);
+        delete($mid);
     } else {
         add();
     }
 }
 
-function del(int $did = 0): void {
+function delete(int $did = 0): void {
     global $db, $afile;
     $id = $did ? $did : getVar('req', 'id', 'num', 0);
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=order');
 }
 
-function active(): void {
+function activate(): void {
     global $db, $afile, $conf;
         $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
@@ -124,16 +124,16 @@ function active(): void {
     setRedirect($afile.'.php?name=order');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=conf', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'    => $afile,
         '{%module%}'   => 'order',
-        '{%op%}'       => 'saveconf',
+        '{%op%}'       => 'configsave',
         '{%save%}'     => _SAVECHANGES,
         '{%fields%}'   => '',
         '{%_or1%}'     => _OR_1,
@@ -161,7 +161,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'mail' => getVar('post', 'mail', 'text', ''),
@@ -175,12 +175,12 @@ function saveconf(): void {
         'sendinfo' => getVar('post', 'sendinfo', 'text', ''),
     ];
     setConfigFile('order.php', $cont);
-    setRedirect($afile.'.php?name=order&op=conf');
+    setRedirect($afile.'.php?name=order&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=conf', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -189,9 +189,9 @@ switch ($op) {
     default: order(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'active': active(); break;
-    case 'del': del(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'activate': activate(); break;
+    case 'delete': delete(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }

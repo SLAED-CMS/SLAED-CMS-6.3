@@ -292,7 +292,7 @@ function save(): void {
     setRedirect($afile.'.php?name=categories&modul='.$modul);
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id]);
@@ -318,6 +318,6 @@ switch ($op) {
     case 'addsave': addsave(); break;
     case 'edit': edit(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
+    case 'delete': delete(); break;
     case 'info': info(); break;
 }

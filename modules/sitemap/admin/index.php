@@ -10,7 +10,7 @@ function sitemap(): void {
     global $afile, $conf;
     setHead();
     $file = 'sitemap.xml';
-    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO]]);
     $cont .= checkPerms(BASE_DIR.'/'.$file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $f = $asize = 0;
@@ -46,11 +46,11 @@ function add(): void {
     setRedirect($afile.'.php?name=sitemap');
 }
 
-function xsl(): void {
+function xsledit(): void {
     global $afile;
     setHead();
     $file = SITEMAP_DIR.'/sitemap.xsl';
-    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_XSL_INFO, $file)]);
@@ -69,13 +69,13 @@ function xslsave(): void {
     if ($template !== '') {
         file_put_contents($file, $template);
     }
-    setRedirect($afile.'.php?name=sitemap&op=xsl');
+    setRedirect($afile.'.php?name=sitemap&op=xsledit');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
     $frs = ['0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY, 'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER];
     $h = $m = $c = $popt = '';
@@ -109,7 +109,7 @@ function conf(): void {
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'       => $afile,
         '{%module%}'      => 'sitemap',
-        '{%op%}'          => 'saveconf',
+        '{%op%}'          => 'configsave',
         '{%save%}'        => _SAVECHANGES,
         '{%fields%}'      => '',
         '{%_modules%}'    => _MODULES,
@@ -164,7 +164,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $mod = getVar('post', 'mod', 'num', []);
     $cont = [
@@ -191,12 +191,12 @@ function saveconf(): void {
         'txt' => getVar('post', 'txt', 'num', 0),
     ];
     setConfigFile('sitemap.php', $cont);
-    setRedirect($afile.'.php?name=sitemap&op=conf');
+    setRedirect($afile.'.php?name=sitemap&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsl', 'name=sitemap&amp;op=conf', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 3]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -204,10 +204,9 @@ function info(): void {
 switch ($op) {
     default: sitemap(); break;
     case 'add': add(); break;
-    case 'xsl': xsl(); break;
+    case 'xsledit': xsledit(); break;
     case 'xslsave': xslsave(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-

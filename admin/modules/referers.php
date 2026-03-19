@@ -47,7 +47,7 @@ function referers(): void {
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
     $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'sub' => getRefererSearch()]);
+    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'sub' => getRefererSearch()]);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
         $a = 0;
@@ -80,10 +80,10 @@ function referers(): void {
     setFoot();
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
+    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
@@ -119,10 +119,10 @@ function save(): void {
         'referb' => getVar('post', 'referb', 'num', 0),
     ];
     setConfigFile('referers.php', $content);
-    setRedirect($afile.'.php?name=referers&op=conf');
+    setRedirect($afile.'.php?name=referers&op=config');
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile;
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = 0');
     setRedirect($afile.'.php?name=referers');
@@ -130,15 +130,15 @@ function del(): void {
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=conf', 'name=referers&amp;op=del', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 3, 'sub' => getRefererSearch()]);
+    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 3, 'sub' => getRefererSearch()]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
 switch ($op) {
     default: referers(); break;
-    case 'conf': conf(); break;
+    case 'config': config(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
+    case 'delete': delete(); break;
     case 'info': info(); break;
 }

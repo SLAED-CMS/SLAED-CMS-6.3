@@ -17,12 +17,12 @@ function jokes(): void {
         $status = '0';
         $field = 'name=jokes&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=conf', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
     } else {
         $status = '1';
         $field = 'name=jokes&amp;';
         $refer = '';
-        $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=conf', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.ip, c.title, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.status = :status ORDER BY j.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -43,7 +43,7 @@ function jokes(): void {
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=jokes&amp;op=del&amp;id='.$jokeid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=jokes&amp;op=delete&amp;id='.$jokeid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_jokes', '', 'status = \''.$status.'\'', $anump);
@@ -72,7 +72,7 @@ function add(): void {
         $joke = getVar('post', 'joke', 'text', '');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=conf', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     if (!empty($joke)) $cont .= preview($title, $joke, '', '', 'all');
     $cont .= setTemplateBasic('open');
@@ -113,13 +113,13 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=jokes');
     } elseif ($posttype === 'delete') {
-        del($jokeid);
+        delete($jokeid);
     } else {
         add();
     }
 }
 
-function del(int $fid = 0): void {
+function delete(int $fid = 0): void {
     global $db, $afile;
     $id = $fid ? $fid : getVar('req', 'id', 'num', 0);
     if ($id) {
@@ -129,16 +129,16 @@ function del(int $fid = 0): void {
     setRedirect($afile.'.php?name=jokes');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=conf', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/jokes.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'      => $afile,
         '{%module%}'     => 'jokes',
-        '{%op%}'         => 'saveconf',
+        '{%op%}'         => 'configsave',
         '{%save%}'       => _SAVECHANGES,
         '{%fields%}'     => '',
         '{%_cdefis%}'    => _CDEFIS,
@@ -174,7 +174,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -192,12 +192,12 @@ function saveconf(): void {
         'rate' => getVar('post', 'rate', 'num', 0),
     ];
     setConfigFile('jokes.php', $cont);
-    setRedirect($afile.'.php?name=jokes&op=conf');
+    setRedirect($afile.'.php?name=jokes&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=conf', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -206,9 +206,9 @@ switch ($op) {
     default: jokes(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'del': del(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

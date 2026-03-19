@@ -17,17 +17,17 @@ function news(): void {
         $status = '0';
         $field = 'name=news&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=conf', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
     } else {
         $status = '1';
         $field = 'name=news&amp;';
         $refer = '';
-        $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=conf', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
-        $cont .= '<form name="post" action="'.$afile.'.php" method="post"><input type="hidden" name="name" value="news"><input type="hidden" name="op" value="admin"><input type="hidden" name="refer" value="1">'
+        $cont .= '<form name="post" action="'.$afile.'.php" method="post"><input type="hidden" name="name" value="news"><input type="hidden" name="op" value="actions"><input type="hidden" name="refer" value="1">'
         .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th><th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
@@ -45,7 +45,7 @@ function news(): void {
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.$vote.'<a href="'.$afile.'.php?name=news&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=news&amp;op=admin&amp;typ=d&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
+            .'<td>'.add_menu($view.$vote.'<a href="'.$afile.'.php?name=news&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
             .'<td><input type="checkbox" name="id[]" class="sl_check" value="'.$id.'"></td></tr>';
         }
         $cont .= '</tbody></table>';
@@ -84,7 +84,7 @@ function add(): void {
         $fix = getVar('post', 'fix', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=conf', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
     $homepre = ($vote) ? '<div id="repnews">'.getVoting($vote, 'news').'</div><hr>'.$hometext : $hometext;
     if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
@@ -160,13 +160,13 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=news');
     } elseif ($posttype === 'delete') {
-        admin($id, 'd');
+        actions($id, 'd');
     } else {
         add();
     }
 }
 
-function admin(int|array $ids = 0, string $vtyp = ''): void {
+function actions(int|array $ids = 0, string $vtyp = ''): void {
     global $db, $afile;
     $id = getVar('req', 'id', 'array', []);
     $req = $id;
@@ -209,16 +209,16 @@ function admin(int|array $ids = 0, string $vtyp = ''): void {
     setRedirect($afile.'.php?name=news'.$refer);
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=conf', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'        => $afile,
         '{%module%}'       => 'news',
-        '{%op%}'           => 'saveconf',
+        '{%op%}'           => 'configsave',
         '{%save%}'         => _SAVECHANGES,
         '{%fields%}'       => '',
         '{%_cdefis%}'      => _CDEFIS,
@@ -270,7 +270,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -296,12 +296,12 @@ function saveconf(): void {
         'assoc' => getVar('post', 'assoc', 'num', 0),
     ];
     setConfigFile('news.php', $cont);
-    setRedirect($afile.'.php?name=news&op=conf');
+    setRedirect($afile.'.php?name=news&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=conf', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -310,9 +310,9 @@ switch ($op) {
     default: news(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'admin': admin(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'actions': actions(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
 

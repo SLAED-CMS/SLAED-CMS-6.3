@@ -61,7 +61,7 @@ function getAdmintext(array $stop): string {
 }
 
 
-function adlist(): void {
+function admins(): void {
     global $db, $afile;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
@@ -76,8 +76,8 @@ function adlist(): void {
     while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super] = $db->getSqlRow($result)) {
         $lang = $lang ? getLangName($lang) : _ALL;
         $show = htmlspecialchars((string)$name, ENT_QUOTES, 'UTF-8');
-        $drop = '<form id="drop'.$aid.'" action="'.$afile.'.php?name=admins&amp;op=del" method="post" style="display:none;">'
-            .'<input type="hidden" name="op" value="del"><input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="token" value="'
+        $drop = '<form id="drop'.$aid.'" action="'.$afile.'.php?name=admins&amp;op=delete" method="post" style="display:none;">'
+            .'<input type="hidden" name="op" value="delete"><input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="token" value="'
             .htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8').'"></form>';
         $edit = '<a href="'.$afile.'.php?name=admins&amp;op=add&amp;id='.$aid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>';
         $drop .= '<a href="#" OnClick="if (DelCheck(this, \''._DELETE.' &quot;'.$show.'&quot;?\')) document.getElementById(\'drop'.$aid
@@ -92,7 +92,7 @@ function adlist(): void {
     setFoot();
 }
 
-function adform(): void {
+function add(): void {
     global $afile, $conf;
     $aid = getVar('req', 'id', 'num', 0);
     $stop = [];
@@ -173,7 +173,7 @@ function adform(): void {
     setFoot();
 }
 
-function adsave(): void {
+function save(): void {
     global $db, $afile, $conf, $stop;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
@@ -243,10 +243,10 @@ function adsave(): void {
         }
         setRedirect($afile.'.php?name=admins');
     }
-    adform();
+    add();
 }
 
-function addrop(): void {
+function delete(): void {
     global $db, $afile;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
@@ -272,7 +272,7 @@ function addrop(): void {
     setRedirect($afile.'.php?name=admins');
 }
 
-function adinfo(): void {
+function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
@@ -280,9 +280,9 @@ function adinfo(): void {
 }
 
 switch ($op) {
-    default: adlist(); break;
-    case 'add': adform(); break;
-    case 'save': adsave(); break;
-    case 'del': addrop(); break;
-    case 'info': adinfo(); break;
+    default: admins(); break;
+    case 'add': add(); break;
+    case 'save': save(); break;
+    case 'delete': delete(); break;
+    case 'info': info(); break;
 }

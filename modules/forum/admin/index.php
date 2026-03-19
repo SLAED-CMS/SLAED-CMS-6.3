@@ -27,7 +27,7 @@ function forum(): void {
         }
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=conf', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHIN]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._FORUM.'</th><th>'._NEWTOPICS.'</th><th>'._MESSAGES.'</th><th class="{sorter: false}">'._STATUS.'</th></tr></thead><tbody>';
@@ -43,10 +43,10 @@ function forum(): void {
     setFoot();
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=conf', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $sort_sel = '<select name="sort" class="sl_conf">'
@@ -61,7 +61,7 @@ function conf(): void {
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'          => $afile,
         '{%module%}'         => 'forum',
-        '{%op%}'             => 'saveconf',
+        '{%op%}'             => 'configsave',
         '{%save%}'           => _SAVECHANGES,
         '{%fields%}'         => '',
         '{%_cdefis%}'        => _CDEFIS,
@@ -104,7 +104,7 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $cont = [
         'defis' => getVar('post', 'defis', 'defis', '%3E'),
@@ -125,19 +125,19 @@ function saveconf(): void {
         'web' => getVar('post', 'web', 'num', 0),
     ];
     setConfigFile('forum.php', $cont);
-    setRedirect($afile.'.php?name=forum&op=conf');
+    setRedirect($afile.'.php?name=forum&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=conf', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 2]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
 switch ($op) {
     default: forum(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }

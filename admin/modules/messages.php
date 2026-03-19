@@ -35,7 +35,7 @@ function messages(): void {
                 .'<td>'.$exp.'</td>'
                 .'<td>'.$mview.'</td>'
                 .'<td>'.getLangName($lang).'</td>'
-                .'<td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active).'||<a href="'.$afile.'.php?name=messages&amp;op=add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=messages&amp;op=del&amp;id='.$mid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+                .'<td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active).'||<a href="'.$afile.'.php?name=messages&amp;op=add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=messages&amp;op=delete&amp;id='.$mid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setTemplateBasic('close');
@@ -119,7 +119,7 @@ function save(): void {
         }
         setRedirect($afile.'.php?name=messages');
     } elseif ($posttype == 'delete') {
-        del($mid);
+        delete($mid);
     } else {
         add();
     }
@@ -133,7 +133,7 @@ function status(): void {
     setRedirect($afile.'.php?name=messages');
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_message WHERE id = :mid', ['mid' => $id]);
@@ -152,6 +152,6 @@ switch ($op) {
     case 'add': add(); break;
     case 'save': save(); break;
     case 'status': status(); break;
-    case 'del': del(); break;
+    case 'delete': delete(); break;
     case 'info': info(); break;
 }

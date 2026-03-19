@@ -19,10 +19,10 @@ function changelog(): void {
 
     $_exporten = $conf['changelog']['exporten'] ?? true;
     $cont = setAdminNavi($_exporten ? [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
     ] : [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _INFO],
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
@@ -92,16 +92,16 @@ function changelog(): void {
     setFoot();
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
     $_exporten = $conf['changelog']['exporten'] ?? true;
     $cont = setAdminNavi($_exporten ? [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
         'tab'  => 1,
     ] : [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _INFO],
         'tab'  => 1,
     ]);
@@ -138,7 +138,7 @@ function conf(): void {
 
     $cont .= '<tr><td colspan="2" class="sl_center">';
     $cont .= '<input type="hidden" name="name" value="changelog">';
-    $cont .= '<input type="hidden" name="op" value="saveconf">';
+    $cont .= '<input type="hidden" name="op" value="configsave">';
     $cont .= '<input type="hidden" name="token" value="'.chlogEsc(getSiteToken('changelog')).'">';
     $cont .= '<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>';
     $cont .= '</table>';
@@ -158,18 +158,18 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile, $conf;
 
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'changelog')) {
         setHead();
         $_exporten = $conf['changelog']['exporten'] ?? true;
         $cont = setAdminNavi($_exporten ? [
-            'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+            'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
             'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
             'tab'  => 1,
         ] : [
-            'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'],
+            'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
             'tabs' => [_HOME, _PREFERENCES, _INFO],
             'tab'  => 1,
         ]);
@@ -198,7 +198,7 @@ function saveconf(): void {
     ];
 
     setConfigFile('changelog.php', $confdata);
-    setRedirect($afile.'.php?name=changelog&op=conf');
+    setRedirect($afile.'.php?name=changelog&op=config');
 }
 
 function export(): void {
@@ -222,11 +222,11 @@ function info(): void {
     setHead();
     $_exporten = $conf['changelog']['exporten'] ?? true;
     $cont = setAdminNavi($_exporten ? [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
         'tab'  => 4,
     ] : [
-        'ops'  => ['name=changelog', 'name=changelog&amp;op=conf', 'name=changelog&amp;op=info'],
+        'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _INFO],
         'tab'  => 4,
     ]);
@@ -258,8 +258,8 @@ function rendpage(int $totcom, int $totpage, int $perpage, int $page, array $fil
 
 switch ($op) {
     default: changelog(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'export': export(); break;
     case 'info': info(); break;
 }

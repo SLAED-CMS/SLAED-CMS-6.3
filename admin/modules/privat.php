@@ -9,15 +9,15 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function privat(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=conf', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     echo $cont.setTemplateBasic('open').'<div id="repajax_privat">'.ajax_privat(1).'</div>'.setTemplateBasic('close');
     setFoot();
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=conf', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
@@ -77,19 +77,19 @@ function save(): void {
         'act' => getVar('post', 'act', 'num')
     ];
     setConfigFile('privat.php', $cont);
-    setRedirect($afile.'.php?name=privat&op=conf');
+    setRedirect($afile.'.php?name=privat&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=conf', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
 switch ($op) {
     default: privat(); break;
-    case 'conf': conf(); break;
+    case 'config': config(); break;
     case 'save': save(); break;
     case 'info': info(); break;
 }

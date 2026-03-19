@@ -9,15 +9,15 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function favorites(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=conf', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     echo $cont.setTemplateBasic('open').'<div id="repfav_aliste">'.fav_aliste(1).'</div>'.setTemplateBasic('close');
     setFoot();
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=conf', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
@@ -56,19 +56,19 @@ function save(): void {
         'favact' => getVar('post', 'favact', 'num')
     ];
     setConfigFile('favorites.php', $cont);
-    setRedirect($afile.'.php?name=favorites&op=conf');
+    setRedirect($afile.'.php?name=favorites&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=conf', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
 
 switch ($op) {
     default: favorites(); break;
-    case 'conf': conf(); break;
+    case 'config': config(); break;
     case 'save': save(); break;
     case 'info': info(); break;
 }

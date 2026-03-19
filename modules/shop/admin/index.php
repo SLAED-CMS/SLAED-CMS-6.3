@@ -32,7 +32,7 @@ function clients(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['shop']['anum'];
     $a = ($num) ? $offset+1 : 1;
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -43,7 +43,7 @@ function clients(): void {
     }
     $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
-    $_sops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientsadd'];
+    $_sops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'];
     $_stabs = [_NEW, _AKTIVE, _DEAKTIVE, _ADD];
     if ($csearch) {
         $sqlstatus = 'status != \'2\'';
@@ -120,7 +120,7 @@ function clients(): void {
             .'<td>'.$nick.'</td>'
             .'<td>'.$cenddate.'</td>'
             .'<td>'.ad_status('', $cactive).'</td>'
-            .'<td>'.add_menu(ad_status($afile.'.php?name=shop&op=clientsact&amp;id='.$cid.$refer, $cactive).'||<a href="'.$afile.'.php?name=shop&op=clientsadd&amp;cid='.$cid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=clientsdel&amp;id='.$cid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu(ad_status($afile.'.php?name=shop&op=clientset&amp;id='.$cid.$refer, $cactive).'||<a href="'.$afile.'.php?name=shop&op=clientadd&amp;cid='.$cid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=clientdel&amp;id='.$cid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             $a++;
         }
         $cont .= '</tbody></table>';
@@ -133,7 +133,7 @@ function clients(): void {
     setFoot();
 }
 
-function clientsact(): void {
+function clientset(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]));
@@ -142,7 +142,7 @@ function clientsact(): void {
     setRedirect($afile.'.php?name=shop&op=clients');
 }
 
-function clientsadd(): void {
+function clientadd(): void {
     global $db, $afile, $conf, $stop;
         if (getVar('req', 'cid', 'num', 0)) {
         $cid = getVar('req', 'cid', 'num');
@@ -166,7 +166,7 @@ function clientsadd(): void {
         $cactive = getVar('post', 'cactive', 'num');
     }
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -181,7 +181,7 @@ function clientsadd(): void {
         'ops'    => $_ops,
         'tabs'   => $_lang,
         'sub'    => $_box,
-        'sops'   => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientsadd'],
+        'sops'   => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
         'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'subtab' => 1,
         'legacy' => 3,
@@ -229,13 +229,13 @@ function clientsadd(): void {
     .'<tr><td>'._CLIENTEND.':</td><td>'.datetime(1, 'cenddate', $cenddate, 16, 'sl_form').'</td></tr>'
     .'<tr><td>'._NOTE.':</td><td><input type="text" name="cinfo" value="'.$cinfo.'" maxlength="255" class="sl_form" placeholder="'._NOTE.'"></td></tr>'
     .'<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($cactive, 'cactive').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="cppi" value="'.$cppi.'">'.ad_save('cid', $cid, 'clientssave', 1).'</td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="cppi" value="'.$cppi.'">'.ad_save('cid', $cid, 'clientsave', 1).'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
 }
 
-function clientssave(): void {
+function clientsave(): void {
     global $db, $afile, $conf, $stop;
     $partner = getVar('post', 'partner', 'num');
     $uid = getVar('post', 'uid', 'num');
@@ -284,13 +284,13 @@ function clientssave(): void {
         }
         setRedirect($afile.'.php?name=shop&op=clients');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
-        clientsdel($cid);
+        clientdel($cid);
     } else {
-        clientsadd();
+        clientadd();
     }
 }
 
-function clientsdel(int $id = 0): void {
+function clientdel(int $id = 0): void {
     global $db, $afile;
     $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_clients WHERE id = :id', ['id' => $id]);
@@ -303,7 +303,7 @@ function products(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num-1) * $conf['shop']['anum'];
     $offset = intval($offset);
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -314,7 +314,7 @@ function products(): void {
     }
     $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
-    $_sops  = ['name=shop&amp;op=products', 'name=shop&amp;op=products&amp;status=1', 'name=shop&amp;op=productsadd'];
+    $_sops  = ['name=shop&amp;op=products', 'name=shop&amp;op=products&amp;status=1', 'name=shop&amp;op=productadd'];
     $_stabs = [_AKTIVE, _DEAKTIVE, _ADD];
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status=0';
@@ -365,11 +365,11 @@ function products(): void {
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime ?? '', _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span></td>'
             .'<td>'.$pprice.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.$vote.ad_status($afile.'.php?name=shop&op=productsadmin&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive).'||<a href="'.$afile.'.php?name=shop&op=productsadd&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=productsadmin&amp;typ=d&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$ptitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
+            .'<td>'.add_menu($view.$vote.ad_status($afile.'.php?name=shop&op=productops&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive).'||<a href="'.$afile.'.php?name=shop&op=productadd&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$ptitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
             .'<td><input type="checkbox" name="id[]" class="sl_check" value="'.$pid.'"></td></tr>';
         }
         $cont .= '</tbody></table>';
-        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="productsadmin"><input type="hidden" name="refer" value="1"> <input type="submit" value="'._OK.'" class="sl_but_blue">';
+        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="productops"><input type="hidden" name="refer" value="1"> <input type="submit" value="'._OK.'" class="sl_but_blue">';
         $numpt = setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_products', '', $sqlstatus, $conf['shop']['anump']);
         $cont .= '<table class="searchboxtab"><tr><td>'.$numpt.'</td><td><div class="searchbox">'.$selms.'</div></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
@@ -380,7 +380,7 @@ function products(): void {
     setFoot();
 }
 
-function productsadd(): void {
+function productadd(): void {
     global $db, $afile, $conf, $stop;
     if (getVar('req', 'id', 'num', 0)) {
         $id = getVar('req', 'id', 'num');
@@ -403,7 +403,7 @@ function productsadd(): void {
         $pactive = getVar('post', 'pactive', 'num');
     }
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -418,7 +418,7 @@ function productsadd(): void {
         'ops'    => $_ops,
         'tabs'   => $_lang,
         'sub'    => $_box,
-        'sops'   => ['name=shop&amp;op=products', 'name=shop&amp;op=products&amp;status=1', 'name=shop&amp;op=productsadd'],
+        'sops'   => ['name=shop&amp;op=products', 'name=shop&amp;op=products&amp;status=1', 'name=shop&amp;op=productadd'],
         'stabs'  => [_AKTIVE, _DEAKTIVE, _ADD],
         'tab'    => 1,
         'subtab' => 1,
@@ -455,13 +455,13 @@ function productsadd(): void {
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
     .'<tr><td>'._FIXED.'?</td><td>'.radio_form($fix, 'fix').'</td></tr>'
     .'<tr><td>'._ACTIVATEP.'</td><td>'.radio_form($pactive, 'pactive').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center">'.ad_save('pid', $pid, 'productssave').'</td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center">'.ad_save('pid', $pid, 'productsave').'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
 }
 
-function productssave(): void {
+function productsave(): void {
     global $db, $afile, $stop;
     $pid = getVar('post', 'pid', 'num');
     $pcid = getVar('post', 'pcid', 'num');
@@ -486,13 +486,13 @@ function productssave(): void {
         }
         setRedirect($afile.'.php?name=shop&op=products');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
-        productsadmin($pid, 'd');
+        productops($pid, 'd');
     } else {
-        productsadd();
+        productadd();
     }
 }
 
-function productsadmin(int|array $id = 0, string $vtyp = ''): void {
+function productops(int|array $id = 0, string $vtyp = ''): void {
     global $db, $afile;
     $id = getVar('req', 'id', 'array', []);
     $arg = $id;
@@ -536,7 +536,7 @@ function partners(): void {
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['shop']['anum'];
     $offset = intval($offset);
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -547,7 +547,7 @@ function partners(): void {
     }
     $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
-    $_sops  = ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partnersadd'];
+    $_sops  = ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'];
     $_stabs = [_NEW, _AKTIVE, _DEAKTIVE, _ADD];
     if (getVar('get', 'status', 'num') == 1) {
         $sqlstatus = 'status=1';
@@ -610,7 +610,7 @@ function partners(): void {
             .'<td>'.$pabek.' '.$conf['shop']['valute'].'</td>'
             .'<td>'.domain($pawebsite).'</td>'
             .'<td>'.date(_TIMESTRING, $paregdate).'</td>'
-            .'<td>'.add_menu(ad_status($afile.'.php?name=shop&op=partnersact&amp;id='.$paid.$refer, $paactive).'||<a href="'.$afile.'.php?name=shop&op=partnersdetails&amp;paid='.$paid.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=shop&op=partnersadd&amp;paid='.$paid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=partnersdel&amp;id='.$paid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu(ad_status($afile.'.php?name=shop&op=partnerset&amp;id='.$paid.$refer, $paactive).'||<a href="'.$afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=shop&op=partneradd&amp;paid='.$paid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_partners', '', $sqlstatus, $conf['shop']['anump']);
@@ -622,7 +622,7 @@ function partners(): void {
     setFoot();
 }
 
-function partnersact(): void {
+function partnerset(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     [$active] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]));
@@ -631,7 +631,7 @@ function partnersact(): void {
     setRedirect($afile.'.php?name=shop&op=partners');
 }
 
-function partnersadd(): void {
+function partneradd(): void {
     global $db, $afile, $stop;
     if (getVar('req', 'paid', 'num', 0)) {
         $paid = getVar('req', 'paid', 'num');
@@ -654,7 +654,7 @@ function partnersadd(): void {
         $paactive = getVar('post', 'paactive', 'num');
     }
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -669,7 +669,7 @@ function partnersadd(): void {
         'ops'    => $_ops,
         'tabs'   => $_lang,
         'sub'    => $_box,
-        'sops'   => ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partnersadd'],
+        'sops'   => ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'],
         'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'    => 2,
         'subtab' => 1,
@@ -697,13 +697,13 @@ function partnersadd(): void {
         .'<tr><td>'._PARTNERBEK.':</td><td><input type="text" name="pabek" value="'.$pabek.'" maxlength="255" class="sl_form" placeholder="'._PARTNERBEK.'"></td></tr>';
     }
     $cont .= '<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($paactive, 'paactive').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center">'.ad_save('paid', $paid, 'partnerssave', 1).'</td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center">'.ad_save('paid', $paid, 'partnersave', 1).'</td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
 }
 
-function partnerssave(): void {
+function partnersave(): void {
     global $db, $afile, $stop;
     $uid = getVar('post', 'uid', 'num');
     $paname = getVar('post', 'paname', 'text');
@@ -729,26 +729,26 @@ function partnerssave(): void {
         }
         setRedirect($afile.'.php?name=shop&op=partners');
     } elseif (getVar('post', 'posttype', 'text') == 'delete') {
-        partnersdel($paid);
+        partnerdel($paid);
     } else {
-        partnersadd();
+        partneradd();
     }
 }
 
-function partnersdel(int $id = 0): void {
+function partnerdel(int $id = 0): void {
     global $db, $afile;
     $id = ($id) ? $id : getVar('req', 'id', 'num', 0);
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_partners WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=shop&op=partners');
 }
 
-function partnersdetails(): void {
+function partnerinfo(): void {
     global $db, $afile, $conf;
     $paid = getVar('get', 'paid', 'num');
     $a = 0;
     $partsumges = 0;
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -763,7 +763,7 @@ function partnersdetails(): void {
         'ops'    => $_ops,
         'tabs'   => $_lang,
         'sub'    => $_box,
-        'sops'   => ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partnersadd'],
+        'sops'   => ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'],
         'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'    => 2,
         'subtab' => 1,
@@ -806,7 +806,7 @@ function partnersdetails(): void {
     setFoot();
 }
 
-function exportdata(): void {
+function export(): void {
     global $db, $afile;
     $id = getVar('post', 'id', 'num');
     $bd = getVar('post', 'bd', 'text');
@@ -872,7 +872,7 @@ function exportdata(): void {
         setRedirect($afile.'.php?name=shop&op='.$idb);
     } else {
         setHead();
-        $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+        $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
         $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
         $_search = getVar('post', 'search', 'num');
         $_csearch = getVar('post', 'csearch', 'text');
@@ -941,10 +941,10 @@ function exportdata(): void {
     }
 }
 
-function shop(): void {
+function config(): void {
     global $afile, $conf;
         setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -959,7 +959,7 @@ function shop(): void {
         'ops'  => $_ops,
         'tabs' => $_lang,
         'sub'  => $_box,
-        'sops'  => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientsadd'],
+        'sops'  => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
         'stabs' => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'  => 4,
     ]);
@@ -1062,13 +1062,13 @@ function save(): void {
         'shopinfo' => $shopinfo,
     ];
     setConfigFile('shop.php', $cont);
-    setRedirect($afile.'.php?name=shop&op=conf');
+    setRedirect($afile.'.php?name=shop&op=config');
 }
 
 function info(): void {
     global $afile;
     setHead();
-    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=conf', 'name=shop&amp;op=info'];
+    $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
@@ -1083,7 +1083,7 @@ function info(): void {
         'ops'  => $_ops,
         'tabs' => $_lang,
         'sub'  => $_box,
-        'sops'  => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientsadd'],
+        'sops'  => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
         'stabs' => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'  => 5,
     ]);
@@ -1091,33 +1091,28 @@ function info(): void {
     setFoot();
 }
 
-function conf(): void {
-    clients();
-}
-
 switch($op) {
     default: shop(); break;
     case 'clients': clients(); break;
-    case 'clientsact': clientsact(); break;
-    case 'clientsadd': clientsadd(); break;
-    case 'clientssave': clientssave(); break;
-    case 'clientsdel': clientsdel(); break;
+    case 'clientset': clientset(); break;
+    case 'clientadd': clientadd(); break;
+    case 'clientsave': clientsave(); break;
+    case 'clientdel': clientdel(); break;
     case 'products': products(); break;
-    case 'productsadd': productsadd(); break;
-    case 'productssave': productssave(); break;
-    case 'productsadmin': productsadmin(); break;
+    case 'productadd': productadd(); break;
+    case 'productsave': productsave(); break;
+    case 'productops': productops(); break;
     case 'partners': partners(); break;
-    case 'partnersact': partnersact(); break;
-    case 'partnersadd': partnersadd(); break;
-    case 'partnersdetails': partnersdetails(); break;
-    case 'partnerssave': partnerssave(); break;
-    case 'partnersdel': partnersdel(); break;
-    case 'export': exportdata(); break;
-    case 'conf': conf(); break;
+    case 'partnerset': partnerset(); break;
+    case 'partneradd': partneradd(); break;
+    case 'partnerinfo': partnerinfo(); break;
+    case 'partnersave': partnersave(); break;
+    case 'partnerdel': partnerdel(); break;
+    case 'export': export(); break;
+    case 'config': config(); break;
     case 'save': save(); break;
     case 'info': info(); break;
 }
-
 
 
 

@@ -21,7 +21,7 @@ function account(): void {
     }
     $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
     ]);
@@ -81,7 +81,7 @@ function account(): void {
             $sgroup = $gname ? '<span style="color: '.$gcolor.'">'.$gname.'</span>' : _NO;
             $web = $site ? domain($site, 40) : _NO;
             $cont .= '<tr><td>'.filterTextHighlight($uid, $chng).'</td>'
-                .'<td>'.title_tip(_HASH.': '.md5($agent).'<br>'._LAST_VISIT.': '.format_time($last, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.filterTextHighlight($web,$chng).'<br>'._GENDER.': '.gender($gender).'<br>'._POINTS.': '.$point).filterTextHighlight(user_info($name), $chng).'</td><td>'.filterTextHighlight(user_geo_ip($ip, 4), $chng).'</td><td>'.filterTextHighlight($mail, $chng).'</td><td>'.format_time($reg, _TIMESTRING).'</td><td>'.add_menu('<a href="'.$afile.'.php?name=account&amp;op=add&amp;id='.$uid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=security&amp;op=block&amp;new_ip='.$ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?name=account&amp;op=del&amp;id='.$uid.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+                .'<td>'.title_tip(_HASH.': '.md5($agent).'<br>'._LAST_VISIT.': '.format_time($last, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.filterTextHighlight($web,$chng).'<br>'._GENDER.': '.gender($gender).'<br>'._POINTS.': '.$point).filterTextHighlight(user_info($name), $chng).'</td><td>'.filterTextHighlight(user_geo_ip($ip, 4), $chng).'</td><td>'.filterTextHighlight($mail, $chng).'</td><td>'.format_time($reg, _TIMESTRING).'</td><td>'.add_menu('<a href="'.$afile.'.php?name=account&amp;op=add&amp;id='.$uid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $lsear = $search ? '&amp;search='.$search : '';
@@ -158,7 +158,7 @@ function add(): void {
     }
     $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
         'tab'  => 1,
@@ -329,7 +329,7 @@ function newuser(): void {
     }
     $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
         'tab'  => 2,
@@ -346,7 +346,7 @@ function newuser(): void {
             .'<td>'.$mail.'</td>'
             .'<td>'.$pass.'</td>'
             .'<td>'.$reg.'</td>'
-            .'<td>'.add_menu(ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check, 0).'||<a href="'.$afile.'.php?name=account&amp;op=newdel&amp;id='.$uid.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.add_menu(ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check, 0).'||<a href="'.$afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', (int)$conf['users']['anum'], 'name=account&amp;op=newuser&amp;', 'id', '_users_temp', '', '', (int)$conf['users']['anump'], []);
@@ -358,7 +358,7 @@ function newuser(): void {
     setFoot();
 }
 
-function nullpoints(): void {
+function pointreset(): void {
     global $afile;
     setHead();
     $_search = getVar('post', 'search');
@@ -370,7 +370,7 @@ function nullpoints(): void {
     }
     $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
         'tab'  => 3,
@@ -381,13 +381,13 @@ function nullpoints(): void {
     .'<tr><td>'._RATINGS.':</td><td>'.radio_form(0, 'votes').'</td></tr>'
     .'<tr><td>'._UWARNS.':</td><td>'.radio_form(0, 'warnings').'</td></tr>'
     .'<tr><td>'._SIGNATURE.':</td><td>'.radio_form(0, 'sig').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="nullsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="resave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $cont .= setTemplateBasic('close');
     echo $cont;
     setFoot();
 }
 
-function nullsave(): void {
+function resave(): void {
     global $db, $afile;
     $points = getVar('post', 'points', 'num');
     $votes = getVar('post', 'votes', 'num');
@@ -400,7 +400,7 @@ function nullsave(): void {
     setRedirect($afile.'.php?name=account');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
     $_search = getVar('post', 'search');
@@ -412,7 +412,7 @@ function conf(): void {
     }
     $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
         'tab'  => 4,
@@ -523,17 +523,17 @@ function save(): void {
         'points' => $conf['users']['points']
     ];
     setConfigFile('users.php', $cont);
-    setRedirect($afile.'.php?name=account&op=conf');
+    setRedirect($afile.'.php?name=account&op=config');
 }
 
-function newdel(): void {
+function newdrop(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     if ($id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=account', true);
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile;
     $id = getVar('get', 'id', 'num');
     if ($id) {
@@ -556,7 +556,7 @@ function info(): void {
     }
     $_box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
-        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=null', 'name=account&amp;op=conf', 'name=account&amp;op=info'],
+        'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]),
         'tab'  => 5,
@@ -570,11 +570,11 @@ switch ($op) {
     case 'add': add(); break;
     case 'addsave': addsave(); break;
     case 'newuser': newuser(); break;
-    case 'newdel': newdel(); break;
-    case 'del': del(); break;
-    case 'null': nullpoints(); break;
-    case 'nullsave': nullsave(); break;
-    case 'conf': conf(); break;
+    case 'newdrop': newdrop(); break;
+    case 'delete': delete(); break;
+    case 'pointreset': pointreset(); break;
+    case 'resave': resave(); break;
+    case 'config': config(); break;
     case 'save': save(); break;
     case 'info': info(); break;
 }

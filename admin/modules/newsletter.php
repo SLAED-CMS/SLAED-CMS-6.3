@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function newsletter(): void {
     global $db, $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=conf', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
@@ -47,7 +47,7 @@ function add(): void {
         $mails = getVar('post', 'mails', '', '');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=conf', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
@@ -218,22 +218,22 @@ function save(): void {
     }
 }
 
-function del(): void {
+function delete(): void {
     global $db, $afile, $id;
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_newsletter WHERE id = :id', ['id' => $id]);
     setRedirect($afile.'.php?name=newsletter');
 }
 
-function conf(): void {
+function config(): void {
     global $afile, $conf;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=conf', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
     $cont .= setTemplateBasic('open');
     $cont .= setTemplateBasic('form-conf', [
         '{%route%}'    => $afile,
         '{%module%}'   => 'newsletter',
-        '{%op%}'       => 'saveconf',
+        '{%op%}'       => 'configsave',
         '{%save%}'     => _SAVECHANGES,
         '{%fields%}'   => '',
         '{%_nlsend%}'  => _NLSEND,
@@ -248,19 +248,19 @@ function conf(): void {
     setFoot();
 }
 
-function saveconf(): void {
+function configsave(): void {
     global $afile;
     $content = [
         'active' => getVar('post', 'active', 'num', 0),
         'count'  => getVar('post', 'count', 'num', 4),
     ];
     setConfigFile('newsletter.php', $content);
-    setRedirect($afile.'.php?name=newsletter&op=conf');
+    setRedirect($afile.'.php?name=newsletter&op=config');
 }
 
 function info(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=conf', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
     setFoot();
 }
@@ -269,8 +269,8 @@ switch ($op) {
     default: newsletter(); break;
     case 'add': add(); break;
     case 'save': save(); break;
-    case 'delete': del(); break;
-    case 'conf': conf(); break;
-    case 'saveconf': saveconf(); break;
+    case 'delete': delete(); break;
+    case 'config': config(); break;
+    case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
