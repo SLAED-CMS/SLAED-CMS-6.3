@@ -1,0 +1,11 @@
+{%if info%}{%info%}<hr>{%endif%}
+<form action="index.php?name={%name%}" method="post">
+<table class="sl_table_form">
+{%if admin_options%}
+<tr><td>{%lbl_to%}:</td><td><select name="id" class="sl_field {%style%}">{%admin_options%}</select></td></tr>
+{%endif%}
+<tr><td>{%lbl_name%}:</td><td><input type="text" name="sname" value="{%sname%}" class="sl_field {%style%}" placeholder="{%lbl_name%}" required></td></tr>
+<tr><td>{%lbl_email%}:</td><td><input type="email" name="semail" value="{%semail%}" class="sl_field {%style%}" placeholder="{%lbl_email%}" required></td></tr>
+<tr><td>{%lbl_message%}:</td><td><textarea name="message" cols="65" rows="10" class="sl_field {%style%}" placeholder="{%lbl_message%}" required>{%message%}</textarea></td></tr>
+<tr><td colspan="2" class="sl_center">{%captcha%}<input type="hidden" name="token" value="{%token%}"><input type="hidden" name="op" value="contact"><input type="hidden" name="send" value="1"><input type="submit" value="{%submit%}" class="sl_but_blue"></td></tr>
+</table></form>

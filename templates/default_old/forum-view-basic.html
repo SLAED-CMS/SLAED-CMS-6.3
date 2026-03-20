@@ -1,0 +1,42 @@
+<div id="{%id%}" {%hclass%}>
+	<div class="forum-post">
+		<div class="forum-post-in clrfix">
+			<div class="fp-right">
+				<div class="fp-meta">
+					<div class="pull-right">
+						<div class="min-rate">
+							<div class="rate-like-box">{%rating%}</div>
+						</div>
+						{%post_count%}
+					</div>
+					<span class="grey">{%date%} {%ip%}</span>
+				</div>
+				<div class="entry-content">{%text%}<div class="sl_sig">{%sig%}</div></div>
+				<div class="fp-moder">{%btn_personal%}{%btn_pm%}{%btn_profile%}{%btn_web%}{%btn_warn%}{%btn_thank%}{%btn_reply%}{%btn_edit%}</div>
+			</div>
+			<div class="fp-left">
+				<div class="fp-nickname dropdown dropup">
+					<a OnClick="HideShow(&#039;f-form-{%id%}&#039;, &#039;blind&#039;, &#039;down&#039;, 500);"><b>{%username%}</b></a>
+					<div id="f-form-{%id%}" class="dropdown-form">
+						<ul class="list-text">
+							<li>{%group%}</li>
+							<li>{%points%}</li>
+							<li>{%regdate%}</li>
+							<li>{%gender%}</li>
+							<li>{%from%}</li>
+							<li>{%warn%}</li>
+						</ul>
+					</div>
+				</div>
+				<a title="{%username%}" class="sl_avatar" style="background-image: url({%avatar%});"></a>
+				<div class="min-rate">
+					<div class="rate-like-box">{%user_rate%}</div>
+				</div>
+				<ul class="fp-user-info">
+					<li>{%rank%}</li>
+					<li>{%rank_link%}</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
