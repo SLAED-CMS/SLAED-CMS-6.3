@@ -43,7 +43,7 @@ function autolink(): void {
         while ([$id, $sitename, $intro, $hits, $outs, $time] = $db->getSqlRow($result)) {
             $thref = 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id;
             $date = format_time($time);
-            $hits = setTemplateBasic('auto-links-hit-badge', ['{%title%}' => _HITS, '{%text%}' => $hits]);
+            $hits = setTemplateBasic('hit-badge', ['{%title%}' => _HITS, '{%text%}' => $hits, '{%cls%}' => 'sl_hits']);
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$sitename.'&quot;?');
             $cont .= setTemplateBasic('basic', [
                 '{%id%}' => $id,

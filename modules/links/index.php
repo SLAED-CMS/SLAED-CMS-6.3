@@ -196,7 +196,8 @@ function view(): void {
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
-        $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
+        $ctitle = ($ctitle) ? setTemplateBasic('category-link', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%text%}' => cutstr($ctitle, 15)]) : '';
+        $cimg = ($cimg) ? setTemplateBasic('category-image', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%src%}' => img_find('categories/'.$cimg)]) : '';
         $post = ($conf['links']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['links']['date']) ? format_time($date) : '';
         $hits = ($conf['links']['hits']) ? '<span title="'._LINKHITS.'" class="sl_down">'.$hits.'</span>' : '';
@@ -212,7 +213,31 @@ function view(): void {
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCLINK.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($authorurl) ? _SITE.': '.domain($authorurl) : '';
-        $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true, 'is_moder' => is_moder($conf['name']), 'has_back' => true], '{%id%}' => $id, '{%title_href%}' => '', '{%title_attr%}' => $title, '{%title_text%}' => filterTextHighlight($title, $word), '{%title_new%}' => '', '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '', '{%category_img%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read_href%}' => '', '{%read_text%}' => '', '{%post_text%}' => $post, '{%post_label%}' => _POSTEDBY, '{%date_text%}' => $date, '{%date_iso%}' => ($date) ? date('c', strtotime($seotime)) : '', '{%date_label%}' => _CHNGSTORY, '{%reads_text%}' => ($conf['links']['read']) ? $counter : '', '{%reads_label%}' => _READS, '{%hits%}' => $hits, '{%comm_href%}' => '', '{%comm_text%}' => '', '{%comm_label%}' => _COMMENTS, '{%rating%}' => $rating, '{%favorites%}' => $favorites, '{%voting%}' => '', '{%editor%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=links_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=links_delete&amp;id='.$id, '{%delete_text%}' => _ONDELETE, '{%delete_ask%}' => $ask, '{%back_title%}' => _BACK, '{%back_text%}' => _BACK]);
+        $admin = (is_moder($conf['name'])) ? setTemplateBasic('admin-menu', ['{%editor_text%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=links_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=links_delete&amp;id='.$id, '{%delete_ask%}' => $ask, '{%delete_text%}' => _ONDELETE]) : '';
+        $goback = setTemplateBasic('back-button', ['{%title%}' => _BACK, '{%label%}' => _BACK]);
+        $cont .= setTemplateBasic('basic-download-view', [
+            '{%id%}' => $id,
+            '{%favorites%}' => $favorites,
+            '{%title%}' => filterTextHighlight($title, $word),
+            '{%hits%}' => $hits,
+            '{%reads%}' => ($conf['links']['read']) ? $counter : '',
+            '{%reads_label%}' => _READS,
+            '{%post%}' => $post,
+            '{%post_label%}' => _POSTEDBY,
+            '{%date%}' => $date,
+            '{%date_iso%}' => ($date) ? date('c', strtotime($seotime)) : '',
+            '{%date_label%}' => _CHNGSTORY,
+            '{%ctitle%}' => $ctitle,
+            '{%cimg%}' => $cimg,
+            '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word),
+            '{%email%}' => $email,
+            '{%home%}' => $home,
+            '{%rating%}' => $rating,
+            '{%goback%}' => $goback,
+            '{%admin%}' => $admin,
+            '{%download%}' => $download ?? '',
+            '{%broken%}' => $broken,
+        ]);
         if ($conf['links']['link']) {
             $limit = intval($conf['links']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_links WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));

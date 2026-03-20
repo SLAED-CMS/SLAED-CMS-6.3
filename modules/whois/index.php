@@ -89,14 +89,14 @@ function mwhois(): void {
 				break;
 			}
 		}
-		$cont .= setTemplateBasic('whois-result-open', ['{%legend%}' => _WHOIS_SUCH]);
+		$cont .= setTemplateBasic('whois-result', ['if_flag' => ['open' => true], '{%legend%}' => _WHOIS_SUCH]);
 		if ($licens) {
 			$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_green', '{%text%}' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!']);
 		} else {
 			$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!']);
 			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? setTemplateBasic('whois-license-add-button', ['{%name%}' => $conf['name'], '{%domain%}' => $domainlicens, '{%submit_label%}' => _WHOIS_LICENS_SEND]) : '';
 		}
-		$cont .= setTemplateBasic('whois-result-close');
+		$cont .= setTemplateBasic('whois-result', ['if_flag' => ['open' => false]]);
 	} elseif ($option == 'licens') {
 		$cont .= printresults(namecheck($domainlicens), 1);
 	}
@@ -262,7 +262,7 @@ function printresults(int|string|null $layout, int $id): string {
 	global $domainwhois, $ext, $server, $domainopt, $conf;
 	$cont = '';
 	if (!$id) $cont .= $domainopt;
-	$cont .= setTemplateBasic('whois-result-open', ['{%legend%}' => _WHOIS_SUCH]);
+	$cont .= setTemplateBasic('whois-result', ['if_flag' => ['open' => true], '{%legend%}' => _WHOIS_SUCH]);
 	if ($layout=='0') {
 		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_green', '{%text%}' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!']);
 	} elseif($layout=='1') {
@@ -273,7 +273,7 @@ function printresults(int|string|null $layout, int $id): string {
 	} else {
 		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => $layout]);
 	}
-	$cont .= setTemplateBasic('whois-result-close');
+	$cont .= setTemplateBasic('whois-result', ['if_flag' => ['open' => false]]);
 	return $cont;
 }
 

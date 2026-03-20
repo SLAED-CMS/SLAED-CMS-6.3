@@ -76,7 +76,7 @@ function files(): void {
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $post = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['files']['date']) ? format_time($time) : '';
-            $hits = ($conf['files']['hits']) ? setTemplateBasic('files-hit-badge', ['{%title%}' => _FILEHITS, '{%text%}' => $hits]) : '';
+            $hits = ($conf['files']['hits']) ? setTemplateBasic('hit-badge', ['{%title%}' => _FILEHITS, '{%text%}' => $hits, '{%cls%}' => 'sl_down']) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             $cont .= setTemplateBasic('basic', [
@@ -209,10 +209,11 @@ function view(): void {
         if ($conf['files']['viewcat']) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], 0);
         $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
-        $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
+        $ctitle = ($ctitle) ? setTemplateBasic('category-link', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%text%}' => cutstr($ctitle, 15)]) : '';
+        $cimg = ($cimg) ? setTemplateBasic('category-image', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%src%}' => img_find('categories/'.$cimg)]) : '';
         $post = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['files']['date']) ? format_time($date) : '';
-        $hits = ($conf['files']['hits']) ? setTemplateBasic('files-hit-badge', ['{%title%}' => _FILEHITS, '{%text%}' => $hits]) : '';
+        $hits = ($conf['files']['hits']) ? setTemplateBasic('hit-badge', ['{%title%}' => _FILEHITS, '{%text%}' => $hits, '{%cls%}' => 'sl_down']) : '';
         $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavorBtn($id, $conf['name']);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
@@ -225,42 +226,33 @@ function view(): void {
         $broken = ($conf['files']['broc'] == 1 && $status != '2') ? setTemplateBasic('files-action-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id, '{%title%}' => _BROCFILE, '{%label%}' => _COMPLAINT, '{%class%}' => 'sl_but_blue']) : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($awebsite) ? _SITE.': '.domain($awebsite) : '';
-        $cont .= setTemplateBasic('basic', [
-            'if_flag' => ['is_view' => true, 'is_moder' => is_moder($conf['name']), 'has_back' => true],
+        $admin = (is_moder($conf['name'])) ? setTemplateBasic('admin-menu', ['{%editor_text%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=files_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=files_delete&amp;id='.$id, '{%delete_ask%}' => $ask, '{%delete_text%}' => _ONDELETE]) : '';
+        $goback = setTemplateBasic('back-button', ['{%title%}' => _BACK, '{%label%}' => _BACK]);
+        $cont .= setTemplateBasic('basic-download-view', [
+            'if_flag' => ['has_size' => true, 'has_version' => true],
             '{%id%}' => $id,
-            '{%title_href%}' => '',
-            '{%title_attr%}' => $title,
-            '{%title_text%}' => filterTextHighlight($title, $word),
-            '{%title_new%}' => '',
-            '{%category_href%}' => $ctitle ? $chref : '',
-            '{%category_attr%}' => $cdesc,
-            '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '',
-            '{%category_img%}' => $cimg,
-            '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word),
-            '{%read_href%}' => '',
-            '{%read_text%}' => '',
-            '{%post_text%}' => $post,
+            '{%favorites%}' => $favorites,
+            '{%title%}' => filterTextHighlight($title, $word),
+            '{%hits%}' => $hits,
+            '{%reads%}' => ($conf['files']['read']) ? $counter : '',
+            '{%reads_label%}' => _READS,
+            '{%post%}' => $post,
             '{%post_label%}' => _POSTEDBY,
-            '{%date_text%}' => $date,
+            '{%date%}' => $date,
             '{%date_iso%}' => ($date) ? date('c', strtotime($seotime)) : '',
             '{%date_label%}' => _CHNGSTORY,
-            '{%reads_text%}' => ($conf['files']['read']) ? $counter : '',
-            '{%reads_label%}' => _READS,
-            '{%hits%}' => $hits,
-            '{%comm_href%}' => '',
-            '{%comm_text%}' => '',
-            '{%comm_label%}' => _COMMENTS,
+            '{%ctitle%}' => $ctitle,
+            '{%cimg%}' => $cimg,
+            '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word),
+            '{%size%}' => $size,
+            '{%version%}' => $version,
+            '{%email%}' => $email,
+            '{%home%}' => $home,
             '{%rating%}' => $rating,
-            '{%favorites%}' => $favorites,
-            '{%voting%}' => '',
-            '{%editor%}' => _EDITOR,
-            '{%edit_href%}' => $afile.'.php?op=files_add&amp;id='.$id,
-            '{%edit_text%}' => _FULLEDIT,
-            '{%delete_href%}' => $afile.'.php?op=files_delete&amp;id='.$id,
-            '{%delete_text%}' => _ONDELETE,
-            '{%delete_ask%}' => $ask,
-            '{%back_title%}' => _BACK,
-            '{%back_text%}' => _BACK,
+            '{%goback%}' => $goback,
+            '{%admin%}' => $admin,
+            '{%download%}' => $download ?? '',
+            '{%broken%}' => $broken,
         ]);
         if ($conf['files']['link']) {
             $limit = intval($conf['files']['linknum']);
