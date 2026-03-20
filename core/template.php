@@ -131,6 +131,7 @@ if (!function_exists('setTemplateHead')) {
                     '{%nickname%}' => _NICKNAME,
                     '{%password%}' => _PASSWORD,
                     '{%captcha%}' => $captcha,
+                    '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
                     '{%lost%}' => _PASSFOR,
                     '{%register%}' => _REG,
                 ]);

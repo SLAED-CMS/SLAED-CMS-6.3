@@ -72,16 +72,50 @@ function jokes(): void {
     $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.body, j.rating, j.ratetot, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid=u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $uname, $time, $jtitle, $cid, $joke, $rating, $ratingtot, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
-            $title = '<a href="#'.$id.'" title="'.$jtitle.'">'.filterTextHighlight($jtitle, $word).'</a> '.new_graphic($time);
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
-            $date = ($conf['jokes']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-            $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
-            $cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
+            $date = ($conf['jokes']['date']) ? format_time($time) : '';
+            $cdesc = $cdesc ?: $ctitle;
+            $chref = 'index.php?name='.$conf['name'].'&amp;cat='.$cid;
+            $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $rating = ajax_rating(1, $id, $conf['name'], $ratingtot, $rating, '');
-            $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=jokes_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=jokes_delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$jtitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($joke, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => '', '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$jtitle.'&quot;?');
+            $cont .= setTemplateBasic('basic', [
+                '{%id%}' => $id,
+                '{%title_href%}' => '#'.$id,
+                '{%title_attr%}' => $jtitle,
+                '{%title_text%}' => filterTextHighlight($jtitle, $word),
+                '{%title_new%}' => new_graphic($time),
+                '{%category_href%}' => $ctitle ? $chref : '',
+                '{%category_attr%}' => $cdesc,
+                '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '',
+                '{%category_img%}' => $cimg,
+                '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($joke, $conf['name'], false), $conf['name']), $word),
+                '{%read_href%}' => '',
+                '{%read_text%}' => '',
+                '{%post_text%}' => $post,
+                '{%post_label%}' => _POSTEDBY,
+                '{%date_text%}' => $date,
+                '{%date_iso%}' => ($date) ? date('c', strtotime($time)) : '',
+                '{%date_label%}' => _CHNGSTORY,
+                '{%reads_text%}' => '',
+                '{%reads_label%}' => _READS,
+                '{%hits%}' => '',
+                '{%comm_href%}' => '',
+                '{%comm_text%}' => '',
+                '{%comm_label%}' => _COMMENTS,
+                '{%rating%}' => $rating,
+                '{%favorites%}' => '',
+                '{%voting%}' => '',
+                '{%editor%}' => _EDITOR,
+                '{%edit_href%}' => $afile.'.php?op=jokes_add&amp;id='.$id,
+                '{%edit_text%}' => _FULLEDIT,
+                '{%delete_href%}' => $afile.'.php?op=jokes_delete&amp;id='.$id.'&amp;refer=1',
+                '{%delete_text%}' => _ONDELETE,
+                '{%delete_ask%}' => $ask,
+                '{%back_title%}' => '',
+                '{%back_text%}' => '',
+                'if_flag' => ['is_moder' => is_moder($conf['name'])],
+            ]);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_jokes', 'cid', $onum, $conf['jokes']['nump']);
     } else {
@@ -103,17 +137,23 @@ function add(): void {
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         if ($joke) $cont .= preview($title, $joke, '', '', 'all');
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADD_JNOTE]);
-        $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
-        if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
-        } else {
-            $postname = ($postname) ? $postname : _ANONYM;
-            $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
-        }
-        $cont .= '<tr><td>'._JTITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._JTITLE.'" required></td></tr>'
-        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-        .'<tr><td>'._JOKE.':</td><td>'.textarea('1', 'joke', $joke, $conf['name'], '10', _JOKE, '1').'</td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
+        $cont .= setTemplateBasic('form-add', [
+            'if_flag' => ['has_name' => true, 'is_user' => is_user()],
+            '{%name%}' => $conf['name'],
+            '{%token%}' => htmlspecialchars(getSiteToken('jokes'), ENT_QUOTES, 'UTF-8'),
+            '{%style%}' => $conf['style'],
+            '{%lbl_name%}' => _YOURNAME,
+            '{%lbl_title%}' => _JTITLE,
+            '{%lbl_cat%}' => _CATEGORY,
+            '{%lbl_text%}' => _JOKE,
+            '{%username%}' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            '{%postname%}' => $postname ?: _ANONYM,
+            '{%titleval%}' => $title,
+            '{%catselect%}' => getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
+            '{%hometext%}' => textarea('1', 'joke', $joke, $conf['name'], '10', _JOKE, '1'),
+            '{%captcha%}' => getCaptcha(1),
+            '{%submit%}' => ad_save('', '', 'send'),
+        ]);
         echo $cont;
         setFoot();
     } else {
@@ -129,6 +169,7 @@ function send(): void {
         $cid = getVar('post', 'cid', 'num');
         $joke = getVar('post', 'joke', 'text');
         $stop = [];
+        if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'jokes')) $stop[] = _ERROR;
         if (!$title) $stop[] = _CERROR;
         if (!$joke) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;

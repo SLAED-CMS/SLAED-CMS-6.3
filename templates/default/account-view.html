@@ -6,7 +6,7 @@
 		</div>
 		<ul class="fp-user-info">
 			<li>{%urank%}</li>
-			<li>{%rank%}</li>
+			<li>{%if has_rank_image%}<img src="{%rank_src%}" alt="{%rank_alt%}" title="{%rank_alt%}">{%endif%}</li>
 		</ul>
 	</div>
 	<div class="com-right">
@@ -20,7 +20,12 @@
 					</ul>
 				</div>
 			</div>
-			<div class="carg">{%admin%}{%privat%}{%profil%}{%goback%}</div>
+			<div class="carg">
+				{%if has_admin_actions%}<span class="sl_menu"><a href="{%admin_edit_href%}" title="{%admin_edit_label%}">{%admin_edit_label%}</a><a href="{%admin_block_href%}" OnClick="return DelCheck(this, '{%admin_block_confirm%}');" title="{%admin_block_title%}">{%admin_block_title%}</a><a href="{%admin_delete_href%}" OnClick="return DelCheck(this, '{%admin_delete_confirm%}');" title="{%admin_delete_title%}">{%admin_delete_title%}</a></span>{%endif%}
+				{%if has_privat_button%}<a href="{%privat_href%}" title="{%privat_title%}" class="sl_but_green">{%privat_label%}</a>{%endif%}
+				{%if has_profil_button%}<a href="{%profil_href%}" title="{%profil_title%}" class="sl_but">{%profil_label%}</a>{%endif%}
+				{%if has_back_button%}<span OnClick="javascript:window.history.go(-1);" title="{%back_title%}" class="sl_but_back">{%back_label%}</span>{%endif%}
+			</div>
 		</div>
 		<div class="com-cont clrfix">
 			<table class="table-acc-info">
@@ -28,14 +33,14 @@
 				<tr><td>{%csite%}:</td><td>{%site%}</td><td>{%cfrom%}:</td><td>{%from%}</td></tr>
 				<tr><td>{%cregdate%}:</td><td>{%regdate%}</td><td>{%cgender%}:</td><td>{%gender%}</td></tr>
 				<tr><td>{%clastvisit%}:</td><td>{%lastvisit%}</td><td>{%clang%}:</td><td>{%lang%}</td></tr>
-				<tr><td>{%cpoints%}:</td><td>{%points%}</td><td>{%csgroup%}:</td><td>{%sgroup%}</td></tr>
+				<tr><td>{%cpoints%}:</td><td>{%points%}</td><td>{%csgroup%}:</td><td>{%if has_special_group%}<span style="color: {%special_group_color%}">{%sgroup%}</span>{%else%}{%sgroup%}{%endif%}</td></tr>
 				<tr><td colspan="4"><hr>{%coccup%}: {%occup%}</td></tr>
 				<tr><td colspan="4">{%cinter%}: {%inter%}</td></tr>
 				<tr><td colspan="4">{%cgroups%}: {%groups%}</td></tr>
 				<tr><td colspan="4">{%cwarn%}: {%warn%}</td></tr>
-				<tr><td colspan="4"><hr>{%field%}</td></tr>
+				{%if has_field%}<tr><td colspan="4"><hr>{%field%}</td></tr>{%endif%}
 				<tr><td colspan="4">{%cagent%}: {%agent%}</td></tr>
-				<tr><td colspan="4">{%sign%}</td></tr>
+				{%if has_sign%}<tr><td colspan="4"><hr>{%sign%}</td></tr>{%endif%}
 			</table>
 		</div>
 	</div>

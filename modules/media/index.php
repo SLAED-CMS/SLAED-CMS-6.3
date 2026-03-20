@@ -70,21 +70,17 @@ function media(): void {
     $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.intro, m.links, m.time, m.acomm, m.votes, m.tvotes, m.comments, m.hits, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
     if ($db->getSqlRowCount($result) > 0) {
         while([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
-            $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
-            $cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
+            $cdesc = $cdesc ?: $ctitle;
+            $chref = 'index.php?name='.$conf['name'].'&amp;cat='.$cid;
+            $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $mtitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-            $title = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" title="'.$mtitle.'">'.$mtitle.'</a> '.new_graphic($time);
-            $read = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" title="'.$mtitle.'" class="sl_but_read">'._READMORE.'</a>';
+            $thref = 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id;
             $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
-            $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-            $date = ($conf['media']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-            $reads = ($conf['media']['read']) ? '<span title="'._READS.'" class="sl_views">'.$hits.'</span>' : '';
-            $links = (url_types($links)) ? '<span title="'._MDOWN.': '.url_types($links).'" class="sl_down">'.url_types($links).'</span>' : '';
-            $comm = ($acomm) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
+            $date = ($conf['media']['date']) ? format_time($time) : '';
+            $links = (url_types($links)) ? setTemplateBasic('media-hit-badge', ['{%title%}' => _MDOWN.': '.url_types($links), '{%text%}' => url_types($links)]) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
-            $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=media_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=media_delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$mtitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $links, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$mtitle.'&quot;?');
+            $cont .= setTemplateBasic('basic', ['{%id%}' => $id, '{%title_href%}' => $thref, '{%title_attr%}' => $mtitle, '{%title_text%}' => $mtitle, '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '', '{%category_img%}' => $cimg, '{%text%}' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), '{%read_href%}' => $thref, '{%read_text%}' => _READMORE, '{%post_text%}' => $post, '{%post_label%}' => _POSTEDBY, '{%date_text%}' => $date, '{%date_iso%}' => ($date) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%reads_text%}' => ($conf['media']['read']) ? $hits : '', '{%reads_label%}' => _READS, '{%hits%}' => $links, '{%comm_href%}' => ($acomm) ? $thref.'#comm' : '', '{%comm_text%}' => ($acomm) ? $comm : '', '{%comm_label%}' => _COMMENTS, '{%rating%}' => $rating, '{%favorites%}' => '', '{%voting%}' => '', '{%editor%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=media_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', '{%delete_text%}' => _ONDELETE, '{%delete_ask%}' => $ask, '{%back_title%}' => '', '{%back_text%}' => '', 'if_flag' => ['is_moder' => is_moder($conf['name'])]]);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
     } else {
@@ -116,15 +112,14 @@ function liste(): void {
     $cont = setModuleNavi(['title' => _LIST, 'htitle' => _MEDIA]);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['media']['letter']) ? letter($conf['name']) : '';
-        $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
+        $cont .= setTemplateBasic('liste-wrap', ['if_flag' => ['open' => true], '{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
         while([$id, $cid, $uname, $title, $subtitle, $time, $ctitle, $nick] = $db->getSqlRow($result)) {
             $stitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-            $title = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" title="'.$stitle.'">'.cutstr($stitle, 40).'</a> '.new_graphic($time);
-            $ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$ctitle.'">'.cutstr($ctitle, 15).'</a>' : _NO;
+            $chref = 'index.php?name='.$conf['name'].'&amp;cat='.$cid;
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $post, '{%time%}' => format_time($time)]);
+            $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title_href%}' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, '{%title_attr%}' => $stitle, '{%title_text%}' => cutstr($stitle, 40), '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $ctitle, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : _NO, '{%post_text%}' => $post, '{%time_text%}' => format_time($time), '{%time_iso%}' => date('c', strtotime($time)), '{%time_label%}' => _DATE]);
         }
-        $cont .= setTemplateBasic('liste-close', []);
+        $cont .= setTemplateBasic('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
         $params = ($let) ? ['let' => $let.'%'] : [];
         $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump'], $params);
@@ -164,17 +159,17 @@ function view(): void {
         if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = ($cdesc) ? $cdesc : $ctitle;
-        $ctitle = ($ctitle) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
-        $cimg = ($cimg) ? '<a href="index.php?name='.$conf['name'].'&amp;cat='.$cid.'" title="'.$cdesc.'" class="sl_icat"><img src="'.img_find('categories/'.$cimg).'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
+        $ctitle = ($ctitle) ? setTemplateBasic('media-category-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;cat='.$cid, '{%title%}' => $cdesc, '{%text%}' => cutstr($ctitle, 15)]) : '';
+        $cimg = ($cimg) ? setTemplateBasic('media-category-image', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;cat='.$cid, '{%title%}' => $cdesc, '{%src%}' => img_find('categories/'.$cimg)]) : '';
         $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
-        $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-        $date = ($conf['media']['date']) ? '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>' : '';
-        $reads = ($conf['media']['read']) ? '<span title="'._READS.'" class="sl_views">'.$hits.'</span>' : '';
+        $post = ($post) ? setTemplateBasic('media-post-badge', ['{%title%}' => _POSTEDBY, '{%text%}' => $post]) : '';
+        $date = ($conf['media']['date']) ? setTemplateBasic('media-date-badge', ['{%iso%}' => date('c', strtotime($date)), '{%title%}' => _CHNGSTORY, '{%text%}' => format_time($date)]) : '';
+        $reads = ($conf['media']['read']) ? setTemplateBasic('media-reads-badge', ['{%title%}' => _READS, '{%text%}' => $hits]) : '';
         $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
-        $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=media_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=media_delete&amp;id='.$id."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$ptitle."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
+        $admin = (is_moder($conf['name'])) ? setTemplateBasic('media-admin-menu', ['{%editor_text%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=media_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=media_delete&amp;id='.$id, '{%delete_ask%}' => _DELETE.' &quot;'.$ptitle.'&quot;?', '{%delete_text%}' => _ONDELETE]) : '';
         $favorites = getFavorBtn($id, $conf['name']);
-        $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
-        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCMEDIA.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
+        $goback = setTemplateBasic('media-back-button', ['{%title%}' => _BACK, '{%label%}' => _BACK]);
+        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? setTemplateBasic('media-action-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id, '{%title%}' => _BROCMEDIA, '{%label%}' => _COMPLAINT, '{%class%}' => 'sl_but_blue']) : '';
         
         $year = ($year) ? _MYEAR.': '.$year : '';
         $director = ($director) ? _MDIRECTOR.': '.$director : '';
@@ -198,12 +193,12 @@ function view(): void {
                         if (substr($val, 0, 4) == 'ed2k') {
                             $esize = explode('|', $val);
                             $size = ($esize[3]) ? _SIZE.': '.filterSize($esize[3]) : '';
-                            $elink = '<a href="'.$val.'" target="_blank" title="'._URL.' '.$e.' - '.$size.'" class="sl_ed2k">'._URL.' '.$e.' - '.$size.'</a>';
-                            $mlinks .= (!$i) ? $elink : '<br>'.$elink;
+                            $elink = setTemplateBasic('media-link-item', ['{%href%}' => $val, '{%title%}' => _URL.' '.$e.' - '.$size, '{%class%}' => 'sl_ed2k', '{%label%}' => _URL.' '.$e.' - '.$size]);
+                            $mlinks .= (!$i) ? $elink : setTemplateBasic('media-link-break').$elink;
                             $e++;
                         } else {
-                            $hlink = '<a href="'.$val.'" target="_blank" title="'._URL.': '.url_types($val).'" class="sl_http">'._URL.': '.url_types($val).'</a>';
-                            $mlinks .= (!$i) ? $hlink : '<br>'.$hlink;
+                            $hlink = setTemplateBasic('media-link-item', ['{%href%}' => $val, '{%title%}' => _URL.': '.url_types($val), '{%class%}' => 'sl_http', '{%label%}' => _URL.': '.url_types($val)]);
+                            $mlinks .= (!$i) ? $hlink : setTemplateBasic('media-link-break').$hlink;
                         }
                         $i++;
                     }
@@ -219,10 +214,10 @@ function view(): void {
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
                 $result = $db->getSqlQuery('SELECT id, title, subtitle, intro, time FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
-                $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
+                $cont .= setTemplateBasic('assoc-wrap', ['if_flag' => ['open' => true], '{%title%}' => _CATASSOC]);
                 while([$aid, $title, $subtitle, $hometext, $time] = $db->getSqlRow($result)) {
                     $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-                    $adate = ($conf['media']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
+                    $adate = ($conf['media']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $atext = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
                     if (preg_match("#\[attach=(.*?)\s(.*?)\]#si", $hometext, $match)) {
                         $img = 'uploads/'.$conf['name'].'/thumb/'.trim($match[1]);
@@ -231,9 +226,9 @@ function view(): void {
                         $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
                     }
                     $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
-                    $cont .= setTemplateBasic('assoc-basic', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$aid, '{%title%}' => $title, '{%date%}' => $adate, '{%text%}' => $atext, '{%img%}' => $img]);
+                    $cont .= setTemplateBasic('assoc-basic', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$aid, '{%title_attr%}' => $title, '{%title_text%}' => $title, '{%date_text%}' => $adate, '{%date_iso%}' => ($conf['media']['date']) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%text%}' => $atext, '{%img_src%}' => $img]);
                 }
-                $cont .= setTemplateBasic('assoc-close', []);
+                $cont .= setTemplateBasic('assoc-wrap', []);
             }
         }
         if ($acomm) $cont .= setComShow($id, $acomm);
@@ -273,66 +268,76 @@ function add(): void {
         if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
         if ($description) $cont .= preview($mtitle, $description, $note, '', $conf['name']);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADDNOTEM]);
-        $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
-        if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
-        } else {
-            $postname = ($postname) ? $postname : _ANONYM;
-            $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
-        }
-        $cont .= '<tr><td>'._MTITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MTITLE.'" required></td></tr>'
-        .'<tr><td>'._MSUBTITLE.':</td><td><input type="text" name="subtitle" value="'.$subtitle.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MSUBTITLE.'"></td></tr>'
-        .'<tr><td>'._CATEGORY.':</td><td>'.getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-        .'<tr><td>'._MYEAR.':</td><td><select name="year" class="sl_field '.$conf['style'].'">';
+        if (!is_user()) $postname = $postname ?: _ANONYM;
+        $yearOptions = '';
+        $linksRows = '';
         $y = $date['year'] - 100;
         while($y <= ($date['year'] + 1)) {
-            $sel = ($y == $year) ? ' selected' : '';
-            $cont .= '<option value="'.$y.'"'.$sel.'>'.$y.'</option>';
+            $yearOptions .= setTemplateBasic('media-select-option', ['if_flag' => ['is_selected' => $y == $year], '{%value%}' => $y, '{%label%}' => $y]);
             $y++;
         }
-        $cont .= '</select></td></tr>'
-        .'<tr><td>'._MDIRECTOR.':</td><td><input type="text" name="director" value="'.$director.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MDIRECTOR.'"></td></tr>'
-        .'<tr><td>'._MROLES.':</td><td><input type="text" name="roles" value="'.$roles.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._MROLES.'"></td></tr>'
-        .'<tr><td>'._DESCRIPTION.':</td><td>'.textarea('1', 'description', $description, $conf['name'], '10', _DESCRIPTION, '1').'</td></tr>'
-        .'<tr><td>'._MCREATEDBY.':</td><td><input type="text" name="createdby" value="'.$createdby.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MCREATEDBY.'"></td></tr>'
-        .'<tr><td>'._MDURATION.':</td><td><input type="text" name="duration" value="'.$duration.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MDURATION.'"></td></tr>'
-        .'<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_field '.$conf['style'].'">';
-        $lang = explode(',', $conf['media']['lang']);
-        foreach($lang as $val) {
-            $sel = ($val == $lang && $val != '') ? ' selected' : '';
-            $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
+        $langOptions = '';
+        foreach (explode(',', (string)($conf['media']['lang'] ?? '')) as $val) {
+            $langOptions .= setTemplateBasic('media-select-option', ['if_flag' => ['is_selected' => $val === $lang && $val !== ''], '{%value%}' => $val, '{%label%}' => $val]);
         }
-        $cont .= '</select></td></tr>'
-        .'<tr><td>'._NOTE.':</td><td>'.textarea('2', 'note', $note, $conf['name'], '5', _NOTE, '0').'</td></tr>'
-        .'<tr><td>'._MFORMAT.':</td><td><select name="format" class="sl_field '.$conf['style'].'">'
-        .'<option value="">'._NO_INFO.'</option>';
-        $format = explode(',', $conf['media']['format']);
-        foreach($format as $val) {
-            $sel = ($val == $format && $val != '') ? ' selected' : '';
-            $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
+        $formatOptions = '';
+        foreach (explode(',', (string)($conf['media']['format'] ?? '')) as $val) {
+            $formatOptions .= setTemplateBasic('media-select-option', ['if_flag' => ['is_selected' => $val === $format && $val !== ''], '{%value%}' => $val, '{%label%}' => $val]);
         }
-        $cont .= '</select></td></tr>'
-        .'<tr><td>'._MQUALITY.':</td><td><select name="quality" class="sl_field '.$conf['style'].'">'
-        .'<option value="">'._NO_INFO.'</option>';
-        $quality = explode(',', $conf['media']['quality']);
-        foreach($quality as $val) {
-            $sel = ($val == $quality && $val != '') ? ' selected' : '';
-            $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
+        $qualityOptions = '';
+        foreach (explode(',', (string)($conf['media']['quality'] ?? '')) as $val) {
+            $qualityOptions .= setTemplateBasic('media-select-option', ['if_flag' => ['is_selected' => $val === $quality && $val !== ''], '{%value%}' => $val, '{%label%}' => $val]);
         }
-        $cont .= '</select></td></tr>'
-        .'<tr><td>'._MSIZE.':</td><td><input type="text" name="size" value="'.$size.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MSIZE.'"></td></tr>'
-        .'<tr><td>'._MRELEASED.':</td><td><input type="text" name="released" value="'.$released.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._MRELEASED.'"></td></tr>'
-        .'<tr><td colspan="2">';
         $i = 0;
         while($i < $conf['media']['links']) {
             $a = $i + 1;
             $link = isset($links[$i]) ? $links[$i] : '';
-            $display = ($i != 0 && $link == '') ? ' sl_none' : '';
-            $cont .= '<table id="med'.$i.'" class="sl_table_form'.$display."\"><tr><td><a OnClick=\"HideShow('med".$a."', 'slide', 'up', 500);\" title=\""._ADD.'" class="sl_plus">'._URL.' - '.$a.':</a></td><td><input type="text" name="links[]" value="'.filterText($link).'" class="sl_field '.$conf['style'].'"></td></tr></table>';
+            $linksRows .= setTemplateBasic('media-link-row', ['if_flag' => ['is_hidden' => $i != 0 && $link == ''], '{%id%}' => 'med'.$i, '{%next_id%}' => 'med'.$a, '{%title%}' => _ADD, '{%label%}' => _URL.' - '.$a.':', '{%value%}' => filterText($link), '{%style%}' => $conf['style']]);
             $i++;
         }
-        $cont .= '</td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
+        $cont .= setTemplateBasic('media-form-add', [
+            'if_flag' => ['has_name' => true, 'is_user' => is_user()],
+            '{%name%}' => $conf['name'],
+            '{%token%}' => htmlspecialchars(getSiteToken('media'), ENT_QUOTES, 'UTF-8'),
+            '{%style%}' => $conf['style'],
+            '{%lbl_name%}' => _YOURNAME,
+            '{%lbl_title%}' => _MTITLE,
+            '{%lbl_subtitle%}' => _MSUBTITLE,
+            '{%lbl_cat%}' => _CATEGORY,
+            '{%lbl_year%}' => _MYEAR,
+            '{%lbl_director%}' => _MDIRECTOR,
+            '{%lbl_roles%}' => _MROLES,
+            '{%lbl_description%}' => _DESCRIPTION,
+            '{%lbl_createdby%}' => _MCREATEDBY,
+            '{%lbl_duration%}' => _MDURATION,
+            '{%lbl_lang%}' => _LANGUAGE,
+            '{%lbl_note%}' => _NOTE,
+            '{%lbl_format%}' => _MFORMAT,
+            '{%lbl_quality%}' => _MQUALITY,
+            '{%lbl_size%}' => _MSIZE,
+            '{%lbl_released%}' => _MRELEASED,
+            '{%username%}' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            '{%postname%}' => $postname,
+            '{%title%}' => $title,
+            '{%subtitle%}' => $subtitle,
+            '{%catselect%}' => getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
+            '{%year_options%}' => $yearOptions,
+            '{%director%}' => $director,
+            '{%roles%}' => $roles,
+            '{%description%}' => textarea('1', 'description', $description, $conf['name'], '10', _DESCRIPTION, '1'),
+            '{%createdby%}' => $createdby,
+            '{%duration%}' => $duration,
+            '{%lang_options%}' => $langOptions,
+            '{%note%}' => textarea('2', 'note', $note, $conf['name'], '5', _NOTE, '0'),
+            '{%no_info%}' => _NO_INFO,
+            '{%format_options%}' => $formatOptions,
+            '{%quality_options%}' => $qualityOptions,
+            '{%size%}' => $size,
+            '{%released%}' => $released,
+            '{%links_rows%}' => $linksRows,
+            '{%captcha%}' => getCaptcha(1),
+            '{%submit%}' => ad_save('', '', 'send'),
+        ]);
         echo $cont;
         setFoot();
     } else {
@@ -362,6 +367,7 @@ function send(): void {
         $links = getVar('post', 'links', 'array');
         $links = ($links) ? filterText(implode(',', str_replace(',', '.', $links))) : '';
         $stop = [];
+        if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'media')) $stop[] = _ERROR;
         if (!$title) $stop[] = _CERROR;
         if (!$description) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;

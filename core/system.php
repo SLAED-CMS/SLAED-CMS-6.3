@@ -3783,7 +3783,7 @@ function show_kasse(string $info = ''): string {
         }
         $cart = '<a href="index.php?name=shop&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
         $total = '<span title="'._PARTNERGES.'" class="sl_shop_total">'._PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'].'</span>';
-        return setTemplateBasic('kasse-open', ['{%title%}' => _PBASKET, '{%col_id%}' => _ID, '{%col_product%}' => _PRODUCT, '{%col_qty%}' => cutstr(_QUANTITY, 3, 1), '{%col_price%}' => _PREIS, '{%col_fn%}' => _FUNCTIONS]).$cont.setTemplateBasic('kasse-close', ['{%cart%}' => $cart, '{%total%}' => $total]);
+        return setTemplateBasic('kasse-wrap', ['if_flag' => ['open' => true], '{%title%}' => _PBASKET, '{%col_id%}' => _ID, '{%col_product%}' => _PRODUCT, '{%col_qty%}' => cutstr(_QUANTITY, 3, 1), '{%col_price%}' => _PREIS, '{%col_fn%}' => _FUNCTIONS]).$cont.setTemplateBasic('kasse-wrap', ['{%cart%}' => $cart, '{%total%}' => $total]);
     }
     return '';
 }

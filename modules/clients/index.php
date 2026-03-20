@@ -11,6 +11,7 @@ if (!defined('MODULE_FILE')) {
 
 function clients(): void {
     global $db, $conf, $afile, $user, $stop, $info;
+    getLang('clients');
     setHead(['title' => _PRODUCTSINFO]);
     $cont = setTemplateBasic('title', ['{%title%}' => _PRODUCTSINFO]);
     $cont .= getUserNav();
@@ -20,7 +21,7 @@ function clients(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $uid = (int)($user[0] ?? 0);
         $conts = '';
-        $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CLOADS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
+        $cont .= setTemplateBasic('clients-list-open', ['{%id%}' => _ID, '{%title%}' => _CTITLE, '{%version%}' => _CVERSION, '{%loads%}' => _CLOADS, '{%functions%}' => _FUNCTIONS]);
         $i = 0;
         $a = 1;
         while ([$id, $title, $body, $url, $num, $hits, $prod] = $db->getSqlRow($result)) {
@@ -33,17 +34,19 @@ function clients(): void {
             $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=clients_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
             $acont = add_menu($moder.'<a OnClick="HideShow(\'cl'.$i.'\', \'blind\', \'up\', 500);" title="'._CINFO.'">'._CINFO.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod.'" title="'.$dtitle.'">'.$dtitle.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod.'" title="'._CLIZENS.'">'._CLIZENS.'</a>');
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
-            $cont .= '<tr id="'.$a.'">'
-            .'<td><a href="#'.$a.'" title="'.$a.'" class="sl_pnum">'.$a.'</a></td>'
-            .'<td>'.title_tip(_CDATE.': '.$time).$title.'</td>'
-            .'<td>'.$num.'</td>'
-            .'<td>'.$hits.'</td>'
-            .'<td>'.$acont.'</td></tr>';
-            $conts .= '<div id="cl'.$i.'" class="sl_none">'.filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']).'</div>';
+            $cont .= setTemplateBasic('clients-list-basic', [
+                '{%row_id%}' => $a,
+                '{%tip%}' => title_tip(_CDATE.': '.$time),
+                '{%title_text%}' => $title,
+                '{%version_text%}' => $num,
+                '{%hits_text%}' => $hits,
+                '{%actions%}' => $acont,
+            ]);
+            $conts .= setTemplateBasic('clients-list-info', ['{%panel_id%}' => 'cl'.$i, '{%body%}' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name'])]);
             $i++;
             $a++;
         }
-        $cont .= '</tbody></table>'.$conts;
+        $cont .= setTemplateBasic('table-close').$conts;
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
     }

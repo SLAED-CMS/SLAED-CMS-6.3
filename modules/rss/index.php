@@ -21,41 +21,48 @@ function info(): void {
     $rssnum = ($num) ? '&amp;num='.$num : '';
     $rsslink = $conf['homeurl'].'/index.php?go=rss'.$rssmod.$rsscat.$rssnum;
     
-    $content = '<form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
-    .'<tr><td colspan="2">'._RSS_INFO_TEXT.'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><hr></td></tr>'
-    .'<tr><td>'._RSS_INFO_TIP.':</td><td>'
-    .'<select name="mod" OnChange="submit()" class="sl_field '.$conf['style'].'">';
+    $modsOptions = '';
     $mods = ['faq' => _FAQ, 'files' => _FILES, 'links' => _LINKS, 'media' => _MEDIA, 'news' => _NEWS, 'pages' => _PAGES, 'shop' => _SHOP];
     foreach ($mods as $key => $val) {
         if (is_active($key)) {
-            $sel = ($key == $mod) ? ' selected' : '';
-            $content .= '<option value="'.$key.'"'.$sel.'>'.$val.'</option>';
+            $modsOptions .= setTemplateBasic('rss-option', ['if_flag' => ['is_selected' => $key == $mod], '{%value%}' => $key, '{%label%}' => $val]);
         }
     }
-    $content .= '</select></td></tr>'
-    .'<tr><td>'._CATEGORIES.':</td><td>'.getcat($mod, $cat, 'cat', $conf['style'], '<option value="" selected>'._RSS_INFO_ALL.'</option>').'</td></tr>'
-    .'<tr><td>'._RSS_INFO_MENG.':</td><td>'
-    .'<select name="num" class="sl_field '.$conf['style'].'">';
+    $numOptions = '';
     $lim = 1;
     while ($lim <= $conf['rss']['max']) {
         $rsslim = ($num) ? $num : $conf['rss']['min'];
-        $sel = ($lim == $rsslim) ? ' selected' : '';
-        $content .= '<option value="'.$lim.'"'.$sel.'>'._RSS_INFO_MENG.' - '.$lim.'</option>';
+        $numOptions .= setTemplateBasic('rss-option', ['if_flag' => ['is_selected' => $lim == $rsslim], '{%value%}' => $lim, '{%label%}' => _RSS_INFO_MENG.' - '.$lim]);
         $lim++;
     }
-    $content .= '</select></td></tr>'
-    .'<tr><td>'._CODE.':</td><td><textarea cols="45" rows="3" OnClick="this.select()" class="sl_field '.$conf['style'].'">'.$rsslink.'</textarea></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="info"><input type="submit" value="'._RSS_INFO_CODE.'" class="sl_but_blue"></td></tr></table></form>';
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);
     $cont = setTemplateBasic('title', ['{%title%}' => _RSS]);
-    $cont .= $content;
+    $cont .= setTemplateBasic('rss-info-form', [
+        '{%name%}' => $conf['name'],
+        '{%style%}' => $conf['style'],
+        '{%info_text%}' => _RSS_INFO_TEXT,
+        '{%lbl_tip%}' => _RSS_INFO_TIP,
+        '{%mods_options%}' => $modsOptions,
+        '{%lbl_categories%}' => _CATEGORIES,
+        '{%catselect%}' => getcat($mod, $cat, 'cat', $conf['style'], '<option value="" selected>'._RSS_INFO_ALL.'</option>'),
+        '{%lbl_amount%}' => _RSS_INFO_MENG,
+        '{%num_options%}' => $numOptions,
+        '{%lbl_code%}' => _CODE,
+        '{%rsslink%}' => $rsslink,
+        '{%submit_label%}' => _RSS_INFO_CODE,
+    ]);
     if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';
-        $content = '<hr><form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form"><tr><td>'._SELECTASITE.':</td><td><select name="url" class="sl_field '.$conf['style'].'">'.rss_select().'</select></td><td><input type="submit" value="'._OK.'" class="sl_but_blue"></td></tr></table></form>'
-        .'<form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form"><tr><td>'._ORTYPEURL.':</td><td><input type="url" name="url" value="'.$link.'" maxlength="200" class="sl_field '.$conf['style'].'" placeholder="'._ORTYPEURL.'"></td><td><input type="submit" value="'._OK.'" class="sl_but_blue"></td></tr></table></form>';
-        $content .= rss_read($url, '');
-        $cont .= $content;
+        $cont .= setTemplateBasic('rss-read-forms', [
+            '{%name%}' => $conf['name'],
+            '{%style%}' => $conf['style'],
+            '{%lbl_select_site%}' => _SELECTASITE,
+            '{%rss_select%}' => rss_select(),
+            '{%lbl_url%}' => _ORTYPEURL,
+            '{%url_value%}' => $link,
+            '{%submit_label%}' => _OK,
+            '{%read_content%}' => rss_read($url, ''),
+        ]);
     }
     echo $cont;
     setFoot();
@@ -64,4 +71,3 @@ function info(): void {
 switch($op) {
     default: info(); break;
 }
-

@@ -17,30 +17,34 @@ function mwhois(): void {
 	global $domainwhois, $ext, $nomatch, $server, $domainopt;
 	$domainlicens = getVar('req', 'domain_licens', 'word');
 	
-	$licensopt = '<fieldset><legend class="sl_red">'._WHOIS_LICENS.'</legend>'
-	.'<form method="post" action="index.php?name='.$conf['name'].'">'
-	.'<table><tr><td><input type="text" name="domain_licens" value="'.$domainlicens.'" class="sl_field '.$conf['style'].'"></td><td><input type="hidden" name="option" value="licens"><input type="submit" value="'._WHOIS_PR.'" class="sl_but_blue"></td></tr></table>'
-	.'</form>'
-	.'</fieldset>';
+	$licensopt = setTemplateBasic('whois-license-form', [
+		'{%name%}' => $conf['name'],
+		'{%style%}' => $conf['style'],
+		'{%legend%}' => _WHOIS_LICENS,
+		'{%domain_value%}' => $domainlicens,
+		'{%submit_label%}' => _WHOIS_PR
+	]);
 	
 	$domainwhois = getVar('req', 'domain_whois', 'word');
 	$ext = getVar('req', 'ext', 'word');
 	
-	$domainopt = '<fieldset><legend class="sl_green">'._WHOIS_DOM.'</legend>'
-	.'<form method="post" action="index.php?name='.$conf['name'].'">'
-	.'<table><tr><td><input type="text" name="domain_whois" value="'.$domainwhois.'" class="sl_field '.$conf['style'].'"></td><td><select name="ext" class="sl_field">';
+	$domainoptOptions = '';
 	
 	$exmas = ['ru', 'com', 'net', 'org', 'biz', 'info', 'name', 'us', 'de', 'in', 'co.in', 'firm.in', 'gen.in', 'ind.in', 'net.in', 'org.in', 'com.ru', 'net.ru', 'org.ru', 'pp.ru', 'spb.ru', 'msk.ru', 'ws', 'cn'];
 	foreach ($exmas as $val) {
 		if ($val != '') {
-			$sel = ($val == $ext) ? 'selected' : '';
-			$domainopt .= '<option value="'.$val.'" '.$sel.'>.'.$val.'</option>';
+			$domainoptOptions .= setTemplateBasic('whois-option', ['if_flag' => ['is_selected' => $val == $ext], '{%value%}' => $val, '{%label%}' => '.'.$val]);
 		}
 	}
 	
-	$domainopt .= '</select></td><td><input type="hidden" name="option" value="check"><input type="submit" value="'._WHOIS_PR.'" class="sl_but_blue"></td></tr></table>'
-	.'</form>'
-	.'</fieldset>';
+	$domainopt = setTemplateBasic('whois-domain-form', [
+		'{%name%}' => $conf['name'],
+		'{%style%}' => $conf['style'],
+		'{%legend%}' => _WHOIS_DOM,
+		'{%domain_value%}' => $domainwhois,
+		'{%options%}' => $domainoptOptions,
+		'{%submit_label%}' => _WHOIS_PR
+	]);
 
 	$serverdefs = [
 	'ru' => ['whois.tcinet.ru','No entries found'],
@@ -85,14 +89,14 @@ function mwhois(): void {
 				break;
 			}
 		}
-		$cont .= '<fieldset class="sl_center"><legend class="sl_blue">'._WHOIS_SUCH.'</legend>';
+		$cont .= setTemplateBasic('whois-result-open', ['{%legend%}' => _WHOIS_SUCH]);
 		if ($licens) {
-			$cont .= '<span class="sl_green">'._DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!</span>';
+			$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_green', '{%text%}' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!']);
 		} else {
-			$cont .= '<span class="sl_red">'._DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!</span>';
-			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? '<form method="post" action="index.php?name='.$conf['name'].'"><input type="hidden" name="op" value="add"><input type="hidden" name="domain" value="'.$domainlicens.'"><input type="submit" value="'._WHOIS_LICENS_SEND.'" class="sl_but_blue"></form>' : '';
+			$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!']);
+			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? setTemplateBasic('whois-license-add-button', ['{%name%}' => $conf['name'], '{%domain%}' => $domainlicens, '{%submit_label%}' => _WHOIS_LICENS_SEND]) : '';
 		}
-		$cont .= '</fieldset>';
+		$cont .= setTemplateBasic('whois-result-close');
 	} elseif ($option == 'licens') {
 		$cont .= printresults(namecheck($domainlicens), 1);
 	}
@@ -125,23 +129,35 @@ function add(): void {
 		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ABMIT]);
 		$hometext = getVar('post', 'hometext', 'text');
-		$cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">';
+		$postname = getVar('post', 'postname', 'name');
+		$postname = ($postname) ? $postname : _ANONYM;
 		if (is_user()) {
-			$cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'</td></tr>';
+			$userNameValue = filterText(substr($user[1], 0, 25));
 		} else {
-			$postname = getVar('post', 'postname', 'name');
-			$postname = ($postname) ? $postname : _ANONYM;
-			$cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'.$postname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>';
+			$userNameValue = $postname;
 		}
 		$domain = getVar('post', 'domain', 'url', 'http://');
 		$host = getVar('post', 'host', 'url', 'http://');
 		$dc = getVar('post', 'dc', 'url', 'http://');
 		
-		$cont .= '<tr><td>'._SITE.':</td><td><input type="url" name="domain" value="'.$domain.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SITE.'" required></td></tr>'
-		.'<tr><td>'._HOST.':</td><td><input type="url" name="host" value="'.$host.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._HOST.'"></td></tr>'
-		.'<tr><td>'._DC.':</td><td><input type="url" name="dc" value="'.$dc.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._DC.'"></td></tr>'
-		.'<tr><td>'._COMMENT.':</td><td><textarea name="hometext" cols="65" rows="5" class="sl_field '.$conf['style'].'" placeholder="'._COMMENT.'">'.$hometext.'</textarea></td></tr>'
-		.'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
+		$cont .= setTemplateBasic('whois-add-form', [
+			'if_flag' => ['is_user' => is_user()],
+			'{%name%}' => $conf['name'],
+			'{%style%}' => $conf['style'],
+			'{%token%}' => htmlspecialchars(getSiteToken('whois'), ENT_QUOTES, 'UTF-8'),
+			'{%lbl_yourname%}' => _YOURNAME,
+			'{%username_value%}' => $userNameValue,
+			'{%domain%}' => $domain,
+			'{%host%}' => $host,
+			'{%dc%}' => $dc,
+			'{%hometext%}' => $hometext,
+			'{%captcha%}' => getCaptcha(1),
+			'{%lbl_site%}' => _SITE,
+			'{%lbl_host%}' => _HOST,
+			'{%lbl_dc%}' => _DC,
+			'{%lbl_comment%}' => _COMMENT,
+			'{%submit_label%}' => _SEND
+		]);
 		echo $cont;
 		setFoot();
 	} else {
@@ -158,6 +174,7 @@ function send(): void {
 		$dc = getVar('post', 'dc', 'url');
 		$hometext = getVar('post', 'hometext', 'text');
 		$stop = [];
+		if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'whois')) $stop[] = _ERROR;
 		if (!$postname && !is_user()) $stop[] = _CERROR3;
 		if (!$domain) $stop[] = _CERROR4;
 		if (checkCaptcha(1)) $stop[] = _SECCODEINCOR;
@@ -245,38 +262,29 @@ function printresults(int|string|null $layout, int $id): string {
 	global $domainwhois, $ext, $server, $domainopt, $conf;
 	$cont = '';
 	if (!$id) $cont .= $domainopt;
-	$cont .= '<fieldset class="sl_center"><legend class="sl_blue">'._WHOIS_SUCH.'</legend>';
+	$cont .= setTemplateBasic('whois-result-open', ['{%legend%}' => _WHOIS_SUCH]);
 	if ($layout=='0') {
-		$cont .= '<span class="sl_green">'._DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!</span>';
+		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_green', '{%text%}' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!']);
 	} elseif($layout=='1') {
-		$cont .= '<span class="sl_red">'._DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!</span>'
-		.'<form method="post" action="index.php?name='.$conf['name'].'">'
-		.'<input type="hidden" name="option" value="whois">'
-		.'<input type="hidden" name="domain_whois" value="'.$domainwhois.'">'
-		.'<input type="hidden" name="ext" value="'.$ext.'">'
-		.'<input type="submit" value="'._WHOIS_INF_US.'" class="sl_but_blue">'
-		.'</form>';
+		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!'])
+		.setTemplateBasic('whois-info-button', ['{%name%}' => $conf['name'], '{%domain%}' => $domainwhois, '{%ext%}' => $ext, '{%submit_label%}' => _WHOIS_INF_US]);
 	} elseif($layout=='2') {
-		$cont .= '<span class="sl_red">Could not contact the whois server '.$server.'</span>';
+		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => 'Could not contact the whois server '.$server]);
 	} else {
-		$cont .= '<span class="sl_red">'.$layout.'</span>';
+		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => $layout]);
 	}
-	$cont .= '</fieldset>';
+	$cont .= setTemplateBasic('whois-result-close');
 	return $cont;
 }
 
 function printwhois(string|array $output): string {
 	global $domainwhois, $ext, $domainopt;
-	$cont = '<table><tr><td>'
-	.$domainopt
-	.'<fieldset><legend class="sl_blue">'._WHOIS_INF_US.'</legend>'
-	.'<table><tr><td>';
+	$cont = setTemplateBasic('whois-output-open', ['{%domain_form%}' => $domainopt, '{%legend%}' => _WHOIS_INF_US]);
 	$output= explode("\n",$output);
 	foreach ($output as $value){
-		$cont .= $value."<br>\n";
+		$cont .= setTemplateBasic('whois-output-line', ['{%value%}' => $value]);
 	}
-	$cont .= '</td></tr></table></fieldset>'
-	.'</td></tr></table>';
+	$cont .= setTemplateBasic('whois-output-close');
 	return $cont;
 }
 
@@ -302,4 +310,3 @@ switch($op) {
 	send();
 	break;
 }
-

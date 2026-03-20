@@ -39,26 +39,36 @@ function contact(): void {
     }
     if ($conf['contact']['info']) {
         $title = _CONTACT;
-        $form = filterReplaceText(filterMarkdown($conf['contact']['info'], $conf['name'], false), $conf['name']).'<hr>';
+        $info = filterReplaceText(filterMarkdown($conf['contact']['info'], $conf['name'], false), $conf['name']);
     } else {
         $title = _FEEDBACK;
-        $form = '';
+        $info = '';
     }
     setHead(['title' => $title]);
     $cont = setTemplateBasic('title', ['{%title%}' => $title]);
-    $form .= '<form action="index.php?name='.$conf['name'].'" method="post">'
-    .'<table class="sl_table_form">';
-    $form .= ($asend) ? '<tr><td>'._TO.':</td><td><select name="id" class="sl_field '.$conf['style'].'">'.$asend.'</select></td></tr>' : '';
-    $form .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="sname" value="'.$sname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>'
-    .'<tr><td>'._YOUREMAIL.':</td><td><input type="email" name="semail" value="'.$semail.'" class="sl_field '.$conf['style'].'" placeholder="'._YOUREMAIL.'" required></td></tr>'
-    .'<tr><td>'._MESSAGE.':</td><td><textarea name="message" cols="65" rows="10" class="sl_field '.$conf['style'].'" placeholder="'._MESSAGE.'" required>'.$message.'</textarea></td></tr>'
-    .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="hidden" name="op" value="contact"><input type="hidden" name="send" value="1"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
+    $form = setTemplateBasic('contact-form', [
+        '{%info%}' => $info,
+        '{%name%}' => $conf['name'],
+        '{%token%}' => htmlspecialchars(getSiteToken('contact'), ENT_QUOTES, 'UTF-8'),
+        '{%style%}' => $conf['style'],
+        '{%admin_options%}' => $asend,
+        '{%lbl_to%}' => _TO,
+        '{%lbl_name%}' => _YOURNAME,
+        '{%lbl_email%}' => _YOUREMAIL,
+        '{%lbl_message%}' => _MESSAGE,
+        '{%sname%}' => $sname,
+        '{%semail%}' => $semail,
+        '{%message%}' => $message,
+        '{%captcha%}' => getCaptcha(1),
+        '{%submit%}' => _SEND,
+    ]);
     if (getVar('post', 'send', 'num') == '1') {
         $id = getVar('post', 'id', 'num');
         $sname = getVar('post', 'sname', 'name');
         $semail = getVar('post', 'semail', 'text');
         $message = nl2br(getVar('post', 'message', 'text'), false);
         $stop = [];
+        if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'contact')) $stop[] = _ERROR;
         if (!$sname) $stop[] = _CERROR3;
         if (!$message) $stop[] = _CERROR1;
         checkemail($semail);

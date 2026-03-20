@@ -149,6 +149,7 @@ function setTemplateHead($sub, $val = '') {
                 '{%nickname%}' => _NICKNAME,
                 '{%password%}' => _PASSWORD,
                 '{%captcha%}' => $captcha,
+                '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
                 '{%lost%}' => _PASSFOR,
                 '{%register%}' => _REG,
             ]);
@@ -183,6 +184,7 @@ function setTemplateFoot($sub, $val = '') {
                     <input type="text" name="sname" class="sl_field" placeholder="'._YOURNAME.'" required>
                     <input type="email" name="semail" class="sl_field" placeholder="'._YOUREMAIL.'" required>
                     '.getCaptcha(1).'
+                    <input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('contact'), ENT_QUOTES, 'UTF-8').'">
                     <input type="hidden" name="op" value="contact">
                     <input type="hidden" name="send" value="1">
                     <button type="submit" class="sl_but_blue">'._SEND.'</button>

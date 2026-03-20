@@ -41,13 +41,47 @@ function autolink(): void {
     if (!$home) $cont .= setModuleNavi(['title' => $ntitle, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $sitename, $intro, $hits, $outs, $time] = $db->getSqlRow($result)) {
-            $title = filterTextHighlight($sitename, $word).' '.new_graphic($time);
-            $read = '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'" target="_blank" title="'.$sitename.'" class="sl_but_read">'._DOWNLLINK.'</a>';
-            $date = '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>';
-            $reads = '<span title="'._OUTS.'" class="sl_outs">'.$outs.'</span>';
-            $hits = '<span title="'._HITS.'" class="sl_hits">'.$hits.'</span>';
-            $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=auto_links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=auto_links_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$sitename.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => '', '{%cimg%}' => '', '{%ctitle%}' => '', '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($intro, $conf['name'], false), $conf['name']), $word), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => '', '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $thref = 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id;
+            $date = format_time($time);
+            $hits = setTemplateBasic('auto-links-hit-badge', ['{%title%}' => _HITS, '{%text%}' => $hits]);
+            $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$sitename.'&quot;?');
+            $cont .= setTemplateBasic('basic', [
+                '{%id%}' => $id,
+                '{%title_href%}' => $thref,
+                '{%title_attr%}' => $sitename,
+                '{%title_text%}' => filterTextHighlight($sitename, $word),
+                '{%title_new%}' => new_graphic($time),
+                '{%category_href%}' => '',
+                '{%category_attr%}' => '',
+                '{%category_text%}' => '',
+                '{%category_img%}' => '',
+                '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($intro, $conf['name'], false), $conf['name']), $word),
+                '{%read_href%}' => $thref,
+                '{%read_text%}' => _DOWNLLINK,
+                '{%post_text%}' => '',
+                '{%post_label%}' => '',
+                '{%date_text%}' => $date,
+                '{%date_iso%}' => date('c', strtotime($time)),
+                '{%date_label%}' => _CHNGSTORY,
+                '{%reads_text%}' => $outs,
+                '{%reads_label%}' => _OUTS,
+                '{%hits%}' => $hits,
+                '{%comm_href%}' => '',
+                '{%comm_text%}' => '',
+                '{%comm_label%}' => _COMMENTS,
+                '{%rating%}' => '',
+                '{%favorites%}' => '',
+                '{%voting%}' => '',
+                '{%editor%}' => _EDITOR,
+                '{%edit_href%}' => $afile.'.php?op=auto_links_add&amp;id='.$id,
+                '{%edit_text%}' => _FULLEDIT,
+                '{%delete_href%}' => $afile.'.php?op=auto_links_delete&amp;id='.$id.'&amp;refer=1',
+                '{%delete_text%}' => _ONDELETE,
+                '{%delete_ask%}' => $ask,
+                '{%back_title%}' => '',
+                '{%back_text%}' => '',
+                'if_flag' => ['is_moder' => is_moder($conf['name'])],
+            ]);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_auto_links', '', 'hits != \'0\'', $conf['auto_links']['nump']);
     } else {
@@ -62,9 +96,7 @@ function view(): void {
     $id = getVar('get', 'id', 'num');
     if ($id) {
         [$url] = $db->getSqlRow($db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links WHERE id = :id', ['id' => $id]));
-        if (!$url) {
-            setRedirect('index.php?name='.$conf['name']);
-        }
+        if (!$url) setRedirect('index.php?name='.$conf['name']);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET outs = outs+1 WHERE id = :id', ['id' => $id]);
         update_points(4);
         setRedirect($url);
@@ -77,15 +109,11 @@ function add(): void {
     global $stop, $conf;
     if (is_user()) {
         $userinfo = getUserInfo();
-        $email = getVar('post', 'mail', 'var');
-        $email = ($email) ? $email : $userinfo['email'];
-        $site = getVar('post', 'site', 'url');
-        $site = ($site) ? $site : $userinfo['website'];
+        $email = getVar('post', 'mail', 'var', $userinfo['email']);
+        $site = getVar('post', 'site', 'url', $userinfo['website']);
     } else {
-        $email = getVar('post', 'mail', 'var');
-        $email = ($email) ? $email : '';
+        $email = getVar('post', 'mail', 'var', '');
         $site = getVar('post', 'site', 'url', 'http://');
-        $site = ($site) ? $site : 'http://';
     }
     $name = getVar('post', 'name', 'title');
     $desc = getVar('post', 'desc', 'text');
@@ -95,12 +123,22 @@ function add(): void {
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
     if ($desc) $cont .= preview($name, $desc, '', '', $conf['name']);
     $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_I]);
-    $cont .= '<form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._SITENAME.':</td><td><input type="text" name="name" value="'.$name.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._SITENAME.'" required></td></tr>'
-    .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="mail" value="'.$email.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_E.'" required></td></tr>'
-    .'<tr><td>'._A_LINKS_TEXT.':</td><td>'.textarea('1', 'desc', $desc, $conf['name'], '5', _A_LINKS_TEXT, '1').'</td></tr>'
-    .'<tr><td>'._A_LINKS_L.':</td><td><input type="url" name="site" value="'.$site.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._A_LINKS_L.'" required></td></tr>'
-    .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).ad_save('', '', 'send').'</td></tr></table></form>';
+    $cont .= setTemplateBasic('form-add', [
+        '{%name%}' => $conf['name'],
+        '{%token%}' => htmlspecialchars(getSiteToken('auto_links'), ENT_QUOTES, 'UTF-8'),
+        '{%style%}' => $conf['style'],
+        '{%lbl_email%}' => _A_LINKS_E,
+        '{%lbl_title%}' => _SITENAME,
+        '{%lbl_text%}' => _A_LINKS_TEXT,
+        '{%lbl_site%}' => _A_LINKS_L,
+        '{%emailval%}' => $email,
+        '{%titleval%}' => $name,
+        '{%hometext%}' => textarea('1', 'desc', $desc, $conf['name'], '5', _A_LINKS_TEXT, '1'),
+        '{%site_attr%}' => 'site',
+        '{%siteval%}' => $site,
+        '{%captcha%}' => getCaptcha(1),
+        '{%submit%}' => ad_save('', '', 'send'),
+    ]);
     echo $cont;
     setFoot();
 }
@@ -112,6 +150,7 @@ function send(): void {
     $site = getVar('post', 'site', 'url');
     $email = getVar('post', 'mail', 'var');
     $stop = [];
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'auto_links')) $stop[] = _ERROR;
     if (!$name) $stop[] = _CERROR10;
     if (!$desc) $stop[] = _CERROR11;
     if (!$site) $stop[] = _CERROR4;
@@ -128,18 +167,17 @@ function send(): void {
         $puname = (is_user()) ? $user[1] : '';
         addAdminMail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_OK]);
-        $code = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['slogan'].'&quot;>'.$conf['sitename'].'</a>';
-        $cont .= '<table class="sl_table_form">'
-        .'<tr><td>'._A_LINKS_M.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$code.'</textarea></td></tr>';
+        $code = setTemplateBasic('auto-links-embed-link', ['{%href%}' => $conf['homeurl'], '{%title%}' => $conf['slogan'], '{%label%}' => $conf['sitename']]);
+        $rows = setTemplateBasic('auto-links-code-row', ['{%label%}' => _A_LINKS_M, '{%style%}' => $conf['style'], '{%code%}' => $code]);
         if ($conf['auto_links']['img']) {
             $banner = img_find('banners/'.$conf['auto_links']['img']);
             if ($banner && file_exists($banner)) {
                 [$imgwidth, $imgheight] = getimagesize($banner);
-                $code = '<a href=&quot;'.$conf['homeurl'].'&quot; target=&quot;_blank&quot; title=&quot;'.$conf['sitename'].' - '.$conf['slogan'].'&quot;><img src=&quot;'.$conf['homeurl'].'/'.$banner.'&quot; alt=&quot;'.$conf['sitename'].' - '.$conf['slogan'].'&quot; style=&quot;border: 0; width: '.$imgwidth.'; height: '.$imgheight.';&quot;></a>';
-                $cont .= '<tr><td>'._A_LINKS_IMG.':</td><td><textarea name="description" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$code.'</textarea></td></tr>';
+                $code = setTemplateBasic('auto-links-embed-image', ['{%href%}' => $conf['homeurl'], '{%title%}' => $conf['sitename'].' - '.$conf['slogan'], '{%src%}' => $conf['homeurl'].'/'.$banner, '{%alt%}' => $conf['sitename'].' - '.$conf['slogan'], '{%width%}' => $imgwidth, '{%height%}' => $imgheight]);
+                $rows .= setTemplateBasic('auto-links-code-row', ['{%label%}' => _A_LINKS_IMG, '{%style%}' => $conf['style'], '{%code%}' => $code]);
             }
         }
-        $cont .= '</table>';
+        $cont .= setTemplateBasic('auto-links-code-table', ['{%rows%}' => $rows]);
         echo $cont;
         setFoot();
     } else {
@@ -148,19 +186,8 @@ function send(): void {
 }
 
 switch ($op) {
-    default:
-    autolink();
-    break;
-
-    case 'view':
-    view();
-    break;
-
-    case 'add':
-    add();
-    break;
-
-    case 'send':
-    send();
-    break;
+    default: autolink(); break;
+    case 'view': view(); break;
+    case 'add': add(); break;
+    case 'send': send(); break;
 }

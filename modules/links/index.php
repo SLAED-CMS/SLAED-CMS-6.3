@@ -72,21 +72,50 @@ function links(): void {
         while ([$id, $cid, $uname, $stitle, $description, $bodytext, $time, $counter, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
+            $cdesc = $cdesc ?: $ctitle;
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
-            $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-            $title = '<a href="'.$thref.'" title="'.$stitle.'">'.$stitle.'</a> '.new_graphic($time);
-            $read = '<a href="'.$thref.'" title="'.$stitle.'" class="sl_but_read">'._READMORE.'</a>';
             $post = ($conf['links']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
-            $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-            $date = ($conf['links']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-            $reads = ($conf['links']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
+            $date = ($conf['links']['date']) ? format_time($time) : '';
             $hits = ($conf['links']['hits']) ? '<span title="'._LINKHITS.'" class="sl_down">'.$hits.'</span>' : '';
-            $comm = ($acomm) ? '<a href="'.$thref.'#comm" title="'._COMMENTS.'" class="sl_coms">'.$comm.'</a>' : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
-            $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=links_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$stitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), '{%read%}' => $read, '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
+            $cont .= setTemplateBasic('basic', [
+                '{%id%}' => $id,
+                '{%title_href%}' => $thref,
+                '{%title_attr%}' => $stitle,
+                '{%title_text%}' => $stitle,
+                '{%title_new%}' => new_graphic($time),
+                '{%category_href%}' => $ctitle ? $chref : '',
+                '{%category_attr%}' => $cdesc,
+                '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '',
+                '{%category_img%}' => $cimg,
+                '{%text%}' => filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']),
+                '{%read_href%}' => $thref,
+                '{%read_text%}' => _READMORE,
+                '{%post_text%}' => $post,
+                '{%post_label%}' => _POSTEDBY,
+                '{%date_text%}' => $date,
+                '{%date_iso%}' => ($date) ? date('c', strtotime($time)) : '',
+                '{%date_label%}' => _CHNGSTORY,
+                '{%reads_text%}' => ($conf['links']['read']) ? $counter : '',
+                '{%reads_label%}' => _READS,
+                '{%hits%}' => $hits,
+                '{%comm_href%}' => ($acomm) ? $thref.'#comm' : '',
+                '{%comm_text%}' => ($acomm) ? $comm : '',
+                '{%comm_label%}' => _COMMENTS,
+                '{%rating%}' => $rating,
+                '{%favorites%}' => '',
+                '{%voting%}' => '',
+                '{%editor%}' => _EDITOR,
+                '{%edit_href%}' => $afile.'.php?op=links_add&amp;id='.$id,
+                '{%edit_text%}' => _FULLEDIT,
+                '{%delete_href%}' => $afile.'.php?op=links_delete&amp;id='.$id.'&amp;refer=1',
+                '{%delete_text%}' => _ONDELETE,
+                '{%delete_ask%}' => $ask,
+                '{%back_title%}' => '',
+                '{%back_text%}' => '',
+                'if_flag' => ['is_moder' => is_moder($conf['name'])],
+            ]);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_links', 'cid', $onum, $conf['links']['nump']);
     } else {
@@ -118,17 +147,15 @@ function liste(): void {
     $cont = setModuleNavi(['title' => _LIST, 'htitle' => _LINKS]);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['links']['letter']) ? letter($conf['name']) : '';
-        $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
+        $cont .= setTemplateBasic('liste-wrap', ['if_flag' => ['open' => true], '{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
         while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
-            $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
+            $cdesc = $cdesc ?: $ctitle;
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => $post, '{%time%}' => format_time($time)]);
+            $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title_href%}' => $thref, '{%title_attr%}' => $title, '{%title_text%}' => cutstr($title, 40), '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : _NO, '{%post_text%}' => $post, '{%time_text%}' => format_time($time), '{%time_iso%}' => date('c', strtotime($time)), '{%time_label%}' => _DATE]);
         }
-        $cont .= setTemplateBasic('liste-close');
+        $cont .= setTemplateBasic('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
         $params = ($let) ? ['let' => $let.'%'] : [];
         $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_links', 'cid', $onum, $conf['links']['nump'], $params);
@@ -168,19 +195,14 @@ function view(): void {
         if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
-        $cdesc = ($cdesc) ? $cdesc : $ctitle;
-        $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
+        $cdesc = $cdesc ?: $ctitle;
         $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
-        $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
         $post = ($conf['links']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
-        $post = ($post) ? '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>' : '';
-        $date = ($conf['links']['date']) ? '<time datetime="'.date('c', strtotime($date)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($date).'</time>' : '';
-        $reads = ($conf['links']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
+        $date = ($conf['links']['date']) ? format_time($date) : '';
         $hits = ($conf['links']['hits']) ? '<span title="'._LINKHITS.'" class="sl_down">'.$hits.'</span>' : '';
         $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
-        $admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?op=links_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=links_delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
         $favorites = getFavorBtn($id, $conf['name']);
-        $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
+        $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         if (is_user() || $conf['links']['links'] == '1') {
             $download = '<form action="index.php?name='.$conf['name'].'" method="post" style="display: inline">'
             .'<input type="hidden" name="id" value="'.$id.'">'
@@ -190,22 +212,22 @@ function view(): void {
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCLINK.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($authorurl) ? _SITE.': '.domain($authorurl) : '';
-        $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => filterTextHighlight($title, $word), '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => $hits, '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => $admin, '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '', '{%size%}' => '', '{%version%}' => '', '{%download%}' => $download, '{%broken%}' => $broken, '{%email%}' => $email, '{%home%}' => $home]);
+        $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => true, 'is_moder' => is_moder($conf['name']), 'has_back' => true], '{%id%}' => $id, '{%title_href%}' => '', '{%title_attr%}' => $title, '{%title_text%}' => filterTextHighlight($title, $word), '{%title_new%}' => '', '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '', '{%category_img%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read_href%}' => '', '{%read_text%}' => '', '{%post_text%}' => $post, '{%post_label%}' => _POSTEDBY, '{%date_text%}' => $date, '{%date_iso%}' => ($date) ? date('c', strtotime($seotime)) : '', '{%date_label%}' => _CHNGSTORY, '{%reads_text%}' => ($conf['links']['read']) ? $counter : '', '{%reads_label%}' => _READS, '{%hits%}' => $hits, '{%comm_href%}' => '', '{%comm_text%}' => '', '{%comm_label%}' => _COMMENTS, '{%rating%}' => $rating, '{%favorites%}' => $favorites, '{%voting%}' => '', '{%editor%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=links_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=links_delete&amp;id='.$id, '{%delete_text%}' => _ONDELETE, '{%delete_ask%}' => $ask, '{%back_title%}' => _BACK, '{%back_text%}' => _BACK]);
         if ($conf['links']['link']) {
             $limit = intval($conf['links']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_links WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
                 $result = $db->getSqlQuery('SELECT id, title, intro, body, time FROM '.PREFIX_DB.'_links WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
-                $cont .= setTemplateBasic('assoc-open', ['{%title%}' => _CATASSOC]);
+                $cont .= setTemplateBasic('assoc-wrap', ['if_flag' => ['open' => true], '{%title%}' => _CATASSOC]);
                 while([$aid, $title, $hometext, $bodytext, $time] = $db->getSqlRow($result)) {
-                    $date = ($conf['links']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'._CHNGSTORY.': '.format_time($time).'</time>' : '';
+                    $date = ($conf['links']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $text = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-                    $cont .= setTemplateBasic('assoc-basic', ['{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title%}' => $title, '{%date%}' => $date, '{%text%}' => $text, '{%img%}' => $img]);
+                    $cont .= setTemplateBasic('assoc-basic', ['{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title_attr%}' => $title, '{%title_text%}' => $title, '{%date_text%}' => $date, '{%date_iso%}' => ($conf['links']['date']) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%text%}' => $text, '{%img_src%}' => $img]);
                 }
-                $cont .= setTemplateBasic('assoc-close');
+                $cont .= setTemplateBasic('assoc-wrap', []);
             }
         }
         if ($acomm) $cont .= setComShow($id, $acomm);
@@ -241,6 +263,7 @@ function add(): void {
         $cont .= setTemplateBasic('form-add', [
             'if_flag'       => ['has_name' => true, 'is_user' => is_user()],
             '{%name%}'      => $conf['name'],
+            '{%token%}'     => htmlspecialchars(getSiteToken('links'), ENT_QUOTES, 'UTF-8'),
             '{%style%}'     => $conf['style'],
             '{%lbl_name%}'  => _YOURNAME,
             '{%lbl_email%}' => _AUEMAIL,
@@ -249,7 +272,7 @@ function add(): void {
             '{%lbl_text%}'  => _TEXT,
             '{%lbl_body%}'  => _ENDTEXT,
             '{%lbl_site%}'  => _URL,
-            '{%username%}'  => filterText(substr($user[1], 0, 25)),
+            '{%username%}'  => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             '{%postname%}'  => $postname,
             '{%emailval%}'  => $mail,
             '{%titleval%}'  => $title,
@@ -280,6 +303,7 @@ function send(): void {
         $mail = getVar('post', 'mail', 'text');
         $site = getVar('post', 'site', 'url');
         $stop = [];
+        if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'links')) $stop[] = _ERROR;
         if (!$title) $stop[] = _CERROR10;
         if (!$description) $stop[] = _CERROR1;
         if (!$postname && !is_user()) $stop[] = _CERROR3;

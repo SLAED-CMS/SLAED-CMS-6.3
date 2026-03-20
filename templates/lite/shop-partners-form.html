@@ -1,0 +1,12 @@
+<form method="post" action="index.php?name={%name%}">
+<input type="hidden" name="token" value="{%token%}">
+<table class="sl_table_form">
+<tr><td>{%lbl_name%}:</td><td><input type="text" name="paname" maxlength="255" value="{%paname%}" class="sl_field {%style%}" placeholder="{%ph_name%}" required></td></tr>
+<tr><td>{%lbl_addr%}:</td><td><input type="text" name="paaddr" maxlength="255" value="{%paaddr%}" class="sl_field {%style%}" placeholder="{%ph_addr%}" required></td></tr>
+<tr><td>{%lbl_phone%}:</td><td><input type="text" name="paphone" maxlength="255" value="{%paphone%}" class="sl_field {%style%}" placeholder="{%ph_phone%}" required></td></tr>
+<tr><td>{%lbl_email%}:</td><td><input type="email" name="paemail" value="{%paemail%}" maxlength="255" class="sl_field {%style%}" placeholder="{%ph_email%}" required></td></tr>
+<tr><td>{%lbl_site%}:</td><td><input type="url" name="pawebsite" value="{%pawebsite%}" maxlength="255" class="sl_field {%style%}" placeholder="{%ph_site%}"></td></tr>
+<tr><td>{%lbl_webmoney%}:</td><td><input type="text" name="pawebmoney" value="{%pawebmoney%}" maxlength="255" class="sl_field {%style%}" placeholder="{%ph_webmoney%}"></td></tr>
+<tr><td>{%lbl_paypal%}:</td><td><input type="text" name="papaypal" value="{%papaypal%}" maxlength="255" class="sl_field {%style%}" placeholder="{%ph_paypal%}"></td></tr>
+<tr><td colspan="2" class="sl_center"><input type="hidden" name="puid" value="{%puid%}"><input type="hidden" name="op" value="partners_send"><input type="submit" value="{%submit_label%}" class="sl_but_blue"></td></tr>
+</table></form>

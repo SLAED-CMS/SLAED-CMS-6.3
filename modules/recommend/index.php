@@ -25,12 +25,22 @@ function recommend(): void {
     setHead(['title' => _RECOMMTITLE]);
     $cont = setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]);
     if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-    $cont .= '<form action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._YOURNAME.':</td><td><input type="text" name="'.$unkey.'" value="'.$sname.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>'
-    .'<tr><td>'._YOUREMAIL.':</td><td><input type="email" name="semail" value="'.$semail.'" class="sl_field '.$conf['style'].'" placeholder="'._YOUREMAIL.'" required></td></tr>'
-    .'<tr><td>'._FFRIENDNAME.':</td><td><input type="text" name="fname" value="'.$fname.'" class="sl_field '.$conf['style'].'" placeholder="'._FFRIENDNAME.'" required></td></tr>'
-    .'<tr><td>'._FFRIENDEMAIL.':</td><td><input type="email" name="femail" value="'.$femail.'" class="sl_field '.$conf['style'].'" placeholder="'._FFRIENDEMAIL.'" required></td></tr>'
-    .'<tr><td colspan="2" class="sl_center">'.getCaptcha(2).'<input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
+    $cont .= setTemplateBasic('recommend-form', [
+        '{%name%}' => $conf['name'],
+        '{%style%}' => $conf['style'],
+        '{%token%}' => htmlspecialchars(getSiteToken('recommend'), ENT_QUOTES, 'UTF-8'),
+        '{%nick_field%}' => $unkey,
+        '{%sname%}' => $sname,
+        '{%semail%}' => $semail,
+        '{%fname%}' => $fname,
+        '{%femail%}' => $femail,
+        '{%captcha%}' => getCaptcha(2),
+        '{%lbl_yourname%}' => _YOURNAME,
+        '{%lbl_youremail%}' => _YOUREMAIL,
+        '{%lbl_friendname%}' => _FFRIENDNAME,
+        '{%lbl_friendemail%}' => _FFRIENDEMAIL,
+        '{%submit_label%}' => _SEND,
+    ]);
     echo $cont;
     setFoot();
 }
@@ -43,17 +53,31 @@ function send(): void {
     $fname = getVar('post', 'fname', 'name');
     $femail = getVar('post', 'femail', 'text');
     $stop = [];
+    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'recommend')) $stop[] = _ERROR;
     if (!$sname || !$fname) $stop[] = _ERROR_ALL;
     checkemail($semail);
     checkemail($femail);
     if (checkCaptcha(2)) $stop[] = _SECCODEINCOR;
     if (!$stop) {
         $subject = $conf['sitename'].' - '._INTSITE;
-        $message = _HELLO.' '.$fname.'!<br><br>'._YOURFRIEND.' '.$sname.' '._OURSITE.' '.$conf['sitename'].' '._INTSENT.'<br><br>'._SITENAME.': '.$conf['sitename'].' '.urldecode($conf['defis']).' '.$conf['slogan'].'<br>'._SITEURL.': <a href="'.$conf['homeurl'].'" target="_blank" title="'.$conf['sitename'].'">'.$conf['homeurl'].'</a>';
+        $siteLink = setTemplateBasic('recommend-mail-link', ['{%href%}' => $conf['homeurl'], '{%title%}' => $conf['sitename'], '{%label%}' => $conf['homeurl']]);
+        $message = setTemplateBasic('recommend-mail-message', [
+            '{%hello%}' => _HELLO,
+            '{%friend_name%}' => $fname,
+            '{%yourfriend%}' => _YOURFRIEND,
+            '{%sender_name%}' => $sname,
+            '{%oursite%}' => _OURSITE,
+            '{%sitename%}' => $conf['sitename'],
+            '{%intsent%}' => _INTSENT,
+            '{%sitename_label%}' => _SITENAME,
+            '{%slogan%}' => urldecode($conf['defis']).' '.$conf['slogan'],
+            '{%siteurl_label%}' => _SITEURL,
+            '{%site_link%}' => $siteLink,
+        ]);
         addMail($femail, $semail, $subject, $message, 0, 3);
         update_points(38);
         setHead(['title' => _RECOMMTITLE]);
-        echo setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _FREFERENCE.' '.$fname.'.<br>'._THANKSREC]);
+        echo setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => setTemplateBasic('recommend-success-text', ['{%freference%}' => _FREFERENCE, '{%friend_name%}' => $fname, '{%thanksrec%}' => _THANKSREC])]);
         setFoot();
     } else {
         recommend();

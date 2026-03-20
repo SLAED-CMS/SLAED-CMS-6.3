@@ -18,17 +18,28 @@ function voting(): void {
 	$cont = setTemplateBasic('title', ['{%title%}' => _VOTING]);
 	$result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
 	if ($db->getSqlRowCount($result) > 0) {
-		$cont .= setTemplateBasic('voting-home-open', ['{%id%}' => _ID, '{%title%}' => _TITLE, '{%comm%}' => cutstr(_COMMENTS, 4, 1), '{%votes%}' => cutstr(_VOTES, 3, 1)]);
+		$cont .= setTemplateBasic('voting-home-wrap', ['if_flag' => ['open' => true], '{%id%}' => _ID, '{%title%}' => _TITLE, '{%comm%}' => cutstr(_COMMENTS, 4, 1), '{%votes%}' => cutstr(_VOTES, 3, 1)]);
 		while ([$id, $stitle, $answer, $date, $enddate, $comm, $acomm, $typ] = $db->getSqlRow($result)) {
-			$title = '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle]).'" title="'.htmlspecialchars($stitle, ENT_QUOTES).'">'.cutstr($stitle, 60).'</a> '.new_graphic($date);
+			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle]);
 			$comm = ($acomm && $comm) ? $comm : _NO;
 			$vote = array_sum(explode('|', $answer));
 			$type = ($typ == '1') ? _VOPEN : _VCLOSE;
 			$report = _CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type;
 			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($stitle, ENT_QUOTES).'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
-			$cont .= setTemplateBasic('voting-home', ['{%id%}' => $id, '{%title%}' => $title, '{%comm%}' => $comm, '{%vote%}' => $vote, '{%info%}' => _INFO, '{%report%}' => $report, '{%admin%}' => $admin]);
+			$cont .= setTemplateBasic('voting-home', [
+				'{%id%}' => $id,
+				'{%title_href%}' => $thref,
+				'{%title_attr%}' => htmlspecialchars($stitle, ENT_QUOTES),
+				'{%title_text%}' => cutstr($stitle, 60),
+				'{%title_new%}' => new_graphic($date),
+				'{%comm%}' => $comm,
+				'{%vote%}' => $vote,
+				'{%info%}' => _INFO,
+				'{%report%}' => $report,
+				'{%admin%}' => $admin,
+			]);
 		}
-		$cont .= setTemplateBasic('voting-home-close');
+		$cont .= setTemplateBasic('voting-home-wrap', []);
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $conf['voting']['num'], '', 'id', '_voting', '', $onum, $conf['voting']['nump']);
 	} else {
 		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);

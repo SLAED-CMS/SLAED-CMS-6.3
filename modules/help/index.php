@@ -83,16 +83,10 @@ function help(): void {
         while ([$id, $cid, $stitle, $time, $hometext, $comm, $counter, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
+            $cdesc = $cdesc ?: $ctitle;
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
-            $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
-            $title = '<a href="'.$thref.'" title="'.$stitle.'">'.$stitle.'</a> '.new_graphic($time);
-            $read = '<a href="'.$thref.'" title="'.$stitle.'" class="sl_but_read">'._READMORE.'</a>';
-            $date = ($conf['help']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
-            $reads = ($conf['help']['read']) ? '<span title="'._READS.'" class="sl_views">'.$counter.'</span>' : '';
-            $comm = '<a href="'.$thref.'#'.$id.'" title="'._MESSAGES.'" class="sl_coms">'.$comm.'</a>';
-            $cont .= setTemplateBasic('basic', ['{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), '{%read%}' => $read, '{%post%}' => '', '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => $comm, '{%rating%}' => '', '{%admin%}' => '', '{%favorites%}' => '', '{%goback%}' => '', '{%voting%}' => '']);
+            $date = ($conf['help']['date']) ? format_time($time) : '';
+            $cont .= setTemplateBasic('basic', ['{%id%}' => $id, '{%title_href%}' => $thref, '{%title_attr%}' => $stitle, '{%title_text%}' => $stitle, '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '', '{%category_img%}' => $cimg, '{%text%}' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), '{%read_href%}' => $thref, '{%read_text%}' => _READMORE, '{%post_text%}' => '', '{%post_label%}' => '', '{%date_text%}' => $date, '{%date_iso%}' => ($date) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%reads_text%}' => ($conf['help']['read']) ? $counter : '', '{%reads_label%}' => _READS, '{%hits%}' => '', '{%comm_href%}' => $thref.'#'.$id, '{%comm_text%}' => $comm, '{%comm_label%}' => _MESSAGES, '{%rating%}' => '', '{%favorites%}' => '', '{%voting%}' => '', '{%editor%}' => _EDITOR, '{%edit_href%}' => '', '{%edit_text%}' => '', '{%delete_href%}' => '', '{%delete_text%}' => '', '{%delete_ask%}' => '', '{%back_title%}' => '', '{%back_text%}' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_help', 'cid', $onum, $conf['help']['nump']);
     } else {
@@ -125,17 +119,15 @@ function liste(): void {
     $cont = setModuleNavi(['title' => _LIST] + HELP_NAVI);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['help']['letter']) ? letter($conf['name']) : '';
-        $cont .= setTemplateBasic('liste-open', ['{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _STATUS, '{%date%}' => _DATE]);
+        $cont .= setTemplateBasic('liste-wrap', ['if_flag' => ['open' => true], '{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _STATUS, '{%date%}' => _DATE]);
         while ([$id, $cid, $title, $time, $status, $ctitle, $cdesc] = $db->getSqlRow($result)) {
             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $title = '<a href="'.$thref.'" title="'.$title.'">'.cutstr($title, 40).'</a> '.new_graphic($time);
-            $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'">'.cutstr($ctitle, 15).'</a>' : _NO;
+            $cdesc = $cdesc ?: $ctitle;
             $status = ($status) ? 0 : 1;
-            $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title%}' => $title, '{%ctitle%}' => $ctitle, '{%post%}' => ad_status('', $status), '{%time%}' => format_time($time)]);
+            $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title_href%}' => $thref, '{%title_attr%}' => $title, '{%title_text%}' => cutstr($title, 40), '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : _NO, '{%post_text%}' => ad_status('', $status), '{%time_text%}' => format_time($time), '{%time_iso%}' => date('c', strtotime($time)), '{%time_label%}' => _DATE]);
         }
-        $cont .= setTemplateBasic('liste-close');
+        $cont .= setTemplateBasic('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND pid = '0' AND uid = :uid" : "time <= NOW() AND pid = '0' AND uid = :uid";
         $params = ($let) ? ['let' => $let.'%', 'uid' => $uid] : ['uid' => $uid];
         $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_help', 'cid', $onum, $conf['help']['nump'], $params);
@@ -182,21 +174,18 @@ function view(): void {
             $fields = ($fields) ? '<br><br>'.$fields : '';
             $text = $hometext.$fields;
             $post = ($nick) ? user_info($nick) : _ANONYM;
-            $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
-            $date = ($conf['help']['date']) ? '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>' : '';
+            $date = ($conf['help']['date']) ? format_time($time) : '';
             $rating = ($haid && $huid != $haid) ? ajax_rating(1, $hid, $conf['name'], $ratings, $score, '') : '';
             if (!$pid) {
-                $reads = '<span title="'._READS.'" class="sl_views">'.$counter.'</span>';
-                $cdesc = ($cdesc) ? $cdesc : $ctitle;
-                $ctitle = ($ctitle) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</a>' : '';
+                $reads = $counter;
+                $cdesc = $cdesc ?: $ctitle;
                 $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
-                $cimg = ($cimg) ? '<a href="'.$chref.'" title="'.$cdesc.'" class="sl_icat"><img src="'.$cimg.'" alt="'.$cdesc.'" title="'.$cdesc.'"></a>' : '';
                 $favorites = getFavorBtn($hid, $conf['name']);
-                $goback = '<span OnClick="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_back">'._BACK.'</span>';
             } else {
-                $reads = $ctitle = $cimg = $favorites = $goback = '';
+                $reads = $ctitle = $cimg = $favorites = '';
+                $cdesc = '';
             }
-            $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => !$pid], '{%cid%}' => $cid, '{%cimg%}' => $cimg, '{%ctitle%}' => $ctitle, '{%id%}' => $hid, '{%title%}' => filterTextHighlight($title, $word), '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read%}' => '', '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%hits%}' => '', '{%comm%}' => '', '{%rating%}' => $rating, '{%admin%}' => '', '{%favorites%}' => $favorites, '{%goback%}' => $goback, '{%voting%}' => '']);
+            $cont .= setTemplateBasic('basic', ['if_flag' => ['is_view' => !$pid, 'has_back' => !$pid], '{%id%}' => $hid, '{%title_href%}' => '#'.$hid, '{%title_attr%}' => strip_tags((string)$title), '{%title_text%}' => filterTextHighlight($title, $word), '{%title_new%}' => '', '{%category_href%}' => (!$pid && $ctitle) ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => (!$pid && $ctitle) ? cutstr($ctitle, 15) : '', '{%category_img%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%read_href%}' => '', '{%read_text%}' => '', '{%post_text%}' => $post, '{%post_label%}' => _POSTEDBY, '{%date_text%}' => $date, '{%date_iso%}' => ($date) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%reads_text%}' => $reads, '{%reads_label%}' => _READS, '{%hits%}' => '', '{%comm_href%}' => '', '{%comm_text%}' => '', '{%comm_label%}' => _COMMENTS, '{%rating%}' => $rating, '{%favorites%}' => $favorites, '{%voting%}' => '', '{%editor%}' => _EDITOR, '{%edit_href%}' => '', '{%edit_text%}' => '', '{%delete_href%}' => '', '{%delete_text%}' => '', '{%delete_ask%}' => '', '{%back_title%}' => _BACK, '{%back_text%}' => _BACK]);
             $a++;
         }
         $cont .= addview($id);
@@ -215,7 +204,7 @@ function addview(int $id): string {
         $cont = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
         .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1').'</td></tr>'
         .'<tr><td>'._HELPGLOS.'</td><td>'.radio_form($status, 'status').'</td></tr>'
-        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="catid" value="'.$cid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
+        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="catid" value="'.$cid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
         return $cont;
     }
     return '';
@@ -235,6 +224,7 @@ function add(): void {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _HSUBMIT]);
         $cont .= setTemplateBasic('form-add', [
             '{%name%}'      => $conf['name'],
+            '{%token%}'     => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
             '{%style%}'     => $conf['style'],
             '{%lbl_title%}' => _TITLE,
             '{%lbl_cat%}'   => _CATEGORY,
@@ -263,6 +253,7 @@ function send(): void {
         $pid = getVar('post', 'pid', 'num');
         $status = ($pid) ? getVar('post', 'status', 'num') : '0';
         $stop = [];
+        if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'help')) $stop[] = _ERROR;
         if (!$title && !$pid) $stop[] = _CERROR;
         if (!$hometext && !$pid) $stop[] = _CERROR1;
         if (!$stop && getVar('post', 'posttype', 'var') == 'save') {

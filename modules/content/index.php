@@ -21,16 +21,22 @@ function content(): void {
     $offset = ($num - 1) * $limit;
     $result = $db->getSqlQuery('SELECT id, title, body, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= '<table class="sl_table_list_sort"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
+        $cont .= setTemplateBasic('content-list-open', ['{%id%}' => _ID, '{%title%}' => _TITLE, '{%functions%}' => _FUNCTIONS]);
         while ([$id, $title, $body, $time, $counter]= $db->getSqlRow($result)) {
             $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=content_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>||' : '';
-            $edit = add_menu($moder.'<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._SHOW.'">'._SHOW.'</a>');
-            $cont .= '<tr id="'.$id.'">'
-            .'<td><a href="#'.$id.'" title="'.$id.'" class="sl_pnum">'.$id.'</a></td>'
-            .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._READS.': '.$counter).'<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]).'" title="'.$title.'">'.$title.'</a> '.new_graphic($time).'</td>'
-            .'<td>'.$edit.'</td></tr>';
+            $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
+            $actions = add_menu($moder.'<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._SHOW.'">'._SHOW.'</a>');
+            $cont .= setTemplateBasic('content-list-basic', [
+                '{%id%}' => $id,
+                '{%tip%}' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._READS.': '.$counter),
+                '{%href%}' => $href,
+                '{%title_attr%}' => $title,
+                '{%title_text%}' => $title,
+                '{%title_new%}' => new_graphic($time),
+                '{%actions%}' => $actions,
+            ]);
         }
-        $cont .= '</tbody></table>';
+        $cont .= setTemplateBasic('table-close');
         $cont .= setArticleNumbers('pagenum', $conf['name'], $limit, '', 'id', '_content', '', '', $nump);
     } else {
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
