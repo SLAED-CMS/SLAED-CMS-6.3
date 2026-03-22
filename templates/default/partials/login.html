@@ -1,0 +1,31 @@
+<div class="login-form">
+    {% if login %}
+    <div class="login-form-title">{{ login }}</div>
+    {% endif %}
+
+    <div class="login-form-body">
+        {% if nickname %}
+        <div class="login-form-nickname">{{ nickname }}</div>
+        {% endif %}
+
+        {% if password %}
+        <div class="login-form-password">{{ password }}</div>
+        {% endif %}
+
+        {% if token %}
+        <input type="hidden" name="token" value="{{ token }}">
+        {% endif %}
+
+        {% if captcha %}
+        <div class="login-form-captcha">{{{ captcha }}}</div>
+        {% endif %}
+
+        {% if lost %}
+        <div class="login-form-lost">{{ lost }}</div>
+        {% endif %}
+
+        {% if register %}
+        <div class="login-form-register">{{ register }}</div>
+        {% endif %}
+    </div>
+</div>

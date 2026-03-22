@@ -1,0 +1,38 @@
+body {
+    background: #f8f9fa;
+}
+
+.site-shell {
+    min-height: 100vh;
+}
+
+.site-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.site-main {
+    padding: 2rem 0;
+}
+
+.site-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    color: #6c757d;
+}
+
+.auth-card {
+    max-width: 28rem;
+    margin: 0 auto;
+}
+
+.message-box {
+    max-width: 42rem;
+    margin: 0 auto;
+}
+
+.content-box {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.04);
+}

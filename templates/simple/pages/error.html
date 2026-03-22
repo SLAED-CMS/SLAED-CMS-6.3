@@ -1,0 +1,15 @@
+{% extends 'layouts/bare.html' %}
+
+{% block content %}
+<div class="message-box">
+    <div class="content-box">
+        {% if title %}
+        <h1 class="h3 mb-3">{{ title }}</h1>
+        {% endif %}
+
+        {% if message_html %}
+        <div>{{{ message_html }}}</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+<div class="login-logged">
+    {% if title %}
+    <div class="login-logged-title">{{ title }}</div>
+    {% endif %}
+
+    {% if avatar %}
+    <div class="login-logged-avatar">
+        <img src="{{ avatar }}" alt="{{ user }}">
+    </div>
+    {% endif %}
+
+    {% if user %}
+    <div class="login-logged-body">
+        <div class="login-logged-user">{{ user }}</div>
+        {% if logout %}
+        <div class="login-logged-logout">{{ logout }}</div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>

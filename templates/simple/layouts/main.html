@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="templates/simple/assets/vendor/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="templates/simple/assets/css/theme.css">
+</head>
+<body>
+    <div class="site-shell d-flex flex-column">
+        <header class="site-header bg-white py-3">
+            <div class="container">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="h4 mb-0">{{ brand }}</div>
+                        {% if subtitle %}
+                        <div class="text-body-secondary small">{{ subtitle }}</div>
+                        {% endif %}
+                    </div>
+                    {% if head_html %}
+                    <div>{{{ head_html }}}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <main class="site-main flex-grow-1">
+            <div class="container">
+                {{{ content_html }}}
+            </div>
+        </main>
+
+        <footer class="site-footer py-4">
+            <div class="container small">
+                {{ footer }}
+            </div>
+        </footer>
+    </div>
+
+    <script src="templates/simple/assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="templates/simple/assets/js/theme.js"></script>
+</body>
+</html>
