@@ -7,118 +7,91 @@
 
 ## Supported Versions
 
-| Version | Supported          | PHP Version | Status |
-| ------- | ------------------ | ----------- | ------ |
-| 6.3.x   | :white_check_mark: | 8.1 - 8.4   | Active Development |
-| 6.2.x   | :x:                | 7.4 - 8.0   | End of Life (2017) |
-| 6.1.x   | :x:                | 7.0 - 7.4   | Not Supported |
-| < 6.0   | :x:                | < 7.0       | Not Supported |
+| Version | Supported | PHP Version | Status |
+| ------- | --------- | ----------- | ------ |
+| 6.3.x   | Yes       | 8.1+        | Active development |
+| 6.2.x   | No        | Legacy      | End of life |
+| 6.1.x   | No        | Legacy      | Not supported |
+| < 6.0   | No        | Legacy      | Not supported |
 
-> [!IMPORTANT]
-> Only version 6.3.x receives security updates. We strongly recommend upgrading to the latest version.
+Only version 6.3.x should be considered for security fixes.
 
 ---
 
 ## Reporting a Vulnerability
 
-### Private Disclosure
+Please report vulnerabilities privately:
 
-If you discover a security vulnerability, please report it privately:
+- **Email:** info@slaed.net
+- **Suggested subject:** `[SECURITY] Brief description`
 
-**Email:** info@slaed.net
+Include:
 
-**Subject:** `[SECURITY] Brief description of the issue`
+1. Clear description of the issue
+2. Steps to reproduce
+3. Affected versions or branch information
+4. Security impact
+5. Proof of concept, if safe to share
 
-### What to Include
+> [!IMPORTANT]
+> Do not disclose unpatched vulnerabilities publicly before a fix is available.
 
-1. **Description:** Clear description of the vulnerability
-2. **Steps to Reproduce:** Detailed steps to reproduce the issue
-3. **Impact:** Potential impact of the vulnerability
-4. **Affected Versions:** Which versions are affected
-5. **Proof of Concept:** If possible, include a PoC (do not exploit live systems)
+### Response Expectations
 
-### Response Timeline
-
-| Stage | Timeline |
-|-------|----------|
-| Initial Response | 48 hours |
-| Vulnerability Assessment | 7 days |
-| Fix Development | 14-30 days |
-| Security Advisory | After fix is released |
-
-### What to Expect
-
-- Acknowledgment of your report within 48 hours
-- Regular updates on the progress
-- Credit in the security advisory (if desired)
-- Notification when the fix is released
+Reports are reviewed on a best-effort basis. This document does not guarantee a fixed response time.
 
 ---
 
-## Security Measures in SLAED CMS 6.3
+## Security Measures in the Current Codebase
 
 ### SQL Injection Prevention
 
-All database queries use **prepared statements** with named placeholders:
+Database access goes through the `Database` class and project SQL helpers such as:
 
 ```php
-// Safe - Using prepared statements
 $db->getSqlQuery(
-    'SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id',
+    'SELECT id, name FROM '.PREFIX_DB.'_users WHERE id = :id',
     ['id' => $id]
 );
 ```
 
-**Statistics:**
-- 2106+ SQL queries converted to prepared statements
-- Named placeholders (`:id`, `:name`) for all parameters
-- In security patches, keep variable names short and single-purpose (`$id`, `$name`, `$filter`); use compound names only when disambiguation is required.
-
 ### Input Validation
 
-All user input is validated using the `getVar()` helper:
+User input should be filtered through `getVar()`:
 
 ```php
-$id = getVar('post', 'id', 'num');        // Integer only
-$name = getVar('post', 'name', 'name');   // Safe characters, max 25
-$url = getVar('post', 'url', 'url');      // Valid URL format
-```
-
-**Statistics:**
-- 269+ user input points secured with validation
-
-### XSS Prevention
-
-All output is properly escaped:
-
-```php
-echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');
+$id = getVar('post', 'id', 'num');
+$name = getVar('post', 'name', 'name');
+$url = getVar('post', 'url', 'url');
 ```
 
 ### CSRF Protection
 
-- Session-based CSRF tokens for state-changing forms
-- Token validation on all POST requests
+The codebase includes token helpers:
 
-### File Upload Security
+- `getSiteToken()`
+- `checkSiteToken()`
 
-- MIME type verification
-- Extension whitelist
-- Size limits
-- Secure storage outside web root
+These should be used for state-changing forms and handlers.
 
 ### Authentication
 
-- Secure password hashing
-- Session management
-- Login attempt limiting
-- IP-based blocking
+Password handling helpers present in the current runtime:
+
+- `getPassHash()`
+- `checkPassHash()`
+
+### Logging
+
+Runtime logs are stored under `storage/logs/`.
 
 ### Access Control
 
-- Role-based permissions
-- Module-level access control
-- Admin panel protection
+The codebase contains dedicated admin and module access checks, including patterns such as:
+
+- `isAdmin()`
+- `isAdmin(true)`
+- `is_admin_modul()`
 
 ---
 
@@ -126,195 +99,67 @@ echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');
 
 ### Installation
 
-1. **Delete `setup.php`** after installation
-2. **Rename admin entry point** from default `admin.php`
-3. **Restrict config directory** access via `.htaccess`
+1. Delete `setup.php` after installation.
+2. Review access to `config/` and `storage/` on the web server.
+3. Use strong database and administrator credentials.
 
 ### Configuration
 
-```php
-// config/db.php - Use strong credentials
-$confdb = [
-    'pass' => 'strong_random_password_here',
-    // ...
-];
-```
+Review the active configuration files under `config/` and keep secrets out of public access.
 
-### Server Configuration
+### Server Hardening
 
-#### Apache (.htaccess)
+Protect sensitive directories such as:
 
-```apache
-# Deny access to sensitive files
-<FilesMatch "\.(php|txt|md|json)$">
-    Order Deny,Allow
-    Deny from all
-</FilesMatch>
+- `config/`
+- `storage/`
+- log files
+- backup files
 
-# Allow only index.php, admin.php, setup.php
-<FilesMatch "^(index|admin|setup)\.php$">
-    Order Allow,Deny
-    Allow from all
-</FilesMatch>
-```
+The exact web server configuration depends on Apache, Nginx, IIS, or your hosting platform.
 
-#### Nginx
+### Maintenance
 
-```nginx
-# Deny access to config directory
-location /config {
-    deny all;
-    return 404;
-}
-
-# Deny access to storage directory
-location /storage {
-    deny all;
-    return 404;
-}
-```
-
-### Regular Maintenance
-
-1. **Update PHP** to the latest supported version
-2. **Apply SLAED updates** promptly
-3. **Monitor logs** for suspicious activity
-4. **Backup regularly** (database and files)
-5. **Review admin accounts** periodically
+1. Keep PHP updated within the supported range.
+2. Apply project updates.
+3. Monitor `storage/logs/`.
+4. Review administrator accounts and permissions.
+5. Keep regular database and file backups.
 
 ---
 
-## Security Changelog
+## What We Consider Security Issues
 
-### Version 6.3.0 (In Development - February 2026)
+Examples:
 
-**Major Security Improvements:**
+- SQL injection
+- XSS
+- CSRF bypass
+- Remote code execution
+- Authentication bypass
+- Privilege escalation
+- Sensitive data disclosure
+- Path traversal
 
-- [x] All SQL queries converted to prepared statements (2106+ queries)
-- [x] Input validation with `getVar()` for all user inputs (269+ points)
-- [x] All raw `$_GET`/`$_POST` access eliminated from `core/system.php` and `core/user.php`
-- [x] `func_get_args()` removed from all core functions — typed PHP 8.x parameters enforced
-- [x] `tpl_eval()`, `tpl_func()`, `tpl_warn()` removed — used `eval()` internally
-- [x] `filterMarkdown()` added — Markdown→HTML parser with safe mode (user) and admin mode
-- [x] `setRedirect()` added — sanitized HTTP redirect replacing raw `header() + exit;`
-- [x] Type declarations for all functions
-- [x] Updated to PHP 8.4 security features
-- [x] Deprecated insecure functions removed (99 functions)
-- [x] 1282 legacy code constructs updated
-- [x] `adm_info()` replaced by `getAdminInfo()` — no params, auto-detects info file from `$_GET['name']`
-- [x] Admin info file structure: flat `admin/info/{module}-{locale}.html` → subdirectory `admin/info/{module}/{locale}.html`
-- [x] Database class `sql_db` renamed to `Database`; all 15 methods renamed to `getSql*` prefix (`getSqlQuery()`, `getSqlRow()`, `getSqlRowCount()`, …)
-- [x] `getAdminInfo()` auto-detects info file from `$_GET['name']`; checks both `.html` and `.md` extensions in `admin/info/{name}/` and `modules/{name}/admin/info/`
+Examples usually not treated as security issues in this policy:
 
-**Renamed Functions (`core/security.php`):**
-
-All legacy snake_case function names have been replaced with camelCase `VerbNoun` equivalents:
-
-| Old name (6.2.x) | New name (6.3.x) | Notes |
-|------------------|------------------|-------|
-| `is_admin_god()` | `isAdminSuper(): bool` | Cached per request |
-| `get_host()` | `getHost(): string` | |
-| `get_referer()` | `getReferer(): string` | |
-| `isVar()` / `analyze()` | `filterVar(string\|array): string\|array` | |
-| `url_filter()` | `filterUrl(string): string` | |
-| `num_filter()` | `filterNum(mixed): int` | |
-| `var_filter()` | `filterWord(string): string` | |
-| `text_filter()` | `filterText(string\|array, int): string` | |
-| `save_text()` | `filterHtml(string, mixed): string` | |
-| `fields_save()` | `filterFields(mixed): string` | |
-| `url_clickable()` | `filterClickable(string): string` | |
-| `cutstrc()` | `filterCut(string, int): string` | |
-| `display_time()` | `getDuration(int): string` | |
-| `rest_time()` | `getTimeLeft(int): string` | |
-| `ed2k_link()` | `getEd2kLink(array): string` | |
-| `mail_send()` | `addMail(...): void` | |
-| `doHackReport()` | `addHackReport(string): void` | Logs, blocks IP, sends email, exits |
-| `doWarnReport()` | `addWarnReport(string): void` | Logs, sends email, exits |
-| `zip_check()` | `checkCompress(): array` | Returns `['zip'=>bool,'gz'=>bool,'bz2'=>bool]` |
-| `zip_compress()` | `addCompress(...): bool` | |
-
-**Logging & Error Handling Hardening (`core/security.php`):**
-
-- [x] `set_exception_handler()` added — catches all uncaught exceptions, logs to `error_php.log`
-- [x] `register_shutdown_function()` added — catches fatal errors (E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR)
-- [x] `set_error_handler()` extended with new error levels: E_USER_ERROR (256), E_USER_WARNING (512), E_USER_NOTICE (1024), E_RECOVERABLE_ERROR (4096), E_USER_DEPRECATED (16384)
-- [x] Log rotation bug fixed in all 6 log functions — proper fclose → compress → reopen pattern
-- [x] All log files renamed from `.txt` to `.log`
-- [x] All log rotation uses `addCompress()` with `$del=true` instead of `zip_compress()` + `unlink()`
-- [x] Unified `log_size` fallback to 10 MB across all log functions
-- [x] Unified `filesize() >= $max` comparison (previously inconsistent `>` vs `>=`)
-- [x] Unified log path variable `$log` and archive timestamp format `Y-m-d_H-i-s`
-- [x] Error log (`error_php.log`) uses **NDJSON format** — one JSON object per line, machine-readable
-
-**Config Write Protection:**
-
-- [x] `setConfigFile()` has a `$reserved` static guard — refuses to write to `system.php`, `header.php`, `chmod.php`, `local.php`
-- [x] `getConfig()` has an explicit `$skip` list — reserved files are never merged into `$conf`
-
-**Modules Secured:**
-
-| Module | Status | Notes |
-|--------|--------|-------|
-| Admin Panel | ✅ Secured | All 24 admin modules protected (incl. scheduler) |
-| User Authentication | ✅ Secured | Session management improved |
-| Forum | ✅ Secured | High-priority public module |
-| Search | ✅ Secured | Previously main attack target |
-| Private Messages | ✅ Secured | Privacy protection |
-| File Uploads | ✅ Secured | MIME validation, size limits |
-| Categories | ✅ Secured | Access control improved |
-
-**Removed:**
-
-| Removed (Insecure) | Replacement |
-|--------------------|-------------|
-| `tpl_eval()` (used `eval()`) | `setTemplateBasic()` |
-| `tpl_func()` (used `eval()`) | `setTemplateBasic()` |
-| `tpl_warn()` (used `eval()`) | `setTemplateWarning()` |
-| Direct `$_GET`/`$_POST` | `getVar()` validation |
-| String concatenation in SQL | Prepared statements |
-| `func_get_args()` in functions | Explicit typed parameters |
-| Inline `header() + exit;` in admin | `setRedirect()` |
-
-### Version 6.2.x (End of Life - 2017)
-
-> [!WARNING]
-> Version 6.2.x is no longer supported. Known vulnerabilities will not be patched.
-
-**Known Issues (Unpatched):**
-- SQL injection vulnerabilities in multiple modules
-- Direct `$_GET`/`$_POST` access without validation
-- Deprecated PHP functions
-- `eval()` usage in template system
+- social engineering
+- spam
+- issues in external third-party software not maintained in this repository
 
 ---
 
-## Vulnerability Disclosure Policy
+## Security Notes for Contributors
 
-### Responsible Disclosure
+When changing code:
 
-We follow responsible disclosure practices:
+- use prepared statements
+- validate request input
+- protect state-changing actions with CSRF tokens where applicable
+- avoid adding raw HTML or SQL paths without a clear reason
+- prefer existing security helpers over ad hoc checks
 
-1. **Private reporting** of vulnerabilities
-2. **Coordinated disclosure** after fix is available
-3. **Credit to researchers** who follow this policy
-
-### What We Consider
-
-- SQL Injection
-- Cross-Site Scripting (XSS)
-- Cross-Site Request Forgery (CSRF)
-- Remote Code Execution
-- Authentication Bypass
-- Privilege Escalation
-- Information Disclosure
-- Path Traversal
-
-### What We Don't Consider
-
-- Denial of Service (DoS) attacks
-- Spam/Social Engineering
-- Issues in third-party plugins not maintained by SLAED
-- Issues requiring physical access to the server
+See also [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

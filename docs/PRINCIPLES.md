@@ -1,27 +1,29 @@
 # SLAED Engineering Principles
 
-SLAED development follows five core principles:
+These principles summarize the stable project direction already reflected in the repository rules and current codebase.
 
-## 1) Fast
-- Optimized queries, efficient caching.
-- Optimize for low server resource usage.
-- Choose simple, cheap operations as defaults.
+## 1. Fast
+- Keep hot paths simple
+- Avoid unnecessary abstractions
+- Prefer low-overhead solutions
 
-## 2) Stable
-- Error prevention, consistent API.
-- Keep interfaces intuitive and predictable.
-- Prefer clear naming and straightforward flows over hidden abstractions.
+## 2. Stable
+- Preserve behavior unless the task explicitly changes it
+- Prefer incremental changes
+- Verify touched areas after each meaningful step
 
-## 3) Effective
-- Reusable code, no redundancy.
-- Keep hot paths fast and avoid unnecessary overhead.
+## 3. Effective
+- Reuse semantics, not accidental duplication
+- Fix root causes when they are clearly identified
+- Keep data flow understandable
 
-## 4) Productive
-- Easy extensibility, clear guidelines.
-- Design for extensibility without artificial limits.
-- Keep modules composable and easy to enhance.
+## 4. Productive
+- Keep structure predictable for contributors
+- Prefer direct contracts over temporary compatibility layers
+- Keep documentation aligned with the code
 
-## 5) Secure
-- Protection against XSS, CSRF, SQL injection.
-- Maintain strong, configurable protection.
-- Log all important actions and failures consistently.
+## 5. Secure
+- Read input through `getVar()`
+- Use prepared statements
+- Validate CSRF tokens on state-changing POST handlers
+- Escape output at the correct boundary

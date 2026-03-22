@@ -3,7 +3,7 @@
 > **Contribution Guidelines for SLAED CMS 6.3**
 > *Last updated: March 2026*
 
-Thank you for your interest in contributing to SLAED CMS! This document provides guidelines and standards for contributing to the project.
+Thank you for your interest in contributing to SLAED CMS. This document describes the current contribution workflow, coding conventions, and project-specific rules that contributors should follow.
 
 ## Table of Contents
 
@@ -11,6 +11,7 @@ Thank you for your interest in contributing to SLAED CMS! This document provides
 - [Getting Started](#getting-started)
 - [Development Setup](#development-setup)
 - [Coding Standards](#coding-standards)
+- [Template Runtime Guidance](#template-runtime-guidance)
 - [Commit Guidelines](#commit-guidelines)
 - [Pull Request Process](#pull-request-process)
 - [Testing](#testing)
@@ -28,20 +29,18 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before contribu
 
 ### Prerequisites
 
-- **PHP:** 8.4+ (8.1+ minimum supported)
+- **PHP:** 8.1+
 - **Database:** MySQL 8.0+ or MariaDB 10+
 - **Web Server:** Apache, Nginx, or IIS
-- **Extensions:** PDO, MySQLi, GD, mbstring, JSON
-- **Tools:** Git, Composer (optional)
+- **Extensions:** PDO, GD, mbstring, JSON
+- **Tools:** Git, Composer
 
 ### Fork and Clone
 
 ```bash
-# Fork the repository on GitHub, then clone your fork
 git clone https://github.com/YOUR-USERNAME/SLAED-CMS-6.3.git
 cd SLAED-CMS-6.3
 
-# Add upstream remote
 git remote add upstream https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
 ```
 
@@ -49,563 +48,211 @@ git remote add upstream https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
 
 ## Development Setup
 
-### 1. Database Configuration
+### 1. Database
 
-```bash
-cp config/db.php.example config/db.php
-# Edit config/db.php with your database credentials
-```
-
-### 2. Import Database Schema
+Create a database and import the base schema:
 
 ```bash
 mysql -u root -p your_database < setup/sql/table.sql
 ```
 
-### 3. Set Permissions
+### 2. Configuration
+
+Review the files in `config/` and adjust local settings as needed for your environment.
+
+> [!NOTE]
+> The repository does not ship a `config/db.php.example` file. Configure the real files used by your local installation.
+
+### 3. Writable Directories
+
+Typical writable directories:
 
 ```bash
 chmod -R 755 config/ storage/ uploads/
-chmod 666 config/*.php storage/logs/*.log
+chmod 666 config/*.php
 ```
 
-### 4. Run Setup
+### 4. Setup
 
-Navigate to `http://localhost/slaed-cms/setup.php` and follow the wizard.
+Run `setup.php` in the browser for a local installation if needed, then delete it after installation.
 
 ---
 
 ## Coding Standards
 
+### Source of Truth
+
+Project rules live primarily in `.rules/`. When this document and `.rules/` overlap, follow `.rules/`.
+
 ### Core Principles
 
-1. **Fast** - Optimized queries, efficient caching
-2. **Stable** - Error prevention, consistent API
-3. **Effective** - Reusable code, no redundancy
-4. **Productive** - Easy extensibility, clear guidelines
-5. **Secure** - Protection against XSS, CSRF, SQL injection
+1. **Fast** - Avoid wasteful SQL, I/O, and repeated rendering work.
+2. **Stable** - Prefer predictable behavior and small, safe changes.
+3. **Effective** - Reuse real project patterns instead of inventing new ones.
+4. **Productive** - Keep modules and helpers understandable.
+5. **Secure** - Validate input, use prepared statements, and protect state-changing flows.
 
 ### Function Naming
 
-All functions **must** use one of the 8 required verbs:
+Project functions use `verbNoun` naming with the approved verb set:
 
-| Verb | Purpose | Return Type |
-|------|---------|-------------|
-| `get` | Retrieve data | Array/Object/String |
-| `set` | Save/set data | bool/ID |
-| `add` | Create new entity | bool/ID |
-| `update` | Modify existing | bool |
-| `delete` | Remove entity | bool |
-| `is` | Boolean check | bool |
-| `check` | Validation | bool/Array |
-| `filter` | Sanitization | cleaned data |
-
-**Format:** `verbNoun` (camelCase, max 2-3 words)
+| Verb | Purpose |
+|------|---------|
+| `get` | Retrieve data |
+| `set` | Save or assign |
+| `add` | Create |
+| `update` | Modify |
+| `delete` | Remove |
+| `is` | Boolean check |
+| `check` | Validation |
+| `filter` | Sanitization or normalization |
 
 ```php
-// Correct
-function getUserById(int $id): array {}
-function setConfig(string $file, array $data): bool {}
-function isUserActive(int $id): bool {}
-function checkPermission(string $perm): bool {}
-function filterInput(string $data): string {}
-
-// Wrong
-function sanitizePath() {}  // Use filterPath()
-function fetchUser() {}     // Use getUser()
+function getUser(int $id): array {}
+function setConfigFile(string $file, array $data): bool {}
+function addMail(string $mail, string $name, string $subj, string $text): void {}
+function isAdmin(): bool {}
+function checkSiteToken(string $name = 'token'): bool {}
+function filterText(string|array $text, int $save = 0): string|array {}
 ```
 
 ### Variable Naming
 
-- Short names: 4-8 characters preferred
-- No camelCase for variables
-- Prefer short, single-purpose names like `$filter` or `$color`
-- Avoid compound names like `$filter_color` unless disambiguation is required
-- Common abbreviations: `$id`, `$db`, `$cfg`, `$tmp`, `$arr`, `$list`, `$rows`
+- Prefer short variable names.
+- Use lowercase variable names in the existing project style.
+- Avoid unnecessary compound names.
 
 ```php
-// Correct
-$id = 123;
+$id = 0;
 $cfg = [];
 $list = [];
-
-// Wrong
-$userId = 123;         // No camelCase
-$configuration = [];   // Too long
+$text = '';
 ```
 
-### Type Declarations
+### Strings and Arrays
 
-**Required** for all functions:
-
-```php
-function processData(int $id, string $name = ''): array {
-    return ['id' => $id, 'name' => $name];
-}
-
-function saveUser(array $data): bool {
-    // ...
-    return true;
-}
-
-function deleteItem(int $id): void {
-    // ...
-}
-```
-
-### String Quotes
-
-**Always use single quotes** for simple strings:
+- Prefer single quotes for plain strings.
+- Use short array syntax `[]`.
+- Keep string concatenation consistent with the surrounding file style.
 
 ```php
-// Correct
-$text = 'Hello World';
-$sql = 'SELECT * FROM users WHERE id = :id';
-echo '<span class="'.$cls.'">'.$text.'</span>';
-
-// Wrong
-$text = "Hello World";  // Unnecessary double quotes
-```
-
-### String Concatenation
-
-**No spaces around the `.` operator:**
-
-```php
-// Correct
+$text = 'Hello';
+$list = ['a', 'b'];
 $html = '<div class="'.$cls.'">'.$text.'</div>';
-$ttl = _TITLE.$info;
-
-// Wrong
-$html = '<div class="' . $cls . '">' . $text . '</div>';
 ```
 
-### SQL Queries
+### SQL
 
-**Always use prepared statements with named placeholders:**
+Use prepared statements with named placeholders through `Database` methods:
 
 ```php
-// Correct - Safe
 $db->getSqlQuery(
-    'SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id AND status = :status',
-    ['id' => $id, 'status' => $active]
+    'SELECT id, name FROM '.PREFIX_DB.'_users WHERE id = :id',
+    ['id' => $id]
 );
-
-// Wrong - SQL Injection vulnerability!
-$db->getSqlQuery("SELECT * FROM users WHERE id = '".$id."'");
 ```
+
+Never concatenate user-controlled input into SQL strings.
 
 ### Input Validation
 
-**Always use `getVar()` for user input:**
+Use `getVar()` instead of raw `$_GET`, `$_POST`, or `$_REQUEST` access:
 
 ```php
 $id = getVar('post', 'id', 'num');
 $name = getVar('post', 'name', 'name', '');
 $url = getVar('post', 'url', 'url', 'https://');
-$text = getVar('post', 'content', 'text', '');
+$text = getVar('post', 'text', 'text', '');
 ```
 
-**Available types:**
-- `'num'` - Integer only (`filterNum`)
-- `'let'` - First letter only (1 char, UTF-8)
-- `'word'` - Word/slug characters only (`filterWord`)
-- `'name'` - Username (max 25 chars, safe characters)
-- `'title'` - Title with `filterHtml` (linkify disabled)
-- `'text'` - Text with full `filterHtml` processing (HTML filtering)
-- `'field'` - Custom field data (`filterFields`)
-- `'url'` - Valid URL (`filterUrl`)
-- `'var'` - Alphanumeric/underscore/dash only (`filterVar`, `[a-zA-Z0-9_\-]`)
-- `'bool'` - Boolean value
-- `'raw'` - No filtering — returns raw value (use carefully)
+Available project types include: `num`, `let`, `word`, `name`, `title`, `text`, `field`, `url`, `var`, `bool`, `raw`.
 
 ### Constants
 
-**Format:** `_UPPER_CASE` with underscore prefix
+Use `_UPPER_CASE` constants:
 
 ```php
 define('_ERR_FILE', 'File not found: %1$s');
 define('_USR_ACTIVE', 'User is active');
 ```
 
-**Categories:**
-- `_ERR_*` - Errors
-- `_SYS_*` - System
-- `_USR_*` - User
-- `_MOD_*` - Modules
-
-> [!IMPORTANT]
-> Every constant **must** be defined in all 6 languages: EN, FR, DE, PL, RU, UA.
->
-> **Placement:**
-> - Constants used in public-facing modules → `lang/*.php`
-> - Constants used only in the admin panel → `admin/lang/*.php`
->
-> Example: `_ANONYM` is used by front-end modules, so it belongs in `lang/*.php`.
+If a new user-facing constant is required, update all bundled locales where that constant is expected.
 
 ### Config Files
 
-#### Reserved Config Files
+Reserved files in `config/`:
 
-The following `config/` files are **reserved** and must not be used as module config files:
+- `system.php`
+- `header.php`
+- `chmod.php`
+- `local.php`
 
-| File | Purpose |
-|------|---------|
-| `config/system.php` | System-level settings (loaded separately) |
-| `config/header.php` | HTML head injection (loaded separately) |
-| `config/chmod.php` | Permission settings (loaded separately) |
-| `config/local.php` | Local overrides (loaded last, not merged) |
-
-- `getConfig()` skips these files during glob merge.
-- `setConfigFile()` refuses to write to them (silently ignored).
-
-Do **not** create module config files with these names.
-
-### Global Configuration: `$conf`
-
-The `$conf` array is the merged global configuration loaded from all `config/*.php` files. It is available in every module via `global $conf;`.
-
-**Common top-level keys:**
-
-| Key | Type | Description |
-|-----|------|-------------|
-| `$conf['sitename']` | `string` | Site title |
-| `$conf['homeurl']` | `string` | Base URL (no trailing slash) |
-| `$conf['slogan']` | `string` | Site slogan / default meta description |
-| `$conf['language']` | `string` | Default locale code (e.g. `'en'`) |
-| `$conf['name']` | `string` | Active module name (value of `$_GET['name']`) |
-| `$conf['multilingual']` | `int` | `1` if multilingual mode is active |
-| `$conf['rewrite']` | `int` | `1` if clean URLs (mod_rewrite) are enabled |
-
-**Module config** is nested under the module name:
-
-```php
-// Module-specific settings (loaded from config/{module}.php)
-$conf['news']['num']        // items per page
-$conf['news']['add']        // registered users may add news (1 = yes)
-$conf['news']['rate']       // ratings enabled
-```
-
-**Usage in a module:**
-
-```php
-function list(): void {
-    global $conf;
-    $num = (int)($conf['mymodule']['num'] ?? 10);
-    // ...
-}
-```
-
-> [!NOTE]
-> Never write directly to `$conf`. Use `setConfigFile()` to persist config changes.
-> `$conf['name']` always matches the filtered `$_GET['name']` value set by the routing layer.
+Do not use these names for module configuration files.
 
 ### Admin Module Conventions
 
-When working on admin modules, follow these specific conventions:
-
-#### Navigation
-
-Admin modules use `setAdminNavi(array $p): string` — callable directly from any handler function; no per-module `navi()` wrapper is required.
-
-```php
-// In any handler function, call setAdminNavi() directly:
-$cont = setAdminNavi([
-    'ops'  => ['name=modules', 'name=modules&amp;op=info'],
-    'tabs' => [_HOME, _INFO],
-]);
-
-// With sub-tabs and searchbox:
-$cont = setAdminNavi([
-    'ops'    => ['name=security', 'name=security&amp;op=block', 'name=security&amp;op=info'],
-    'tabs'   => [_HOME, _BANNED, _INFO],
-    'sops'   => ['', ''],
-    'stabs'  => [_BANNED_IP, _BANNED_USERS],
-    'sub'    => $searchboxHtml,
-    'tab'    => $tab,
-    'subtab' => $subtab,
-    'legacy' => $legacy,
-    'id'     => 'security',
-]);
-```
-
-#### Global Variables
+- Use `$afile` for admin entry routing.
+- Use `setRedirect()` for redirects.
+- Use `setAdminNavi()` for admin navigation blocks where appropriate.
+- Keep admin handlers in named functions instead of large inline switch bodies when touching a file substantially.
 
 ```php
-// ✅ Correct - use $afile
 global $afile;
 setRedirect($afile.'.php?name=modules');
-
-// ❌ Wrong - deprecated
-global $admin_file;
-header('Location: '.$admin_file.'.php?name=modules');
-exit;
 ```
-
-#### Header Redirects
-
-Use `setRedirect()` for all redirects. It handles the correct HTTP status code automatically (302 → 303 on POST) and sanitizes the URL:
-
-```php
-// ✅ Correct — use setRedirect()
-setRedirect($afile.'.php?name=modules');
-
-// ✅ With referer fallback (for "Back" buttons)
-setRedirect($afile.'.php?name=modules', true);
-
-// ❌ Wrong — manual header/exit pattern (legacy, do not use)
-header('Location: '.$afile.'.php?name=modules');
-exit;
-
-// ❌ Wrong — unnecessary &op=show
-setRedirect($afile.'.php?name=modules&op=show');
-```
-
-**`setRedirect()` signature:**
-```php
-setRedirect(string $url, bool $refer = false, int $code = 302): never
-```
-- `$url` — redirect target URL
-- `$refer` — when `true` and a `refer` GET/POST parameter is present, redirect to the HTTP Referer instead (same-origin only)
-- `$code` — HTTP status code (301, 302, 303, 307, 308); defaults to 302; auto-upgrades to 303 on POST
-
-#### Switch-Case Structure
-
-Extract inline code into separate functions:
-
-```php
-// ✅ Correct
-function status(): void {
-    global $db, $afile, $act, $id;
-    $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET active = :act WHERE mid = :id', ['act' => $act, 'id' => $id]);
-    setRedirect($afile.'.php?name=categories');
-}
-
-switch ($op) {
-    default: modules(); break;
-    case 'status': status(); break;
-    case 'edit': edit(); break;
-}
-```
-
-#### Help Info Files
-
-Admin modules display a contextual help tab via `getAdminInfo()`. It is called automatically by the admin core — no parameters are needed in module code.
-
-**Signature:**
-
-```php
-getAdminInfo(): string
-```
-
-- Reads `$_GET['name']` to determine which module's info to display.
-- Checks `modules/{name}/admin/info/{locale}.html` and `modules/{name}/admin/info/{locale}.md` first.
-- Falls back to `admin/info/{name}/{locale}.html` and `admin/info/{name}/{locale}.md`.
-- When `adminfo` is enabled in config, also renders an in-page editor form.
-
-**Info file locations:**
-
-| Path | Purpose |
-|------|---------|
-| `modules/{name}/admin/info/{locale}.html` or `.md` | Module-specific help (e.g. `modules/news/admin/info/en.html`) |
-| `admin/info/{name}/{locale}.html` or `.md` | Core admin module help (e.g. `admin/info/categories/en.html`) |
-
-> [!NOTE]
-> Info files use 2-letter locale codes (`en`, `de`, `fr`, `pl`, `ru`, `uk`).
-> Content is parsed with `bb_decode()`.
-
-### Template Functions
-
-Use the modernized template functions. `tpl_eval()`, `tpl_func()`, and `tpl_warn()` have been **removed** from 6.3.x:
-
-```php
-// ✅ Correct (6.3.x)
-$cont .= setTemplateBasic('open');
-$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $text]);
-$cont .= setTemplateBasic('close');
-
-// ❌ Removed — will cause a fatal error
-$cont .= tpl_eval('open');
-$cont .= tpl_warn('warn', $text, '', '', 'info');
-$cont .= tpl_func('open');
-```
-
-### Content Parsing
-
-Use `filterMarkdown()` to render Markdown content as HTML. It is self-contained in `core/system.php`.
-
-**Signature:**
-
-```php
-filterMarkdown(string $src, string $mod = '', bool $safe = true): string
-```
-
-**Parameters:**
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `$src` | `string` | — | Markdown source text |
-| `$mod` | `string` | `''` | Reserved for mode switching (`'bb'`/`'md'`/`'mixed'`) — currently unused |
-| `$safe` | `bool` | `true` | `true` = user mode (HTML escaped, URL allowlist); `false` = admin mode (raw HTML allowed) |
-
-**Usage:**
-
-```php
-// User content — safe mode (default): HTML escaped, no javascript: URLs
-echo filterMarkdown($comment['text']);
-
-// Admin content — raw HTML blocks allowed
-echo filterMarkdown($article['text'], '', false);
-
-// Format-based switch alongside bb_decode()
-echo $article['format'] === 'md'
-    ? filterMarkdown($article['text'], '', false)
-    : bb_decode($article['text'], $conf['name']);
-```
-
-**Supported Markdown elements** (both modes):
-`# H1–H6`, `**bold**`, `*italic*`, `~~strike~~`, `==highlight==`, `` `code` ``, ` ``` `, `> blockquote`,
-`- list`, `1. list`, `- [x] task`, `| table |`, `[link](url)`, `![img](src)`, `<https://auto>`
-
-**Raw HTML blocks** (`<div>`, `<section>`, `<article>`, etc.) — only when `$safe = false`.
-
-> [!IMPORTANT]
-> Always use `safe=true` (default) for user-submitted content.
-> `safe=false` is intended for admin-authored content only.
-> `filterMarkdown()` contains no `eval()` and executes no PHP.
-
----
 
 ### Language Loading
 
-Use `getLang()` to load a module's language file and get the active locale. `setLang()` is a bootstrap function — never call it from within a module.
-
-**`getLang()` signature:**
+Use `getLang()` to load module language files. Do not call `setLang()` from modules.
 
 ```php
-getLang(string $module = '', bool $admin = false): string
+getLang('news');
+getLang('news', true);
+getLang('admin');
 ```
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `$module` | `string` | `''` | Module name, `'admin'` for the admin panel, or `''` to return the active locale without loading any file |
-| `$admin` | `bool` | `false` | `true` loads the admin language variant (`modules/{module}/admin/lang/`) |
+### Page Lifecycle
 
-**Returns:** The active locale string (e.g. `'en'`, `'de'`).
-
-**Usage:**
+Frontend modules typically follow this flow:
 
 ```php
-// Load front-end module language file — call at the top of every module
-$locale = getLang('news');           // loads modules/news/lang/{locale}.php
-
-// Load admin language variant
-$locale = getLang('news', true);     // loads modules/news/admin/lang/{locale}.php
-
-// Load admin panel base language
-$locale = getLang('admin');          // loads admin/lang/{locale}.php
-
-// Return active locale without loading any file
-$locale = getLang();
+getLang('news');
+setHead(['title' => _NEWS]);
+echo $cont;
+setFoot();
 ```
 
-> [!NOTE]
-> `getLang()` uses a static cache — loading the same module/context/locale pair twice has no overhead.
-> If the locale file is not readable, it falls back to the default language from config.
-
-**`setLang()` signature:**
-
-```php
-setLang(): void
-```
-
-Called once per request from bootstrap (`index.php` / `admin.php`). Sets the global `$locale` from, in order: the `newlang` request parameter → the language cookie → the config default. Also loads the main `lang/{locale}.php` file.
-
-> [!CAUTION]
-> Never call `setLang()` from within a module or admin module. It is a bootstrap function and must run exactly once per request.
+Admin pages are handled by the admin runtime and do not use the frontend lifecycle in the same way.
 
 ---
 
-### Page Lifecycle — setHead() and setFoot()
+## Template Runtime Guidance
 
-Every front-end module follows this request lifecycle:
+SLAED currently contains two template layers:
 
-```
-getLang() → build $cont → setHead($seo) → echo $cont → setFoot()
-```
+- **Legacy layer:** `core/template.php`
+- **Modern runtime:** `core/classes/template.php`
 
-**`setHead()` signature:**
+For new template work:
 
-```php
-setHead(array $seo = []): void
-```
+- Prefer the modern `Template` runtime.
+- Use the shared `$tpl` runtime object when available.
+- Keep HTML in template files under `templates/*`.
+- Do not add new legacy `setTemplateBasic()`-only rendering paths for new slices unless the task explicitly requires legacy work.
 
-Outputs the HTML `<head>` section, handles session tracking, referer logging, and statistics. Must be called exactly once per request, after the content is ready.
-
-**`$seo` array keys:**
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| `'title'` | `string` | `$conf['sitename']` | Page `<title>` and OG title |
-| `'ctitle'` | `string` | `''` | Sub-title appended to `<title>` when `$conf['ltitle']` is enabled |
-| `'desc'` | `string` | `$conf['slogan']` | `<meta name="description">` and OG description |
-| `'img'` | `string` | site logo URL | OG image URL |
-| `'time'` | `string` | current time | Article publish time (ISO 8601 or MySQL datetime) |
-| `'author'` | `string` | `$conf['sitename']` | OG article author |
-
-**`setFoot()` signature:**
+Current modern runtime methods:
 
 ```php
-setFoot(): void
+$tpl->getHtmlPage('error', $data);
+$tpl->getHtmlPart('login', $data);
+$tpl->getHtmlFrag('message', $data);
 ```
-
-Outputs the page footer template, inserts sidebar blocks, writes the page cache if enabled, flushes output buffers, and terminates the request with `exit;`. Must be called exactly once, after all content has been echoed.
-
-**Full module page flow:**
-
-```php
-function list(): void {
-    global $db, $conf;
-
-    $locale = getLang('news');
-
-    // ... build content ...
-    $cont  = setTemplateBasic('open');
-    $cont .= '<p>Content here</p>';
-    $cont .= setTemplateBasic('close');
-
-    setHead(['title' => _NEWS, 'desc' => _NEWSDESC]);
-    echo $cont;
-    setFoot();
-}
-```
-
-> [!CAUTION]
-> `setFoot()` calls `exit;` internally — do not place any code after it.
-> `setHead()` and `setFoot()` are for front-end modules only. Admin modules do not call them; the admin panel manages its own page lifecycle.
-
----
-
-### File Structure
-
-- **Files:** `snake_case.php`
-- **Classes:** `PascalCase`
-- **Constants:** `_UPPER_CASE`
-
-### Code Formatting
-
-- **Indentation:** 4 spaces (no tabs)
-- **Line length:** Max 120 characters
-- **Encoding:** UTF-8
-- **Line endings:** LF (`\n`)
 
 ---
 
 ## Commit Guidelines
 
 ### Use the Commit Template
-
-Configure git to use the project template:
 
 ```bash
 git config commit.template .gitmessage
@@ -614,43 +261,23 @@ git config commit.template .gitmessage
 ### Commit Message Format
 
 ```
-<Type>: <Short description of changes>
+Type: Short description
 
-<Extended description explaining what and why>
-
-Core changes:
-
-1. <Component description> (<filename.php>):
-- <Change description>
-  * <Detail>
-
-Benefits:
-- <Benefit 1>
-- <Benefit 2>
-
-Technical notes:
-- <Note 1>
-- <Note 2>
+Extended context explaining what changed and why.
 ```
 
-### Commit Types
+Common types:
 
-| Type | Description |
-|------|-------------|
-| `Feature` | New functionality |
-| `Fix` | Bug fix |
-| `Refactor` | Code refactoring |
-| `Docs` | Documentation changes |
-| `Style` | Formatting, no logic change |
-| `Test` | Adding/updating tests |
-| `Chore` | Maintenance tasks |
-| `Perf` | Performance improvements |
+- `Feature`
+- `Fix`
+- `Refactor`
+- `Docs`
+- `Style`
+- `Test`
+- `Chore`
+- `Perf`
 
-### Author Information
-
-All commits should use:
-- **Name:** Eduard Laas
-- **Email:** info@slaed.net
+Keep commits focused and atomic where possible.
 
 ---
 
@@ -658,64 +285,44 @@ All commits should use:
 
 ### Before Submitting
 
-1. **Sync with upstream:**
-   ```bash
-   git fetch upstream
-   git rebase upstream/master
-   ```
+1. Sync with upstream.
+2. Run relevant tests and syntax checks.
+3. Update documentation when behavior or developer workflow changes.
 
-2. **Run tests:**
-   ```bash
-   ./vendor/bin/phpunit
-   ./vendor/bin/phpstan analyse
-   ```
+### Checklist
 
-3. **Check coding standards:**
-   ```bash
-   ./vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no --config=.php-cs-fixer.dist.php
-   ```
+- [ ] Code follows project rules in `.rules/`
+- [ ] SQL uses prepared statements
+- [ ] User input is validated
+- [ ] New comments are written in English
+- [ ] Relevant tests were run
+- [ ] Documentation was updated when needed
 
-### PR Requirements
+In the PR description, include:
 
-- [ ] Code follows SLAED coding standards
-- [ ] All functions have type hints and return types
-- [ ] SQL uses prepared statements with named placeholders
-- [ ] User input validated with `getVar()`
-- [ ] Comments written in English
-- [ ] Tested on PHP 8.4+
-- [ ] No breaking changes (or documented in PR)
-- [ ] Updated documentation if needed
-
-### PR Description
-
-Include:
-- **Summary:** What changes and why
-- **Testing:** How you tested the changes
-- **Breaking changes:** If any
-- **Related issues:** Link to related issues
+- Summary
+- Testing performed
+- Breaking changes, if any
+- Related issues or context
 
 ---
 
 ## Testing
 
-### Running Tests
+Run the checks that match your change scope:
 
 ```bash
-# Unit tests
 ./vendor/bin/phpunit
-
-# With coverage
-./vendor/bin/phpunit --coverage-html coverage/
-
-# Static analysis
-./vendor/bin/phpstan analyse --level=5
+./vendor/bin/phpstan analyse
+./vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no --config=.php-cs-fixer.dist.php <paths>
+php -l path/to/file.php
 ```
 
-### Test Requirements
+Project configuration:
 
-- Minimum 60% coverage for core modules
-- All new functions should have tests
-- Tests must pass on PHP 8.4+
+- PHPUnit config: `phpunit.xml`
+- PHPStan config: `phpstan.neon`
+- Composer dev tools: `composer.json`
 
 ---
 
@@ -723,26 +330,13 @@ Include:
 
 ### Code Comments
 
-- Write comments in **English**
-- Use PHPDoc for functions
-- Explain "why", not "what"
-
-```php
-/**
- * Get user by ID with optional role filtering.
- *
- * @param int $id User ID
- * @param string|null $role Optional role filter
- * @return array User data or empty array if not found
- */
-function getUserById(int $id, ?string $role = null): array {
-    // ...
-}
-```
+- Write comments in English.
+- Explain intent where needed.
+- Avoid comments that restate obvious code.
 
 ### File Headers
 
-For new files:
+For new PHP files:
 
 ```php
 <?php
@@ -752,26 +346,22 @@ For new files:
 # Website: slaed.net
 ```
 
-### Language Constants
+### Public Docs
 
-When adding new text:
+When updating public documentation:
 
-1. Add constant to all 6 language files
-2. Use `_PREFIX_NAME` format
-3. Use `%1$s`, `%2$d` for placeholders
+- prefer code-backed claims
+- avoid unsupported metrics and guarantees
+- keep useful detail when it reflects the current repository
 
 ---
 
-## Questions?
+## Questions
 
 - **Forum:** [slaed.net/forum](https://slaed.net/index.php?name=forum)
 - **Documentation EN:** [slaed.info](https://slaed.info)
 - **Documentation DE:** [slaed.de](https://slaed.de)
 - **Email:** info@slaed.net
-
----
-
-**Thank you for contributing to SLAED CMS!**
 
 ---
 

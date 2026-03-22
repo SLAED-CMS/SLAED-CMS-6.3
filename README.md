@@ -1,90 +1,81 @@
 # SLAED CMS 6.3
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.4+-slateblue.svg)](https://www.php.net/)
+[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-slateblue.svg)](https://www.php.net/)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 ![Migration](https://img.shields.io/badge/Migration-85%25%20Complete-purple.svg)
 
-**Modern, Secure, High-Performance Content Management System**
+**Modular PHP Content Management System**
 
 > *Last updated: March 2026*
 
-SLAED CMS is a powerful, modular content management system built with modern PHP 8.4 standards, featuring comprehensive security, multi-language support, and extensive customization options.
+SLAED CMS is a modular content management system with a legacy runtime, a modernized database layer, multi-language support, and an actively evolving template stack. The current codebase contains both stable legacy subsystems and newer runtime components used for ongoing modernization work.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # 1. Clone or download the repository
 git clone https://github.com/SLAED-CMS/SLAED-CMS-6.3.git
 
-# 2. Configure database
-# Edit config/db.php with your database credentials
-
-# 3. Import database schema
+# 2. Create a database and import the base schema
 mysql -u root -p your_database < setup/sql/table.sql
 
-# 4. Set permissions
-chmod -R 755 config/ storage/ uploads/
-chmod 666 config/*.php
+# 3. Review config/*.php and local overrides
 
-# 5. Open in browser
+# 4. Open in browser
 http://localhost/slaed-cms/
 ```
 
 > [!WARNING]
-> **Default admin credentials:** `admin` / `admin`
-> Change the password immediately after first login!
+> Delete `setup.php` after installation.
 
 ---
 
-## 📋 System Requirements
+## System Requirements
 
-- **PHP:** 8.4+ (8.1+ supported)
+- **PHP:** 8.1+
 - **Database:** MySQL 8.0+ or MariaDB 10+
-- **Web Server:** Apache, Nginx, IIS
-- **Extensions:** PDO, MySQLi, GD, mbstring, JSON
-- **Encoding:** UTF-8 (utf8mb4)
+- **Web Server:** Apache, Nginx, IIS, or another PHP-capable web server
+- **Extensions:** PDO, GD, mbstring, JSON
+- **Encoding:** UTF-8 / utf8mb4
+
+> [!NOTE]
+> Some development documentation and modernization work target newer PHP releases, but the current Composer requirement is `>=8.1`.
 
 ---
 
-## 🔧 Installation
+## Installation
 
-### Method 1: Manual Installation
+### Manual Installation
 
-1. **Download** the latest release or clone the repository
-2. **Extract** files to your web server directory
-3. **Create** a MySQL/MariaDB database
-4. **Configure** database connection in `config/db.php`
-5. **Import** database schema from `setup/sql/table.sql`
-6. **Set permissions** on writable directories:
+1. Download or clone the repository.
+2. Extract files into the web root.
+3. Create a MySQL or MariaDB database.
+4. Import the base schema from `setup/sql/table.sql`.
+5. Review the files in `config/` and adjust local settings as needed.
+6. Open `http://yoursite.com/setup.php` and complete the setup flow.
+7. Delete `setup.php`.
+
+### Permissions
+
+Typical writable directories:
 
 ```bash
 chmod -R 755 config/ storage/ uploads/
-chmod 666 config/*.php storage/logs/*.log
+chmod 666 config/*.php
 ```
 
-7. **Run setup** by accessing `http://yoursite.com/setup.php`
-8. **Delete** `setup.php` after installation
-
-> [!CAUTION]
-> Always delete `setup.php` after installation to prevent unauthorized access.
-
-### Method 2: Using setup.php
-
-1. Upload all files to your web server
-2. Navigate to `http://yoursite.com/setup.php`
-3. Follow the installation wizard
-4. Delete `setup.php` after successful installation
+Actual server permissions depend on your OS, web server user, and deployment model.
 
 ---
 
 ## Testing
 
-See `docs/TESTS.md` for the full guide, tools, and explanations.
+See [docs/TESTS.md](docs/TESTS.md) for the full guide.
 
 Quick commands:
 
@@ -95,320 +86,140 @@ Quick commands:
 php -l path/to/file.php
 ```
 
-Tests must be run after about 100 changed lines and before merging into `master`.
+---
+
+## Tech Stack
+
+- **Backend:** PHP 8.1+
+- **Database:** `Database` class in `core/classes/pdo.php` with prepared statements and `getSql*` methods
+- **Legacy Template Layer:** `core/template.php`
+- **Modern Template Runtime:** `core/classes/template.php`
+- **Editors / JS Plugins:** CKEditor, TinyMCE, CodeMirror, jQuery, htmx, Bootstrap and other bundled plugin directories under `plugins/`
+- **Content Parsing:** `filterMarkdown()` in `core/system.php`
+- **Security Helpers:** `getVar()`, `getSiteToken()`, `checkSiteToken()`, `getPassHash()`, `checkPassHash()`
+- **Languages:** 6 bundled locale files in `lang/`
 
 ---
 
-## 🎯 Tech Stack
+## Features
 
-- **Backend:** PHP 8.4 with strict types and type declarations
-- **Database:** `Database` class (PDO) with prepared statements; methods via `getSql*` prefix
-- **Frontend:** jQuery 3.x + jQuery UI
-- **Editors:** CKEditor 4, TinyMCE, CodeMirror
-- **Content Parsing:** `filterMarkdown(string $src, string $mod = '', bool $safe = true): string` — self-contained Markdown→HTML parser (no `eval()`, no dependencies); user mode escapes HTML, admin mode allows raw HTML blocks
-- **Security:** XSS filtering, CSRF tokens, prepared statements, URL allowlist in `filterMarkdown()`
-- **Caching:** Multi-level (pages, blocks, CSS, JS)
-- **Languages:** 6 languages out-of-the-box (EN, FR, DE, PL, RU, UA)
+### Core
 
----
+- Modular frontend and admin architecture
+- Multi-language support
+- User groups, roles, and permissions
+- Prepared-statement database layer
+- Caching and logging directories under `storage/`
+- Legacy and modern template runtimes available side by side during migration
 
-## ✨ Features
+### Content and Modules
 
-### Core Functionality
-- 🎨 **26 Modules** - News, forum, shop, media, files, and more
-- 🌍 **Multi-language** - Full support for 6 languages
-- 👥 **User Management** - Groups, permissions, roles
-- 🔒 **Security** - XSS, CSRF, SQL injection protection
-- ⚡ **Performance** - Multi-level caching system
-- 📱 **Responsive** - Mobile-friendly admin panel
+- News, forum, shop, media, files, account, search, and other modules
+- WYSIWYG editor integrations
+- File uploads and media handling
+- RSS, SEO metadata, referer and statistics modules
 
-### Content Management
-- 📝 WYSIWYG editors (CKEditor, TinyMCE)
-- 📂 File manager with drag & drop
-- 🖼️ Media gallery with image processing
-- 📰 News and articles system
-- 💬 Comment system with moderation
+### Themes
 
-### E-Commerce
-- 🛒 Shopping cart and checkout
-- 💳 Order management
-- 📦 Product catalog with categories
-- 💰 Payment integration ready
+Bundled themes currently present in the repository:
 
-### SEO & Marketing
-- 🔍 SEO optimization (meta tags, keywords)
-- 🗺️ XML Sitemap generation
-- 📡 RSS feeds
-- 🔗 Clean URLs (mod_rewrite)
-- 📊 Statistics and analytics
+- `templates/admin`
+- `templates/default`
+- `templates/default_old`
+- `templates/lite`
+- `templates/simple`
+
+`templates/simple` is the minimal modern theme structure used for current template runtime work.
 
 ---
 
-## 🏗️ Project Structure
+## Project Structure
 
-```
+```text
 slaed-cms/
-├── admin/                 # Admin panel interface
-│   ├── modules/          # Admin modules
-│   └── lang/             # Admin translations
-├── blocks/               # Reusable UI components
-├── config/               # Configuration files
-│   ├── db.php           # Database configuration
-│   ├── global.php       # Global settings (187+ parameters)
-│   └── *.php            # Module-specific configs
-├── core/                 # System core
-│   ├── system.php       # Main core file
-│   ├── security.php     # Security functions
-│   ├── user.php         # User management
-│   └── classes/         # Database drivers (MySQLi, PDO)
-├── lang/                 # Multi-language files
-│   ├── en.php
-│   ├── de.php
-│   └── ...
-├── modules/              # Frontend modules (26)
-│   ├── news/            # News module
-│   ├── forum/           # Forum module
-│   ├── shop/            # E-commerce module
-│   └── ...
-├── plugins/              # JavaScript libraries
-│   ├── jquery/
-│   ├── ckeditor/
-│   └── ...
-├── storage/              # System data
-│   ├── cache/           # Cache files
-│   ├── logs/            # System logs
-│   └── backup/          # Backups
-├── templates/            # Themes
-│   ├── admin/           # Admin theme
-│   ├── default/         # Default frontend theme
-│   └── lite/            # Lite theme
-├── uploads/              # User uploads
-├── index.php             # Frontend entry point
-├── admin.php             # Admin entry point
-└── setup.php             # Installation wizard
+├── admin/                 # Admin panel entry logic and admin modules
+├── blocks/                # Block rendering
+├── config/                # Runtime configuration files
+├── core/                  # Core runtime
+│   ├── system.php         # Main bootstrap/runtime layer
+│   ├── template.php       # Legacy template layer
+│   ├── security.php       # Security helpers
+│   └── classes/
+│       ├── pdo.php        # Database class
+│       └── template.php   # Modern template runtime
+├── lang/                  # Main language files
+├── modules/               # Frontend modules
+├── plugins/               # Bundled JS/editor/plugin assets
+├── setup/                 # Installation and SQL files
+├── storage/               # Cache, logs, backups, sitemap data
+├── templates/             # Themes and template trees
+├── tests/                 # PHPUnit and validation tests
+├── uploads/               # Uploaded files
+├── admin.php              # Admin entry point
+├── index.php              # Frontend entry point
+└── setup.php              # Installation entry point
 ```
 
 ---
 
-## 🔄 Modernization Status (v6.3)
+## Development Notes
 
-> [!NOTE]
-> SLAED CMS 6.3 is undergoing a major modernization to PHP 8.4 standards.
-> **Progress: ~85% Complete** (as of March 2026)
+- Legacy code and modernized code coexist in the current repository.
+- `core/template.php` remains the legacy template layer.
+- New template work targets `core/classes/template.php`, the shared `$tpl` runtime object, and HTML files under `templates/*`.
+- Public documentation aims to describe the current repository state, not a future fully completed migration.
 
-### ✅ Completed
-
-**Security Improvements:**
-- 2106+ SQL queries converted to prepared statements
-- 269+ user input points secured with validation
-- 99 deprecated functions replaced
-
-**Code Modernization:**
-- Type declarations added (parameters & return types)
-- `func_get_args()` eliminated — all functions use typed parameters
-- Modern array syntax (`[]` instead of `array()`)
-- Input validation with `getVar()` — all raw `$_GET`/`$_POST` replaced in `core/`
-- Quote consistency (single quotes throughout)
-- Template functions modernized (`setTemplateBasic()`, `setTemplateWarning()`)
-- `tpl_eval()` and `tpl_func()` removed (used `eval()`, security risk)
-- `setRedirect()` replaces inline `header() + exit;` in admin modules
-- `filterMarkdown()` — self-contained Markdown→HTML parser added to `core/system.php`
-- `adm_info()` → `getAdminInfo()`: auto-detects info file from `$_GET['name']`, no parameters; supports both `.html` and `.md` info files
-- Admin info file structure: `admin/info/{module}-{locale}.html` → `admin/info/{module}/{locale}.html` (or `.md`)
-- Database class: `sql_db` → `Database`; all methods renamed to `getSql*` prefix (`getSqlQuery()`, `getSqlRow()`, `getSqlRowCount()`, etc.)
-
-**Modernized Admin Modules (24/24 - 100%):**
-- `admins.php` - Administrator management
-- `blocks.php` - Block management
-- `categories.php` - Category management
-- `comments.php` - Comment management
-- `config.php` - System configuration
-- `database.php` - Database operations (+186% refactored)
-- `editor.php` - Editor settings
-- `favorites.php` - Favorites management
-- `fields.php` - Custom fields
-- `groups.php` - User groups
-- `lang.php` - Language settings
-- `messages.php` - Messages management
-- `modules.php` - Module management
-- `monitor.php` - System monitor
-- `newsletter.php` - Newsletter management
-- `privat.php` - Private messages
-- `ratings.php` - Ratings system
-- `referers.php` - Referers tracking
-- `replace.php` - Text replacement
-- `scheduler.php` - Scheduled tasks management
-- `security.php` - Security settings
-- `statistic.php` - Statistics
-- `template.php` - Template management
-- `uploads.php` - Upload management
-
-### 🚧 In Progress
-- Performance improvements
-- Documentation updates
-
-### 🎯 Goals
-- ✅ Full PHP 8.4 compatibility
-- ✅ Enhanced security (SQL injection prevention)
-- ✅ Better performance (2-3x faster with PHP 8.4)
-- ✅ Type safety (type hints, return types)
-- ✅ Modern coding standards (PSR-12 compatible)
+For contribution rules and coding conventions, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
-## 💻 Development
+## Contributing
 
-### Coding Standards
+Contributions are welcome. Start here:
 
-**Core Principles:**
-1. **Fast** - Optimized queries, efficient caching
-2. **Stable** - Error prevention, consistent API
-3. **Effective** - Reusable code, no redundancy
-4. **Productive** - Easy extensibility, clear guidelines
-5. **Secure** - Protection against XSS, CSRF, SQL injection
-
-**Function Naming (Mandatory):**
-```php
-// Format: verb + Noun (camelCase)
-function getUserById(int $id): array {}
-function setConfig(string $file, array $data): bool {}
-function isUserActive(int $id): bool {}
-function checkPermission(string $perm): bool {}
-function filterInput(string $data): string {}
-```
-
-**8 Required Verbs:**
-- `get` - retrieve data
-- `set` - save/set data
-- `add` - create new entity
-- `update` - modify existing
-- `delete` - remove entity
-- `is` - boolean check
-- `check` - validation
-- `filter` - sanitization
-
-**Variable Naming:**
-- Prefer short, single-purpose names like `$filter` or `$color`.
-- Avoid compound names like `$filter_color` unless disambiguation is required.
-```php
-// ✅ Correct
-$id = 123;
-$cfg = [];
-$list = [];
-$user = '';
-
-// ❌ Wrong
-$userId = 123;        // No camelCase
-$configuration = [];  // Too long
-```
-
-**Constants:**
-```php
-// Format: _UPPER_CASE with _ prefix
-define('_ERR_FILE', 'File not found: %1$s');
-define('_USR_ACTIVE', 'User is active');
-
-// MUST be defined in ALL 6 languages:
-// EN, FR, DE, PL, RU, UA
-```
-
-> [!IMPORTANT]
-> **Security Best Practices**
-
-```php
-// ✅ Input validation
-$id = getVar('post', 'id', 'num');
-$name = getVar('post', 'name', 'name', '');
-$url = getVar('post', 'url', 'url', 'https://');
-
-// ✅ SQL prepared statements
-$db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
-
-// ✅ Output escaping
-echo htmlspecialchars($user_input, ENT_QUOTES, 'UTF-8');
-```
-
-> [!CAUTION]
-> **Never concatenate user input directly into SQL queries!**
-> ```php
-> // ❌ NEVER do this - SQL injection vulnerability
-> $db->getSqlQuery("SELECT * FROM users WHERE id = '".$id."'");
-> ```
-
-**Code Style:**
-```php
-// Always use single quotes
-$text = 'Hello World';
-
-// Modern array syntax
-$arr = ['item1', 'item2', 'item3'];
-
-// String concatenation (no spaces around .)
-$html = '<div class="'.$cls.'">'.$text.'</div>';
-
-// Type declarations
-function processData(int $id, string $name = ''): array {
-    return ['id' => $id, 'name' => $name];
-}
-```
-
-### File Naming Conventions
-- **Files:** snake_case.php
-- **Classes:** PascalCase
-- **Constants:** _UPPER_CASE
-
-### Code Formatting
-- **Indentation:** 4 spaces (no tabs)
-- **Line length:** Max 120 characters
-- **Encoding:** UTF-8
-- **Line endings:** LF (\n)
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- [SECURITY.md](SECURITY.md)
 
 ---
 
-## 🤝 Contributing
+## Upgrading
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
-
-**Quick Start:**
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Follow** SLAED coding standards
-4. **Test** your changes thoroughly
-5. **Commit** with clear messages (see [.gitmessage](.gitmessage))
-6. **Push** to your branch
-7. **Open** a Pull Request
-
-> [!TIP]
-> **Code Requirements:**
-> - Follow SLAED naming conventions
-> - Add type hints to all functions
-> - Use prepared statements for SQL
-> - Validate all user input with `getVar()`
-> - Write comments in English
-> - Test on PHP 8.4+
-
-See also: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | [SECURITY.md](SECURITY.md)
+For upgrade guidance and currently confirmed migration notes, see [UPGRADING.md](UPGRADING.md).
 
 ---
 
-## 📝 License
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [docs/TEMPLATES.md](docs/TEMPLATES.md) | Template system and theme structure |
+| [docs/TEMPLATE_STATUS.md](docs/TEMPLATE_STATUS.md) | Current template runtime status |
+| [docs/TESTS.md](docs/TESTS.md) | Testing and validation commands |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution and coding rules |
+| [SECURITY.md](SECURITY.md) | Security policy |
+| [UPGRADING.md](UPGRADING.md) | Upgrade notes |
+| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards |
+
+---
+
+## Support
+
+- **Documentation EN:** [slaed.info](https://slaed.info)
+- **Documentation DE:** [slaed.de](https://slaed.de)
+- **Forum:** [slaed.net/forum](https://slaed.net/index.php?name=forum)
+
+---
+
+## License
 
 GNU General Public License v3.0
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-See [LICENSE](LICENSE) for more details.
+See [LICENSE](LICENSE) for details.
 
 ---
 
-## 🔄 Upgrading
-
-Upgrading from a previous version? See [UPGRADING.md](UPGRADING.md) for migration instructions.
-
----
-
-## 👤 Author
+## Author
 
 **Eduard Laas**
 
@@ -418,41 +229,4 @@ Upgrading from a previous version? See [UPGRADING.md](UPGRADING.md) for migratio
 
 ---
 
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [TEMPLATES.md](docs/TEMPLATES.md) | Template system guide (variables, conditionals, SEO, examples) |
-| [TESTS.md](docs/TESTS.md) | Testing guide — PHPUnit, PHPStan, PHP-CS-Fixer commands |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Coding standards and contribution guidelines |
-| [UPGRADING.md](UPGRADING.md) | Migration guide from previous versions |
-| [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
-| [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community standards |
-
----
-
-## 📮 Support
-
-- **Documentation EN:** [slaed.info](https://slaed.info)
-- **Documentation DE:** [slaed.de](https://slaed.de)
-- **Forum:** [slaed.net/forum](https://slaed.net/index.php?name=forum)
-
----
-
-## 📜 Version History
-
-| Version | Release | PHP | Status |
-|---------|---------|-----|--------|
-| 6.3.x | 2025-2026 | 8.1 - 8.4 | Active Development |
-| 6.2.x | 2017 | 7.4 - 8.0 | End of Life |
-| 6.1.x | 2015 | 7.0 - 7.4 | Not Supported |
-| < 6.0 | 2005-2014 | 5.x | Not Supported |
-
-> [!WARNING]
-> **Version 6.2.x and earlier are no longer supported.** Security vulnerabilities will not be patched. Please upgrade to 6.3.x.
-
----
-
-**SLAED CMS** - Powerful, Secure, Flexible Content Management for Your Projects
-
-*© 2005 - 2026 SLAED. Licensed under GNU GPL 3.*
+*SLAED CMS © 2005 - 2026 Eduard Laas. Licensed under GNU GPL 3.*

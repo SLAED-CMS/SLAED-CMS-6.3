@@ -3,617 +3,274 @@
 > **Migration Guide for SLAED CMS**
 > *Last updated: March 2026*
 
-This document provides instructions for upgrading SLAED CMS between versions.
+This document describes the upgrade process using currently confirmed files and repository structure. Where the exact historical path cannot be verified from the current codebase alone, it is marked as `TODO:`.
 
 ## Table of Contents
 
-- [Upgrade Paths](#upgrade-paths)
 - [Before You Upgrade](#before-you-upgrade)
-- [Upgrading to 6.3](#upgrading-to-63)
-- [Breaking Changes](#breaking-changes)
-- [Migration Checklist](#migration-checklist)
+- [Upgrade Files Present in the Repository](#upgrade-files-present-in-the-repository)
+- [Recommended Upgrade Flow](#recommended-upgrade-flow)
+- [Breaking and Important Changes](#breaking-and-important-changes)
+- [Migration Checklist for Custom Code](#migration-checklist-for-custom-code)
 - [Troubleshooting](#troubleshooting)
-- [Version History](#version-history)
-
----
-
-## Upgrade Paths
-
-| From Version | To Version | Supported | Notes |
-|--------------|------------|-----------|-------|
-| 6.2.x | 6.3.x | :white_check_mark: | Direct upgrade |
-| 6.1.x | 6.3.x | :white_check_mark: | Via 6.2.x recommended |
-| 6.0.x | 6.3.x | :warning: | Manual migration required |
-| < 6.0 | 6.3.x | :x: | Fresh installation recommended |
 
 ---
 
 ## Before You Upgrade
 
 > [!CAUTION]
-> **Always backup before upgrading!**
+> Always create a database and file backup before upgrading.
 
-### 1. Create Backups
+### Database Backup
 
 ```bash
-# Database backup
 mysqldump -u root -p your_database > backup_$(date +%Y%m%d).sql
+```
 
-# Files backup
+### File Backup
+
+```bash
 tar -czf slaed_backup_$(date +%Y%m%d).tar.gz /path/to/slaed/
 ```
 
-### 2. Check System Requirements
+### Minimum Runtime
 
-**SLAED CMS 6.3 requires:**
+Confirmed current baseline:
 
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| PHP | 8.1 | 8.4 |
-| MySQL | 8.0 | 8.0+ |
-| MariaDB | 10.5 | 10.5+ |
+- **PHP:** 8.1+
+- **Database:** MySQL 8.0+ or MariaDB 10+
 
-**Required PHP Extensions:**
-- PDO + PDO_MySQL
-- MySQLi
-- GD
-- mbstring
-- JSON
-- zip (for backups)
+### Review Writable Directories
 
-### 3. Check PHP Version
+Typical writable paths:
 
-```bash
-php -v
-# Should show PHP 8.1 or higher
-```
-
-### 4. Enable Maintenance Mode
-
-Before starting the upgrade, put your site in maintenance mode:
-
-1. Login to admin panel
-2. Go to Settings → General
-3. Enable "Site Closed" option
+- `config/`
+- `storage/`
+- `uploads/`
 
 ---
 
-## Upgrading to 6.3
+## Upgrade Files Present in the Repository
 
-### From Version 6.2.x
+The repository currently contains these SQL files under `setup/sql/`:
 
-#### Step 1: Download SLAED 6.3
+- `table.sql`
+- `insert.sql`
+- `table_update4_1.sql`
+- `table_update4_2.sql`
+- `table_update4_3.sql`
+- `table_update5_0.sql`
+- `table_update5_1.sql`
+- `table_update6_0.sql`
+- `table_update6_2.sql`
+- `table_update6_3.sql`
+
+> [!NOTE]
+> The repository confirms these files exist. It does not, by itself, fully define every safe version-to-version upgrade path.
+
+> [!IMPORTANT]
+> `TODO:` Confirm the exact supported source-version matrix for production upgrades and whether intermediate SQL steps are required for specific legacy versions.
+
+---
+
+## Recommended Upgrade Flow
+
+### 1. Prepare a Clean Copy of the Target Version
 
 ```bash
-# Option 1: Git
 git clone https://github.com/SLAED-CMS/SLAED-CMS-6.3.git slaed-new
-
-# Option 2: Download ZIP
-wget https://github.com/SLAED-CMS/SLAED-CMS-6.3/archive/master.zip
-unzip master.zip
 ```
 
-#### Step 2: Preserve Your Configuration
+### 2. Preserve Site-Specific Data
+
+Review and carry over environment-specific data as needed:
+
+- `config/`
+- `uploads/`
+- any locally maintained templates or theme customizations
+- any site-specific generated files that are not part of the repository
+
+### 3. Import the Required SQL
+
+Use the base schema for fresh installations:
 
 ```bash
-# Copy your existing configuration
-cp your-old-slaed/config/db.php slaed-new/config/
-cp your-old-slaed/config/global.php slaed-new/config/
-
-# Copy module-specific configs
-cp your-old-slaed/config/*.php slaed-new/config/
+mysql -u root -p your_database < setup/sql/table.sql
 ```
 
-#### Step 3: Preserve User Data
+For upgrades, review the available `table_update*.sql` files and apply the correct path for your current version.
 
-```bash
-# Copy uploads
-cp -r your-old-slaed/uploads/* slaed-new/uploads/
+> [!IMPORTANT]
+> `TODO:` Confirm the exact upgrade order for each legacy source version before documenting a mandatory sequence.
 
-# Copy custom templates (if any)
-cp -r your-old-slaed/templates/custom/* slaed-new/templates/custom/
-```
+### 4. Review Configuration
 
-#### Step 4: Run Database Migrations
+Check the active files in `config/` and verify:
 
-```bash
-# Import upgrade SQL
-mysql -u root -p your_database < slaed-new/setup/sql/table_update6_3.sql
-```
+- database connection
+- prefixes
+- language and site settings
+- module-related configuration
+- local overrides in `config/local.php`, if used
 
-#### Step 5: Update File Permissions
-
-```bash
-chmod -R 755 config/ storage/ uploads/
-chmod 666 config/*.php storage/logs/*.log
-```
-
-#### Step 6: Clear Cache
+### 5. Clear Runtime Cache
 
 ```bash
 rm -rf storage/cache/*
 ```
 
-#### Step 7: Test the Upgrade
+### 6. Verify Entry Points
 
-1. Navigate to `http://yoursite.com/admin.php`
-2. Login with your admin credentials
-3. Check all modules are working
-4. Review error logs: `storage/logs/`
+Check at minimum:
 
-#### Step 8: Disable Maintenance Mode
-
-1. Go to Settings → General
-2. Disable "Site Closed" option
+- `index.php`
+- `admin.php`
+- login flow
+- key modules used by your installation
+- `storage/logs/` for runtime errors
 
 ---
 
-## Breaking Changes
+## Breaking and Important Changes
 
-### Version 6.3.0
+The current codebase confirms these project-level changes in 6.3:
 
-#### Configuration Changes
+### Database Layer
 
-##### Removed: `config/config_db.php`
+The active database class is `Database` in `core/classes/pdo.php`.
 
-The old `config_db.php` is removed. Use `config/db.php` instead:
+Current method family:
 
-```php
-// Old (6.2.x) - config/config_db.php
-$dbhost = 'localhost';
-$dbuname = 'root';
-// ...
+- `getSqlQuery()`
+- `getSqlRow()`
+- `getSqlRows()`
+- `getSqlField()`
+- `getSqlRowCount()`
 
-// New (6.3.x) - config/db.php
-$confdb = [
-    'type' => 'mysqli',
-    'host' => 'localhost',
-    'name' => 'slaed',
-    'uname' => 'root',
-    'pass' => '',
-    'prefix' => 'slaed',
-    'charset' => 'utf8mb4',
-    'collate' => 'utf8mb4_unicode_ci',
-    'engine' => 'InnoDB',
-];
-```
+Custom code using older `sql_*` methods should be reviewed.
 
-##### Module Configuration
+### Input Handling
 
-Modules now use `config/modules.php` instead of database storage:
+The current project pattern is to use `getVar()` instead of direct request access:
 
 ```php
-// config/modules.php
-return [
-    'news' => [
-        'active' => true,
-        'view' => true,
-        'menu' => true,
-        'group' => 1,
-    ],
-    // ...
-];
-```
-
-#### Function Changes
-
-##### Security and Utility Functions (`core/security.php`)
-
-All legacy snake_case function names have been replaced with camelCase `VerbNoun` equivalents. Any remaining calls to the old names will cause a fatal error:
-
-| Old name (6.2.x) | New name (6.3.x) | Notes |
-|------------------|------------------|-------|
-| `is_admin_god()` | `isAdminSuper(): bool` | Cached per request |
-| `get_host()` | `getHost(): string` | |
-| `get_referer()` | `getReferer(): string` | |
-| `isVar()` / `analyze()` | `filterVar(string\|array): string\|array` | |
-| `url_filter()` | `filterUrl(string): string` | |
-| `num_filter()` | `filterNum(mixed): int` | |
-| `var_filter()` | `filterWord(string): string` | |
-| `text_filter()` | `filterText(string\|array, int): string` | |
-| `save_text()` | `filterHtml(string, mixed): string` | |
-| `fields_save()` | `filterFields(mixed): string` | |
-| `url_clickable()` | `filterClickable(string): string` | |
-| `cutstrc()` | `filterCut(string, int): string` | |
-| `display_time()` | `getDuration(int): string` | |
-| `rest_time()` | `getTimeLeft(int): string` | |
-| `ed2k_link()` | `getEd2kLink(array): string` | |
-| `mail_send()` | `addMail(...): void` | |
-| `doHackReport()` | `addHackReport(string): void` | Logs, blocks IP, sends email, exits |
-| `doWarnReport()` | `addWarnReport(string): void` | Logs, sends email, exits |
-| `zip_check()` | `checkCompress(): array` | Returns `['zip'=>bool,'gz'=>bool,'bz2'=>bool]` |
-| `zip_compress()` | `addCompress(...): bool` | In `core/system.php` |
-
-##### Template Functions
-
-`tpl_eval()`, `tpl_func()`, and `tpl_warn()` have been **fully removed**. Any existing calls will cause a fatal error:
-
-| Removed (6.2.x) | Replacement (6.3.x) |
-|-----------------|---------------------|
-| `tpl_eval('open')` | `setTemplateBasic('open')` |
-| `tpl_eval('close')` | `setTemplateBasic('close')` |
-| `tpl_func('name')` | `setTemplateBasic('name')` |
-| `tpl_warn('warn', $text)` | `setTemplateWarning('warn', ['text' => $text])` |
-
-##### Admin Variables
-
-| Old (6.2.x) | New (6.3.x) |
-|-------------|-------------|
-| `$admin_file` | `$afile` |
-
-##### Admin Redirects
-
-Inline `header() + exit;` patterns have been replaced by `setRedirect()`:
-
-```php
-// Old (6.2.x)
-global $admin_file;
-header('Location: '.$admin_file.'.php?name=modules');
-exit;
-
-// New (6.3.x)
-global $afile;
-setRedirect($afile.'.php?name=modules');
-```
-
-`setRedirect(string $url, bool $refer = false, int $code = 302): never` — automatically sanitizes the URL, selects the correct HTTP status code (upgrades 302 → 303 on POST), and terminates the script.
-
-##### Admin Help Files
-
-Admin panel info files were reorganized from flat filenames to subdirectories:
-
-| Old path | New path |
-|----------|----------|
-| `admin/info/news/news-en.html` | `admin/info/news/en.html` |
-| `admin/info/news/news-de.html` | `admin/info/news/de.html` |
-| `admin/info/news/news-fr.html` | `admin/info/news/fr.html` |
-| `admin/info/news/news-pl.html` | `admin/info/news/pl.html` |
-| `admin/info/news/news-ru.html` | `admin/info/news/ru.html` |
-| `admin/info/news/news-uk.html` | `admin/info/news/uk.html` |
-
-The pattern applies to all admin module info files under `admin/info/*/`.
-Locale codes remain 2-letter (`en`, `de`, `fr`, `pl`, `ru`, `uk`).
-Both `.html` and `.md` extensions are supported (`.html` takes priority; `.md` is checked as fallback).
-
-The helper `getAdminInfo()` auto-detects the correct path from `$_GET['name']` and also checks
-`modules/{name}/admin/info/{locale}.html` (and `.md`) for frontend module admin areas.
-
-#### SQL Query Changes
-
-All SQL queries now require prepared statements:
-
-```php
-// Old (6.2.x) - INSECURE
-// $db->sql_query("SELECT * FROM users WHERE id = '".$id."'");
-
-// New (6.3.x) - SECURE
-$db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_users WHERE id = :id', ['id' => $id]);
-```
-
-#### Input Validation
-
-Direct `$_GET`/`$_POST` access is deprecated. Use `getVar()`:
-
-```php
-// Old (6.2.x)
-$id = $_POST['id'];
-
-// New (6.3.x)
 $id = getVar('post', 'id', 'num');
 ```
 
-##### Removed: `config/rewrite.php`
+### Password Hashing
 
-The `config/rewrite.php` file and the `rewrite()` function have been removed.
-URL rewriting behavior is controlled exclusively by `$conf['rewrite']` in `config/global.php`.
+Current helpers in the runtime:
 
-##### Removed: `$confu['anonym']`
+- `getPassHash()`
+- `checkPassHash()`
 
-The configurable anonymous user name has been replaced with a language constant:
+### CSRF Tokens
 
-| Old (6.2.x) | New (6.3.x) |
-|-------------|-------------|
-| `$confu['anonym']` | `_ANONYM` |
+Current helpers:
 
-Define `_ANONYM` in all 6 `lang/*.php` files. Do **not** add it to `admin/lang/*.php`.
+- `getSiteToken()`
+- `checkSiteToken()`
 
-##### Protected: `setConfigFile()` reserved files
+### Template Layer
 
-`setConfigFile()` now refuses to write to: `system.php`, `header.php`, `chmod.php`, `local.php`.
-Calls with these names are silently ignored.
+Two template layers currently coexist:
 
-##### Changed: `getConfig()` skip list
+- legacy `core/template.php`
+- modern runtime `core/classes/template.php`
 
-`getConfig()` explicitly skips: `system.php`, `header.php`, `chmod.php`, `local.php`.
-These files are loaded separately by the system and must not return config arrays.
+New template work should target the modern runtime and theme HTML files under `templates/`.
 
-##### Renamed: Database class and all SQL methods
+### Themes
 
-The PDO wrapper class `sql_db` has been renamed to `Database`.
-All public methods now use the `getSql*` prefix:
+Themes currently present in the repository:
 
-| Old method (6.2.x) | New method (6.3.x) |
-|--------------------|---------------------|
-| `new sql_db(...)` | `new Database(...)` |
-| `$db->sql_query($sql, $params)` | `$db->getSqlQuery($sql, $params)` |
-| `$db->sql_fetchrow($r)` | `$db->getSqlRow($r)` |
-| `$db->sql_fetchrowset($r)` | `$db->getSqlRows($r)` |
-| `$db->sql_fetchfield($f, $n)` | `$db->getSqlField($f, $n)` |
-| `$db->sql_numrows($r)` | `$db->getSqlRowCount($r)` |
-| `$db->sql_affectedrows()` | `$db->getSqlAffected()` |
-| `$db->sql_numfields($r)` | `$db->getSqlFieldCount($r)` |
-| `$db->sql_fieldname($i)` | `$db->getSqlFieldName($i)` |
-| `$db->sql_fieldtype($i)` | `$db->getSqlFieldType($i)` |
-| `$db->sql_nextid()` | `$db->getSqlLastId()` |
-| `$db->sql_error()` | `$db->getSqlError()` |
-| `$db->sql_value($v)` | `$db->getSqlValue($v)` |
-| `$db->sql_rowseek($n)` | `$db->getSqlSeek($n)` |
-| `$db->sql_close()` | `$db->getSqlClose()` |
-| `$db->sql_freeresult($r)` | `$db->getSqlFree($r)` |
-
-##### Renamed: `adm_info()` → `getAdminInfo()`
-
-The admin info helper has been refactored:
-
-| Old (6.2.x) | New (6.3.x) |
-|-------------|-------------|
-| `adm_info(1, 0, 'name')` | `getAdminInfo()` |
-| `adm_info(1, 'mod', 0)` | `getAdminInfo()` |
-
-`getAdminInfo(): string` — takes no parameters; auto-detects the info file path from `$_GET['name']`
-and checks both `admin/info/{name}/{locale}.html`, `admin/info/{name}/{locale}.md`,
-`modules/{name}/admin/info/{locale}.html`, and `modules/{name}/admin/info/{locale}.md`.
+- `admin`
+- `default`
+- `default_old`
+- `lite`
+- `simple`
 
 ---
 
-## Migration Checklist
+## Migration Checklist for Custom Code
 
-Use this checklist when upgrading custom modules or themes to SLAED CMS 6.3:
-
-### Code Style
-
-- [ ] Update copyright year: `© 2005 - 2026 SLAED`
-- [ ] Change all `"..."` to `'...'` (single quotes)
-- [ ] Change all `array(...)` to `[...]`
-- [ ] Prefer short, single-purpose variable names (`$filter`, `$color`) over compound names (`$filter_color`) unless disambiguation is required
-- [ ] Check indentation: 4 spaces (no tabs)
-- [ ] Check line length: max 120 characters
-- [ ] Remove closing PHP tag `?>`
-- [ ] Remove error suppression operators `@`
-
-### Functions
-
-- [ ] Add type hints to all function parameters
-- [ ] Add return types to all functions (`: void`, `: string`, etc.)
-- [ ] Remove all `func_get_args()` usage
-- [ ] Rename functions to verb+noun pattern if needed
+Use this checklist when reviewing custom modules, custom admin code, or local patches.
 
 ### Security
 
-- [ ] Replace all `isset($_GET/$_POST)` with `getVar()`
-- [ ] Convert all SQL queries to prepared statements
-- [ ] Test for SQL injection vulnerabilities
-- [ ] Validate all user inputs
+- [ ] Replace direct request access with `getVar()` where possible
+- [ ] Replace string-built SQL with prepared statements
+- [ ] Review state-changing actions for CSRF protection
 
-### Modernization
+### Database
 
-- [ ] Replace `tpl_eval()` / `tpl_func()` calls with `setTemplateBasic()`
-- [ ] Replace `tpl_warn()` calls with `setTemplateWarning()`
-- [ ] Change `http://` defaults to `https://`
-- [ ] Update config includes: `include('config/config_X.php')` → `require_once CONFIG_DIR.'/X.php'`
-- [ ] Use `checkPerms()` instead of `end_chmod()` for config permissions
-- [ ] Rename config files: remove `config_` prefix where applicable
+- [ ] Update custom DB calls to current `Database` method names
+- [ ] Re-test custom queries against the current schema
 
-### Security Functions
+### Templates
 
-- [ ] Replace `is_admin_god()` with `isAdminSuper()`
-- [ ] Replace `get_host()` with `getHost()`
-- [ ] Replace `get_referer()` with `getReferer()`
-- [ ] Replace `isVar()` / `analyze()` with `filterVar()`
-- [ ] Replace `url_filter()` with `filterUrl()`
-- [ ] Replace `num_filter()` with `filterNum()`
-- [ ] Replace `var_filter()` with `filterWord()`
-- [ ] Replace `text_filter()` with `filterText()`
-- [ ] Replace `save_text()` with `filterHtml()`
-- [ ] Replace `fields_save()` with `filterFields()`
-- [ ] Replace `url_clickable()` with `filterClickable()`
-- [ ] Replace `cutstrc()` with `filterCut()`
-- [ ] Replace `display_time()` with `getDuration()`
-- [ ] Replace `rest_time()` with `getTimeLeft()`
-- [ ] Replace `ed2k_link()` with `getEd2kLink()`
-- [ ] Replace `mail_send()` with `addMail()`
-- [ ] Replace `doHackReport()` with `addHackReport()`
-- [ ] Replace `doWarnReport()` with `addWarnReport()`
-- [ ] Replace `zip_check()` with `checkCompress()`
-- [ ] Replace `zip_compress()` with `addCompress()`
+- [ ] Review custom templates against the current theme structure
+- [ ] For new template work, prefer the modern `Template` runtime
+- [ ] Keep HTML in theme files instead of PHP where practical
 
-### Admin Modules
+### Configuration
 
-- [ ] Rename navigation function to `navi()`
-- [ ] Replace `$admin_file` with `$afile`
-- [ ] Replace `header('Location: ...') + exit;` with `setRedirect(...)`
-- [ ] Remove `&op=show` from navigation URLs
-- [ ] Extract inline switch-cases into separate functions
-- [ ] Rename admin info files: `admin/info/{module}/{module}-{locale}.html` → `admin/info/{module}/{locale}.html`
-- [ ] Replace `new sql_db(` → `new Database(`
-- [ ] Replace all `$db->sql_*()` calls with `$db->getSql*()` equivalents (see breaking changes)
-- [ ] Replace `adm_info(...)` calls with `getAdminInfo()`
+- [ ] Review local config overrides
+- [ ] Re-check file permissions after deployment
 
-> [!TIP]
-> Refer to [CONTRIBUTING.md](CONTRIBUTING.md) for detailed migration patterns and examples.
+### Runtime Validation
+
+- [ ] Check `storage/logs/`
+- [ ] Test admin login
+- [ ] Test frontend entry page
+- [ ] Test the modules critical to your site
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
+### White Screen / HTTP 500
 
-#### Error: "Class 'Database' not found"
+Check:
 
-**Cause:** `core/classes/pdo.php` not included, or you are referencing the old class name `sql_db`.
+- PHP error log
+- `storage/logs/`
+- web server logs
 
-**Solution:**
+### Database Connection Errors
 
-- Ensure `core/classes/pdo.php` is loaded by the bootstrap.
-- Replace all occurrences of `new sql_db(` with `new Database(` in your custom code.
-- Replace all `$db->sql_*()` calls with the new `getSql*()` equivalents (see breaking changes below).
+Verify:
 
-#### Error: "Undefined constant _CONSTANT_NAME"
+- database credentials
+- database server status
+- charset and prefix settings
 
-**Cause:** Language constant not defined in all languages.
+### Cache Issues
 
-**Solution:** Add the constant to all 6 language files:
-- `lang/en.php`
-- `lang/de.php`
-- `lang/fr.php`
-- `lang/pl.php`
-- `lang/ru.php`
-- `lang/uk.php`
-
-#### White Screen / 500 Error
-
-**Cause:** PHP error with display_errors off.
-
-**Solution:**
-```php
-// Temporarily add to index.php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-```
-
-Check `storage/logs/error_php.log` and `storage/logs/error_site.log` for details.
-
-#### Database Connection Failed
-
-**Cause:** Database credentials incorrect or MySQL version incompatible.
-
-**Solution:**
-1. Verify `config/db.php` credentials
-2. Check MySQL is running
-3. Verify charset support: `SHOW VARIABLES LIKE 'character_set%';`
-
-#### Cache Issues After Upgrade
-
-**Cause:** Old cache files incompatible with new code.
-
-**Solution:**
-```bash
-rm -rf storage/cache/*
-rm -rf config/cache/*
-```
-
-### Getting Help
-
-If you encounter issues during upgrade:
-
-1. Check the [Forum](https://slaed.net/index.php?name=forum)
-2. Review error logs in `storage/logs/`
-3. Contact support: info@slaed.net
-
----
-
-## Rollback Procedure
-
-If the upgrade fails, restore from backup:
-
-### 1. Restore Database
-
-```bash
-mysql -u root -p your_database < backup_YYYYMMDD.sql
-```
-
-### 2. Restore Files
-
-```bash
-rm -rf /path/to/slaed/*
-tar -xzf slaed_backup_YYYYMMDD.tar.gz -C /
-```
-
-### 3. Clear Cache
+Clear runtime cache:
 
 ```bash
 rm -rf storage/cache/*
 ```
 
+### Missing Constants or Language Errors
+
+Review:
+
+- `lang/*.php`
+- `admin/lang/*.php`
+- module-specific language files
+
 ---
 
-## Version History
+## Rollback
 
-### 6.3.0 (In Development - 2025/2026)
+If the upgrade fails:
 
-**Status:** Active Development (~85% Complete as of March 2026)
-
-**Major Changes:**
-- PHP 8.4 compatibility (8.1+ minimum)
-- All SQL queries converted to prepared statements
-- Input validation with `getVar()` — raw `$_GET`/`$_POST` eliminated from `core/`
-- `func_get_args()` removed from all functions — typed parameters enforced throughout
-- Type declarations for all functions (parameters + return types)
-- Module configuration moved to `config/modules.php`
-- Template functions modernized (`setTemplateBasic()`, `setTemplateWarning()`)
-- `tpl_eval()`, `tpl_func()`, `tpl_warn()` **removed** (used `eval()` internally)
-- `setRedirect()` introduced — replaces inline `header() + exit;` in admin modules
-- `filterMarkdown()` added — safe Markdown→HTML parser with user/admin modes
-- `setHead()` enhanced — new `[headline]` and `[author]` SEO placeholders
-- Admin info files reorganized: `admin/info/{module}/{module}-{locale}.html` → `admin/info/{module}/{locale}.html`
-- `adm_info()` replaced by `getAdminInfo()` — auto-detects info path from `$_GET['name']`, no parameters
-- Database class `sql_db` renamed to `Database`; all methods renamed to `getSql*` prefix
-- All 20 snake_case functions in `core/security.php` renamed to camelCase `VerbNoun` (see Breaking Changes above)
-- `checkCompress()` and `addCompress()` replace `zip_check()` and `zip_compress()` in `core/system.php`
-- `LOGS_DIR` constant = `BASE_DIR.'/storage/logs'`
-- Removed `core/classes/module.php` (centralized in core)
-- Config file naming: removed `config_` prefix
-- Language constant `_ANONYM` replaces configurable `$confu['anonym']`
-- `config/rewrite.php` removed (URL rewrite controlled by `$conf['rewrite']`)
-- Error log (`error_php.log`) uses NDJSON format (one JSON object per line)
-
-**Security Improvements:**
-- 2106+ SQL injection vulnerabilities fixed
-- 269+ input validation points added
-- 99 deprecated insecure functions removed
-- 1282 legacy code constructs updated
-
-**Modernized Admin Modules (24/24 - 100%):**
-- All admin modules have been modernized with `navi()` or `setAdminNavi()` navigation
-- Key modules: `admins.php`, `blocks.php`, `categories.php`, `comments.php`
-- `config.php`, `database.php`, `editor.php`, `fields.php`, `groups.php`
-- `lang.php`, `messages.php`, `modules.php`, `monitor.php`, `security.php`
-- `newsletter.php`, `privat.php`, `ratings.php`, `referers.php`, `replace.php`
-- `scheduler.php`, `statistic.php`, `template.php`, `uploads.php`
-
-**Removed Files:**
-- `config/config_db.php` → use `config/db.php`
-- `config/counter/dump.txt`, `config/counter/sess.txt`
-- `core/classes/module.php`
-
-**Renamed Files:**
-- `admin/info/{module}/{module}-{locale}.html` → `admin/info/{module}/{locale}.html` (all admin modules)
-- `storage/logs/log.txt` → `log.log`
-- `storage/logs/error_site.txt` → `error_site.log`
-- `storage/logs/error_sql.txt` → `error_sql.log`
-- `storage/logs/hack.txt` → `hack.log`
-- `storage/logs/warn.txt` → `warn.log`
-
-### 6.2.0 (2017)
-
-**Status:** End of Life - No security updates
-
-- Last stable release with PHP 7.x support
-- Legacy SQL queries (string concatenation)
-- Direct `$_GET`/`$_POST` access
-- `eval()` in template system
-
-> [!WARNING]
-> Version 6.2.x contains known security vulnerabilities that will not be patched.
-> Upgrade to 6.3.x is strongly recommended.
-
-### 6.1.0 and Earlier
-
-**Status:** Not Supported
-
-- PHP 5.x/7.0 only
-- Fresh installation of 6.3.x recommended
-- No upgrade path available
+1. Restore the database backup.
+2. Restore the file backup.
+3. Clear `storage/cache/`.
+4. Re-check logs before retrying.
 
 ---
 
