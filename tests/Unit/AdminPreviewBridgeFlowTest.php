@@ -1,0 +1,135 @@
+<?php
+declare(strict_types=1);
+
+namespace {
+    require_once __DIR__.'/../Support/ViewTestBootstrap.php';
+
+    if (!defined('ADMIN_FILE')) define('ADMIN_FILE', true);
+    if (!defined('_PREVIEW')) define('_PREVIEW', 'Preview');
+
+    if (!function_exists('filterMarkdown')) {
+        function filterMarkdown(string $text, string $mod = '', bool $safe = false): string
+        {
+            return $GLOBALS['__test_filter_markdown'][$text] ?? $text;
+        }
+    }
+
+    if (!function_exists('filterReplaceText')) {
+        function filterReplaceText(string $text, string $mod = ''): string
+        {
+            return $GLOBALS['__test_filter_replace'][$text] ?? $text;
+        }
+    }
+
+    if (!function_exists('fields_out')) {
+        function fields_out(string $text, string $mod = ''): string
+        {
+            return $GLOBALS['__test_fields_out'][$text] ?? $text;
+        }
+    }
+
+}
+
+namespace Tests\Unit {
+    use PHPUnit\Framework\Attributes\Test;
+    use PHPUnit\Framework\TestCase;
+
+    final class AdminPreviewBridgeFlowTest extends TestCase
+    {
+        protected function setUp(): void
+        {
+            $GLOBALS['__test_theme'] = 'default';
+            $GLOBALS['__test_is_user'] = false;
+            $GLOBALS['__test_user_info'] = [];
+            $GLOBALS['__test_captcha'] = '';
+            $GLOBALS['__test_token'] = [];
+            $GLOBALS['__test_templates'] = [];
+            $GLOBALS['__test_filter_markdown'] = [];
+            $GLOBALS['__test_filter_replace'] = [];
+            $GLOBALS['__test_fields_out'] = [];
+            $GLOBALS['conf'] = [
+                'theme' => 'default',
+                'sitename' => 'SLAED',
+                'homeurl' => 'https://slaed.loc',
+                'slogan' => 'Fast CMS',
+                'site_logo' => 'logo.png',
+                'users' => [
+                    'adirectory' => 'uploads/avatars',
+                ],
+            ];
+        }
+
+        #[Test]
+        public function previewHappyPathUsesNewAdminPartial(): void
+        {
+            $tpl = new \Template('admin');
+            $html = $tpl->getHtmlPart('preview', [
+                'title' => 'Preview',
+                'fields' => '<b>Title</b>',
+                'fields1' => 'Text one',
+                'fields2' => 'Text two',
+                'fields3' => 'Text three',
+            ]);
+
+            $this->assertNotSame('', $html);
+            $this->assertStringContainsString('admin-preview', $html);
+            $this->assertStringContainsString('Preview', $html);
+            $this->assertStringContainsString('<b>Title</b>', $html);
+            $this->assertStringContainsString('Text one', $html);
+            $this->assertStringContainsString('Text two', $html);
+            $this->assertStringContainsString('Text three', $html);
+        }
+
+        #[Test]
+        public function previewMissingThemeReturnsEmptyHtml(): void
+        {
+            $tpl = new \Template('missing-theme');
+            $html = $tpl->getHtmlPart('preview', [
+                'title' => 'Preview',
+                'fields' => '<b>Title</b>',
+                'fields1' => 'Text one',
+                'fields2' => 'Text two',
+                'fields3' => 'Text three',
+            ]);
+
+            $this->assertSame('', $html);
+        }
+
+        #[Test]
+        public function previewPreservesExpectedMappedValues(): void
+        {
+            $view = [
+                'title' => 'Preview',
+                'fields' => '<b>Mapped</b>',
+                'fields1' => 'Body one',
+                'fields2' => 'Body two',
+                'fields3' => 'Body three',
+            ];
+            $html = (new \Template('admin'))->getHtmlPart('preview', $view);
+
+            $this->assertStringContainsString('Preview', $html);
+            $this->assertStringContainsString('<b>Mapped</b>', $html);
+            $this->assertStringContainsString('Body one', $html);
+            $this->assertStringContainsString('Body two', $html);
+            $this->assertStringContainsString('Body three', $html);
+        }
+
+        #[Test]
+        public function previewPartialHandlesHtmlContentCorrectly(): void
+        {
+            $GLOBALS['__test_filter_markdown']['Html text'] = '<em>Html text</em>';
+
+            $html = (new \Template('admin'))->getHtmlPart('preview', [
+                'title' => 'Preview',
+                'fields' => '<b>Title</b>',
+                'fields1' => '<em>Html text</em>',
+                'fields2' => '',
+                'fields3' => '',
+            ]);
+
+            $this->assertNotSame('', $html);
+            $this->assertStringContainsString('<em>Html text</em>', $html);
+            $this->assertStringContainsString('admin-preview-fields1', $html);
+        }
+    }
+}
