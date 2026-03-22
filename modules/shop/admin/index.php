@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('shop')) die('Illegal file access'
 
 
 function clients(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         $csearch = getVar('post', 'csearch', 'text');
     $search = getVar('post', 'search', 'num');
     setHead();
@@ -36,13 +36,13 @@ function clients(): void {
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $_sops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'];
     $_stabs = [_NEW, _AKTIVE, _DEAKTIVE, _ADD];
     if ($csearch) {
@@ -52,7 +52,7 @@ function clients(): void {
         $navi = setAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
-            'sub'    => $_box,
+            'sub'    => $box,
             'sops'   => $_sops,
             'stabs'  => $_stabs,
             'subtab' => 1,
@@ -65,7 +65,7 @@ function clients(): void {
         $navi = setAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
-            'sub'    => $_box,
+            'sub'    => $box,
             'sops'   => $_sops,
             'stabs'  => $_stabs,
             'subtab' => 1,
@@ -78,7 +78,7 @@ function clients(): void {
         $navi = setAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
-            'sub'    => $_box,
+            'sub'    => $box,
             'sops'   => $_sops,
             'stabs'  => $_stabs,
             'subtab' => 1,
@@ -91,7 +91,7 @@ function clients(): void {
         $navi = setAdminNavi([
             'ops'   => $_ops,
             'tabs'  => $_lang,
-            'sub'   => $_box,
+            'sub'   => $box,
             'sops'  => $_sops,
             'stabs' => $_stabs,
             'subtab' => 1,
@@ -143,7 +143,7 @@ function clientset(): void {
 }
 
 function clientadd(): void {
-    global $db, $afile, $conf, $stop;
+    global $db, $afile, $conf, $stop, $tpl;
         if (getVar('req', 'cid', 'num', 0)) {
         $cid = getVar('req', 'cid', 'num');
         $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.part) WHERE c.id = :cid', ['cid' => $cid]);
@@ -170,17 +170,17 @@ function clientadd(): void {
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $cont = setAdminNavi([
         'ops'    => $_ops,
         'tabs'   => $_lang,
-        'sub'    => $_box,
+        'sub'    => $box,
         'sops'   => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
         'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'subtab' => 1,
@@ -298,7 +298,7 @@ function clientdel(int $id = 0): void {
 }
 
 function products(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         setHead();
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num-1) * $conf['shop']['anum'];
@@ -307,13 +307,13 @@ function products(): void {
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $_sops  = ['name=shop&amp;op=products', 'name=shop&amp;op=products&amp;status=1', 'name=shop&amp;op=productadd'];
     $_stabs = [_AKTIVE, _DEAKTIVE, _ADD];
     if (getVar('get', 'status', 'num') == 1) {
@@ -323,7 +323,7 @@ function products(): void {
         $navi = setAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
-            'sub'    => $_box,
+            'sub'    => $box,
             'sops'   => $_sops,
             'stabs'  => $_stabs,
             'tab'    => 1,
@@ -337,7 +337,7 @@ function products(): void {
         $navi = setAdminNavi([
             'ops'   => $_ops,
             'tabs'  => $_lang,
-            'sub'   => $_box,
+            'sub'   => $box,
             'sops'  => $_sops,
             'stabs' => $_stabs,
             'tab'   => 1,
@@ -381,7 +381,7 @@ function products(): void {
 }
 
 function productadd(): void {
-    global $db, $afile, $conf, $stop;
+    global $db, $afile, $conf, $stop, $tpl;
     if (getVar('req', 'id', 'num', 0)) {
         $id = getVar('req', 'id', 'num');
         $result = $db->getSqlQuery('SELECT id, cid, time, title, intro, body, price, vote, assoc, ihome, acomm, counter, fix, status FROM '.PREFIX_DB.'_products WHERE id = :id', ['id' => $id]);
@@ -407,17 +407,17 @@ function productadd(): void {
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $cont = setAdminNavi([
         'ops'    => $_ops,
         'tabs'   => $_lang,
-        'sub'    => $_box,
+        'sub'    => $box,
         'sops'   => ['name=shop&amp;op=products', 'name=shop&amp;op=products&amp;status=1', 'name=shop&amp;op=productadd'],
         'stabs'  => [_AKTIVE, _DEAKTIVE, _ADD],
         'tab'    => 1,
@@ -531,7 +531,7 @@ function productops(int|array $id = 0, string $vtyp = ''): void {
 }
 
 function partners(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         setHead();
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['shop']['anum'];
@@ -540,13 +540,13 @@ function partners(): void {
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $_sops  = ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'];
     $_stabs = [_NEW, _AKTIVE, _DEAKTIVE, _ADD];
     if (getVar('get', 'status', 'num') == 1) {
@@ -556,7 +556,7 @@ function partners(): void {
         $navi = setAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
-            'sub'    => $_box,
+            'sub'    => $box,
             'sops'   => $_sops,
             'stabs'  => $_stabs,
             'tab'    => 2,
@@ -570,7 +570,7 @@ function partners(): void {
         $navi = setAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
-            'sub'    => $_box,
+            'sub'    => $box,
             'sops'   => $_sops,
             'stabs'  => $_stabs,
             'tab'    => 2,
@@ -584,7 +584,7 @@ function partners(): void {
         $navi = setAdminNavi([
             'ops'   => $_ops,
             'tabs'  => $_lang,
-            'sub'   => $_box,
+            'sub'   => $box,
             'sops'  => $_sops,
             'stabs' => $_stabs,
             'tab'   => 2,
@@ -632,7 +632,7 @@ function partnerset(): void {
 }
 
 function partneradd(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     if (getVar('req', 'paid', 'num', 0)) {
         $paid = getVar('req', 'paid', 'num');
         $result = $db->getSqlQuery('SELECT p.id, p.uid, p.name, p.addr, p.phone, p.email, p.website, p.webmoney, p.paypal, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE p.id = :paid', ['paid' => $paid]);
@@ -658,17 +658,17 @@ function partneradd(): void {
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $cont = setAdminNavi([
         'ops'    => $_ops,
         'tabs'   => $_lang,
-        'sub'    => $_box,
+        'sub'    => $box,
         'sops'   => ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'],
         'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'    => 2,
@@ -743,7 +743,7 @@ function partnerdel(int $id = 0): void {
 }
 
 function partnerinfo(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $paid = getVar('get', 'paid', 'num');
     $a = 0;
     $partsumges = 0;
@@ -752,17 +752,17 @@ function partnerinfo(): void {
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $cont = setAdminNavi([
         'ops'    => $_ops,
         'tabs'   => $_lang,
-        'sub'    => $_box,
+        'sub'    => $box,
         'sops'   => ['name=shop&amp;op=partners', 'name=shop&amp;op=partners&amp;status=1', 'name=shop&amp;op=partners&amp;status=2', 'name=shop&amp;op=partneradd'],
         'stabs'  => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'    => 2,
@@ -807,7 +807,7 @@ function partnerinfo(): void {
 }
 
 function export(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $id = getVar('post', 'id', 'num');
     $bd = getVar('post', 'bd', 'text');
     if ($id == 1 && $bd) {
@@ -876,17 +876,17 @@ function export(): void {
         $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
         $_search = getVar('post', 'search', 'num');
         $_csearch = getVar('post', 'csearch', 'text');
-        $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+        $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
         foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
             $_sort = $_k + 1;
-            $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+            $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
         }
-        $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-        $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+        $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+        $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
         $cont = setAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
-            'sub'    => $_box,
+            'sub'    => $box,
             'sops'   => ['', ''],
             'stabs'  => [_EXPORT, _IMPORT],
             'tab'    => 3,
@@ -942,23 +942,23 @@ function export(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
         setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $cont = setAdminNavi([
         'ops'  => $_ops,
         'tabs' => $_lang,
-        'sub'  => $_box,
+        'sub'  => $box,
         'sops'  => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
         'stabs' => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'  => 4,
@@ -1066,23 +1066,23 @@ function save(): void {
 }
 
 function info(): void {
-    global $afile;
+    global $afile, $tpl;
     setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $_search = getVar('post', 'search', 'num');
     $_csearch = getVar('post', 'csearch', 'text');
-    $_box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
+    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $_k => $_v) {
         $_sort = $_k + 1;
-        $_box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
+        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
     }
-    $_box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+    $box .= '</select> '.get_user_search('csearch', $_csearch, '30').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     $cont = setAdminNavi([
         'ops'  => $_ops,
         'tabs' => $_lang,
-        'sub'  => $_box,
+        'sub'  => $box,
         'sops'  => ['name=shop&amp;op=clients', 'name=shop&amp;op=clients&amp;status=1', 'name=shop&amp;op=clients&amp;status=2', 'name=shop&amp;op=clientadd'],
         'stabs' => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'  => 5,
@@ -1113,8 +1113,3 @@ switch($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-
-
-
-
-

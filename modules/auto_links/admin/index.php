@@ -50,7 +50,7 @@ function auto_links(): void {
 }
 
 function stats(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $id = getVar('req', 'id', 'num');
     $sort = getVar('req', 'sort', 'num');
     $order = getVar('req', 'order', 'num');
@@ -71,25 +71,25 @@ function stats(): void {
     $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer WHERE lid = :lid GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc, ['lid' => $id]);
     setHead();
     $_id = getVar('req', 'id', 'num');
-    $_box = '';
+    $box = '';
     if ($_id) {
-        $_box = '<form method="post" action="'.$afile.'.php?name=auto_links">'._SORTE.': <select name="sort">';
+        $box = '<form method="post" action="'.$afile.'.php?name=auto_links">'._SORTE.': <select name="sort">';
         foreach ([_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF] as $_k => $_v) {
             $_sort = $_k + 1;
-            $_box .= '<option value="'.$_sort.'"'.(getVar('post', 'sort', 'num') == $_sort ? ' selected' : '').'>'.$_v.'</option>';
+            $box .= '<option value="'.$_sort.'"'.(getVar('post', 'sort', 'num') == $_sort ? ' selected' : '').'>'.$_v.'</option>';
         }
-        $_box .= '</select><select name="order">';
+        $box .= '</select><select name="order">';
         foreach ([_ASC, _DESC] as $_k => $_v) {
             $_sort = $_k + 1;
-            $_box .= '<option value="'.$_sort.'"'.(getVar('post', 'order', 'num') == $_sort ? ' selected' : '').'>'.$_v.'</option>';
+            $box .= '<option value="'.$_sort.'"'.(getVar('post', 'order', 'num') == $_sort ? ' selected' : '').'>'.$_v.'</option>';
         }
-        $_box .= '</select> <input type="hidden" name="op" value="stats"><input type="hidden" name="id" value="'.$_id.'"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-        $_box = setTemplateBasic('searchbox', ['{%searchbox%}' => $_box]);
+        $box .= '</select> <input type="hidden" name="op" value="stats"><input type="hidden" name="id" value="'.$_id.'"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+        $box = $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
     }
     $cont = setAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
-        'sub'  => $_box,
+        'sub'  => $box,
     ]);
     if (!$conf['referers']['refer']) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]);
     $list = [];
@@ -292,5 +292,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-

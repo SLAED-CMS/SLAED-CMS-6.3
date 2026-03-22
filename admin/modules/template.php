@@ -7,20 +7,16 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getTemplateSearch(string $templ): string {
-    global $afile;
+    global $afile, $tpl;
     $search = '<form method="post" action="'.$afile.'.php">'._THEME.': <select name="templ">';
-    $handle = opendir('templates');
-    if ($handle !== false) {
-        while (($file = readdir($handle)) !== false) {
-            if (!preg_match('/\./', $file)) {
-                $selected = ($file == $templ) ? ' selected' : '';
-                $search .= '<option value="'.$file.'"'.$selected.'>'.$file.'</option>';
-            }
+    foreach (scandir('templates') as $file) {
+        if (!preg_match('/\./', $file)) {
+            $selected = ($file == $templ) ? ' selected' : '';
+            $search .= '<option value="'.$file.'"'.$selected.'>'.$file.'</option>';
         }
-        closedir($handle);
     }
     $search .= '</select> <input type="hidden" name="name" value="template"><input type="hidden" name="op" value="template"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $search]);
 }
 
 function template(): void {

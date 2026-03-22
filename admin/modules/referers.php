@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getRefererSearch(): string {
-    global $afile;
+    global $afile, $tpl;
     $search = '<form method="post" action="'.$afile.'.php">'._SORTE.': <select name="sort">';
     $priv = [_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF];
     $sort = getVar('post', 'sort', 'num', 0);
@@ -25,7 +25,7 @@ function getRefererSearch(): string {
         $search .= '<option value="'.$idx.'"'.$sel.'>'.$value.'</option>';
     }
     $search .= '</select> <input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="referers"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $search]);
 }
 
 function referers(): void {

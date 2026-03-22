@@ -7,14 +7,10 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getStatisticSearch(): string {
-    global $afile;
+    global $afile, $tpl;
     $file = getVar('post', 'file', 'text');
     $files = [];
-    $handle = opendir(COUNTER_DIR.'/statistic/');
-    if ($handle !== false) {
-        while (false !== ($f = readdir($handle))) $files[] = $f;
-        closedir($handle);
-    }
+    foreach (scandir(COUNTER_DIR.'/statistic/') as $filev) $files[] = $filev;
     rsort($files);
     $search = '<form method="post" action="'.$afile.'.php">'._STATFROM.': <select name="file"><option value="">'._NO_INFO.'</option>';
     foreach ($files as $val) {
@@ -24,7 +20,7 @@ function getStatisticSearch(): string {
         }
     }
     $search .= '</select> <input type="hidden" name="name" value="statistic"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $search]);
 }
 
 function statistic(): void {

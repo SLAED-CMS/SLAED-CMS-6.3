@@ -179,9 +179,9 @@ function getSearchlink(int $sort = 3, int $order = 2, int $num = 1, string $find
     return $link;
 }
 
-function getSearchbox(string $view = 'search'): string {
-    global $afile;
-    if ($view !== 'search' && $view !== 'toplist') return '';
+function getSearchbox(string $type = 'search'): string {
+    global $afile, $tpl;
+    if ($type !== 'search' && $type !== 'toplist') return '';
     $sort = getVar('req', 'sort', 'num', 3);
     $order = getVar('req', 'order', 'num', 2);
     $find = trim(getVar('req', 'find', 'text', ''));
@@ -201,9 +201,9 @@ function getSearchbox(string $view = 'search'): string {
     $box .= '</select> '._SEARCH.': <input type="text" name="find" value="'.htmlspecialchars($find, ENT_QUOTES, 'UTF-8')
         .'" class="sl_form" style="width: 140px;" placeholder="'._SWORD.'"> '._MODUL.': <select name="fmod" style="width: 140px;">'.getSearchmods($fmod).'</select>'
         .'<input type="hidden" name="name" value="search">';
-    if ($view === 'toplist') $box .= '<input type="hidden" name="op" value="toplist">';
+    if ($type === 'toplist') $box .= '<input type="hidden" name="op" value="toplist">';
     $box .= ' <input type="submit" value="'._OK.'" class="sl_but_blue"></span></form>';
-    return setTemplateBasic('searchbox', ['{%searchbox%}' => $box]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $box]);
 }
 
 function getSearchsum(string $where, array $pars): string {

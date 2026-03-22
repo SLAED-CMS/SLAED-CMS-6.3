@@ -193,15 +193,34 @@ function check_admin() {
 }
 
 function login() {
- global $db, $afile, $conf, $stop;
+ global $db, $afile, $conf, $stop, $tpl;
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
-        $cont .= setTemplateBasic('registration', ['{%route%}' => $afile, '{%nickname%}' => _NICKNAME, '{%aname%}' => getVar('post', 'aname', 'var'), '{%homepage%}' => _HOMEPAGE, '{%host%}' => getHost(), '{%email%}' => _EMAIL, '{%aemail%}' => getVar('post', 'aemail', 'text'), '{%password%}' => _PASSWORD, '{%retype%}' => _RETYPEPASSWORD, '{%createuserdata%}' => _CREATEUSERDATA, '{%yes%}' => _YES, '{%no%}' => _NO, '{%send%}' => _SEND]);
+        $cont .= $tpl->getHtmlPart('registration', [
+            'route' => $afile,
+            'nickname' => _NICKNAME,
+            'aname' => getVar('post', 'aname', 'var'),
+            'homepage' => _HOMEPAGE,
+            'host' => getHost(),
+            'email' => _EMAIL,
+            'aemail' => getVar('post', 'aemail', 'text'),
+            'password' => _PASSWORD,
+            'retype' => _RETYPEPASSWORD,
+            'createuserdata' => _CREATEUSERDATA,
+            'yes' => _YES,
+            'no' => _NO,
+            'send' => _SEND,
+        ]);
     } else {
-        $captcha = ($conf['gfx_chk'] == 1 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
         $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
-        $cont .= setTemplateBasic('login', ['{%route%}' => $afile, '{%nickname%}' => _NICKNAME, '{%password%}' => _PASSWORD, '{%captcha%}' => $captcha, '{%login%}' => _LOGIN]);
+        $cont .= $tpl->getHtmlPart('login', [
+            'route' => $afile,
+            'nickname' => _NICKNAME,
+            'password' => _PASSWORD,
+            'captcha' => in_array((int)($conf['gfx_chk'] ?? 0), [1, 5, 6, 7], true) ? getCaptcha(2) : '',
+            'login' => _LOGIN,
+        ]);
     }
     echo $cont;
     setFoot();

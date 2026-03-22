@@ -8,11 +8,11 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function modules(): void {
-    global $conf, $db, $afile, $infos;
+    global $conf, $db, $afile, $infos, $tpl;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
+    $search = $tpl->getHtmlPart('searchbox', ['searchbox' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
     if (isset($infos)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $infos]);
@@ -182,7 +182,7 @@ function modules(): void {
 }
 
 function edit(): void {
-    global $conf, $db, $afile;
+    global $conf, $db, $afile, $tpl;
     $mod = getVar('get', 'mod', 'var');
     if (!isset($conf['modules'][$mod])) setRedirect($afile.'.php?name=modules');
     $lang = $conf['modules'][$mod]['lang'] ?? '_'.strtoupper($mod);
@@ -196,7 +196,7 @@ function edit(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
+    $search = $tpl->getHtmlPart('searchbox', ['searchbox' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
     $cont .= setTemplateBasic('open');

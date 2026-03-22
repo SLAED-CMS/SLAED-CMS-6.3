@@ -7,21 +7,17 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getUploadsSearch(): string {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     $dir = getVar('post', 'dir', 'var', $conf['uploads']['dir']);
     $search = '<form method="post" action="'.$afile.'.php">'._DIR.': <select name="dir" OnChange="submit()">';
-    $handle = opendir('uploads');
-    if ($handle !== false) {
-        while (($file = readdir($handle)) !== false) {
-            if (!preg_match('/\./', $file)) {
-                $sel = ($dir == $file) ? ' selected' : '';
-                $search .= '<option value="'.$file.'"'.$sel.'>uploads/'.$file.'</option>';
-            }
+    foreach (scandir('uploads') as $file) {
+        if (!preg_match('/\./', $file)) {
+            $sel = ($dir == $file) ? ' selected' : '';
+            $search .= '<option value="'.$file.'"'.$sel.'>uploads/'.$file.'</option>';
         }
-        closedir($handle);
     }
     $search .= '</select><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploads"></form>';
-    return setTemplateBasic('searchbox', ['{%searchbox%}' => $search]);
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => $search]);
 }
 
 function uploads(): void {
@@ -47,16 +43,12 @@ function uploads(): void {
     if (is_dir($fdir)) {
         $f = 0;
         $affilesize = 0;
-        $handle = opendir($fdir);
-        if ($handle !== false) {
-            while (($file = readdir($handle)) !== false) {
-                if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($fdir.'/'.$file)) {
-                    $filesize = filesize($fdir.'/'.$file);
-                    $f++;
-                    $affilesize += $filesize;
-                }
+        foreach (scandir($fdir) as $file) {
+            if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($fdir.'/'.$file)) {
+                $filesize = filesize($fdir.'/'.$file);
+                $f++;
+                $affilesize += $filesize;
             }
-            closedir($handle);
         }
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
     } else {
@@ -70,16 +62,12 @@ function uploads(): void {
     if (is_dir($tdir)) {
         $t = 0;
         $atfilesize = 0;
-        $handle = opendir($tdir);
-        if ($handle !== false) {
-            while (($file = readdir($handle)) !== false) {
-                if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($tdir.'/'.$file)) {
-                    $filesize = filesize($tdir.'/'.$file);
-                    $t++;
-                    $atfilesize += $filesize;
-                }
+        foreach (scandir($tdir) as $file) {
+            if ($file != '.' && $file != '..' && $file != 'index.html' && !is_dir($tdir.'/'.$file)) {
+                $filesize = filesize($tdir.'/'.$file);
+                $t++;
+                $atfilesize += $filesize;
             }
-            closedir($handle);
         }
         $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
     } else {
@@ -140,16 +128,12 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_GENPREF, _MODULES], 'tab' => 2, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'config']);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
-    $handle = opendir('uploads');
     $directory = '';
-    if ($handle !== false) {
-        while (($file = readdir($handle)) !== false) {
-            if (!preg_match('/\./', $file)) {
-                $sel = ($conf['uploads']['dir'] == $file) ? ' selected' : '';
-                $directory .= '<option value="'.$file.'"'.$sel.'>uploads/'.$file.'</option>';
-            }
+    foreach (scandir('uploads') as $file) {
+        if (!preg_match('/\./', $file)) {
+            $sel = ($conf['uploads']['dir'] == $file) ? ' selected' : '';
+            $directory .= '<option value="'.$file.'"'.$sel.'>uploads/'.$file.'</option>';
         }
-        closedir($handle);
     }
     $conts = '<form action="'.$afile.'.php" method="post">'
     .'<div id="tabcs0" class="tabcont">'

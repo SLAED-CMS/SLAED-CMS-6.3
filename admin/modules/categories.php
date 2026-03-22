@@ -7,8 +7,8 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getCategoriesSearch(string $modul): string {
-    global $afile;
-    return setTemplateBasic('searchbox', ['{%searchbox%}' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="categories">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>']);
+    global $afile, $tpl;
+    return $tpl->getHtmlPart('searchbox', ['searchbox' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="categories">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>']);
 }
 
 function categories(): void {
