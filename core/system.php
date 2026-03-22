@@ -114,6 +114,9 @@ if (defined('MODULE_FILE')) {
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/template.php';
+require_once BASE_DIR.'/core/classes/template.php';
+$tpl = defined('ADMIN_FILE') ? new Template('admin') : new Template($theme);
+$GLOBALS['tpl'] = $tpl;
 
 # Returns a normalized 5-part cron schedule or an empty string when invalid
 function getSchedulerSchedule(array|string $job): string {
@@ -4177,12 +4180,21 @@ function rss_load(mixed $bid): void {
 }
 
 # Preview
-function preview(string $title = '', string $text1 = '', string $text2 = '', string $text3 = '', string $mod = ''): string {
-    $fields  = $title ? '<b>'.$title.'</b>' : '';
-    $fields1 = $text1 ? (($fields) ? '<br><br>'.filterReplaceText(filterMarkdown($text1, $mod, false), $mod) : filterReplaceText(filterMarkdown($text1, $mod, false), $mod)) : '';
-    $fields2 = $text2 ? '<br><br>'.filterReplaceText(filterMarkdown($text2, $mod, false), $mod) : '';
-    $fields3 = $text3 ? '<br><br>'.fields_out(filterReplaceText(filterMarkdown($text3, $mod, false), $mod), $mod) : '';
-    return setTemplateBasic('preview', ['{%title%}' => _PREVIEW, '{%fields%}' => $fields, '{%fields1%}' => $fields1, '{%fields2%}' => $fields2, '{%fields3%}' => $fields3]);
+if (!function_exists('preview')) {
+    function preview(string $title = '', string $texta = '', string $textb = '', string $textc = '', string $mod = ''): string {
+        global $tpl;
+        $field = $title ? '<b>'.$title.'</b>' : '';
+        $fielda = $texta ? (($field) ? '<br><br>'.filterReplaceText(filterMarkdown($texta, $mod, false), $mod) : filterReplaceText(filterMarkdown($texta, $mod, false), $mod)) : '';
+        $fieldb = $textb ? '<br><br>'.filterReplaceText(filterMarkdown($textb, $mod, false), $mod) : '';
+        $fieldc = $textc ? '<br><br>'.fields_out(filterReplaceText(filterMarkdown($textc, $mod, false), $mod), $mod) : '';
+        return $tpl->getHtmlPart('preview', [
+            'title' => _PREVIEW,
+            'fields' => $field,
+            'fields1' => $fielda,
+            'fields2' => $fieldb,
+            'fields3' => $fieldc,
+        ]);
+    }
 }
 
 # Fields in
