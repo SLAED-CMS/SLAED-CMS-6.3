@@ -1,0 +1,22 @@
+<form action="{{ route }}.php" method="post" class="admin-login-form">
+    <div class="admin-login-panel">
+        <div class="admin-login-row">
+            <label class="admin-login-label">{{ nickname }}</label>
+            <input type="text" name="name" maxlength="25" placeholder="{{ nickname }}" required>
+        </div>
+
+        <div class="admin-login-row">
+            <label class="admin-login-label">{{ password }}</label>
+            <input type="password" name="pwd" maxlength="25" placeholder="{{ password }}" required>
+        </div>
+
+        {% if captcha %}
+        <div class="admin-login-captcha">{{{ captcha }}}</div>
+        {% endif %}
+
+        <div class="admin-login-actions">
+            <input type="hidden" name="op" value="check_admin">
+            <button type="submit">{{ login }}</button>
+        </div>
+    </div>
+</form>
