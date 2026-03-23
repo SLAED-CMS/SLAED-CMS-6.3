@@ -46,21 +46,21 @@ function contact(): void {
     }
     setHead(['title' => $title]);
     $cont = $tpl->getHtmlFrag('title', ['title' => $title]);
-    $form = setTemplateBasic('contact-form', [
-        '{%info%}' => $info,
-        '{%name%}' => $conf['name'],
-        '{%token%}' => htmlspecialchars(getSiteToken('contact'), ENT_QUOTES, 'UTF-8'),
-        '{%style%}' => $conf['style'],
-        '{%admin_options%}' => $asend,
-        '{%lbl_to%}' => _TO,
-        '{%lbl_name%}' => _YOURNAME,
-        '{%lbl_email%}' => _YOUREMAIL,
-        '{%lbl_message%}' => _MESSAGE,
-        '{%sname%}' => $sname,
-        '{%semail%}' => $semail,
-        '{%message%}' => $message,
-        '{%captcha%}' => getCaptcha(1),
-        '{%submit%}' => _SEND,
+    $form = $tpl->getHtmlFrag('contact-form', [
+        'info' => $info,
+        'name' => $conf['name'],
+        'token' => htmlspecialchars(getSiteToken('contact'), ENT_QUOTES, 'UTF-8'),
+        'style' => $conf['style'],
+        'admin_options' => $asend,
+        'lbl_to' => _TO,
+        'lbl_name' => _YOURNAME,
+        'lbl_email' => _YOUREMAIL,
+        'lbl_message' => _MESSAGE,
+        'sname' => $sname,
+        'semail' => $semail,
+        'message' => $message,
+        'captcha' => getCaptcha(1),
+        'submit' => _SEND,
     ]);
     if (getVar('post', 'send', 'num') == '1') {
         $id = getVar('post', 'id', 'num');

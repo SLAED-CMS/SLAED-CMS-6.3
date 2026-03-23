@@ -25,43 +25,43 @@ function info(): void {
     $mods = ['faq' => _FAQ, 'files' => _FILES, 'links' => _LINKS, 'media' => _MEDIA, 'news' => _NEWS, 'pages' => _PAGES, 'shop' => _SHOP];
     foreach ($mods as $key => $val) {
         if (is_active($key)) {
-            $modsOptions .= setTemplateBasic('rss-option', ['if_flag' => ['is_selected' => $key == $mod], '{%value%}' => $key, '{%label%}' => $val]);
+            $modsOptions .= $tpl->getHtmlFrag('rss-option', ['is_selected' => $key == $mod, 'value' => $key, 'label' => $val]);
         }
     }
     $numOptions = '';
     $lim = 1;
     while ($lim <= $conf['rss']['max']) {
         $rsslim = ($num) ? $num : $conf['rss']['min'];
-        $numOptions .= setTemplateBasic('rss-option', ['if_flag' => ['is_selected' => $lim == $rsslim], '{%value%}' => $lim, '{%label%}' => _RSS_INFO_MENG.' - '.$lim]);
+        $numOptions .= $tpl->getHtmlFrag('rss-option', ['is_selected' => $lim == $rsslim, 'value' => $lim, 'label' => _RSS_INFO_MENG.' - '.$lim]);
         $lim++;
     }
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);
     $cont = $tpl->getHtmlFrag('title', ['title' => _RSS]);
-    $cont .= setTemplateBasic('rss-info-form', [
-        '{%name%}' => $conf['name'],
-        '{%style%}' => $conf['style'],
-        '{%info_text%}' => _RSS_INFO_TEXT,
-        '{%lbl_tip%}' => _RSS_INFO_TIP,
-        '{%mods_options%}' => $modsOptions,
-        '{%lbl_categories%}' => _CATEGORIES,
-        '{%catselect%}' => getcat($mod, $cat, 'cat', $conf['style'], '<option value="" selected>'._RSS_INFO_ALL.'</option>'),
-        '{%lbl_amount%}' => _RSS_INFO_MENG,
-        '{%num_options%}' => $numOptions,
-        '{%lbl_code%}' => _CODE,
-        '{%rsslink%}' => $rsslink,
-        '{%submit_label%}' => _RSS_INFO_CODE,
+    $cont .= $tpl->getHtmlFrag('rss-info-form', [
+        'name' => $conf['name'],
+        'style' => $conf['style'],
+        'info_text' => _RSS_INFO_TEXT,
+        'lbl_tip' => _RSS_INFO_TIP,
+        'mods_options' => $modsOptions,
+        'lbl_categories' => _CATEGORIES,
+        'catselect' => getcat($mod, $cat, 'cat', $conf['style'], '<option value="" selected>'._RSS_INFO_ALL.'</option>'),
+        'lbl_amount' => _RSS_INFO_MENG,
+        'num_options' => $numOptions,
+        'lbl_code' => _CODE,
+        'rsslink' => $rsslink,
+        'submit_label' => _RSS_INFO_CODE,
     ]);
     if ($conf['rss']['use'] == 1) {
         $link = ($url) ? $url : 'http://';
-        $cont .= setTemplateBasic('rss-read-forms', [
-            '{%name%}' => $conf['name'],
-            '{%style%}' => $conf['style'],
-            '{%lbl_select_site%}' => _SELECTASITE,
-            '{%rss_select%}' => rss_select(),
-            '{%lbl_url%}' => _ORTYPEURL,
-            '{%url_value%}' => $link,
-            '{%submit_label%}' => _OK,
-            '{%read_content%}' => rss_read($url, ''),
+        $cont .= $tpl->getHtmlFrag('rss-read-forms', [
+            'name' => $conf['name'],
+            'style' => $conf['style'],
+            'lbl_select_site' => _SELECTASITE,
+            'rss_select' => rss_select(),
+            'lbl_url' => _ORTYPEURL,
+            'url_value' => $link,
+            'submit_label' => _OK,
+            'read_content' => rss_read($url, ''),
         ]);
     }
     echo $cont;

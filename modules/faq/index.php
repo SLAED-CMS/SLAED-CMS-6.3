@@ -63,14 +63,14 @@ function faq(): void {
 	$cont = '';
 	if (!$home || ($home && $conf['faq']['homcat'])) {
 		$cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _FAQ]);
-		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['faq']['defis'], _FAQ)]);
+		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['faq']['defis'], _FAQ)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], $ncat);
 	}
 	if ($ncat) {
-		$cont .= setTemplateBasic('faq-quicklinks-open');
+		$cont .= $tpl->getHtmlFrag('faq-quicklinks-open');
 		$result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq WHERE cid = :ncat AND time <= NOW() AND status != \'0\' ORDER BY '.$orderbyf, ['ncat' => $ncat]);
-		while ([$fid, $ftitle] = $db->getSqlRow($result)) $cont .= setTemplateBasic('faq-quicklinks-row', ['{%id%}' => $fid, '{%title%}' => $ftitle, '{%label%}' => filterTextHighlight($ftitle, $word)]);
-		$cont .= setTemplateBasic('faq-quicklinks-close');
+		while ([$fid, $ftitle] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('faq-quicklinks-row', ['id' => $fid, 'title' => $ftitle, 'label' => filterTextHighlight($ftitle, $word)]);
+		$cont .= $tpl->getHtmlFrag('faq-quicklinks-close');
 	}
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $unum;
@@ -139,7 +139,7 @@ function liste(): void {
 }
 
 function view(): void {
-	global $db, $afile, $conf;
+	global $db, $afile, $conf, $tpl;
 	$id = getVar('get', 'id', 'num');
 	$num = getVar('get', 'num', 'num', '1');
 	$pag = $num;
@@ -166,7 +166,7 @@ function view(): void {
 			'author' => $seoauthor,
 		]);
 		$cont = setModuleNavi(['title' => _FAQ]);
-		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['faq']['defis'], _FAQ)]);
+		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['faq']['defis'], _FAQ)]);
 		if ($conf['faq']['viewcat']) $cont .= setCategories($conf['name'], $conf['faq']['subcat'], $conf['faq']['catdesc'], 0);
 		$conpag = explode('[pagebreak]', $hometext);
 		$pageno = count($conpag);
@@ -220,22 +220,23 @@ function add(): void {
 		if ($hometext) $cont .= preview($title, $hometext, '', '', $conf['name']);
 		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= setTemplateBasic('form-add', [
-            'if_flag' => ['has_name' => true, 'is_user' => is_user()],
-            '{%name%}' => $conf['name'],
-            '{%token%}' => htmlspecialchars(getSiteToken('faq'), ENT_QUOTES, 'UTF-8'),
-            '{%style%}' => $conf['style'],
-            '{%lbl_name%}' => _YOURNAME,
-            '{%lbl_title%}' => _QUESTION,
-            '{%lbl_cat%}' => _CATEGORY,
-            '{%lbl_text%}' => _ANSWER,
-            '{%username%}' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            '{%postname%}' => $postname,
-            '{%titleval%}' => $title,
-            '{%catselect%}' => getcat($conf['name'], $cid, 'catid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
-            '{%hometext%}' => textarea('1', 'hometext', $hometext, $conf['name'], '10', _ANSWER, '1'),
-            '{%captcha%}' => getCaptcha(1),
-            '{%submit%}' => ad_save('', '', 'send'),
+        $cont .= $tpl->getHtmlFrag('form-add', [
+            'has_name' => true,
+            'is_user' => is_user(),
+            'name' => $conf['name'],
+            'token' => htmlspecialchars(getSiteToken('faq'), ENT_QUOTES, 'UTF-8'),
+            'style' => $conf['style'],
+            'lbl_name' => _YOURNAME,
+            'lbl_title' => _QUESTION,
+            'lbl_cat' => _CATEGORY,
+            'lbl_text' => _ANSWER,
+            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            'postname' => $postname,
+            'titleval' => $title,
+            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
+            'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '10', _ANSWER, '1'),
+            'captcha' => getCaptcha(1),
+            'submit' => ad_save('', '', 'send'),
         ]);
 		echo $cont;
 		setFoot();

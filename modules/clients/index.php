@@ -21,7 +21,7 @@ function clients(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $uid = (int)($user[0] ?? 0);
         $conts = '';
-        $cont .= setTemplateBasic('clients-list-open', ['{%id%}' => _ID, '{%title%}' => _CTITLE, '{%version%}' => _CVERSION, '{%loads%}' => _CLOADS, '{%functions%}' => _FUNCTIONS]);
+        $cont .= $tpl->getHtmlFrag('clients-list-open', ['id' => _ID, 'title' => _CTITLE, 'version' => _CVERSION, 'loads' => _CLOADS, 'functions' => _FUNCTIONS]);
         $i = 0;
         $a = 1;
         while ([$id, $title, $body, $url, $num, $hits, $prod] = $db->getSqlRow($result)) {
@@ -34,15 +34,15 @@ function clients(): void {
             $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=clients_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
             $acont = add_menu($moder.'<a OnClick="HideShow(\'cl'.$i.'\', \'blind\', \'up\', 500);" title="'._CINFO.'">'._CINFO.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod.'" title="'.$dtitle.'">'.$dtitle.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod.'" title="'._CLIZENS.'">'._CLIZENS.'</a>');
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
-            $cont .= setTemplateBasic('clients-list-basic', [
-                '{%row_id%}' => $a,
-                '{%tip%}' => title_tip(_CDATE.': '.$time),
-                '{%title_text%}' => $title,
-                '{%version_text%}' => $num,
-                '{%hits_text%}' => $hits,
-                '{%actions%}' => $acont,
+            $cont .= $tpl->getHtmlFrag('clients-list-basic', [
+                'row_id' => $a,
+                'tip' => title_tip(_CDATE.': '.$time),
+                'title_text' => $title,
+                'version_text' => $num,
+                'hits_text' => $hits,
+                'actions' => $acont,
             ]);
-            $conts .= setTemplateBasic('clients-list-info', ['{%panel_id%}' => 'cl'.$i, '{%body%}' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name'])]);
+            $conts .= $tpl->getHtmlFrag('clients-list-info', ['panel_id' => 'cl'.$i, 'body' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name'])]);
             $i++;
             $a++;
         }

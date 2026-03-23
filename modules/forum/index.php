@@ -51,7 +51,7 @@ function forum(): void {
         foreach ($rows as $val) {
             if ($val[4] == $id && is_acess($val[10])) {
                 if ($id) {
-                    $cont = (!$cnt) ? setTemplateBasic('forum-cat-wrap', ['if_flag' => ['open' => true], '{%heading%}' => '<a href="index.php?name='.$conf['name'].'" title="'._FORUM.'">'._FORUM.'</a> '.urldecode($conf['forum']['defis']).' <a href="index.php?name='.$mod.'&amp;cat='.$rows[0][0].'" title="'.$rows[0][1].'">'.$rows[0][1].'</a>', '{%col_forum%}' => _FORUM, '{%col_topics%}' => _NEWTOPICS, '{%col_messages%}' => cutstr(_MESSAGES, 5, 1), '{%col_last%}' => _LASTMESSAGE]) : '';
+                    $cont = (!$cnt) ? $tpl->getHtmlFrag('forum-cat-wrap', ['open' => true, 'heading' => '<a href="index.php?name='.$conf['name'].'" title="'._FORUM.'">'._FORUM.'</a> '.urldecode($conf['forum']['defis']).' <a href="index.php?name='.$mod.'&amp;cat='.$rows[0][0].'" title="'.$rows[0][1].'">'.$rows[0][1].'</a>', 'col_forum' => _FORUM, 'col_topics' => _NEWTOPICS, 'col_messages' => cutstr(_MESSAGES, 5, 1), 'col_last' => _LASTMESSAGE]) : '';
                     $ttit = ($val[2]) ? $val[2] : $val[1];
                     $tlink = ($val[5] || is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'.$ttit.'">'.$val[1].'</a>' : $val[1];
                     if (!$val[5]) {
@@ -75,10 +75,10 @@ function forum(): void {
                         $data = _NO_INFO;
                         $topic = $post = $lpost = '';
                     }
-                    $cont .= setTemplateBasic('forum-cat-basic', ['{%icon%}' => $timg, '{%link%}' => $tlink, '{%desc%}' => $val[2], '{%topics%}' => $val[7], '{%posts%}' => $val[8], '{%date%}' => $data, '{%last_topic%}' => $topic, '{%last_post%}' => $post, '{%last_link%}' => $lpost]);
+                    $cont .= $tpl->getHtmlFrag('forum-cat-basic', ['icon' => $timg, 'link' => $tlink, 'desc' => $val[2], 'topics' => $val[7], 'posts' => $val[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
                     echo $cont;
                 } else {
-                    $cont = setTemplateBasic('forum-cat-wrap', ['if_flag' => ['open' => true], '{%heading%}' => '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'.$val[1].'">'.$val[1].'</a>', '{%col_forum%}' => _FORUM, '{%col_topics%}' => _NEWTOPICS, '{%col_messages%}' => cutstr(_MESSAGES, 5, 1), '{%col_last%}' => _LASTMESSAGE]);
+                    $cont = $tpl->getHtmlFrag('forum-cat-wrap', ['open' => true, 'heading' => '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'.$val[1].'">'.$val[1].'</a>', 'col_forum' => _FORUM, 'col_topics' => _NEWTOPICS, 'col_messages' => cutstr(_MESSAGES, 5, 1), 'col_last' => _LASTMESSAGE]);
                     foreach ($rows as $valb) {
                         if ($val[0] == $valb[4] && is_acess($valb[10])) {
                             $ttit = ($valb[2]) ? $valb[2] : $valb[1];
@@ -104,10 +104,10 @@ function forum(): void {
                                 $data = _NO_INFO;
                                 $topic = $post = $lpost = '';
                             }
-                            $cont .= setTemplateBasic('forum-cat-basic', ['{%icon%}' => $timg, '{%link%}' => $tlink, '{%desc%}' => $valb[2], '{%topics%}' => $valb[7], '{%posts%}' => $valb[8], '{%date%}' => $data, '{%last_topic%}' => $topic, '{%last_post%}' => $post, '{%last_link%}' => $lpost]);
+                            $cont .= $tpl->getHtmlFrag('forum-cat-basic', ['icon' => $timg, 'link' => $tlink, 'desc' => $valb[2], 'topics' => $valb[7], 'posts' => $valb[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
                         }
                     }
-                    $cont .= setTemplateBasic('forum-cat-wrap', []);
+                    $cont .= $tpl->getHtmlFrag('forum-cat-wrap', []);
                     echo $cont;
                 }
                 $cnt++;
@@ -131,10 +131,10 @@ function forum(): void {
                     $offset = intval($offset);
                     $query = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.body, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $lpars);
                     $newbt = ($istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][0].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
-                    $cont = setTemplateBasic('forum-list-wrap', ['if_flag' => ['open' => true], '{%button%}' => $newbt, '{%cat%}' => '<a href="index.php?name='.$mod.'&amp;cat='.$rows[0][0].'" title="'.$rows[0][1].'">'.$rows[0][1].'</a>']);
+                    $cont = $tpl->getHtmlFrag('forum-list-wrap', ['open' => true, 'button' => $newbt, 'cat' => '<a href="index.php?name='.$mod.'&amp;cat='.$rows[0][0].'" title="'.$rows[0][1].'">'.$rows[0][1].'</a>']);
                     if ($db->getSqlRowCount($query) > 0) {
                         $mark = 0;
-                        $cont .= setTemplateBasic('forum-list-basic-wrap', ['if_flag' => ['open' => true], '{%col_topics%}' => _NEWTOPICS, '{%col_posts%}' => _POSTS, '{%col_poster%}' => _POSTER, '{%col_views%}' => cutstr(_TVIEWS, 5, 1), '{%col_last%}' => _LASTMESSAGE]);
+                        $cont .= $tpl->getHtmlFrag('forum-list-basic-wrap', ['open' => true, 'col_topics' => _NEWTOPICS, 'col_posts' => _POSTS, 'col_poster' => _POSTER, 'col_views' => cutstr(_TVIEWS, 5, 1), 'col_last' => _LASTMESSAGE]);
                         $cont .= ($ismod) ? '<form action="index.php?name='.$conf['name'].'" method="post">' : '';
                         while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($query)) {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
@@ -189,19 +189,19 @@ function forum(): void {
                             } else {
                                 $checkb = '';
                             }
-                            $cont .= ($view) ? setTemplateBasic('forum-list-basic', ['{%icon%}' => $timg, '{%link%}' => $tlink, '{%replies%}' => $comments, '{%posts%}' => $post, '{%views%}' => $counter, '{%last_date%}' => $ldata, '{%last_poster%}' => $lposter, '{%last_link%}' => $lpost.$checkb]) : '';
+                            $cont .= ($view) ? $tpl->getHtmlFrag('forum-list-basic', ['icon' => $timg, 'link' => $tlink, 'replies' => $comments, 'posts' => $post, 'views' => $counter, 'last_date' => $ldata, 'last_poster' => $lposter, 'last_link' => $lpost.$checkb]) : '';
                         }
-                        $cont .= setTemplateBasic('forum-list-basic-wrap', []);
+                        $cont .= $tpl->getHtmlFrag('forum-list-basic-wrap', []);
                         if ($ismod) {
                             $selmm = tmoder(1).'<input type="hidden" name="op" value="move"><input type="hidden" name="cat" value="'.$cat.'"> <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-                            $cont .= setTemplateBasic('forum-view-change', ['{%title%}' => _CHECKOP, '{%content%}' => $selmm]);
+                            $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => $selmm]);
                         }
                     } else {
                         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
                     }
                     $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$cat."'" : "pid = '0' AND cid = '".$cat."' AND time <= NOW() AND status != '0'";
                     $pnum = setArticleNumbers('forum-pagenum', $conf['name'], $listnum, 'cat='.$cat.'&', 'id', '_forum', 'cid', $order, $conf['forum']['pnum']);
-                    $cont .= setTemplateBasic('forum-list-wrap', ['{%button%}' => $newbt, '{%pager%}' => $pnum]);
+                    $cont .= $tpl->getHtmlFrag('forum-list-wrap', ['button' => $newbt, 'pager' => $pnum]);
                     $infov = ($isview) ? sprintf(_ACINFOV, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOV, '<b>'._NOTCAN.'</b>');
                     $infor = ($isread) ? sprintf(_ACINFOR, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOR, '<b>'._NOTCAN.'</b>');
                     $infot = ($istopic) ? sprintf(_ACINFOT, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOT, '<b>'._NOTCAN.'</b>');
@@ -209,19 +209,19 @@ function forum(): void {
                     $infoe = ($isedit) ? sprintf(_ACINFOE, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOE, '<b>'._NOTCAN.'</b>');
                     $infod = ($isdelete) ? sprintf(_ACINFOD, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOD, '<b>'._NOTCAN.'</b>');
                     $infom = ($ismod) ? sprintf(_ACINFOM, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOM, '<b>'._NOTCAN.'</b>');
-                    $cont .= setTemplateBasic('forum-list-info', ['{%new%}' => '<span title="'._ISNEWPOST.'" class="sl_t_new">'._ISNEWPOST.'</span>', '{%old%}' => '<span title="'._NONEWPOST.'" class="sl_t_old">'._NONEWPOST.'</span>', '{%popular_new%}' => '<span title="'._TPOPN.'" class="sl_t_pop">'._TPOPN.'</span>', '{%popular%}' => '<span title="'._TPOP.'" class="sl_t_pold">'._TPOP.'</span>', '{%announce%}' => '<span title="'._TANNOUN.'" class="sl_t_announ">'._TANNOUN.'</span>', '{%hot%}' => '<span title="'._THOT.'" class="sl_t_hot">'._THOT.'</span>', '{%mod%}' => '<span title="'._TOPICM.'" class="sl_t_clos_m">'._TOPICM.'</span>', '{%admin%}' => '<span title="'._TOPICA.'" class="sl_t_clos_a">'._TOPICA.'</span>', '{%closed%}' => '<span title="'._TOPICN.'" class="sl_t_clos_n">'._TOPICN.'</span>', '{%pinned%}' => '<span title="'._TOPICP.'" class="sl_t_clos_p">'._TOPICP.'</span>', '{%perm_view%}' => $infov, '{%perm_read%}' => $infor, '{%perm_topic%}' => $infot, '{%perm_reply%}' => $infop, '{%perm_edit%}' => $infoe, '{%perm_delete%}' => $infod, '{%perm_mod%}' => $infom]);
+                    $cont .= $tpl->getHtmlFrag('forum-list-info', ['new' => '<span title="'._ISNEWPOST.'" class="sl_t_new">'._ISNEWPOST.'</span>', 'old' => '<span title="'._NONEWPOST.'" class="sl_t_old">'._NONEWPOST.'</span>', 'popular_new' => '<span title="'._TPOPN.'" class="sl_t_pop">'._TPOPN.'</span>', 'popular' => '<span title="'._TPOP.'" class="sl_t_pold">'._TPOP.'</span>', 'announce' => '<span title="'._TANNOUN.'" class="sl_t_announ">'._TANNOUN.'</span>', 'hot' => '<span title="'._THOT.'" class="sl_t_hot">'._THOT.'</span>', 'mod' => '<span title="'._TOPICM.'" class="sl_t_clos_m">'._TOPICM.'</span>', 'admin' => '<span title="'._TOPICA.'" class="sl_t_clos_a">'._TOPICA.'</span>', 'closed' => '<span title="'._TOPICN.'" class="sl_t_clos_n">'._TOPICN.'</span>', 'pinned' => '<span title="'._TOPICP.'" class="sl_t_clos_p">'._TOPICP.'</span>', 'perm_view' => $infov, 'perm_read' => $infor, 'perm_topic' => $infot, 'perm_reply' => $infop, 'perm_edit' => $infoe, 'perm_delete' => $infod, 'perm_mod' => $infom]);
                 } else {
                     $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
                     $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
                 }
                 $show = false;
             } else {
-                $cont = setTemplateBasic('forum-cat-wrap', []);
+                $cont = $tpl->getHtmlFrag('forum-cat-wrap', []);
             }
         } else {
             $cont = '';
         }
-        if ($show) $cont .= setTemplateBasic('forum-cat-info', ['{%new%}' => '<span title="'._ISNEWPOST.'" class="sl_f_new">'._ISNEWPOST.'</span>', '{%nonew%}' => '<span title="'._NONEWPOST.'" class="sl_f_old">'._NONEWPOST.'</span>', '{%closed%}' => '<span title="'._FCLOSED.'" class="sl_f_clos">'._FCLOSED.'</span>']);
+        if ($show) $cont .= $tpl->getHtmlFrag('forum-cat-info', ['new' => '<span title="'._ISNEWPOST.'" class="sl_f_new">'._ISNEWPOST.'</span>', 'nonew' => '<span title="'._NONEWPOST.'" class="sl_f_old">'._NONEWPOST.'</span>', 'closed' => '<span title="'._FCLOSED.'" class="sl_f_clos">'._FCLOSED.'</span>']);
         echo $cont;
     } else {
         setHead(['title' => _FORUM]);
@@ -298,7 +298,7 @@ function view(): void {
             $areply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'&amp;pid='.$topic.'" title="'._TOPICREPLY.'" class="sl_but">'._REPLY.'</a>' : '<span title="'.sprintf(_ACINFOP, _NOTCAN).'" class="sl_but sl_hidden">'._REPLY.'</span>';
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
             $favor = getFavorBtn($topic, $conf['name']);
-            $cont = setTemplateBasic('forum-view-wrap', ['if_flag' => ['open' => true], '{%atopic%}' => $atopic, '{%areply%}' => $areply, '{%title%}' => filterTextHighlight($rows[0][5], $word), '{%favor%}' => $favor]);
+            $cont = $tpl->getHtmlFrag('forum-view-wrap', ['open' => true, 'atopic' => $atopic, 'areply' => $areply, 'title' => filterTextHighlight($rows[0][5], $word), 'favor' => $favor]);
             foreach ($rows as $val) {
                 $fid = $val[0];
                 $fcat = $val[2];
@@ -381,14 +381,14 @@ function view(): void {
                 $edit = ($edit) ? add_menu($edit) : '';
                 $hclass = (!$val[17]) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
                 $text = ($fields) ? '<div id="repfor'.$fid.'">'.filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>'.filterTextHighlight(filterReplaceText(filterMarkdown('<br><br>'.$fields, $conf['name'], false), $conf['name']), $word) : '<div id="repfor'.$fid.'">'.filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>';
-                $cont .= setTemplateBasic('forum-view-basic', ['{%id%}' => $fid, '{%username%}' => $avname, '{%date%}' => $date, '{%rating%}' => $rating, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_reply%}' => $qreply, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass]);
+                $cont .= $tpl->getHtmlFrag('forum-view-basic', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_reply' => $qreply, 'btn_edit' => $edit, 'hclass' => $hclass]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
-            $cont .= setTemplateBasic('forum-view-wrap', ['{%atopic%}' => $atopic, '{%areply%}' => $areply, '{%pager%}' => $pnum]);
+            $cont .= $tpl->getHtmlFrag('forum-view-wrap', ['atopic' => $atopic, 'areply' => $areply, 'pager' => $pnum]);
             if ($ismod) {
                 $selmm = '<form action="index.php?name='.$conf['name'].'" method="post">'.tmoder(1).' <input type="hidden" name="op" value="move"><input type="hidden" name="cat" value="'.$rows[0][2].'"><input type="hidden" name="id[]" value="'.$topic.'"> <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-                $cont .= setTemplateBasic('forum-view-change', ['{%title%}' => _OPMOD.': ', '{%content%}' => $selmm]);
+                $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _OPMOD.': ', 'content' => $selmm]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         } else {
@@ -413,7 +413,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
         .fields_in(isset($field), $conf['name'])
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="subject" value="'.$subject.'"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$catid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr>'
         .'</table></form>';
-        return setTemplateBasic('forum-all-open', ['{%title%}' => _QUICKREPLY]).$cont;
+        return $tpl->getHtmlFrag('forum-all-open', ['title' => _QUICKREPLY]).$cont;
     }
     return '';
 }
@@ -535,7 +535,7 @@ function add(): void {
         if ($hometext) $cont .= preview($psubject, $hometext, '', $field, $conf['name']);
         $userinfo = getUserInfo();
         if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
-        $cont .= setTemplateBasic('forum-all-open', ['{%title%}' => $info]);
+        $cont .= $tpl->getHtmlFrag('forum-all-open', ['title' => $info]);
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
         $cont .= (!is_user()) ? '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>' : '';
         $cont .= ($subh) ? '<input type="hidden" name="subject" value="'.$subject.'">' : '<tr><td>'._TITLE.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._TITLE.'" required></td></tr>';
@@ -551,7 +551,7 @@ function add(): void {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
         $head = _FORUM.' '.$ctitle.' '.$ctitle;
         setHead(['title' => $head]);
-        $cont = setTemplateBasic('forum-all-open', ['{%title%}' => $ctitle]);
+        $cont = $tpl->getHtmlFrag('forum-all-open', ['title' => $ctitle]);
         $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info, 'meta' => $meta]);
     }

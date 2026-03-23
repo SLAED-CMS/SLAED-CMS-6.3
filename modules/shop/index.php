@@ -65,7 +65,7 @@ function shop(): void {
 	if (!$home || ($home && $conf['shop']['homcat'])) {
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		$cont .= setModuleNavi(['title' => $ntitle] + SHOP_NAVI);
-		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $defis, _SHOP)]);
+		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $defis, _SHOP)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
@@ -73,38 +73,38 @@ function shop(): void {
 	$offset = intval($offset);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.intro, p.body, p.price, p.acomm, p.comments, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
-		$cont .= setTemplateBasic('shop-kasse-content', ['if_flag' => ['has_outer' => true], '{%content%}' => show_kasse()]);
+		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => show_kasse()]);
 		$width = 100 / $conf['shop']['bascol'];
 		$i = 1;
-		$cont .= setTemplateBasic('grid-table', ['if_flag' => ['open' => true]]);
+		$cont .= $tpl->getHtmlFrag('grid-table', ['open' => true]);
 		while ([$id, $cid, $time, $stitle, $text, $bodytext, $pprice, $acomm, $pcom, $counter, $votes, $totalvotes, $ctitle, $cdesc, $cimg] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = $cdesc ?: $ctitle;
-			$cimg = ($cimg) ? setTemplateBasic('category-image', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%src%}' => img_find('categories/'.$cimg)]) : '';
+			$cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
 			$post = '';
-			$date = ($conf['shop']['date']) ? setTemplateBasic('date-badge', ['{%iso%}' => date('c', strtotime($time)), '{%title%}' => _CHNGSTORY, '{%text%}' => format_time($time)]) : '';
+			$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 			$rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
 			$prtitle = _PREIS;
-			$price = setTemplateBasic('shop-price-badge', ['{%title%}' => $prtitle, '{%text%}' => $prtitle.': '.$pprice.' '.$conf['shop']['valute']]);
+			$price = $tpl->getHtmlFrag('shop-price-badge', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute']]);
 			$opreis = '';
 			$discount = '';
-			$cart = setTemplateBasic('shop-cart-button', ['{%id%}' => $id, '{%title%}' => _SCART, '{%label%}' => _SCART]);
-			$kasse = setTemplateBasic('shop-kasse-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=kasse', '{%title%}' => _SCACH, '{%label%}' => _SCACH]);
+			$cart = $tpl->getHtmlFrag('shop-cart-button', ['id' => $id, 'title' => _SCART, 'label' => _SCART]);
+			$kasse = $tpl->getHtmlFrag('shop-kasse-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH]);
 			$title = setTemplateBasic('shop-title-link', ['{%href%}' => $thref, '{%title%}' => $stitle, '{%label%}' => $stitle, '{%new%}' => new_graphic($time)]);
-			$ctitle = ($ctitle) ? setTemplateBasic('category-link', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%text%}' => cutstr($ctitle, 15)]) : '';
+			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
 			$comm = ($acomm) ? setTemplateBasic('shop-comment-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm', '{%title%}' => _COMMENTS, '{%label%}' => $pcom]) : '';
 			$read = setTemplateBasic('shop-read-link', ['{%href%}' => $thref, '{%title%}' => $stitle, '{%label%}' => _READMORE]);
-			$admin = (is_moder($conf['name'])) ? setTemplateBasic('admin-menu', ['{%editor_text%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=shop_products_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', '{%delete_ask%}' => _DELETE.' &quot;'.$stitle.'&quot;?', '{%delete_text%}' => _ONDELETE]) : '';
-			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= setTemplateBasic('grid-table-row', ['if_flag' => ['open' => true]]);
-			$cont .= setTemplateBasic('grid-table-cell', ['if_flag' => ['open' => true], '{%width%}' => $width]);
-			$cont .= setTemplateBasic('basic-shop', ['{%id%}' => $id, '{%favorites%}' => '', '{%title%}' => $title, '{%comm%}' => $comm, '{%hits%}' => '', '{%reads%}' => ($conf['shop']['read']) ? setTemplateBasic('reads-badge', ['{%title%}' => _READS, '{%text%}' => $counter]) : '', '{%post%}' => '', '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%preis%}' => $price, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse, '{%voting%}' => '', '{%cimg%}' => $cimg, '{%text%}' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), '{%rating%}' => $rating, '{%goback%}' => '', '{%admin%}' => $admin, '{%read%}' => $read]);
-			$cont .= setTemplateBasic('grid-table-cell', []);
-			if ($i % $conf['shop']['bascol'] == 0) $cont .= setTemplateBasic('grid-table-row', []);
+			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'delete_ask' => _DELETE.' &quot;'.$stitle.'&quot;?', 'delete_text' => _ONDELETE]) : '';
+			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
+			$cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
+			$cont .= setTemplateBasic('basic-shop', ['{%id%}' => $id, '{%favorites%}' => '', '{%title%}' => $title, '{%comm%}' => $comm, '{%hits%}' => '', '{%reads%}' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', '{%post%}' => '', '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%preis%}' => $price, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse, '{%voting%}' => '', '{%cimg%}' => $cimg, '{%text%}' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), '{%rating%}' => $rating, '{%goback%}' => '', '{%admin%}' => $admin, '{%read%}' => $read]);
+			$cont .= $tpl->getHtmlFrag('grid-table-cell', []);
+			if ($i % $conf['shop']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
 			$i++;
 		}
-		if (($i - 1) % $conf['shop']['bascol'] != 0) $cont .= setTemplateBasic('grid-table-row', []);
-		$cont .= setTemplateBasic('grid-table', []);
+		if (($i - 1) % $conf['shop']['bascol'] != 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
+		$cont .= $tpl->getHtmlFrag('grid-table', []);
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump']);
 	} else {
 		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -155,7 +155,7 @@ function liste(): void {
 }
 
 function view(): void {
-	global $db, $conf, $afile;
+	global $db, $conf, $afile, $tpl;
 	$id = getVar('get', 'id', 'num');
 	$word = getVar('get', 'word', 'word');
 	$cwhere = catmids($conf['name'], 'p.cid');
@@ -181,27 +181,27 @@ function view(): void {
 		]);
 		$cont = setModuleNavi(['title' => _SHOP] + SHOP_NAVI);
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
-		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $defis, _SHOP)]);
+		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $defis, _SHOP)]);
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
-		$cont .= setTemplateBasic('shop-kasse-content', ['if_flag' => ['has_outer' => true], '{%content%}' => show_kasse()]);
+		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => show_kasse()]);
 		$text = ($bodytext) ? $text.'<br><br>'.$bodytext : $text;
 		$cdesc = $cdesc ?: $ctitle;
-		$cimg = ($cimg) ? setTemplateBasic('category-image', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%src%}' => img_find('categories/'.$cimg)]) : '';
+		$cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
 		$post = '';
-		$date = ($conf['shop']['date']) ? setTemplateBasic('date-badge', ['{%iso%}' => date('c', strtotime($time)), '{%title%}' => _CHNGSTORY, '{%text%}' => format_time($time)]) : '';
+		$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$favorites = getFavorBtn($id, $conf['name']);
 		$voting = ($vote) ? setTemplateBasic('shop-voting-box', ['{%id%}' => 'rep'.$conf['name'], '{%content%}' => getVoting($vote, $conf['name'])]) : '';
 		$prtitle = _PREIS;
-		$price = setTemplateBasic('shop-price-badge', ['{%title%}' => $prtitle, '{%text%}' => $prtitle.': '.$pprice.' '.$conf['shop']['valute']]);
+		$price = $tpl->getHtmlFrag('shop-price-badge', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute']]);
 		$opreis = '';
 		$discount = '';
-		$cart = setTemplateBasic('shop-cart-button', ['{%id%}' => $id, '{%title%}' => _SCART, '{%label%}' => _SCART]);
-		$kasse = setTemplateBasic('shop-kasse-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=kasse', '{%title%}' => _SCACH, '{%label%}' => _SCACH]);
-		$ctitle = ($ctitle) ? setTemplateBasic('category-link', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%text%}' => cutstr($ctitle, 15)]) : '';
-		$goback = setTemplateBasic('back-button', ['{%title%}' => _BACK, '{%label%}' => _BACK]);
-		$admin = (is_moder($conf['name'])) ? setTemplateBasic('admin-menu', ['{%editor_text%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=shop_products_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, '{%delete_ask%}' => _DELETE.' &quot;'.$title.'&quot;?', '{%delete_text%}' => _ONDELETE]) : '';
-		$cont .= setTemplateBasic('basic-shop', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => filterTextHighlight($title, $word), '{%comm%}' => '', '{%hits%}' => '', '{%reads%}' => ($conf['shop']['read']) ? setTemplateBasic('reads-badge', ['{%title%}' => _READS, '{%text%}' => $counter]) : '', '{%post%}' => '', '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%preis%}' => $price, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse, '{%voting%}' => $voting, '{%cimg%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%read%}' => '']);
+		$cart = $tpl->getHtmlFrag('shop-cart-button', ['id' => $id, 'title' => _SCART, 'label' => _SCART]);
+		$kasse = $tpl->getHtmlFrag('shop-kasse-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH]);
+		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
+		$goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
+		$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'delete_ask' => _DELETE.' &quot;'.$title.'&quot;?', 'delete_text' => _ONDELETE]) : '';
+		$cont .= setTemplateBasic('basic-shop', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => filterTextHighlight($title, $word), '{%comm%}' => '', '{%hits%}' => '', '{%reads%}' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', '{%post%}' => '', '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%preis%}' => $price, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse, '{%voting%}' => $voting, '{%cimg%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%read%}' => '']);
 		if ($conf['shop']['assoc']) {
 			$limit = intval($conf['shop']['assocnum']);
 			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
@@ -256,7 +256,7 @@ function kasse(): void {
 	setHead(['title' => _C_TITLE]);
 	$cont = setModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
-		$cont .= setTemplateBasic('shop-kasse-content', ['if_flag' => ['has_outer' => false], '{%content%}' => show_kasse()]);
+		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => show_kasse()]);
 		$cont .= $tpl->getHtmlFrag('title', ['title' => _C_TITLE]).$form;
 	} elseif ($opi && $cookies) {
 		$stop = [];
@@ -324,7 +324,7 @@ function kasse(): void {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['shop']['sende'], $conf['name'], false), $conf['name'])]);
 		} else {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-			$cont .= setTemplateBasic('shop-kasse-content', ['if_flag' => ['has_outer' => false], '{%content%}' => show_kasse()]);
+			$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => show_kasse()]);
 			$cont .= $form;
 		}
 	} else {

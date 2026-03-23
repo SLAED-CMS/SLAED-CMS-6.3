@@ -61,7 +61,7 @@ function media(): void {
     $cont = '';
     if (!$home || ($home && $conf['media']['homcat'])) {
         $cont = setModuleNavi(['title' => $ntitle, 'htitle' => _MEDIA]);
-        if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['media']['defis'], _MEDIA)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -77,7 +77,7 @@ function media(): void {
             $thref = 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id;
             $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['media']['date']) ? format_time($time) : '';
-            $links = (url_types($links)) ? setTemplateBasic('hit-badge', ['{%title%}' => _MDOWN.': '.url_types($links), '{%text%}' => url_types($links), '{%cls%}' => 'sl_down']) : '';
+            $links = (url_types($links)) ? $tpl->getHtmlFrag('hit-badge', ['title' => _MDOWN.': '.url_types($links), 'text' => url_types($links), 'cls' => 'sl_down']) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$mtitle.'&quot;?');
             $cont .= setTemplateBasic('basic', ['{%id%}' => $id, '{%title_href%}' => $thref, '{%title_attr%}' => $mtitle, '{%title_text%}' => $mtitle, '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '', '{%category_img%}' => $cimg, '{%text%}' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), '{%read_href%}' => $thref, '{%read_text%}' => _READMORE, '{%post_text%}' => $post, '{%post_label%}' => _POSTEDBY, '{%date_text%}' => $date, '{%date_iso%}' => ($date) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%reads_text%}' => ($conf['media']['read']) ? $hits : '', '{%reads_label%}' => _READS, '{%hits%}' => $links, '{%comm_href%}' => ($acomm) ? $thref.'#comm' : '', '{%comm_text%}' => ($acomm) ? $comm : '', '{%comm_label%}' => _COMMENTS, '{%rating%}' => $rating, '{%favorites%}' => '', '{%voting%}' => '', '{%editor%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=media_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', '{%delete_text%}' => _ONDELETE, '{%delete_ask%}' => $ask, '{%back_title%}' => '', '{%back_text%}' => '', 'if_flag' => ['is_moder' => is_moder($conf['name'])]]);
@@ -156,20 +156,20 @@ function view(): void {
             'author' => $seoauthor,
         ]);
         $cont = setModuleNavi(['title' => _MEDIA]);
-        if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = ($cdesc) ? $cdesc : $ctitle;
-        $ctitle = ($ctitle) ? setTemplateBasic('category-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;cat='.$cid, '{%title%}' => $cdesc, '{%text%}' => cutstr($ctitle, 15)]) : '';
-        $cimg = ($cimg) ? setTemplateBasic('category-image', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;cat='.$cid, '{%title%}' => $cdesc, '{%src%}' => img_find('categories/'.$cimg)]) : '';
+        $ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => 'index.php?name='.$conf['name'].'&amp;cat='.$cid, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
+        $cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => 'index.php?name='.$conf['name'].'&amp;cat='.$cid, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
         $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
-        $post = ($post) ? setTemplateBasic('media-post-badge', ['{%title%}' => _POSTEDBY, '{%text%}' => $post]) : '';
-        $date = ($conf['media']['date']) ? setTemplateBasic('date-badge', ['{%iso%}' => date('c', strtotime($date)), '{%title%}' => _CHNGSTORY, '{%text%}' => format_time($date)]) : '';
-        $reads = ($conf['media']['read']) ? setTemplateBasic('reads-badge', ['{%title%}' => _READS, '{%text%}' => $hits]) : '';
+        $post = ($post) ? $tpl->getHtmlFrag('media-post-badge', ['title' => _POSTEDBY, 'text' => $post]) : '';
+        $date = ($conf['media']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($date)), 'title' => _CHNGSTORY, 'text' => format_time($date)]) : '';
+        $reads = ($conf['media']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $hits]) : '';
         $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
-        $admin = (is_moder($conf['name'])) ? setTemplateBasic('admin-menu', ['{%editor_text%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=media_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=media_delete&amp;id='.$id, '{%delete_ask%}' => _DELETE.' &quot;'.$ptitle.'&quot;?', '{%delete_text%}' => _ONDELETE]) : '';
+        $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id, 'delete_ask' => _DELETE.' &quot;'.$ptitle.'&quot;?', 'delete_text' => _ONDELETE]) : '';
         $favorites = getFavorBtn($id, $conf['name']);
-        $goback = setTemplateBasic('back-button', ['{%title%}' => _BACK, '{%label%}' => _BACK]);
-        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? setTemplateBasic('media-action-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id, '{%title%}' => _BROCMEDIA, '{%label%}' => _COMPLAINT, '{%class%}' => 'sl_but_blue']) : '';
+        $goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
+        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id, 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
         
         $year = ($year) ? _MYEAR.': '.$year : '';
         $director = ($director) ? _MDIRECTOR.': '.$director : '';
@@ -193,12 +193,12 @@ function view(): void {
                         if (substr($val, 0, 4) == 'ed2k') {
                             $esize = explode('|', $val);
                             $size = ($esize[3]) ? _SIZE.': '.filterSize($esize[3]) : '';
-                            $elink = setTemplateBasic('media-link-item', ['{%href%}' => $val, '{%title%}' => _URL.' '.$e.' - '.$size, '{%class%}' => 'sl_ed2k', '{%label%}' => _URL.' '.$e.' - '.$size]);
-                            $mlinks .= (!$i) ? $elink : setTemplateBasic('media-link-break').$elink;
+                            $elink = $tpl->getHtmlFrag('media-link-item', ['href' => $val, 'title' => _URL.' '.$e.' - '.$size, 'class' => 'sl_ed2k', 'label' => _URL.' '.$e.' - '.$size]);
+                            $mlinks .= (!$i) ? $elink : $tpl->getHtmlFrag('media-link-break').$elink;
                             $e++;
                         } else {
-                            $hlink = setTemplateBasic('media-link-item', ['{%href%}' => $val, '{%title%}' => _URL.': '.url_types($val), '{%class%}' => 'sl_http', '{%label%}' => _URL.': '.url_types($val)]);
-                            $mlinks .= (!$i) ? $hlink : setTemplateBasic('media-link-break').$hlink;
+                            $hlink = $tpl->getHtmlFrag('media-link-item', ['href' => $val, 'title' => _URL.': '.url_types($val), 'class' => 'sl_http', 'label' => _URL.': '.url_types($val)]);
+                            $mlinks .= (!$i) ? $hlink : $tpl->getHtmlFrag('media-link-break').$hlink;
                         }
                         $i++;
                     }
@@ -273,70 +273,71 @@ function add(): void {
         $linksRows = '';
         $y = $date['year'] - 100;
         while($y <= ($date['year'] + 1)) {
-            $yearOptions .= setTemplateBasic('media-select-option', ['if_flag' => ['is_selected' => $y == $year], '{%value%}' => $y, '{%label%}' => $y]);
+            $yearOptions .= $tpl->getHtmlFrag('media-select-option', ['is_selected' => $y == $year, 'value' => $y, 'label' => $y]);
             $y++;
         }
         $langOptions = '';
         foreach (explode(',', (string)($conf['media']['lang'] ?? '')) as $val) {
-            $langOptions .= setTemplateBasic('media-select-option', ['if_flag' => ['is_selected' => $val === $lang && $val !== ''], '{%value%}' => $val, '{%label%}' => $val]);
+            $langOptions .= $tpl->getHtmlFrag('media-select-option', ['is_selected' => $val === $lang && $val !== '', 'value' => $val, 'label' => $val]);
         }
         $formatOptions = '';
         foreach (explode(',', (string)($conf['media']['format'] ?? '')) as $val) {
-            $formatOptions .= setTemplateBasic('media-select-option', ['if_flag' => ['is_selected' => $val === $format && $val !== ''], '{%value%}' => $val, '{%label%}' => $val]);
+            $formatOptions .= $tpl->getHtmlFrag('media-select-option', ['is_selected' => $val === $format && $val !== '', 'value' => $val, 'label' => $val]);
         }
         $qualityOptions = '';
         foreach (explode(',', (string)($conf['media']['quality'] ?? '')) as $val) {
-            $qualityOptions .= setTemplateBasic('media-select-option', ['if_flag' => ['is_selected' => $val === $quality && $val !== ''], '{%value%}' => $val, '{%label%}' => $val]);
+            $qualityOptions .= $tpl->getHtmlFrag('media-select-option', ['is_selected' => $val === $quality && $val !== '', 'value' => $val, 'label' => $val]);
         }
         $i = 0;
         while($i < $conf['media']['links']) {
             $a = $i + 1;
             $link = isset($links[$i]) ? $links[$i] : '';
-            $linksRows .= setTemplateBasic('media-link-row', ['if_flag' => ['is_hidden' => $i != 0 && $link == ''], '{%id%}' => 'med'.$i, '{%next_id%}' => 'med'.$a, '{%title%}' => _ADD, '{%label%}' => _URL.' - '.$a.':', '{%value%}' => filterText($link), '{%style%}' => $conf['style']]);
+            $linksRows .= $tpl->getHtmlFrag('media-link-row', ['is_hidden' => $i != 0 && $link == '', 'id' => 'med'.$i, 'next_id' => 'med'.$a, 'title' => _ADD, 'label' => _URL.' - '.$a.':', 'value' => filterText($link), 'style' => $conf['style']]);
             $i++;
         }
-        $cont .= setTemplateBasic('media-form-add', [
-            'if_flag' => ['has_name' => true, 'is_user' => is_user()],
-            '{%name%}' => $conf['name'],
-            '{%token%}' => htmlspecialchars(getSiteToken('media'), ENT_QUOTES, 'UTF-8'),
-            '{%style%}' => $conf['style'],
-            '{%lbl_name%}' => _YOURNAME,
-            '{%lbl_title%}' => _MTITLE,
-            '{%lbl_subtitle%}' => _MSUBTITLE,
-            '{%lbl_cat%}' => _CATEGORY,
-            '{%lbl_year%}' => _MYEAR,
-            '{%lbl_director%}' => _MDIRECTOR,
-            '{%lbl_roles%}' => _MROLES,
-            '{%lbl_description%}' => _DESCRIPTION,
-            '{%lbl_createdby%}' => _MCREATEDBY,
-            '{%lbl_duration%}' => _MDURATION,
-            '{%lbl_lang%}' => _LANGUAGE,
-            '{%lbl_note%}' => _NOTE,
-            '{%lbl_format%}' => _MFORMAT,
-            '{%lbl_quality%}' => _MQUALITY,
-            '{%lbl_size%}' => _MSIZE,
-            '{%lbl_released%}' => _MRELEASED,
-            '{%username%}' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            '{%postname%}' => $postname,
-            '{%title%}' => $title,
-            '{%subtitle%}' => $subtitle,
-            '{%catselect%}' => getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
-            '{%year_options%}' => $yearOptions,
-            '{%director%}' => $director,
-            '{%roles%}' => $roles,
-            '{%description%}' => textarea('1', 'description', $description, $conf['name'], '10', _DESCRIPTION, '1'),
-            '{%createdby%}' => $createdby,
-            '{%duration%}' => $duration,
-            '{%lang_options%}' => $langOptions,
-            '{%note%}' => textarea('2', 'note', $note, $conf['name'], '5', _NOTE, '0'),
-            '{%no_info%}' => _NO_INFO,
-            '{%format_options%}' => $formatOptions,
-            '{%quality_options%}' => $qualityOptions,
-            '{%size%}' => $size,
-            '{%released%}' => $released,
-            '{%links_rows%}' => $linksRows,
-            '{%captcha%}' => getCaptcha(1),
-            '{%submit%}' => ad_save('', '', 'send'),
+        $cont .= $tpl->getHtmlFrag('media-form-add', [
+            'has_name' => true,
+            'is_user' => is_user(),
+            'name' => $conf['name'],
+            'token' => htmlspecialchars(getSiteToken('media'), ENT_QUOTES, 'UTF-8'),
+            'style' => $conf['style'],
+            'lbl_name' => _YOURNAME,
+            'lbl_title' => _MTITLE,
+            'lbl_subtitle' => _MSUBTITLE,
+            'lbl_cat' => _CATEGORY,
+            'lbl_year' => _MYEAR,
+            'lbl_director' => _MDIRECTOR,
+            'lbl_roles' => _MROLES,
+            'lbl_description' => _DESCRIPTION,
+            'lbl_createdby' => _MCREATEDBY,
+            'lbl_duration' => _MDURATION,
+            'lbl_lang' => _LANGUAGE,
+            'lbl_note' => _NOTE,
+            'lbl_format' => _MFORMAT,
+            'lbl_quality' => _MQUALITY,
+            'lbl_size' => _MSIZE,
+            'lbl_released' => _MRELEASED,
+            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            'postname' => $postname,
+            'title' => $title,
+            'subtitle' => $subtitle,
+            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
+            'year_options' => $yearOptions,
+            'director' => $director,
+            'roles' => $roles,
+            'description' => textarea('1', 'description', $description, $conf['name'], '10', _DESCRIPTION, '1'),
+            'createdby' => $createdby,
+            'duration' => $duration,
+            'lang_options' => $langOptions,
+            'note' => textarea('2', 'note', $note, $conf['name'], '5', _NOTE, '0'),
+            'no_info' => _NO_INFO,
+            'format_options' => $formatOptions,
+            'quality_options' => $qualityOptions,
+            'size' => $size,
+            'released' => $released,
+            'links_rows' => $linksRows,
+            'captcha' => getCaptcha(1),
+            'submit' => ad_save('', '', 'send'),
         ]);
         echo $cont;
         setFoot();

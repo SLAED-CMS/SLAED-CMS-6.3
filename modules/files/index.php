@@ -61,7 +61,7 @@ function files(): void {
     $cont = '';
     if (!$home || ($home && $conf['files']['homcat'])) {
         $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _FILES]);
-        if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['files']['defis'], _FILES)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['files']['defis'], _FILES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -76,7 +76,7 @@ function files(): void {
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $post = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['files']['date']) ? format_time($time) : '';
-            $hits = ($conf['files']['hits']) ? setTemplateBasic('hit-badge', ['{%title%}' => _FILEHITS, '{%text%}' => $hits, '{%cls%}' => 'sl_down']) : '';
+            $hits = ($conf['files']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _FILEHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             $cont .= setTemplateBasic('basic', [
@@ -180,7 +180,7 @@ function liste(): void {
 }
 
 function view(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $cwhere = catmids($conf['name'], 'f.cid');
@@ -205,15 +205,15 @@ function view(): void {
             'author' => $seoauthor,
         ]);
         $cont = setModuleNavi(['title' => _FILES]);
-        if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['files']['defis'], _FILES)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['files']['defis'], _FILES)]);
         if ($conf['files']['viewcat']) $cont .= setCategories($conf['name'], $conf['files']['subcat'], $conf['files']['catdesc'], 0);
         $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
-        $ctitle = ($ctitle) ? setTemplateBasic('category-link', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%text%}' => cutstr($ctitle, 15)]) : '';
-        $cimg = ($cimg) ? setTemplateBasic('category-image', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%src%}' => img_find('categories/'.$cimg)]) : '';
+        $ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
+        $cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
         $post = ($conf['files']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['files']['date']) ? format_time($date) : '';
-        $hits = ($conf['files']['hits']) ? setTemplateBasic('hit-badge', ['{%title%}' => _FILEHITS, '{%text%}' => $hits, '{%cls%}' => 'sl_down']) : '';
+        $hits = ($conf['files']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _FILEHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
         $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavorBtn($id, $conf['name']);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
@@ -221,13 +221,13 @@ function view(): void {
         $version = _VERSION.': '.$fversion;
         if (is_user() || $conf['files']['down'] == '1') {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
-            $download = setTemplateBasic('files-download-form', ['{%name%}' => $conf['name'], '{%id%}' => $id, '{%onclick%}' => $onclick, '{%submit_label%}' => _UPLOAD]);
+            $download = $tpl->getHtmlFrag('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _UPLOAD]);
         }
-        $broken = ($conf['files']['broc'] == 1 && $status != '2') ? setTemplateBasic('files-action-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id, '{%title%}' => _BROCFILE, '{%label%}' => _COMPLAINT, '{%class%}' => 'sl_but_blue']) : '';
+        $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id, 'title' => _BROCFILE, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($awebsite) ? _SITE.': '.domain($awebsite) : '';
-        $admin = (is_moder($conf['name'])) ? setTemplateBasic('admin-menu', ['{%editor_text%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=files_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=files_delete&amp;id='.$id, '{%delete_ask%}' => $ask, '{%delete_text%}' => _ONDELETE]) : '';
-        $goback = setTemplateBasic('back-button', ['{%title%}' => _BACK, '{%label%}' => _BACK]);
+        $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=files_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=files_delete&amp;id='.$id, 'delete_ask' => $ask, 'delete_text' => _ONDELETE]) : '';
+        $goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
         $cont .= setTemplateBasic('basic-download-view', [
             'if_flag' => ['has_size' => true, 'has_version' => true],
             '{%id%}' => $id,
@@ -309,36 +309,37 @@ function add(): void {
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $extra = '';
         if ($conf['files']['upload'] == 1) {
-            $extra .= setTemplateBasic('files-add-upload-row', ['{%label%}' => _FILE_USER, '{%style%}' => $conf['style']]);
+            $extra .= $tpl->getHtmlFrag('files-add-upload-row', ['label' => _FILE_USER, 'style' => $conf['style']]);
         }
-        $extra .= setTemplateBasic('files-add-input-row', ['{%label%}' => _URL, '{%type%}' => 'url', '{%field%}' => 'url', '{%value%}' => $url, '{%maxlength%}' => '100', '{%style%}' => $conf['style'], '{%placeholder%}' => _URL]);
-        $extra .= setTemplateBasic('files-add-input-row', ['{%label%}' => _VERSION, '{%type%}' => 'text', '{%field%}' => 'fversion', '{%value%}' => $fversion, '{%maxlength%}' => '10', '{%style%}' => $conf['style'], '{%placeholder%}' => _VERSION]);
-        $extra .= setTemplateBasic('files-add-input-row', ['{%label%}' => _SIZE, '{%type%}' => 'text', '{%field%}' => 'fsize', '{%value%}' => $fsize, '{%maxlength%}' => '10', '{%style%}' => $conf['style'], '{%placeholder%}' => _SIZE]);
-        $cont .= setTemplateBasic('form-add', [
-            'if_flag'         => ['has_name' => true, 'is_user' => is_user()],
-            '{%name%}'        => $conf['name'],
-            '{%token%}'       => htmlspecialchars(getSiteToken('files'), ENT_QUOTES, 'UTF-8'),
-            '{%style%}'       => $conf['style'],
-            '{%lbl_name%}'    => _YOURNAME,
-            '{%lbl_email%}'   => _AUEMAIL,
-            '{%lbl_title%}'   => _NAME,
-            '{%lbl_cat%}'     => _CATEGORY,
-            '{%lbl_text%}'    => _TEXT,
-            '{%lbl_body%}'    => _ENDTEXT,
-            '{%lbl_site%}'    => _SITE,
-            '{%username%}'    => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            '{%postname%}'    => $postname,
-            '{%emailval%}'    => $mail,
-            '{%titleval%}'    => $title,
-            '{%catselect%}'   => getcat($conf['name'], $cid, 'cid', $conf['style'],
+        $extra .= $tpl->getHtmlFrag('files-add-input-row', ['label' => _URL, 'type' => 'url', 'field' => 'url', 'value' => $url, 'maxlength' => '100', 'style' => $conf['style'], 'placeholder' => _URL]);
+        $extra .= $tpl->getHtmlFrag('files-add-input-row', ['label' => _VERSION, 'type' => 'text', 'field' => 'fversion', 'value' => $fversion, 'maxlength' => '10', 'style' => $conf['style'], 'placeholder' => _VERSION]);
+        $extra .= $tpl->getHtmlFrag('files-add-input-row', ['label' => _SIZE, 'type' => 'text', 'field' => 'fsize', 'value' => $fsize, 'maxlength' => '10', 'style' => $conf['style'], 'placeholder' => _SIZE]);
+        $cont .= $tpl->getHtmlFrag('form-add', [
+            'has_name' => true,
+            'is_user' => is_user(),
+            'name' => $conf['name'],
+            'token' => htmlspecialchars(getSiteToken('files'), ENT_QUOTES, 'UTF-8'),
+            'style' => $conf['style'],
+            'lbl_name' => _YOURNAME,
+            'lbl_email' => _AUEMAIL,
+            'lbl_title' => _NAME,
+            'lbl_cat' => _CATEGORY,
+            'lbl_text' => _TEXT,
+            'lbl_body' => _ENDTEXT,
+            'lbl_site' => _SITE,
+            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            'postname' => $postname,
+            'emailval' => $mail,
+            'titleval' => $title,
+            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'],
                 '<option value="">'._HOMECAT.'</option>'),
-            '{%hometext%}'    => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
-            '{%bodytext%}'    => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
-            '{%siteval%}'     => $home,
-            '{%site_attr%}'   => 'home',
-            '{%extrafields%}' => $extra,
-            '{%captcha%}'     => getCaptcha(1),
-            '{%submit%}'      => ad_save('', '', 'send'),
+            'hometext' => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
+            'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
+            'siteval' => $home,
+            'site_attr' => 'home',
+            'extrafields' => $extra,
+            'captcha' => getCaptcha(1),
+            'submit' => ad_save('', '', 'send'),
         ]);
         echo $cont;
         setFoot();
@@ -423,7 +424,7 @@ function loading(): void {
         } elseif ($conf['files']['stream'] == '1') {
             stream($url, preg_replace('#(.*?)\/#i', '', $url));
         } else {
-            $info = sprintf(_NOTEDOWNLOAD, $stitle, setTemplateBasic('files-external-link', ['{%href%}' => $url, '{%title%}' => _UPLOAD.': '.$stitle, '{%label%}' => $url]));
+            $info = sprintf(_NOTEDOWNLOAD, $stitle, $tpl->getHtmlFrag('files-external-link', ['href' => $url, 'title' => _UPLOAD.': '.$stitle, 'label' => $url]));
             setHead(['title' => _FILES]);
             $cont = setModuleNavi(['title' => _FILES]);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);

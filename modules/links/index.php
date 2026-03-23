@@ -61,7 +61,7 @@ function links(): void {
     $cont = '';
     if (!$home || ($home && $conf['links']['homcat'])) {
         $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _LINKS]);
-        if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['links']['defis'], _LINKS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -167,7 +167,7 @@ function liste(): void {
 }
 
 function view(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $cwhere = catmids($conf['name'], 'f.cid');
@@ -192,12 +192,12 @@ function view(): void {
             'author' => $seoauthor,
         ]);
         $cont = setModuleNavi(['title' => _LINKS]);
-        if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
         $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
-        $ctitle = ($ctitle) ? setTemplateBasic('category-link', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%text%}' => cutstr($ctitle, 15)]) : '';
-        $cimg = ($cimg) ? setTemplateBasic('category-image', ['{%href%}' => $chref, '{%title%}' => $cdesc, '{%src%}' => img_find('categories/'.$cimg)]) : '';
+        $ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
+        $cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
         $post = ($conf['links']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['links']['date']) ? format_time($date) : '';
         $hits = ($conf['links']['hits']) ? '<span title="'._LINKHITS.'" class="sl_down">'.$hits.'</span>' : '';
@@ -213,8 +213,8 @@ function view(): void {
         $broken = ($conf['links']['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCLINK.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($authorurl) ? _SITE.': '.domain($authorurl) : '';
-        $admin = (is_moder($conf['name'])) ? setTemplateBasic('admin-menu', ['{%editor_text%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=links_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=links_delete&amp;id='.$id, '{%delete_ask%}' => $ask, '{%delete_text%}' => _ONDELETE]) : '';
-        $goback = setTemplateBasic('back-button', ['{%title%}' => _BACK, '{%label%}' => _BACK]);
+        $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=links_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=links_delete&amp;id='.$id, 'delete_ask' => $ask, 'delete_text' => _ONDELETE]) : '';
+        $goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
         $cont .= setTemplateBasic('basic-download-view', [
             '{%id%}' => $id,
             '{%favorites%}' => $favorites,
@@ -285,30 +285,31 @@ function add(): void {
         if ($description) $cont .= preview($title, $description, $bodytext, '', $conf['name']);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADDFNOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= setTemplateBasic('form-add', [
-            'if_flag'       => ['has_name' => true, 'is_user' => is_user()],
-            '{%name%}'      => $conf['name'],
-            '{%token%}'     => htmlspecialchars(getSiteToken('links'), ENT_QUOTES, 'UTF-8'),
-            '{%style%}'     => $conf['style'],
-            '{%lbl_name%}'  => _YOURNAME,
-            '{%lbl_email%}' => _AUEMAIL,
-            '{%lbl_title%}' => _SITENAME,
-            '{%lbl_cat%}'   => _CATEGORY,
-            '{%lbl_text%}'  => _TEXT,
-            '{%lbl_body%}'  => _ENDTEXT,
-            '{%lbl_site%}'  => _URL,
-            '{%username%}'  => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            '{%postname%}'  => $postname,
-            '{%emailval%}'  => $mail,
-            '{%titleval%}'  => $title,
-            '{%catselect%}' => getcat($conf['name'], $cid, 'cid', $conf['style'],
+        $cont .= $tpl->getHtmlFrag('form-add', [
+            'has_name' => true,
+            'is_user' => is_user(),
+            'name' => $conf['name'],
+            'token' => htmlspecialchars(getSiteToken('links'), ENT_QUOTES, 'UTF-8'),
+            'style' => $conf['style'],
+            'lbl_name' => _YOURNAME,
+            'lbl_email' => _AUEMAIL,
+            'lbl_title' => _SITENAME,
+            'lbl_cat' => _CATEGORY,
+            'lbl_text' => _TEXT,
+            'lbl_body' => _ENDTEXT,
+            'lbl_site' => _URL,
+            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            'postname' => $postname,
+            'emailval' => $mail,
+            'titleval' => $title,
+            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'],
                 '<option value="">'._HOMECAT.'</option>'),
-            '{%hometext%}'  => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
-            '{%bodytext%}'  => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
-            '{%siteval%}'   => $site,
-            '{%site_attr%}' => 'site',
-            '{%captcha%}'   => getCaptcha(1),
-            '{%submit%}'    => ad_save('', '', 'send'),
+            'hometext' => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
+            'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
+            'siteval' => $site,
+            'site_attr' => 'site',
+            'captcha' => getCaptcha(1),
+            'submit' => ad_save('', '', 'send'),
         ]);
         echo $cont;
         setFoot();

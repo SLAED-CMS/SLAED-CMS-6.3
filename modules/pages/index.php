@@ -61,7 +61,7 @@ function pages(): void {
 	$cont = '';
 	if (!$home || ($home && $conf['pages']['homcat'])) {
 		$cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _PAGES]);
-		if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['pages']['defis'], _PAGES)]);
+		if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['pages']['defis'], _PAGES)]);
 		if ($caton == 1) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], $ncat);
 	}
 	$num = getVar('get', 'num', 'num', '1');
@@ -130,7 +130,7 @@ function liste(): void {
 }
 
 function view(): void {
-	global $db, $afile, $conf;
+	global $db, $afile, $conf, $tpl;
 	$id = getVar('get', 'id', 'num');
 	$num = getVar('get', 'num', 'num', '1');
 	$pag = $num;
@@ -157,7 +157,7 @@ function view(): void {
 			'author' => $seoauthor,
 		]);
 		$cont = setModuleNavi(['title' => _PAGES]);
-		if ($cid) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
+		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
 		if ($conf['pages']['viewcat']) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0);
 		$text = ($bodytext) ? $hometext.'<br><br>'.$bodytext : $hometext;
 		$conpag = explode('[pagebreak]', $text);
@@ -213,25 +213,26 @@ function add(): void {
 		if ($hometext) $cont .= preview($title, $hometext, $bodytext, '', $conf['name']);
 		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= setTemplateBasic('form-add', [
-            'if_flag'       => ['has_name' => true, 'is_user' => is_user()],
-            '{%name%}'      => $conf['name'],
-            '{%token%}'     => htmlspecialchars(getSiteToken('pages'), ENT_QUOTES, 'UTF-8'),
-            '{%style%}'     => $conf['style'],
-            '{%lbl_name%}'  => _YOURNAME,
-            '{%lbl_title%}' => _TITLE,
-            '{%lbl_cat%}'   => _CATEGORY,
-            '{%lbl_text%}'  => _TEXT,
-            '{%lbl_body%}'  => _ENDTEXT,
-            '{%username%}'  => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            '{%postname%}'  => $postname,
-            '{%titleval%}'  => $title,
-            '{%catselect%}' => getcat($conf['name'], $cid, 'catid', $conf['style'],
+        $cont .= $tpl->getHtmlFrag('form-add', [
+            'has_name' => true,
+            'is_user' => is_user(),
+            'name' => $conf['name'],
+            'token' => htmlspecialchars(getSiteToken('pages'), ENT_QUOTES, 'UTF-8'),
+            'style' => $conf['style'],
+            'lbl_name' => _YOURNAME,
+            'lbl_title' => _TITLE,
+            'lbl_cat' => _CATEGORY,
+            'lbl_text' => _TEXT,
+            'lbl_body' => _ENDTEXT,
+            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            'postname' => $postname,
+            'titleval' => $title,
+            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'],
                 '<option value="">'._HOMECAT.'</option>'),
-            '{%hometext%}'  => textarea('1', 'hometext', $hometext, $conf['name'], '5', _TEXT, '1'),
-            '{%bodytext%}'  => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
-            '{%captcha%}'   => getCaptcha(1),
-            '{%submit%}'    => ad_save('', '', 'send'),
+            'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '5', _TEXT, '1'),
+            'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
+            'captcha' => getCaptcha(1),
+            'submit' => ad_save('', '', 'send'),
         ]);
 		echo $cont;
 		setFoot();

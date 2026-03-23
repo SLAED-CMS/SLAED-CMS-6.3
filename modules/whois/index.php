@@ -13,16 +13,16 @@ const WHOIS_NAVI = ['htitle' => _WHOIS_LIC, 'best_href' => '', 'pop_href' => '',
 
 
 function mwhois(): void {
-	global $db, $afile, $user, $conf, $home, $locale;
+	global $db, $afile, $user, $conf, $home, $locale, $tpl;
 	global $domainwhois, $ext, $nomatch, $server, $domainopt;
 	$domainlicens = getVar('req', 'domain_licens', 'word');
 	
-	$licensopt = setTemplateBasic('whois-license-form', [
-		'{%name%}' => $conf['name'],
-		'{%style%}' => $conf['style'],
-		'{%legend%}' => _WHOIS_LICENS,
-		'{%domain_value%}' => $domainlicens,
-		'{%submit_label%}' => _WHOIS_PR
+	$licensopt = $tpl->getHtmlFrag('whois-license-form', [
+		'name' => $conf['name'],
+		'style' => $conf['style'],
+		'legend' => _WHOIS_LICENS,
+		'domain_value' => $domainlicens,
+		'submit_label' => _WHOIS_PR
 	]);
 	
 	$domainwhois = getVar('req', 'domain_whois', 'word');
@@ -33,17 +33,17 @@ function mwhois(): void {
 	$exmas = ['ru', 'com', 'net', 'org', 'biz', 'info', 'name', 'us', 'de', 'in', 'co.in', 'firm.in', 'gen.in', 'ind.in', 'net.in', 'org.in', 'com.ru', 'net.ru', 'org.ru', 'pp.ru', 'spb.ru', 'msk.ru', 'ws', 'cn'];
 	foreach ($exmas as $val) {
 		if ($val != '') {
-			$domainoptOptions .= setTemplateBasic('whois-option', ['if_flag' => ['is_selected' => $val == $ext], '{%value%}' => $val, '{%label%}' => '.'.$val]);
+			$domainoptOptions .= $tpl->getHtmlFrag('whois-option', ['is_selected' => $val == $ext, 'value' => $val, 'label' => '.'.$val]);
 		}
 	}
 	
-	$domainopt = setTemplateBasic('whois-domain-form', [
-		'{%name%}' => $conf['name'],
-		'{%style%}' => $conf['style'],
-		'{%legend%}' => _WHOIS_DOM,
-		'{%domain_value%}' => $domainwhois,
-		'{%options%}' => $domainoptOptions,
-		'{%submit_label%}' => _WHOIS_PR
+	$domainopt = $tpl->getHtmlFrag('whois-domain-form', [
+		'name' => $conf['name'],
+		'style' => $conf['style'],
+		'legend' => _WHOIS_DOM,
+		'domain_value' => $domainwhois,
+		'options' => $domainoptOptions,
+		'submit_label' => _WHOIS_PR
 	]);
 
 	$serverdefs = [
@@ -89,14 +89,14 @@ function mwhois(): void {
 				break;
 			}
 		}
-		$cont .= setTemplateBasic('whois-result', ['if_flag' => ['open' => true], '{%legend%}' => _WHOIS_SUCH]);
+		$cont .= $tpl->getHtmlFrag('whois-result', ['open' => true, 'legend' => _WHOIS_SUCH]);
 		if ($licens) {
-			$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_green', '{%text%}' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!']);
+			$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_green', 'text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_ISL.'!']);
 		} else {
-			$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!']);
-			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? setTemplateBasic('whois-license-add-button', ['{%name%}' => $conf['name'], '{%domain%}' => $domainlicens, '{%submit_label%}' => _WHOIS_LICENS_SEND]) : '';
+			$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_red', 'text' => _DOMAIN.' «'.$domainlicens.'» '._WHOIS_NOL.'!']);
+			$cont .= ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) ? $tpl->getHtmlFrag('whois-license-add-button', ['name' => $conf['name'], 'domain' => $domainlicens, 'submit_label' => _WHOIS_LICENS_SEND]) : '';
 		}
-		$cont .= setTemplateBasic('whois-result', ['if_flag' => ['open' => false]]);
+		$cont .= $tpl->getHtmlFrag('whois-result', ['open' => false]);
 	} elseif ($option == 'licens') {
 		$cont .= printresults(namecheck($domainlicens), 1);
 	}
@@ -140,23 +140,23 @@ function add(): void {
 		$host = getVar('post', 'host', 'url', 'http://');
 		$dc = getVar('post', 'dc', 'url', 'http://');
 		
-		$cont .= setTemplateBasic('whois-add-form', [
-			'if_flag' => ['is_user' => is_user()],
-			'{%name%}' => $conf['name'],
-			'{%style%}' => $conf['style'],
-			'{%token%}' => htmlspecialchars(getSiteToken('whois'), ENT_QUOTES, 'UTF-8'),
-			'{%lbl_yourname%}' => _YOURNAME,
-			'{%username_value%}' => $userNameValue,
-			'{%domain%}' => $domain,
-			'{%host%}' => $host,
-			'{%dc%}' => $dc,
-			'{%hometext%}' => $hometext,
-			'{%captcha%}' => getCaptcha(1),
-			'{%lbl_site%}' => _SITE,
-			'{%lbl_host%}' => _HOST,
-			'{%lbl_dc%}' => _DC,
-			'{%lbl_comment%}' => _COMMENT,
-			'{%submit_label%}' => _SEND
+		$cont .= $tpl->getHtmlFrag('whois-add-form', [
+			'is_user' => is_user(),
+			'name' => $conf['name'],
+			'style' => $conf['style'],
+			'token' => htmlspecialchars(getSiteToken('whois'), ENT_QUOTES, 'UTF-8'),
+			'lbl_yourname' => _YOURNAME,
+			'username_value' => $userNameValue,
+			'domain' => $domain,
+			'host' => $host,
+			'dc' => $dc,
+			'hometext' => $hometext,
+			'captcha' => getCaptcha(1),
+			'lbl_site' => _SITE,
+			'lbl_host' => _HOST,
+			'lbl_dc' => _DC,
+			'lbl_comment' => _COMMENT,
+			'submit_label' => _SEND
 		]);
 		echo $cont;
 		setFoot();
@@ -260,32 +260,32 @@ function whois(string $domainwhois, string $ext): string {
 }
 
 function printresults(int|string|null $layout, int $id): string {
-	global $domainwhois, $ext, $server, $domainopt, $conf;
+	global $domainwhois, $ext, $server, $domainopt, $conf, $tpl;
 	$cont = '';
 	if (!$id) $cont .= $domainopt;
-	$cont .= setTemplateBasic('whois-result', ['if_flag' => ['open' => true], '{%legend%}' => _WHOIS_SUCH]);
+	$cont .= $tpl->getHtmlFrag('whois-result', ['open' => true, 'legend' => _WHOIS_SUCH]);
 	if ($layout=='0') {
-		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_green', '{%text%}' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!']);
+		$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_green', 'text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_FREI.'!']);
 	} elseif($layout=='1') {
-		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!'])
-		.setTemplateBasic('whois-info-button', ['{%name%}' => $conf['name'], '{%domain%}' => $domainwhois, '{%ext%}' => $ext, '{%submit_label%}' => _WHOIS_INF_US]);
+		$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_red', 'text' => _DOMAIN.' «'.$domainwhois.'.'.$ext.'» '._WHOIS_B.'!'])
+		.$tpl->getHtmlFrag('whois-info-button', ['name' => $conf['name'], 'domain' => $domainwhois, 'ext' => $ext, 'submit_label' => _WHOIS_INF_US]);
 	} elseif($layout=='2') {
-		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => 'Could not contact the whois server '.$server]);
+		$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_red', 'text' => 'Could not contact the whois server '.$server]);
 	} else {
-		$cont .= setTemplateBasic('whois-status', ['{%class%}' => 'sl_red', '{%text%}' => $layout]);
+		$cont .= $tpl->getHtmlFrag('whois-status', ['class' => 'sl_red', 'text' => $layout]);
 	}
-	$cont .= setTemplateBasic('whois-result', ['if_flag' => ['open' => false]]);
+	$cont .= $tpl->getHtmlFrag('whois-result', ['open' => false]);
 	return $cont;
 }
 
 function printwhois(string|array $output): string {
 	global $domainwhois, $ext, $domainopt;
-	$cont = setTemplateBasic('whois-output-open', ['{%domain_form%}' => $domainopt, '{%legend%}' => _WHOIS_INF_US]);
+	$cont = $tpl->getHtmlFrag('whois-output-open', ['domain_form' => $domainopt, 'legend' => _WHOIS_INF_US]);
 	$output= explode("\n",$output);
 	foreach ($output as $value){
-		$cont .= setTemplateBasic('whois-output-line', ['{%value%}' => $value]);
+		$cont .= $tpl->getHtmlFrag('whois-output-line', ['value' => $value]);
 	}
-	$cont .= setTemplateBasic('whois-output-close');
+	$cont .= $tpl->getHtmlFrag('whois-output-close');
 	return $cont;
 }
 

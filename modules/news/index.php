@@ -74,9 +74,7 @@ function news(): void {
     $cont = '';
     if (!$home || ($home && $conf['news']['homcat'])) {
         $cont .= setModuleNavi(['title' => $ntitle, 'htitle' => _NEWS]);
-        if ($ncat) $cont .= setTemplateBasic('cat-navi', [
-            '{%crumbs%}' => catlink($conf['name'], $ncat, $conf['news']['defis'], _NEWS),
-        ]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['news']['defis'], _NEWS)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -93,7 +91,7 @@ function news(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $width = 100 / $conf['news']['bascol'];
         $i = 1;
-        $cont .= setTemplateBasic('grid-table', ['if_flag' => ['open' => true]]);
+        $cont .= $tpl->getHtmlFrag('grid-table', ['open' => true]);
         while ([
             $id, $cid, $uname, $stitle, $time, $hometext, ,
             $comm, $counter, $acomm, $score, $ratings, $ctitle, $cdesc, $cimg, $nick
@@ -113,8 +111,8 @@ function news(): void {
             $iso = ($conf['news']['date']) ? date('c', strtotime($time)) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $ratings, $score, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
-            if (($i - 1) % $conf['news']['bascol'] == 0) $cont .= setTemplateBasic('grid-table-row', ['if_flag' => ['open' => true]]);
-            $cont .= setTemplateBasic('grid-table-cell', ['if_flag' => ['open' => true], '{%width%}' => $width]);
+            if (($i - 1) % $conf['news']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
+            $cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
             $cont .= setTemplateBasic('basic', [
                 '{%id%}' => $id,
                 '{%title_href%}' => $thref,
@@ -152,12 +150,12 @@ function news(): void {
                 '{%back_text%}' => '',
                 'if_flag' => ['is_moder' => is_moder($conf['name'])],
             ]);
-            $cont .= setTemplateBasic('grid-table-cell', []);
-            if ($i % $conf['news']['bascol'] == 0) $cont .= setTemplateBasic('grid-table-row', []);
+            $cont .= $tpl->getHtmlFrag('grid-table-cell', []);
+            if ($i % $conf['news']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
             $i++;
         }
-        if (($i - 1) % $conf['news']['bascol'] != 0) $cont .= setTemplateBasic('grid-table-row', []);
-        $cont .= setTemplateBasic('grid-table', []);
+        if (($i - 1) % $conf['news']['bascol'] != 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
+        $cont .= $tpl->getHtmlFrag('grid-table', []);
         $cont .= setArticleNumbers(
             'pagenum', $conf['name'], $unum, $field, 'id', '_news', 'cid', $onum, $conf['news']['nump']
         );
@@ -240,7 +238,7 @@ function liste(): void {
 }
 
 function view(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
     $num = getVar('get', 'num', 'num', '1');
     $pag = $num;
@@ -279,9 +277,7 @@ function view(): void {
             'author' => $seoaut,
         ]);
         $cont = setModuleNavi(['title' => _NEWS]);
-        if ($cid) $cont .= setTemplateBasic('cat-navi', [
-            '{%crumbs%}' => catlink($conf['name'], $cid, $conf['news']['defis'], _NEWS),
-        ]);
+        if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['news']['defis'], _NEWS)]);
         if ($conf['news']['viewcat'])
             $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
         $fields = fields_out($field, $conf['name']);
@@ -417,25 +413,26 @@ function add(): void {
         if ($hometext) $cont .= preview($title, $hometext, $bodytext, $field, $conf['name']);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
-        $cont .= setTemplateBasic('form-add', [
-            'if_flag' => ['has_name' => true, 'is_user' => is_user()],
-            '{%name%}' => $conf['name'],
-            '{%token%}' => htmlspecialchars(getSiteToken('news'), ENT_QUOTES, 'UTF-8'),
-            '{%style%}' => $conf['style'],
-            '{%lbl_name%}' => _YOURNAME,
-            '{%lbl_title%}' => _TITLE,
-            '{%lbl_cat%}' => _CATEGORY,
-            '{%lbl_text%}' => _TEXT,
-            '{%lbl_body%}' => _ENDTEXT,
-            '{%username%}' => filterText(substr($user[1], 0, 25)),
-            '{%postname%}' => $postname,
-            '{%titleval%}' => $title,
-            '{%catselect%}' => getcat($conf['name'], $cid, 'catid', $conf['style'],'<option value="">'._HOMECAT.'</option>'),
-            '{%hometext%}' => textarea('1', 'hometext', $hometext, $conf['name'], '5', _TEXT, '1'),
-            '{%bodytext%}' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
-            '{%fields%}' => fields_in($field, $conf['name']),
-            '{%captcha%}' => getCaptcha(1),
-            '{%submit%}' => ad_save('', '', 'send'),
+        $cont .= $tpl->getHtmlFrag('form-add', [
+            'has_name' => true,
+            'is_user' => is_user(),
+            'name' => $conf['name'],
+            'token' => htmlspecialchars(getSiteToken('news'), ENT_QUOTES, 'UTF-8'),
+            'style' => $conf['style'],
+            'lbl_name' => _YOURNAME,
+            'lbl_title' => _TITLE,
+            'lbl_cat' => _CATEGORY,
+            'lbl_text' => _TEXT,
+            'lbl_body' => _ENDTEXT,
+            'username' => filterText(substr($user[1], 0, 25)),
+            'postname' => $postname,
+            'titleval' => $title,
+            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'],'<option value="">'._HOMECAT.'</option>'),
+            'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '5', _TEXT, '1'),
+            'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
+            'fields' => fields_in($field, $conf['name']),
+            'captcha' => getCaptcha(1),
+            'submit' => ad_save('', '', 'send'),
         ]);
         echo $cont;
         setFoot();

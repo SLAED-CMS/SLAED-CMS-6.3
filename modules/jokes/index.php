@@ -63,7 +63,7 @@ function jokes(): void {
     $cont = '';
     if (!$home || ($home && $conf['jokes']['homcat'])) {
         $cont .= setModuleNavi(['title' => $ntitle] + JOKES_NAVI);
-        if ($ncat) $cont .= setTemplateBasic('cat-navi', ['{%crumbs%}' => catlink($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
+        if ($ncat) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $ncat, $conf['jokes']['defis'], _JOKES)]);
         if ($caton == 1) $cont .= setCategories($conf['name'], $conf['jokes']['subcat'], $conf['jokes']['catdesc'], $ncat);
     }
     $num = getVar('get', 'num', 'num', '1');
@@ -137,22 +137,23 @@ function add(): void {
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         if ($joke) $cont .= preview($title, $joke, '', '', 'all');
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADD_JNOTE]);
-        $cont .= setTemplateBasic('form-add', [
-            'if_flag' => ['has_name' => true, 'is_user' => is_user()],
-            '{%name%}' => $conf['name'],
-            '{%token%}' => htmlspecialchars(getSiteToken('jokes'), ENT_QUOTES, 'UTF-8'),
-            '{%style%}' => $conf['style'],
-            '{%lbl_name%}' => _YOURNAME,
-            '{%lbl_title%}' => _JTITLE,
-            '{%lbl_cat%}' => _CATEGORY,
-            '{%lbl_text%}' => _JOKE,
-            '{%username%}' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
-            '{%postname%}' => $postname ?: _ANONYM,
-            '{%titleval%}' => $title,
-            '{%catselect%}' => getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
-            '{%hometext%}' => textarea('1', 'joke', $joke, $conf['name'], '10', _JOKE, '1'),
-            '{%captcha%}' => getCaptcha(1),
-            '{%submit%}' => ad_save('', '', 'send'),
+        $cont .= $tpl->getHtmlFrag('form-add', [
+            'has_name' => true,
+            'is_user' => is_user(),
+            'name' => $conf['name'],
+            'token' => htmlspecialchars(getSiteToken('jokes'), ENT_QUOTES, 'UTF-8'),
+            'style' => $conf['style'],
+            'lbl_name' => _YOURNAME,
+            'lbl_title' => _JTITLE,
+            'lbl_cat' => _CATEGORY,
+            'lbl_text' => _JOKE,
+            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
+            'postname' => $postname ?: _ANONYM,
+            'titleval' => $title,
+            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
+            'hometext' => textarea('1', 'joke', $joke, $conf['name'], '10', _JOKE, '1'),
+            'captcha' => getCaptcha(1),
+            'submit' => ad_save('', '', 'send'),
         ]);
         echo $cont;
         setFoot();

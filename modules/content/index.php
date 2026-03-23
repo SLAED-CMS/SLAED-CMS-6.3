@@ -21,19 +21,19 @@ function content(): void {
     $offset = ($num - 1) * $limit;
     $result = $db->getSqlQuery('SELECT id, title, body, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('content-list-open', ['{%id%}' => _ID, '{%title%}' => _TITLE, '{%functions%}' => _FUNCTIONS]);
+        $cont .= $tpl->getHtmlFrag('content-list-open', ['id' => _ID, 'title' => _TITLE, 'functions' => _FUNCTIONS]);
         while ([$id, $title, $body, $time, $counter]= $db->getSqlRow($result)) {
             $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=content_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>||' : '';
             $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
             $actions = add_menu($moder.'<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._SHOW.'">'._SHOW.'</a>');
-            $cont .= setTemplateBasic('content-list-basic', [
-                '{%id%}' => $id,
-                '{%tip%}' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._READS.': '.$counter),
-                '{%href%}' => $href,
-                '{%title_attr%}' => $title,
-                '{%title_text%}' => $title,
-                '{%title_new%}' => new_graphic($time),
-                '{%actions%}' => $actions,
+            $cont .= $tpl->getHtmlFrag('content-list-basic', [
+                'id' => $id,
+                'tip' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._READS.': '.$counter),
+                'href' => $href,
+                'title_attr' => $title,
+                'title_text' => $title,
+                'title_new' => new_graphic($time),
+                'actions' => $actions,
             ]);
         }
         $cont .= setTemplateBasic('table-close');
