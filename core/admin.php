@@ -49,13 +49,23 @@ function getStatistic(): void {
         }
     }
     $f = ($f !== false) ? $f : [];
+    $f = array_values(array_filter(array_map(static function ($row) {
+        $row = trim((string)$row);
+        if ($row === '') {
+            return null;
+        }
+
+        $parts = explode('|', $row);
+        return (count($parts) >= 8) ? implode('|', array_slice($parts, 0, 8)) : null;
+    }, $f)));
     $to = count($f);
     if ($day > 15) {
         $from = 0;
-        $to = 15;
+        $to = min(15, $to);
     } else {
         $from = (!$file && date('d') <= 15) ? 0 : 15;
         if ($from < 0) $from = 0;
+        if ($from > $to) $from = $to;
     }
     $regusers = $unique = $today = $engines = $sites = $homepage = $auditory = $max1 = $max2 = 0;
     for ($i = $from; $i < $to; $i++) {
@@ -75,13 +85,13 @@ function getStatistic(): void {
     for ($z = $from; $z < $to; $z++) {
         $day = explode('|', $f[$z]);
         if ($day[2] != '') {
-            $w = round((230 / $max2) * $day[2]);
+            $w = ($max2 > 0) ? round((230 / $max2) * $day[2]) : 0;
             if ($w < 4) $w = 4;
             $off = 134;
             imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi'], 249, $yellow);
             imagerectangle($image, $off+$conf['statistic']['bet']*$i, 250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi'], 249, $black);
             imagerectangle($image, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+1, 250-$w+3, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+2, 249, $gray);
-            $w = round((230 / $max1) * $day[1]);
+            $w = ($max1 > 0) ? round((230 / $max1) * $day[1]) : 0;
             if ($w < 5) $w = 1;
             $off = 120;
 
@@ -89,7 +99,7 @@ function getStatistic(): void {
             imagerectangle($image, $off+$conf['statistic']['bet']*$i,250-$w, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $black);
             imagerectangle($image, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+4, 250-$w+4, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+5, 249, $black);
             $zzz = $day[1] - ($day[4] + $day[5]);
-            $w = round((230 / $max1) * $zzz);
+            $w = ($max1 > 0) ? round((230 / $max1) * $zzz) : 0;
             if ($w < 4) $w = $w + 31;
 
             imagefilledrectangle($image, $off+$conf['statistic']['bet']*$i+1, 250-$w+1, $off+$conf['statistic']['bet']*$i+$conf['statistic']['shi']+3, 249, $wgreen);
@@ -149,8 +159,8 @@ function getStatistic(): void {
     imagestring($image, 1, 5, 90, 'AUDIENCE: '.$auditory, $green);
     imagestring($image, 1, 5, 100, 'REG. USERS: '.$regusers, $purple);
 
-    imagestring($image, 1, 5, 120, 'PAGES PER VIS.: '.round($today/$unique, 2), $wblue);
-    imagestring($image, 1, 5, 130, 'AVR. AUDIENCE: '.round($auditory/$i), $wblue);
+    imagestring($image, 1, 5, 120, 'PAGES PER VIS.: '.(($unique > 0) ? round($today / $unique, 2) : 0), $wblue);
+    imagestring($image, 1, 5, 130, 'AVR. AUDIENCE: '.(($i > 0) ? round($auditory / $i) : 0), $wblue);
 
     if ($report) {
         imagepng($image, COUNTER_DIR.'/statistic/'.date('m-Y').'.png');
@@ -192,7 +202,7 @@ function setUnauthorized() {
 
 # Build admin tabs navigation — accepts named array, reads module title/icon from config automatically
 function setAdminNavi(array $p): string {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     $ttl = _ADMINMENU;
     $ico = 'components.png';
     $name = getVar('req', 'name', 'var');
@@ -238,7 +248,7 @@ function setAdminNavi(array $p): string {
         $k++;
     }
     $cnt .= ($scnt !== '') ? '</ul>'.$scnt : '</ul>';
-    return setTemplateBasic('title', ['{%title%}' => $ttl, '{%icon%}' => $ico, '{%subtitle%}' => $sub, '{%content%}' => $cnt]);
+    return $tpl->getHtmlFrag('title', ['title' => $ttl, 'icon' => $ico, 'subtitle' => $sub, 'content' => $cnt]);
 }
 
 function admininfo() {
@@ -824,7 +834,7 @@ function edit_list(string $modul, string $name, string $extraClass = ''): string
 
 # Renders the info/help page for the current admin module
 function getAdminInfo(): string {
-    global $locale, $conf;
+    global $locale, $conf, $tpl;
     $id   = getVar('post', 'id', 'num', 0);
     $cont = '';
     $fdoc = static function(string $base): string {
@@ -870,7 +880,7 @@ function getAdminInfo(): string {
             $cont .= checkPerms(BASE_DIR.'/'.$dir);
         }
     }
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open');
     $cont .= filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
     if ($conf['adminfo']) {
         $cont .= '<hr><form name="post" id="formadm_info" method="post"><table class="sl_table_edit">'
@@ -878,6 +888,6 @@ function getAdminInfo(): string {
         ."<tr><td class=\"sl_center\"><input type=\"submit\" OnClick=\"AjaxLoad('POST', '1', 'adm_info', 'go=5&amp;op=adm_info&amp;id=1&amp;type=".$type.'&amp;name='.$name."', { 'text':'"._CERROR1."' }); return false;\" value=\""._SAVECHANGES.'" title="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>'
         .'</table></form>';
     }
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close');
     return $cont;
 }

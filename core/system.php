@@ -793,7 +793,7 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                 '/\[code\](.*?)\[\/code\]/si',
                 function(array $m): string {
                     $txt  = str_replace('?', '&#063;', (string)$m[1]);
-                    $html = setTemplateBasic('code', ['{%title%}' => _CODE, '{%content%}' => $this->filterEsc($txt)]);
+                    $html = $GLOBALS['tpl']->getHtmlFrag('code', ['title' => _CODE, 'content' => $this->filterEsc($txt)]);
                     return $this->addStash((string)$html);
                 },
                 $src
@@ -823,7 +823,7 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                     '/\[quote\](.*?)\[\/quote\]/si',
                     function(array $m) use ($safe): string {
                         $txt  = $this->filterNest($m[1], $safe);
-                        $html = setTemplateBasic('quote', ['{%title%}' => _QUOTE, '{%text%}' => $txt]);
+                        $html = $GLOBALS['tpl']->getHtmlFrag('quote', ['title' => _QUOTE, 'text' => $txt]);
                         return $this->addStash((string)$html);
                     },
                     $src
@@ -837,7 +837,7 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                     function(array $m) use ($safe): string {
                         $show = (defined('ADMIN_FILE') || is_user());
                         $txt  = $show ? $this->filterNest($m[1], $safe) : (string)_HIDETEXT;
-                        $html = setTemplateBasic('hide', ['{%title%}' => _HIDE, '{%text%}' => $txt]);
+                        $html = $GLOBALS['tpl']->getHtmlFrag('hide', ['title' => _HIDE, 'text' => $txt]);
                         return $this->addStash((string)$html);
                     },
                     $src
@@ -2367,7 +2367,7 @@ function checkCaptcha(int $id): bool {
 
 # Generating categories for modules
 function setCategories(string $mod, int $sub, bool $desc, string $id = ''): string {
- global $db, $user, $conf, $locale;
+ global $db, $user, $conf, $locale, $tpl;
     if (filterVar($mod)) {
         $id = (intval($id)) ? $id : 0;
         $params = ['mod' => $mod];
@@ -2463,7 +2463,7 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                 list($pnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$cin.") AND time <= NOW() AND status != '0'", $pm));
                 $in = _INS;
             }
-            return setTemplateBasic('categories', ['{%categories%}' => _CATEGORIES, '{%content%}' => $cont, '{%total%}' => _ALLIN, '{%pages%}' => $pnum, '{%in%}' => $in, '{%cat%}' => $cnum, '{%category%}' => _ALLINC, '{%mod%}' => $mod]);
+            return $tpl->getHtmlFrag('categories', ['categories' => _CATEGORIES, 'content' => $cont, 'total' => _ALLIN, 'pages' => $pnum, 'in' => $in, 'cat' => $cnum, 'category' => _ALLINC, 'mod' => $mod]);
         }
     }
     return '';
@@ -2527,7 +2527,9 @@ function setPageNumbers(string $tpl, string $mod, int $count, int $pages, int $l
         } else {
             $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
         }
-        return setTemplateBasic($tpl, ['{%overall%}' => _OVERALL, '{%count%}' => $count, '{%by%}' => _BY, '{%pages%}' => $pages, '{%page_s%}' => _PAGE_S, '{%page%}' => $limit, '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
+        $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $limit, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
+        $out = $GLOBALS['tpl']->getHtmlFrag($tpl, $data);
+        return ($out !== '') ? $out : setTemplateBasic($tpl, ['{%overall%}' => _OVERALL, '{%count%}' => $count, '{%by%}' => _BY, '{%pages%}' => $pages, '{%page_s%}' => _PAGE_S, '{%page%}' => $limit, '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
     }
     return '';
 }
@@ -2570,7 +2572,7 @@ function setCss(): void {
 
 # Build module navigation — defaults from $conf[$conf['name']], any $p key overrides
 function setModuleNavi(array $p): string {
-    global $conf;
+    global $conf, $tpl;
     $mconf = $conf[$conf['name']] ?? [];
     $cat = getVar('get', 'cat', 'num');
     $cpar = $cat ? ['cat' => $cat] : [];
@@ -2582,22 +2584,22 @@ function setModuleNavi(array $p): string {
     $showrate = $always || !empty($mconf['rate']);
     $canadd = (is_user() && ($mconf['add'] ?? 0) == 1)
            || (!is_user() && $addquest && ($mconf['addquest'] ?? 0) == 1);
-    return setTemplateBasic('navi', [
-        '{%title%}' => $title,
-        '{%htitle%}' => $htitle,
-        '{%lbl_home%}' => _HOME,
-        '{%home_href%}' => $p['home_href'] ?? getSeoUrl(['name' => $conf['name']]),
-        '{%best_href%}' => $p['best_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => $bop]) : ''),
-        '{%lbl_best%}' => $p['btitle'] ?? _BEST,
-        '{%pop_href%}' => $p['pop_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']) : ''),
-        '{%lbl_pop%}' => $p['ptitle'] ?? _POP,
-        '{%liste_href%}' => $p['liste_href'] ?? getSeoUrl(['name' => $conf['name'], 'op' => 'liste']),
-        '{%lbl_liste%}' => _LIST,
-        '{%add_href%}' => $p['add_href'] ?? ($canadd ? getSeoUrl(['name' => $conf['name'], 'op' => 'add']) : ''),
-        '{%lbl_add%}' => _ADD,
-        '{%catshow%}' => $p['catshow'] ?? $cat,
-        '{%lbl_catvorh%}' => _CATVORH,
-        '{%lbl_cats%}' => _CATEGORIES,
+    return $tpl->getHtmlFrag('navi', [
+        'title' => $title,
+        'htitle' => $htitle,
+        'lbl_home' => _HOME,
+        'home_href' => $p['home_href'] ?? getSeoUrl(['name' => $conf['name']]),
+        'best_href' => $p['best_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => $bop]) : ''),
+        'lbl_best' => $p['btitle'] ?? _BEST,
+        'pop_href' => $p['pop_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']) : ''),
+        'lbl_pop' => $p['ptitle'] ?? _POP,
+        'liste_href' => $p['liste_href'] ?? getSeoUrl(['name' => $conf['name'], 'op' => 'liste']),
+        'lbl_liste' => _LIST,
+        'add_href' => $p['add_href'] ?? ($canadd ? getSeoUrl(['name' => $conf['name'], 'op' => 'add']) : ''),
+        'lbl_add' => _ADD,
+        'catshow' => $p['catshow'] ?? $cat,
+        'lbl_catvorh' => _CATVORH,
+        'lbl_cats' => _CATEGORIES,
     ]);
 }
 
@@ -3059,7 +3061,7 @@ function getCompressHtml(string $html): string {
 
 # Voting view
 function getVoting(int $id = 0, string $votid = ''): string {
- global $db, $afile, $user, $locale, $conf;
+ global $db, $afile, $user, $locale, $conf, $tpl;
     if ($conf['multilingual'] == 1) {
         $querylang = "(lang = :locale OR lang = '') AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
         $qlang_params = ['locale' => $locale];
@@ -3085,7 +3087,7 @@ function getVoting(int $id = 0, string $votid = ''): string {
             $answer = explode('|', $answer);
             $vote = array_sum($answer);
             $form = (!$rate) ? '<form name="voting" id="form'.$votid.'" method="post">' : '';
-            $cont = setTemplateBasic('voting-open', ['{%form%}' => $form, '{%title%}' => $title]);
+            $cont = $tpl->getHtmlFrag('voting-open', ['form' => $form, 'title' => $title]);
             $pn = 0;
             for ($i = 0; $i < count($body); $i++) {
                 $pn++;
@@ -3099,9 +3101,9 @@ function getVoting(int $id = 0, string $votid = ''): string {
                 }
                 if (!$rate) {
                     $itype = ($multi) ? 'checkbox' : 'radio';
-                    $cont .= setTemplateBasic('voting-post', ['{%id%}' => $id, '{%n%}' => $n, '{%itype%}' => $itype, '{%name%}' => 'body[]', '{%text%}' => $body[$i]]);
+                    $cont .= $tpl->getHtmlFrag('voting-post', ['id' => $id, 'n' => $n, 'itype' => $itype, 'name' => 'body[]', 'text' => $body[$i]]);
                 } else {
-                    $cont .= setTemplateBasic('voting-view', ['{%text%}' => $body[$i], '{%text_safe%}' => filterText($body[$i]), '{%n%}' => $n, '{%pn%}' => $pn, '{%percent%}' => $procent, '{%votes_label%}' => _VOTES, '{%votes%}' => $answer[$i]]);
+                    $cont .= $tpl->getHtmlFrag('voting-view', ['text' => $body[$i], 'text_safe' => filterText($body[$i]), 'n' => $n, 'pn' => $pn, 'percent' => $procent, 'votes_label' => _VOTES, 'votes' => $answer[$i]]);
                 }
             }
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
@@ -3111,7 +3113,7 @@ function getVoting(int $id = 0, string $votid = ''): string {
             $votes = (!$modul && $votid != 'voting') ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'" title="'._VOTES.'" class="sl_votes">'._VOTES.': '.$vote.'</a>' : '<span class="sl_votes">'._VOTES.': '.$vote.'</span>';
             $comm = (!$modul && $acomm) ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id.'" title="'._COMMENTS.'" class="sl_coms">'._COMMENTS.': '.$comments.'</a>' : '';
             $formend = (!$rate) ? '</form>' : '';
-            $cont .= setTemplateBasic('voting-close', ['{%admin%}' => $admin, '{%post%}' => $post, '{%polls%}' => $polls, '{%votes%}' => $votes, '{%comm%}' => $comm, '{%formend%}' => $formend]);
+            $cont .= $tpl->getHtmlFrag('voting-close', ['admin' => $admin, 'post' => $post, 'polls' => $polls, 'votes' => $votes, 'comm' => $comm, 'formend' => $formend]);
         } else {
             $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _VCLINFO]);
         }
@@ -3752,7 +3754,7 @@ function user_info(string $name): string {
 
 # Show kasse
 function show_kasse(string $info = ''): string {
- global $db, $conf;
+ global $db, $conf, $tpl;
     $shop = (isset($_COOKIE['shop'])) ? base64_decode($_COOKIE['shop']) : '';
     $info = (empty($info)) ? $shop : base64_decode($info);
     $cookies = (preg_match('#[^0-9,]#', $info)) ? '' : $info;
@@ -3782,11 +3784,11 @@ function show_kasse(string $info = ''): string {
             $mtitle = ($i > 1) ? _PMINUS : _DELETE;
             $plus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=add_kasse&amp;id=".$id."', ''); return false;\" title=\""._PPLUS.'" class="sl_shop_plus"></a>';
             $minus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=del_kasse&amp;id=".$id."', ''); return false;\" title=\"".$mtitle.'" class="sl_shop_minus"></a>';
-            $cont .= setTemplateBasic('kasse-basic', ['{%id%}' => $id, '{%title%}' => $ptitle, '{%qty%}' => $i, '{%price%}' => $price.' '.$conf['shop']['valute'], '{%plus%}' => $plus, '{%minus%}' => $minus]);
+            $cont .= $tpl->getHtmlFrag('kasse-basic', ['id' => $id, 'title' => $ptitle, 'qty' => $i, 'price' => $price.' '.$conf['shop']['valute'], 'plus' => $plus, 'minus' => $minus]);
         }
         $cart = '<a href="index.php?name=shop&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
         $total = '<span title="'._PARTNERGES.'" class="sl_shop_total">'._PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'].'</span>';
-        return setTemplateBasic('kasse-wrap', ['if_flag' => ['open' => true], '{%title%}' => _PBASKET, '{%col_id%}' => _ID, '{%col_product%}' => _PRODUCT, '{%col_qty%}' => cutstr(_QUANTITY, 3, 1), '{%col_price%}' => _PREIS, '{%col_fn%}' => _FUNCTIONS]).$cont.setTemplateBasic('kasse-wrap', ['{%cart%}' => $cart, '{%total%}' => $total]);
+        return $tpl->getHtmlFrag('kasse-wrap', ['open' => true, 'title' => _PBASKET, 'col_id' => _ID, 'col_product' => _PRODUCT, 'col_qty' => cutstr(_QUANTITY, 3, 1), 'col_price' => _PREIS, 'col_fn' => _FUNCTIONS]).$cont.$tpl->getHtmlFrag('kasse-wrap', ['cart' => $cart, 'total' => $total]);
     }
     return '';
 }
@@ -4854,7 +4856,7 @@ function is_active(string $mod, string $view = ''): int {
 
 # Format PHP code
 function encode_php(array $text): string {
- global $conf;
+ global $conf, $tpl;
     static $sname;
 
     $replace = isset($text[2]) ? trim($text[2]) : trim($text[1]);
@@ -4907,7 +4909,7 @@ function encode_php(array $text): string {
         }
         $format = $scripts.'<pre class="brush: '.$ucname.';">'.$replace.'</pre>';
     }
-    return setTemplateBasic('code', ['{%title%}' => $cname.' - '._CODE, '{%content%}' => $format]);
+    return $tpl->getHtmlFrag('code', ['title' => $cname.' - '._CODE, 'content' => $format]);
 }
 
 # Mail check
@@ -5536,7 +5538,9 @@ function num_ajax(string $tpl, int $count, int $pages, int $page, int $mnum = 8,
         } else {
             $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
         }
-        return setTemplateBasic($tpl, ['{%overall%}' => _OVERALL, '{%count%}' => $count, '{%by%}' => _BY, '{%pages%}' => $pages, '{%page_s%}' => _PAGE_S, '{%page%}' => $page, '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
+        $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $page, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
+        $out = $GLOBALS['tpl']->getHtmlFrag($tpl, $data);
+        return ($out !== '') ? $out : setTemplateBasic($tpl, ['{%overall%}' => _OVERALL, '{%count%}' => $count, '{%by%}' => _BY, '{%pages%}' => $pages, '{%page_s%}' => _PAGE_S, '{%page%}' => $page, '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
     }
     return '';
 }
@@ -5777,7 +5781,7 @@ function redaktor(int $id, string $name, string $class, int $editor, mixed $subm
 
 # Show comments
 function ashowcom(int $cid = 0, string $mod = ''): string {
- global $db, $conf, $afile, $user;
+ global $db, $conf, $afile, $user, $tpl;
     $mod = filterVar($mod);
     $params = [];
     if (defined('ADMIN_FILE')) {
@@ -5924,20 +5928,20 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             } else {
                 $checkb = '';
             }
-            $cont .= setTemplateBasic('comment', ['{%id%}' => $com_id, '{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%post_count%}' => $amess, '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => $text, '{%sig%}' => filterReplaceText(filterMarkdown($sig, $com_modul, false), $com_modul), '{%btn_personal%}' => $personal, '{%btn_pm%}' => $privat, '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_warn%}' => $warn, '{%btn_thank%}' => $thank, '{%btn_edit%}' => $edit, '{%hclass%}' => $hclass, '{%checkb%}' => $checkb]);
+            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => filterReplaceText(filterMarkdown($sig, $com_modul, false), $com_modul), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'hclass' => $hclass, 'checkb' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {
             $selms = _CHECKOP.': <select name="op"><option value="comm_act">'._ACTIVATE.'</option><option value="comm_del">'._DELETE.'</option></select> <input type="hidden" name="refer" value="1"><input type="submit" value="'._OK.'" class="sl_but_blue">';
             $pag = (getVar('get', 'status', 'num', 0) == 1) ? 'op=comm_show&amp;status=1' : 'op=comm_show';
             $numpt = setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&amp;', $plnum, 0, '', 'com');
-            $cont .= setTemplateBasic('list-bottom', ['{%pager%}' => $numpt, '{%select%}' => $selms]);
-            $out = setTemplateBasic('open', []).$cont.setTemplateBasic('close', []);
+            $cont .= $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]);
+            $out = $tpl->getHtmlFrag('open').$cont.$tpl->getHtmlFrag('close');
         } else {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;
             $cont .= setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&', $plnum, 0, '#comm', 'com');
-            $out = setTemplateBasic('title', ['{%title%}' => _COMMENTS]).$cont;
+            $out = $tpl->getHtmlFrag('title', ['title' => _COMMENTS]).$cont;
         }
     } else {
         $winfo = (defined('ADMIN_FILE')) ? _NO_INFO : _NOCOMMENTS;

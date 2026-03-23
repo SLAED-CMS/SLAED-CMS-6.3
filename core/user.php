@@ -30,7 +30,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
 
 # Render the active site message box for the current language and user role
 function setMessageShow(): string {
-    global $db, $afile, $conf, $currentlang;
+    global $db, $afile, $conf, $currentlang, $tpl;
     if ($conf['message'] == 1) {
         $params = [];
         $querylang = ($conf['multilingual'] == 1) ? 'AND (lang = :lang OR lang = \'\')' : '';
@@ -48,16 +48,16 @@ function setMessageShow(): string {
                 $info = '| '._PURCHASED.': '.$exp.' | <a href="'.$afile.'.php?op=msg_add&amp;id='.$mid.'" title="'._EDIT.'">'._EDIT.'</a> ]</div>';
                 if ($view == 4 && is_moder()) {
                     $body .= '<div class="sl_center">[ '._VIEW.': '._MVADMIN.' '.$info;
-                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $body]);
+                    return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
                 } elseif (($view == 3 && is_user()) || ($view == 3 && is_user() && is_moder())) {
                     if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVUSERS.' '.$info;
-                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $body]);
+                    return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
                 } elseif (($view == 2 && !is_user()) || ($view == 2 && !is_user() && is_moder())) {
                     if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVANON.' '.$info;
-                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $body]);
+                    return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
                 } elseif ($view == 1) {
                     if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVALL.' '.$info;
-                    return setTemplateBasic('messagebox', ['{%title%}' => $title, '{%content%}' => $body]);
+                    return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
                 }
             }
         }
@@ -102,7 +102,7 @@ function getUserNav(): string {
     foreach ($navs as [$titl, $itit, $link, $icon]) {
         $cont .= '<div class="sl_catflex-box"><a href="'.$link.'" title="'.$itit.'"><img src="'.img_find($icon).'" alt="'.$itit.'" title="'.$itit.'"><br>'.$titl.'</a></div>';
     }
-    return setTemplateBasic('open', []).'<div class="sl_catflex-cont">'.$cont.'</div>'.setTemplateBasic('close', []);
+    return '<div class="sl_catflex-cont">'.$cont.'</div>';
 }
 
 # Check if the logged-in user meets the group or points requirement for a module
@@ -419,7 +419,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
 
                 
                 $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? add_menu("<a OnClick=\"AjaxLoad('GET', '0', '".$prmid."', 'go=1&amp;op=prmessdel&amp;id=".$idp.'&amp;typ='.$mod."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-                $cont .= setTemplateBasic('privat-message', ['{%username%}' => $avname, '{%date%}' => $date, '{%ip%}' => $ip, '{%title%}' => cutstr($title, 35), '{%avatar%}' => $avatar, '{%rank%}' => $rank, '{%rank_link%}' => $rlink, '{%user_rate%}' => $rate, '{%warn%}' => $rwarn, '{%group%}' => $group, '{%points%}' => $point, '{%regdate%}' => $regdate, '{%gender%}' => $gender, '{%from%}' => $from, '{%text%}' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']), '{%sig%}' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), '{%btn_profile%}' => $profil, '{%btn_web%}' => $web, '{%btn_edit%}' => $edit]);
+                $cont .= $GLOBALS['tpl']->getHtmlFrag('privat-message', ['username' => $avname, 'date' => $date, 'ip' => $ip, 'title' => cutstr($title, 35), 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']), 'sig' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {
