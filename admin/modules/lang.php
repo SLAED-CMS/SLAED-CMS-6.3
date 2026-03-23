@@ -15,7 +15,7 @@ function getLangPath(string $mod = '', string $typ = ''): string {
 }
 
 function lang(): void {
-    global $conf, $afile;
+    global $conf, $afile, $tpl;
     $modbase = [];
     $who_view = [];
     foreach ($conf['modules'] as $ttl => $info) {
@@ -32,7 +32,7 @@ function lang(): void {
 
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     $sys_admin = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
     $sys_modul = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit" title="'._FULLEDIT.'">'._MODUL.'</a>';
@@ -60,13 +60,13 @@ function lang(): void {
         $cont .= '<td>'.add_menu($eadmin.$emodul).'</td></tr>';
     }
     $cont .= '</tbody></table>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
 
 function fileedit(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $mod = getVar('get', 'mod', 'var', '');
@@ -108,7 +108,7 @@ function fileedit(): void {
     $total_pages = max(1, (int)ceil($total / $per_page));
     $page = max(1, min($page, $total_pages));
     $offset = ($page - 1) * $per_page;
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     $ci = min($per_page, $total - $offset);
     for ($i = 0; $i < $ci; $i++) {
@@ -144,7 +144,7 @@ function fileedit(): void {
     $cont .= '<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     $url = 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
     $cont .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -196,28 +196,28 @@ function save(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = '<select name="lang" class="sl_conf">'.language($conf['lang']['lang'], 1).'</select>';
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'      => $afile,
-        '{%module%}'     => 'lang',
-        '{%op%}'         => 'configsave',
-        '{%save%}'       => _SAVECHANGES,
-        '{%fields%}'     => '',
-        '{%_langkey%}'   => _LANGKEY,
-        '{%key%}'        => $conf['lang']['key'],
-        '{%_langtr%}'    => _LANGTR,
-        '{%s_lang%}'     => $s_lang,
-        '{%_langcount%}' => _LANGCOUNT,
-        '{%count%}'      => $conf['lang']['count'],
-        '{%per_page%}'   => $conf['lang']['per_page'] ?? 100,
-        'if_flag'        => ['lang' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'lang',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_langkey' => _LANGKEY,
+        'key' => $conf['lang']['key'],
+        '_langtr' => _LANGTR,
+        's_lang' => $s_lang,
+        '_langcount' => _LANGCOUNT,
+        'count' => $conf['lang']['count'],
+        'per_page' => $conf['lang']['per_page'] ?? 100,
+        'lang' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

@@ -92,7 +92,7 @@ function getAdminPanel(): void {
                     );
                 }
             }
-            $content .= setTemplateBasic('panel-admin', ['{%title%}' => _MODULESADMIN, '{%content%}' => $cont]);
+            $content .= $tpl->getHtmlFrag('panel-admin', ['title' => _MODULESADMIN, 'content' => $cont]);
         }
         $count = 1;
         $cont = '';
@@ -113,7 +113,7 @@ function getAdminPanel(): void {
                 }
             }
         }
-        $content .= setTemplateBasic('panel-modul', ['{%title%}' => _MODULESADMIN, '{%content%}' => $cont]);
+        $content .= $tpl->getHtmlFrag('panel-modul', ['title' => _MODULESADMIN, 'content' => $cont]);
     }
     echo $content;
     setFoot();

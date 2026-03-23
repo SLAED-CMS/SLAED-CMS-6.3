@@ -49,7 +49,7 @@ function referers(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'sub' => getRefererSearch()]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $a = 0;
         $massiv = [];
         while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
@@ -72,7 +72,7 @@ function referers(): void {
         $cont .= '</tbody></table>';
         $numpages = ceil($a / $conf['referers']['anum']);
         $cont .= setPageNumbers('pagenum', '', $a, $numpages, $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump']);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -81,30 +81,30 @@ function referers(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'    => $afile,
-        '{%module%}'   => 'referers',
-        '{%op%}'       => 'save',
-        '{%save%}'     => _SAVECHANGES,
-        '{%fields%}'   => '',
-        '{%_c34%}'     => _C_34,
-        '{%anum%}'     => $conf['referers']['anum'],
-        '{%_c36%}'     => _C_36,
-        '{%anump%}'    => $conf['referers']['anump'],
-        '{%_refer_t%}' => _REFER_T,
-        '{%refer_t%}'  => intval($conf['referers']['refer_t'] / 86400),
-        '{%_refer%}'   => _REFER,
-        '{%r_refer%}'  => radio_form($conf['referers']['refer'], 'refer'),
-        '{%_referb%}'  => _REFERB,
-        '{%r_referb%}' => radio_form($conf['referers']['referb'], 'referb'),
-        'if_flag'      => ['referers' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'referers',
+        'op' => 'save',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_c34' => _C_34,
+        'anum' => $conf['referers']['anum'],
+        '_c36' => _C_36,
+        'anump' => $conf['referers']['anump'],
+        '_refer_t' => _REFER_T,
+        'refer_t' => intval($conf['referers']['refer_t'] / 86400),
+        '_refer' => _REFER,
+        'r_refer' => radio_form($conf['referers']['refer'], 'refer'),
+        '_referb' => _REFERB,
+        'r_referb' => radio_form($conf['referers']['referb'], 'referb'),
+        'referers' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

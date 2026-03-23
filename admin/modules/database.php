@@ -366,9 +366,9 @@ function database(): void {
     }
 
     echo $cont
-       .setTemplateBasic('open')
+       .$tpl->getHtmlFrag('open', [])
        .$content
-       .setTemplateBasic('close');
+       .$tpl->getHtmlFrag('close', []);
 
     setFoot();
 }
@@ -423,15 +423,15 @@ function dump(): void {
                 }
             }
             $cont .= getSqlsum($reslist, $action, $conf['db']['name']);
-            $cont .= setTemplateBasic('open');
+            $cont .= $tpl->getHtmlFrag('open', []);
             $cont .= getSqltable($reslist);
-            $cont .= setTemplateBasic('close');
+            $cont .= $tpl->getHtmlFrag('close', []);
         }
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DBINFO]);
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DBWARN]);
     }
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php" method="post">
         <table class="sl_table_edit">
             <tr>
@@ -449,7 +449,7 @@ function dump(): void {
             </tr>
         </table>
     </form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

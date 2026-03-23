@@ -46,7 +46,7 @@ function template(): void {
             }
             closedir($handle);
         }
-        $cont .= setTemplateBasic('open').$conts.setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('open', []).$conts.$tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -80,7 +80,7 @@ function style(): void {
             }
             closedir($handle);
         }
-        $cont .= setTemplateBasic('open').$conts.setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('open', []).$conts.$tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }

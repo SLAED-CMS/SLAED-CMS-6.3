@@ -35,7 +35,7 @@ function replace(): void {
             $k++;
         }
     }
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="replace"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
     .'<script>
         var countries=new ddtabcontent("replace")
@@ -43,7 +43,7 @@ function replace(): void {
         countries.setselectedClassTarget("link")
         countries.init()
     </script>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

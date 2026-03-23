@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function ratings(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=ratings', 'name=ratings&amp;op=info'], 'tabs' => [_HOME, _INFO]]);
     $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
@@ -25,15 +25,15 @@ function ratings(): void {
            .'<tr><td>'._C_22.'</td><td>'.radio_form($con[2], $i.'view').'</td></tr>';
         $i++;
     }
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'  => $afile,
-        '{%module%}' => 'ratings',
-        '{%op%}'     => 'save',
-        '{%save%}'   => _SAVECHANGES,
-        '{%fields%}' => $content,
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'ratings',
+        'op' => 'save',
+        'save' => _SAVECHANGES,
+        'fields' => $content,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

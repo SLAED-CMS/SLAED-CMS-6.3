@@ -67,7 +67,7 @@ function admins(): void {
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     if (getVar('get', 'send', 'num')) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MAIL_SEND]);
     if ($msg = trim(getVar('get', 'msg', 'text', ''))) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $msg]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE
         .'</th><th>'._SUPERUSER.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     $result = $db->getSqlQuery(
@@ -87,7 +87,7 @@ function admins(): void {
             .(((int)$super === 1) ? _YES : _NO).'</td><td>'.add_menu($edit.'||'.$drop).'</td></tr>';
     }
     $cont .= '</tbody></table>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -122,7 +122,7 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => getAdmintext($stop)]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php?name=admins&amp;op=save" method="post"><input type="hidden" name="op" value="save">'
         .'<input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="token" value="'
         .htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8').'"><table class="sl_table_form">'
@@ -168,7 +168,7 @@ function add(): void {
     $mark = ((int)$super === 1) ? ' checked' : '';
     $cont .= '<tr><td colspan="'.$cols.'"><input type="checkbox" name="super" value="1"'.$mark.'> <b>'._SUPERUSER.'</b></td></tr></table>'
         .'</td></tr><tr><td colspan="2" class="sl_center"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

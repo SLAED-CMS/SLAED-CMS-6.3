@@ -24,14 +24,14 @@ function getStatisticSearch(): string {
 }
 
 function statistic(): void {
-    global $afile;
+    global $afile, $tpl;
     $file = getVar('post', 'file', 'text');
     $pfile = $file ? '&amp;file='.$file : '';
     setHead();
     $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15" alt="'._STATGR.'" title="'._STATGR.'">';
     if ($file || date('d') > 15) {
         if ($file) {
@@ -75,7 +75,7 @@ function statistic(): void {
         $cont .= '<tr><td>'.$out[0].'</td><td>'.$out[1].'</td><td>'.$out[2].'</td><td>'.$out[6].'</td><td>'.$out[5].'</td><td>'.$out[4].'</td><td>'.$out_aud.'</td><td>'.rtrim($out[7]).'</td></tr>';
     }
     $cont .= '<tr><th>'._ALL.'</th><th>'.$unique.'</th><th>'.$today.'</th><th>'.$homepage.'</th><th>'.$sites.'</th><th>'.$engines.'</th><th>'.$auditory.'</th><th>'.$regusers.'</th></tr></tbody></table>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -85,26 +85,26 @@ function add(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'    => $afile,
-        '{%module%}'   => 'statistic',
-        '{%op%}'       => 'save',
-        '{%save%}'     => _SAVECHANGES,
-        '{%fields%}'   => '',
-        '{%_statbet%}' => _STATBET,
-        '{%bet%}'      => $conf['statistic']['bet'],
-        '{%_statshi%}' => _STATSHI,
-        '{%shi%}'      => $conf['statistic']['shi'],
-        '{%_statact%}' => _STATACT,
-        '{%r_stat%}'   => radio_form($conf['statistic']['stat'], 'stat'),
-        'if_flag'      => ['statistic' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'statistic',
+        'op' => 'save',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_statbet' => _STATBET,
+        'bet' => $conf['statistic']['bet'],
+        '_statshi' => _STATSHI,
+        'shi' => $conf['statistic']['shi'],
+        '_statact' => _STATACT,
+        'r_stat' => radio_form($conf['statistic']['stat'], 'stat'),
+        'statistic' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

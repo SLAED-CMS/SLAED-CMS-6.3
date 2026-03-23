@@ -8,39 +8,40 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function favorites(): void {
+    global $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.setTemplateBasic('open').'<div id="repfav_aliste">'.fav_aliste(1).'</div>'.setTemplateBasic('close');
+    echo $cont.$tpl->getHtmlFrag('open', []).'<div id="repfav_aliste">'.fav_aliste(1).'</div>'.$tpl->getHtmlFrag('close', []);
     setFoot();
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'       => $afile,
-        '{%module%}'      => 'favorites',
-        '{%op%}'          => 'save',
-        '{%save%}'        => _SAVECHANGES,
-        '{%fields%}'      => '',
-        '{%_c33%}'        => _C_33,
-        '{%num%}'         => $conf['favorites']['num'],
-        '{%_c34%}'        => _C_34,
-        '{%anum%}'        => $conf['favorites']['anum'],
-        '{%_c35%}'        => _C_35,
-        '{%nump%}'        => $conf['favorites']['nump'],
-        '{%_c36%}'        => _C_36,
-        '{%anump%}'       => $conf['favorites']['anump'],
-        '{%_favor_umax%}' => _FAVOR_UMAX,
-        '{%favorites%}'   => $conf['favorites']['favorites'],
-        '{%_favor_act%}'  => _FAVOR_ACT,
-        '{%r_favact%}'    => radio_form($conf['favorites']['favact'], 'favact'),
-        'if_flag'         => ['favorites' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'favorites',
+        'op' => 'save',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_c33' => _C_33,
+        'num' => $conf['favorites']['num'],
+        '_c34' => _C_34,
+        'anum' => $conf['favorites']['anum'],
+        '_c35' => _C_35,
+        'nump' => $conf['favorites']['nump'],
+        '_c36' => _C_36,
+        'anump' => $conf['favorites']['anump'],
+        '_favor_umax' => _FAVOR_UMAX,
+        'favorites' => $conf['favorites']['favorites'],
+        '_favor_act' => _FAVOR_ACT,
+        'r_favact' => radio_form($conf['favorites']['favact'], 'favact'),
+        'favorites' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

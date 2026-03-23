@@ -30,12 +30,12 @@ function uploads(): void {
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $cont .= '<div id="tabcs0" class="tabcont">';
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form enctype="multipart/form-data" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_form"></td></tr>'
     .'<tr><td>'._FILE_SITE.':</td><td><input type="text" name="sitefile" class="sl_form" placeholder="'._FILE_SITE.'"></td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploadsave"><input type="hidden" name="dir" value="'.$dir.'"><input type="submit" value="'._EXECUTE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     $cont .= '</div>'
     .'<div id="tabcs1" class="tabcont">';
     $fdir = 'uploads/'.$dir;
@@ -54,7 +54,7 @@ function uploads(): void {
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
-    $cont .= setTemplateBasic('open').'<div id="repf1"></div>'.setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('open', []).'<div id="repf1"></div>'.$tpl->getHtmlFrag('close', []);
     $cont .= '</div>'
     .'<div id="tabcs2" class="tabcont">';
     $tdir = 'uploads/'.$dir.'/thumb';
@@ -73,7 +73,7 @@ function uploads(): void {
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
-    $cont .= setTemplateBasic('open').'<div id="repf2"></div>'.setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('open', []).'<div id="repf2"></div>'.$tpl->getHtmlFrag('close', []);
     $cont .= '</div>'
     .'<script>
         var countries=new ddtabcontent("uploadss")
@@ -108,7 +108,7 @@ function tplconfig(): void {
         $hr = ($i == 0) ? '' : '<hr>';
         $conts .= $hr.'<table class="sl_table_edit"><tr><td><h5>'._TPFOR.': '.$typm[$i].'</h5></td></tr><tr><td>'.textarea_code('code_'.$i.'', 'tmp[]', 'sl_form', 'text/html', $conf['filetype'][$typm[$i]] ?? '').'</td></tr></table>';
     }
-    $cont .= setTemplateBasic('open').'<form action="'.$afile.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="tplsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('open', []).'<form action="'.$afile.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="tplsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.$tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -124,7 +124,7 @@ function tplsave(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_GENPREF, _MODULES], 'tab' => 2, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'config']);
     $cont .= checkPerms(CONFIG_DIR.'/uploads.php');
@@ -168,7 +168,7 @@ function config(): void {
         }
     }
     $conts .= '</div>';
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= $conts
     .'<script>
         var countries=new ddtabcontent("confs")
@@ -177,7 +177,7 @@ function config(): void {
         countries.init()
     </script>'
     .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="configsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

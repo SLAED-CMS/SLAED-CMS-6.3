@@ -8,53 +8,54 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function privat(): void {
+    global $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.setTemplateBasic('open').'<div id="repajax_privat">'.ajax_privat(1).'</div>'.setTemplateBasic('close');
+    echo $cont.$tpl->getHtmlFrag('open', []).'<div id="repajax_privat">'.ajax_privat(1).'</div>'.$tpl->getHtmlFrag('close', []);
     setFoot();
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'     => $afile,
-        '{%module%}'    => 'privat',
-        '{%op%}'        => 'save',
-        '{%save%}'      => _SAVECHANGES,
-        '{%fields%}'    => '',
-        '{%_c33%}'      => _C_33,
-        '{%num%}'       => $conf['privat']['num'],
-        '{%_c34%}'      => _C_34,
-        '{%anum%}'      => $conf['privat']['anum'],
-        '{%_c35%}'      => _C_35,
-        '{%nump%}'      => $conf['privat']['nump'],
-        '{%_c36%}'      => _C_36,
-        '{%anump%}'     => $conf['privat']['anump'],
-        '{%_comletter%}' => _COMLETTER,
-        '{%letter%}'    => $conf['privat']['letter'],
-        '{%_csend%}'    => _CSEND,
-        '{%send%}'      => $conf['privat']['send'],
-        '{%_prinm%}'    => _PRINM,
-        '{%messin%}'    => $conf['privat']['messin'],
-        '{%_prsavem%}'  => _PRSAVEM,
-        '{%messsav%}'   => $conf['privat']['messsav'],
-        '{%_prmail%}'   => _PRMAIL,
-        '{%r_newmail%}' => radio_form($conf['privat']['newmail'], 'newmail'),
-        '{%_prself%}'   => _PRSELF,
-        '{%r_himself%}' => radio_form($conf['privat']['himself'], 'himself'),
-        '{%_vprofil%}'  => _VPROFIL,
-        '{%r_profil%}'  => radio_form($conf['privat']['profil'], 'profil'),
-        '{%_vweb%}'     => _VWEB,
-        '{%r_web%}'     => radio_form($conf['privat']['web'], 'web'),
-        '{%_pract%}'    => _PRACT,
-        '{%r_act%}'     => radio_form($conf['privat']['act'], 'act'),
-        'if_flag'       => ['privat' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'privat',
+        'op' => 'save',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_c33' => _C_33,
+        'num' => $conf['privat']['num'],
+        '_c34' => _C_34,
+        'anum' => $conf['privat']['anum'],
+        '_c35' => _C_35,
+        'nump' => $conf['privat']['nump'],
+        '_c36' => _C_36,
+        'anump' => $conf['privat']['anump'],
+        '_comletter' => _COMLETTER,
+        'letter' => $conf['privat']['letter'],
+        '_csend' => _CSEND,
+        'send' => $conf['privat']['send'],
+        '_prinm' => _PRINM,
+        'messin' => $conf['privat']['messin'],
+        '_prsavem' => _PRSAVEM,
+        'messsav' => $conf['privat']['messsav'],
+        '_prmail' => _PRMAIL,
+        'r_newmail' => radio_form($conf['privat']['newmail'], 'newmail'),
+        '_prself' => _PRSELF,
+        'r_himself' => radio_form($conf['privat']['himself'], 'himself'),
+        '_vprofil' => _VPROFIL,
+        'r_profil' => radio_form($conf['privat']['profil'], 'profil'),
+        '_vweb' => _VWEB,
+        'r_web' => radio_form($conf['privat']['web'], 'web'),
+        '_pract' => _PRACT,
+        'r_act' => radio_form($conf['privat']['act'], 'act'),
+        'privat' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

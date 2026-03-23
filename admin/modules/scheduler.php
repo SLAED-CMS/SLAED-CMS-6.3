@@ -72,7 +72,7 @@ function scheduler(): void {
     }
     $cont .= '</tbody></table>';
     setHead();
-    echo $navi.setTemplateBasic('open').$cont.setTemplateBasic('close');
+    echo $navi.$tpl->getHtmlFrag('open', []).$cont.$tpl->getHtmlFrag('close', []);
     setFoot();
 }
 
@@ -113,7 +113,7 @@ function add(string $name = ''): void {
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="scheduler"><input type="hidden" name="op" value="save"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('scheduler'), ENT_QUOTES, 'UTF-8').'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
     setHead();
     $navi = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    echo $navi.setTemplateBasic('open').$cont.setTemplateBasic('close');
+    echo $navi.$tpl->getHtmlFrag('open', []).$cont.$tpl->getHtmlFrag('close', []);
     setFoot();
 }
 
