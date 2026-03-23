@@ -1,0 +1,12 @@
+<tr id="{{ id }}" class="forum-line">
+	<td class="fl-col-num"><a href="#{{ id }}" title="{{ id }}" class="sl_pnum">{{ id }}</a></td>
+	<td class="fl-col-content">
+		<div class="dropdown">
+			<span OnClick="HideShow('v-form-{{ id }}', 'blind', 'up', 500);" title="{{ info }}" class="sl_n_info"></span><h4>{% if title_href %}<a href="{{{ title_href }}}" title="{{{ title_attr }}}">{{ title_text }}</a>{% else %}{{ title_text }}{% endif %}{% if title_new %} {{{ title_new }}}{% endif %}</h4>
+			<div id="v-form-{{ id }}" class="dropdown-form">{{{ report }}}</div>
+		</div>
+		{% if admin %}<div class="sl_mt_5">{{{ admin }}}</div>{% endif %}
+	</td>
+	<td class="fl-col-stat">{{ comm }}</td>
+	<td class="fl-col-stat">{{ vote }}</td>
+</tr>
