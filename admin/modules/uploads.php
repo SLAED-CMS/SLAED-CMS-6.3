@@ -21,15 +21,15 @@ function getUploadsSearch(): string {
 }
 
 function uploads(): void {
-    global $afile, $conf, $stop;
+    global $afile, $conf, $stop, $tpl;
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f1\', \'go=5&amp;op=ashow_files&amp;id=1&amp;dir='.$dir.'\', \'\'); return false;">'._DGEN.'</span>', '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f2\', \'go=5&amp;op=ashow_files&amp;id=2&amp;dir='.$dir.'\', \'\'); return false;">'._DTHUMB.'</span>'], 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $cont .= '<div id="tabcs0" class="tabcont">';
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form enctype="multipart/form-data" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_form"></td></tr>'
@@ -50,9 +50,9 @@ function uploads(): void {
                 $affilesize += $filesize;
             }
         }
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
     $cont .= setTemplateBasic('open').'<div id="repf1"></div>'.setTemplateBasic('close');
     $cont .= '</div>'
@@ -69,9 +69,9 @@ function uploads(): void {
                 $atfilesize += $filesize;
             }
         }
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
     $cont .= setTemplateBasic('open').'<div id="repf2"></div>'.setTemplateBasic('close');
     $cont .= '</div>'
@@ -97,10 +97,10 @@ function uploadsave(): void {
 }
 
 function tplconfig(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 1, 'sub' => getUploadsSearch(), 'id' => 'tplconfig']);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TPINFO]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _TPINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/filetype.php');
     $typm = explode(',', $conf['uploads']['typ']);
     $conts = '';

@@ -25,7 +25,7 @@ function account(): void {
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
     ]);
-    if (getVar('get','send','num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
+    if (getVar('get','send','num')) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
     $where = '1 = 1';
     $wcnt = '1 = 1';
     $order = 'ORDER BY u.id DESC';
@@ -89,7 +89,7 @@ function account(): void {
         $cont .= setArticleNumbers('pagenum', '', $conf['users']['anum'], 'name=account'.$lsear.$lchg.'&amp;', 'id', '_users', '', $wcnt, $conf['users']['anump'], $pars);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _USERNOEXIST]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERNOEXIST]);
     }
     echo $cont;
     setFoot();
@@ -163,7 +163,7 @@ function add(): void {
         'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
         'tab'  => 1,
     ]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._NICKNAME.':</td><td><input type="text" name="uname" value="'.$uname.'" maxlength="25" class="sl_form" placeholder="'._NICKNAME.'" required></td></tr>'
@@ -352,7 +352,7 @@ function newuser(): void {
         $cont .= setArticleNumbers('pagenum', '', (int)$conf['users']['anum'], 'name=account&amp;op=newuser&amp;', 'id', '_users_temp', '', '', (int)$conf['users']['anump'], []);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();

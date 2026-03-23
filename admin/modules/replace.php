@@ -7,10 +7,10 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function replace(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['', '', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'id' => 'replace']);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _REPLACEINFO]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _REPLACEINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/replace.php');
     $mods = ['content', 'news'];
     $content = '';

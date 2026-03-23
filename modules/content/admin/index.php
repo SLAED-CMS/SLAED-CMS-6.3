@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('content')) die('Illegal file access');
 
 function content(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         setHead();
     $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $num = getVar('get', 'num', 'num', 1);
@@ -37,14 +37,14 @@ function content(): void {
         $cont .= setArticleNumbers('pagenum', '', $anum, 'name=content&amp;', 'id', '_content', '', '', $anump);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     $id = getVar('req', 'id', 'num', 0);
     if ($id) {
         $result = $db->getSqlQuery('SELECT id, title, body, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id', ['id' => $id]);
@@ -60,7 +60,7 @@ function add(): void {
     }
     setHead();
     $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $fields = ($field) ? '<br><br>'.fields_out($field, 'content') : '';
     if ($body) $cont .= preview($title, $body, '', $field, 'content');
     $cont .= setTemplateBasic('open');

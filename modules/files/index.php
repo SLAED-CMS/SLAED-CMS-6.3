@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function files(): void {
-    global $db, $afile, $user, $conf, $home, $op;
+    global $db, $afile, $user, $conf, $home, $op, $tpl;
     $cwhere = catmids($conf['name'], 'f.cid');
     $unum = getUserNews($conf['files']['num']);
     $cat = getVar('get', 'cat', 'num');
@@ -119,14 +119,14 @@ function files(): void {
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_files', 'cid', $onum, $conf['files']['nump']);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function liste(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $cwhere = catmids($conf['name'], 'f.cid');
     $listnum = intval($conf['files']['listnum']);
     $let = getVar('get', 'let', 'let');
@@ -173,7 +173,7 @@ function liste(): void {
         $params = ($let) ? ['let' => $let.'%'] : [];
         $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_files', 'cid', $onum, $conf['files']['nump'], $params);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -280,7 +280,7 @@ function view(): void {
 }
 
 function add(): void {
-    global $db, $user, $conf, $stop;
+    global $db, $user, $conf, $stop, $tpl;
     if ((is_user() && $conf['files']['add'] == 1) || (!is_user() && $conf['files']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'cid', 'num');
@@ -303,9 +303,9 @@ function add(): void {
         $info .= ' '._ADDFNOTE3;
         setHead(['title' => _ADD]);
         $cont = setModuleNavi(['title' => _ADD, 'htitle' => _FILES]);
-        if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         if ($description) $cont .= preview($title, $description, $bodytext, '', $conf['name']);
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $extra = '';
         if ($conf['files']['upload'] == 1) {
@@ -348,7 +348,7 @@ function add(): void {
 }
 
 function send(): void {
-    global $db, $user, $conf, $stop;
+    global $db, $user, $conf, $stop, $tpl;
     if ((is_user() && $conf['files']['add'] == 1) || (!is_user() && $conf['files']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'cid', 'num');
@@ -385,7 +385,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
             setHead(['title' => _ADD]);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _FILES]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISH]);
+            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            echo setModuleNavi(['title' => _ADD, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISH, 'meta' => $meta]);
             setFoot();
         } else {
             add();
@@ -396,12 +397,13 @@ function send(): void {
 }
 
 function broken(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
     if ($conf['files']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET status = '2' WHERE id = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCFILE]);
-        echo setModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTE]);
+        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'">';
+        echo setModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTE, 'meta' => $meta]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);
@@ -409,7 +411,7 @@ function broken(): void {
 }
 
 function loading(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $id = getVar('post', 'id', 'num');
     if (($id && is_user()) || ($id && $conf['files']['down'] == '1')) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_files SET hits = hits+1 WHERE id = :id', ['id' => $id]);
@@ -424,7 +426,7 @@ function loading(): void {
             $info = sprintf(_NOTEDOWNLOAD, $stitle, setTemplateBasic('files-external-link', ['{%href%}' => $url, '{%title%}' => _UPLOAD.': '.$stitle, '{%label%}' => $url]));
             setHead(['title' => _FILES]);
             $cont = setModuleNavi(['title' => _FILES]);
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
             $cont .= setNaviLower($conf['name']);
             echo $cont;
             setFoot();

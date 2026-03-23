@@ -13,7 +13,7 @@ const SHOP_NAVI = ['htitle' => _SHOP, 'add_href' => ''];
 
 
 function shop(): void {
-	global $db, $conf, $afile, $home, $user, $op;
+	global $db, $conf, $afile, $home, $user, $op, $tpl;
 	$cwhere = catmids($conf['name'], 'p.cid');
 	$unum = getUserNews($conf['shop']['num']);
 	$cat = getVar('get', 'cat', 'num');
@@ -107,14 +107,14 @@ function shop(): void {
 		$cont .= setTemplateBasic('grid-table', []);
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump']);
 	} else {
-		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
 	}
 	echo $cont;
 	setFoot();
 }
 
 function liste(): void {
-	global $db, $conf;
+	global $db, $conf, $tpl;
 	$cwhere = catmids($conf['name'], 'p.cid');
 	$listnum = intval($conf['shop']['listnum']);
 	$let = getVar('get', 'let', 'let');
@@ -148,7 +148,7 @@ function liste(): void {
 		$params = ($let) ? ['let' => $let.'%'] : [];
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump'], $params);
 	} else {
-		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
 	}
 	echo $cont;
 	setFoot();
@@ -228,7 +228,7 @@ function view(): void {
 }
 
 function kasse(): void {
-	global $db, $conf, $stop;
+	global $db, $conf, $stop, $tpl;
 	if (is_user()) {
 		$userinfo = getUserInfo();
 		$sid = $userinfo['id'];
@@ -257,7 +257,7 @@ function kasse(): void {
 	$cont = setModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
 		$cont .= setTemplateBasic('shop-kasse-content', ['if_flag' => ['has_outer' => false], '{%content%}' => show_kasse()]);
-		$cont .= setTemplateBasic('title', ['{%title%}' => _C_TITLE]).$form;
+		$cont .= $tpl->getHtmlFrag('title', ['title' => _C_TITLE]).$form;
 	} elseif ($opi && $cookies) {
 		$stop = [];
         if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'shop')) $stop[] = _ERROR;
@@ -321,14 +321,15 @@ function kasse(): void {
 			setcookie('shop', false);
 			setcookie('part', false);
 			update_points(39);
-			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => filterReplaceText(filterMarkdown($conf['shop']['sende'], $conf['name'], false), $conf['name'])]);
+			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['shop']['sende'], $conf['name'], false), $conf['name'])]);
 		} else {
-			$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
 			$cont .= setTemplateBasic('shop-kasse-content', ['if_flag' => ['has_outer' => false], '{%content%}' => show_kasse()]);
 			$cont .= $form;
 		}
 	} else {
-		$cont .= setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => $stop]);
+		$meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop, 'meta' => $meta]);
 	}
 	echo $cont;
 	setFoot();
@@ -416,7 +417,7 @@ function rech(): void {
 }
 
 function partners(): void {
-	global $db, $conf, $stop;
+	global $db, $conf, $stop, $tpl;
 	if (is_user() && is_active('shop')) {
 		$userinfo = getUserInfo();
 		$uid = intval($userinfo['id']);
@@ -429,9 +430,9 @@ function partners(): void {
 		if ($db->getSqlRowCount($result) > 0) {
 			[$paid, $puid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
 			if ($paactive == 2) {
-				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PARTNERADD_W]);
+				$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PARTNERADD_W]);
 			} elseif ($paactive == 0) {
-				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _PARTNER_AUS]);
+				$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _PARTNER_AUS]);
 			} else {
 				$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.part = :user_id AND c.status != 2 ORDER BY c.id ASC', ['user_id' => $uid]);
 				$partsum = $partsumges = $a = 0;
@@ -446,13 +447,13 @@ function partners(): void {
 					$cont .= setTemplateBasic('shop-partners-open', ['{%head_id%}' => _ID, '{%head_user%}' => _NICKNAME, '{%head_product%}' => _PRODUCT, '{%head_percent%}' => _PERCENT, '{%head_sum%}' => _SUM]).$content.setTemplateBasic('table-close');
 				}
 				$cont .= setTemplateBasic('shop-partners-summary', ['{%head_clients%}' => _CLIENTEN, '{%head_webmoney%}' => _WEBMONEY, '{%head_paypal%}' => _PAYPAL, '{%head_total%}' => _PARTNERGES, '{%head_rest%}' => _PARTNERREST, '{%head_paid%}' => _PARTNERBEK, '{%clients%}' => $a, '{%webmoney%}' => $pawebmoney, '{%paypal%}' => $papaypal, '{%total%}' => $partsumges.' '.$conf['shop']['valute'], '{%rest%}' => $parest.' '.$conf['shop']['valute'], '{%paid%}' => $pabek.' '.$conf['shop']['valute']]);
-				$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
+				$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
 				$cont .= filterReplaceText(filterMarkdown(str_replace('[id]', $uid, $conf['shop']['partinfo2']), $conf['name'], false), $conf['name']);
 			}
 		} else {
-			if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
 			$cont .= filterReplaceText(filterMarkdown($conf['shop']['partinfo'], $conf['name'], false), $conf['name']);
-			$cont .= setTemplateBasic('title', ['{%title%}' => _PARTNERADD]);
+			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD]);
 			$cont .= setTemplateBasic('shop-partners-form', ['{%name%}' => $conf['name'], '{%token%}' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), '{%style%}' => $conf['style'], '{%lbl_name%}' => _C_PIN, '{%ph_name%}' => _C_PINB, '{%lbl_addr%}' => _C_PIP, '{%ph_addr%}' => _C_PIPB, '{%lbl_phone%}' => _C_TEL, '{%ph_phone%}' => _C_TELB, '{%lbl_email%}' => _EMAIL, '{%ph_email%}' => _C_MAILB, '{%lbl_site%}' => _SITE, '{%ph_site%}' => _SDOMB, '{%lbl_webmoney%}' => _WEBMONEY, '{%ph_webmoney%}' => _C_WEBMONEYB, '{%lbl_paypal%}' => _PAYPAL, '{%ph_paypal%}' => _C_MAILB, '{%paname%}' => '', '{%paaddr%}' => '', '{%paphone%}' => '', '{%paemail%}' => $smail, '{%pawebsite%}' => $sdom, '{%pawebmoney%}' => '', '{%papaypal%}' => '', '{%puid%}' => $uid, '{%submit_label%}' => _PARTNERSEND]);
 		}
 		echo $cont;

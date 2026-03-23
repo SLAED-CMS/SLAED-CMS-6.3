@@ -13,7 +13,7 @@ const AUTO_LINKS_NAVI = ['htitle' => _A_LINKS, 'liste_href' => ''];
 
 
 function autolink(): void {
-    global $db, $afile, $user, $conf, $home, $op;
+    global $db, $afile, $user, $conf, $home, $op, $tpl;
     $unum = intval(getUserNews($conf['auto_links']['num']));
     if ($unum < 1) $unum = 1;
     $word = getVar('get', 'word', 'word');
@@ -85,7 +85,7 @@ function autolink(): void {
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_auto_links', '', 'hits != \'0\'', $conf['auto_links']['nump']);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -106,7 +106,7 @@ function view(): void {
 }
 
 function add(): void {
-    global $stop, $conf;
+    global $stop, $conf, $tpl;
     if (is_user()) {
         $userinfo = getUserInfo();
         $email = getVar('post', 'mail', 'var', $userinfo['email']);
@@ -120,9 +120,9 @@ function add(): void {
     
     setHead(['title' => _ADD]);
     $cont = setModuleNavi(['title' => _ADD, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($desc) $cont .= preview($name, $desc, '', '', $conf['name']);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_I]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _A_LINKS_I]);
     $cont .= setTemplateBasic('form-add', [
         '{%name%}' => $conf['name'],
         '{%token%}' => htmlspecialchars(getSiteToken('auto_links'), ENT_QUOTES, 'UTF-8'),
@@ -144,7 +144,7 @@ function add(): void {
 }
 
 function send(): void {
-    global $db, $user, $stop, $conf;
+    global $db, $user, $stop, $conf, $tpl;
     $name = getVar('post', 'name', 'title');
     $desc = getVar('post', 'desc', 'text');
     $site = getVar('post', 'site', 'url');
@@ -166,7 +166,7 @@ function send(): void {
         );
         $puname = (is_user()) ? $user[1] : '';
         addAdminMail($conf['auto_links']['addmail'], $conf['name'], $puname, _A_LINKS);
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _A_LINKS_OK]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _A_LINKS_OK]);
         $code = setTemplateBasic('auto-links-embed-link', ['{%href%}' => $conf['homeurl'], '{%title%}' => $conf['slogan'], '{%label%}' => $conf['sitename']]);
         $rows = setTemplateBasic('auto-links-code-row', ['{%label%}' => _A_LINKS_M, '{%style%}' => $conf['style'], '{%code%}' => $code]);
         if ($conf['auto_links']['img']) {

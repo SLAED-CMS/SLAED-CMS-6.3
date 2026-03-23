@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function users(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     setHead(['title' => _TOPUSERS]);
     $cont = setModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $lim = 50;
@@ -42,7 +42,7 @@ function users(): void {
         $cont .= setTemplateBasic('table-close');
         $cont .= setArticleNumbers('pagenum', $conf['name'], $lim, '', 'id', '_users', '', '', '5');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -67,7 +67,7 @@ function rules(): void {
 }
 
 function stats(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     setHead(['title' => _TU_STATS]);
     $cont = setModuleNavi(['title' => _TOPUSERS, 'htitle' => _TOPUSERS, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'rules']), 'btitle' => _TU_RULES, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'stats']), 'ptitle' => _TU_STATS, 'liste_href' => '', 'add_href' => '']);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points');
@@ -97,7 +97,7 @@ function stats(): void {
         $cont .= setTemplateBasic('table-close');
         $cont .= setNaviLower($conf['name']);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();

@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('help')) die('Illegal file access');
 
 function help(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         setHead();
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['help']['anum'] ?? 25;
@@ -44,7 +44,7 @@ function help(): void {
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -102,7 +102,7 @@ function addview(int $id): string {
 }
 
 function add(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     $id = getVar('req', 'id', 'num', 0);
     if ($id) {
         $result = $db->getSqlQuery('SELECT s.pid, s.cid, s.title, s.time, s.body, s.field, s.status, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id', ['id' => $id]);
@@ -121,7 +121,7 @@ function add(): void {
     $status = getVar('post', 'status', 'num', 0) ? getVar('post', 'status', 'num', 0) : ($status ?? 0);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'

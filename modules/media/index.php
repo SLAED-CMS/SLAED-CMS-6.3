@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function media(): void {
-    global $db, $afile, $user, $conf, $home, $op;
+    global $db, $afile, $user, $conf, $home, $op, $tpl;
     $cwhere = catmids($conf['name'], 'm.cid');
     $unum = getUserNews($conf['media']['num']);
     $cat = getVar('get', 'cat', 'num');
@@ -84,14 +84,14 @@ function media(): void {
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function liste(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $cwhere = catmids($conf['name'], 'm.cid');
     $listnum = intval($conf['media']['listnum']);
     $let = getVar('get', 'let', 'let');
@@ -124,14 +124,14 @@ function liste(): void {
         $params = ($let) ? ['let' => $let.'%'] : [];
         $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump'], $params);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function view(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'text');
     $cwhere = catmids($conf['name'], 'm.cid');
@@ -204,7 +204,7 @@ function view(): void {
                     }
                 }
             } else {
-                $mlinks = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _HIDETEXT]);
+                $mlinks = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HIDETEXT]);
             }
         }
         $cont .= setTemplateBasic('basic-media-view', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => filterTextHighlight($ptitle, $word), '{%hits%}' => '', '{%reads%}' => $reads, '{%post%}' => $post, '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%cimg%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), $word), '{%year%}' => $year, '{%director%}' => $director, '{%roles%}' => $roles, '{%createdby%}' => $createdby, '{%duration%}' => $duration, '{%lang%}' => $lang, '{%format%}' => $format, '{%quality%}' => $quality, '{%size%}' => $size, '{%released%}' => $released, '{%note%}' => $note, '{%links_label%}' => ($mlinks ?? '') ? _MURLS : '', '{%mlinks%}' => $mlinks ?? '', '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%download%}' => '', '{%broken%}' => $broc]);
@@ -240,7 +240,7 @@ function view(): void {
 }
 
 function add(): void {
-    global $db, $user, $conf, $stop;
+    global $db, $user, $conf, $stop, $tpl;
     if ((is_user() && $conf['media']['add'] == 1) || (!is_user() && $conf['media']['addquest'] == 1)) {
         $date = getdate();
         $title = getVar('post', 'title', 'text');
@@ -265,9 +265,9 @@ function add(): void {
         
         setHead(['title' => _ADD]);
         $cont = setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]);
-        if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         if ($description) $cont .= preview($mtitle, $description, $note, '', $conf['name']);
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADDNOTEM]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADDNOTEM]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $yearOptions = '';
         $linksRows = '';
@@ -346,7 +346,7 @@ function add(): void {
 }
 
 function send(): void {
-    global $db, $user, $conf, $stop;
+    global $db, $user, $conf, $stop, $tpl;
     if ((is_user() && $conf['media']['add'] == 1) || (!is_user() && $conf['media']['addquest'] == 1)) {
         $postname = getVar('post', 'postname', 'name');
         $cid = getVar('post', 'cid', 'num');
@@ -381,7 +381,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
             setHead(['title' => _MEDIA.' '._ADD, 'desc' => _UPLOADFINISHM]);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHM]);
+            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            echo setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHM, 'meta' => $meta]);
             setFoot();
         } else {
             add();
@@ -392,12 +393,13 @@ function send(): void {
 }
 
 function broken(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
     if ($conf['media']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCMEDIA]);
-        echo setModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'id' => 'info', 'text' => _BROCNOTEM]);
+        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'">';
+        echo setModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEM, 'meta' => $meta]);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);

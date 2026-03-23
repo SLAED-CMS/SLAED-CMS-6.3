@@ -7,10 +7,10 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('order')) die('Illegal file access');
 
 function order(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         setHead();
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
-    if (getVar('get', 'send', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _OR_8]);
+    if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OR_8]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['order']['anum'] ?? 25;
     $anump = $conf['order']['anump'] ?? 10;
@@ -38,14 +38,14 @@ function order(): void {
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=order&amp;', $anump);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     $id = getVar('req', 'id', 'num', 0);
     $mid = $id;
     $mid = $id;
@@ -61,7 +61,7 @@ function add(): void {
     }
     setHead();
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'

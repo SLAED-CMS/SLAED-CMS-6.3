@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('pages')) die('Illegal file access');
 
 function pages(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         setHead();
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['pages']['anum'] ?? 25;
@@ -49,14 +49,14 @@ function pages(): void {
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_pages', '', 'status = \''.$status.'\'', $anump);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     $id = getVar('req', 'id', 'num', 0);
     $pid = $id;
     if ($pid) {
@@ -76,9 +76,9 @@ function add(): void {
     }
     setHead();
     $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($hometext) $cont .= preview($subject, $hometext, $bodytext, '', 'pages');
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PAGENOTE]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'

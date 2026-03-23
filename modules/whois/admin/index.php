@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('whois')) die('Illegal file access');
 
 function whois(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         $anum = $conf['whois']['anum'] ?? 10;
     $anump = $conf['whois']['anump'] ?? 10;
 
@@ -51,7 +51,7 @@ function whois(): void {
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_whois', '', "status = '".$status."'", $anump);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -76,7 +76,7 @@ function toggle(): void {
 }
 
 function add(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     $stop = $stop ?? [];
     $wid = 0;
     $id = getVar('req', 'id', 'num');
@@ -94,7 +94,7 @@ function add(): void {
     }
     setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', $stop)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
         .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'

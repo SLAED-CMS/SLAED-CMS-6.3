@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('rss')) die('Illegal file access');
 
 function rss(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['', '', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'id' => 'rss']);
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
@@ -36,7 +36,7 @@ function rss(): void {
         .'<tr><td>'._USES.':</td><td>'.$field.'</td></tr></table>'
         .'</td></tr></table></div>';
     }
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _RSSDESC]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=rss" method="post">'
     .'<input type="hidden" name="op" value="save">'

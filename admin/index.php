@@ -69,14 +69,14 @@ function getAdminPanelBlocks(): string {
 }
 
 function getAdminPanel(): void {
- global $conf, $panel, $count, $afile, $class;
+ global $conf, $panel, $count, $afile, $class, $tpl;
     setHead();
     $content = '';
     $minver = '8.1.0';
     $info = sprintf(_PHPSETUP, $minver);
-    if (file_exists('setup.php')) $content .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _DELSETUP]);
-    if (PHP_VERSION < $minver) $content .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $info]);
-    if ($conf['admininfo']) $content .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $conf['admininfo']]);
+    if (file_exists('setup.php')) $content .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DELSETUP]);
+    if (PHP_VERSION < $minver) $content .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $info]);
+    if ($conf['admininfo']) $content .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $conf['admininfo']]);
     if ($panel) {
         $count = 1;
         if (isAdmin(true)) {
@@ -196,7 +196,7 @@ function login() {
  global $db, $afile, $conf, $stop, $tpl;
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_admins')) == 0) {
-        $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['type' => 'atten', 'text' => $stop]) : '';
         $cont .= $tpl->getHtmlPart('registration', [
             'route' => $afile,
             'nickname' => _NICKNAME,
@@ -213,7 +213,7 @@ function login() {
             'send' => _SEND,
         ]);
     } else {
-        $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'atten', 'text' => $stop]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['type' => 'atten', 'text' => $stop]) : '';
         $cont .= $tpl->getHtmlPart('login', [
             'route' => $afile,
             'nickname' => _NICKNAME,

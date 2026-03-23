@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function recommend(): void {
-    global $conf, $stop;
+    global $conf, $stop, $tpl;
     $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
     if (is_user()) {
         $userinfo = getUserInfo();
@@ -23,8 +23,8 @@ function recommend(): void {
     $fname = getVar('post', 'fname', 'name');
     $femail = getVar('post', 'femail', 'text');
     setHead(['title' => _RECOMMTITLE]);
-    $cont = setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= setTemplateBasic('recommend-form', [
         '{%name%}' => $conf['name'],
         '{%style%}' => $conf['style'],
@@ -46,7 +46,7 @@ function recommend(): void {
 }
 
 function send(): void {
-    global $conf, $stop;
+    global $conf, $stop, $tpl;
     $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
     $sname = getVar('post', $unkey, 'name');
     $semail = getVar('post', 'semail', 'text');
@@ -77,7 +77,8 @@ function send(): void {
         addMail($femail, $semail, $subject, $message, 0, 3);
         update_points(38);
         setHead(['title' => _RECOMMTITLE]);
-        echo setTemplateBasic('title', ['{%title%}' => _RECOMMTITLE]).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => setTemplateBasic('recommend-success-text', ['{%freference%}' => _FREFERENCE, '{%friend_name%}' => $fname, '{%thanksrec%}' => _THANKSREC])]);
+        $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+        echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => setTemplateBasic('recommend-success-text', ['{%freference%}' => _FREFERENCE, '{%friend_name%}' => $fname, '{%thanksrec%}' => _THANKSREC]), 'meta' => $meta]);
         setFoot();
     } else {
         recommend();

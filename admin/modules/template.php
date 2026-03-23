@@ -20,7 +20,7 @@ function getTemplateSearch(string $templ): string {
 }
 
 function template(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     $templ = getVar('post', 'templ', 'var', '');
     if ($templ === '') $templ = getVar('get', 'templ', 'var', $conf['theme']);
     setHead();
@@ -48,14 +48,14 @@ function template(): void {
         }
         $cont .= setTemplateBasic('open').$conts.setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function style(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     $templ = getVar('get', 'templ', 'var', $conf['theme']);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=template&amp;templ='.$templ, 'name=template&amp;op=style&amp;templ='.$templ, 'name=template&amp;op=info'], 'tabs' => [_TEMPLATES, _STYLES, _INFO], 'tab' => 1, 'sub' => getTemplateSearch($templ)]);
@@ -82,7 +82,7 @@ function style(): void {
         }
         $cont .= setTemplateBasic('open').$conts.setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();

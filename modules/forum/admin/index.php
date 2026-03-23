@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('forum')) die('Illegal file access');
 
 function forum(): void {
-    global $db;
+    global $db, $tpl;
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = \'0\', posts = \'0\', lpost = \'0\' WHERE modul = \'forum\'');
     $query = $db->getSqlQuery('SELECT id, parent FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     $cats = [];
@@ -28,7 +28,7 @@ function forum(): void {
     }
     setHead();
     $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHIN]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHIN]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._FORUM.'</th><th>'._NEWTOPICS.'</th><th>'._MESSAGES.'</th><th class="{sorter: false}">'._STATUS.'</th></tr></thead><tbody>';
     $query = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
@@ -44,10 +44,10 @@ function forum(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SYNCHINF]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $sort_sel = '<select name="sort" class="sl_conf">'
         .'<option value="1"'.(($conf['forum']['sort'] ?? null) == '1' ? ' selected' : '').'>'._ASC.'</option>'

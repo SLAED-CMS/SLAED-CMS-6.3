@@ -62,11 +62,11 @@ function getAdmintext(array $stop): string {
 
 
 function admins(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-    if (getVar('get', 'send', 'num')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
-    if ($msg = trim(getVar('get', 'msg', 'text', ''))) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $msg]);
+    if (getVar('get', 'send', 'num')) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MAIL_SEND]);
+    if ($msg = trim(getVar('get', 'msg', 'text', ''))) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $msg]);
     $cont .= setTemplateBasic('open');
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE
         .'</th><th>'._SUPERUSER.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -93,7 +93,7 @@ function admins(): void {
 }
 
 function add(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     $aid = getVar('req', 'id', 'num', 0);
     $stop = [];
     if ($aid) {
@@ -121,7 +121,7 @@ function add(): void {
     $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
     setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => getAdmintext($stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => getAdmintext($stop)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php?name=admins&amp;op=save" method="post"><input type="hidden" name="op" value="save">'
         .'<input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="token" value="'
@@ -174,11 +174,11 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $conf, $stop;
+    global $db, $afile, $conf, $stop, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _TOKENMISS]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _TOKENMISS]);
         setFoot();
         return;
     }
@@ -247,11 +247,11 @@ function save(): void {
 }
 
 function delete(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _TOKENMISS]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _TOKENMISS]);
         setFoot();
         return;
     }

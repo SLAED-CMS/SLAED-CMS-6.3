@@ -13,7 +13,7 @@ const JOKES_NAVI = ['htitle' => _JOKES, 'liste_href' => ''];
 
 
 function jokes(): void {
-    global $db, $afile, $user, $conf, $home, $op;
+    global $db, $afile, $user, $conf, $home, $op, $tpl;
     $cwhere = catmids($conf['name'], 'j.cid');
     $word = getVar('get', 'word', 'word');
     $unum = getUserNews($conf['jokes']['num']);
@@ -119,14 +119,14 @@ function jokes(): void {
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_jokes', 'cid', $onum, $conf['jokes']['nump']);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $user, $conf, $stop;
+    global $user, $conf, $stop, $tpl;
     if ($conf['jokes']['add'] == '1') {
         $title = getVar('post', 'title', 'text');
         $cid = getVar('post', 'cid', 'num');
@@ -134,9 +134,9 @@ function add(): void {
         $postname = filterText(substr(getVar('post', 'postname', 'name'), 0, 25));
         setHead(['title' => _ADD]);
         $cont = setModuleNavi(['title' => _ADD] + JOKES_NAVI);
-        if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         if ($joke) $cont .= preview($title, $joke, '', '', 'all');
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ADD_JNOTE]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ADD_JNOTE]);
         $cont .= setTemplateBasic('form-add', [
             'if_flag' => ['has_name' => true, 'is_user' => is_user()],
             '{%name%}' => $conf['name'],
@@ -162,7 +162,7 @@ function add(): void {
 }
 
 function send(): void {
-    global $db, $user, $conf, $stop;
+    global $db, $user, $conf, $stop, $tpl;
     if ($conf['jokes']['add'] == '1') {
         $postname = filterText(substr(getVar('post', 'postname', 'name'), 0, 25));
         $title = getVar('post', 'title', 'text');
@@ -183,7 +183,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
             setHead(['title' => _JOKES.' '._ADD, 'desc' => _UPLOADFINISHJ]);
-            echo setModuleNavi(['title' => _ADD] + JOKES_NAVI).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _UPLOADFINISHJ]);
+            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            echo setModuleNavi(['title' => _ADD] + JOKES_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHJ, 'meta' => $meta]);
             setFoot();
         } else {
             add();

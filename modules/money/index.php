@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function money(): void {
-    global $conf, $stop;
+    global $conf, $stop, $tpl;
     if (is_user()) {
         $userinfo = getUserInfo();
         $email = getVar('post', 'email', 'text');
@@ -19,8 +19,8 @@ function money(): void {
         $email = getVar('post', 'email', 'text');
     }
     setHead(['title' => _MONEY]);
-    $cont = setTemplateBasic('title', ['{%title%}' => _MONEY]);
-    $cont .= ($conf['money']['an']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MO_11]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _MONEY]);
+    $cont .= ($conf['money']['an']) ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MO_11]);
     $cont .= filterReplaceText(filterMarkdown(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), 'all', false), 'all');
     $cont .= '<script>
     function Rechner(form) {
@@ -57,7 +57,7 @@ function money(): void {
         $sum = getVar('post', 'sum', 'num');
         $intro = getVar('post', 'intro', 'array', []);
         $note = getVar('post', 'note', 'text');
-        if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         $cont .= '<h2>'._MO_6.'</h2><form action="index.php?name='.$conf['name'].'" method="post">'
         .'<table class="sl_table_form">'
         .'<tr><td>'._MO_7.':</td><td><input type="number" name="sum" value="'.$sum.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_7.'" required></td></tr>'
@@ -78,7 +78,7 @@ function money(): void {
 }
 
 function send(): void {
-    global $db, $conf, $stop;
+    global $db, $conf, $stop, $tpl;
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $email = getVar('post', 'email', 'text');
@@ -136,7 +136,8 @@ function send(): void {
                 addMail($email, $amail, $subject, $msg, 0, 3);
             }
             setHead(['title' => _MONEY]);
-            echo setTemplateBasic('title', ['{%title%}' => _MONEY]).setTemplateWarning('warn', ['time' => '30', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => filterReplaceText(filterMarkdown($conf['money']['info'], 'all', false), 'all')]);
+            $meta = '<meta http-equiv="refresh" content="30; url=index.php?name='.$conf['name'].'">';
+            echo $tpl->getHtmlFrag('title', ['title' => _MONEY]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['money']['info'], 'all', false), 'all'), 'meta' => $meta]);
             setFoot();
         } else {
             money();

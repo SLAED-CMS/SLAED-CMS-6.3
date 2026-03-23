@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('voting')) die('Illegal file access');
 
 function voting(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $num = getVar('get', 'num', 'num', 1);
@@ -43,14 +43,14 @@ function voting(): void {
         $cont .= setArticleNumbers('pagenum', '', $conf['voting']['anum'], 'name=voting&amp;', 'id', '_voting', '', '', $conf['voting']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $db, $afile, $conf, $stop;
+    global $db, $afile, $conf, $stop, $tpl;
     $stop = $stop ?? '';
     $id = getVar('req', 'id', 'num');
     if ($id) {
@@ -73,7 +73,7 @@ function add(): void {
     }
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($id) $cont .= setTemplateBasic('open').'<div id="repvoting">'.getVoting($id, 'voting').'</div>'.setTemplateBasic('close');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';

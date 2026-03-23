@@ -7,10 +7,10 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('clients')) die('Illegal file access');
 
 function clients(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _CERROR]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
         $cont .= setTemplateBasic('open');
@@ -34,14 +34,14 @@ function clients(): void {
         $cont .= '</tbody></table>';
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     $id = getVar('req', 'id', 'num');
     if ($id) {
         $result = $db->getSqlQuery('SELECT id, title, body, url, num, code, pid, status FROM '.PREFIX_DB.'_clients_down WHERE id = :id', ['id' => $id]);
@@ -60,7 +60,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) {
         $stopText = is_array($stop) ? implode('<br>', $stop) : $stop;
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stopText]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stopText]);
     }
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     $cont .= setTemplateBasic('open');

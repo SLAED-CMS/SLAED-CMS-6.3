@@ -10,13 +10,13 @@ if (!defined('MODULE_FILE')) {
 }
 
 function clients(): void {
-    global $db, $conf, $afile, $user, $stop, $info;
+    global $db, $conf, $afile, $user, $stop, $info, $tpl;
     getLang('clients');
     setHead(['title' => _PRODUCTSINFO]);
-    $cont = setTemplateBasic('title', ['{%title%}' => _PRODUCTSINFO]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _PRODUCTSINFO]);
     $cont .= getUserNav();
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-    if ($info) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+    if ($info) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid FROM '.PREFIX_DB.'_clients_down WHERE status != \'0\'');
     if ($db->getSqlRowCount($result) > 0) {
         $uid = (int)($user[0] ?? 0);
@@ -48,7 +48,7 @@ function clients(): void {
         }
         $cont .= setTemplateBasic('table-close').$conts;
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();

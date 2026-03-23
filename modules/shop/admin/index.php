@@ -127,7 +127,7 @@ function clients(): void {
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $conf['shop']['anum'], $field, $conf['shop']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -186,7 +186,7 @@ function clientadd(): void {
         'subtab' => 1,
         'legacy' => 3,
     ]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     $cont .= setTemplateBasic('open');
     $cppi = 0;
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
@@ -374,7 +374,7 @@ function products(): void {
         $cont .= '<table class="searchboxtab"><tr><td>'.$numpt.'</td><td><div class="searchbox">'.$selms.'</div></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -424,7 +424,7 @@ function productadd(): void {
         'subtab' => 1,
         'legacy' => 2,
     ]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     $ptextpre = ($vote) ? '<div id="repshop">'.getVoting($vote, 'shop').'</div><hr>'.$ptext : $ptext;
     if ($ptextpre) $cont .= preview($ptitle, $ptextpre, $pbodytext, '', 'shop');
     $cont .= setTemplateBasic('open');
@@ -616,7 +616,7 @@ function partners(): void {
         $cont .= setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_partners', '', $sqlstatus, $conf['shop']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -675,7 +675,7 @@ function partneradd(): void {
         'subtab' => 1,
         'legacy' => 3,
     ]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     if ($paid) {
@@ -894,7 +894,7 @@ function export(): void {
             'id'     => 'export',
         ]);
         $cont .= checkPerms(BASE_DIR.'/uploads/shop/temp');
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _S_NOTE]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _S_NOTE]);
         [$pr] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_products'));
         [$cl] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_clients'));
         [$pa] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_partners'));
@@ -907,7 +907,7 @@ function export(): void {
             $content .= ($pa) ? '<option value="partners">'._PARTNERS.'</option>' : '';
             $content .= '</select></td></tr><tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="shop"><input type="hidden" name="id" value="1"><input type="hidden" name="op" value="export"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
         } else {
-            $content .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
         $content .= '</div><div id="tabcs1" class="tabcont">';
         $ocont = '';
@@ -926,7 +926,7 @@ function export(): void {
             $content .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
             .'<tr><td>'._FILE.':</td><td><select name="bd" class="sl_form">'.$ocont.'</select></td></tr><tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="shop"><input type="hidden" name="id" value="2"><input type="hidden" name="op" value="export"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
         } else {
-            $content .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
         $content .= '</div>'
         .'<script>

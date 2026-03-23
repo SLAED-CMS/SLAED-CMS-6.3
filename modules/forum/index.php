@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function forum(): void {
-    global $db, $conf, $locale;
+    global $db, $conf, $locale, $tpl;
     $rows = [];
     $mod = ($conf['name']) ? filterVar($conf['name']) : 0;
     $cat = getVar('req', 'cat', 'num');
@@ -197,7 +197,7 @@ function forum(): void {
                             $cont .= setTemplateBasic('forum-view-change', ['{%title%}' => _CHECKOP, '{%content%}' => $selmm]);
                         }
                     } else {
-                        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+                        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
                     }
                     $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$cat."'" : "pid = '0' AND cid = '".$cat."' AND time <= NOW() AND status != '0'";
                     $pnum = setArticleNumbers('forum-pagenum', $conf['name'], $listnum, 'cat='.$cat.'&', 'id', '_forum', 'cid', $order, $conf['forum']['pnum']);
@@ -211,7 +211,8 @@ function forum(): void {
                     $infom = ($ismod) ? sprintf(_ACINFOM, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOM, '<b>'._NOTCAN.'</b>');
                     $cont .= setTemplateBasic('forum-list-info', ['{%new%}' => '<span title="'._ISNEWPOST.'" class="sl_t_new">'._ISNEWPOST.'</span>', '{%old%}' => '<span title="'._NONEWPOST.'" class="sl_t_old">'._NONEWPOST.'</span>', '{%popular_new%}' => '<span title="'._TPOPN.'" class="sl_t_pop">'._TPOPN.'</span>', '{%popular%}' => '<span title="'._TPOP.'" class="sl_t_pold">'._TPOP.'</span>', '{%announce%}' => '<span title="'._TANNOUN.'" class="sl_t_announ">'._TANNOUN.'</span>', '{%hot%}' => '<span title="'._THOT.'" class="sl_t_hot">'._THOT.'</span>', '{%mod%}' => '<span title="'._TOPICM.'" class="sl_t_clos_m">'._TOPICM.'</span>', '{%admin%}' => '<span title="'._TOPICA.'" class="sl_t_clos_a">'._TOPICA.'</span>', '{%closed%}' => '<span title="'._TOPICN.'" class="sl_t_clos_n">'._TOPICN.'</span>', '{%pinned%}' => '<span title="'._TOPICP.'" class="sl_t_clos_p">'._TOPICP.'</span>', '{%perm_view%}' => $infov, '{%perm_read%}' => $infor, '{%perm_topic%}' => $infot, '{%perm_reply%}' => $infop, '{%perm_edit%}' => $infoe, '{%perm_delete%}' => $infod, '{%perm_mod%}' => $infom]);
                 } else {
-                    $cont = setTemplateWarning('warn', ['text' => _NOVIEW, 'url' => '?name='.$conf['name'], 'time' => 5, 'id' => 'warn']);
+                    $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+                    $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
                 }
                 $show = false;
             } else {
@@ -224,13 +225,14 @@ function forum(): void {
         echo $cont;
     } else {
         setHead(['title' => _FORUM]);
-        echo setTemplateWarning('warn', ['time' => '5', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _NO_INFO]);
+        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+        echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NO_INFO, 'meta' => $meta]);
     }
     setFoot();
 }
 
 function view(): void {
-    global $db, $user, $conf;
+    global $db, $user, $conf, $tpl;
     $rows = [];
     $where = [];
     $users = [];
@@ -390,7 +392,8 @@ function view(): void {
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         } else {
-            $cont = setTemplateWarning('warn', ['text' => _NOVIEW, 'url' => '?name='.$conf['name'], 'time' => 5, 'id' => 'warn']);
+            $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+            $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
         }
         echo $cont;
     setFoot();
@@ -459,7 +462,7 @@ function move(): void {
 }
 
 function add(): void {
-    global $db, $user, $conf, $stop;
+    global $db, $user, $conf, $stop, $tpl;
     $cat = getVar('req', 'cat', 'num');
     $catid = $cat;
     [$ctitle, $authp, $authy, $authe, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT title, ppost, preply, pedit, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
@@ -527,11 +530,11 @@ function add(): void {
     }
     if ($form) {
         setHead(['title' => $head]);
-        $cont = ($stop) ? setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
         $psubject = (!$subh) ? $subject : '';
         if ($hometext) $cont .= preview($psubject, $hometext, '', $field, $conf['name']);
         $userinfo = getUserInfo();
-        if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= setTemplateWarning('warn', ['text' => _POSTNOTE, 'url' => '', 'time' => 0, 'id' => 'warn']);
+        if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= setTemplateBasic('forum-all-open', ['{%title%}' => $info]);
         $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
         $cont .= (!is_user()) ? '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>' : '';
@@ -549,7 +552,8 @@ function add(): void {
         $head = _FORUM.' '.$ctitle.' '.$ctitle;
         setHead(['title' => $head]);
         $cont = setTemplateBasic('forum-all-open', ['{%title%}' => $ctitle]);
-        $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '?name='.$conf['name'], 'time' => 5, 'id' => 'warn']);
+        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info, 'meta' => $meta]);
     }
     echo $cont;
     setFoot();

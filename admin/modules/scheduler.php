@@ -8,13 +8,13 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function scheduler(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     $jobs = getSchedulerJobs();
     $navi = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $cont = '';
     $seclink = ' <a href="'.$afile.'.php?name=security&amp;op=config">'.htmlspecialchars(_SCHEDULER_WARN_GO, ENT_QUOTES, 'UTF-8').'</a>.';
-    $cont .= (!$conf['security']['log_b']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SCHEDULER_WARN_DB.$seclink]) : '';
-    $cont .= (!$conf['security']['log_d']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SCHEDULER_WARNLOG.$seclink]) : '';
+    $cont .= (!$conf['security']['log_b']) ? $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _SCHEDULER_WARN_DB.$seclink]) : '';
+    $cont .= (!$conf['security']['log_d']) ? $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _SCHEDULER_WARNLOG.$seclink]) : '';
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SCHEDULER_NEXTRUN.'</th><th>'._SCHEDULER_RESULT.'</th><th>'._SCHEDULER_PRIO.'</th><th>'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
     foreach ($jobs as $job) {
         $name = $job['name'];
@@ -77,7 +77,7 @@ function scheduler(): void {
 }
 
 function add(string $name = ''): void {
-    global $conf, $afile;
+    global $conf, $afile, $tpl;
     if ($name === '') $name = getVar('get', 'job', 'var', '');
     $name = preg_replace('#[^a-z]#', '', strtolower($name));
     $jobs = getSchedulerJobs();
@@ -95,7 +95,7 @@ function add(string $name = ''): void {
     $info = $iscustom ? _SCHEDULER_URLINFO : _SCHEDULER_SYSINFO;
     $readonly = $isnew ? '' : ' readonly';
     $cont = checkPerms(CONFIG_DIR.'/scheduler.php');
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $info]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._SCHEDULER_JOBKEY.':</td><td><input type="text" name="job" value="'.htmlspecialchars($key, ENT_QUOTES, 'UTF-8').'" maxlength="32" class="sl_form"'.$readonly.' required></td></tr>'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.htmlspecialchars((string)$job['title'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_form" required></td></tr>'

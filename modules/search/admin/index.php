@@ -136,7 +136,8 @@ function getSearchinvalid(array $list): array {
 }
 
 function getSearchauditTable(array $list, string $view = 'enabled'): string {
-    if (!$list) return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+    global $tpl;
+    if (!$list) return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     $pick = ($view === 'ready') ? '<th class="{sorter: false}">'._ADD.'</th>' : '';
     $cont = '<table class="sl_table_list_sort"><thead><tr>'.$pick.'<th>'._MODUL.'</th><th>'._SEARCHTYPE.'</th><th>'._TABLE.'</th><th>'._SEARCHFIELDS.'</th><th>'._SEARCHEDIT.'</th><th>'._SEARCHREASON.'</th></tr></thead><tbody>';
     foreach ($list as $row) {
@@ -207,7 +208,7 @@ function getSearchbox(string $type = 'search'): string {
 }
 
 function getSearchsum(string $where, array $pars): string {
-    global $db;
+    global $db, $tpl;
     [$hits] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_search'.$where, $pars));
     [$uniq] = $db->getSqlRow($db->getSqlQuery('SELECT Count(DISTINCT word) FROM '.PREFIX_DB.'_search'.$where, $pars));
     [$last] = $db->getSqlRow($db->getSqlQuery('SELECT Max(time) FROM '.PREFIX_DB.'_search'.$where, $pars));
@@ -227,11 +228,11 @@ function getSearchsum(string $where, array $pars): string {
         .'<br>'._SEARCHLAST.': '.($last ? format_time((string)$last, _TIMESTRING) : _NO_INFO)
         .'<br>'._SEARCHTOP.': '.($word ?: _NO_INFO).' ('.intval($best).')'
         .'<br>'._SEARCHTOPMOD.': '.($mlab ?: _NO_INFO).' ('.intval($mhit).')';
-    return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $text]);
+    return $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $text]);
 }
 
 function search(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $sort = getVar('req', 'sort', 'num', 3);
     $order = getVar('req', 'order', 'num', 2);
     $num = getVar('get', 'num', 'num', 1);
@@ -287,14 +288,14 @@ function search(): void {
             .'&amp;order='.$order.$clink.'&amp;', $anump);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function toplist(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $sort = getVar('req', 'sort', 'num', 4);
     $order = getVar('req', 'order', 'num', 2);
     $num = getVar('get', 'num', 'num', 1);
@@ -348,14 +349,14 @@ function toplist(): void {
             .$sort.'&amp;order='.$order.$clink.'&amp;', $anump);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     $allow = ['auto_links', 'faq', 'files', 'forum', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     $anum = intval($conf['search']['anum'] ?? 50);
     $anump = intval($conf['search']['anump'] ?? 10);
@@ -365,8 +366,8 @@ function config(): void {
     $ilist = getSearchinvalid($audit);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('config'), 'tab' => 2, 'id' => 'search']);
-    if (getVar('get', 'reindex', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'reindex', 'num', 0))]);
-    if (getVar('get', 'pick', 'num', 0)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))]);
+    if (getVar('get', 'reindex', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'reindex', 'num', 0))]);
+    if (getVar('get', 'pick', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))]);
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=search" method="post"><input type="hidden" name="op" value="save">'
@@ -401,11 +402,11 @@ function config(): void {
 }
 
 function save(): void {
-    global $afile;
+    global $afile, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('config'), 'tab' => 2, 'id' => 'search']);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -424,11 +425,11 @@ function save(): void {
 }
 
 function reindex(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('config'), 'tab' => 2, 'id' => 'search']);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -450,11 +451,11 @@ function reindex(): void {
 }
 
 function modadd(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('config'), 'tab' => 2, 'id' => 'search']);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -485,7 +486,7 @@ function modadd(): void {
 }
 
 function edit(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $id = getVar('get', 'id', 'num', 0);
     $sort = getVar('req', 'sort', 'num', 3);
     $order = getVar('req', 'order', 'num', 2);
@@ -516,14 +517,14 @@ function edit(): void {
             ._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function editsave(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $id = getVar('post', 'id', 'num', 0);
     $sort = getVar('post', 'sort', 'num', 3);
     $order = getVar('post', 'order', 'num', 2);
@@ -533,7 +534,7 @@ function editsave(): void {
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('search'), 'id' => 'search']);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }
@@ -545,7 +546,7 @@ function editsave(): void {
     if ($word === '') {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('search'), 'id' => 'search']);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SWORD]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SWORD]);
         setFoot();
         return;
     }
@@ -557,10 +558,10 @@ function editsave(): void {
 }
 
 function delete(): void {
-    global $afile;
+    global $afile, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('delete'), 'tab' => 3, 'id' => 'search']);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEARCHCLEARINFO]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=search" method="post"><table class="sl_table_conf">'
         .'<tr><td>'._DELETE.':</td><td><select name="mode" class="sl_form"><option value="all">'._SEARCHCLEAR
@@ -576,11 +577,11 @@ function delete(): void {
 }
 
 function clear(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'search')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('delete'), 'tab' => 3, 'id' => 'search']);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => 'Security token mismatch']);
         setFoot();
         return;
     }

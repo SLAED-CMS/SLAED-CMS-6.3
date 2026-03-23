@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function info(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $url = getVar('post', 'url', 'url');
     $mod = getVar('post', 'mod', 'text', 'news');
     $cat = getVar('post', 'cat', 'num');
@@ -36,7 +36,7 @@ function info(): void {
         $lim++;
     }
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);
-    $cont = setTemplateBasic('title', ['{%title%}' => _RSS]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _RSS]);
     $cont .= setTemplateBasic('rss-info-form', [
         '{%name%}' => $conf['name'],
         '{%style%}' => $conf['style'],

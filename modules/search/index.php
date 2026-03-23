@@ -312,7 +312,7 @@ function getSearchRows(array $state): array {
 }
 
 function getSearchList(array $rows, array $state): string {
-    global $conf;
+    global $conf, $tpl;
     $cont = '';
     $anum = count($rows);
     $from = ($state['num'] - 1) * $state['snum'];
@@ -322,7 +322,7 @@ function getSearchList(array $rows, array $state): string {
         $cont .= setTemplateBasic('basic-search', ['{%n%}' => $numb, '{%title%}' => $row['title'], '{%date%}' => $row['date'], '{%modul%}' => $row['modul'], '{%ctitle%}' => $row['ctitle'], '{%post%}' => $row['post'], '{%admin%}' => $row['edit']]);
         $numb++;
     }
-    if (!$anum) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOMATCHES]);
+    if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);
     $pnum = ceil($anum / $state['snum']);
     $tail = $state['typ'] ? '&typ='.$state['typ'] : '';
     $cont .= ($anum > $state['snum']) ? setPageNumbers('pagenum', $conf['name'], $anum, $pnum, $state['snum'], 'mod='.$state['mod'].'&word='.urlencode($state['word']).$tail.'&', $state['snump']) : setNaviLower($conf['name']);
@@ -330,10 +330,10 @@ function getSearchList(array $rows, array $state): string {
 }
 
 function search(): void {
-    global $conf;
+    global $conf, $tpl;
     $state = getSearchState();
     setHead(['title' => _SEARCH]);
-    $cont = setTemplateBasic('title', ['{%title%}' => _SEARCH]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _SEARCH]);
     $cont .= getSearchForm($state);
     if (!$state['stop'] && $state['word'] !== '') {
         addSearchStat($state);
@@ -341,7 +341,7 @@ function search(): void {
     } else {
         $winfo = ($state['stop']) ? $state['stop'] : _SEARCHINFO;
         $wtyp = ($state['stop']) ? 'warn' : 'info';
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => $wtyp, 'text' => $winfo]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => ($wtyp !== 'info'), 'text' => $winfo]);
     }
     echo $cont;
     setFoot();

@@ -122,12 +122,12 @@ function mwhois(): void {
 }
 
 function add(): void {
-	global $db, $user, $conf, $stop;
+	global $db, $user, $conf, $stop, $tpl;
 	if ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) {
 		setHead(['title' => _WHOIS_LICENS_SEND]);
 		$cont = setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI);
-		if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
-		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _ABMIT]);
+		if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABMIT]);
 		$hometext = getVar('post', 'hometext', 'text');
 		$postname = getVar('post', 'postname', 'name');
 		$postname = ($postname) ? $postname : _ANONYM;
@@ -166,7 +166,7 @@ function add(): void {
 }
 
 function send(): void {
-	global $db, $user, $conf, $stop;
+	global $db, $user, $conf, $stop, $tpl;
 	if ((is_user() && $conf['whois']['add'] == 1) || (!is_user() && $conf['whois']['addquest'] == 1)) {
 		$postname = getVar('post', 'postname', 'name');
 		$domain = getVar('post', 'domain', 'url');
@@ -186,7 +186,8 @@ function send(): void {
 			$puname = (is_user()) ? $user[1] : $postname;
 			addAdminMail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
 			setHead(['title' => _WHOIS_LICENS_SEND]);
-			echo setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI).setTemplateWarning('warn', ['time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ABTEXT]);
+			$meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+			echo setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABTEXT, 'meta' => $meta]);
 			setFoot();
 		} else {
 			add();

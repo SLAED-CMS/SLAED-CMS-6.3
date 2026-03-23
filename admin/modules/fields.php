@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function fields(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['', '', '', '', '', '', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'id' => 'fields']);
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
@@ -50,7 +50,7 @@ function fields(): void {
         $content .= '</div>';
         $k++;
     }
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _FIELDINFO]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _FIELDINFO]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="fields"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
        .'<script>

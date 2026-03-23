@@ -144,7 +144,7 @@ function fix(): void {
 }
 
 function addsave(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
     $url = getVar('post', 'url', 'url', '');
@@ -174,7 +174,7 @@ function addsave(): void {
     if (($content == '') && ($bfile == '')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _RSSFAIL]).setTemplateBasic('open').'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.setTemplateBasic('close');
+        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _RSSFAIL]).setTemplateBasic('open').'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.setTemplateBasic('close');
         setFoot();
     } else {
         if ($expire == '' || $expire == 0) {
@@ -196,7 +196,7 @@ function addsave(): void {
 }
 
 function filecode(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $bf = getVar('post', 'bf', 'var', '');
     if ($bf != '') {
         $flag = getVar('post', 'flag', 'var', '');
@@ -219,12 +219,12 @@ function filecode(): void {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
         $cont .= checkPerms(BASE_DIR.'/blocks/');
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _BLOCK.': '.$bf]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _BLOCK.': '.$bf]);
         if (file_exists('blocks/'.$bf)) {
             $cont .= checkPerms(BASE_DIR.'/blocks/'.$bf);
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _B_FEDIT]);
+            $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _B_FEDIT]);
         }
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _EINFOPHP]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _EINFOPHP]);
         $cont .= setTemplateBasic('open');
         $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit">'
         .'<tr><td>'.textarea_code('code', 'blocktext', 'sl_form', 'text/x-php', trim($out[1])).'</td></tr>'
@@ -262,7 +262,7 @@ function filecodesave(): void {
 }
 
 function edit(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
     $bid = getVar('get', 'id', 'num');
@@ -274,7 +274,7 @@ function edit(): void {
     } else {
         $type = '('._BLOCKHTML.')';
     }
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _BLOCK.': '.$title.' '.$type]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _BLOCK.': '.$title.' '.$type]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.':<div class="sl_small">'._ADDCONST.'</div></td><td><input type="text" name="title" maxlength="50" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>';

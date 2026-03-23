@@ -15,7 +15,7 @@ function modules(): void {
     $search = $tpl->getHtmlPart('searchbox', ['searchbox' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
-    if (isset($infos)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $infos]);
+    if (isset($infos)) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $infos]);
     $config = false;
     $modlist = [];
     $new = [];
@@ -67,12 +67,12 @@ function modules(): void {
     closedir($handle);
     $duplicates = array_diff_assoc($modlist, array_unique($modlist));
     if (!empty($duplicates)) {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _MODULES_DUPLICATE.': '.implode(', ', array_unique($duplicates))]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _MODULES_DUPLICATE.': '.implode(', ', array_unique($duplicates))]);
     }
     if (!empty($new)) {
         $new = array_values(array_unique($new));
         sort($new, SORT_NATURAL | SORT_FLAG_CASE);
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODULES_NEW.': '.implode(', ', $new)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODULES_NEW.': '.implode(', ', $new)]);
     }
     foreach (array_keys($conf['modules']) as $module) {
         if (!in_array($module, $modlist, true)) {
@@ -84,7 +84,7 @@ function modules(): void {
     if (!empty($removed)) {
         $removed = array_values(array_unique($removed));
         sort($removed, SORT_NATURAL | SORT_FLAG_CASE);
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MODULES_DELETED.': '.implode(', ', $removed)]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODULES_DELETED.': '.implode(', ', $removed)]);
     }
     if ($config) setConfigFile('modules.php', $conf['modules']);
     $mods = [];

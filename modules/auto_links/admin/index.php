@@ -8,13 +8,13 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('auto_links')) die('Illegal file a
 
 
 function auto_links(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
     ]);
-    if (!$conf['referers']['refer']) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]);
+    if (!$conf['referers']['refer']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['auto_links']['anum'];
     $result = $db->getSqlQuery('SELECT id, title, url, hits, outs, added FROM '.PREFIX_DB.'_auto_links ORDER BY hits ASC LIMIT '.$offset.', '.$conf['auto_links']['anum']);
@@ -43,7 +43,7 @@ function auto_links(): void {
         $cont .= setArticleNumbers('pagenum', '', $conf['auto_links']['anum'], 'name=auto_links&amp;', 'id', '_auto_links', '', '', $conf['auto_links']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -91,7 +91,7 @@ function stats(): void {
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'sub'  => $box,
     ]);
-    if (!$conf['referers']['refer']) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]);
+    if (!$conf['referers']['refer']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     $list = [];
     $a = 0;
     while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
@@ -120,14 +120,14 @@ function stats(): void {
         $cont .= setPageNumbers('pagenum', '', $a, $pages, $conf['auto_links']['anum'], 'name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['auto_links']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function add(): void {
-    global $db, $afile, $stop;
+    global $db, $afile, $stop, $tpl;
     $stop = $stop ?? [];
     $id = getVar('req', 'id', 'num');
     if ($id) {
@@ -148,7 +148,7 @@ function add(): void {
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 1,
     ]);
-    if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => implode('<br>', $stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', $stop)]);
     if ($desc) $cont .= preview($name, $desc, '', '', 'auto_links');
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php?name=auto_links" method="post"><table class="sl_table_form">'
@@ -216,14 +216,14 @@ function zerodel(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 4,
     ]);
-    if (!$conf['referers']['refer']) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _A_NOTE]);
+    if (!$conf['referers']['refer']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     $cont .= checkPerms(CONFIG_DIR.'/auto_links.php');
     $cont .= setTemplateBasic('open');
     $path = 'templates/'.$conf['theme'].'/images/banners/';

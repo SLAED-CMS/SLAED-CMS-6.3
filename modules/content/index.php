@@ -10,13 +10,13 @@ if (!defined('MODULE_FILE')) {
 }
 
 function content(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
     $limit = (int)($conf['content']['num'] ?? ($conf['content']['num'] ?? 10));
     $nump = (int)($conf['content']['nump'] ?? ($conf['content']['nump'] ?? 5));
     if ($limit < 1) $limit = 10;
     if ($nump < 1) $nump = 5;
     setHead(['title' => _CONTENT]);
-    $cont = setTemplateBasic('title', ['{%title%}' => _CONTENT]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _CONTENT]);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $limit;
     $result = $db->getSqlQuery('SELECT id, title, body, time, counter FROM '.PREFIX_DB.'_content WHERE time <= NOW() ORDER BY time DESC LIMIT '.$offset.', '.$limit);
@@ -39,14 +39,14 @@ function content(): void {
         $cont .= setTemplateBasic('table-close');
         $cont .= setArticleNumbers('pagenum', $conf['name'], $limit, '', 'id', '_content', '', '', $nump);
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function view(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
     $result = $db->getSqlQuery('SELECT id, title, body, field, url, time, refresh FROM '.PREFIX_DB.'_content WHERE id = :id AND time <= NOW()', ['id' => $id]);
@@ -73,7 +73,7 @@ function view(): void {
             'time' => $time,
             'author' => $conf['sitename'],
         ]);
-        echo setTemplateBasic('title', ['if_flag' => ['is_view' => true], '{%title%}' => $title]).filterTextHighlight(filterMarkdown($hometext, $conf['name'], false), $word);
+        echo $tpl->getHtmlFrag('title', ['title' => $title]).filterTextHighlight(filterMarkdown($hometext, $conf['name'], false), $word);
         setFoot();
     } else {
         setRedirect('index.php?name='.$conf['name']);

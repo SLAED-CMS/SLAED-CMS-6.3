@@ -7,7 +7,7 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('sitemap')) die('Illegal file access');
 
 function sitemap(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $file = 'sitemap.xml';
     $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO]]);
@@ -31,7 +31,7 @@ function sitemap(): void {
         $f++;
         $asize += $size;
     }
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add"><input type="submit" value="'._UPDATE.'" class="sl_but_blue"></td></tr></table></form>';
@@ -47,13 +47,13 @@ function add(): void {
 }
 
 function xsledit(): void {
-    global $afile;
+    global $afile, $tpl;
     setHead();
     $file = SITEMAP_DIR.'/sitemap.xsl';
     $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_XSL_INFO, $file)]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'application/xml', $conts).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="xslsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';

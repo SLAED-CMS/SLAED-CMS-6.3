@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function contact(): void {
-    global $db, $conf, $locale, $stop;
+    global $db, $conf, $locale, $stop, $tpl;
     if (is_user()) {
         $userinfo = getUserInfo();
         $sname = getVar('post', 'sname', 'name', $userinfo['name']);
@@ -45,7 +45,7 @@ function contact(): void {
         $info = '';
     }
     setHead(['title' => $title]);
-    $cont = setTemplateBasic('title', ['{%title%}' => $title]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => $title]);
     $form = setTemplateBasic('contact-form', [
         '{%info%}' => $info,
         '{%name%}' => $conf['name'],
@@ -84,9 +84,10 @@ function contact(): void {
             $msg = $conf['sitename'].' - '._FEEDBACK.'<br><br>'._SENDERNAME.': '.$sname.'<br>'._SENDEREMAIL.': '.$semail.'<br><br>'._MESSAGE.': '.$message;
             addMail($to, $semail, $subject, $msg, 1, 1);
             update_points(5);
-            $cont .= setTemplateWarning('warn', ['time' => '5', 'url' => '', 'id' => 'info', 'text' => _FBMAILSENT]);
+            $meta = '<meta http-equiv="refresh" content="5; url=index.php">';
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
             $cont .= $form;
         }
     } else {

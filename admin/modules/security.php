@@ -47,7 +47,7 @@ function security(): void {
 }
 
 function logview(): void {
-    global $labels;
+    global $labels, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $file = getVar('get', 'file', 'var');
@@ -56,7 +56,7 @@ function logview(): void {
         $path = LOGS_DIR.'/'.$file.'.log';
         $content = (is_file($path) && is_readable($path)) ? file_get_contents($path) : false;
         if ($content === false) {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
             echo $cont;
             setFoot();
             return;
@@ -64,14 +64,14 @@ function logview(): void {
         $cont .= checkPerms($path);
         $cont .= setTemplateBasic('open').'<table class="sl_table_edit"><tr><td><h5>'.$title.'</h5></td></tr><tr><td>'.textarea_code('code', '', 'sl_form', 'message/http', $content).'</td></tr></table>'.setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function banlist(): void {
-    global $conf, $afile;
+    global $conf, $afile, $tpl;
     $time = getVar('req', 'time', 'num');
     $info = getVar('req', 'info', 'text');
     $hash = getVar('req', 'hash', 'text');
@@ -79,7 +79,7 @@ function banlist(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 1, 'subtab' => 1, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
-    if (getVar('get', 'send', 'var')) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _MAIL_SEND]);
+    if (getVar('get', 'send', 'var')) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MAIL_SEND]);
     $cont .= setTemplateBasic('open');
     $cont .= '<div id="tabcs0" class="tabcont">';
     $bip = explode('||', $conf['security']['blocker_ip']);
@@ -195,11 +195,11 @@ function bansave(): void {
 }
 
 function passwd(): void {
-    global $conf, $afile;
+    global $conf, $afile, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 2, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
-    $cont .= (!$conf['security']['login'] || !$conf['security']['password']) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _SEC_AUTH_INFO]) : setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _SEC_AUTH_OK]);
+    $cont .= (!$conf['security']['login'] || !$conf['security']['password']) ? $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _SEC_AUTH_INFO]) : $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _SEC_AUTH_OK]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
     .'<tr><td>'._SEC_ADMIN_IP.':<div class="sl_small">'._IP_CIDR_TIP.'</div></td><td><textarea name="admin_ip" cols="65" rows="5" class="sl_form" placeholder="'._IP_CIDR_EX.'">'.$conf['security']['admin_ip'].'</textarea></td></tr>';

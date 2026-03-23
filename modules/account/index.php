@@ -10,14 +10,14 @@ if (!defined('MODULE_FILE')) {
 }
 
 function account(): void {
-    global $conf, $stop;
+    global $conf, $stop, $tpl;
     if (is_user()) {
         profil();
     } else {
         setHead(['title' => _USERREGLOGIN]);
         $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-        $cont = setTemplateBasic('title', ['{%title%}' => _USERREGLOGIN]);
-        if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         $cont .= setTemplateBasic('account-login-form', [
             'if_flag' => ['network_enabled' => !empty($conf['users']['network'])],
             '{%name%}' => $conf['name'],
@@ -57,19 +57,19 @@ function checkuser(string $nick, string $mail, int|string $rules): ?array {
 }
 
 function newuser(): void {
-    global $conf, $stop;
+    global $conf, $stop, $tpl;
     if (is_user()) {
         profil();
     } else {
         setHead(['title' => _REGNEWUSER]);
         if ($stop) {
-            $cont = setTemplateBasic('title', ['{%title%}' => _NEWUSERERROR]);
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+            $cont = $tpl->getHtmlFrag('title', ['title' => _NEWUSERERROR]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         } else {
-            $cont = setTemplateBasic('title', ['{%title%}' => _REGNEWUSER]);
+            $cont = $tpl->getHtmlFrag('title', ['title' => _REGNEWUSER]);
         }
         if (!$conf['users']['reg']) {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOREG]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOREG]);
         } else {
             $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
             $nick = getVar('post', $unkey, 'text');
@@ -109,10 +109,10 @@ function newuser(): void {
 }
 
 function finnewuser(): void {
-    global $db, $conf, $stop;
+    global $db, $conf, $stop, $tpl;
     if (!$conf['users']['reg']) {
         setHead(['title' => _NOREG]);
-        echo setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOREG]);
+        echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOREG]);
         setFoot();
     } else {
         $unkey = substr(hash('sha256', 'field|'.$conf['sitekey']), 0, 32);
@@ -143,8 +143,8 @@ function finnewuser(): void {
             );
             setHead(['title' => _ACCOUNTCREATED]);
             if ($conf['users']['nomail'] == 1) {
-                $cont = setTemplateBasic('title', ['{%title%}' => _ACCOUNTCREATED]);
-                $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _TOFINISHUSERN]);
+                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]);
+                $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TOFINISHUSERN]);
                 $cont .= setTemplateBasic('account-activate-form', [
                     '{%name%}' => $conf['name'],
                     '{%lbl_nickname%}' => _UNICKNAME,
@@ -160,7 +160,8 @@ function finnewuser(): void {
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
-                $cont = setTemplateBasic('title', ['{%title%}' => _ACCOUNTCREATED]).setTemplateWarning('warn', ['time' => '30', 'url' => '', 'id' => 'info', 'text' => _YOUAREREGISTERED.'<br><br>'._FINISHUSERCONF.'<br><br>'._THANKSUSER]);
+                $meta = '<meta http-equiv="refresh" content="30; url=index.php">';
+                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.'<br><br>'._FINISHUSERCONF.'<br><br>'._THANKSUSER, 'meta' => $meta]);
             }
             echo $cont;
             setFoot();
@@ -171,7 +172,7 @@ function finnewuser(): void {
 }
 
 function network(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $conf['users']['network'] = 1;
     $token = getVar('post', 'token', 'text');
     if ($conf['users']['network'] && $token) {
@@ -241,7 +242,8 @@ function network(): void {
             }
         } else {
             setHead(['title' => _ERRORINPUT]);
-            echo setTemplateBasic('title', ['{%title%}' => _ERRORINPUT]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ERRORSESS]);
+            $meta = '<meta http-equiv="refresh" content="15; url=index.php?name='.$conf['name'].'">';
+            echo $tpl->getHtmlFrag('title', ['title' => _ERRORINPUT]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERRORSESS, 'meta' => $meta]);
             setFoot();
         }
     } else {
@@ -250,7 +252,7 @@ function network(): void {
 }
 
 function activate(): void {
-    global $db, $conf, $locale;
+    global $db, $conf, $locale, $tpl;
     $user = getVar('get', 'user', 'name', '');
     $num = getVar('get', 'num', 'text', '');
     $past = time() - 86400;
@@ -266,18 +268,21 @@ function activate(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, network, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => 'default/00.gif', 'regdate' => $reg, 'pwd' => getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
-            echo setTemplateBasic('title', ['{%title%}' => _ACTIVATIONYES]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _ACTMSG]);
+            $meta = '<meta http-equiv="refresh" content="15; url=index.php?name='.$conf['name'].'">';
+            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONYES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ACTMSG, 'meta' => $meta]);
         } else {
-            echo setTemplateBasic('title', ['{%title%}' => _ACTIVATIONERROR]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ACTERROR1]);
+            $meta = '<meta http-equiv="refresh" content="15; url=index.php?name='.$conf['name'].'">';
+            echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR1, 'meta' => $meta]);
         }
     } else {
-        echo setTemplateBasic('title', ['{%title%}' => _ACTIVATIONERROR]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name='.$conf['name'], 'id' => 'warn', 'text' => _ACTERROR2]);
+        $meta = '<meta http-equiv="refresh" content="15; url=index.php?name='.$conf['name'].'">';
+        echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR2, 'meta' => $meta]);
     }
     setFoot();
 }
 
 function view(): void {
-    global $db, $conf, $afile;
+    global $db, $conf, $afile, $tpl;
     if ($conf['users']['prof'] != 1 || ($conf['users']['prof'] == 1 && is_user()) || isAdmin()) {
         $uname = htmlspecialchars(substr(urldecode(getVar('get', 'uname', 'text')), 0, 25));
         $params = [];
@@ -474,21 +479,23 @@ function view(): void {
             setFoot();
         } else {
             setHead(['title' => _USERNOEXIST]);
-            echo setTemplateWarning('warn', ['time' => '3', 'url' => '', 'id' => 'info', 'text' => _USERNOEXIST]);
+            $meta = '<meta http-equiv="refresh" content="3; url=index.php">';
+            echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERNOEXIST, 'meta' => $meta]);
             setFoot();
         }
     } else {
         setHead(['title' => _MODULEUSERS]);
-        echo setTemplateWarning('warn', ['time' => '15', 'url' => '', 'id' => 'info', 'text' => _MODULEUSERS]);
+        $meta = '<meta http-equiv="refresh" content="15; url=index.php">';
+        echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MODULEUSERS, 'meta' => $meta]);
         setFoot();
     }
 }
 
 function profil(): void {
-    global $conf, $user;
+    global $conf, $user, $tpl;
     if (is_user()) {
         setHead(['title' => _THISISYOURPAGE]);
-        $cont = setTemplateBasic('title', ['{%title%}' => _THISISYOURPAGE]);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _THISISYOURPAGE]);
         $cont .= getUserNav();
         $title[] = _COMMENTS;
         $text[] = last($user[0], 'comm');
@@ -553,7 +560,7 @@ function profil(): void {
 }
 
 function last(int|string $uid, string $modul): string {
-    global $db, $conf, $user;
+    global $db, $conf, $user, $tpl;
     $uid = intval($uid);
     $num = getUserNews(25);
     $limit = intval($num);
@@ -575,7 +582,7 @@ function last(int|string $uid, string $modul): string {
             }
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'faq') {
@@ -585,7 +592,7 @@ function last(int|string $uid, string $modul): string {
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'files') {
@@ -595,7 +602,7 @@ function last(int|string $uid, string $modul): string {
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'forum') {
@@ -605,7 +612,7 @@ function last(int|string $uid, string $modul): string {
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=forum&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'jokes') {
@@ -615,7 +622,7 @@ function last(int|string $uid, string $modul): string {
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=jokes#'.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'links') {
@@ -625,7 +632,7 @@ function last(int|string $uid, string $modul): string {
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=links&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'media') {
@@ -635,7 +642,7 @@ function last(int|string $uid, string $modul): string {
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=media&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'news') {
@@ -645,7 +652,7 @@ function last(int|string $uid, string $modul): string {
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=news&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     if ($modul == 'pages') {
@@ -655,14 +662,14 @@ function last(int|string $uid, string $modul): string {
             while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=pages&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
             $cont .= setTemplateBasic('account-last-wrap', []);
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
     }
     return $cont;
 }
 
 function privat(): void {
-    global $conf;
+    global $conf, $tpl;
     if (is_user() && ($conf['privat']['act'] ?? 0)) {
         #$typ = (getVar('get', 'uname', 'text')) ? 3 : 0;
         setHead([
@@ -680,7 +687,7 @@ function privat(): void {
             setTemplateBasic('account-privat-tab-pane', ['{%id%}' => 'repprmesssa', '{%content%}' => getPmView(1, 0, 0, 3)]),
             setTemplateBasic('account-privat-tab-pane', ['{%id%}' => 'repprmessfo', '{%content%}' => getPmView(1, 0, 0, 4)])
         ];
-        $cont = setTemplateBasic('title', ['{%title%}' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
         setFoot();
     } else {
@@ -689,12 +696,12 @@ function privat(): void {
 }
 
 function favorites(): void {
-    global $conf;
+    global $conf, $tpl;
     if (is_user() && ($conf['favorites']['favact'] ?? 0)) {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo setTemplateBasic('title', ['{%title%}' => _FAVORITES]).getUserNav().setTemplateBasic('account-favorites-list', ['{%content%}' => getFavorList(1)]);
+        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().setTemplateBasic('account-favorites-list', ['{%content%}' => getFavorList(1)]);
         setFoot();
     } else {
         account();
@@ -702,7 +709,7 @@ function favorites(): void {
 }
 
 function passlost(): void {
-    global $conf, $stop;
+    global $conf, $stop, $tpl;
     $code = getVar('get', 'code', 'text');
     $code = ($code) ? substr($code, 0, 10) : false;
     $email = getVar('get', 'email', 'text');
@@ -711,11 +718,11 @@ function passlost(): void {
         setHead([
             'title' => _PASSWORDLOST,
         ]);
-        $cont = setTemplateBasic('title', ['{%title%}' => _PASSWORDLOST]);
+        $cont = $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]);
         $info = ($email) ? _PASSLOSP : _PASSLOSC;
         $send = ($email) ? _SENDPASSWORD : _SEND;
-        if ($stop) $cont .= setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
-        $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'info']);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
         $cont .= setTemplateBasic('account-passlost-form', [
             'if_flag' => ['has_code' => !empty($email)],
             '{%name%}' => $conf['name'],
@@ -739,7 +746,7 @@ function passlost(): void {
 }
 
 function passmail(): void {
-    global $db, $conf, $stop;
+    global $db, $conf, $stop, $tpl;
     $email = getVar('post', 'email', 'text');
     $code = getVar('post', 'code', 'text');
     $code = ($code) ? substr($code, 0, 10) : false;
@@ -767,7 +774,8 @@ function passmail(): void {
             setHead([
                 'title' => _PASSWORDLOST,
             ]);
-            echo setTemplateBasic('title', ['{%title%}' => _PASSWORDLOST]).setTemplateWarning('warn', ['text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'url' => '?name='.$conf['name'], 'time' => 10, 'id' => 'info']);
+            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {
             $link = setTemplateBasic('account-mail-link', ['{%href%}' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, '{%title%}' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, '{%label%}' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, '{%target%}' => '']);
@@ -822,7 +830,7 @@ function logout(): void {
 }
 
 function edithome(): void {
-    global $db, $user, $conf, $stop;
+    global $db, $user, $conf, $stop, $tpl;
     if (is_user()) {
         setHead([
             'title' => _CHANGE,
@@ -837,7 +845,7 @@ function edithome(): void {
             $birthday = '';
         }
         $userinfo['theme'] = (!$userinfo['theme']) ? $conf['theme'] : $userinfo['theme'];
-        $cont = ($stop) ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]) : '';
+        $cont = ($stop) ? $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]) : '';
         $story = '';
         if ($conf['users']['news'] == 1) {
             $xusnum = 3;
@@ -939,7 +947,7 @@ function edithome(): void {
             }
         }
         if (($i - 1) % $a != 0 && $aset !== '') $aset .= setTemplateBasic('account-avatar-grid-row-close');
-        if ($i >= 1) $asetup .= setTemplateBasic('account-avatar-grid', ['{%info_html%}' => setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _AVATARSELECT]), '{%grid_html%}' => $aset]);
+        if ($i >= 1) $asetup .= setTemplateBasic('account-avatar-grid', ['{%info_html%}' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _AVATARSELECT]), '{%grid_html%}' => $aset]);
         $uid = intval($user[0]);
         [$network] = $db->getSqlRow($db->getSqlQuery('SELECT network FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
         if (empty($network)) {
@@ -947,16 +955,16 @@ function edithome(): void {
                 '{%name%}' => $conf['name'],
                 '{%style%}' => $conf['style'],
                 '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                '{%info_html%}' => setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _PASSTEXT]),
+                '{%info_html%}' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT]),
                 '{%lbl_newpass%}' => _PASSNEW,
                 '{%lbl_newpass2%}' => _PASSNEW2,
                 '{%lbl_oldpass%}' => _PASSOLD,
                 '{%submit_label%}' => _SAVECHANGES,
             ]);
         } else {
-            $psetup = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NETWORKPASS]);
+            $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NETWORKPASS]);
         }
-        echo setTemplateBasic('title', ['{%title%}' => _CHANGE]).getUserNav().$cont.getNaviTabs(0, 'tab', [_CHANGE, _AVATARSETUP, _PASSSETUP], [$change, $asetup, $psetup]);
+        echo $tpl->getHtmlFrag('title', ['title' => _CHANGE]).getUserNav().$cont.getNaviTabs(0, 'tab', [_CHANGE, _AVATARSETUP, _PASSSETUP], [$change, $asetup, $psetup]);
         setFoot();
     } else {
         account();

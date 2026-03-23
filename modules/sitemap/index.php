@@ -10,15 +10,15 @@ if (!defined('MODULE_FILE')) {
 }
 
 function sitemap(): void {
-    global $conf;
+    global $conf, $tpl;
     $path = SITEMAP_DIR.'/sitemap.txt';
     setHead(['title' => _SITEMAP]);
-    $cont = setTemplateBasic('title', ['{%title%}' => _SITEMAP]);
+    $cont = $tpl->getHtmlFrag('title', ['title' => _SITEMAP]);
     if (is_readable($path)) {
         $map = file_get_contents($path);
         $cont .= ($map !== false ? $map : '');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();

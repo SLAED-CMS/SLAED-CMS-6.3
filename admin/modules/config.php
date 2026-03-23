@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['', '', '', '', '', '', '', 'name=config&amp;op=info'], 'tabs' => [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO], 'id' => 'config']);
     $cont .= checkPerms(CONFIG_DIR.'/global.php');
@@ -217,7 +217,7 @@ function config(): void {
         $f++;
         $asize += $size;
     }
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _DIR.': config/cache<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DIR.': config/cache<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
     $cont .= '<table class="sl_table_conf">'
     .'<tr><td>'._CACHE.':</td><td>'
     .'<select name="cache" class="sl_conf">'

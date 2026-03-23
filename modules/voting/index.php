@@ -10,12 +10,12 @@ if (!defined('MODULE_FILE')) {
 }
 
 function voting(): void {
-	global $db, $afile, $locale, $conf;
+	global $db, $afile, $locale, $conf, $tpl;
 	$onum = ($conf['multilingual'] == 1) ? "(lang = '".$locale."' OR lang = '') AND modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')" : "modul = '' AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
 	$num = getVar('get', 'num', 'num', '1');
 	$offset = ($num - 1) * $conf['voting']['num'];
 	setHead(['title' => _VOTING]);
-	$cont = setTemplateBasic('title', ['{%title%}' => _VOTING]);
+	$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]);
 	$result = $db->getSqlQuery('SELECT id, title, answer, time, enddate, comments, acomm, typ FROM '.PREFIX_DB.'_voting WHERE '.$onum.' ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['num']);
 	if ($db->getSqlRowCount($result) > 0) {
 		$cont .= setTemplateBasic('voting-home-wrap', ['if_flag' => ['open' => true], '{%id%}' => _ID, '{%title%}' => _TITLE, '{%comm%}' => cutstr(_COMMENTS, 4, 1), '{%votes%}' => cutstr(_VOTES, 3, 1)]);
@@ -42,14 +42,14 @@ function voting(): void {
 		$cont .= setTemplateBasic('voting-home-wrap', []);
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $conf['voting']['num'], '', 'id', '_voting', '', $onum, $conf['voting']['nump']);
 	} else {
-		$cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
 	}
 	echo $cont;
 	setFoot();
 }
 
 function view(): void {
-	global $db, $conf;
+	global $db, $conf, $tpl;
 	$id = getVar('get', 'id', 'num');
 	$result = $db->getSqlQuery('SELECT title, time, acomm FROM '.PREFIX_DB.'_voting WHERE id = :id AND modul = \'\' AND time <= NOW() AND (enddate >= NOW() AND status = \'0\' OR status = \'1\')', ['id' => $id]);
 	if ($db->getSqlRowCount($result) > 0) {
@@ -61,11 +61,12 @@ function view(): void {
 			'time' => $date,
 			'author' => $conf['sitename'],
 		]);
-		$cont = setTemplateBasic('title', ['{%title%}' => _VOTING]).setTemplateBasic('voting-basic', ['{%content%}' => '<div id="rep'.$conf['name'].'">'.getVoting($id, $conf['name']).'</div>']);
+		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).setTemplateBasic('voting-basic', ['{%content%}' => '<div id="rep'.$conf['name'].'">'.getVoting($id, $conf['name']).'</div>']);
 		if ($acomm) $cont .= setComShow($id, $acomm);
 	} else {
 		setHead(['title' => _VOTING]);
-		$cont = setTemplateWarning('warn', ['time' => '3', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _NO_INFO]);
+		$meta = '<meta http-equiv="refresh" content="3; url=index.php?name='.$conf['name'].'">';
+		$cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO, 'meta' => $meta]);
 	}
 	echo $cont;
 	setFoot();

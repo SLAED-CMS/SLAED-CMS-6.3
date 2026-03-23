@@ -163,6 +163,7 @@ function getSqltable(array $items): string {
 }
 
 function getSqlsum(array $items, string $mode, string $name): string {
+    global $tpl;
     $all = count($items);
     $good = 0;
     $bad = 0;
@@ -184,19 +185,19 @@ function getSqlsum(array $items, string $mode, string $name): string {
         .'<br>'._DB_ERRORS.': '.$bad
         .'<br>'._STATUS.': '.$stat;
     if ($stop) $text .= '<br>'._DB_STOP.': '.$stop;
-    return setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $text]);
+    return $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $text]);
 }
 
 
 function database(): void {
-    global $db, $conf, $afile;
+    global $db, $conf, $afile, $tpl;
     $type = getVar('get', 'type', 'var');
     $headtag = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
-        echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _ERROR]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _ERROR]);
         setFoot();
         return;
     }
@@ -341,18 +342,8 @@ function database(): void {
     // Navigation + Info-Boxen
     if (empty($type)) {
         $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
-        $cont .= setTemplateWarning('warn', [
-            'time' => '',
-            'url'  => '',
-            'id'   => 'warn',
-            'text' => _OPTTEXT
-        ]);
-        $cont .= setTemplateWarning('warn', [
-            'time' => '',
-            'url'  => '',
-            'id'   => 'info',
-            'text' => _REPTEXT
-        ]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _OPTTEXT]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _REPTEXT]);
 
     } elseif ($type === 'optimize') {
         $db->getSqlQuery('FLUSH TABLES');
@@ -362,12 +353,7 @@ function database(): void {
                   .'<br>'._TOTALSPACE.': '.filterSize($total)
                   .'<br>'._TOTALFREE.': '.filterSize($sumfree);
 
-        $cont .= setTemplateWarning('warn', [
-            'time' => '',
-            'url'  => '',
-            'id'   => 'info',
-            'text' => $info
-        ]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
 
     } elseif ($type === 'repair') {
         $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 2]);
@@ -376,12 +362,7 @@ function database(): void {
                   .'<br>'._TOTALSPACE.': '.filterSize($total)
                   .'<br>'._TOTALFREE.': '.filterSize($sumfree);
 
-        $cont .= setTemplateWarning('warn', [
-            'time' => '',
-            'url'  => '',
-            'id'   => 'info',
-            'text' => $info
-        ]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
     }
 
     echo $cont
@@ -393,19 +374,19 @@ function database(): void {
 }
 
 function dump(): void {
-    global $db, $conf, $afile;
+    global $db, $conf, $afile, $tpl;
     $type = getVar('post', 'type', 'var', '');
     $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
     setHead();
     $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 3]);
     if (($action === 'parse' || $action === 'dump') && !checkSiteToken(getVar('post', 'token', 'raw', ''), 'db')) {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Security token mismatch']);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => 'Security token mismatch']);
     } elseif ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
         $subst = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
         $parsed = getSqlbatch(stripslashes($string));
         if ($parsed['error'] !== '') {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => htmlspecialchars($parsed['error'])]);
+            $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => htmlspecialchars($parsed['error'])]);
         } else {
             $items = [];
             foreach ($parsed['statements'] as $query) {
@@ -414,7 +395,7 @@ function dump(): void {
             $reslist = [];
             if ($action === 'dump') {
                 if (!checkDblock()) {
-                    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => 'Another migration run is already active']);
+                    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => 'Another migration run is already active']);
                 } else {
                     addDblog('START blocks='.count($items));
                     try {
@@ -447,8 +428,8 @@ function dump(): void {
             $cont .= setTemplateBasic('close');
         }
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _DBINFO]);
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _DBWARN]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DBINFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DBWARN]);
     }
     $cont .= setTemplateBasic('open');
     $cont .= '<form action="'.$afile.'.php" method="post">

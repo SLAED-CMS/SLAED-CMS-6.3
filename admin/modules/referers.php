@@ -29,7 +29,7 @@ function getRefererSearch(): string {
 }
 
 function referers(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $sort = getVar('req', 'sort', 'num', 10);
     $order = getVar('req', 'order', 'num', 2);
     $num = getVar('get', 'num', 'num', 1);
@@ -74,7 +74,7 @@ function referers(): void {
         $cont .= setPageNumbers('pagenum', '', $a, $numpages, $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump']);
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();

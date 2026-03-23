@@ -12,11 +12,12 @@ function getCategoriesSearch(string $modul): string {
 }
 
 function categories(): void {
+    global $tpl;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'sub' => getCategoriesSearch($modul)]);
-    echo $cont.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _INFOCATDEL]).setTemplateBasic('open').'<div id="repajax_cat">'.ajax_cat($modul, 1).'</div>'.setTemplateBasic('close');
+    echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _INFOCATDEL]).setTemplateBasic('open').'<div id="repajax_cat">'.ajax_cat($modul, 1).'</div>'.setTemplateBasic('close');
     setFoot();
 }
 
@@ -33,13 +34,13 @@ function fix(): void {
 }
 
 function add(): void {
-    global $db, $conf, $afile;
+    global $db, $conf, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     setHead();
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 1, 'subtab' => 1, 'sub' => getCategoriesSearch($modul), 'id' => 'add']);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post">'
     .'<div id="tabcs0" class="tabcont">'
@@ -86,14 +87,14 @@ function add(): void {
 }
     
 function subadd(): void {
-    global $db, $conf, $afile;
+    global $db, $conf, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 2, 'subtab' => 1, 'sub' => getCategoriesSearch($modul), 'id' => 'subadd']);
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
         $cont .= setTemplateBasic('open');
         $cont .= '<form name="post2" action="'.$afile.'.php" method="post">'
         .'<div id="tabcs0" class="tabcont">'
@@ -138,14 +139,14 @@ function subadd(): void {
         $cont .= setTemplateBasic('close');
     } else {
         $navi = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 2, 'sub' => getCategoriesSearch($modul)]);
-        $cont = $navi.setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
+        $cont = $navi.$tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
     }
     echo $cont;
     setFoot();
 }
 
 function addedit(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
     setHead();
@@ -157,14 +158,14 @@ function addedit(): void {
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="edit"><input type="submit" value="'._EDIT.'" class="sl_but_blue"></td></tr></form></table>';
         $cont .= setTemplateBasic('close');
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
+        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
     }
     echo $cont;
     setFoot();
 }
 
 function edit(): void {
-    global $db, $conf, $afile;
+    global $db, $conf, $afile, $tpl;
     $cid = getVar('req', 'cid', 'num');
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     $result = $db->getSqlQuery('SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
@@ -172,7 +173,7 @@ function edit(): void {
     $modlink = '&amp;modul='.$modul;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'subtab' => 1, 'sub' => getCategoriesSearch($modul), 'id' => 'edit']);
-    $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _CACESSI]);
+    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
     $cont .= setTemplateBasic('open');
     $cont .= '<form name="post" action="'.$afile.'.php" method="post">'
     .'<div id="tabcs0" class="tabcont">'

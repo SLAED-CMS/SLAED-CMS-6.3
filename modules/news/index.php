@@ -10,7 +10,7 @@ if (!defined('MODULE_FILE')) {
 }
 
 function news(): void {
-    global $db, $afile, $conf, $home, $op;
+    global $db, $afile, $conf, $home, $op, $tpl;
     $cwhere = catmids($conf['name'], 's.cid');
     $unum = getUserNews($conf['news']['num']);
     $cat = getVar('get', 'cat', 'num');
@@ -162,14 +162,14 @@ function news(): void {
             'pagenum', $conf['name'], $unum, $field, 'id', '_news', 'cid', $onum, $conf['news']['nump']
         );
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
 }
 
 function liste(): void {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $cwhere = catmids($conf['name'], 's.cid');
     $listnum = intval($conf['news']['listnum']);
     $let = getVar('get', 'let', 'let');
@@ -233,7 +233,7 @@ function liste(): void {
             'pagenum', $conf['name'], $listnum, $field, 'id', '_news', 'cid', $onum, $conf['news']['nump'], $params
         );
     } else {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
     echo $cont;
     setFoot();
@@ -403,7 +403,7 @@ function view(): void {
 }
 
 function add(): void {
-    global $conf, $user, $stop;
+    global $conf, $user, $stop, $tpl;
     if ((is_user() && $conf['news']['add'] == 1) || (!is_user() && $conf['news']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'catid', 'num');
@@ -413,11 +413,9 @@ function add(): void {
         $postname = getVar('post', 'postname', 'name');
         setHead(['title' => _ADD]);
         $cont = setModuleNavi(['title' => _ADD, 'htitle' => _NEWS]);
-        if ($stop) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $stop]);
+        if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         if ($hometext) $cont .= preview($title, $hometext, $bodytext, $field, $conf['name']);
-        $cont .= setTemplateWarning('warn', [
-            'time' => '', 'url' => '', 'id' => 'info', 'text' => _SUBMIT.' '._PAGENOTE,
-        ]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBMIT.' '._PAGENOTE]);
         if (!is_user()) $postname = $postname ?: _ANONYM;
         $cont .= setTemplateBasic('form-add', [
             'if_flag' => ['has_name' => true, 'is_user' => is_user()],
@@ -447,7 +445,7 @@ function add(): void {
 }
 
 function send(): void {
-    global $db, $conf, $user, $stop;
+    global $db, $conf, $user, $stop, $tpl;
     if ((is_user() && $conf['news']['add'] == 1) || (!is_user() && $conf['news']['addquest'] == 1)) {
         $title = getVar('post', 'title', 'title');
         $cid = getVar('post', 'catid', 'num');
@@ -476,9 +474,8 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);
             setHead(['title' => _ADD]);
-            echo setModuleNavi(['title' => _ADD, 'htitle' => _NEWS]).setTemplateWarning('warn', [
-                'time' => '10', 'url' => '?name='.$conf['name'], 'id' => 'info', 'text' => _SUBTEXT,
-            ]);
+            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            echo setModuleNavi(['title' => _ADD, 'htitle' => _NEWS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {
             add();
