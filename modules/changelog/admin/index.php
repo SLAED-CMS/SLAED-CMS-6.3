@@ -13,7 +13,7 @@ require_once __DIR__.'/../common.php';
 // ============================================================================
 
 function changelog(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
 
     setHead();
 
@@ -38,10 +38,7 @@ function changelog(): void {
     if (empty($commits)) {
         $warnText = $error !== '' ? $error : _CHLOG_ERR_NO_COMMITS;
         $warnType = $error !== '' ? 'warn' : 'info';
-        $cont .= setTemplateWarning($warnType, [
-            'time' => '', 'url' => '', 'id' => $warnType,
-            'text' => $warnText
-        ]);
+        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => ($warnType !== 'info'), 'text' => $warnText]);
         echo $cont;
         setFoot();
         return;
@@ -159,7 +156,7 @@ function config(): void {
 }
 
 function configsave(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
 
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'changelog')) {
         setHead();
@@ -173,12 +170,7 @@ function configsave(): void {
             'tabs' => [_HOME, _PREFERENCES, _INFO],
             'tab'  => 1,
         ]);
-        echo $cont.setTemplateWarning('warn', [
-            'time' => '',
-            'url' => '',
-            'id' => 'warn',
-            'text' => _CHLOG_ERR_TOKEN
-        ]);
+        echo $cont.$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CHLOG_ERR_TOKEN]);
         setFoot();
         return;
     }

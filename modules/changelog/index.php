@@ -26,7 +26,7 @@ function chlogRenderPaging(string $modname, int $totcom, int $totpage, int $perp
 }
 
 function changelog(): void {
-    global $conf;
+    global $conf, $tpl;
     setHead(['title' => _CHANGELOG]);
 
     $page = max(1, getVar('get', 'page', 'num', 1));
@@ -40,7 +40,7 @@ function changelog(): void {
     if (empty($commits)) {
         $warnText = $error !== '' ? $error : _CHLOG_ERR_NO_COMMITS;
         $warnType = $error !== '' ? 'warn' : 'info';
-        echo setTemplateWarning($warnType, ['time' => '', 'url' => '', 'id' => $warnType, 'text' => $warnText]);
+        echo $tpl->getHtmlFrag('alert', ['is_warn' => ($warnType !== 'info'), 'text' => $warnText]);
         setFoot();
         return;
     }
