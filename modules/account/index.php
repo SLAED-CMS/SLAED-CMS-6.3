@@ -18,21 +18,21 @@ function account(): void {
         $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
         $cont = $tpl->getHtmlFrag('title', ['title' => _USERREGLOGIN]);
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-        $cont .= setTemplateBasic('account-login-form', [
-            'if_flag' => ['network_enabled' => !empty($conf['users']['network'])],
-            '{%name%}' => $conf['name'],
-            '{%style%}' => $conf['style'],
-            '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-            '{%lbl_nickname%}' => _NICKNAME,
-            '{%lbl_password%}' => _PASSWORD,
-            '{%captcha%}' => $captcha,
-            '{%submit_label%}' => _USERLOGIN,
-            '{%passlost_href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
-            '{%passlost_label%}' => _PASSWORDLOST,
-            '{%register_href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']),
-            '{%register_label%}' => _REGNEWUSER,
-            '{%network_label%}' => _LOGINNETWORK,
-            '{%network_html%}' => getNetworks(),
+        $cont .= $tpl->getHtmlFrag('account-login-form', [
+            'network_enabled' => !empty($conf['users']['network']),
+            'name' => $conf['name'],
+            'style' => $conf['style'],
+            'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+            'lbl_nickname' => _NICKNAME,
+            'lbl_password' => _PASSWORD,
+            'captcha' => $captcha,
+            'submit_label' => _USERLOGIN,
+            'passlost_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
+            'passlost_label' => _PASSWORDLOST,
+            'register_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'newuser']),
+            'register_label' => _REGNEWUSER,
+            'network_label' => _LOGINNETWORK,
+            'network_html' => getNetworks(),
         ]);
         echo $cont;
         setFoot();
@@ -77,30 +77,31 @@ function newuser(): void {
             $mail = getVar('post', 'mail', 'text');
             $mail = ($mail) ? filterText($mail) : '';
             $captcha = ($conf['gfx_chk'] == 3 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 6 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-            $cont .= setTemplateBasic('account-newuser-form', [
-                'if_flag' => ['rules_enabled' => !empty($conf['users']['rule']), 'network_enabled' => !empty($conf['users']['network'])],
-                '{%name%}' => $conf['name'],
-                '{%style%}' => $conf['style'],
-                '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                '{%nick_field%}' => $unkey,
-                '{%nick_value%}' => $nick,
-                '{%mail_value%}' => $mail,
-                '{%lbl_nickname%}' => _NICKNAME,
-                '{%lbl_email%}' => _EMAIL,
-                '{%password_tip%}' => title_tip(_BLANKFORAUTO),
-                '{%lbl_password%}' => _PASSWORD,
-                '{%lbl_password2%}' => _RETYPEPASSWORD,
-                '{%lbl_rules%}' => _RULES,
-                '{%rules_text%}' => $conf['users']['rules'],
-                '{%lbl_rules_ok%}' => _RULES_OK,
-                '{%captcha%}' => $captcha,
-                '{%submit_label%}' => _NEWUSER,
-                '{%login_href%}' => getSeoUrl(['name' => $conf['name']]),
-                '{%login_label%}' => _USERLOGIN,
-                '{%passlost_href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
-                '{%passlost_label%}' => _PASSWORDLOST,
-                '{%network_label%}' => _LOGINNETWORK,
-                '{%network_html%}' => getNetworks(),
+            $cont .= $tpl->getHtmlFrag('account-newuser-form', [
+                'rules_enabled' => !empty($conf['users']['rule']),
+                'network_enabled' => !empty($conf['users']['network']),
+                'name' => $conf['name'],
+                'style' => $conf['style'],
+                'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+                'nick_field' => $unkey,
+                'nick_value' => $nick,
+                'mail_value' => $mail,
+                'lbl_nickname' => _NICKNAME,
+                'lbl_email' => _EMAIL,
+                'password_tip' => title_tip(_BLANKFORAUTO),
+                'lbl_password' => _PASSWORD,
+                'lbl_password2' => _RETYPEPASSWORD,
+                'lbl_rules' => _RULES,
+                'rules_text' => $conf['users']['rules'],
+                'lbl_rules_ok' => _RULES_OK,
+                'captcha' => $captcha,
+                'submit_label' => _NEWUSER,
+                'login_href' => getSeoUrl(['name' => $conf['name']]),
+                'login_label' => _USERLOGIN,
+                'passlost_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'passlost']),
+                'passlost_label' => _PASSWORDLOST,
+                'network_label' => _LOGINNETWORK,
+                'network_html' => getNetworks(),
             ]);
         }
         echo $cont;
@@ -145,18 +146,18 @@ function finnewuser(): void {
             if ($conf['users']['nomail'] == 1) {
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]);
                 $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _TOFINISHUSERN]);
-                $cont .= setTemplateBasic('account-activate-form', [
-                    '{%name%}' => $conf['name'],
-                    '{%lbl_nickname%}' => _UNICKNAME,
-                    '{%nick_value%}' => $nick,
-                    '{%lbl_password%}' => _UPASSWORD,
-                    '{%pass_value%}' => $pass,
-                    '{%user_value%}' => urlencode($nick),
-                    '{%code_value%}' => $check,
-                    '{%submit_label%}' => _ACTIVATIONSUB,
+                $cont .= $tpl->getHtmlFrag('account-activate-form', [
+                    'name' => $conf['name'],
+                    'lbl_nickname' => _UNICKNAME,
+                    'nick_value' => $nick,
+                    'lbl_password' => _UPASSWORD,
+                    'pass_value' => $pass,
+                    'user_value' => urlencode($nick),
+                    'code_value' => $check,
+                    'submit_label' => _ACTIVATIONSUB,
                 ]);
             } else {
-                $link = setTemplateBasic('account-mail-link', ['{%href%}' => $finishlink, '{%title%}' => _ACTIVATIONSUB, '{%label%}' => str_replace('&amp;', '&', $finishlink), '{%target%}' => ' target="_blank"']);
+                $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label' => str_replace('&amp;', '&', $finishlink), 'target' => ' target="_blank"']);
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -400,81 +401,79 @@ function view(): void {
                 $text[] = last($uid, 'pages');
             }
             $tabs = getNaviTabs(0, 'tab', $title, $text);
-            echo setTemplateBasic('account-view', [
-                'if_flag' => [
-                    'has_sign' => !empty($sign),
-                    'has_field' => !empty($field),
-                    'has_rank_image' => !empty($rankImage),
-                    'has_special_group' => !empty($gname),
-                    'has_admin_actions' => isAdmin(),
-                    'has_privat_button' => ($conf['privat']['act'] ?? 0) && !empty($nick),
-                    'has_profil_button' => is_user() && $uname == $nick,
-                    'has_back_button' => true,
-                ],
-                '{%cid%}' => $id[0],
-                '{%id%}' => $id[1],
-                '{%cname%}' => $name[0],
-                '{%name%}' => $name[1],
-                '{%curank%}' => $urank[0],
-                '{%urank%}' => $urank[1],
-                '{%cmail%}' => $mail[0],
-                '{%mail%}' => $mail[1],
-                '{%csite%}' => $site[0],
-                '{%site%}' => $site[1],
-                '{%avatar%}' => $avatar,
-                '{%cregdate%}' => $regdate[0],
-                '{%regdate%}' => $regdate[1],
-                '{%coccup%}' => $occup[0],
-                '{%occup%}' => $occup[1],
-                '{%cfrom%}' => $from[0],
-                '{%from%}' => $from[1],
-                '{%cinter%}' => $inter[0],
-                '{%inter%}' => $inter[1],
-                '{%sign%}' => $sign,
-                '{%clastvisit%}' => $lastvisit[0],
-                '{%lastvisit%}' => $lastvisit[1],
-                '{%clang%}' => $lang[0],
-                '{%lang%}' => $lang[1],
-                '{%cpoints%}' => $points[0],
-                '{%points%}' => $points[1],
-                '{%cip%}' => $ip[0],
-                '{%ip%}' => $ip[1],
-                '{%cwarn%}' => $warn[0],
-                '{%warn%}' => $warn[1],
-                '{%cbirth%}' => $birth[0],
-                '{%birth%}' => $birth[1],
-                '{%cgender%}' => $gender[0],
-                '{%gender%}' => $gender[1],
-                '{%crating%}' => $rating[0],
-                '{%rating%}' => $rating[1],
-                '{%field%}' => $field,
-                '{%cagent%}' => $agent[0],
-                '{%agent%}' => $agent[1],
-                '{%csgroup%}' => $sgroup[0],
-                '{%sgroup%}' => $sgroup[1],
-                '{%special_group_color%}' => $gcolor,
-                '{%cgroups%}' => $groups[0],
-                '{%groups%}' => $groups[1],
-                '{%rank_src%}' => $rankImage,
-                '{%rank_alt%}' => $trank,
-                '{%admin_edit_href%}' => $afile.'.php?op=users_add&amp;id='.$uid,
-                '{%admin_edit_label%}' => _FULLEDIT,
-                '{%admin_block_href%}' => $afile.'.php?op=security_block&amp;new_ip='.$userIpRaw,
-                '{%admin_block_title%}' => _BANIPSENDER,
-                '{%admin_block_confirm%}' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?',
-                '{%admin_delete_href%}' => $afile.'.php?op=users_del&amp;id='.$uid,
-                '{%admin_delete_title%}' => _ONDELETE,
-                '{%admin_delete_confirm%}' => _DELETE.' &quot;'.$nick.'&quot;?',
-                '{%privat_href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]),
-                '{%privat_title%}' => _SENDMES,
-                '{%privat_label%}' => _MESSAGE,
-                '{%profil_href%}' => getSeoUrl(['name' => $conf['name']]),
-                '{%profil_title%}' => _ACCOUNT,
-                '{%profil_label%}' => _ACCOUNT,
-                '{%back_title%}' => _BACK,
-                '{%back_label%}' => _BACK,
-                '{%tabs%}' => $tabs,
-                '{%info%}' => _PERSONALINFO
+            echo $tpl->getHtmlFrag('account-view', [
+                'has_sign' => !empty($sign),
+                'has_field' => !empty($field),
+                'has_rank_image' => !empty($rankImage),
+                'has_special_group' => !empty($gname),
+                'has_admin_actions' => isAdmin(),
+                'has_privat_button' => ($conf['privat']['act'] ?? 0) && !empty($nick),
+                'has_profil_button' => is_user() && $uname == $nick,
+                'has_back_button' => true,
+                'cid' => $id[0],
+                'id' => $id[1],
+                'cname' => $name[0],
+                'name' => $name[1],
+                'curank' => $urank[0],
+                'urank' => $urank[1],
+                'cmail' => $mail[0],
+                'mail' => $mail[1],
+                'csite' => $site[0],
+                'site' => $site[1],
+                'avatar' => $avatar,
+                'cregdate' => $regdate[0],
+                'regdate' => $regdate[1],
+                'coccup' => $occup[0],
+                'occup' => $occup[1],
+                'cfrom' => $from[0],
+                'from' => $from[1],
+                'cinter' => $inter[0],
+                'inter' => $inter[1],
+                'sign' => $sign,
+                'clastvisit' => $lastvisit[0],
+                'lastvisit' => $lastvisit[1],
+                'clang' => $lang[0],
+                'lang' => $lang[1],
+                'cpoints' => $points[0],
+                'points' => $points[1],
+                'cip' => $ip[0],
+                'ip' => $ip[1],
+                'cwarn' => $warn[0],
+                'warn' => $warn[1],
+                'cbirth' => $birth[0],
+                'birth' => $birth[1],
+                'cgender' => $gender[0],
+                'gender' => $gender[1],
+                'crating' => $rating[0],
+                'rating' => $rating[1],
+                'field' => $field,
+                'cagent' => $agent[0],
+                'agent' => $agent[1],
+                'csgroup' => $sgroup[0],
+                'sgroup' => $sgroup[1],
+                'special_group_color' => $gcolor,
+                'cgroups' => $groups[0],
+                'groups' => $groups[1],
+                'rank_src' => $rankImage,
+                'rank_alt' => $trank,
+                'admin_edit_href' => $afile.'.php?op=users_add&amp;id='.$uid,
+                'admin_edit_label' => _FULLEDIT,
+                'admin_block_href' => $afile.'.php?op=security_block&amp;new_ip='.$userIpRaw,
+                'admin_block_title' => _BANIPSENDER,
+                'admin_block_confirm' => _BANIPSENDER.' &quot;'.$userIpRaw.'&quot;?',
+                'admin_delete_href' => $afile.'.php?op=users_del&amp;id='.$uid,
+                'admin_delete_title' => _ONDELETE,
+                'admin_delete_confirm' => _DELETE.' &quot;'.$nick.'&quot;?',
+                'privat_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'privat', 'uname' => urlencode($nick)]),
+                'privat_title' => _SENDMES,
+                'privat_label' => _MESSAGE,
+                'profil_href' => getSeoUrl(['name' => $conf['name']]),
+                'profil_title' => _ACCOUNT,
+                'profil_label' => _ACCOUNT,
+                'back_title' => _BACK,
+                'back_label' => _BACK,
+                'tabs' => $tabs,
+                'info' => _PERSONALINFO,
             ]);
             setFoot();
         } else {
@@ -535,19 +534,19 @@ function profil(): void {
             $url = getVar('post', 'url', 'url');
             $link = ($url) ? $url : 'http://';
             $title[] = _RSS;
-            $text[] = setTemplateBasic('account-rss-select-form', [
-                '{%name%}' => $conf['name'],
-                '{%style%}' => $conf['style'],
-                '{%lbl_select%}' => _SELECTASITE,
-                '{%options_html%}' => rss_select(),
-                '{%submit_label%}' => _OK,
+            $text[] = $tpl->getHtmlFrag('account-rss-select-form', [
+                'name' => $conf['name'],
+                'style' => $conf['style'],
+                'lbl_select' => _SELECTASITE,
+                'options_html' => rss_select(),
+                'submit_label' => _OK,
             ])
-            .setTemplateBasic('account-rss-url-form', [
-                '{%name%}' => $conf['name'],
-                '{%style%}' => $conf['style'],
-                '{%lbl_url%}' => _ORTYPEURL,
-                '{%url_value%}' => $link,
-                '{%submit_label%}' => _OK,
+            .$tpl->getHtmlFrag('account-rss-url-form', [
+                'name' => $conf['name'],
+                'style' => $conf['style'],
+                'lbl_url' => _ORTYPEURL,
+                'url_value' => $link,
+                'submit_label' => _OK,
             ])
             .rss_read($url, '');
         }
@@ -568,19 +567,19 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'comm') {
         $result = $db->getSqlQuery('SELECT id, cid, modul, time, body FROM '.PREFIX_DB."_comment WHERE uid = :user_id AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
             while([$id, $cid, $modul, $date, $comment] = $db->getSqlRow($result)) {
                 $comment = cutstr(str_replace([_QUOTE, _CODE], '', filterText(filterReplaceText(filterMarkdown($comment, $conf['name'], false), $conf['name']))), 70);
-                $cont .= setTemplateBasic('account-last-row', [
-                    '{%date_iso%}' => date('c', strtotime($date)),
-                    '{%date_title%}' => _CHNGSTORY.': '.format_time($date, _TIMESTRING),
-                    '{%date_text%}' => format_time($date),
-                    '{%href%}' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id,
-                    '{%title_attr%}' => $comment,
-                    '{%title_text%}' => $comment,
+                $cont .= $tpl->getHtmlFrag('account-last-row', [
+                    'date_iso' => date('c', strtotime($date)),
+                    'date_title' => _CHNGSTORY.': '.format_time($date, _TIMESTRING),
+                    'date_text' => format_time($date),
+                    'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $cid]).'#'.$id,
+                    'title_attr' => $comment,
+                    'title_text' => $comment,
                 ]);
             }
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -588,9 +587,9 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'faq') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_faq WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, 'title_attr' => $title, 'title_text' => $title]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -598,9 +597,9 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'files') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_files WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]).'#'.$id, 'title_attr' => $title, 'title_text' => $title]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -608,9 +607,9 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'forum') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_forum WHERE uid = :user_id AND pid = '0' AND time <= NOW() AND status > '1' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=forum&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=forum&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -618,9 +617,9 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'jokes') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_jokes WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=jokes#'.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=jokes#'.$id, 'title_attr' => $title, 'title_text' => $title]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -628,9 +627,9 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'links') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_links WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=links&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=links&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -638,9 +637,9 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'media') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_media WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=media&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=media&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -648,9 +647,9 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'news') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_news WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=news&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=news&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -658,9 +657,9 @@ function last(int|string $uid, string $modul): string {
     if ($modul == 'pages') {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_pages WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= setTemplateBasic('account-last-wrap', ['if_flag' => ['open' => true]]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= setTemplateBasic('account-last-row', ['{%date_iso%}' => date('c', strtotime($time)), '{%date_title%}' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), '{%date_text%}' => format_time($time), '{%href%}' => 'index.php?name=pages&amp;op=view&amp;id='.$id, '{%title_attr%}' => $title, '{%title_text%}' => $title]);
-            $cont .= setTemplateBasic('account-last-wrap', []);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=pages&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
@@ -676,16 +675,16 @@ function privat(): void {
             'title' => _PRIVAT,
         ]);
         $title = [
-            setTemplateBasic('account-privat-tab-title', ['{%id%}' => 'prmessin', '{%request%}' => 'go=1&amp;op=prmess&amp;typ=1', '{%label%}' => _PRIN]),
-            setTemplateBasic('account-privat-tab-title', ['{%id%}' => 'prmessou', '{%request%}' => 'go=1&amp;op=prmess&amp;typ=2', '{%label%}' => _PROUT]),
-            setTemplateBasic('account-privat-tab-title', ['{%id%}' => 'prmesssa', '{%request%}' => 'go=1&amp;op=prmess&amp;typ=3', '{%label%}' => _PRSAVE]),
+            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmessin', 'request' => 'go=1&amp;op=prmess&amp;typ=1', 'label' => _PRIN]),
+            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmessou', 'request' => 'go=1&amp;op=prmess&amp;typ=2', 'label' => _PROUT]),
+            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmesssa', 'request' => 'go=1&amp;op=prmess&amp;typ=3', 'label' => _PRSAVE]),
             _SEND
         ];
         $text = [
-            setTemplateBasic('account-privat-tab-pane', ['{%id%}' => 'repprmessin', '{%content%}' => getPmView(1, 0, 0, 1)]),
-            setTemplateBasic('account-privat-tab-pane', ['{%id%}' => 'repprmessou', '{%content%}' => getPmView(1, 0, 0, 2)]),
-            setTemplateBasic('account-privat-tab-pane', ['{%id%}' => 'repprmesssa', '{%content%}' => getPmView(1, 0, 0, 3)]),
-            setTemplateBasic('account-privat-tab-pane', ['{%id%}' => 'repprmessfo', '{%content%}' => getPmView(1, 0, 0, 4)])
+            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessin', 'content' => getPmView(1, 0, 0, 1)]),
+            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessou', 'content' => getPmView(1, 0, 0, 2)]),
+            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmesssa', 'content' => getPmView(1, 0, 0, 3)]),
+            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessfo', 'content' => getPmView(1, 0, 0, 4)])
         ];
         $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
@@ -701,7 +700,7 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().setTemplateBasic('account-favorites-list', ['{%content%}' => getFavorList(1)]);
+        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().$tpl->getHtmlFrag('account-favorites-list', ['content' => getFavorList(1)]);
         setFoot();
     } else {
         account();
@@ -723,20 +722,20 @@ function passlost(): void {
         $send = ($email) ? _SENDPASSWORD : _SEND;
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $info]);
-        $cont .= setTemplateBasic('account-passlost-form', [
-            'if_flag' => ['has_code' => !empty($email)],
-            '{%name%}' => $conf['name'],
-            '{%style%}' => $conf['style'],
-            '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-            '{%lbl_email%}' => _EMAIL,
-            '{%email_value%}' => $email,
-            '{%lbl_code%}' => _CONFIRMATIONCODE,
-            '{%code_value%}' => $code ?: '',
-            '{%submit_label%}' => $send,
-            '{%login_href%}' => 'index.php?name='.$conf['name'],
-            '{%login_label%}' => _USERLOGIN,
-            '{%register_href%}' => 'index.php?name='.$conf['name'].'&amp;op=newuser',
-            '{%register_label%}' => _REGNEWUSER,
+        $cont .= $tpl->getHtmlFrag('account-passlost-form', [
+            'has_code' => !empty($email),
+            'name' => $conf['name'],
+            'style' => $conf['style'],
+            'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+            'lbl_email' => _EMAIL,
+            'email_value' => $email,
+            'lbl_code' => _CONFIRMATIONCODE,
+            'code_value' => $code ?: '',
+            'submit_label' => $send,
+            'login_href' => 'index.php?name='.$conf['name'],
+            'login_label' => _USERLOGIN,
+            'register_href' => 'index.php?name='.$conf['name'].'&amp;op=newuser',
+            'register_label' => _REGNEWUSER,
         ]);
         echo $cont;
         setFoot();
@@ -767,7 +766,7 @@ function passmail(): void {
             $newpass = getPass($conf['users']['minpass']);
             $chash = getPassHash($newpass);
             $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET password = :password WHERE email = :email', ['password' => $chash, 'email' => $email]);
-            $link = setTemplateBasic('account-mail-link', ['{%href%}' => $conf['homeurl'].'/index.php?name='.$conf['name'], '{%title%}' => $conf['homeurl'].'/index.php?name='.$conf['name'], '{%label%}' => $conf['homeurl'].'/index.php?name='.$conf['name'], '{%target%}' => '']);
+            $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'target' => '']);
             $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSSEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
             addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -778,7 +777,7 @@ function passmail(): void {
             echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {
-            $link = setTemplateBasic('account-mail-link', ['{%href%}' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, '{%title%}' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, '{%label%}' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, '{%target%}' => '']);
+            $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'label' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'target' => '']);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
             $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
             addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -850,7 +849,7 @@ function edithome(): void {
         if ($conf['users']['news'] == 1) {
             $xusnum = 3;
             while ($xusnum <= 20) {
-                $story .= setTemplateBasic('account-select-option', ['if_flag' => ['is_selected' => $xusnum == $userinfo['storynum']], '{%value%}' => $xusnum, '{%label%}' => $xusnum]);
+                $story .= $tpl->getHtmlFrag('account-select-option', ['is_selected' => $xusnum == $userinfo['storynum'], 'value' => $xusnum, 'label' => $xusnum]);
                 $xusnum++;
             }
         }
@@ -861,74 +860,78 @@ function edithome(): void {
             foreach ($list ?: [] as $file) {
                 if ($file === '.' || $file === '..' || $file === 'admin') continue;
                 if (!is_dir('templates/'.$file)) continue;
-                $theme .= setTemplateBasic('account-select-option', ['if_flag' => ['is_selected' => $file == $userinfo['theme']], '{%value%}' => $file, '{%label%}' => $file]);
+                $theme .= $tpl->getHtmlFrag('account-select-option', ['is_selected' => $file == $userinfo['theme'], 'value' => $file, 'label' => $file]);
                 $tcount++;
             }
         }
-        $change = setTemplateBasic('account-edit-form', [
-            'if_flag' => ['has_points' => !empty($conf['users']['point']), 'has_story_select' => $conf['users']['news'] == 1, 'has_forum_mail' => is_active('forum'), 'has_privat_mail' => !empty($conf['privat']['act']), 'has_theme_select' => $tcount > 1],
-            '{%name%}' => $conf['name'],
-            '{%style%}' => $conf['style'],
-            '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-            '{%lbl_ip%}' => _IP,
-            '{%ip_value%}' => $userinfo['ip'],
-            '{%lbl_reg%}' => _REG,
-            '{%reg_value%}' => format_time($userinfo['regdate']),
-            '{%lbl_points%}' => _POINTS,
-            '{%points_value%}' => $userinfo['points'],
-            '{%lbl_name%}' => _YOURNAME,
-            '{%name_value%}' => $userinfo['name'],
-            '{%lbl_birthday%}' => _BIRTHDAY,
-            '{%birthday_html%}' => datetime(2, 'user_birthday', $birthday, 10, $conf['style']),
-            '{%lbl_gender%}' => _GENDER,
-            '{%gender_html%}' => get_gender('gender', $userinfo['gender'], $conf['style']),
-            '{%lbl_email%}' => _YOUREMAIL,
-            '{%mail_value%}' => $userinfo['email'],
-            '{%lbl_site%}' => _SITEURL,
-            '{%site_value%}' => $userinfo['website'],
-            '{%lbl_occ%}' => _OCCUPATION,
-            '{%occ_value%}' => $userinfo['occ'],
-            '{%lbl_from%}' => _LOCALITYLANG,
-            '{%from_value%}' => $userinfo['origin'],
-            '{%lbl_inter%}' => _INTERESTS,
-            '{%inter_value%}' => $userinfo['interest'],
-            '{%lbl_sig%}' => _SIGNATURE,
-            '{%sig_info%}' => _SIGNATURE_TEXT,
-            '{%sig_html%}' => textarea('1', 'sig', $userinfo['sig'], $conf['name'], '5', _SIGNATURE, '0'),
-            '{%fields_html%}' => fields_in($userinfo['field'], $conf['name']),
-            '{%lbl_story%}' => _C_12,
-            '{%story_options%}' => $story,
-            '{%story_hidden%}' => $conf['news']['num'] ?? 0,
-            '{%lbl_news%}' => _RNEWSLETTER,
-            '{%news_html%}' => radio_form($userinfo['newslet'], 'news'),
-            '{%lbl_fsmail%}' => _FSMAIL,
-            '{%fsmail_html%}' => radio_form($userinfo['fsmail'], 'fsmail'),
-            '{%lbl_psmail%}' => _PSMAIL,
-            '{%psmail_html%}' => radio_form($userinfo['psmail'], 'psmail'),
-            '{%lbl_view%}' => _ALLOWUSERS,
-            '{%view_html%}' => radio_form($userinfo['viewmail'], 'view'),
-            '{%lbl_blockon%}' => _ACTIVATEPERSONAL,
-            '{%blockon_html%}' => radio_form($userinfo['blockon'], 'blockon'),
-            '{%lbl_block%}' => _MENUCONF,
-            '{%block_info%}' => _MENUINFO,
-            '{%block_html%}' => textarea('2', 'block', $userinfo['block'], $conf['name'], '10', _MENUCONF, '0'),
-            '{%lbl_theme%}' => _THEME,
-            '{%theme_options%}' => $theme,
-            '{%submit_label%}' => _SAVECHANGES,
+        $change = $tpl->getHtmlFrag('account-edit-form', [
+            'has_points' => !empty($conf['users']['point']),
+            'has_story_select' => $conf['users']['news'] == 1,
+            'has_forum_mail' => is_active('forum'),
+            'has_privat_mail' => !empty($conf['privat']['act']),
+            'has_theme_select' => $tcount > 1,
+            'name' => $conf['name'],
+            'style' => $conf['style'],
+            'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+            'lbl_ip' => _IP,
+            'ip_value' => $userinfo['ip'],
+            'lbl_reg' => _REG,
+            'reg_value' => format_time($userinfo['regdate']),
+            'lbl_points' => _POINTS,
+            'points_value' => $userinfo['points'],
+            'lbl_name' => _YOURNAME,
+            'name_value' => $userinfo['name'],
+            'lbl_birthday' => _BIRTHDAY,
+            'birthday_html' => datetime(2, 'user_birthday', $birthday, 10, $conf['style']),
+            'lbl_gender' => _GENDER,
+            'gender_html' => get_gender('gender', $userinfo['gender'], $conf['style']),
+            'lbl_email' => _YOUREMAIL,
+            'mail_value' => $userinfo['email'],
+            'lbl_site' => _SITEURL,
+            'site_value' => $userinfo['website'],
+            'lbl_occ' => _OCCUPATION,
+            'occ_value' => $userinfo['occ'],
+            'lbl_from' => _LOCALITYLANG,
+            'from_value' => $userinfo['origin'],
+            'lbl_inter' => _INTERESTS,
+            'inter_value' => $userinfo['interest'],
+            'lbl_sig' => _SIGNATURE,
+            'sig_info' => _SIGNATURE_TEXT,
+            'sig_html' => textarea('1', 'sig', $userinfo['sig'], $conf['name'], '5', _SIGNATURE, '0'),
+            'fields_html' => fields_in($userinfo['field'], $conf['name']),
+            'lbl_story' => _C_12,
+            'story_options' => $story,
+            'story_hidden' => $conf['news']['num'] ?? 0,
+            'lbl_news' => _RNEWSLETTER,
+            'news_html' => radio_form($userinfo['newslet'], 'news'),
+            'lbl_fsmail' => _FSMAIL,
+            'fsmail_html' => radio_form($userinfo['fsmail'], 'fsmail'),
+            'lbl_psmail' => _PSMAIL,
+            'psmail_html' => radio_form($userinfo['psmail'], 'psmail'),
+            'lbl_view' => _ALLOWUSERS,
+            'view_html' => radio_form($userinfo['viewmail'], 'view'),
+            'lbl_blockon' => _ACTIVATEPERSONAL,
+            'blockon_html' => radio_form($userinfo['blockon'], 'blockon'),
+            'lbl_block' => _MENUCONF,
+            'block_info' => _MENUINFO,
+            'block_html' => textarea('2', 'block', $userinfo['block'], $conf['name'], '10', _MENUCONF, '0'),
+            'lbl_theme' => _THEME,
+            'theme_options' => $theme,
+            'submit_label' => _SAVECHANGES,
         ]);
         $avatar = (file_exists($conf['users']['adirectory'].'/'.$userinfo['avatar'])) ? $userinfo['avatar'] : 'default/00.gif';
-        $asetup = setTemplateBasic('account-avatar-current', [
-            '{%lbl_avatar%}' => _AVATAR,
-            '{%avatar_info%}' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize'])),
-            '{%avatar_src%}' => $conf['users']['adirectory'].'/'.$avatar,
+        $asetup = $tpl->getHtmlFrag('account-avatar-current', [
+            'lbl_avatar' => _AVATAR,
+            'avatar_info' => sprintf(_AVATARINFO, $conf['users']['awidth'], $conf['users']['aheight'], filterSize($conf['users']['amaxsize'])),
+            'avatar_src' => $conf['users']['adirectory'].'/'.$avatar,
         ]);
         if ($conf['users']['aupload']) {
-            $asetup .= setTemplateBasic('account-avatar-upload', [
-                '{%name%}' => $conf['name'],
-                '{%style%}' => $conf['style'],
-                '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                '{%lbl_avatar_user%}' => _AVATAR_USER,
-                '{%submit_label%}' => _UPLOAD,
+            $asetup .= $tpl->getHtmlFrag('account-avatar-upload', [
+                'name' => $conf['name'],
+                'style' => $conf['style'],
+                'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+                'lbl_avatar_user' => _AVATAR_USER,
+                'submit_label' => _UPLOAD,
             ]);
         }
         $a = 6;
@@ -940,26 +943,26 @@ function edithome(): void {
         foreach ($list ?: [] as $file) {
             if (preg_match("#(\.gif|\.png|\.jpg|\.jpeg)$#is", $file) && !preg_match("#(\b0\.gif\b|\b00\.gif\b)$#i", $file)) {
                 $filename = str_replace('_', ' ', preg_replace("/^(.*)\..*$/", '\\1', $file));
-                if (($i - 1) % $a == 0) $aset .= setTemplateBasic('account-avatar-grid-row-open');
-                $aset .= setTemplateBasic('account-avatar-grid-cell', ['{%width%}' => $tdwidth, '{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=saveavatar&amp;avatar='.$file, '{%src%}' => $adir.'/'.$file, '{%alt%}' => _AVATARSAVE.' '._ID.' '.$filename, '{%title%}' => _AVATARSAVE.' '._ID.' '.$filename]);
-                if ($i % $a == 0) $aset .= setTemplateBasic('account-avatar-grid-row-close');
+                if (($i - 1) % $a == 0) $aset .= $tpl->getHtmlFrag('account-avatar-grid-row-open', []);
+                $aset .= $tpl->getHtmlFrag('account-avatar-grid-cell', ['width' => $tdwidth, 'href' => 'index.php?name='.$conf['name'].'&amp;op=saveavatar&amp;avatar='.$file, 'src' => $adir.'/'.$file, 'alt' => _AVATARSAVE.' '._ID.' '.$filename, 'title' => _AVATARSAVE.' '._ID.' '.$filename]);
+                if ($i % $a == 0) $aset .= $tpl->getHtmlFrag('account-avatar-grid-row-close', []);
                 $i++;
             }
         }
-        if (($i - 1) % $a != 0 && $aset !== '') $aset .= setTemplateBasic('account-avatar-grid-row-close');
-        if ($i >= 1) $asetup .= setTemplateBasic('account-avatar-grid', ['{%info_html%}' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _AVATARSELECT]), '{%grid_html%}' => $aset]);
+        if (($i - 1) % $a != 0 && $aset !== '') $aset .= $tpl->getHtmlFrag('account-avatar-grid-row-close', []);
+        if ($i >= 1) $asetup .= $tpl->getHtmlFrag('account-avatar-grid', ['info_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _AVATARSELECT]), 'grid_html' => $aset]);
         $uid = intval($user[0]);
         [$network] = $db->getSqlRow($db->getSqlQuery('SELECT network FROM '.PREFIX_DB.'_users WHERE id = :user_id', ['user_id' => $uid]));
         if (empty($network)) {
-            $psetup = setTemplateBasic('account-password-form', [
-                '{%name%}' => $conf['name'],
-                '{%style%}' => $conf['style'],
-                '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                '{%info_html%}' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT]),
-                '{%lbl_newpass%}' => _PASSNEW,
-                '{%lbl_newpass2%}' => _PASSNEW2,
-                '{%lbl_oldpass%}' => _PASSOLD,
-                '{%submit_label%}' => _SAVECHANGES,
+            $psetup = $tpl->getHtmlFrag('account-password-form', [
+                'name' => $conf['name'],
+                'style' => $conf['style'],
+                'token' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+                'info_html' => $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PASSTEXT]),
+                'lbl_newpass' => _PASSNEW,
+                'lbl_newpass2' => _PASSNEW2,
+                'lbl_oldpass' => _PASSOLD,
+                'submit_label' => _SAVECHANGES,
             ]);
         } else {
             $psetup = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NETWORKPASS]);
@@ -1034,7 +1037,7 @@ function saveavatar(): void {
 }
 
 function savepass(): void {
-    global $user, $db, $conf, $stop;
+    global $user, $db, $conf, $stop, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'account')) $stop[] = _ERROR;
     $newpass = getVar('post', 'newpass', 'text', false);
     $newpass2 = getVar('post', 'newpass2', 'text', false);
@@ -1048,7 +1051,7 @@ function savepass(): void {
                     $userinfo = getUserInfo();
                     $mail = $userinfo['email'];
                     $nick = $userinfo['name'];
-                    $link = setTemplateBasic('account-mail-link', ['{%href%}' => $conf['homeurl'].'/index.php?name='.$conf['name'], '{%title%}' => $conf['homeurl'].'/index.php?name='.$conf['name'], '{%label%}' => $conf['homeurl'].'/index.php?name='.$conf['name'], '{%target%}' => '']);
+                    $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'label' => $conf['homeurl'].'/index.php?name='.$conf['name'], 'target' => '']);
                     $subject = $conf['sitename'].' - '._USERPASSWORD.' '.$nick;
                     $message = str_replace('[text]', sprintf(_PASSESEND, $nick, $conf['sitename'], $nick, $newpass, $link), $conf['mtemp']);
                     addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);

@@ -91,14 +91,14 @@ function shop(): void {
 			$discount = '';
 			$cart = $tpl->getHtmlFrag('shop-cart-button', ['id' => $id, 'title' => _SCART, 'label' => _SCART]);
 			$kasse = $tpl->getHtmlFrag('shop-kasse-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=kasse', 'title' => _SCACH, 'label' => _SCACH]);
-			$title = setTemplateBasic('shop-title-link', ['{%href%}' => $thref, '{%title%}' => $stitle, '{%label%}' => $stitle, '{%new%}' => new_graphic($time)]);
+			$title = $tpl->getHtmlFrag('shop-title-link', ['href' => $thref, 'title' => $stitle, 'label' => $stitle, 'new' => new_graphic($time)]);
 			$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
-			$comm = ($acomm) ? setTemplateBasic('shop-comment-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm', '{%title%}' => _COMMENTS, '{%label%}' => $pcom]) : '';
-			$read = setTemplateBasic('shop-read-link', ['{%href%}' => $thref, '{%title%}' => $stitle, '{%label%}' => _READMORE]);
+			$comm = ($acomm) ? $tpl->getHtmlFrag('shop-comment-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'#comm', 'title' => _COMMENTS, 'label' => $pcom]) : '';
+			$read = $tpl->getHtmlFrag('shop-read-link', ['href' => $thref, 'title' => $stitle, 'label' => _READMORE]);
 			$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1', 'delete_ask' => _DELETE.' &quot;'.$stitle.'&quot;?', 'delete_text' => _ONDELETE]) : '';
 			if (($i - 1) % $conf['shop']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
 			$cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
-			$cont .= setTemplateBasic('basic-shop', ['{%id%}' => $id, '{%favorites%}' => '', '{%title%}' => $title, '{%comm%}' => $comm, '{%hits%}' => '', '{%reads%}' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', '{%post%}' => '', '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%preis%}' => $price, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse, '{%voting%}' => '', '{%cimg%}' => $cimg, '{%text%}' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), '{%rating%}' => $rating, '{%goback%}' => '', '{%admin%}' => $admin, '{%read%}' => $read]);
+			$cont .= $tpl->getHtmlFrag('basic-shop', ['id' => $id, 'favorites' => '', 'title' => $title, 'comm' => $comm, 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => '', 'cimg' => $cimg, 'text' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), 'rating' => $rating, 'goback' => '', 'admin' => $admin, 'read' => $read]);
 			$cont .= $tpl->getHtmlFrag('grid-table-cell', []);
 			if ($i % $conf['shop']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
 			$i++;
@@ -135,15 +135,15 @@ function liste(): void {
 	$cont = setModuleNavi(['title' => _LIST] + SHOP_NAVI);
 	if ($db->getSqlRowCount($result) > 0) {
 		$letter = ($conf['shop']['letter']) ? letter($conf['name']) : '';
-		$cont .= setTemplateBasic('liste-wrap', ['if_flag' => ['open' => true], '{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _PREIS, '{%date%}' => _DATE]);
+		$cont .= $tpl->getHtmlFrag('liste-wrap', ['open' => true, 'letter' => $letter, 'id' => _ID, 'title' => _TITLE, 'category' => _CATEGORY, 'poster' => _PREIS, 'date' => _DATE]);
 		while ([$id, $cid, $time, $title, $price, $ctitle, $cdesc] = $db->getSqlRow($result)) {
 			$thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
 			$chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
 			$cdesc = $cdesc ?: $ctitle;
 			$price = $price.' '.$conf['shop']['valute'];
-			$cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title_href%}' => $thref, '{%title_attr%}' => $title, '{%title_text%}' => cutstr($title, 40), '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : _NO, '{%post_text%}' => $price, '{%time_text%}' => format_time($time), '{%time_iso%}' => date('c', strtotime($time)), '{%time_label%}' => _DATE]);
+			$cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $title, 'title_text' => cutstr($title, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $price, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
 		}
-		$cont .= setTemplateBasic('liste-wrap', []);
+		$cont .= $tpl->getHtmlFrag('liste-wrap', []);
 		$onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
 		$params = ($let) ? ['let' => $let.'%'] : [];
 		$cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_products', 'cid', $onum, $conf['shop']['nump'], $params);
@@ -191,7 +191,7 @@ function view(): void {
 		$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
 		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
 		$favorites = getFavorBtn($id, $conf['name']);
-		$voting = ($vote) ? setTemplateBasic('shop-voting-box', ['{%id%}' => 'rep'.$conf['name'], '{%content%}' => getVoting($vote, $conf['name'])]) : '';
+		$voting = ($vote) ? $tpl->getHtmlFrag('shop-voting-box', ['id' => 'rep'.$conf['name'], 'content' => getVoting($vote, $conf['name'])]) : '';
 		$prtitle = _PREIS;
 		$price = $tpl->getHtmlFrag('shop-price-badge', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute']]);
 		$opreis = '';
@@ -201,22 +201,22 @@ function view(): void {
 		$ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
 		$goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
 		$admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=shop_products_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=shop_products_admin&amp;typ=d&amp;id='.$id, 'delete_ask' => _DELETE.' &quot;'.$title.'&quot;?', 'delete_text' => _ONDELETE]) : '';
-		$cont .= setTemplateBasic('basic-shop', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => filterTextHighlight($title, $word), '{%comm%}' => '', '{%hits%}' => '', '{%reads%}' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', '{%post%}' => '', '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%preis%}' => $price, '{%opreis%}' => $opreis, '{%discount%}' => $discount, '{%cart%}' => $cart, '{%kasse%}' => $kasse, '{%voting%}' => $voting, '{%cimg%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%read%}' => '']);
+		$cont .= $tpl->getHtmlFrag('basic-shop', ['id' => $id, 'favorites' => $favorites, 'title' => filterTextHighlight($title, $word), 'comm' => '', 'hits' => '', 'reads' => ($conf['shop']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $counter]) : '', 'post' => '', 'date' => $date, 'ctitle' => $ctitle, 'preis' => $price, 'opreis' => $opreis, 'discount' => $discount, 'cart' => $cart, 'kasse' => $kasse, 'voting' => $voting, 'cimg' => $cimg, 'text' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), 'rating' => $rating, 'goback' => $goback, 'admin' => $admin, 'read' => '']);
 		if ($conf['shop']['assoc']) {
 			$limit = intval($conf['shop']['assocnum']);
 			[$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\'', ['id' => $id]));
 			if ($count >= $limit) {
 				$random = mt_rand(0, $count - $limit);
 				$result = $db->getSqlQuery('SELECT id, time, title, intro, body FROM '.PREFIX_DB.'_products WHERE cid IN ('.$passoc.') AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['id' => $id]);
-				$cont .= setTemplateBasic('assoc-wrap', ['if_flag' => ['open' => true], '{%title%}' => _ASPROD]);
+				$cont .= $tpl->getHtmlFrag('assoc-wrap', ['open' => true, 'title' => _ASPROD]);
 				while ([$aid, $time, $title, $hometext, $bodytext] = $db->getSqlRow($result)) {
 					$date = ($conf['shop']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
 					$text = cutstr(htmlspecialchars(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), ENT_QUOTES), 80);
 					$img = getImgText($hometext);
 					$img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-					$cont .= setTemplateBasic('assoc-basic', ['{%href%}' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), '{%title_attr%}' => $title, '{%title_text%}' => $title, '{%date_text%}' => $date, '{%date_iso%}' => ($conf['shop']['date']) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%text%}' => $text, '{%img_src%}' => $img]);
+					$cont .= $tpl->getHtmlFrag('assoc-basic', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title, 'date_text' => $date, 'date_iso' => ($conf['shop']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $text, 'img_src' => $img]);
 				}
-				$cont .= setTemplateBasic('assoc-wrap', []);
+				$cont .= $tpl->getHtmlFrag('assoc-wrap', []);
 			}
 		}
 		if ($acomm) $cont .= setComShow($id, $acomm);
@@ -252,7 +252,7 @@ function kasse(): void {
 	$idPartner = filter_input(INPUT_COOKIE, 'part', FILTER_VALIDATE_INT);
 	$idPartner = ($idPartner !== false && $idPartner !== null) ? $idPartner : '';
 	$stop = (!$cookies) ? _SERRORP : '';
-	$form = setTemplateBasic('shop-kasse-form', ['{%name%}' => $conf['name'], '{%token%}' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), '{%style%}' => $conf['style'], '{%lbl_name%}' => _C_PIN, '{%ph_name%}' => _C_PINB, '{%lbl_addr%}' => _C_PIP, '{%ph_addr%}' => _C_PIPB, '{%lbl_phone%}' => _C_TEL, '{%ph_phone%}' => _C_TELB, '{%lbl_email%}' => _C_MAIL, '{%ph_email%}' => _C_MAILB, '{%lbl_site%}' => _SDOM, '{%ph_site%}' => _SDOMB, '{%lbl_msg%}' => _C_MESSAGE, '{%sname%}' => $sname, '{%sadr%}' => $sadr, '{%stel%}' => $stel, '{%smail%}' => $smail, '{%sdom%}' => $sdom, '{%smsg%}' => $smsg, '{%submit_label%}' => _C_SEND]);
+	$form = $tpl->getHtmlFrag('shop-kasse-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'style' => $conf['style'], 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _C_MAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SDOM, 'ph_site' => _SDOMB, 'lbl_msg' => _C_MESSAGE, 'sname' => $sname, 'sadr' => $sadr, 'stel' => $stel, 'smail' => $smail, 'sdom' => $sdom, 'smsg' => $smsg, 'submit_label' => _C_SEND]);
 	setHead(['title' => _C_TITLE]);
 	$cont = setModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
@@ -277,9 +277,9 @@ function kasse(): void {
 				}
 				$price = $price * $i;
 				$ptotal += $price;
-				$content .= setTemplateBasic('shop-order-row', ['{%id%}' => $id, '{%qty%}' => $i, '{%title%}' => $title, '{%price%}' => $price.' '.$conf['shop']['valute']]);
+				$content .= $tpl->getHtmlFrag('shop-order-row', ['id' => $id, 'qty' => $i, 'title' => $title, 'price' => $price.' '.$conf['shop']['valute']]);
 			}
-			$pinfo = setTemplateBasic('shop-order-table', ['{%head_id%}' => _ID, '{%head_qty%}' => _QUANTITY, '{%head_product%}' => _PRODUCT, '{%head_price%}' => _PREIS, '{%rows%}' => $content, '{%total_label%}' => _PARTNERGES, '{%total_value%}' => $ptotal.' '.$conf['shop']['valute']]);
+			$pinfo = $tpl->getHtmlFrag('shop-order-table', ['head_id' => _ID, 'head_qty' => _QUANTITY, 'head_product' => _PRODUCT, 'head_price' => _PREIS, 'rows' => $content, 'total_label' => _PARTNERGES, 'total_value' => $ptotal.' '.$conf['shop']['valute']]);
 			if ($conf['shop']['mailsend']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
@@ -343,7 +343,7 @@ function part(): void {
 }
 
 function clients(): void {
-	global $db, $user, $conf;
+	global $db, $user, $conf, $tpl;
 	if (is_user() && is_active('shop')) {
 		$uid = intval($user[0]);
 		setHead(['title' => _CLIENTINFO]);
@@ -351,15 +351,15 @@ function clients(): void {
 		$cont .= getUserNav();
 		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.uid = :user_id ORDER BY c.id ASC', ['user_id' => $uid]);
 		if ($db->getSqlRowCount($result) > 0) {
-			$cont .= setTemplateBasic('shop-clients-open', ['{%head_id%}' => _ID, '{%head_product%}' => _PRODUCT, '{%head_date%}' => _L_DATE, '{%head_status%}' => _STATUS, '{%head_functions%}' => _FUNCTIONS]);
+			$cont .= $tpl->getHtmlFrag('shop-clients-open', ['head_id' => _ID, 'head_product' => _PRODUCT, 'head_date' => _L_DATE, 'head_status' => _STATUS, 'head_functions' => _FUNCTIONS]);
 			while([$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $stitle, $pprice] = $db->getSqlRow($result)) {
 				$website = ($cwebsite) ? '<br>'._SITE.': '.$cwebsite : '';
 				$note = ($cinfo) ? '<br>'._NOTE.' : '.$cinfo : '';
 				$cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _NO;
-				$rechn = setTemplateBasic('shop-rechn-link', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid, '{%title%}' => _RECHN_B, '{%label%}' => _RECHN_B]);
-				$cont .= setTemplateBasic('shop-client-row', ['{%id%}' => $cid, '{%tip%}' => title_tip(_PREIS.': '.$pprice.' '.$conf['shop']['valute'].$website.$note), '{%title%}' => $stitle, '{%title_text%}' => cutstr($stitle, 35), '{%date%}' => $cenddate, '{%status%}' => ad_status('', $cactive), '{%actions%}' => $rechn]);
+				$rechn = $tpl->getHtmlFrag('shop-rechn-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid, 'title' => _RECHN_B, 'label' => _RECHN_B]);
+				$cont .= $tpl->getHtmlFrag('shop-client-row', ['id' => $cid, 'tip' => title_tip(_PREIS.': '.$pprice.' '.$conf['shop']['valute'].$website.$note), 'title' => $stitle, 'title_text' => cutstr($stitle, 35), 'date' => $cenddate, 'status' => ad_status('', $cactive), 'actions' => $rechn]);
 			}
-			$cont .= setTemplateBasic('table-close');
+			$cont .= $tpl->getHtmlFrag('table-close', []);
 		}
 		$cont .= filterReplaceText(filterMarkdown($conf['shop']['userinfo'], $conf['name'], false), $conf['name']);
 		echo $cont;
@@ -370,7 +370,7 @@ function clients(): void {
 }
 
 function rech(): void {
-	global $db, $conf, $theme;
+	global $db, $conf, $theme, $tpl;
 	if (is_user() && is_active('shop')) {
 		$defis = urldecode($conf['defis']);
 		$id = getVar('get', 'id', 'num');
@@ -379,36 +379,36 @@ function rech(): void {
 			[$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $pprice] = $db->getSqlRow($result);
 			$themeCss = file_exists('templates/'.$theme.'/theme.css') ? 'templates/'.$theme.'/theme.css' : '';
 			$cenddate = ($cenddate != '0') ? date(_TIMESTRING, $cenddate) : _UNLIMITED;
-			echo setTemplateBasic('shop-rech', [
-				'{%charset%}' => _CHARSET,
-				'{%theme_css%}' => $themeCss,
-				'{%title%}' => $conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN,
-				'{%logo_src%}' => img_find('logos/'.$conf['site_logo']),
-				'{%logo_alt%}' => $conf['sitename'],
-				'{%shopinfo%}' => filterReplaceText(filterMarkdown($conf['shop']['shopinfo'], $conf['name'], false), $conf['name']),
-				'{%lbl_name%}' => _C_PIN,
-				'{%name%}' => $cname,
-				'{%lbl_addr%}' => _C_PIP,
-				'{%addr%}' => $caddr,
-				'{%lbl_phone%}' => _C_TEL,
-				'{%phone%}' => $cphone,
-				'{%lbl_email%}' => _C_MAIL,
-				'{%email%}' => $cemail,
-				'{%heading%}' => _C_NAIM,
-				'{%date_label%}' => _K_DATE,
-				'{%date_value%}' => date(_TIMESTRING, $cregdate),
-				'{%lbl_product%}' => _PRODUCT,
-				'{%product%}' => $stitle,
-				'{%lbl_site%}' => _SDOM,
-				'{%site%}' => $cwebsite,
-				'{%lbl_note%}' => _NOTE,
-				'{%note%}' => $cinfo,
-				'{%lbl_license_end%}' => _LIZENS_END,
-				'{%license_end%}' => $cenddate,
-				'{%product_text_label%}' => _PRODUCT_TEXT,
-				'{%product_text%}' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']),
-				'{%price_label%}' => _PREIS_TEXT,
-				'{%price_value%}' => $pprice.' '.$conf['shop']['valute'],
+			echo $tpl->getHtmlFrag('shop-rech', [
+				'charset' => _CHARSET,
+				'theme_css' => $themeCss,
+				'title' => $conf['sitename'].' '.$defis.' '._CLIENTINFO.' '.$defis.' '._RECHN,
+				'logo_src' => img_find('logos/'.$conf['site_logo']),
+				'logo_alt' => $conf['sitename'],
+				'shopinfo' => filterReplaceText(filterMarkdown($conf['shop']['shopinfo'], $conf['name'], false), $conf['name']),
+				'lbl_name' => _C_PIN,
+				'name' => $cname,
+				'lbl_addr' => _C_PIP,
+				'addr' => $caddr,
+				'lbl_phone' => _C_TEL,
+				'phone' => $cphone,
+				'lbl_email' => _C_MAIL,
+				'email' => $cemail,
+				'heading' => _C_NAIM,
+				'date_label' => _K_DATE,
+				'date_value' => date(_TIMESTRING, $cregdate),
+				'lbl_product' => _PRODUCT,
+				'product' => $stitle,
+				'lbl_site' => _SDOM,
+				'site' => $cwebsite,
+				'lbl_note' => _NOTE,
+				'note' => $cinfo,
+				'lbl_license_end' => _LIZENS_END,
+				'license_end' => $cenddate,
+				'product_text_label' => _PRODUCT_TEXT,
+				'product_text' => filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']),
+				'price_label' => _PREIS_TEXT,
+				'price_value' => $pprice.' '.$conf['shop']['valute'],
 			]);
 		}
 	} else {
@@ -441,12 +441,12 @@ function partners(): void {
 					while([$cid, $cuid, $cprod, $cpart, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $uuid, $nick, $pid, $stitle, $pprice] = $db->getSqlRow($result)) {
 						$partsum = $pprice / 100 * $proz;
 						$partsumges += $partsum;
-						$content .= setTemplateBasic('shop-partner-row', ['{%id%}' => $cid, '{%user%}' => user_info($nick), '{%tip%}' => title_tip(_PREIS.': '.$pprice.' '.$conf['shop']['valute'].'<br>'._DATE.' : '.date(_TIMESTRING, $cregdate)), '{%title%}' => $stitle, '{%title_text%}' => cutstr($stitle, 35), '{%percent%}' => $proz.' %', '{%sum%}' => $partsum.' '.$conf['shop']['valute']]);
+						$content .= $tpl->getHtmlFrag('shop-partner-row', ['id' => $cid, 'user' => user_info($nick), 'tip' => title_tip(_PREIS.': '.$pprice.' '.$conf['shop']['valute'].'<br>'._DATE.' : '.date(_TIMESTRING, $cregdate)), 'title' => $stitle, 'title_text' => cutstr($stitle, 35), 'percent' => $proz.' %', 'sum' => $partsum.' '.$conf['shop']['valute']]);
 						$a++;
 					}
-					$cont .= setTemplateBasic('shop-partners-open', ['{%head_id%}' => _ID, '{%head_user%}' => _NICKNAME, '{%head_product%}' => _PRODUCT, '{%head_percent%}' => _PERCENT, '{%head_sum%}' => _SUM]).$content.setTemplateBasic('table-close');
+					$cont .= $tpl->getHtmlFrag('shop-partners-open', ['head_id' => _ID, 'head_user' => _NICKNAME, 'head_product' => _PRODUCT, 'head_percent' => _PERCENT, 'head_sum' => _SUM]).$content.$tpl->getHtmlFrag('table-close', []);
 				}
-				$cont .= setTemplateBasic('shop-partners-summary', ['{%head_clients%}' => _CLIENTEN, '{%head_webmoney%}' => _WEBMONEY, '{%head_paypal%}' => _PAYPAL, '{%head_total%}' => _PARTNERGES, '{%head_rest%}' => _PARTNERREST, '{%head_paid%}' => _PARTNERBEK, '{%clients%}' => $a, '{%webmoney%}' => $pawebmoney, '{%paypal%}' => $papaypal, '{%total%}' => $partsumges.' '.$conf['shop']['valute'], '{%rest%}' => $parest.' '.$conf['shop']['valute'], '{%paid%}' => $pabek.' '.$conf['shop']['valute']]);
+				$cont .= $tpl->getHtmlFrag('shop-partners-summary', ['head_clients' => _CLIENTEN, 'head_webmoney' => _WEBMONEY, 'head_paypal' => _PAYPAL, 'head_total' => _PARTNERGES, 'head_rest' => _PARTNERREST, 'head_paid' => _PARTNERBEK, 'clients' => $a, 'webmoney' => $pawebmoney, 'paypal' => $papaypal, 'total' => $partsumges.' '.$conf['shop']['valute'], 'rest' => $parest.' '.$conf['shop']['valute'], 'paid' => $pabek.' '.$conf['shop']['valute']]);
 				$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);
 				$cont .= filterReplaceText(filterMarkdown(str_replace('[id]', $uid, $conf['shop']['partinfo2']), $conf['name'], false), $conf['name']);
 			}
@@ -454,7 +454,7 @@ function partners(): void {
 			if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
 			$cont .= filterReplaceText(filterMarkdown($conf['shop']['partinfo'], $conf['name'], false), $conf['name']);
 			$cont .= $tpl->getHtmlFrag('title', ['title' => _PARTNERADD]);
-			$cont .= setTemplateBasic('shop-partners-form', ['{%name%}' => $conf['name'], '{%token%}' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), '{%style%}' => $conf['style'], '{%lbl_name%}' => _C_PIN, '{%ph_name%}' => _C_PINB, '{%lbl_addr%}' => _C_PIP, '{%ph_addr%}' => _C_PIPB, '{%lbl_phone%}' => _C_TEL, '{%ph_phone%}' => _C_TELB, '{%lbl_email%}' => _EMAIL, '{%ph_email%}' => _C_MAILB, '{%lbl_site%}' => _SITE, '{%ph_site%}' => _SDOMB, '{%lbl_webmoney%}' => _WEBMONEY, '{%ph_webmoney%}' => _C_WEBMONEYB, '{%lbl_paypal%}' => _PAYPAL, '{%ph_paypal%}' => _C_MAILB, '{%paname%}' => '', '{%paaddr%}' => '', '{%paphone%}' => '', '{%paemail%}' => $smail, '{%pawebsite%}' => $sdom, '{%pawebmoney%}' => '', '{%papaypal%}' => '', '{%puid%}' => $uid, '{%submit_label%}' => _PARTNERSEND]);
+			$cont .= $tpl->getHtmlFrag('shop-partners-form', ['name' => $conf['name'], 'token' => htmlspecialchars(getSiteToken('shop'), ENT_QUOTES, 'UTF-8'), 'style' => $conf['style'], 'lbl_name' => _C_PIN, 'ph_name' => _C_PINB, 'lbl_addr' => _C_PIP, 'ph_addr' => _C_PIPB, 'lbl_phone' => _C_TEL, 'ph_phone' => _C_TELB, 'lbl_email' => _EMAIL, 'ph_email' => _C_MAILB, 'lbl_site' => _SITE, 'ph_site' => _SDOMB, 'lbl_webmoney' => _WEBMONEY, 'ph_webmoney' => _C_WEBMONEYB, 'lbl_paypal' => _PAYPAL, 'ph_paypal' => _C_MAILB, 'paname' => '', 'paaddr' => '', 'paphone' => '', 'paemail' => $smail, 'pawebsite' => $sdom, 'pawebmoney' => '', 'papaypal' => '', 'puid' => $uid, 'submit_label' => _PARTNERSEND]);
 		}
 		echo $cont;
 		setFoot();
