@@ -113,42 +113,42 @@ function news(): void {
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             if (($i - 1) % $conf['news']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
             $cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
-            $cont .= setTemplateBasic('basic', [
-                '{%id%}' => $id,
-                '{%title_href%}' => $thref,
-                '{%title_attr%}' => $stitle,
-                '{%title_text%}' => $stitle,
-                '{%title_new%}' => new_graphic($time),
-                '{%category_href%}' => $ctitle ? $chref : '',
-                '{%category_attr%}' => $cdesc,
-                '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '',
-                '{%category_img%}' => $cimg,
-                '{%text%}' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']),
-                '{%read_href%}' => $thref,
-                '{%read_text%}' => _READMORE,
-                '{%post_text%}' => $post,
-                '{%post_label%}' => _POSTEDBY,
-                '{%date_text%}' => $date,
-                '{%date_iso%}' => $iso,
-                '{%date_label%}' => _CHNGSTORY,
-                '{%reads_text%}' => ($conf['news']['read']) ? $counter : '',
-                '{%reads_label%}' => _READS,
-                '{%hits%}' => '',
-                '{%comm_href%}' => ($acomm) ? $thref.'#comm' : '',
-                '{%comm_text%}' => ($acomm) ? $comm : '',
-                '{%comm_label%}' => _COMMENTS,
-                '{%rating%}' => $rating,
-                '{%favorites%}' => '',
-                '{%voting%}' => '',
-                '{%editor%}' => _EDITOR,
-                '{%edit_href%}' => $afile.'.php?op=news_add&amp;id='.$id,
-                '{%edit_text%}' => _FULLEDIT,
-                '{%delete_href%}' => $afile.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1',
-                '{%delete_text%}' => _ONDELETE,
-                '{%delete_ask%}' => $ask,
-                '{%back_title%}' => '',
-                '{%back_text%}' => '',
-                'if_flag' => ['is_moder' => is_moder($conf['name'])],
+            $cont .= $tpl->getHtmlFrag('basic', [
+                'id' => $id,
+                'title_href' => $thref,
+                'title_attr' => $stitle,
+                'title_text' => $stitle,
+                'title_new' => new_graphic($time),
+                'category_href' => $ctitle ? $chref : '',
+                'category_attr' => $cdesc,
+                'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
+                'category_img' => $cimg,
+                'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']),
+                'read_href' => $thref,
+                'read_text' => _READMORE,
+                'post_text' => $post,
+                'post_label' => _POSTEDBY,
+                'date_text' => $date,
+                'date_iso' => $iso,
+                'date_label' => _CHNGSTORY,
+                'reads_text' => ($conf['news']['read']) ? $counter : '',
+                'reads_label' => _READS,
+                'hits' => '',
+                'comm_href' => ($acomm) ? $thref.'#comm' : '',
+                'comm_text' => ($acomm) ? $comm : '',
+                'comm_label' => _COMMENTS,
+                'rating' => $rating,
+                'favorites' => '',
+                'voting' => '',
+                'editor' => _EDITOR,
+                'edit_href' => $afile.'.php?op=news_add&amp;id='.$id,
+                'edit_text' => _FULLEDIT,
+                'delete_href' => $afile.'.php?op=news_admin&amp;typ=d&amp;id='.$id.'&amp;refer=1',
+                'delete_text' => _ONDELETE,
+                'delete_ask' => $ask,
+                'back_title' => '',
+                'back_text' => '',
+                'is_moder' => is_moder($conf['name']),
             ]);
             $cont .= $tpl->getHtmlFrag('grid-table-cell', []);
             if ($i % $conf['news']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', []);
@@ -193,13 +193,13 @@ function liste(): void {
     $cont = setModuleNavi(['title' => _LIST, 'htitle' => _NEWS]);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['news']['letter']) ? letter($conf['name']) : '';
-        $cont .= setTemplateBasic('liste-wrap', ['if_flag' => ['open' => true], 
-            '{%letter%}' => $letter,
-            '{%id%}' => _ID,
-            '{%title%}' => _TITLE,
-            '{%category%}' => _CATEGORY,
-            '{%poster%}' => _POSTER,
-            '{%date%}' => _DATE,
+        $cont .= $tpl->getHtmlFrag('liste-wrap', ['open' => true,
+            'letter' => $letter,
+            'id' => _ID,
+            'title' => _TITLE,
+            'category' => _CATEGORY,
+            'poster' => _POSTER,
+            'date' => _DATE,
         ]);
         while ([$id, $cid, $uname, $title, $time, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
             $thref = getSeoUrl([
@@ -209,22 +209,22 @@ function liste(): void {
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cdesc = $cdesc ?: $ctitle;
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= setTemplateBasic('liste-basic', [
-                '{%id%}' => $id,
-                '{%title_href%}' => $thref,
-                '{%title_attr%}' => $title,
-                '{%title_text%}' => cutstr($title, 40),
-                '{%title_new%}' => new_graphic($time),
-                '{%category_href%}' => $ctitle ? $chref : '',
-                '{%category_attr%}' => $cdesc,
-                '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
-                '{%post_text%}' => $post,
-                '{%time_text%}' => format_time($time),
-                '{%time_iso%}' => date('c', strtotime($time)),
-                '{%time_label%}' => _DATE,
+            $cont .= $tpl->getHtmlFrag('liste-basic', [
+                'id' => $id,
+                'title_href' => $thref,
+                'title_attr' => $title,
+                'title_text' => cutstr($title, 40),
+                'title_new' => new_graphic($time),
+                'category_href' => $ctitle ? $chref : '',
+                'category_attr' => $cdesc,
+                'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO,
+                'post_text' => $post,
+                'time_text' => format_time($time),
+                'time_iso' => date('c', strtotime($time)),
+                'time_label' => _DATE,
             ]);
         }
-        $cont .= setTemplateBasic('liste-wrap', []);
+        $cont .= $tpl->getHtmlFrag('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
         $params = ($let) ? ['let' => $let.'%'] : [];
         $cont .= setArticleNumbers(
@@ -297,47 +297,49 @@ function view(): void {
         $favorites = getFavorBtn($id, $conf['name']);
         $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVoting($vote, $conf['name']).'</div><hr>' : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-        $cont .= setTemplateBasic('basic', [
-            'if_flag' => ['is_view' => true, 'is_moder' => is_moder($conf['name']), 'has_back' => true],
-            '{%id%}' => $id,
-            '{%title_href%}' => getSeoUrl([
+        $cont .= $tpl->getHtmlFrag('basic', [
+            'is_view' => true,
+            'is_moder' => is_moder($conf['name']),
+            'has_back' => true,
+            'id' => $id,
+            'title_href' => getSeoUrl([
                 'name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle,
             ]),
-            '{%title_attr%}' => $title,
-            '{%title_text%}' => filterTextHighlight($title, $word),
-            '{%title_new%}' => '',
-            '{%category_href%}' => $ctitle ? $chref : '',
-            '{%category_attr%}' => $cdesc,
-            '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '',
-            '{%category_img%}' => $cimg,
-            '{%text%}' => filterTextHighlight(
+            'title_attr' => $title,
+            'title_text' => filterTextHighlight($title, $word),
+            'title_new' => '',
+            'category_href' => $ctitle ? $chref : '',
+            'category_attr' => $cdesc,
+            'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
+            'category_img' => $cimg,
+            'text' => filterTextHighlight(
                 filterReplaceText(filterMarkdown($conpag[$pagei], $conf['name'], false), $conf['name']),
                 $word
             ),
-            '{%read_href%}' => '',
-            '{%read_text%}' => '',
-            '{%post_text%}' => $post,
-            '{%post_label%}' => _POSTEDBY,
-            '{%date_text%}' => $date,
-            '{%date_iso%}' => $iso,
-            '{%date_label%}' => _CHNGSTORY,
-            '{%reads_text%}' => ($conf['news']['read']) ? $counter : '',
-            '{%reads_label%}' => _READS,
-            '{%hits%}' => '',
-            '{%comm_href%}' => '',
-            '{%comm_text%}' => '',
-            '{%comm_label%}' => _COMMENTS,
-            '{%rating%}' => $rating,
-            '{%favorites%}' => $favorites,
-            '{%voting%}' => $voting,
-            '{%editor%}' => _EDITOR,
-            '{%edit_href%}' => $afile.'.php?op=news_add&amp;id='.$id,
-            '{%edit_text%}' => _FULLEDIT,
-            '{%delete_href%}' => $afile.'.php?op=news_admin&amp;typ=d&amp;id='.$id,
-            '{%delete_text%}' => _ONDELETE,
-            '{%delete_ask%}' => $ask,
-            '{%back_title%}' => _BACK,
-            '{%back_text%}' => _BACK,
+            'read_href' => '',
+            'read_text' => '',
+            'post_text' => $post,
+            'post_label' => _POSTEDBY,
+            'date_text' => $date,
+            'date_iso' => $iso,
+            'date_label' => _CHNGSTORY,
+            'reads_text' => ($conf['news']['read']) ? $counter : '',
+            'reads_label' => _READS,
+            'hits' => '',
+            'comm_href' => '',
+            'comm_text' => '',
+            'comm_label' => _COMMENTS,
+            'rating' => $rating,
+            'favorites' => $favorites,
+            'voting' => $voting,
+            'editor' => _EDITOR,
+            'edit_href' => $afile.'.php?op=news_add&amp;id='.$id,
+            'edit_text' => _FULLEDIT,
+            'delete_href' => $afile.'.php?op=news_admin&amp;typ=d&amp;id='.$id,
+            'delete_text' => _ONDELETE,
+            'delete_ask' => $ask,
+            'back_title' => _BACK,
+            'back_text' => _BACK,
         ]);
         $cont .= setPageNumbers(
             'pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['news']['nump'], (int)$pag, '#'.$id
@@ -362,7 +364,7 @@ function view(): void {
                     .' WHERE cid IN ('.$assin.') AND id != :id'
                     ." AND time <= NOW() AND status != '0' ORDER BY time DESC LIMIT ".$random.', '.$limit;
                 $result = $db->getSqlQuery($asql, ['id' => $id]);
-                $cont .= setTemplateBasic('assoc-wrap', ['if_flag' => ['open' => true], '{%title%}' => _ASSTORY]);
+                $cont .= $tpl->getHtmlFrag('assoc-wrap', ['open' => true, 'title' => _ASSTORY]);
                 while ([$aid, $title, $time, $hometext, $bodytext] = $db->getSqlRow($result)) {
                     $date = ($conf['news']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
                     $text = cutstr(htmlspecialchars(
@@ -373,21 +375,21 @@ function view(): void {
                     ), 80);
                     $img = getImgText($hometext);
                     $img = ($img) ? $img : img_find('logos/slaed_logo_60x60.png');
-                    $cont .= setTemplateBasic('assoc-basic', [
-                        '{%href%}' => getSeoUrl([
+                    $cont .= $tpl->getHtmlFrag('assoc-basic', [
+                        'href' => getSeoUrl([
                             'name' => $conf['name'], 'op' => 'view',
                             'id' => $aid, 'title' => $title,
                         ]),
-                        '{%title_attr%}' => $title,
-                        '{%title_text%}' => $title,
-                        '{%date_text%}' => $date,
-                        '{%date_iso%}' => ($conf['news']['date']) ? date('c', strtotime($time)) : '',
-                        '{%date_label%}' => _CHNGSTORY,
-                        '{%text%}' => $text,
-                        '{%img_src%}' => $img,
+                        'title_attr' => $title,
+                        'title_text' => $title,
+                        'date_text' => $date,
+                        'date_iso' => ($conf['news']['date']) ? date('c', strtotime($time)) : '',
+                        'date_label' => _CHNGSTORY,
+                        'text' => $text,
+                        'img_src' => $img,
                     ]);
                 }
-                $cont .= setTemplateBasic('assoc-wrap', []);
+                $cont .= $tpl->getHtmlFrag('assoc-wrap', []);
             }
         }
         if ($acomm) $cont .= setComShow($id, $acomm);

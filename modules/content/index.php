@@ -36,7 +36,7 @@ function content(): void {
                 'actions' => $actions,
             ]);
         }
-        $cont .= setTemplateBasic('table-close');
+        $cont .= $tpl->getHtmlFrag('table-close');
         $cont .= setArticleNumbers('pagenum', $conf['name'], $limit, '', 'id', '_content', '', '', $nump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);

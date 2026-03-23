@@ -279,7 +279,7 @@ function printresults(int|string|null $layout, int $id): string {
 }
 
 function printwhois(string|array $output): string {
-	global $domainwhois, $ext, $domainopt;
+	global $domainwhois, $ext, $domainopt, $tpl;
 	$cont = $tpl->getHtmlFrag('whois-output-open', ['domain_form' => $domainopt, 'legend' => _WHOIS_INF_US]);
 	$output= explode("\n",$output);
 	foreach ($output as $value){

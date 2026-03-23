@@ -319,7 +319,7 @@ function getSearchList(array $rows, array $state): string {
     $slice = array_slice($rows, $from, $state['snum']);
     $numb = $from + 1;
     foreach ($slice as $row) {
-        $cont .= setTemplateBasic('basic-search', ['{%n%}' => $numb, '{%title%}' => $row['title'], '{%date%}' => $row['date'], '{%modul%}' => $row['modul'], '{%ctitle%}' => $row['ctitle'], '{%post%}' => $row['post'], '{%admin%}' => $row['edit']]);
+        $cont .= $tpl->getHtmlFrag('basic-search', ['n' => $numb, 'title' => $row['title'], 'date' => $row['date'], 'modul' => $row['modul'], 'ctitle' => $row['ctitle'], 'post' => $row['post'], 'admin' => $row['edit']]);
         $numb++;
     }
     if (!$anum) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOMATCHES]);

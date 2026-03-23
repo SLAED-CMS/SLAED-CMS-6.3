@@ -80,7 +80,7 @@ function media(): void {
             $links = (url_types($links)) ? $tpl->getHtmlFrag('hit-badge', ['title' => _MDOWN.': '.url_types($links), 'text' => url_types($links), 'cls' => 'sl_down']) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$mtitle.'&quot;?');
-            $cont .= setTemplateBasic('basic', ['{%id%}' => $id, '{%title_href%}' => $thref, '{%title_attr%}' => $mtitle, '{%title_text%}' => $mtitle, '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $cdesc, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : '', '{%category_img%}' => $cimg, '{%text%}' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), '{%read_href%}' => $thref, '{%read_text%}' => _READMORE, '{%post_text%}' => $post, '{%post_label%}' => _POSTEDBY, '{%date_text%}' => $date, '{%date_iso%}' => ($date) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%reads_text%}' => ($conf['media']['read']) ? $hits : '', '{%reads_label%}' => _READS, '{%hits%}' => $links, '{%comm_href%}' => ($acomm) ? $thref.'#comm' : '', '{%comm_text%}' => ($acomm) ? $comm : '', '{%comm_label%}' => _COMMENTS, '{%rating%}' => $rating, '{%favorites%}' => '', '{%voting%}' => '', '{%editor%}' => _EDITOR, '{%edit_href%}' => $afile.'.php?op=media_add&amp;id='.$id, '{%edit_text%}' => _FULLEDIT, '{%delete_href%}' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', '{%delete_text%}' => _ONDELETE, '{%delete_ask%}' => $ask, '{%back_title%}' => '', '{%back_text%}' => '', 'if_flag' => ['is_moder' => is_moder($conf['name'])]]);
+            $cont .= $tpl->getHtmlFrag('basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $mtitle, 'title_text' => $mtitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['media']['read']) ? $hits : '', 'reads_label' => _READS, 'hits' => $links, 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
     } else {
@@ -112,14 +112,14 @@ function liste(): void {
     $cont = setModuleNavi(['title' => _LIST, 'htitle' => _MEDIA]);
     if ($db->getSqlRowCount($result) > 0) {
         $letter = ($conf['media']['letter']) ? letter($conf['name']) : '';
-        $cont .= setTemplateBasic('liste-wrap', ['if_flag' => ['open' => true], '{%letter%}' => $letter, '{%id%}' => _ID, '{%title%}' => _TITLE, '{%category%}' => _CATEGORY, '{%poster%}' => _POSTER, '{%date%}' => _DATE]);
+        $cont .= $tpl->getHtmlFrag('liste-wrap', ['open' => true, 'letter' => $letter, 'id' => _ID, 'title' => _TITLE, 'category' => _CATEGORY, 'poster' => _POSTER, 'date' => _DATE]);
         while([$id, $cid, $uname, $title, $subtitle, $time, $ctitle, $nick] = $db->getSqlRow($result)) {
             $stitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
             $chref = 'index.php?name='.$conf['name'].'&amp;cat='.$cid;
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= setTemplateBasic('liste-basic', ['{%id%}' => $id, '{%title_href%}' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, '{%title_attr%}' => $stitle, '{%title_text%}' => cutstr($stitle, 40), '{%title_new%}' => new_graphic($time), '{%category_href%}' => $ctitle ? $chref : '', '{%category_attr%}' => $ctitle, '{%category_text%}' => ($ctitle) ? cutstr($ctitle, 15) : _NO, '{%post_text%}' => $post, '{%time_text%}' => format_time($time), '{%time_iso%}' => date('c', strtotime($time)), '{%time_label%}' => _DATE]);
+            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'title_attr' => $stitle, 'title_text' => cutstr($stitle, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $ctitle, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
         }
-        $cont .= setTemplateBasic('liste-wrap', []);
+        $cont .= $tpl->getHtmlFrag('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
         $params = ($let) ? ['let' => $let.'%'] : [];
         $cont .= setArticleNumbers('pagenum', $conf['name'], $listnum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump'], $params);
@@ -207,14 +207,14 @@ function view(): void {
                 $mlinks = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HIDETEXT]);
             }
         }
-        $cont .= setTemplateBasic('basic-media-view', ['{%id%}' => $id, '{%favorites%}' => $favorites, '{%title%}' => filterTextHighlight($ptitle, $word), '{%hits%}' => '', '{%reads%}' => $reads, '{%post%}' => $post, '{%date%}' => $date, '{%ctitle%}' => $ctitle, '{%cimg%}' => $cimg, '{%text%}' => filterTextHighlight(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), $word), '{%year%}' => $year, '{%director%}' => $director, '{%roles%}' => $roles, '{%createdby%}' => $createdby, '{%duration%}' => $duration, '{%lang%}' => $lang, '{%format%}' => $format, '{%quality%}' => $quality, '{%size%}' => $size, '{%released%}' => $released, '{%note%}' => $note, '{%links_label%}' => ($mlinks ?? '') ? _MURLS : '', '{%mlinks%}' => $mlinks ?? '', '{%rating%}' => $rating, '{%goback%}' => $goback, '{%admin%}' => $admin, '{%download%}' => '', '{%broken%}' => $broc]);
+        $cont .= $tpl->getHtmlFrag('basic-media-view', ['id' => $id, 'favorites' => $favorites, 'title' => filterTextHighlight($ptitle, $word), 'hits' => '', 'reads' => $reads, 'post' => $post, 'date' => $date, 'ctitle' => $ctitle, 'cimg' => $cimg, 'text' => filterTextHighlight(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), $word), 'year' => $year, 'director' => $director, 'roles' => $roles, 'createdby' => $createdby, 'duration' => $duration, 'lang' => $lang, 'format' => $format, 'quality' => $quality, 'size' => $size, 'released' => $released, 'note' => $note, 'links_label' => ($mlinks ?? '') ? _MURLS : '', 'mlinks' => $mlinks ?? '', 'rating' => $rating, 'goback' => $goback, 'admin' => $admin, 'download' => '', 'broken' => $broc]);
         if ($conf['media']['link']) {
             $limit = intval($conf['media']['linknum']);
             [$count] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\'', ['cid' => $cid, 'id' => $id]));
             if ($count >= $limit) {
                 $random = mt_rand(0, $count - $limit);
                 $result = $db->getSqlQuery('SELECT id, title, subtitle, intro, time FROM '.PREFIX_DB.'_media WHERE cid = :cid AND id != :id AND time <= NOW() AND status != \'0\' ORDER BY time DESC LIMIT '.$random.', '.$limit, ['cid' => $cid, 'id' => $id]);
-                $cont .= setTemplateBasic('assoc-wrap', ['if_flag' => ['open' => true], '{%title%}' => _CATASSOC]);
+                $cont .= $tpl->getHtmlFrag('assoc-wrap', ['open' => true, 'title' => _CATASSOC]);
                 while([$aid, $title, $subtitle, $hometext, $time] = $db->getSqlRow($result)) {
                     $title = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
                     $adate = ($conf['media']['date']) ? _CHNGSTORY.': '.format_time($time) : '';
@@ -226,9 +226,9 @@ function view(): void {
                         $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
                     }
                     $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
-                    $cont .= setTemplateBasic('assoc-basic', ['{%href%}' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$aid, '{%title_attr%}' => $title, '{%title_text%}' => $title, '{%date_text%}' => $adate, '{%date_iso%}' => ($conf['media']['date']) ? date('c', strtotime($time)) : '', '{%date_label%}' => _CHNGSTORY, '{%text%}' => $atext, '{%img_src%}' => $img]);
+                    $cont .= $tpl->getHtmlFrag('assoc-basic', ['href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$aid, 'title_attr' => $title, 'title_text' => $title, 'date_text' => $adate, 'date_iso' => ($conf['media']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $atext, 'img_src' => $img]);
                 }
-                $cont .= setTemplateBasic('assoc-wrap', []);
+                $cont .= $tpl->getHtmlFrag('assoc-wrap', []);
             }
         }
         if ($acomm) $cont .= setComShow($id, $acomm);

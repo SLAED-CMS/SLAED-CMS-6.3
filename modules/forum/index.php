@@ -403,7 +403,7 @@ function view(): void {
 }
 
 function quickreply(int|string|null $id, int|string|null $catid, string $subject): string {
-    global $conf;
+    global $conf, $tpl;
     $id = (int)$id;
     $catid = (int)$catid;
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {

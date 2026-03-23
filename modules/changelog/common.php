@@ -203,6 +203,7 @@ function chlogRenderCommitStats(array $commit, bool $showStats, bool $showFiles)
 }
 
 function chlogRenderCommits(array $commits, array $options = []): string {
+    global $tpl;
     $showStats = !empty($options['showstat']);
     $showFiles = !empty($options['showfile']);
     $html = '';
@@ -219,17 +220,17 @@ function chlogRenderCommits(array $commits, array $options = []): string {
             $bodyHtml = '<div class="commit-body">'.filterMarkdown((string)$commit['body'], 'changelog', true).'</div>';
         }
 
-        $html .= setTemplateBasic('basic-changelog-commit', [
-            '{%background%}' => $i % 2 ? '#f9f9f9' : '#fff',
-            '{%subject%}' => chlogEsc((string)($commit['subject'] ?? '')),
-            '{%hash%}' => chlogEsc((string)($commit['hash'] ?? '')),
-            '{%author%}' => chlogEsc((string)($commit['author'] ?? '')),
-            '{%email%}' => chlogEsc((string)($commit['email'] ?? '')),
-            '{%date%}' => chlogFormatDate((string)($commit['date'] ?? '')),
-            '{%label_author%}' => _CHLOG_AUTHOR,
-            '{%label_date%}' => _CHLOG_DATE,
-            '{%body%}' => $bodyHtml,
-            '{%stats%}' => chlogRenderCommitStats($commit, $showStats, $showFiles)
+        $html .= $tpl->getHtmlFrag('basic-changelog-commit', [
+            'background' => $i % 2 ? '#f9f9f9' : '#fff',
+            'subject' => chlogEsc((string)($commit['subject'] ?? '')),
+            'hash' => chlogEsc((string)($commit['hash'] ?? '')),
+            'author' => chlogEsc((string)($commit['author'] ?? '')),
+            'email' => chlogEsc((string)($commit['email'] ?? '')),
+            'date' => chlogFormatDate((string)($commit['date'] ?? '')),
+            'label_author' => _CHLOG_AUTHOR,
+            'label_date' => _CHLOG_DATE,
+            'body' => $bodyHtml,
+            'stats' => chlogRenderCommitStats($commit, $showStats, $showFiles)
         ]);
         $i++;
     }
