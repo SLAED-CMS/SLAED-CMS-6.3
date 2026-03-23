@@ -253,7 +253,7 @@ function search(): void {
     $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('search'), 'id' => 'search']);
     $cont .= getSearchsum($where, $pars);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._SWORD.'</th><th>'._MODUL.'</th><th>'._HITS
             .'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $word, $mod, $time, $hits] = $db->getSqlRow($result)) {
@@ -286,7 +286,7 @@ function search(): void {
         $pages = ceil($all / $anum);
         $cont .= setPageNumbers('pagenum', '', intval($all), intval($pages), $anum, 'name=search&amp;sort='.$sort
             .'&amp;order='.$order.$clink.'&amp;', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -318,7 +318,7 @@ function toplist(): void {
     $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('toplist'), 'tab' => 1, 'id' => 'search']);
     $cont .= getSearchsum($where, $pars);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._SWORD.'</th><th>'._MODUL.'</th><th>'._HITS
             .'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $word, $mod, $time, $hits] = $db->getSqlRow($result)) {
@@ -347,7 +347,7 @@ function toplist(): void {
         $pages = ceil($all / $anum);
         $cont .= setPageNumbers('pagenum', '', intval($all), intval($pages), $anum, 'name=search&amp;op=toplist&amp;sort='
             .$sort.'&amp;order='.$order.$clink.'&amp;', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -369,7 +369,7 @@ function config(): void {
     if (getVar('get', 'reindex', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHAUTODONE.': '.intval(getVar('get', 'reindex', 'num', 0))]);
     if (getVar('get', 'pick', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SEARCHADDSEL.': '.intval(getVar('get', 'pick', 'num', 0))]);
     $cont .= checkPerms(CONFIG_DIR.'/search.php');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php?name=search" method="post"><input type="hidden" name="op" value="save">'
         .'<input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'">'
         .'<table class="sl_table_conf">'
@@ -396,7 +396,7 @@ function config(): void {
         .getSearchauditTable($rlist, 'ready').'<table class="sl_table_conf"><tr><td>'._SEARCHAUTO.':<div class="sl_small">'._SEARCHAUTOINFO.'</div></td></tr>'
         .'<tr><td class="sl_center"><input type="submit" value="'._SEARCHADDSEL.'" class="sl_but_blue"> <button type="submit" name="all" value="1" class="sl_but_blue">'._SEARCHADDALL.'</button></td></tr></table></form>';
     $cont .= '<h3>'._SEARCHINVALID.'</h3>'.getSearchauditTable($ilist, 'invalid');
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -499,7 +499,7 @@ function edit(): void {
     if ($db->getSqlRowCount($result) > 0) {
         [$word, $mod, $time, $score] = $db->getSqlRow($result);
         $hits = max(intval($score), 1);
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<form action="'.$afile.'.php?name=search" method="post"><table class="sl_table_form">'
             .'<tr><td>'._SWORD.':</td><td><input type="text" name="word" value="'
             .htmlspecialchars((string)$word, ENT_QUOTES, 'UTF-8').'" maxlength="255" class="sl_form" placeholder="'
@@ -515,7 +515,7 @@ function edit(): void {
             .htmlspecialchars($fmod, ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="token" value="'
             .htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'"><input type="submit" value="'
             ._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -562,7 +562,7 @@ function delete(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'], 'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO], 'sub' => getSearchbox('delete'), 'tab' => 3, 'id' => 'search']);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php?name=search" method="post"><table class="sl_table_conf">'
         .'<tr><td>'._DELETE.':</td><td><select name="mode" class="sl_form"><option value="all">'._SEARCHCLEAR
         .'</option><option value="mod">'._SEARCHBYMOD.'</option><option value="days">'._SEARCHBYDAY
@@ -571,7 +571,7 @@ function delete(): void {
         .'<tr><td>'._DAYS.':</td><td><input type="number" name="days" value="30" min="1" class="sl_form" placeholder="'._DAYS.'" required></td></tr>'
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="clear"><input type="hidden" name="token" value="'
         .htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'"><input type="submit" value="'._DELETE.'" class="sl_but_red"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

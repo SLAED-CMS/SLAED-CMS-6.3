@@ -26,7 +26,7 @@ function pages(): void {
     }
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
@@ -47,7 +47,7 @@ function pages(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_pages', '', 'status = \''.$status.'\'', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -79,7 +79,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($hometext) $cont .= preview($subject, $hometext, $bodytext, '', 'pages');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
@@ -90,7 +90,7 @@ function add(): void {
     .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="pages">'.ad_save('pid', $pid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -141,60 +141,60 @@ function delete(int $did = 0): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/pages.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'        => $afile,
-        '{%module%}'       => 'pages',
-        '{%op%}'           => 'configsave',
-        '{%save%}'         => _SAVECHANGES,
-        '{%fields%}'       => '',
-        '{%_cdefis%}'      => _CDEFIS,
-        '{%defis%}'        => urldecode($conf['pages']['defis'] ?? ''),
-        '{%_pagelinknum%}' => _PAGELINKNUM,
-        '{%linknum%}'      => $conf['pages']['linknum'] ?? 10,
-        '{%_c13%}'         => _C_13,
-        '{%listnum%}'      => $conf['pages']['listnum'] ?? 10,
-        '{%_c33%}'         => _C_33,
-        '{%num%}'          => $conf['pages']['num'] ?? 25,
-        '{%_c34%}'         => _C_34,
-        '{%anum%}'         => $conf['pages']['anum'] ?? 25,
-        '{%_c35%}'         => _C_35,
-        '{%nump%}'         => $conf['pages']['nump'] ?? 10,
-        '{%_c36%}'         => _C_36,
-        '{%anump%}'        => $conf['pages']['anump'] ?? 10,
-        '{%_homcat%}'      => _HOMCAT,
-        '{%r_homcat%}'     => radio_form($conf['pages']['homcat'] ?? 0, 'homcat'),
-        '{%_viewcat%}'     => _VIEWCAT,
-        '{%r_viewcat%}'    => radio_form($conf['pages']['viewcat'] ?? 0, 'viewcat'),
-        '{%_c32%}'         => _C_32,
-        '{%r_catdesc%}'    => radio_form($conf['pages']['catdesc'] ?? 0, 'catdesc'),
-        '{%_c15%}'         => _C_15,
-        '{%r_subcat%}'     => radio_form($conf['pages']['subcat'] ?? 0, 'subcat'),
-        '{%_addamail%}'    => _ADDAMAIL,
-        '{%r_addmail%}'    => radio_form($conf['pages']['addmail'] ?? 0, 'addmail'),
-        '{%_c39%}'         => _C_39,
-        '{%r_add%}'        => radio_form($conf['pages']['add'] ?? 0, 'add'),
-        '{%_c40%}'         => _C_40,
-        '{%r_addquest%}'   => radio_form($conf['pages']['addquest'] ?? 0, 'addquest'),
-        '{%_c37%}'         => _C_37,
-        '{%r_autor%}'      => radio_form($conf['pages']['autor'] ?? 0, 'autor'),
-        '{%_c17%}'         => _C_17,
-        '{%r_date%}'       => radio_form($conf['pages']['date'] ?? 0, 'date'),
-        '{%_c18%}'         => _C_18,
-        '{%r_read%}'       => radio_form($conf['pages']['read'] ?? 0, 'read'),
-        '{%_c19%}'         => _C_19,
-        '{%r_rate%}'       => radio_form($conf['pages']['rate'] ?? 0, 'rate'),
-        '{%_c20%}'         => _C_20,
-        '{%r_letter%}'     => radio_form($conf['pages']['letter'] ?? 0, 'letter'),
-        '{%_pagelink%}'    => _PAGELINK,
-        '{%r_link%}'       => radio_form($conf['pages']['link'] ?? 0, 'link'),
-        'if_flag'          => ['pages' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'pages',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_cdefis' => _CDEFIS,
+        'defis' => urldecode($conf['pages']['defis'] ?? ''),
+        '_pagelinknum' => _PAGELINKNUM,
+        'linknum' => $conf['pages']['linknum'] ?? 10,
+        '_c13' => _C_13,
+        'listnum' => $conf['pages']['listnum'] ?? 10,
+        '_c33' => _C_33,
+        'num' => $conf['pages']['num'] ?? 25,
+        '_c34' => _C_34,
+        'anum' => $conf['pages']['anum'] ?? 25,
+        '_c35' => _C_35,
+        'nump' => $conf['pages']['nump'] ?? 10,
+        '_c36' => _C_36,
+        'anump' => $conf['pages']['anump'] ?? 10,
+        '_homcat' => _HOMCAT,
+        'r_homcat' => radio_form($conf['pages']['homcat'] ?? 0, 'homcat'),
+        '_viewcat' => _VIEWCAT,
+        'r_viewcat' => radio_form($conf['pages']['viewcat'] ?? 0, 'viewcat'),
+        '_c32' => _C_32,
+        'r_catdesc' => radio_form($conf['pages']['catdesc'] ?? 0, 'catdesc'),
+        '_c15' => _C_15,
+        'r_subcat' => radio_form($conf['pages']['subcat'] ?? 0, 'subcat'),
+        '_addamail' => _ADDAMAIL,
+        'r_addmail' => radio_form($conf['pages']['addmail'] ?? 0, 'addmail'),
+        '_c39' => _C_39,
+        'r_add' => radio_form($conf['pages']['add'] ?? 0, 'add'),
+        '_c40' => _C_40,
+        'r_addquest' => radio_form($conf['pages']['addquest'] ?? 0, 'addquest'),
+        '_c37' => _C_37,
+        'r_autor' => radio_form($conf['pages']['autor'] ?? 0, 'autor'),
+        '_c17' => _C_17,
+        'r_date' => radio_form($conf['pages']['date'] ?? 0, 'date'),
+        '_c18' => _C_18,
+        'r_read' => radio_form($conf['pages']['read'] ?? 0, 'read'),
+        '_c19' => _C_19,
+        'r_rate' => radio_form($conf['pages']['rate'] ?? 0, 'rate'),
+        '_c20' => _C_20,
+        'r_letter' => radio_form($conf['pages']['letter'] ?? 0, 'letter'),
+        '_pagelink' => _PAGELINK,
+        'r_link' => radio_form($conf['pages']['link'] ?? 0, 'link'),
+        'pages' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

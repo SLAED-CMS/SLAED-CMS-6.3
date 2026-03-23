@@ -17,7 +17,7 @@ function order(): void {
     $offset = (int)(($num - 1) * $anum);
     $result = $db->getSqlQuery('SELECT id, email, info, note, ip, agent, time, status FROM '.PREFIX_DB.'_order ORDER BY time DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_order'));
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
@@ -36,7 +36,7 @@ function order(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=order&amp;', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -63,14 +63,14 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._OR_9.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._OR_9.'" required></td></tr>'
     .fields_in($field, 'order')
     .'<tr><td>'._OR_10.':</td><td><textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._OR_10.'">'.$note.'</textarea></td></tr>'
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -125,38 +125,38 @@ function activate(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'    => $afile,
-        '{%module%}'   => 'order',
-        '{%op%}'       => 'configsave',
-        '{%save%}'     => _SAVECHANGES,
-        '{%fields%}'   => '',
-        '{%_or1%}'     => _OR_1,
-        '{%mail%}'     => $conf['order']['mail'] ?? '',
-        '{%_c34%}'     => _C_34,
-        '{%anum%}'     => $conf['order']['anum'] ?? 25,
-        '{%_c36%}'     => _C_36,
-        '{%anump%}'    => $conf['order']['anump'] ?? 10,
-        '{%_or2%}'     => _OR_2,
-        '{%r_an%}'     => radio_form($conf['order']['an'] ?? 0, 'an'),
-        '{%_or3%}'     => _OR_3,
-        '{%r_pr%}'     => radio_form($conf['order']['pr'] ?? 0, 'pr'),
-        '{%_or4%}'     => _OR_4,
-        '{%r_ad%}'     => radio_form($conf['order']['ad'] ?? 0, 'ad'),
-        '{%_or5%}'     => _OR_5,
-        '{%t_text%}'   => textarea('1', 'text', $conf['order']['text'] ?? '', 'all', '5', _OR_5, '1'),
-        '{%_or6%}'     => _OR_6,
-        '{%t_info%}'   => textarea('2', 'info', $conf['order']['info'] ?? '', 'all', '5', _OR_6, '1'),
-        '{%_or7%}'     => _OR_7,
-        '{%t_sendinfo%}' => textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', '5', _OR_7, '1'),
-        'if_flag'      => ['order' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'order',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_or1' => _OR_1,
+        'mail' => $conf['order']['mail'] ?? '',
+        '_c34' => _C_34,
+        'anum' => $conf['order']['anum'] ?? 25,
+        '_c36' => _C_36,
+        'anump' => $conf['order']['anump'] ?? 10,
+        '_or2' => _OR_2,
+        'r_an' => radio_form($conf['order']['an'] ?? 0, 'an'),
+        '_or3' => _OR_3,
+        'r_pr' => radio_form($conf['order']['pr'] ?? 0, 'pr'),
+        '_or4' => _OR_4,
+        'r_ad' => radio_form($conf['order']['ad'] ?? 0, 'ad'),
+        '_or5' => _OR_5,
+        't_text' => textarea('1', 'text', $conf['order']['text'] ?? '', 'all', '5', _OR_5, '1'),
+        '_or6' => _OR_6,
+        't_info' => textarea('2', 'info', $conf['order']['info'] ?? '', 'all', '5', _OR_6, '1'),
+        '_or7' => _OR_7,
+        't_sendinfo' => textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', '5', _OR_7, '1'),
+        'order' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

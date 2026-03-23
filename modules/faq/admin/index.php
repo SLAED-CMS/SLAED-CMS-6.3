@@ -26,7 +26,7 @@ function faq(): void {
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, t.title, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._QUESTION.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
@@ -47,7 +47,7 @@ function faq(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_faq', '', 'status = \''.$status.'\'', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -78,7 +78,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     if ($hometext) $cont .= preview($subject, $hometext, '', '', 'faq');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TITLE.' / '._QUESTION.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.' / '._QUESTION.'" required></td></tr>'
@@ -88,7 +88,7 @@ function add(): void {
     .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="faq">'.ad_save('fid', $fid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -138,60 +138,60 @@ function delete(int $fid = 0): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/faq.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'        => $afile,
-        '{%module%}'       => 'faq',
-        '{%op%}'           => 'configsave',
-        '{%save%}'         => _SAVECHANGES,
-        '{%fields%}'       => '',
-        '{%_cdefis%}'      => _CDEFIS,
-        '{%defis%}'        => urldecode($conf['faq']['defis'] ?? ''),
-        '{%_pagelinknum%}' => _PAGELINKNUM,
-        '{%linknum%}'      => $conf['faq']['linknum'] ?? 0,
-        '{%_c13%}'         => _C_13,
-        '{%listnum%}'      => $conf['faq']['listnum'] ?? 0,
-        '{%_c33%}'         => _C_33,
-        '{%num%}'          => $conf['faq']['num'] ?? 0,
-        '{%_c34%}'         => _C_34,
-        '{%anum%}'         => $conf['faq']['anum'] ?? 0,
-        '{%_c35%}'         => _C_35,
-        '{%nump%}'         => $conf['faq']['nump'] ?? 0,
-        '{%_c36%}'         => _C_36,
-        '{%anump%}'        => $conf['faq']['anump'] ?? 0,
-        '{%_homcat%}'      => _HOMCAT,
-        '{%r_homcat%}'     => radio_form($conf['faq']['homcat'] ?? 0, 'homcat'),
-        '{%_viewcat%}'     => _VIEWCAT,
-        '{%r_viewcat%}'    => radio_form($conf['faq']['viewcat'] ?? 0, 'viewcat'),
-        '{%_c32%}'         => _C_32,
-        '{%r_catdesc%}'    => radio_form($conf['faq']['catdesc'] ?? 0, 'catdesc'),
-        '{%_c15%}'         => _C_15,
-        '{%r_subcat%}'     => radio_form($conf['faq']['subcat'] ?? 0, 'subcat'),
-        '{%_addamail%}'    => _ADDAMAIL,
-        '{%r_addmail%}'    => radio_form($conf['faq']['addmail'] ?? 0, 'addmail'),
-        '{%_c39%}'         => _C_39,
-        '{%r_add%}'        => radio_form($conf['faq']['add'] ?? 0, 'add'),
-        '{%_c40%}'         => _C_40,
-        '{%r_addquest%}'   => radio_form($conf['faq']['addquest'] ?? 0, 'addquest'),
-        '{%_c37%}'         => _C_37,
-        '{%r_autor%}'      => radio_form($conf['faq']['autor'] ?? 0, 'autor'),
-        '{%_c17%}'         => _C_17,
-        '{%r_date%}'       => radio_form($conf['faq']['date'] ?? 0, 'date'),
-        '{%_c18%}'         => _C_18,
-        '{%r_read%}'       => radio_form($conf['faq']['read'] ?? 0, 'read'),
-        '{%_c19%}'         => _C_19,
-        '{%r_rate%}'       => radio_form($conf['faq']['rate'] ?? 0, 'rate'),
-        '{%_c20%}'         => _C_20,
-        '{%r_letter%}'     => radio_form($conf['faq']['letter'] ?? 0, 'letter'),
-        '{%_pagelink%}'    => _PAGELINK,
-        '{%r_link%}'       => radio_form($conf['faq']['link'] ?? 0, 'link'),
-        'if_flag'          => ['faq' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'faq',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_cdefis' => _CDEFIS,
+        'defis' => urldecode($conf['faq']['defis'] ?? ''),
+        '_pagelinknum' => _PAGELINKNUM,
+        'linknum' => $conf['faq']['linknum'] ?? 0,
+        '_c13' => _C_13,
+        'listnum' => $conf['faq']['listnum'] ?? 0,
+        '_c33' => _C_33,
+        'num' => $conf['faq']['num'] ?? 0,
+        '_c34' => _C_34,
+        'anum' => $conf['faq']['anum'] ?? 0,
+        '_c35' => _C_35,
+        'nump' => $conf['faq']['nump'] ?? 0,
+        '_c36' => _C_36,
+        'anump' => $conf['faq']['anump'] ?? 0,
+        '_homcat' => _HOMCAT,
+        'r_homcat' => radio_form($conf['faq']['homcat'] ?? 0, 'homcat'),
+        '_viewcat' => _VIEWCAT,
+        'r_viewcat' => radio_form($conf['faq']['viewcat'] ?? 0, 'viewcat'),
+        '_c32' => _C_32,
+        'r_catdesc' => radio_form($conf['faq']['catdesc'] ?? 0, 'catdesc'),
+        '_c15' => _C_15,
+        'r_subcat' => radio_form($conf['faq']['subcat'] ?? 0, 'subcat'),
+        '_addamail' => _ADDAMAIL,
+        'r_addmail' => radio_form($conf['faq']['addmail'] ?? 0, 'addmail'),
+        '_c39' => _C_39,
+        'r_add' => radio_form($conf['faq']['add'] ?? 0, 'add'),
+        '_c40' => _C_40,
+        'r_addquest' => radio_form($conf['faq']['addquest'] ?? 0, 'addquest'),
+        '_c37' => _C_37,
+        'r_autor' => radio_form($conf['faq']['autor'] ?? 0, 'autor'),
+        '_c17' => _C_17,
+        'r_date' => radio_form($conf['faq']['date'] ?? 0, 'date'),
+        '_c18' => _C_18,
+        'r_read' => radio_form($conf['faq']['read'] ?? 0, 'read'),
+        '_c19' => _C_19,
+        'r_rate' => radio_form($conf['faq']['rate'] ?? 0, 'rate'),
+        '_c20' => _C_20,
+        'r_letter' => radio_form($conf['faq']['letter'] ?? 0, 'letter'),
+        '_pagelink' => _PAGELINK,
+        'r_link' => radio_form($conf['faq']['link'] ?? 0, 'link'),
+        'faq' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

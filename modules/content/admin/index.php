@@ -16,7 +16,7 @@ function content(): void {
     $offset = ($num - 1) * $anum;
     $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content ORDER BY id DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._DATE.'</th><th>'.cutstr(_READS, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             if (time() >= strtotime($time)) {
@@ -35,7 +35,7 @@ function content(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, 'name=content&amp;', 'id', '_content', '', '', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -63,7 +63,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $fields = ($field) ? '<br><br>'.fields_out($field, 'content') : '';
     if ($body) $cont .= preview($title, $body, '', $field, 'content');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._RSSFILE.':<div class="sl_small">'._RSSINFO.'</div></td><td><input type="text" name="url" value="'.$url.'" maxlength="200" class="sl_form" placeholder="'._RSSFILE.'"></td></tr>'
@@ -88,7 +88,7 @@ function add(): void {
     .fields_in($field, 'content')
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="content">'.ad_save('cid', $cid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -129,28 +129,28 @@ function delete(int $cid = 0): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'  => $afile,
-        '{%module%}' => 'content',
-        '{%op%}'     => 'configsave',
-        '{%save%}'   => _SAVECHANGES,
-        '{%fields%}' => '',
-        '{%_c33%}'   => _C_33,
-        '{%num%}'    => $conf['content']['num'],
-        '{%_c34%}'   => _C_34,
-        '{%anum%}'   => $conf['content']['anum'],
-        '{%_c35%}'   => _C_35,
-        '{%nump%}'   => $conf['content']['nump'],
-        '{%_c36%}'   => _C_36,
-        '{%anump%}'  => $conf['content']['anump'],
-        'if_flag'    => ['content' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'content',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_c33' => _C_33,
+        'num' => $conf['content']['num'],
+        '_c34' => _C_34,
+        'anum' => $conf['content']['anum'],
+        '_c35' => _C_35,
+        'nump' => $conf['content']['nump'],
+        '_c36' => _C_36,
+        'anump' => $conf['content']['anump'],
+        'content' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

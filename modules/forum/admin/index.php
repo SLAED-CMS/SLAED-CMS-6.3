@@ -29,7 +29,7 @@ function forum(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHIN]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._FORUM.'</th><th>'._NEWTOPICS.'</th><th>'._MESSAGES.'</th><th class="{sorter: false}">'._STATUS.'</th></tr></thead><tbody>';
     $query = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     while ([$id, $title, $intro, $state, $topics, $posts] = $db->getSqlRow($query)) {
@@ -38,7 +38,7 @@ function forum(): void {
         $cont .= '<tr><td>'.$id.'</td><td>'.$link.'</td><td>'.$topics.'</td><td>'.$posts.'</td><td>'.ad_status('', $state).'</td></tr>';
     }
     $cont .= '</tbody></table>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -57,49 +57,49 @@ function config(): void {
         .'<option value="0"'.(($conf['forum']['anonpost'] ?? null) == '0' ? ' selected' : '').'>'._APOSTMOD.'</option>'
         .'<option value="1"'.(($conf['forum']['anonpost'] ?? null) == '1' ? ' selected' : '').'>'._APOSTNOMOD.'</option>'
         .'</select>';
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'          => $afile,
-        '{%module%}'         => 'forum',
-        '{%op%}'             => 'configsave',
-        '{%save%}'           => _SAVECHANGES,
-        '{%fields%}'         => '',
-        '{%_cdefis%}'        => _CDEFIS,
-        '{%defis%}'          => urldecode($conf['forum']['defis'] ?? ''),
-        '{%_fo1%}'           => _FO_1,
-        '{%listnum%}'        => $conf['forum']['listnum'] ?? 0,
-        '{%_fo2%}'           => _FO_2,
-        '{%pop%}'            => $conf['forum']['pop'] ?? 0,
-        '{%_comletter%}'     => _COMLETTER,
-        '{%letter%}'         => $conf['forum']['letter'] ?? 0,
-        '{%_c33%}'           => _C_33,
-        '{%num%}'            => $conf['forum']['num'] ?? 0,
-        '{%_c35%}'           => _C_35,
-        '{%pnum%}'           => $conf['forum']['pnum'] ?? 0,
-        '{%_fo5%}'           => _FO_5,
-        '{%s_recycle%}'      => getcat('forum', $conf['forum']['recycle'] ?? 0, 'recycle', 'sl_conf', '<option value="0">'._NO.'</option>'),
-        '{%_sort%}'          => _SORT,
-        '{%s_sort%}'         => $sort_sel,
-        '{%_allowanonpost%}' => _ALLOWANONPOST,
-        '{%_fo6%}'           => _FO_6,
-        '{%s_anonpost%}'     => $anon_sel,
-        '{%_fo7%}'           => _FO_7,
-        '{%r_add%}'          => radio_form($conf['forum']['add'] ?? 0, 'add'),
-        '{%_fo8%}'           => _FO_8,
-        '{%r_qreply%}'       => radio_form($conf['forum']['qreply'] ?? 0, 'qreply'),
-        '{%_fo9%}'           => _FO_9,
-        '{%r_ledit%}'        => radio_form($conf['forum']['ledit'] ?? 0, 'ledit'),
-        '{%_fo10%}'          => _FO_10,
-        '{%r_addmail%}'      => radio_form($conf['forum']['addmail'] ?? 0, 'addmail'),
-        '{%_vprivat%}'       => _VPRIVAT,
-        '{%r_privat%}'       => radio_form($conf['forum']['privat'] ?? 0, 'privat'),
-        '{%_vprofil%}'       => _VPROFIL,
-        '{%r_profil%}'       => radio_form($conf['forum']['profil'] ?? 0, 'profil'),
-        '{%_vweb%}'          => _VWEB,
-        '{%r_web%}'          => radio_form($conf['forum']['web'] ?? 0, 'web'),
-        'if_flag'            => ['forum' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'forum',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_cdefis' => _CDEFIS,
+        'defis' => urldecode($conf['forum']['defis'] ?? ''),
+        '_fo1' => _FO_1,
+        'listnum' => $conf['forum']['listnum'] ?? 0,
+        '_fo2' => _FO_2,
+        'pop' => $conf['forum']['pop'] ?? 0,
+        '_comletter' => _COMLETTER,
+        'letter' => $conf['forum']['letter'] ?? 0,
+        '_c33' => _C_33,
+        'num' => $conf['forum']['num'] ?? 0,
+        '_c35' => _C_35,
+        'pnum' => $conf['forum']['pnum'] ?? 0,
+        '_fo5' => _FO_5,
+        's_recycle' => getcat('forum', $conf['forum']['recycle'] ?? 0, 'recycle', 'sl_conf', '<option value="0">'._NO.'</option>'),
+        '_sort' => _SORT,
+        's_sort' => $sort_sel,
+        '_allowanonpost' => _ALLOWANONPOST,
+        '_fo6' => _FO_6,
+        's_anonpost' => $anon_sel,
+        '_fo7' => _FO_7,
+        'r_add' => radio_form($conf['forum']['add'] ?? 0, 'add'),
+        '_fo8' => _FO_8,
+        'r_qreply' => radio_form($conf['forum']['qreply'] ?? 0, 'qreply'),
+        '_fo9' => _FO_9,
+        'r_ledit' => radio_form($conf['forum']['ledit'] ?? 0, 'ledit'),
+        '_fo10' => _FO_10,
+        'r_addmail' => radio_form($conf['forum']['addmail'] ?? 0, 'addmail'),
+        '_vprivat' => _VPRIVAT,
+        'r_privat' => radio_form($conf['forum']['privat'] ?? 0, 'privat'),
+        '_vprofil' => _VPROFIL,
+        'r_profil' => radio_form($conf['forum']['profil'] ?? 0, 'profil'),
+        '_vweb' => _VWEB,
+        'r_web' => radio_form($conf['forum']['web'] ?? 0, 'web'),
+        'forum' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

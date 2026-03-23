@@ -32,10 +32,10 @@ function sitemap(): void {
         $asize += $size;
     }
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add"><input type="submit" value="'._UPDATE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -54,10 +54,10 @@ function xsledit(): void {
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'application/xml', $conts).'</td></tr>'
     .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="xslsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -73,7 +73,7 @@ function xslsave(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
@@ -105,61 +105,61 @@ function config(): void {
         $sp = (($conf['sitemap']['pr_p'] ?? '0') === (string)$val) ? ' selected' : '';
         $popt .= '<option value="'.$val.'"'.$sp.'>'.$val.'</option>';
     }
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'       => $afile,
-        '{%module%}'      => 'sitemap',
-        '{%op%}'          => 'configsave',
-        '{%save%}'        => _SAVECHANGES,
-        '{%fields%}'      => '',
-        '{%_modules%}'    => _MODULES,
-        '{%_ctrlinfo%}'   => _CTRLINFO,
-        '{%s_mod%}'       => modul('mod', 'sl_conf', $conf['sitemap']['mod'] ?? '', 1),
-        '{%_map_fr_h%}'   => _MAP_FR_H,
-        '{%_info_no%}'    => _INFO_NO,
-        '{%s_fr_h%}'      => $s_fr_h,
-        '{%_map_fr_m%}'   => _MAP_FR_M,
-        '{%s_fr_m%}'      => $s_fr_m,
-        '{%_map_fr_c%}'   => _MAP_FR_C,
-        '{%s_fr_c%}'      => $s_fr_c,
-        '{%_map_fr_p%}'   => _MAP_FR_P,
-        '{%s_fr_p%}'      => $s_fr_p,
-        '{%_map_auto_t%}' => _MAP_AUTO_T,
-        '{%auto_t%}'      => intval(($conf['sitemap']['auto_t'] ?? 0) / 3600),
-        '{%_map_auto%}'   => _MAP_AUTO,
-        '{%r_auto%}'      => radio_form($conf['sitemap']['auto'] ?? 0, 'auto'),
-        '{%_map_pr_h%}'   => _MAP_PR_H,
-        '{%_info_null%}'  => _INFO_NULL,
-        '{%s_pr_h%}'      => '<select name="pr_h" class="sl_conf">'.$h.'</select>',
-        '{%_map_pr_m%}'   => _MAP_PR_M,
-        '{%s_pr_m%}'      => '<select name="pr_m" class="sl_conf">'.$m.'</select>',
-        '{%_map_pr_c%}'   => _MAP_PR_C,
-        '{%s_pr_c%}'      => '<select name="pr_c" class="sl_conf">'.$c.'</select>',
-        '{%_map_pr_p%}'   => _MAP_PR_P,
-        '{%s_pr_p%}'      => '<select name="pr_p" class="sl_conf">'.$popt.'</select>',
-        '{%_map_dat_h%}'  => _MAP_DAT_H,
-        '{%r_dat_h%}'     => radio_form($conf['sitemap']['dat_h'] ?? 0, 'dat_h'),
-        '{%_map_dat_m%}'  => _MAP_DAT_M,
-        '{%r_dat_m%}'     => radio_form($conf['sitemap']['dat_m'] ?? 0, 'dat_m'),
-        '{%_map_dat_c%}'  => _MAP_DAT_C,
-        '{%r_dat_c%}'     => radio_form($conf['sitemap']['dat_c'] ?? 0, 'dat_c'),
-        '{%_map_dat_p%}'  => _MAP_DAT_P,
-        '{%r_dat_p%}'     => radio_form($conf['sitemap']['dat_p'] ?? 0, 'dat_p'),
-        '{%_map_gen_h%}'  => _MAP_GEN_H,
-        '{%r_gen_h%}'     => radio_form($conf['sitemap']['gen_h'] ?? 0, 'gen_h'),
-        '{%_map_gen_m%}'  => _MAP_GEN_M,
-        '{%r_gen_m%}'     => radio_form($conf['sitemap']['gen_m'] ?? 0, 'gen_m'),
-        '{%_map_gen_c%}'  => _MAP_GEN_C,
-        '{%r_gen_c%}'     => radio_form($conf['sitemap']['gen_c'] ?? 0, 'gen_c'),
-        '{%_map_gen_p%}'  => _MAP_GEN_P,
-        '{%r_gen_p%}'     => radio_form($conf['sitemap']['gen_p'] ?? 0, 'gen_p'),
-        '{%_map_xsl%}'    => _MAP_XSL,
-        '{%r_xsl%}'       => radio_form($conf['sitemap']['xsl'] ?? 0, 'xsl'),
-        '{%_map_site%}'   => _MAP_SITE,
-        '{%r_txt%}'       => radio_form($conf['sitemap']['txt'] ?? 0, 'txt'),
-        'if_flag'         => ['sitemap' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'sitemap',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_modules' => _MODULES,
+        '_ctrlinfo' => _CTRLINFO,
+        's_mod' => modul('mod', 'sl_conf', $conf['sitemap']['mod'] ?? '', 1),
+        '_map_fr_h' => _MAP_FR_H,
+        '_info_no' => _INFO_NO,
+        's_fr_h' => $s_fr_h,
+        '_map_fr_m' => _MAP_FR_M,
+        's_fr_m' => $s_fr_m,
+        '_map_fr_c' => _MAP_FR_C,
+        's_fr_c' => $s_fr_c,
+        '_map_fr_p' => _MAP_FR_P,
+        's_fr_p' => $s_fr_p,
+        '_map_auto_t' => _MAP_AUTO_T,
+        'auto_t' => intval(($conf['sitemap']['auto_t'] ?? 0) / 3600),
+        '_map_auto' => _MAP_AUTO,
+        'r_auto' => radio_form($conf['sitemap']['auto'] ?? 0, 'auto'),
+        '_map_pr_h' => _MAP_PR_H,
+        '_info_null' => _INFO_NULL,
+        's_pr_h' => '<select name="pr_h" class="sl_conf">'.$h.'</select>',
+        '_map_pr_m' => _MAP_PR_M,
+        's_pr_m' => '<select name="pr_m" class="sl_conf">'.$m.'</select>',
+        '_map_pr_c' => _MAP_PR_C,
+        's_pr_c' => '<select name="pr_c" class="sl_conf">'.$c.'</select>',
+        '_map_pr_p' => _MAP_PR_P,
+        's_pr_p' => '<select name="pr_p" class="sl_conf">'.$popt.'</select>',
+        '_map_dat_h' => _MAP_DAT_H,
+        'r_dat_h' => radio_form($conf['sitemap']['dat_h'] ?? 0, 'dat_h'),
+        '_map_dat_m' => _MAP_DAT_M,
+        'r_dat_m' => radio_form($conf['sitemap']['dat_m'] ?? 0, 'dat_m'),
+        '_map_dat_c' => _MAP_DAT_C,
+        'r_dat_c' => radio_form($conf['sitemap']['dat_c'] ?? 0, 'dat_c'),
+        '_map_dat_p' => _MAP_DAT_P,
+        'r_dat_p' => radio_form($conf['sitemap']['dat_p'] ?? 0, 'dat_p'),
+        '_map_gen_h' => _MAP_GEN_H,
+        'r_gen_h' => radio_form($conf['sitemap']['gen_h'] ?? 0, 'gen_h'),
+        '_map_gen_m' => _MAP_GEN_M,
+        'r_gen_m' => radio_form($conf['sitemap']['gen_m'] ?? 0, 'gen_m'),
+        '_map_gen_c' => _MAP_GEN_C,
+        'r_gen_c' => radio_form($conf['sitemap']['gen_c'] ?? 0, 'gen_c'),
+        '_map_gen_p' => _MAP_GEN_P,
+        'r_gen_p' => radio_form($conf['sitemap']['gen_p'] ?? 0, 'gen_p'),
+        '_map_xsl' => _MAP_XSL,
+        'r_xsl' => radio_form($conf['sitemap']['xsl'] ?? 0, 'xsl'),
+        '_map_site' => _MAP_SITE,
+        'r_txt' => radio_form($conf['sitemap']['txt'] ?? 0, 'txt'),
+        'sitemap' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

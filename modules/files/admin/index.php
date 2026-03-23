@@ -32,7 +32,7 @@ function files(): void {
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, c.title, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
@@ -54,7 +54,7 @@ function files(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_files', '', 'status = \''.$st.'\'', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -105,7 +105,7 @@ function add(): void {
             }
         }
     }
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" enctype="multipart/form-data" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
@@ -124,7 +124,7 @@ function add(): void {
     .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="files">'.ad_save('fid', $fid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -207,7 +207,7 @@ function approve(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
@@ -216,75 +216,75 @@ function config(): void {
         .'<option value="1"'.(($conf['files']['stream'] ?? null) == '1' ? ' selected' : '').'>'._STREAM_1.'</option>'
         .'<option value="2"'.(($conf['files']['stream'] ?? null) == '2' ? ' selected' : '').'>'._STREAM_2.'</option>'
         .'</select>';
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'        => $afile,
-        '{%module%}'       => 'files',
-        '{%op%}'           => 'configsave',
-        '{%save%}'         => _SAVECHANGES,
-        '{%fields%}'       => '',
-        '{%_cdefis%}'      => _CDEFIS,
-        '{%defis%}'        => urldecode($conf['files']['defis'] ?? ''),
-        '{%_f0%}'          => _F_0,
-        '{%temp%}'         => $conf['files']['temp'] ?? '',
-        '{%_f1%}'          => _F_1,
-        '{%path%}'         => $conf['files']['path'] ?? '',
-        '{%_fsize_fin%}'   => _FSIZE._FIN,
-        '{%maxsize%}'      => $conf['files']['max_size'] ?? 0,
-        '{%_nokoma%}'      => _NOKOMA,
-        '{%_ftype%}'       => _FTYPE,
-        '{%typefile%}'     => $conf['files']['typefile'] ?? '',
-        '{%_pagelinknum%}' => _PAGELINKNUM,
-        '{%linknum%}'      => $conf['files']['linknum'] ?? 0,
-        '{%_c13%}'         => _C_13,
-        '{%listnum%}'      => $conf['files']['listnum'] ?? 0,
-        '{%_c33%}'         => _C_33,
-        '{%num%}'          => $conf['files']['num'] ?? 0,
-        '{%_c34%}'         => _C_34,
-        '{%anum%}'         => $conf['files']['anum'] ?? 0,
-        '{%_c35%}'         => _C_35,
-        '{%nump%}'         => $conf['files']['nump'] ?? 0,
-        '{%_c36%}'         => _C_36,
-        '{%anump%}'        => $conf['files']['anump'] ?? 0,
-        '{%_stream%}'      => _STREAM,
-        '{%s_stream%}'     => $stream_sel,
-        '{%_homcat%}'      => _HOMCAT,
-        '{%r_homcat%}'     => radio_form($conf['files']['homcat'] ?? 0, 'homcat'),
-        '{%_viewcat%}'     => _VIEWCAT,
-        '{%r_viewcat%}'    => radio_form($conf['files']['viewcat'] ?? 0, 'viewcat'),
-        '{%_c32%}'         => _C_32,
-        '{%r_catdesc%}'    => radio_form($conf['files']['catdesc'] ?? 0, 'catdesc'),
-        '{%_c15%}'         => _C_15,
-        '{%r_subcat%}'     => radio_form($conf['files']['subcat'] ?? 0, 'subcat'),
-        '{%_addamail%}'    => _ADDAMAIL,
-        '{%r_addmail%}'    => radio_form($conf['files']['addmail'] ?? 0, 'addmail'),
-        '{%_f8%}'          => _F_8,
-        '{%r_add%}'        => radio_form($conf['files']['add'] ?? 0, 'add'),
-        '{%_f9%}'          => _F_9,
-        '{%r_addquest%}'   => radio_form($conf['files']['addquest'] ?? 0, 'addquest'),
-        '{%_f11%}'         => _F_11,
-        '{%r_broc%}'       => radio_form($conf['files']['broc'] ?? 0, 'broc'),
-        '{%_f12%}'         => _F_12,
-        '{%r_down%}'       => radio_form($conf['files']['down'] ?? 0, 'down'),
-        '{%_upfile%}'      => _UPFILE,
-        '{%r_upload%}'     => radio_form($conf['files']['upload'] ?? 0, 'upload'),
-        '{%_c37%}'         => _C_37,
-        '{%r_autor%}'      => radio_form($conf['files']['autor'] ?? 0, 'autor'),
-        '{%_c17%}'         => _C_17,
-        '{%r_date%}'       => radio_form($conf['files']['date'] ?? 0, 'date'),
-        '{%_c18%}'         => _C_18,
-        '{%r_read%}'       => radio_form($conf['files']['read'] ?? 0, 'read'),
-        '{%_f2%}'          => _F_2,
-        '{%r_hits%}'       => radio_form($conf['files']['hits'] ?? 0, 'hits'),
-        '{%_c19%}'         => _C_19,
-        '{%r_rate%}'       => radio_form($conf['files']['rate'] ?? 0, 'rate'),
-        '{%_c20%}'         => _C_20,
-        '{%r_letter%}'     => radio_form($conf['files']['letter'] ?? 0, 'letter'),
-        '{%_pagelink%}'    => _PAGELINK,
-        '{%r_link%}'       => radio_form($conf['files']['link'] ?? 0, 'link'),
-        'if_flag'          => ['files' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'files',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_cdefis' => _CDEFIS,
+        'defis' => urldecode($conf['files']['defis'] ?? ''),
+        '_f0' => _F_0,
+        'temp' => $conf['files']['temp'] ?? '',
+        '_f1' => _F_1,
+        'path' => $conf['files']['path'] ?? '',
+        '_fsize_fin' => _FSIZE._FIN,
+        'maxsize' => $conf['files']['max_size'] ?? 0,
+        '_nokoma' => _NOKOMA,
+        '_ftype' => _FTYPE,
+        'typefile' => $conf['files']['typefile'] ?? '',
+        '_pagelinknum' => _PAGELINKNUM,
+        'linknum' => $conf['files']['linknum'] ?? 0,
+        '_c13' => _C_13,
+        'listnum' => $conf['files']['listnum'] ?? 0,
+        '_c33' => _C_33,
+        'num' => $conf['files']['num'] ?? 0,
+        '_c34' => _C_34,
+        'anum' => $conf['files']['anum'] ?? 0,
+        '_c35' => _C_35,
+        'nump' => $conf['files']['nump'] ?? 0,
+        '_c36' => _C_36,
+        'anump' => $conf['files']['anump'] ?? 0,
+        '_stream' => _STREAM,
+        's_stream' => $stream_sel,
+        '_homcat' => _HOMCAT,
+        'r_homcat' => radio_form($conf['files']['homcat'] ?? 0, 'homcat'),
+        '_viewcat' => _VIEWCAT,
+        'r_viewcat' => radio_form($conf['files']['viewcat'] ?? 0, 'viewcat'),
+        '_c32' => _C_32,
+        'r_catdesc' => radio_form($conf['files']['catdesc'] ?? 0, 'catdesc'),
+        '_c15' => _C_15,
+        'r_subcat' => radio_form($conf['files']['subcat'] ?? 0, 'subcat'),
+        '_addamail' => _ADDAMAIL,
+        'r_addmail' => radio_form($conf['files']['addmail'] ?? 0, 'addmail'),
+        '_f8' => _F_8,
+        'r_add' => radio_form($conf['files']['add'] ?? 0, 'add'),
+        '_f9' => _F_9,
+        'r_addquest' => radio_form($conf['files']['addquest'] ?? 0, 'addquest'),
+        '_f11' => _F_11,
+        'r_broc' => radio_form($conf['files']['broc'] ?? 0, 'broc'),
+        '_f12' => _F_12,
+        'r_down' => radio_form($conf['files']['down'] ?? 0, 'down'),
+        '_upfile' => _UPFILE,
+        'r_upload' => radio_form($conf['files']['upload'] ?? 0, 'upload'),
+        '_c37' => _C_37,
+        'r_autor' => radio_form($conf['files']['autor'] ?? 0, 'autor'),
+        '_c17' => _C_17,
+        'r_date' => radio_form($conf['files']['date'] ?? 0, 'date'),
+        '_c18' => _C_18,
+        'r_read' => radio_form($conf['files']['read'] ?? 0, 'read'),
+        '_f2' => _F_2,
+        'r_hits' => radio_form($conf['files']['hits'] ?? 0, 'hits'),
+        '_c19' => _C_19,
+        'r_rate' => radio_form($conf['files']['rate'] ?? 0, 'rate'),
+        '_c20' => _C_20,
+        'r_letter' => radio_form($conf['files']['letter'] ?? 0, 'letter'),
+        '_pagelink' => _PAGELINK,
+        'r_link' => radio_form($conf['files']['link'] ?? 0, 'link'),
+        'files' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

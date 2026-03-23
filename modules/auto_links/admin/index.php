@@ -19,7 +19,7 @@ function auto_links(): void {
     $offset = ($num - 1) * $conf['auto_links']['anum'];
     $result = $db->getSqlQuery('SELECT id, title, url, hits, outs, added FROM '.PREFIX_DB.'_auto_links ORDER BY hits ASC LIMIT '.$offset.', '.$conf['auto_links']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr>'
            .'<th>'._ID.'</th><th>'._SITENAME.'</th><th>'._SITEURL.'</th>'
            .'<th>'._HITS.'</th><th>'._OUTS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>'
@@ -41,7 +41,7 @@ function auto_links(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $conf['auto_links']['anum'], 'name=auto_links&amp;', 'id', '_auto_links', '', '', $conf['auto_links']['anump']);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -99,7 +99,7 @@ function stats(): void {
         $a++;
     }
     if (isArray($list)) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr>'
            .'<th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._REF_URL.'</th><th>'._IN_URL.'</th>'
            .'</tr></thead><tbody>';
@@ -118,7 +118,7 @@ function stats(): void {
         $cont .= '</tbody></table>';
         $pages = ceil($a / $conf['auto_links']['anum']);
         $cont .= setPageNumbers('pagenum', '', $a, $pages, $conf['auto_links']['anum'], 'name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['auto_links']['anump']);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -150,7 +150,7 @@ function add(): void {
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', $stop)]);
     if ($desc) $cont .= preview($name, $desc, '', '', 'auto_links');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php?name=auto_links" method="post"><table class="sl_table_form">'
        .'<tr><td>'._SITENAME.':</td><td><input type="text" name="name" value="'.$name.'" maxlength="255" class="sl_form" placeholder="'._SITENAME.'" required></td></tr>'
        .'<tr><td>'._A_LINKS_E.':</td><td><input type="email" name="mail" value="'.$email.'" maxlength="100" class="sl_form" placeholder="'._A_LINKS_E.'" required></td></tr>'
@@ -159,7 +159,7 @@ function add(): void {
        .'<tr><td>'._HITS.':</td><td><input type="number" name="hits" value="'.$hits.'" class="sl_form" placeholder="'._HITS.'"></td></tr>'
        .'<tr><td>'._OUTS.':</td><td><input type="number" name="outs" value="'.$outs.'" class="sl_form" placeholder="'._OUTS.'"></td></tr>'
        .'<tr><td colspan="2" class="sl_center">'.ad_save('id', $id, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -225,7 +225,7 @@ function config(): void {
     ]);
     if (!$conf['referers']['refer']) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _A_NOTE]);
     $cont .= checkPerms(CONFIG_DIR.'/auto_links.php');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $path = 'templates/'.$conf['theme'].'/images/banners/';
     $opts = '';
     foreach (scandir($path) as $entry) {
@@ -248,7 +248,7 @@ function config(): void {
        .'<input type="hidden" name="op" value="configsave">'
        .'<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">'
        .'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

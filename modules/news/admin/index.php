@@ -26,7 +26,7 @@ function news(): void {
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<form name="post" action="'.$afile.'.php" method="post"><input type="hidden" name="name" value="news"><input type="hidden" name="op" value="actions"><input type="hidden" name="refer" value="1">'
         .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th><th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
@@ -52,7 +52,7 @@ function news(): void {
         $selms = _CHECKOP.': '.edit_list('news', 'typ', '').' <input type="submit" value="'._OK.'" class="sl_but_blue">';
         $numpt = setArticleNumbers('pagenum', '', $anum, $field, 'id', '_news', '', 'status = \''.$status.'\'', $anump);
         $cont .= '<table class="searchboxtab"><tr><td>'.$numpt.'</td><td><div class="searchbox">'.$selms.'</div></td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -89,7 +89,7 @@ function add(): void {
     $homepre = ($vote) ? '<div id="repnews">'.getVoting($vote, 'news').'</div><hr>'.$hometext : $hometext;
     if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
@@ -123,7 +123,7 @@ function add(): void {
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
     .'<tr><td>'._FIXED.'?</td><td>'.radio_form($fix, 'fix').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="news">'.ad_save('id', $id, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -210,62 +210,62 @@ function actions(int|array $ids = 0, string $vtyp = ''): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'        => $afile,
-        '{%module%}'       => 'news',
-        '{%op%}'           => 'configsave',
-        '{%save%}'         => _SAVECHANGES,
-        '{%fields%}'       => '',
-        '{%_cdefis%}'      => _CDEFIS,
-        '{%defis%}'        => urldecode($conf['news']['defis'] ?? ''),
-        '{%_bascol%}'      => _BASCOL,
-        '{%bascol%}'       => $conf['news']['bascol'] ?? 1,
-        '{%_c11%}'         => _C_11,
-        '{%asocnum%}'      => $conf['news']['asocnum'] ?? 10,
-        '{%_c13%}'         => _C_13,
-        '{%listnum%}'      => $conf['news']['listnum'] ?? 10,
-        '{%_c33%}'         => _C_33,
-        '{%num%}'          => $conf['news']['num'] ?? 25,
-        '{%_c34%}'         => _C_34,
-        '{%anum%}'         => $conf['news']['anum'] ?? 25,
-        '{%_c35%}'         => _C_35,
-        '{%nump%}'         => $conf['news']['nump'] ?? 10,
-        '{%_c36%}'         => _C_36,
-        '{%anump%}'        => $conf['news']['anump'] ?? 10,
-        '{%_homcat%}'      => _HOMCAT,
-        '{%r_homcat%}'     => radio_form($conf['news']['homcat'] ?? 0, 'homcat'),
-        '{%_viewcat%}'     => _VIEWCAT,
-        '{%r_viewcat%}'    => radio_form($conf['news']['viewcat'] ?? 0, 'viewcat'),
-        '{%_c32%}'         => _C_32,
-        '{%r_catdesc%}'    => radio_form($conf['news']['catdesc'] ?? 0, 'catdesc'),
-        '{%_c15%}'         => _C_15,
-        '{%r_subcat%}'     => radio_form($conf['news']['subcat'] ?? 0, 'subcat'),
-        '{%_addamail%}'    => _ADDAMAIL,
-        '{%r_addmail%}'    => radio_form($conf['news']['addmail'] ?? 0, 'addmail'),
-        '{%_c39%}'         => _C_39,
-        '{%r_add%}'        => radio_form($conf['news']['add'] ?? 0, 'add'),
-        '{%_c40%}'         => _C_40,
-        '{%r_addquest%}'   => radio_form($conf['news']['addquest'] ?? 0, 'addquest'),
-        '{%_c37%}'         => _C_37,
-        '{%r_autor%}'      => radio_form($conf['news']['autor'] ?? 0, 'autor'),
-        '{%_c17%}'         => _C_17,
-        '{%r_date%}'       => radio_form($conf['news']['date'] ?? 0, 'date'),
-        '{%_c18%}'         => _C_18,
-        '{%r_read%}'       => radio_form($conf['news']['read'] ?? 0, 'read'),
-        '{%_c19%}'         => _C_19,
-        '{%r_rate%}'       => radio_form($conf['news']['rate'] ?? 0, 'rate'),
-        '{%_c20%}'         => _C_20,
-        '{%r_letter%}'     => radio_form($conf['news']['letter'] ?? 0, 'letter'),
-        '{%_c23%}'         => _C_23,
-        '{%r_assoc%}'      => radio_form($conf['news']['assoc'] ?? 0, 'assoc'),
-        'if_flag'          => ['news' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'news',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_cdefis' => _CDEFIS,
+        'defis' => urldecode($conf['news']['defis'] ?? ''),
+        '_bascol' => _BASCOL,
+        'bascol' => $conf['news']['bascol'] ?? 1,
+        '_c11' => _C_11,
+        'asocnum' => $conf['news']['asocnum'] ?? 10,
+        '_c13' => _C_13,
+        'listnum' => $conf['news']['listnum'] ?? 10,
+        '_c33' => _C_33,
+        'num' => $conf['news']['num'] ?? 25,
+        '_c34' => _C_34,
+        'anum' => $conf['news']['anum'] ?? 25,
+        '_c35' => _C_35,
+        'nump' => $conf['news']['nump'] ?? 10,
+        '_c36' => _C_36,
+        'anump' => $conf['news']['anump'] ?? 10,
+        '_homcat' => _HOMCAT,
+        'r_homcat' => radio_form($conf['news']['homcat'] ?? 0, 'homcat'),
+        '_viewcat' => _VIEWCAT,
+        'r_viewcat' => radio_form($conf['news']['viewcat'] ?? 0, 'viewcat'),
+        '_c32' => _C_32,
+        'r_catdesc' => radio_form($conf['news']['catdesc'] ?? 0, 'catdesc'),
+        '_c15' => _C_15,
+        'r_subcat' => radio_form($conf['news']['subcat'] ?? 0, 'subcat'),
+        '_addamail' => _ADDAMAIL,
+        'r_addmail' => radio_form($conf['news']['addmail'] ?? 0, 'addmail'),
+        '_c39' => _C_39,
+        'r_add' => radio_form($conf['news']['add'] ?? 0, 'add'),
+        '_c40' => _C_40,
+        'r_addquest' => radio_form($conf['news']['addquest'] ?? 0, 'addquest'),
+        '_c37' => _C_37,
+        'r_autor' => radio_form($conf['news']['autor'] ?? 0, 'autor'),
+        '_c17' => _C_17,
+        'r_date' => radio_form($conf['news']['date'] ?? 0, 'date'),
+        '_c18' => _C_18,
+        'r_read' => radio_form($conf['news']['read'] ?? 0, 'read'),
+        '_c19' => _C_19,
+        'r_rate' => radio_form($conf['news']['rate'] ?? 0, 'rate'),
+        '_c20' => _C_20,
+        'r_letter' => radio_form($conf['news']['letter'] ?? 0, 'letter'),
+        '_c23' => _C_23,
+        'r_assoc' => radio_form($conf['news']['assoc'] ?? 0, 'assoc'),
+        'news' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

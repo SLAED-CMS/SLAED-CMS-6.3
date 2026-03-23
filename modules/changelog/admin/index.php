@@ -90,7 +90,7 @@ function changelog(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $_exporten = $conf['changelog']['exporten'] ?? true;
     $cont = setAdminNavi($_exporten ? [
@@ -103,7 +103,7 @@ function config(): void {
         'tab'  => 1,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/changelog.php');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">';
 
     $source = chlogSource((string) ($conf['changelog']['source'] ?? 'local'));
@@ -150,7 +150,7 @@ function config(): void {
     </script>';
 
     $cont .= '</form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

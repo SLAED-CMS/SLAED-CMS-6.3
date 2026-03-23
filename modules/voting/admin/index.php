@@ -15,7 +15,7 @@ function voting(): void {
     $offset = intval($offset);
     $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th>';
         if ($conf['multilingual'] == 1) $cont .= '<th>'._LANGUAGE.'</th>';
         $cont .= '<th>'._MODUL.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
@@ -41,7 +41,7 @@ function voting(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $conf['voting']['anum'], 'name=voting&amp;', 'id', '_voting', '', '', $conf['voting']['anump']);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -74,8 +74,8 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    if ($id) $cont .= setTemplateBasic('open').'<div id="repvoting">'.getVoting($id, 'voting').'</div>'.setTemplateBasic('close');
-    $cont .= setTemplateBasic('open');
+    if ($id) $cont .= $tpl->getHtmlFrag('open', []).'<div id="repvoting">'.getVoting($id, 'voting').'</div>'.$tpl->getHtmlFrag('close', []);
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     $mname = ['news', 'shop'];
     $content = '';
@@ -120,7 +120,7 @@ function add(): void {
     $cont .= '<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
     .'<tr><td>'._MULTI.'</td><td>'.radio_form($multi, 'multi').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="voting">'.ad_save('id', $id, 'save', 1).'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -178,7 +178,7 @@ function delete(int $id = 0): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
@@ -189,30 +189,30 @@ function config(): void {
         .'<option value="2"'.($bval === '2' ? ' selected' : '').'>'._VRANACT.'</option>'
         .'<option value="3"'.($bval === '3' ? ' selected' : '').'>'._VRANCLO.'</option>'
         .'</select>';
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'         => $afile,
-        '{%module%}'        => 'voting',
-        '{%op%}'            => 'configsave',
-        '{%save%}'          => _SAVECHANGES,
-        '{%fields%}'        => '',
-        '{%_voting_time%}'  => _VOTING_TIME,
-        '{%time%}'          => intval($conf['voting']['voting_t'] / 86400),
-        '{%_c33%}'          => _C_33,
-        '{%num%}'           => $conf['voting']['num'],
-        '{%_c34%}'          => _C_34,
-        '{%anum%}'          => $conf['voting']['anum'],
-        '{%_c35%}'          => _C_35,
-        '{%nump%}'          => $conf['voting']['nump'],
-        '{%_c36%}'          => _C_36,
-        '{%anump%}'         => $conf['voting']['anump'],
-        '{%_vansw%}'        => _VANSW,
-        '{%answ%}'          => $conf['voting']['answ'],
-        '{%_vblock%}'       => _VBLOCK,
-        '{%s_block%}'       => $block_sel,
-        'if_flag'           => ['voting' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'voting',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_voting_time' => _VOTING_TIME,
+        'time' => intval($conf['voting']['voting_t'] / 86400),
+        '_c33' => _C_33,
+        'num' => $conf['voting']['num'],
+        '_c34' => _C_34,
+        'anum' => $conf['voting']['anum'],
+        '_c35' => _C_35,
+        'nump' => $conf['voting']['nump'],
+        '_c36' => _C_36,
+        'anump' => $conf['voting']['anump'],
+        '_vansw' => _VANSW,
+        'answ' => $conf['voting']['answ'],
+        '_vblock' => _VBLOCK,
+        's_block' => $block_sel,
+        'voting' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

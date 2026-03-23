@@ -7,16 +7,16 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('contact')) die('Illegal file access');
 
 function contact(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
         setHead();
     $cont = setAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO]]);
     $cont .= checkPerms(CONFIG_DIR.'/contact.php');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._CONTACTINFO.':</td><td>'.textarea('1', 'info', $conf['contact']['info'], 'all', '10', _CONTACTINFO, '0').'</td></tr>'
     .'<tr><td>'._CONTACTALL.'</td><td>'.radio_form($conf['contact']['admins'], 'admins').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="contact"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

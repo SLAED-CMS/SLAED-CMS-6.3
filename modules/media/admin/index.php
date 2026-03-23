@@ -32,7 +32,7 @@ function media(): void {
     }
     $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.time, m.ip, c.title, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.status = :status ORDER BY m.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $subtitle, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $title = ($subtitle) ? $title.' / '.$subtitle : $title;
@@ -55,7 +55,7 @@ function media(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_media', '', 'status = \''.$status.'\'', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -102,7 +102,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($description) $cont .= preview($mtitle, $description, '', '', 'media');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._MTITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._MTITLE.'" required></td></tr>'
@@ -162,7 +162,7 @@ function add(): void {
     .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="media">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -233,75 +233,75 @@ function approve(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/media.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'        => $afile,
-        '{%module%}'       => 'media',
-        '{%op%}'           => 'configsave',
-        '{%save%}'         => _SAVECHANGES,
-        '{%fields%}'       => '',
-        '{%_cdefis%}'      => _CDEFIS,
-        '{%defis%}'        => urldecode($conf['media']['defis'] ?? ''),
-        '{%_pagelinknum%}' => _PAGELINKNUM,
-        '{%linknum%}'      => $conf['media']['linknum'] ?? 10,
-        '{%_c13%}'         => _C_13,
-        '{%listnum%}'      => $conf['media']['listnum'] ?? 10,
-        '{%_c33%}'         => _C_33,
-        '{%num%}'          => $conf['media']['num'] ?? 25,
-        '{%_c34%}'         => _C_34,
-        '{%anum%}'         => $conf['media']['anum'] ?? 25,
-        '{%_c35%}'         => _C_35,
-        '{%nump%}'         => $conf['media']['nump'] ?? 10,
-        '{%_c36%}'         => _C_36,
-        '{%anump%}'        => $conf['media']['anump'] ?? 10,
-        '{%_nokoma%}'      => _NOKOMA,
-        '{%_m1%}'          => _M_1,
-        '{%mlang%}'        => $conf['media']['lang'] ?? '',
-        '{%_m2%}'          => _M_2,
-        '{%format%}'       => $conf['media']['format'] ?? '',
-        '{%_m3%}'          => _M_3,
-        '{%quality%}'      => $conf['media']['quality'] ?? '',
-        '{%_m4%}'          => _M_4,
-        '{%links%}'        => $conf['media']['links'] ?? 0,
-        '{%_defis%}'       => _DEFIS,
-        '{%mdefis%}'       => urldecode($conf['media']['mdefis'] ?? ''),
-        '{%_homcat%}'      => _HOMCAT,
-        '{%r_homcat%}'     => radio_form($conf['media']['homcat'] ?? 0, 'homcat'),
-        '{%_viewcat%}'     => _VIEWCAT,
-        '{%r_viewcat%}'    => radio_form($conf['media']['viewcat'] ?? 0, 'viewcat'),
-        '{%_c32%}'         => _C_32,
-        '{%r_catdesc%}'    => radio_form($conf['media']['catdesc'] ?? 0, 'catdesc'),
-        '{%_c15%}'         => _C_15,
-        '{%r_subcat%}'     => radio_form($conf['media']['subcat'] ?? 0, 'subcat'),
-        '{%_addamail%}'    => _ADDAMAIL,
-        '{%r_addmail%}'    => radio_form($conf['media']['addmail'] ?? 0, 'addmail'),
-        '{%_m7%}'          => _M_7,
-        '{%r_add%}'        => radio_form($conf['media']['add'] ?? 0, 'add'),
-        '{%_m8%}'          => _M_8,
-        '{%r_addquest%}'   => radio_form($conf['media']['addquest'] ?? 0, 'addquest'),
-        '{%_m9%}'          => _M_9,
-        '{%r_broc%}'       => radio_form($conf['media']['broc'] ?? 0, 'broc'),
-        '{%_m10%}'         => _M_10,
-        '{%r_hide%}'       => radio_form($conf['media']['hide'] ?? 0, 'hide'),
-        '{%_c37%}'         => _C_37,
-        '{%r_autor%}'      => radio_form($conf['media']['autor'] ?? 0, 'autor'),
-        '{%_c17%}'         => _C_17,
-        '{%r_date%}'       => radio_form($conf['media']['date'] ?? 0, 'date'),
-        '{%_c18%}'         => _C_18,
-        '{%r_read%}'       => radio_form($conf['media']['read'] ?? 0, 'read'),
-        '{%_c19%}'         => _C_19,
-        '{%r_rate%}'       => radio_form($conf['media']['rate'] ?? 0, 'rate'),
-        '{%_c20%}'         => _C_20,
-        '{%r_letter%}'     => radio_form($conf['media']['letter'] ?? 0, 'letter'),
-        '{%_pagelink%}'    => _PAGELINK,
-        '{%r_link%}'       => radio_form($conf['media']['link'] ?? 0, 'link'),
-        'if_flag'          => ['media' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'media',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_cdefis' => _CDEFIS,
+        'defis' => urldecode($conf['media']['defis'] ?? ''),
+        '_pagelinknum' => _PAGELINKNUM,
+        'linknum' => $conf['media']['linknum'] ?? 10,
+        '_c13' => _C_13,
+        'listnum' => $conf['media']['listnum'] ?? 10,
+        '_c33' => _C_33,
+        'num' => $conf['media']['num'] ?? 25,
+        '_c34' => _C_34,
+        'anum' => $conf['media']['anum'] ?? 25,
+        '_c35' => _C_35,
+        'nump' => $conf['media']['nump'] ?? 10,
+        '_c36' => _C_36,
+        'anump' => $conf['media']['anump'] ?? 10,
+        '_nokoma' => _NOKOMA,
+        '_m1' => _M_1,
+        'mlang' => $conf['media']['lang'] ?? '',
+        '_m2' => _M_2,
+        'format' => $conf['media']['format'] ?? '',
+        '_m3' => _M_3,
+        'quality' => $conf['media']['quality'] ?? '',
+        '_m4' => _M_4,
+        'links' => $conf['media']['links'] ?? 0,
+        '_defis' => _DEFIS,
+        'mdefis' => urldecode($conf['media']['mdefis'] ?? ''),
+        '_homcat' => _HOMCAT,
+        'r_homcat' => radio_form($conf['media']['homcat'] ?? 0, 'homcat'),
+        '_viewcat' => _VIEWCAT,
+        'r_viewcat' => radio_form($conf['media']['viewcat'] ?? 0, 'viewcat'),
+        '_c32' => _C_32,
+        'r_catdesc' => radio_form($conf['media']['catdesc'] ?? 0, 'catdesc'),
+        '_c15' => _C_15,
+        'r_subcat' => radio_form($conf['media']['subcat'] ?? 0, 'subcat'),
+        '_addamail' => _ADDAMAIL,
+        'r_addmail' => radio_form($conf['media']['addmail'] ?? 0, 'addmail'),
+        '_m7' => _M_7,
+        'r_add' => radio_form($conf['media']['add'] ?? 0, 'add'),
+        '_m8' => _M_8,
+        'r_addquest' => radio_form($conf['media']['addquest'] ?? 0, 'addquest'),
+        '_m9' => _M_9,
+        'r_broc' => radio_form($conf['media']['broc'] ?? 0, 'broc'),
+        '_m10' => _M_10,
+        'r_hide' => radio_form($conf['media']['hide'] ?? 0, 'hide'),
+        '_c37' => _C_37,
+        'r_autor' => radio_form($conf['media']['autor'] ?? 0, 'autor'),
+        '_c17' => _C_17,
+        'r_date' => radio_form($conf['media']['date'] ?? 0, 'date'),
+        '_c18' => _C_18,
+        'r_read' => radio_form($conf['media']['read'] ?? 0, 'read'),
+        '_c19' => _C_19,
+        'r_rate' => radio_form($conf['media']['rate'] ?? 0, 'rate'),
+        '_c20' => _C_20,
+        'r_letter' => radio_form($conf['media']['letter'] ?? 0, 'letter'),
+        '_pagelink' => _PAGELINK,
+        'r_link' => radio_form($conf['media']['link'] ?? 0, 'link'),
+        'media' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

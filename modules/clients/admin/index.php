@@ -13,7 +13,7 @@ function clients(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CDATE.'</th><th>'._ID.'</th><th>'._CLOADS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
@@ -32,7 +32,7 @@ function clients(): void {
             .'</td></tr>';
         }
         $cont .= '</tbody></table>';
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -63,7 +63,7 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stopText]);
     }
     if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._CTITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._CTITLE.'" required></td></tr>'
     .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'body', $body, 'clients', '15', _TEXT, '1').'</td></tr>'
@@ -73,7 +73,7 @@ function add(): void {
     .'<tr><td>'._ID.':</td><td><input type="number" name="prod" value="'.$prod.'" class="sl_form" placeholder="'._ID.'"></td></tr>'
     .'<tr><td>'._CADOWN.'</td><td>'.radio_form($status, 'status').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="clients">'.ad_save('cid', $cid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

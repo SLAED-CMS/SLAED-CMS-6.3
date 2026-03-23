@@ -75,7 +75,7 @@ function account(): void {
     $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
     $res = $db->getSqlQuery($sql,$params);
     if ($db->getSqlRowCount($res) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._EMAIL.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->getSqlRow($res)) {
             $sgroup = $gname ? '<span style="color: '.$gcolor.'">'.$gname.'</span>' : _NO;
@@ -87,7 +87,7 @@ function account(): void {
         $lsear = $search ? '&amp;search='.$search : '';
         $lchg = $chng ? '&amp;chng='.$chng : '';
         $cont .= setArticleNumbers('pagenum', '', $conf['users']['anum'], 'name=account'.$lsear.$lchg.'&amp;', 'id', '_users', '', $wcnt, $conf['users']['anump'], $pars);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERNOEXIST]);
     }
@@ -164,7 +164,7 @@ function add(): void {
         'tab'  => 1,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._NICKNAME.':</td><td><input type="text" name="uname" value="'.$uname.'" maxlength="25" class="sl_form" placeholder="'._NICKNAME.'" required></td></tr>'
     .'<tr><td>'._URANK.':</td><td><input type="text" name="rank" value="'.$rank.'" maxlength="25" class="sl_form" placeholder="'._URANK.'"></td></tr>'
@@ -234,7 +234,7 @@ function add(): void {
     .'<tr><td>'._MAIL_SENDE.'</td><td><input type="checkbox" name="mail" value="1" OnClick="CloseOpen(\'sl_close_9\', 0);"'.$check.'></td></tr>'
     .'<tr><td colspan="2"><div id="sl_close_9"><table class="sl_table_form"><tr><td>'._MAIL_TEXT.':<div class="sl_small">'._MAIL_PASS_INFO.'</div></td><td class="sl_form">'.textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, '').'</td></tr></table></div></td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -338,7 +338,7 @@ function newuser(): void {
     $offset = ($num - 1) * $conf['users']['anum'];
     $result = $db->getSqlQuery('SELECT id, name, email, password, regdate, code FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $conf['users']['anum']]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._EMAIL.'</th><th>'._PASSWORD.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$uid, $name, $mail, $pass, $reg, $check] = $db->getSqlRow($result)) {
             $cont .= '<tr><td>'.$uid.'</td>'
@@ -350,7 +350,7 @@ function newuser(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', (int)$conf['users']['anum'], 'name=account&amp;op=newuser&amp;', 'id', '_users_temp', '', '', (int)$conf['users']['anump'], []);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -375,14 +375,14 @@ function pointreset(): void {
         'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
         'tab'  => 3,
     ]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._POINTS.':</td><td>'.radio_form(0, 'points').'</td></tr>'
     .'<tr><td>'._RATINGS.':</td><td>'.radio_form(0, 'votes').'</td></tr>'
     .'<tr><td>'._UWARNS.':</td><td>'.radio_form(0, 'warnings').'</td></tr>'
     .'<tr><td>'._SIGNATURE.':</td><td>'.radio_form(0, 'sig').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="resave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -429,65 +429,65 @@ function config(): void {
         .'<option value="0"'.($conf['users']['enter'] == '0' ? ' selected' : '').'>'._LOGINL.'</option>'
         .'<option value="1"'.($conf['users']['enter'] == '1' ? ' selected' : '').'>'._LOGINF.'</option>'
         .'</select>';
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'           => $afile,
-        '{%module%}'          => 'account',
-        '{%op%}'              => 'save',
-        '{%save%}'            => _SAVECHANGES,
-        '{%fields%}'          => '',
-        '{%_adir%}'           => _ADIR,
-        '{%adirectory%}'      => $conf['users']['adirectory'],
-        '{%_atype%}'          => _ATYPE,
-        '{%atypefile%}'       => $conf['users']['atypefile'],
-        '{%_asize%}'          => _ASIZE,
-        '{%amaxsize%}'        => $conf['users']['amaxsize'],
-        '{%_awidthin%}'       => _AWIDTH._AIN,
-        '{%awidth%}'          => $conf['users']['awidth'],
-        '{%_aheightin%}'      => _AHEIGHT._AIN,
-        '{%aheight%}'         => $conf['users']['aheight'],
-        '{%_voting_time%}'    => _VOTING_TIME,
-        '{%user%}'            => intval($conf['users']['user_t'] / 86400),
-        '{%_c34%}'            => _C_34,
-        '{%anum%}'            => $conf['users']['anum'],
-        '{%_c36%}'            => _C_36,
-        '{%anump%}'           => $conf['users']['anump'],
-        '{%_passwdlen%}'      => _PASSWDLEN,
-        '{%s_minpass%}'       => $minpass_sel,
-        '{%_loginfl%}'        => _LOGINFL,
-        '{%s_enter%}'         => $enter_sel,
-        '{%_update_points%}'  => _UPDATE_POINTS,
-        '{%r_point%}'         => radio_form($conf['users']['point'], 'point'),
-        '{%_aupload%}'        => _AUPLOAD,
-        '{%r_aupload%}'       => radio_form($conf['users']['aupload'], 'aupload'),
-        '{%_no_mail_reg%}'    => _NO_MAIL_REG,
-        '{%r_nomail%}'        => radio_form($conf['users']['nomail'], 'nomail'),
-        '{%_usershomenum%}'   => _USERSHOMENUM,
-        '{%r_news%}'          => radio_form($conf['users']['news'], 'news'),
-        '{%_useripcheck%}'    => _USERIPCHECK,
-        '{%r_check%}'         => radio_form($conf['users']['check'], 'check'),
-        '{%_regact%}'         => _REGACT,
-        '{%r_reg%}'           => radio_form($conf['users']['reg'], 'reg'),
-        '{%_seltheme%}'       => _SELTHEME,
-        '{%r_theme%}'         => radio_form($conf['users']['theme'], 'theme'),
-        '{%_profact%}'        => _PROFACT,
-        '{%r_prof%}'          => radio_form($conf['users']['prof'], 'prof'),
-        '{%_networkactive%}'  => _NETWORKACTIVE,
-        '{%r_network%}'       => radio_form($conf['users']['network'], 'network'),
-        '{%_rulact%}'         => _RULACT,
-        '{%r_rule%}'          => radio_form($conf['users']['rule'], 'rule'),
-        '{%_rules%}'          => _RULES,
-        '{%rules%}'           => $conf['users']['rules'],
-        '{%_networkcode%}'    => _NETWORKCODE,
-        '{%t_code%}'          => textarea_code('code', 'network', 'sl_conf', 'text/html', $conf['users']['network_c']),
-        '{%_name_block%}'     => _NAME_BLOCK,
-        '{%_nokoma%}'         => _NOKOMA,
-        '{%name_b%}'          => $conf['users']['name_b'],
-        '{%_mail_block%}'     => _MAIL_BLOCK,
-        '{%mail_b%}'          => $conf['users']['mail_b'],
-        'if_flag'             => ['account' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'account',
+        'op' => 'save',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_adir' => _ADIR,
+        'adirectory' => $conf['users']['adirectory'],
+        '_atype' => _ATYPE,
+        'atypefile' => $conf['users']['atypefile'],
+        '_asize' => _ASIZE,
+        'amaxsize' => $conf['users']['amaxsize'],
+        '_awidthin' => _AWIDTH._AIN,
+        'awidth' => $conf['users']['awidth'],
+        '_aheightin' => _AHEIGHT._AIN,
+        'aheight' => $conf['users']['aheight'],
+        '_voting_time' => _VOTING_TIME,
+        'user' => intval($conf['users']['user_t'] / 86400),
+        '_c34' => _C_34,
+        'anum' => $conf['users']['anum'],
+        '_c36' => _C_36,
+        'anump' => $conf['users']['anump'],
+        '_passwdlen' => _PASSWDLEN,
+        's_minpass' => $minpass_sel,
+        '_loginfl' => _LOGINFL,
+        's_enter' => $enter_sel,
+        '_update_points' => _UPDATE_POINTS,
+        'r_point' => radio_form($conf['users']['point'], 'point'),
+        '_aupload' => _AUPLOAD,
+        'r_aupload' => radio_form($conf['users']['aupload'], 'aupload'),
+        '_no_mail_reg' => _NO_MAIL_REG,
+        'r_nomail' => radio_form($conf['users']['nomail'], 'nomail'),
+        '_usershomenum' => _USERSHOMENUM,
+        'r_news' => radio_form($conf['users']['news'], 'news'),
+        '_useripcheck' => _USERIPCHECK,
+        'r_check' => radio_form($conf['users']['check'], 'check'),
+        '_regact' => _REGACT,
+        'r_reg' => radio_form($conf['users']['reg'], 'reg'),
+        '_seltheme' => _SELTHEME,
+        'r_theme' => radio_form($conf['users']['theme'], 'theme'),
+        '_profact' => _PROFACT,
+        'r_prof' => radio_form($conf['users']['prof'], 'prof'),
+        '_networkactive' => _NETWORKACTIVE,
+        'r_network' => radio_form($conf['users']['network'], 'network'),
+        '_rulact' => _RULACT,
+        'r_rule' => radio_form($conf['users']['rule'], 'rule'),
+        '_rules' => _RULES,
+        'rules' => $conf['users']['rules'],
+        '_networkcode' => _NETWORKCODE,
+        't_code' => textarea_code('code', 'network', 'sl_conf', 'text/html', $conf['users']['network_c']),
+        '_name_block' => _NAME_BLOCK,
+        '_nokoma' => _NOKOMA,
+        'name_b' => $conf['users']['name_b'],
+        '_mail_block' => _MAIL_BLOCK,
+        'mail_b' => $conf['users']['mail_b'],
+        'account' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

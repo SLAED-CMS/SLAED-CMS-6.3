@@ -37,7 +37,7 @@ function rss(): void {
         .'</td></tr></table></div>';
     }
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php?name=rss" method="post">'
     .'<input type="hidden" name="op" value="save">'
     .'<div id="tabc0" class="tabcont">'.$content.'</div>'
@@ -55,7 +55,7 @@ function rss(): void {
         countries.setselectedClassTarget("link")
         countries.init()
     </script>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

@@ -26,7 +26,7 @@ function help(): void {
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th>'.cutstr(_MESSAGES, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $title, $time, $comments, $ip, $stat, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
@@ -42,7 +42,7 @@ function help(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -51,12 +51,12 @@ function help(): void {
 }
 
 function view(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $id = getVar('get', 'id', 'num', 0);
     $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id]);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $a = 0;
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $title = ($title) ? $title : _MESSAGE.': '.$a;
@@ -77,27 +77,27 @@ function view(): void {
             $reads =  '';
         }
         $admin = add_menu('<a href="'.$afile.'.php?name=help&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=help&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
-        $cont .= setTemplateBasic('basic', ['{%ctitle%}' => $ctitle, '{%id%}' => $id, '{%title%}' => $title, '{%text%}' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), '{%post%}' => $post, '{%date%}' => $date, '{%reads%}' => $reads, '{%comm%}' => $comm, '{%rating%}' => $rating, '{%admin%}' => $admin]);
+        $cont .= $tpl->getHtmlFrag('basic', ['ctitle' => $ctitle, 'id' => $id, 'title' => $title, 'text' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), 'post' => $post, 'date' => $date, 'reads' => $reads, 'comm' => $comm, 'rating' => $rating, 'admin' => $admin]);
         $a++;
     }
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     $cont .= addview($id);
     echo $cont;
     setFoot();
 }
 
 function addview(int $id): string {
-    global $db, $afile, $admin;
+    global $db, $afile, $admin, $tpl;
     $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
     [$cid, $uid, $status] = $db->getSqlRow($result);
-    $cont = setTemplateBasic('open');
+    $cont = $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $admin[1] ?? '', '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', 'help', '10', _TEXT, '1').'</td></tr>'
     .'<tr><td>'._HELPGLOS.'</td><td>'.radio_form($status, 'status').'</td></tr>'
     .'<tr><td>'._MAIL_SENDE.'</td><td>'.radio_form('1', 'umail').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="refer" value="1"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$cid.'"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="save"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     return $cont;
 }
 
@@ -123,7 +123,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>';
     if (!$pid) $cont .= '<tr><td>'._TITLE.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>';
@@ -132,7 +132,7 @@ function add(): void {
     .fields_in($field, 'help')
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="pid" value="'.$pid.'">'.ad_save('id', $id, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -196,46 +196,46 @@ function delete(int $fid = 0): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'     => $afile,
-        '{%module%}'    => 'help',
-        '{%op%}'        => 'configsave',
-        '{%save%}'      => _SAVECHANGES,
-        '{%fields%}'    => '',
-        '{%_cdefis%}'   => _CDEFIS,
-        '{%defis%}'     => urldecode($conf['help']['defis'] ?? ''),
-        '{%_c13%}'      => _C_13,
-        '{%listnum%}'   => $conf['help']['listnum'] ?? 0,
-        '{%_c33%}'      => _C_33,
-        '{%num%}'       => $conf['help']['num'] ?? 0,
-        '{%_c34%}'      => _C_34,
-        '{%anum%}'      => $conf['help']['anum'] ?? 0,
-        '{%_c35%}'      => _C_35,
-        '{%nump%}'      => $conf['help']['nump'] ?? 0,
-        '{%_c36%}'      => _C_36,
-        '{%anump%}'     => $conf['help']['anump'] ?? 0,
-        '{%_c32%}'      => _C_32,
-        '{%r_catdesc%}' => radio_form($conf['help']['catdesc'] ?? 0, 'catdesc'),
-        '{%_c15%}'      => _C_15,
-        '{%r_subcat%}'  => radio_form($conf['help']['subcat'] ?? 0, 'subcat'),
-        '{%_addamail%}' => _ADDAMAIL,
-        '{%r_addmail%}' => radio_form($conf['help']['addmail'] ?? 0, 'addmail'),
-        '{%_helpadd%}'  => _HELPADD,
-        '{%r_add%}'     => radio_form($conf['help']['add'] ?? 0, 'add'),
-        '{%_c17%}'      => _C_17,
-        '{%r_date%}'    => radio_form($conf['help']['date'] ?? 0, 'date'),
-        '{%_c18%}'      => _C_18,
-        '{%r_read%}'    => radio_form($conf['help']['read'] ?? 0, 'read'),
-        '{%_c20%}'      => _C_20,
-        '{%r_letter%}'  => radio_form($conf['help']['letter'] ?? 0, 'letter'),
-        'if_flag'       => ['help' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'help',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_cdefis' => _CDEFIS,
+        'defis' => urldecode($conf['help']['defis'] ?? ''),
+        '_c13' => _C_13,
+        'listnum' => $conf['help']['listnum'] ?? 0,
+        '_c33' => _C_33,
+        'num' => $conf['help']['num'] ?? 0,
+        '_c34' => _C_34,
+        'anum' => $conf['help']['anum'] ?? 0,
+        '_c35' => _C_35,
+        'nump' => $conf['help']['nump'] ?? 0,
+        '_c36' => _C_36,
+        'anump' => $conf['help']['anump'] ?? 0,
+        '_c32' => _C_32,
+        'r_catdesc' => radio_form($conf['help']['catdesc'] ?? 0, 'catdesc'),
+        '_c15' => _C_15,
+        'r_subcat' => radio_form($conf['help']['subcat'] ?? 0, 'subcat'),
+        '_addamail' => _ADDAMAIL,
+        'r_addmail' => radio_form($conf['help']['addmail'] ?? 0, 'addmail'),
+        '_helpadd' => _HELPADD,
+        'r_add' => radio_form($conf['help']['add'] ?? 0, 'add'),
+        '_c17' => _C_17,
+        'r_date' => radio_form($conf['help']['date'] ?? 0, 'date'),
+        '_c18' => _C_18,
+        'r_read' => radio_form($conf['help']['read'] ?? 0, 'read'),
+        '_c20' => _C_20,
+        'r_letter' => radio_form($conf['help']['letter'] ?? 0, 'letter'),
+        'help' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

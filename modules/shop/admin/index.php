@@ -7,7 +7,6 @@
 if (!defined('ADMIN_FILE') || !is_admin_modul('shop')) die('Illegal file access');
 
 
-
 function clients(): void {
     global $db, $afile, $conf, $tpl;
         $csearch = getVar('post', 'csearch', 'text');
@@ -102,7 +101,7 @@ function clients(): void {
     [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(c.id) FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) WHERE c.'.$sqlstatus.$searchWhere, $searchParams));
     $numpages = ($conf['shop']['anum'] > 0) ? (int)ceil($numstories / $conf['shop']['anum']) : 1;
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._SITE.'</th><th>'._NICKNAME.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while([$cid, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $nick, $ptitle] = $db->getSqlRow($result)) {
             $cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _UNLIMITED;
@@ -125,7 +124,7 @@ function clients(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $conf['shop']['anum'], $field, $conf['shop']['anump']);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -187,7 +186,7 @@ function clientadd(): void {
         'legacy' => 3,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cppi = 0;
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     if ($partner) {
@@ -230,7 +229,7 @@ function clientadd(): void {
     .'<tr><td>'._NOTE.':</td><td><input type="text" name="cinfo" value="'.$cinfo.'" maxlength="255" class="sl_form" placeholder="'._NOTE.'"></td></tr>'
     .'<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($cactive, 'cactive').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="cppi" value="'.$cppi.'">'.ad_save('cid', $cid, 'clientsave', 1).'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -347,7 +346,7 @@ function products(): void {
     $cont = $navi;
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, p.vote, p.status, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<form name="post" action="'.$afile.'.php" method="post">'
         .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th><th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th></tr></thead><tbody>';
         while([$pid, $pcid, $ptime, $ptitle, $pprice, $pvote, $pactive, $ctitle] = $db->getSqlRow($result)) {
@@ -372,7 +371,7 @@ function products(): void {
         $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="productops"><input type="hidden" name="refer" value="1"> <input type="submit" value="'._OK.'" class="sl_but_blue">';
         $numpt = setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_products', '', $sqlstatus, $conf['shop']['anump']);
         $cont .= '<table class="searchboxtab"><tr><td>'.$numpt.'</td><td><div class="searchbox">'.$selms.'</div></td></tr></table></form>';
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -427,7 +426,7 @@ function productadd(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     $ptextpre = ($vote) ? '<div id="repshop">'.getVoting($vote, 'shop').'</div><hr>'.$ptext : $ptext;
     if ($ptextpre) $cont .= preview($ptitle, $ptextpre, $pbodytext, '', 'shop');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._TITLE.' / '._PRODUCT.':</td><td><input type="text" name="ptitle" value="'.$ptitle.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
     .'<tr><td>'._CATEGORY.':</td><td>'.getcat('shop', $pcid, 'pcid', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>';
@@ -456,7 +455,7 @@ function productadd(): void {
     .'<tr><td>'._FIXED.'?</td><td>'.radio_form($fix, 'fix').'</td></tr>'
     .'<tr><td>'._ACTIVATEP.'</td><td>'.radio_form($pactive, 'pactive').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center">'.ad_save('pid', $pid, 'productsave').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -594,7 +593,7 @@ function partners(): void {
     $cont = $navi;
     $result = $db->getSqlQuery('SELECT p.id, p.name, p.addr, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PARTNERREST.'</th><th>'._PARTNERBEK.'</th><th>'._SITE.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while([$paid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result)) {
             if ($nick) {
@@ -614,7 +613,7 @@ function partners(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_partners', '', $sqlstatus, $conf['shop']['anump']);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -676,7 +675,7 @@ function partneradd(): void {
         'legacy' => 3,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
     if ($paid) {
         $nick = ($nick) ? user_info($nick) : _ANONYM;
@@ -698,7 +697,7 @@ function partneradd(): void {
     }
     $cont .= '<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($paactive, 'paactive').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center">'.ad_save('paid', $paid, 'partnersave', 1).'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -773,7 +772,7 @@ function partnerinfo(): void {
     [$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
     $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id=c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.prod) WHERE c.part = :uid AND c.status != 2 ORDER BY c.id ASC', ['uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th><th>'._PERCENT.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._SUM.'</th></tr></thead><tbody>';
         $partsum = 0;
         $partsumges = 0;
@@ -791,9 +790,9 @@ function partnerinfo(): void {
             $a++;
         }
         $cont .= '</tbody></table>';
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     }
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._CLIENTEN.'</th><th>'._WEBMONEY.'</th><th>'._PAYPAL.'</th><th>'._PARTNERGES.'</th><th>'._PARTNERREST.'</th><th class="{sorter: false}">'._PARTNERBEK.'</th></tr></thead><tbody>'
     .'<tr><td>'.$a.'</td>'
     .'<td>'.$pawebmoney.'</td>'
@@ -801,7 +800,7 @@ function partnerinfo(): void {
     .'<td>'.$partsumges.' '.$conf['shop']['valute'].'</td>'
     .'<td>'.$parest.' '.$conf['shop']['valute'].'</td>'
     .'<td>'.$pabek.' '.$conf['shop']['valute'].'</td></tr></tbody></table>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -935,7 +934,7 @@ function export(): void {
         countries.setselectedClassTarget(\'link\')
         countries.init()
         </script>';
-        $cont .= setTemplateBasic('open').$content.setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('open', []).$content.$tpl->getHtmlFrag('close', []);
         echo $cont;
         setFoot();
     }
@@ -964,7 +963,7 @@ function config(): void {
         'tab'  => 4,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/shop.php');
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._CDEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['shop']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required></td></tr>'
     .'<tr><td>'._C_0.':</td><td><input type="number" name="clients" value="'.$conf['shop']['clients'].'" class="sl_conf" placeholder="'._C_0.'" required></td></tr>'
@@ -1003,7 +1002,7 @@ function config(): void {
     .'<tr><td>'._C_30.':</td><td>'.textarea('4', 'partinfo2', $conf['shop']['partinfo2'], 'shop', '5', _C_30, '1').'</td></tr>'
     .'<tr><td>'._C_31.':</td><td>'.textarea('5', 'shopinfo', $conf['shop']['shopinfo'], 'shop', '5', _C_31, '1').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -1092,7 +1091,7 @@ function info(): void {
 }
 
 switch($op) {
-    default: shop(); break;
+    default: clients(); break;
     case 'clients': clients(); break;
     case 'clientset': clientset(); break;
     case 'clientadd': clientadd(); break;

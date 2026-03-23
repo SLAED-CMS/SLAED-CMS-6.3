@@ -17,7 +17,7 @@ function money(): void {
     $offset = (int)(($num - 1) * $anum);
     $result = $db->getSqlQuery('SELECT id, sum, email, intro, note, ip, agent, time, status FROM '.PREFIX_DB.'_money ORDER BY time DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_money'));
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
@@ -46,7 +46,7 @@ function money(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=money&amp;', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -85,7 +85,7 @@ function add(): void {
         }
         $cont .= preview($email, $infos, _COMMENT.': '.$note, '', 'all');
     }
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._MA_17.':</td><td><input type="number" name="sum" value="'.$sum.'" class="sl_form" placeholder="'._MA_17.'" required></td></tr>'
     .'<tr><td>'._MA_18.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._MA_18.'" required></td></tr>';
@@ -100,7 +100,7 @@ function add(): void {
     $cont .= '<tr><td>'._MA_19.':</td><td><textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._MA_19.'">'.$note.'</textarea></td></tr>'
     .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="money">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -204,50 +204,50 @@ function activate(): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'      => $afile,
-        '{%module%}'     => 'money',
-        '{%op%}'         => 'configsave',
-        '{%save%}'       => _SAVECHANGES,
-        '{%fields%}'     => '',
-        '{%_ma3%}'       => _MA_3,
-        '{%proz%}'       => $conf['money']['proz'] ?? '',
-        '{%_ma4_usd%}'   => _MA_4.': EUR > USD',
-        '{%kurs%}'       => $conf['money']['kurs'] ?? '',
-        '{%_ma4_rub%}'   => _MA_4.': EUR > RUB',
-        '{%kurs2%}'      => $conf['money']['kurs2'] ?? '',
-        '{%_ma5%}'       => _MA_5,
-        '{%bal%}'        => $conf['money']['bal'] ?? '',
-        '{%_ma6%}'       => _MA_6,
-        '{%mail%}'       => $conf['money']['mail'] ?? '',
-        '{%_ma7%}'       => _MA_7,
-        '{%form%}'       => $conf['money']['form'] ?? '',
-        '{%_c34%}'       => _C_34,
-        '{%anum%}'       => $conf['money']['anum'] ?? 25,
-        '{%_c36%}'       => _C_36,
-        '{%anump%}'      => $conf['money']['anump'] ?? 10,
-        '{%_ma8%}'       => _MA_8,
-        '{%r_an%}'       => radio_form($conf['money']['an'] ?? 0, 'an'),
-        '{%_ma9%}'       => _MA_9,
-        '{%r_pr%}'       => radio_form($conf['money']['pr'] ?? 0, 'pr'),
-        '{%_ma10%}'      => _MA_10,
-        '{%r_ad%}'       => radio_form($conf['money']['ad'] ?? 0, 'ad'),
-        '{%_ma11%}'      => _MA_11,
-        '{%t_text%}'     => textarea('1', 'text', $conf['money']['text'] ?? '', 'all', '5', _MA_11, '1'),
-        '{%_ma12%}'      => _MA_12,
-        '{%t_info%}'     => textarea('2', 'info', $conf['money']['info'] ?? '', 'all', '5', _MA_12, '1'),
-        '{%_ma13%}'      => _MA_13,
-        '{%t_sendinfo%}' => textarea('3', 'sendinfo', $conf['money']['sendinfo'] ?? '', 'all', '5', _MA_13, '1'),
-        '{%_ma14%}'      => _MA_14,
-        '{%t_autor%}'    => textarea('4', 'autor', $conf['money']['autor'] ?? '', 'all', '5', _MA_14, '1'),
-        'if_flag'        => ['money' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'money',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_ma3' => _MA_3,
+        'proz' => $conf['money']['proz'] ?? '',
+        '_ma4_usd' => _MA_4.': EUR > USD',
+        'kurs' => $conf['money']['kurs'] ?? '',
+        '_ma4_rub' => _MA_4.': EUR > RUB',
+        'kurs2' => $conf['money']['kurs2'] ?? '',
+        '_ma5' => _MA_5,
+        'bal' => $conf['money']['bal'] ?? '',
+        '_ma6' => _MA_6,
+        'mail' => $conf['money']['mail'] ?? '',
+        '_ma7' => _MA_7,
+        'form' => $conf['money']['form'] ?? '',
+        '_c34' => _C_34,
+        'anum' => $conf['money']['anum'] ?? 25,
+        '_c36' => _C_36,
+        'anump' => $conf['money']['anump'] ?? 10,
+        '_ma8' => _MA_8,
+        'r_an' => radio_form($conf['money']['an'] ?? 0, 'an'),
+        '_ma9' => _MA_9,
+        'r_pr' => radio_form($conf['money']['pr'] ?? 0, 'pr'),
+        '_ma10' => _MA_10,
+        'r_ad' => radio_form($conf['money']['ad'] ?? 0, 'ad'),
+        '_ma11' => _MA_11,
+        't_text' => textarea('1', 'text', $conf['money']['text'] ?? '', 'all', '5', _MA_11, '1'),
+        '_ma12' => _MA_12,
+        't_info' => textarea('2', 'info', $conf['money']['info'] ?? '', 'all', '5', _MA_12, '1'),
+        '_ma13' => _MA_13,
+        't_sendinfo' => textarea('3', 'sendinfo', $conf['money']['sendinfo'] ?? '', 'all', '5', _MA_13, '1'),
+        '_ma14' => _MA_14,
+        't_autor' => textarea('4', 'autor', $conf['money']['autor'] ?? '', 'all', '5', _MA_14, '1'),
+        'money' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

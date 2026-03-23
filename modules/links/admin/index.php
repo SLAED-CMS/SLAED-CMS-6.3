@@ -32,7 +32,7 @@ function links(): void {
     }
     $result = $db->getSqlQuery('SELECT l.id, l.cid, l.name, l.title, l.url, l.time, l.ip, c.title, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.status = :status ORDER BY l.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._SITEURL.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $cid, $uname, $title, $url, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
@@ -55,7 +55,7 @@ function links(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_links', '', 'status = \''.$status.'\'', $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -89,7 +89,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($description)) $cont .= preview($title, $description, $bodytext, '', 'links');
     $link = (!empty($site) && $site !== 'http://') ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
     .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
@@ -102,7 +102,7 @@ function add(): void {
     .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
     .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="links">'.ad_save('fid', $fid, 'save').'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -164,66 +164,66 @@ function delete(int $dfid = 0): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/links.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'        => $afile,
-        '{%module%}'       => 'links',
-        '{%op%}'           => 'configsave',
-        '{%save%}'         => _SAVECHANGES,
-        '{%fields%}'       => '',
-        '{%_cdefis%}'      => _CDEFIS,
-        '{%defis%}'        => urldecode($conf['links']['defis'] ?? ''),
-        '{%_pagelinknum%}' => _PAGELINKNUM,
-        '{%linknum%}'      => $conf['links']['linknum'] ?? 0,
-        '{%_c13%}'         => _C_13,
-        '{%listnum%}'      => $conf['links']['listnum'] ?? 0,
-        '{%_c33%}'         => _C_33,
-        '{%num%}'          => $conf['links']['num'] ?? 0,
-        '{%_c34%}'         => _C_34,
-        '{%anum%}'         => $conf['links']['anum'] ?? 0,
-        '{%_c35%}'         => _C_35,
-        '{%nump%}'         => $conf['links']['nump'] ?? 0,
-        '{%_c36%}'         => _C_36,
-        '{%anump%}'        => $conf['links']['anump'] ?? 0,
-        '{%_homcat%}'      => _HOMCAT,
-        '{%r_homcat%}'     => radio_form($conf['links']['homcat'] ?? 0, 'homcat'),
-        '{%_viewcat%}'     => _VIEWCAT,
-        '{%r_viewcat%}'    => radio_form($conf['links']['viewcat'] ?? 0, 'viewcat'),
-        '{%_c32%}'         => _C_32,
-        '{%r_catdesc%}'    => radio_form($conf['links']['catdesc'] ?? 0, 'catdesc'),
-        '{%_c15%}'         => _C_15,
-        '{%r_subcat%}'     => radio_form($conf['links']['subcat'] ?? 0, 'subcat'),
-        '{%_addamail%}'    => _ADDAMAIL,
-        '{%r_addmail%}'    => radio_form($conf['links']['addmail'] ?? 0, 'addmail'),
-        '{%_l8%}'          => _L_8,
-        '{%r_add%}'        => radio_form($conf['links']['add'] ?? 0, 'add'),
-        '{%_l9%}'          => _L_9,
-        '{%r_addquest%}'   => radio_form($conf['links']['addquest'] ?? 0, 'addquest'),
-        '{%_l11%}'         => _L_11,
-        '{%r_broc%}'       => radio_form($conf['links']['broc'] ?? 0, 'broc'),
-        '{%_l12%}'         => _L_12,
-        '{%r_links%}'      => radio_form($conf['links']['links'] ?? 0, 'links'),
-        '{%_c37%}'         => _C_37,
-        '{%r_autor%}'      => radio_form($conf['links']['autor'] ?? 0, 'autor'),
-        '{%_c17%}'         => _C_17,
-        '{%r_date%}'       => radio_form($conf['links']['date'] ?? 0, 'date'),
-        '{%_c18%}'         => _C_18,
-        '{%r_read%}'       => radio_form($conf['links']['read'] ?? 0, 'read'),
-        '{%_l1%}'          => _L_1,
-        '{%r_hits%}'       => radio_form($conf['links']['hits'] ?? 0, 'hits'),
-        '{%_c19%}'         => _C_19,
-        '{%r_rate%}'       => radio_form($conf['links']['rate'] ?? 0, 'rate'),
-        '{%_c20%}'         => _C_20,
-        '{%r_letter%}'     => radio_form($conf['links']['letter'] ?? 0, 'letter'),
-        '{%_pagelink%}'    => _PAGELINK,
-        '{%r_link%}'       => radio_form($conf['links']['link'] ?? 0, 'link'),
-        'if_flag'          => ['links' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'links',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_cdefis' => _CDEFIS,
+        'defis' => urldecode($conf['links']['defis'] ?? ''),
+        '_pagelinknum' => _PAGELINKNUM,
+        'linknum' => $conf['links']['linknum'] ?? 0,
+        '_c13' => _C_13,
+        'listnum' => $conf['links']['listnum'] ?? 0,
+        '_c33' => _C_33,
+        'num' => $conf['links']['num'] ?? 0,
+        '_c34' => _C_34,
+        'anum' => $conf['links']['anum'] ?? 0,
+        '_c35' => _C_35,
+        'nump' => $conf['links']['nump'] ?? 0,
+        '_c36' => _C_36,
+        'anump' => $conf['links']['anump'] ?? 0,
+        '_homcat' => _HOMCAT,
+        'r_homcat' => radio_form($conf['links']['homcat'] ?? 0, 'homcat'),
+        '_viewcat' => _VIEWCAT,
+        'r_viewcat' => radio_form($conf['links']['viewcat'] ?? 0, 'viewcat'),
+        '_c32' => _C_32,
+        'r_catdesc' => radio_form($conf['links']['catdesc'] ?? 0, 'catdesc'),
+        '_c15' => _C_15,
+        'r_subcat' => radio_form($conf['links']['subcat'] ?? 0, 'subcat'),
+        '_addamail' => _ADDAMAIL,
+        'r_addmail' => radio_form($conf['links']['addmail'] ?? 0, 'addmail'),
+        '_l8' => _L_8,
+        'r_add' => radio_form($conf['links']['add'] ?? 0, 'add'),
+        '_l9' => _L_9,
+        'r_addquest' => radio_form($conf['links']['addquest'] ?? 0, 'addquest'),
+        '_l11' => _L_11,
+        'r_broc' => radio_form($conf['links']['broc'] ?? 0, 'broc'),
+        '_l12' => _L_12,
+        'r_links' => radio_form($conf['links']['links'] ?? 0, 'links'),
+        '_c37' => _C_37,
+        'r_autor' => radio_form($conf['links']['autor'] ?? 0, 'autor'),
+        '_c17' => _C_17,
+        'r_date' => radio_form($conf['links']['date'] ?? 0, 'date'),
+        '_c18' => _C_18,
+        'r_read' => radio_form($conf['links']['read'] ?? 0, 'read'),
+        '_l1' => _L_1,
+        'r_hits' => radio_form($conf['links']['hits'] ?? 0, 'hits'),
+        '_c19' => _C_19,
+        'r_rate' => radio_form($conf['links']['rate'] ?? 0, 'rate'),
+        '_c20' => _C_20,
+        'r_letter' => radio_form($conf['links']['letter'] ?? 0, 'letter'),
+        '_pagelink' => _PAGELINK,
+        'r_link' => radio_form($conf['links']['link'] ?? 0, 'link'),
+        'links' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }

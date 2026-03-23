@@ -27,7 +27,7 @@ function whois(): void {
 
     $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= setTemplateBasic('open');
+        $cont .= $tpl->getHtmlFrag('open', []);
         $cont .= '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._POSTEDBY.'</th><th colspan="2">'._SITE.'</th><th colspan="2">'._HOST.'</th><th colspan="2">'._DC.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         while ([$id, $uname, $ipSender, $time, $domain, $host, $dc, $hometext, $statusDomain, $statusHost, $statusDc, $userName] = $db->getSqlRow($result)) {
             $post = $userName ? user_info($userName) : ($uname ?: _ANONYM);
@@ -49,7 +49,7 @@ function whois(): void {
         }
         $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_whois', '', "status = '".$status."'", $anump);
-        $cont .= setTemplateBasic('close');
+        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -95,7 +95,7 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', $stop)]);
-    $cont .= setTemplateBasic('open');
+    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
         .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
         .'<tr><td>'._SITE.':</td><td><input type="url" name="domain" value="'.$domain.'" maxlength="255" class="sl_form" placeholder="'._SITE.'" required></td></tr>'
@@ -103,7 +103,7 @@ function add(): void {
         .'<tr><td>'._DC.':</td><td><input type="url" name="dc" value="'.$dc.'" maxlength="255" class="sl_form" placeholder="'._DC.'"></td></tr>'
         .'<tr><td>'._COMMENT.':</td><td><textarea name="hometext" cols="65" rows="5" class="sl_form" placeholder="'._COMMENT.'">'.$hometext.'</textarea></td></tr>'
         .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="whois">'.ad_save('wid', $wid, 'save', 1).'</td></tr></table></form>';
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
@@ -147,30 +147,30 @@ function delete(int $id = 0): void {
 }
 
 function config(): void {
-    global $afile, $conf;
+    global $afile, $conf, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
-    $cont .= setTemplateBasic('open');
-    $cont .= setTemplateBasic('form-conf', [
-        '{%route%}'      => $afile,
-        '{%module%}'     => 'whois',
-        '{%op%}'         => 'configsave',
-        '{%save%}'       => _SAVECHANGES,
-        '{%fields%}'     => '',
-        '{%_c34%}'       => _C_34,
-        '{%anum%}'       => $conf['whois']['anum'] ?? 10,
-        '{%_c36%}'       => _C_36,
-        '{%anump%}'      => $conf['whois']['anump'] ?? 10,
-        '{%_addamail%}'  => _ADDAMAIL,
-        '{%r_addmail%}'  => radio_form($conf['whois']['addmail'] ?? 0, 'addmail'),
-        '{%_whoisadd%}'  => _WHOISADD,
-        '{%r_add%}'      => radio_form($conf['whois']['add'] ?? 0, 'add'),
-        '{%_whoisaddg%}' => _WHOISADDG,
-        '{%r_addquest%}' => radio_form($conf['whois']['addquest'] ?? 0, 'addquest'),
-        'if_flag'        => ['whois' => true],
+    $cont .= $tpl->getHtmlFrag('open', []);
+    $cont .= $tpl->getHtmlFrag('form-conf', [
+        'route' => $afile,
+        'module' => 'whois',
+        'op' => 'configsave',
+        'save' => _SAVECHANGES,
+        'fields' => '',
+        '_c34' => _C_34,
+        'anum' => $conf['whois']['anum'] ?? 10,
+        '_c36' => _C_36,
+        'anump' => $conf['whois']['anump'] ?? 10,
+        '_addamail' => _ADDAMAIL,
+        'r_addmail' => radio_form($conf['whois']['addmail'] ?? 0, 'addmail'),
+        '_whoisadd' => _WHOISADD,
+        'r_add' => radio_form($conf['whois']['add'] ?? 0, 'add'),
+        '_whoisaddg' => _WHOISADDG,
+        'r_addquest' => radio_form($conf['whois']['addquest'] ?? 0, 'addquest'),
+        'whois' => true,
     ]);
-    $cont .= setTemplateBasic('close');
+    $cont .= $tpl->getHtmlFrag('close', []);
     echo $cont;
     setFoot();
 }
