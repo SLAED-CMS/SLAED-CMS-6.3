@@ -1,0 +1,34 @@
+<div id="{{ id }}" {{{ hclass }}}>
+	<div class="comment">
+		<div class="com-left">
+			<div class="com-ava"><a title="{{ username }}" class="sl_avatar" style="background-image: url({{ avatar }});"></a></div>
+			<div class="min-rate">
+				<div class="rate-like-box">{{{ user_rate }}}</div>
+			</div>
+			<ul class="fp-user-info">
+				<li>{{{ rank }}}</li>
+				<li>{{{ rank_link }}}</li>
+			</ul>
+		</div>
+		<div class="com-right">
+			<div class="com-top">
+				<div class="com-edit">{{{ post_count }}}</div>
+				<div class="carg dropdown">
+					<a OnClick="HideShow(&#039;c-form-{{ id }}&#039;, &#039;blind&#039;, &#039;up&#039;, 500);"><b>{{ username }}</b></a>
+					<div id="c-form-{{ id }}" class="dropdown-form">
+						<ul class="list-text">
+							<li>{{{ group }}}</li>
+							<li>{{{ points }}}</li>
+							<li>{{{ regdate }}}</li>
+							<li>{{{ gender }}}</li>
+							<li>{{{ from }}}</li>
+							<li>{{{ warn }}}</li>
+						</ul>
+					</div>
+				</div>
+				<div class="carg">{{{ btn_edit }}}{{{ btn_personal }}}{{{ btn_pm }}}{{{ btn_profile }}}{{{ btn_web }}}{{{ btn_warn }}}{{{ btn_thank }}}<span class="cargs">{{{ date }}} {{{ ip }}}</span></div>
+			</div>
+			<div class="com-cont clrfix">{{{ text }}}<div class="sl_sig">{{{ sig }}}</div></div>
+		</div>
+	</div>
+</div>

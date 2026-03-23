@@ -1,0 +1,11 @@
+<form method="post" action="index.php?name={{ name }}">
+<input type="hidden" name="token" value="{{ token }}">
+<table class="sl_table_form">
+<tr><td>{{ lbl_name }}:</td><td><input type="text" name="sname" value="{{ sname }}" class="sl_field {{ style }}" placeholder="{{ ph_name }}" required></td></tr>
+<tr><td>{{ lbl_addr }}:</td><td><input type="text" name="sadr" value="{{ sadr }}" class="sl_field {{ style }}" placeholder="{{ ph_addr }}" required></td></tr>
+<tr><td>{{ lbl_phone }}:</td><td><input type="text" name="stel" value="{{ stel }}" class="sl_field {{ style }}" placeholder="{{ ph_phone }}" required></td></tr>
+<tr><td>{{ lbl_email }}:</td><td><input type="email" name="smail" value="{{ smail }}" class="sl_field {{ style }}" placeholder="{{ ph_email }}" required></td></tr>
+<tr><td>{{ lbl_site }}:</td><td><input type="url" name="sdom" value="{{ sdom }}" class="sl_field {{ style }}" placeholder="{{ ph_site }}"></td></tr>
+<tr><td>{{ lbl_msg }}:</td><td><textarea name="smsg" cols="65" rows="5" class="sl_field {{ style }}" placeholder="{{ lbl_msg }}">{{ smsg }}</textarea></td></tr>
+<tr><td colspan="2" class="sl_center"><input type="hidden" name="opi" value="1"><input type="hidden" name="op" value="kasse"><input type="submit" value="{{ submit_label }}" class="sl_but_blue"></td></tr>
+</table></form>
