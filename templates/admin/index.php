@@ -6,8 +6,8 @@
 
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
-function setTemplateHead($sub, $val = ''): string {
-    global $theme, $conf, $db, $blocks, $admin, $afile;
+function getAdminHeadVars(): array {
+    global $conf, $db, $admin, $afile;
     $langs = $menu = $blocks = $login = '';
     if (isAdmin()) {
         if ($conf['multilingual'] == 1) {
@@ -39,25 +39,14 @@ function setTemplateHead($sub, $val = ''): string {
     } else {
         $login = ($db->getSqlRowCount($db->getSqlQuery('SELECT 1 FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
     }
-    $value = ['{%langs%}' => $langs, '{%menu%}' => $menu, '{%blocks%}' => $blocks, '{%login%}' => $login, '{%theme%}' => $theme, '{%lang%}' => substr(_LOCALE, 0, 2)];
-    $value = is_array($val) ? array_merge($value, $val) : $value;
-    return str_replace(array_keys($value), array_values($value), $sub);
+    return [
+        '{%langs%}'  => $langs,
+        '{%menu%}'   => $menu,
+        '{%blocks%}' => $blocks,
+        '{%login%}'  => $login,
+    ];
 }
 
-function setTemplateBlock($tpl, $val = ''): string {
-    static $argc = null, $cach = '';
-    if ($argc !== $tpl) {
-        $argc = $tpl;
-        $cont = getThemeFile($argc);
-        if ($cont) $cach = file_get_contents($cont);
-    }
-    $value = ['{%close%}' => _OPCL];
-    $value = is_array($val) ? array_merge($value, $val) : $value;
-    return str_replace(array_keys($value), array_values($value), $cach);
-}
-
-function setTemplateFoot($sub, $val = ''): string {
-    $value = ['{%upper%}' => _PAGETOP];
-    $value = is_array($val) ? array_merge($value, $val) : $value;
-    return str_replace(array_keys($value), array_values($value), $sub);
+function getThemeFootVars(): array {
+    return ['{%upper%}' => _PAGETOP];
 }

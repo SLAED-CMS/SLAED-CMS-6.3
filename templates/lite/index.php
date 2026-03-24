@@ -128,51 +128,28 @@ function setTemplateForum() {
     return $cont;
 }
 
-function setTemplateHead($sub, $val = '') {
- global $theme, $user, $conf, $db;
-    if (is_user()) {
-        $uname = htmlspecialchars(substr($user[1], 0, 25));
-        $userinfo = getUserInfo();
-        $uavatar = (is_array($userinfo) && !empty($userinfo['avatar'])) ? $userinfo['avatar'] : '';
-        $avatar = ($uavatar && file_exists($conf['users']['adirectory'].'/'.$uavatar)) ? $uavatar : 'default/00.gif';
-        $cont = setTemplateBasic('login-logged', [
-            '{%title%}' => _ACCOUNT,
-            '{%avatar%}' => $conf['users']['adirectory'].'/'.$avatar,
-            '{%user%}' => $uname,
-            '{%logout%}' => _LOGOUT,
-        ]);
-    } else {
-        if ($conf['users']['enter'] == 1) {
-            $captcha = ($conf['gfx_chk'] == 2 || $conf['gfx_chk'] == 4 || $conf['gfx_chk'] == 5 || $conf['gfx_chk'] == 7) ? getCaptcha(2) : '';
-            $cont = setTemplateBasic('login', [
-                '{%login%}' => _LOGIN,
-                '{%nickname%}' => _NICKNAME,
-                '{%password%}' => _PASSWORD,
-                '{%captcha%}' => $captcha,
-                '{%token%}' => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                '{%lost%}' => _PASSFOR,
-                '{%register%}' => _REG,
-            ]);
-        } else {
-            $cont = setTemplateBasic('login-without', ['{%register%}' => _BREG]);
-        }
-    }
+function getThemeHeadVars(): array {
+    global $db, $conf;
     $mname = ($conf['name']) ? getModuleName($conf['name']) : '';
-    $fcat = (isset($_GET['cat'])) ? intval($_GET['cat']) : 0;
+    $fcat = isset($_GET['cat']) ? intval($_GET['cat']) : 0;
     $cname = ($fcat && !empty($conf['files'])) ? catlink($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
-    list($count) = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
-    $random = mt_rand(0, $count);
-    $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1');
-    list($fid, $title) = $db->getSqlRow($result);
-    $faq = '<a class="ico i_fav" href="index.php?name=faq&amp;op=view&amp;id='.$fid.'" title="'.$title.'">'.$title.'</a>';
-    $value = ['{%login%}' => $cont, '{%theme%}' => $theme, '{%lang%}' => substr(_LOCALE, 0, 2), '{%sitename%}' => $conf['sitename'], '{%logo%}' => $conf['site_logo'], '{%homeurl%}' => $conf['homeurl'], '{%slogan%}' => $conf['slogan'], '{%home%}' => _HOME, '{%account%}' => _ACCOUNT, '{%album%}' => _ALBUM, '{%alinks%}' => _A_LINKS, '{%feedback%}' => _FEEDBACK, '{%content%}' => _CONTENT, '{%faq%}' => _FAQ, '{%files%}' => _FILES, '{%forum%}' => _FORUM, '{%help%}' => _HELP, '{%radio%}' => _RADIO, '{%jokes%}' => _JOKES, '{%links%}' => _LINKS, '{%media%}' => _MEDIA, '{%users%}' => _USERS, '{%news%}' => _NEWS, '{%order%}' => _ORDER, '{%pages%}' => _PAGES, '{%recommend%}' => _RECOMMEND, '{%rss%}' => _RSS, '{%search%}' => _SEARCH, '{%shop%}' => _SHOP, '{%topusers%}' => _TOPUSERS, '{%voting%}' => _VOTING, '{%favorites%}' => _S_FAVORITEN, '{%homepage%}' => _S_STARTSEITE, '{%season%}' => setTemplateSeason(), '{%modul%}' => $conf['name'], '{%menu%}' => setTemplateMenu(), '{%modulname%}' => $mname, '{%catname%}' => $cname, '{%faqtitle%}' => $faq];
-    $value = is_array($val) ? array_merge($value, $val) : $value;
-    return str_replace(array_keys($value), array_values($value), $sub);
+    [$count] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB."_faq WHERE time <= now() AND status != '0'"));
+    $random = mt_rand(0, (int)$count);
+    [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));
+    $ftitle = htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8');
+    $faq = '<a class="ico i_fav" href="index.php?name=faq&amp;op=view&amp;id='.(int)$fid.'" title="'.$ftitle.'">'.$ftitle.'</a>';
+    return [
+        '{%season%}'    => setTemplateSeason(),
+        '{%modul%}'     => $conf['name'],
+        '{%menu%}'      => setTemplateMenu(),
+        '{%modulname%}' => $mname,
+        '{%catname%}'   => $cname,
+        '{%faqtitle%}'  => $faq,
+    ];
 }
 
-function setTemplateFoot($sub, $val = '') {
- global $theme, $user, $conf;
-    $cont = '';
+function getThemeFootVars(): array {
+    global $conf;
     $contactblock = '<div id="block-feedback" class="dropdown">
         <a OnClick="HideShow(\'f-form\', \'slide\', \'right\', 500);" title="'._FEEDBACK.'" class="btn-feedback"><b class="font">'._FEEDBACK.'</b></a>
         <form id="f-form" class="dropdown-form" action="index.php?name=contact" method="post">
@@ -192,7 +169,8 @@ function setTemplateFoot($sub, $val = '') {
             </ul>
         </form>
     </div>';
-    $value = ['{%login%}' => $cont, '{%theme%}' => $theme, '{%sitename%}' => $conf['sitename'], '{%logo%}' => $conf['site_logo'], '{%homeurl%}' => $conf['homeurl'], '{%slogan%}' => $conf['slogan'], '{%home%}' => _HOME, '{%account%}' => _ACCOUNT, '{%album%}' => _ALBUM, '{%alinks%}' => _A_LINKS, '{%feedback%}' => _FEEDBACK, '{%content%}' => _CONTENT, '{%faq%}' => _FAQ, '{%files%}' => _FILES, '{%forum%}' => _FORUM, '{%help%}' => _HELP, '{%radio%}' => _RADIO, '{%jokes%}' => _JOKES, '{%links%}' => _LINKS, '{%media%}' => _MEDIA, '{%users%}' => _USERS, '{%news%}' => _NEWS, '{%order%}' => _ORDER, '{%pages%}' => _PAGES, '{%recommend%}' => _RECOMMEND, '{%rss%}' => _RSS, '{%search%}' => _SEARCH, '{%shop%}' => _SHOP, '{%topusers%}' => _TOPUSERS, '{%voting%}' => _VOTING, '{%favorites%}' => _S_FAVORITEN, '{%homepage%}' => _S_STARTSEITE, '{%forumblock%}' => setTemplateForum(), '{%contactblock%}' => $contactblock];
-    $value = is_array($val) ? array_merge($value, $val) : $value;
-    return str_replace(array_keys($value), array_values($value), $sub);
+    return [
+        '{%forumblock%}'   => setTemplateForum(),
+        '{%contactblock%}' => $contactblock,
+    ];
 }

@@ -27,7 +27,7 @@ function getAdminMenu(string $url, string $title, string $image, string $class =
 }
 
 function getAdminPanelBlocks(): string {
- global $panel, $afile, $conf;
+ global $panel, $afile, $conf, $tpl;
     if (!$panel) {
         $cont = '';
         if (isAdmin(true)) {
@@ -42,7 +42,7 @@ function getAdminPanelBlocks(): string {
                     );
                 }
             }
-            $block = setTemplateBlock('block-left', ['{%title%}' => _ADMIN, '{%content%}' => $cont, '{%id%}' => '1']);
+            $block = $tpl->getHtmlFrag('block-left', ['title' => _ADMIN, 'content' => $cont, 'id' => '1', 'close' => _OPCL]);
             $cont = '';
         }
         foreach ($conf['modules'] as $name => $mod) {
@@ -62,7 +62,7 @@ function getAdminPanelBlocks(): string {
                 }
             }
         }
-        $block .= setTemplateBlock('block-left', ['{%title%}' => _MODULES, '{%content%}' => $cont, '{%id%}' => '2']);
+        $block .= $tpl->getHtmlFrag('block-left', ['title' => _MODULES, 'content' => $cont, 'id' => '2', 'close' => _OPCL]);
         return $block;
     }
     return '';

@@ -63,7 +63,9 @@ if (empty($go)) {
                 }
                 if ($gname) $info .= _ADDITIONALYGRP.': '.$gname;
                 setHead();
-                echo setTemplateBasic('title', ['{%title%}' => _ACCESSDENIED]).setTemplateWarning('warn', ['time' => '15', 'url' => '?name=account&op=newuser', 'id' => 'info', 'text' => $info]);
+                $meta = '<meta http-equiv="refresh" content="15; url=index.php?name=account&op=newuser">';
+                echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED])
+                    .$tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => $meta, 'type' => 'info', 'is_warn' => false]);
                 setFoot();
                 exit;
             } elseif ($view == 2 && is_moder($name) && file_exists($path)) {
@@ -71,7 +73,9 @@ if (empty($go)) {
                 require_once $path;
             } elseif ($view == 2 && !is_moder($name)) {
                 setHead();
-                echo setTemplateBasic('title', ['{%title%}' => _ACCESSDENIED]).setTemplateWarning('warn', ['time' => '5', 'url' => '', 'id' => 'info', 'text' => _MODULESADMINS]);
+                $meta = '<meta http-equiv="refresh" content="5; url=index.php">';
+                echo $tpl->getHtmlFrag('title', ['title' => _ACCESSDENIED])
+                    .$tpl->getHtmlFrag('alert', ['text' => _MODULESADMINS, 'meta' => $meta, 'type' => 'info', 'is_warn' => false]);
                 setFoot();
                 exit;
             } else {
@@ -99,7 +103,7 @@ if (empty($go)) {
                 exit;
             } else {
                 setHead();
-                echo setTemplateWarning('warn', ['text' => _HOMEPROBLEMUSER, 'url' => '', 'time' => 0, 'id' => 'warn']);
+                echo $tpl->getHtmlFrag('alert', ['text' => _HOMEPROBLEMUSER, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
                 setFoot();
                 exit;
             }

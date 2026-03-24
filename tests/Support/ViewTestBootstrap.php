@@ -91,6 +91,3 @@ if (!class_exists('Template', false)) {
     require_once BASE_DIR.'/core/classes/template.php';
 }
 
-if (!function_exists('setTemplateHead')) {
-    require_once BASE_DIR.'/core/template.php';
-}

@@ -113,10 +113,8 @@ if (defined('MODULE_FILE')) {
 
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
-require_once BASE_DIR.'/core/template.php';
 require_once BASE_DIR.'/core/classes/template.php';
 $tpl = defined('ADMIN_FILE') ? new Template('admin') : new Template($theme);
-$GLOBALS['tpl'] = $tpl;
 
 # Returns a normalized 5-part cron schedule or an empty string when invalid
 function getSchedulerSchedule(array|string $job): string {
@@ -509,6 +507,7 @@ function getBlocks(string $side, string $fly = ''): void {
     $pos = strtolower($side[0]);
     $side = $pos;
     if (!isset($barr)) {
+        $barr = [];
         $result = $db->getSqlQuery('SELECT id, bkey, title, content, url, bfile, view, expire, action, bpos, which FROM '.PREFIX_DB."_blocks WHERE status = '1' ".$querylang.' ORDER BY weight ASC', $qlang_params);
         while(list($bid, $bkey, $title, $content, $url, $bfile, $view, $expire, $action, $bpos, $which) = $db->getSqlRow($result)) {
             $bid = intval($bid);
@@ -792,8 +791,9 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
             $src = preg_replace_callback(
                 '/\[code\](.*?)\[\/code\]/si',
                 function(array $m): string {
+                    global $tpl;
                     $txt  = str_replace('?', '&#063;', (string)$m[1]);
-                    $html = $GLOBALS['tpl']->getHtmlFrag('code', ['title' => _CODE, 'content' => $this->filterEsc($txt)]);
+                    $html = $tpl->getHtmlFrag('code', ['title' => _CODE, 'content' => $this->filterEsc($txt)]);
                     return $this->addStash((string)$html);
                 },
                 $src
@@ -822,8 +822,9 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                 $src = preg_replace_callback(
                     '/\[quote\](.*?)\[\/quote\]/si',
                     function(array $m) use ($safe): string {
+                        global $tpl;
                         $txt  = $this->filterNest($m[1], $safe);
-                        $html = $GLOBALS['tpl']->getHtmlFrag('quote', ['title' => _QUOTE, 'text' => $txt]);
+                        $html = $tpl->getHtmlFrag('quote', ['title' => _QUOTE, 'text' => $txt]);
                         return $this->addStash((string)$html);
                     },
                     $src
@@ -835,9 +836,10 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                 $src = preg_replace_callback(
                     '/\[hide\](.*?)\[\/hide\]/si',
                     function(array $m) use ($safe): string {
+                        global $tpl;
                         $show = (defined('ADMIN_FILE') || is_user());
                         $txt  = $show ? $this->filterNest($m[1], $safe) : (string)_HIDETEXT;
-                        $html = $GLOBALS['tpl']->getHtmlFrag('hide', ['title' => _HIDE, 'text' => $txt]);
+                        $html = $tpl->getHtmlFrag('hide', ['title' => _HIDE, 'text' => $txt]);
                         return $this->addStash((string)$html);
                     },
                     $src
@@ -1691,187 +1693,213 @@ function getAdminModuleNames(string $modules): array {
     return array_values(array_unique($list));
 }
 
+# Track the current visitor session and return derived tracking context
+function updateSessionTrack(int $ctime, string $request, string $name): array {
+    global $db, $conf, $user, $admin;
+    $ip = getIp();
+    $url = urlencode($request);
+    $guest = 0;
+    $uname = '';
+    if (isAdmin()) {
+        $uname = filterText(substr($admin[1], 0, 25), 1);
+        $guest = 3;
+    } elseif (!defined('ADMIN_FILE') && is_user()) {
+        $uname = filterText(substr($user[1], 0, 25), 1);
+        $guest = 2;
+    } elseif (!defined('ADMIN_FILE') && !is_user()) {
+        $bname = is_bot();
+        if ($bname) {
+            $uname = filterText(substr($bname, 0, 25), 1);
+            $guest = 1;
+        } else {
+            $uname = $ip;
+            $guest = 0;
+        }
+    }
+    $sessf = COUNTER_DIR.'/session.log';
+    $sesst = (file_exists($sessf) && filesize($sessf) != 0) ? file_get_contents($sessf) : 0;
+    $past = $ctime - intval($conf['sess_t']);
+    if ($sesst < $past) {
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE time < :past', ['past' => $past]);
+        if (file_exists($sessf)) unlink($sessf);
+        $fp = fopen($sessf, 'wb');
+        fwrite($fp, $ctime);
+        fclose($fp);
+    }
+    if ($uname !== '') {
+        if (!defined('ADMIN_FILE') && is_user()) {
+            $uagent = getAgent();
+            $uid = intval($user[0]);
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
+        }
+        $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session WHERE uname = :uname', ['uname' => $uname]));
+        if ($num >= 1) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_session SET time = :time, ip = :ip, guest = :guest, modul = :modul, url = :url WHERE uname = :uname', ['time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'modul' => $name, 'url' => $url, 'uname' => $uname]);
+        } else {
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_session (uname, time, ip, guest, modul, url) VALUES (:uname, :time, :ip, :guest, :modul, :url)', ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'modul' => $name, 'url' => $url]);
+        }
+    }
+    return ['uname' => $uname, 'guest' => $guest];
+}
+
+# Track the current referer hit and optional auto-link attribution
+function updateRefererTrack(int $ctime, string $request, string $uname): void {
+    global $db, $conf, $user;
+    $referer = getReferer();
+    if (!$referer) return;
+    $referf = COUNTER_DIR.'/referer.log';
+    $refert = (file_exists($referf) && filesize($referf) != 0) ? file_get_contents($referf) : 0;
+    $past = $ctime - intval($conf['referers']['refer_t']);
+    if ($refert < $past) {
+        $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = :lid', ['lid' => 0]);
+        if (file_exists($referf)) unlink($referf);
+        $fp = fopen($referf, 'wb');
+        fwrite($fp, $ctime);
+        fclose($fp);
+    }
+    $ip = getIp();
+    $uid = is_user() ? intval($user[0]) : 0;
+    $link = filterText($request);
+    $args = ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => 0];
+    if (is_active('auto_links')) {
+        [$exist] = $db->getSqlRow($db->getSqlQuery('SELECT ip FROM '.PREFIX_DB.'_referer WHERE ip = :ip AND lid != :lid', ['ip' => $ip, 'lid' => 0]));
+        if ($exist) {
+            if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) {
+                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', $args);
+            }
+            return;
+        }
+        $islink = 0;
+        $slink = '';
+        $result = $db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links');
+        while ([$slink] = $db->getSqlRow($result)) {
+            if (preg_match('#'.$slink.'#i', $referer)) {
+                $islink = 1;
+                break;
+            }
+        }
+        if ($islink) {
+            $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = hits + 1 WHERE url = :url', ['url' => $slink]);
+            [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $slink]));
+            $args['lid'] = $lid;
+            $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', $args);
+            return;
+        }
+    }
+    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) {
+        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', $args);
+    }
+}
+
+# Track daily statistics and rotate counter files when periods change
+function updateStatsTrack(string $request, int $guest): void {
+    global $conf;
+    $sreferer = getReferer();
+    $sreqhom = filterText($request);
+    $spath = COUNTER_DIR.'/';
+    $slog = $spath.'statistic.log';
+    $safeReadLines = static function(string $file) {
+        if (!is_file($file) || !is_readable($file)) return false;
+        set_error_handler(static function(): bool {
+            return true;
+        });
+        try {
+            $lines = file($file);
+        } finally {
+            restore_error_handler();
+        }
+        return $lines ?: false;
+    };
+    $safeOpen = static function(string $file, string $mode) {
+        set_error_handler(static function(): bool {
+            return true;
+        });
+        try {
+            $handle = fopen($file, $mode);
+        } finally {
+            restore_error_handler();
+        }
+        return $handle ?: false;
+    };
+    $sdate = $safeReadLines($slog);
+    if ($sdate) {
+        $con = explode('|', trim($sdate[0]));
+        if (date('d.m.Y') != $con[0]) {
+            $fpd = $safeOpen($spath.'days.log', 'ab');
+            if ($fpd && flock($fpd, LOCK_EX)) {
+                fwrite($fpd, $sdate[0].PHP_EOL);
+                fflush($fpd);
+                flock($fpd, LOCK_UN);
+            }
+            if ($fpd) fclose($fpd);
+            if (file_exists($spath.'statistic.log')) unlink($spath.'statistic.log');
+            if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
+            if (file_exists($spath.'user.log')) unlink($spath.'user.log');
+            if (substr($con[0], 3) != date('m.Y')) {
+                $month = date('Y-m', strtotime('-1 month'));
+                $sdir = $spath.'statistic';
+                if (!is_dir($sdir)) mkdir($sdir, 0755, true);
+                rename($spath.'days.log', $sdir.'/statistic_'.$month.'.log');
+                if (file_exists($spath.'days.log')) unlink($spath.'days.log');
+            }
+            $ahits = ($con[3] ?? 0) ? (($con[3] ?? 0) + 1) : '1';
+            $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
+            $srefer = ($sreferer) ? '1' : '0';
+            $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
+            $wc = date('d.m.Y').'|0|1|'.$ahits.'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
+        } else {
+            $check = checkUniqueIp();
+            $checku = check_user();
+            $shost = ($check) ? intval(($con[1] ?? 0) + 1) : ($con[1] ?? 0);
+            $sengine = ($check && $conf['session'] && $guest == 1) ? intval(($con[4] ?? 0) + 1) : ($con[4] ?? 0);
+            $srefer = ($check && $sreferer) ? intval(($con[5] ?? 0) + 1) : ($con[5] ?? 0);
+            $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? intval(($con[6] ?? 0) + 1) : ($con[6] ?? 0);
+            $suser = ($checku && $conf['session'] && $guest == 2) ? intval(($con[7] ?? 0) + 1) : ($con[7] ?? 0);
+            $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
+        }
+        $fps = $safeOpen($spath.'statistic.log', 'wb');
+        if ($fps && flock($fps, LOCK_EX)) {
+            ftruncate($fps, 0);
+            fwrite($fps, $wc);
+            fflush($fps);
+            flock($fps, LOCK_UN);
+        }
+        if ($fps) fclose($fps);
+        return;
+    }
+    if (!file_exists($slog) || filemtime($slog) < strtotime('today midnight')) {
+        if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
+        if (file_exists($spath.'user.log')) unlink($spath.'user.log');
+        $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
+        $srefer = ($sreferer) ? '1' : '0';
+        $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
+        $wc = date('d.m.Y').'|0|1|1|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
+        $fps = $safeOpen($slog, 'wb');
+        if ($fps && flock($fps, LOCK_EX)) {
+            fwrite($fps, $wc);
+            fflush($fps);
+            flock($fps, LOCK_UN);
+        }
+        if ($fps) fclose($fps);
+    }
+}
+
 # Format head
 function setHead(array $seo = []): void {
-    global $db, $home, $index, $conf, $user, $admin, $name, $theme, $op;
+    global $home, $index, $conf, $user, $name, $theme, $op, $tpl;
     $name = $name ?? '';
     $ctime = time();
     $request = getenv('REQUEST_URI');
     if ($conf['session']) {
-        $ip = getIp();
-        $url = urlencode($request);
+        $track = updateSessionTrack($ctime, $request, $name);
+        $uname = $track['uname'];
+        $guest = $track['guest'];
+    } else {
+        $uname = '';
         $guest = 0;
-        if (isAdmin()) {
-            $uname = filterText(substr($admin[1], 0, 25), 1);
-            $guest = 3;
-        } elseif (!defined('ADMIN_FILE') && is_user()) {
-            $uname = filterText(substr($user[1], 0, 25), 1);
-            $guest = 2;
-        } elseif (!defined('ADMIN_FILE') && !is_user()) {
-            $bname = is_bot();
-            if ($bname) {
-                $uname = filterText(substr($bname, 0, 25), 1);
-                $guest = 1;
-            } else {
-                $uname = $ip;
-                $guest = 0;
-            }
-        }
-        $sess_f = 'config/counter/sess.txt';
-        $sess_t = (file_exists($sess_f) && filesize($sess_f) != 0) ? file_get_contents($sess_f) : 0;
-        $past = $ctime - intval($conf['sess_t']);
-        if ($sess_t < $past) {
-            $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE time < :past', ['past' => $past]);
-            if (file_exists($sess_f)) unlink($sess_f);
-            $fp = fopen($sess_f, 'wb');
-            fwrite($fp, $ctime);
-            fclose($fp);
-        }
-        if (!empty($uname)) {
-            if (!defined('ADMIN_FILE') && is_user()) {
-                $uagent = getAgent();
-                $uid= intval($user[0]);
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_users SET ip = :ip, lastvis = NOW(), agent = :agent WHERE id = :uid', ['ip' => $ip, 'agent' => $uagent, 'uid' => $uid]);
-            }
-            $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_session WHERE uname = :uname', ['uname' => $uname]));
-            if ($num >= 1) {
-                $db->getSqlQuery('UPDATE '.PREFIX_DB.'_session SET time = :time, ip = :ip, guest = :guest, modul = :modul, url = :url WHERE uname = :uname', [':time' => $ctime, ':ip' => $ip, ':guest' => $guest, ':modul' => $name, ':url' => $url, ':uname' => $uname]);
-            } else {
-                $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_session (uname, time, ip, guest, modul, url) VALUES (:uname, :time, :ip, :guest, :modul, :url)', ['uname' => $uname, 'time' => $ctime, 'ip' => $ip, 'guest' => $guest, 'modul' => $name, 'url' => $url]);
-            }
-        }
     }
-    if ($conf['referers']['refer']) {
-        $referer = getReferer();
-        if ($referer) {
-            $refer_f = 'config/counter/refer.txt';
-            $refer_t = (file_exists($refer_f) && filesize($refer_f) != 0) ? file_get_contents($refer_f) : 0;
-            $past = $ctime - intval($conf['referers']['refer_t']);
-            if ($refer_t < $past) {
-                $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_referer WHERE lid = :lid', ['lid' => 0]);
-                unlink($refer_f);
-                $fp = fopen($refer_f, 'wb');
-                fwrite($fp, $ctime);
-                fclose($fp);
-            }
-            $ip = getIp();
-            $uid = is_user() ? intval($user[0]) : 0;
-            $link = filterText($request);
-            if (is_active('auto_links')) {
-                list($exist) = $db->getSqlRow($db->getSqlQuery('SELECT ip FROM '.PREFIX_DB.'_referer WHERE ip = :ip AND lid != :lid', ['ip' => $ip, 'lid' => 0]));
-                if ($exist) {
-                    if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => 0]);
-                } else {
-                    $result = $db->getSqlQuery('SELECT url FROM '.PREFIX_DB.'_auto_links');
-                    while(list($slink) = $db->getSqlRow($result)) {
-                        if (preg_match('#'.$slink.'#i', $referer)) {
-                            $islink = 1;
-                            break;
-                        } else {
-                            $islink = 0;
-                        }
-                    }
-                    if ($islink) {
-                        $db->getSqlQuery('UPDATE '.PREFIX_DB.'_auto_links SET hits = hits + 1 WHERE url = :url', ['url' => $slink]);
-                        list($lid) = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_auto_links WHERE url = :url', ['url' => $slink]));
-                        $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => $lid]);
-                    } else {
-                        if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => 0]);
-                    }
-                }
-            } else {
-                if ($conf['referers']['referb'] != 1 || ($conf['referers']['referb'] == 1 && from_bot())) $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_referer (uid, name, ip, referer, url, time, lid) VALUES (:uid, :name, :ip, :referer, :url, NOW(), :lid)', ['uid' => $uid, 'name' => $uname, 'ip' => $ip, 'referer' => $referer, 'url' => $link, 'lid' => 0]);
-            }
-        }
-    }
-    if ($conf['statistic']['stat']) {
-        $sreferer = getReferer();
-        $sreqhom = filterText($request);
-        $spath = COUNTER_DIR.'/';
-        $slog = $spath.'statistic.log';
-        $safeReadLines = static function(string $file) {
-            if (!is_file($file) || !is_readable($file)) return false;
-            set_error_handler(static function(): bool {
-                return true;
-            });
-            try {
-                $lines = file($file);
-            } finally {
-                restore_error_handler();
-            }
-            return $lines ?: false;
-        };
-        $safeOpen = static function(string $file, string $mode) {
-            set_error_handler(static function(): bool {
-                return true;
-            });
-            try {
-                $handle = fopen($file, $mode);
-            } finally {
-                restore_error_handler();
-            }
-            return $handle ?: false;
-        };
-        $sdate = $safeReadLines($slog);
-        if ($sdate) {
-            $con = explode('|', trim($sdate[0]));
-            if (date('d.m.Y') != $con[0]) {
-                $fpd = $safeOpen($spath.'days.log', 'ab');
-                if ($fpd && flock($fpd, LOCK_EX)) {
-                    fwrite($fpd, $sdate[0].PHP_EOL);
-                    fflush($fpd);
-                    flock($fpd, LOCK_UN);
-                }
-                if ($fpd) fclose($fpd);
-                if (file_exists($spath.'statistic.log')) unlink($spath.'statistic.log');
-                if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
-                if (file_exists($spath.'user.log')) unlink($spath.'user.log');
-                if (substr($con[0], 3) != date('m.Y')) {
-                    $month = date('Y-m', strtotime('-1 month'));
-                    $sdir = $spath.'statistic';
-                    if (!is_dir($sdir)) mkdir($sdir, 0755, true);
-                    rename($spath.'days.log', $sdir.'/statistic_'.$month.'.log');
-                    if (file_exists($spath.'days.log')) unlink($spath.'days.log');
-                }
-                $ahits = ($con[3] ?? 0) ? (($con[3] ?? 0) + 1) : '1';
-                $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
-                $srefer = ($sreferer) ? '1' : '0';
-                $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
-                $wc = date('d.m.Y').'|0|1|'.$ahits.'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
-            } else {
-                $check = checkUniqueIp();
-                $checku = check_user();
-                $shost = ($check) ? intval(($con[1] ?? 0) + 1) : ($con[1] ?? 0);
-                $sengine = ($check && $conf['session'] && $guest == 1) ? intval(($con[4] ?? 0) + 1) : ($con[4] ?? 0);
-                $srefer = ($check && $sreferer) ? intval(($con[5] ?? 0) + 1) : ($con[5] ?? 0);
-                $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? intval(($con[6] ?? 0) + 1) : ($con[6] ?? 0);
-                $suser = ($checku && $conf['session'] && $guest == 2) ? intval(($con[7] ?? 0) + 1) : ($con[7] ?? 0);
-                $wc = $con[0].'|'.$shost.'|'.intval(($con[2] ?? 0) + 1).'|'.intval(($con[3] ?? 0) + 1).'|'.$sengine.'|'.$srefer.'|'.$reqhom.'|'.$suser;
-            }
-            $fps = $safeOpen($spath.'statistic.log', 'wb');
-            if ($fps && flock($fps, LOCK_EX)) {
-                ftruncate($fps, 0);
-                fwrite($fps, $wc);
-                fflush($fps);
-                flock($fps, LOCK_UN);
-            }
-            if ($fps) fclose($fps);
-        } elseif (!file_exists($slog) || filemtime($slog) < strtotime('today midnight')) {
-            if (file_exists($spath.'ips.log')) unlink($spath.'ips.log');
-            if (file_exists($spath.'user.log')) unlink($spath.'user.log');
-            $sengine = ($conf['session'] && $guest == 1) ? '1' : '0';
-            $srefer = ($sreferer) ? '1' : '0';
-            $reqhom = ($sreqhom == '/' || $sreqhom == '/index.html' || $sreqhom == '/index.php') ? '1' : '0';
-            $wc = date('d.m.Y').'|0|1|1|'.$sengine.'|'.$srefer.'|'.$reqhom.'|0';
-            $fps = $safeOpen($slog, 'wb');
-            if ($fps && flock($fps, LOCK_EX)) {
-                fwrite($fps, $wc);
-                fflush($fps);
-                flock($fps, LOCK_UN);
-            }
-            if ($fps) fclose($fps);
-        }
-    }
+    if ($conf['referers']['refer']) updateRefererTrack($ctime, $request, $uname);
+    if ($conf['statistic']['stat']) updateStatsTrack($request, $guest);
     if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
         ob_start();
         $url = str_replace('/', '', $request);
@@ -1989,17 +2017,118 @@ function setHead(array $seo = []): void {
         $js = '<script>window.addEventListener("load",function(){window.setTimeout(function(){fetch("'.$surl.'",{credentials:"same-origin"});},1);});</script>';
         $head = preg_replace('#<body(.*?)>#si', '<body$1>'.$js, $head, 1);
     }
-    echo setTemplateHead($head);
+    $vars = [
+        '{%theme%}'     => $theme,
+        '{%lang%}'      => substr(_LOCALE, 0, 2),
+        '{%sitename%}'  => $conf['sitename'] ?? '',
+        '{%logo%}'      => $conf['site_logo'] ?? '',
+        '{%homeurl%}'   => $conf['homeurl'] ?? '',
+        '{%slogan%}'    => $conf['slogan'] ?? '',
+        '{%home%}'      => _HOME,
+        '{%account%}'   => _ACCOUNT,
+        '{%album%}'     => _ALBUM,
+        '{%alinks%}'    => _A_LINKS,
+        '{%feedback%}'  => _FEEDBACK,
+        '{%content%}'   => _CONTENT,
+        '{%faq%}'       => _FAQ,
+        '{%files%}'     => _FILES,
+        '{%forum%}'     => _FORUM,
+        '{%help%}'      => _HELP,
+        '{%radio%}'     => _RADIO,
+        '{%jokes%}'     => _JOKES,
+        '{%links%}'     => _LINKS,
+        '{%media%}'     => _MEDIA,
+        '{%users%}'     => _USERS,
+        '{%news%}'      => _NEWS,
+        '{%order%}'     => _ORDER,
+        '{%pages%}'     => _PAGES,
+        '{%recommend%}' => _RECOMMEND,
+        '{%rss%}'       => _RSS,
+        '{%search%}'    => _SEARCH,
+        '{%shop%}'      => _SHOP,
+        '{%topusers%}'  => _TOPUSERS,
+        '{%voting%}'    => _VOTING,
+        '{%favorites%}' => _S_FAVORITEN,
+        '{%homepage%}'  => _S_STARTSEITE,
+    ];
+    if (!defined('ADMIN_FILE')) {
+        if (is_user()) {
+            $uname = htmlspecialchars(substr((string)$user[1], 0, 25), ENT_QUOTES, 'UTF-8');
+            $userinfo = getUserInfo();
+            $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.($userinfo['avatar'] ?? '');
+            $avatar = (!empty($userinfo['avatar']) && is_file($avpath)) ? $userinfo['avatar'] : 'default/00.gif';
+            $vars['{%login%}'] = $tpl->getHtmlFrag('login-logged', [
+                'title'  => _ACCOUNT,
+                'avatar' => $conf['users']['adirectory'].'/'.$avatar,
+                'user'   => $uname,
+                'logout' => _LOGOUT,
+            ]);
+        } elseif ($conf['users']['enter']) {
+            $gfx = (int)($conf['gfx_chk'] ?? 0);
+            $captcha = in_array($gfx, [2, 4, 5, 7], true) ? getCaptcha(2) : '';
+            $vars['{%login%}'] = $tpl->getHtmlFrag('login', [
+                'login'    => _LOGIN,
+                'nickname' => _NICKNAME,
+                'password' => _PASSWORD,
+                'captcha'  => $captcha,
+                'token'    => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+                'lost'     => _PASSFOR,
+                'register' => _REG,
+            ]);
+        } else {
+            $vars['{%login%}'] = $tpl->getHtmlFrag('login-without', ['register' => _BREG]);
+        }
+        if (function_exists('getThemeHeadVars')) $vars += getThemeHeadVars();
+    } elseif (function_exists('getAdminHeadVars')) {
+        $vars += getAdminHeadVars();
+    }
+    echo strtr($head, $vars);
     unset($head);
     if (!defined('ADMIN_FILE')) update_points(1);
 }
 
 # Format foot
 function setFoot(): void {
- global $home, $name, $index, $conf, $do_gzip_compress;
+ global $home, $name, $index, $conf;
     $index = addblocks($index);
     $index = (!defined('ADMIN_FILE') && !empty($conf['script_b'])) ? str_replace('{%SCRIPT%}', doScript(), $index) : str_replace('{%SCRIPT%}', '', $index);
-    echo setTemplateFoot($index);
+    $vars = [
+        '{%theme%}'     => getTheme(),
+        '{%lang%}'      => substr(_LOCALE, 0, 2),
+        '{%sitename%}'  => $conf['sitename'] ?? '',
+        '{%logo%}'      => $conf['site_logo'] ?? '',
+        '{%homeurl%}'   => $conf['homeurl'] ?? '',
+        '{%slogan%}'    => $conf['slogan'] ?? '',
+        '{%home%}'      => _HOME,
+        '{%account%}'   => _ACCOUNT,
+        '{%album%}'     => _ALBUM,
+        '{%alinks%}'    => _A_LINKS,
+        '{%feedback%}'  => _FEEDBACK,
+        '{%content%}'   => _CONTENT,
+        '{%faq%}'       => _FAQ,
+        '{%files%}'     => _FILES,
+        '{%forum%}'     => _FORUM,
+        '{%help%}'      => _HELP,
+        '{%radio%}'     => _RADIO,
+        '{%jokes%}'     => _JOKES,
+        '{%links%}'     => _LINKS,
+        '{%media%}'     => _MEDIA,
+        '{%users%}'     => _USERS,
+        '{%news%}'      => _NEWS,
+        '{%order%}'     => _ORDER,
+        '{%pages%}'     => _PAGES,
+        '{%recommend%}' => _RECOMMEND,
+        '{%rss%}'       => _RSS,
+        '{%search%}'    => _SEARCH,
+        '{%shop%}'      => _SHOP,
+        '{%topusers%}'  => _TOPUSERS,
+        '{%voting%}'    => _VOTING,
+        '{%favorites%}' => _S_FAVORITEN,
+        '{%homepage%}'  => _S_STARTSEITE,
+        '{%login%}'     => '',
+    ];
+    if (function_exists('getThemeFootVars')) $vars += getThemeFootVars();
+    echo strtr($index, $vars);
     unset($index);
     if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
         $dir = 'config/cache/';
@@ -2497,8 +2626,8 @@ function setArticleNumbers(string $name, string $mod, int $limit, string $url, s
 }
 
 # Generation of page numbers
-function setPageNumbers(string $tpl, string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
-    global $afile;
+function setPageNumbers(string $frag, string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
+    global $afile, $tpl;
     $num  = $num ?: getVar('get', $n, 'num', 1);
     $nnum = $maxpg + 1;
     if ($pages > 1) {
@@ -2528,8 +2657,7 @@ function setPageNumbers(string $tpl, string $mod, int $count, int $pages, int $l
             $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
         }
         $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $limit, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
-        $out = $GLOBALS['tpl']->getHtmlFrag($tpl, $data);
-        return ($out !== '') ? $out : setTemplateBasic($tpl, ['{%overall%}' => _OVERALL, '{%count%}' => $count, '{%by%}' => _BY, '{%pages%}' => $pages, '{%page_s%}' => _PAGE_S, '{%page%}' => $limit, '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
+        return $tpl->getHtmlFrag($frag, $data);
     }
     return '';
 }
@@ -2610,9 +2738,10 @@ function setNaviLower(string $mod): string {
 
 # Load configuration file or directory and return chmod warning if needed
 function checkPerms(string $fp): string {
+    global $tpl;
     $perm = is_dir($fp) ? 777 : 666;
     $info = checkFileChmod($fp, $perm);
-    return ($info !== '') ? setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => $info]) : '';
+    return ($info !== '') ? $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'warn', 'is_warn' => true]) : '';
 }
 
 # Check file chmod permission and try to fix it (Linux only)
@@ -3115,10 +3244,10 @@ function getVoting(int $id = 0, string $votid = ''): string {
             $formend = (!$rate) ? '</form>' : '';
             $cont .= $tpl->getHtmlFrag('voting-close', ['admin' => $admin, 'post' => $post, 'polls' => $polls, 'votes' => $votes, 'comm' => $comm, 'formend' => $formend]);
         } else {
-            $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _VCLINFO]);
+            $cont = $tpl->getHtmlFrag('alert', ['text' => _VCLINFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
     } else {
-        $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
     return $cont;
 }
@@ -3319,7 +3448,7 @@ function getSeoUrl(array $params): string {
         }
         return implode($sep, $segments);
     }
-    return 'index.php?'.implode('&amp;', $query);
+    return 'index.php?'.implode('&', $query);
 }
 
 function filterSlug(string $text, string $sep = '-'): string {
@@ -3725,7 +3854,7 @@ function user_sainfo(string $id = ''): string {
 
 # Format admin block
 function adminblock(): string {
- global $db, $afile;
+ global $db, $afile, $tpl;
     if (isAdmin()) {
         $title = '';
         $content = '';
@@ -3736,7 +3865,8 @@ function adminblock(): string {
             $cont .= '<hr>'.$content;
         }
         $a_title = ($title) ? $title : _ADMINS;
-        return setTemplateBlock('block-left', ['{%title%}' => $a_title, '{%content%}' => $cont, '{%id%}' => '7']).setTemplateBlock('block-left', ['{%title%}' => _WHO, '{%content%}' => '<div id="repsainfo">'.user_sainfo(1).'</div>', '{%id%}' => '8']);
+        return $tpl->getHtmlFrag('block-left', ['title' => $a_title, 'content' => $cont, 'id' => '7', 'close' => _OPCL])
+            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => '<div id="repsainfo">'.user_sainfo(1).'</div>', 'id' => '8', 'close' => _OPCL]);
     }
     return '';
 }
@@ -4110,7 +4240,7 @@ function rss_select(): string {
 
 # Read RSS
 function rss_read(mixed $url, mixed $id): string {
-    global $conf;
+    global $conf, $tpl;
     if ($url) {
         $url = trim(html_entity_decode(str_replace(['&#038;', '&amp;'], '&', $url), ENT_QUOTES, 'UTF-8'));
         $url = (!preg_match('#^https?://#i', $url)) ? 'http://'.$url : $url;
@@ -4157,10 +4287,10 @@ function rss_read(mixed $url, mixed $id): string {
                 }
                 $cont = ($id) ? $cont : '<h2>'._RSS_FROM.': <a href="'.htmlspecialchars($url).'" target="_blank" title="'._RSS_FROM.': '.$title.'">'.$title.'</a></h2>'.$cont;
             } else {
-                $cont = ($id) ? '' : setTemplateWarning('warn', ['text' => _RSS_PROBLEM, 'url' => '', 'time' => 0, 'id' => 'warn']);
+                $cont = ($id) ? '' : $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
             }
         } else {
-            $cont = ($id) ? '' : setTemplateWarning('warn', ['text' => _RSS_PROBLEM, 'url' => '', 'time' => 0, 'id' => 'warn']);
+            $cont = ($id) ? '' : $tpl->getHtmlFrag('alert', ['text' => _RSS_PROBLEM, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         }
         return $cont;
     }
@@ -4169,7 +4299,7 @@ function rss_read(mixed $url, mixed $id): string {
 
 # Load RSS
 function rss_load(mixed $bid): void {
- global $db;
+    global $db, $tpl;
     $bid = intval($bid);
     list($title, $content, $url, $refresh, $otime) = $db->getSqlRow($db->getSqlQuery('SELECT title, content, url, refresh, time FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
     $past = time() - $refresh;
@@ -4178,7 +4308,7 @@ function rss_load(mixed $bid): void {
         $content = rss_read($url, 1);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET content = :content, time = :time WHERE id = :bid', ['content' => $content, 'time' => $btime, 'bid' => $bid]);
     }
-    echo setTemplateBlock('', ['{%title%}' => $title, '{%content%}' => $content]);
+    echo $tpl->getHtmlFrag('block-all', ['title' => $title, 'content' => $content]);
 }
 
 # Preview
@@ -4999,7 +5129,7 @@ function addblocks(string $str): string {
 
 # Format block
 function render_blocks(string $side, string $bfile, string $blocktitle, string $content, mixed $bid, string $url): string {
- global $showbanners, $foot;
+    global $showbanners, $foot, $tpl;
     if ($url == '') {
         $blocktitle = getConst($blocktitle);
         if ($bfile != '') {
@@ -5024,10 +5154,10 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
             return $content;
             break;
             case 'o':
-            return setTemplateBlock('', ['{%title%}' => $blocktitle, '{%content%}' => $content]);
+            return $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content]);
             break;
             default:
-            echo setTemplateBlock('', ['{%title%}' => $blocktitle, '{%content%}' => $content]);
+            echo $tpl->getHtmlFrag('block-all', ['title' => $blocktitle, 'content' => $content]);
             break;
         }
     } else {
@@ -5509,8 +5639,8 @@ function textarea_code(string $id, string $name, string $style, string $mode, st
 }
 
 # Format nummer page for Ajax
-function num_ajax(string $tpl, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', string $id = '', int $cid = 0, string $typ = '', string $mod = ''): string {
- global $afile;
+function num_ajax(string $frag, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', string $id = '', int $cid = 0, string $typ = '', string $mod = ''): string {
+    global $tpl;
     $nnum = $mnum + 1;
     if ($pages > 1) {
         $cont = '';
@@ -5539,8 +5669,7 @@ function num_ajax(string $tpl, int $count, int $pages, int $page, int $mnum = 8,
             $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
         }
         $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $page, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
-        $out = $GLOBALS['tpl']->getHtmlFrag($tpl, $data);
-        return ($out !== '') ? $out : setTemplateBasic($tpl, ['{%overall%}' => _OVERALL, '{%count%}' => $count, '{%by%}' => _BY, '{%pages%}' => $pages, '{%page_s%}' => _PAGE_S, '{%page%}' => $page, '{%perpage%}' => _PERPAGE, '{%pager%}' => $cont, '{%prev%}' => $cprev, '{%next%}' => $cnext]);
+        return $tpl->getHtmlFrag($frag, $data);
     }
     return '';
 }
@@ -5945,14 +6074,14 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
         }
     } else {
         $winfo = (defined('ADMIN_FILE')) ? _NO_INFO : _NOCOMMENTS;
-        $out = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => $winfo]);
+        $out = $tpl->getHtmlFrag('alert', ['text' => $winfo, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
     return $out;
 }
 
 # Save edit comments
 function editcom(): string {
- global $db, $conf, $user;
+ global $db, $conf, $user, $tpl;
     $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
     $mod  = filterVar(getVar('post', 'mod',  'text', '') ?: getVar('get', 'mod',  'text', ''));
@@ -5977,19 +6106,19 @@ function editcom(): string {
                 $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET body = :body WHERE id = :id', ['body' => $comm, 'id' => $id]);
                 echo filterReplaceText(filterMarkdown($comm, $mod, false), $mod);
             } else {
-                return setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
+                return $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
             }
         }
     } else {
         $info = sprintf(_PEDEND, intval($conf['comments']['edit'] / 60));
-        return setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'warn']);
+        return $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     }
     return '';
 }
 
 # Close comments
 function closecom(): void {
- global $db;
+ global $db, $tpl;
     $id  = getVar('post', 'id',  'num',  0) ?: getVar('get', 'id',  'num',  0);
     $typ = getVar('post', 'typ', 'num',  0) ?: getVar('get', 'typ', 'num',  0);
     $mod = filterVar(getVar('post', 'mod', 'text', '') ?: getVar('get', 'mod', 'text', ''));
@@ -6000,7 +6129,7 @@ function closecom(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_comment SET status = :status WHERE id = :id', ['status' => $status, 'id' => $id]);
         list($cid, $uid) = $db->getSqlRow($db->getSqlQuery('SELECT cid, uid FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]));
         numcom($cid, $mod, $numcom, $uid);
-        echo setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'warn']);
+        echo $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     }
 }
 
@@ -6050,7 +6179,7 @@ function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0):
 
 # Voting result save
 function avoting_save(): void {
- global $db, $conf, $user, $locale;
+ global $db, $conf, $user, $locale, $tpl;
     $id = getVar('post', 'id', 'num', 0);
     $body = isset($_POST['body']) && is_array($_POST['body']) ? $_POST['body'] : [];
     if ($conf['multilingual'] == 1) {
@@ -6063,7 +6192,8 @@ function avoting_save(): void {
     $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_voting WHERE id = :id AND '.$querylang, array_merge(['id' => $id], $qlang_params));
     if ($db->getSqlRowCount($result) > 0) {
         if (!$body) {
-            $cont = setTemplateWarning('warn', ['text' => _SEROR1, 'url' => '?name=voting&amp;op=view&amp;id='.$id, 'time' => 3, 'id' => 'warn']);
+            $meta = '<meta http-equiv="refresh" content="3; url=index.php?name=voting&amp;op=view&amp;id='.$id.'">';
+            $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR1, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
         } else {
             $ip = getIp();
             $past = time() - intval($conf['voting']['voting_t']);
@@ -6073,7 +6203,8 @@ function avoting_save(): void {
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB."_rating WHERE time < :past AND modul = 'voting'", ['past' => $past]);
             list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = 'voting' AND ip = :ip) OR (mid = :id2 AND modul = 'voting' AND uid = :uid AND uid != '0')", ['id' => $id, 'ip' => $ip, 'id2' => $id, 'uid' => $uid]));
             if ($cookies == $id || $num > 0) {
-                $cont = setTemplateWarning('warn', ['text' => _SEROR2, 'url' => '?name=voting&amp;op=view&amp;id='.$id, 'time' => 3, 'id' => 'warn']);
+                $meta = '<meta http-equiv="refresh" content="3; url=index.php?name=voting&amp;op=view&amp;id='.$id.'">';
+                $cont = $tpl->getHtmlFrag('alert', ['text' => _SEROR2, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
             } else {
                 setcookie(substr('voting', 0, 2).'-'.$id, $id, time() + intval($conf['voting']['voting_t']));
                 $new = time();
@@ -6102,7 +6233,8 @@ function avoting_save(): void {
             }
         }
     } else {
-        $cont = setTemplateWarning('warn', ['time' => '3', 'url' => '?name=voting', 'id' => 'warn', 'text' => _ERROR]);
+        $meta = '<meta http-equiv="refresh" content="3; url=index.php?name=voting">';
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => $meta, 'type' => 'warn', 'is_warn' => true]);
     }
     echo $cont;
 }

@@ -8,13 +8,13 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Render the comment list and submission form for an item
 function setComShow(int $id = 0, int $cid = 0): string {
-    global $conf, $user;
+    global $conf, $user, $tpl;
     $cont = '<a id="comm"></a><div id="repcsave">'.ashowcom($id, $conf['name']).'</div>';
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
-        $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _NOANONCOMMENTS]);
+        $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } else {
         $userinfo = getUserInfo();
-        if ($cid == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'warn', 'text' => _POSTNOTE]);
+        if ($cid == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         $cont .= '<form name="post" id="formcsave" method="post">'
         .'<table class="sl_table_form">';
         if (is_user()) {
@@ -143,20 +143,20 @@ function getUserInfo() {
 
 # Render the user's custom sidebar block if enabled
 function getUserBlock(): string {
-    global $db, $user;
+    global $db, $user, $tpl;
     $uid = (isset($user[0])) ? intval($user[0]) : 0;
     $block = (isset($user[4])) ? intval($user[4]) : 0;
     if (is_user() && $block) {
         [$userblock] = $db->getSqlRow($db->getSqlQuery('SELECT block FROM '.PREFIX_DB.'_users WHERE id = :uid', ['uid' => $uid]));
         $userblock = filterReplaceText(filterMarkdown($userblock, 'account', false), 'account');
-        return setTemplateBlock('', ['{%title%}' => _MENUFOR, '{%content%}' => $userblock]);
+        return $tpl->getHtmlFrag('block-all', ['title' => _MENUFOR, 'content' => $userblock]);
     }
     return '';
 }
 
 # Validate and save a new comment; echoes the updated comment list on success
 function addComment() {
-    global $db, $user, $conf;
+    global $db, $user, $conf, $tpl;
     $id       = getVar('post', 'id',   'num',  0);
     $cid      = getVar('post', 'cid',  'num',  0);
     $mod      = filterVar(getVar('post', 'mod',  'text', ''));
@@ -200,13 +200,13 @@ function addComment() {
         echo ashowcom($id, $mod);
     } else {
         $stop = ($stop) ? $stop : _ERROR;
-        echo setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
+        echo $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     }
 }
 
 # Validate and update an existing forum post in-place
 function updatePost() {
-    global $db, $user, $conf;
+    global $db, $user, $conf, $tpl;
     $conf['forum'] = $conf['forum'] ?? [];
     $id    = getVar('post', 'id',  'num',  0)  ?: getVar('get', 'id',  'num',  0);
     $cid   = getVar('post', 'cid', 'num',  0)  ?: getVar('get', 'cid', 'num',  0);
@@ -246,20 +246,20 @@ function updatePost() {
                     );
                     echo filterReplaceText(filterMarkdown($htext, $mod, false), $mod);
                 } else {
-                    return setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
+                    return $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
                 }
             }
         } else {
-            return setTemplateWarning('warn', ['text' => _ERROR, 'url' => '', 'time' => 0, 'id' => 'warn']);
+            return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         }
     } else {
-        return setTemplateWarning('warn', ['text' => _ERROR, 'url' => '', 'time' => 0, 'id' => 'warn']);
+        return $tpl->getHtmlFrag('alert', ['text' => _ERROR, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     }
 }
 
 # Render the private-message inbox, outbox, saved or detail view
 function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ = 0): string {
-    global $db, $user, $conf;
+    global $db, $user, $conf, $tpl;
     $typ = $typ ?: getVar('get', 'typ', 'num', 0);
     $uid = intval($user[0]);
     $newlistnum = intval($conf['privat']['num']);
@@ -283,11 +283,11 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             $messinfo = sprintf(_PRINMAX, $conf['privat']['messin'], $pr_num, $acmess);
             $fstatus = 'info';
         }
-        if ($fstatus) $cont .= setTemplateWarning('warn', ['text' => $messinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
+        if ($fstatus) $cont .= $tpl->getHtmlFrag('alert', ['text' => $messinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
         if ($stop) {
-            $cont .= setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         } elseif ($info) {
-            $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'info']);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE p.uidin = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
@@ -308,7 +308,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             }
             $cont .= '</tbody></table>';
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= num_ajax('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'prmess', 'prmessin', 0, '1', '');
@@ -334,7 +334,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             }
             $cont .= '</tbody></table>';
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
         [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidout = :uid AND status <= 1', ['uid' => $uid]));
         $numpages = ceil($pr_num / $newlistnum);
@@ -350,7 +350,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             $messinfo = sprintf(_PRSAVEMAX, $conf['privat']['messsav'], $pr_num, $acmess);
             $fstatus = 'info';
         }
-        if ($fstatus) $cont .= setTemplateWarning('warn', ['text' => $messinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
+        if ($fstatus) $cont .= $tpl->getHtmlFrag('alert', ['text' => $messinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout=u.id) WHERE p.uidin = :uid AND p.status = 2 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._TITLE.'</th><th>'._PRSE.'</th><th>'._DATE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
@@ -363,15 +363,15 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             }
             $cont .= '</tbody></table>';
         } else {
-            $cont .= setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
         $numpages = ceil($pr_num / $newlistnum);
         $cont .= num_ajax('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'prmess', 'prmesssa', 0, '3', '');
     } elseif ($typ == 4) {
         if ($stop) {
-            $cont .= setTemplateWarning('warn', ['text' => $stop, 'url' => '', 'time' => 0, 'id' => 'warn']);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
         } elseif ($info) {
-            $cont .= setTemplateWarning('warn', ['text' => $info, 'url' => '', 'time' => 0, 'id' => 'info']);
+            $cont .= $tpl->getHtmlFrag('alert', ['text' => $info, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
         $id  = getVar('get', 'id',  'num', 0);
         $cid = getVar('get', 'cid', 'num', 0);
@@ -419,7 +419,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
 
                 
                 $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? add_menu("<a OnClick=\"AjaxLoad('GET', '0', '".$prmid."', 'go=1&amp;op=prmessdel&amp;id=".$idp.'&amp;typ='.$mod."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-                $cont .= $GLOBALS['tpl']->getHtmlFrag('privat-message', ['username' => $avname, 'date' => $date, 'ip' => $ip, 'title' => cutstr($title, 35), 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']), 'sig' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit]);
+                $cont .= $tpl->getHtmlFrag('privat-message', ['username' => $avname, 'date' => $date, 'ip' => $ip, 'title' => cutstr($title, 35), 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']), 'sig' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit]);
             }
         }
         if (!$info && (!$cid || $cid == '1')) {
@@ -575,7 +575,7 @@ function addFavor() {
 
 # Render the paginated favorites list for the logged-in user
 function getFavorList(int $obj = 0): string {
-    global $db, $conf, $user;
+    global $db, $conf, $user, $tpl;
     $uid = intval($user[0]);
     $newlistnum = intval($conf['favorites']['num']);
     $cid = getVar('get', 'cid', 'num', 1);
@@ -643,7 +643,7 @@ function getFavorList(int $obj = 0): string {
             }
         }
     }
-    $cont = setTemplateWarning('warn', ['text' => $favinfo, 'url' => '', 'time' => 0, 'id' => $fstatus]);
+    $cont = $tpl->getHtmlFrag('alert', ['text' => $favinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
     if ($ffmassiv) {
         $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
         foreach ($ffmassiv as $key => $val) {
@@ -662,7 +662,7 @@ function getFavorList(int $obj = 0): string {
         $numpages = ceil($fav_num / $newlistnum);
         $cont .= num_ajax('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, '0', 1, 'favorliste', 'favorliste', 0, '', '');
     } else {
-        $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
     if ($obj) { return $cont; }
     echo $cont;

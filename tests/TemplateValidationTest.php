@@ -26,16 +26,15 @@ class TemplateValidationTest extends TestCase
      */
     private static function loadKnownPlaceholders(): void
     {
-        $templateFile = self::$basePath.'/core/template.php';
+        $templateFile = self::$basePath.'/core/classes/template.php';
         if (!file_exists($templateFile)) return;
 
         $content = file_get_contents($templateFile);
 
-        // Ищем плейсхолдеры в getTemplateVars
         preg_match_all('/\{\s*%\s*(\w+)\s*%\s*\}/', $content, $matches);
         self::$knownPlaceholders = array_unique($matches[1]);
 
-        // Добавляем стандартные плейсхолдеры
+        // Стандартные плейсхолдеры
         $standard = [
             'theme', 'lang', 'sitename', 'logo', 'homeurl', 'slogan',
             'home', 'account', 'news', 'admin', 'search', 'login',

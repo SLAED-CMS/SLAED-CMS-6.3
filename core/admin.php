@@ -252,7 +252,7 @@ function setAdminNavi(array $p): string {
 }
 
 function admininfo() {
- global $db, $admin, $afile, $conf, $panel;
+ global $db, $admin, $afile, $conf, $panel, $tpl;
     if (isAdmin()) {
         $ablocks = '';
         if ($panel) {
@@ -330,19 +330,19 @@ function admininfo() {
                 $n_cont .= '<tr><td><a href="'.$afile.'.php?name=whois&status=1" title="'._WHOIS.'">'._WHOIS.'</a>:</td><td>'.$num.'</td></tr>';
             }
             $n_cont .= '</table>';
-            $ablocks = setTemplateBlock('block-left', ['{%title%}' => _NEW, '{%content%}' => $n_cont, '{%id%}' => '3']);
+            $ablocks = $tpl->getHtmlFrag('block-left', ['title' => _NEW, 'content' => $n_cont, 'id' => '3', 'close' => _OPCL]);
             
             $w_cont = '<table class="sl_tab_bl">';
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
             $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
             $w_cont .= '<tr><td><a href="'.$afile.'.php?name=comments&status=1" title="'._COMMENTS.'">'._COMMENTS.'</a>:</td><td>'.$num.'</td></tr>';
             $w_cont .= '</table>';
-            $ablocks .= setTemplateBlock('block-left', ['{%title%}' => _WAITINGCONT, '{%content%}' => $w_cont, '{%id%}' => '4']);
+            $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _WAITINGCONT, 'content' => $w_cont, 'id' => '4', 'close' => _OPCL]);
             
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
         $e_cont = '<form method="post" action="'.$afile.'.php"><table><tr><td>'.redaktor('1', 'editor', '', $editor, 1).'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
-        $ablocks .= setTemplateBlock('block-left', ['{%title%}' => _EDITOR, '{%content%}' => $e_cont, '{%id%}' => '6']);
+        $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _EDITOR, 'content' => $e_cont, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
 }
@@ -354,7 +354,7 @@ function db_version() {
 }
 
 function ajax_cat(string $modul = '', int $obj = 0): string {
- global $db, $afile, $conf;
+ global $db, $afile, $conf, $tpl;
     $modul   = filterVar($modul);
     $where   = ($modul) ? 'WHERE a.modul = :modul' : '';
     $params  = ($modul) ? ['modul' => $modul] : [];
@@ -430,7 +430,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
         }
         $cont = '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._CATEGORY.'</th><th>'.cutstr(_CONTENT, 3, 1).'</th><th>'.cutstr(_SUBCATEGORY, 3, 1).'</th><th>'.cutstr(_IMG, 2, 1).'</th><th colspan="2">'._WEIGHT.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>'.$fcont.'</tbody></table>';
     } else {
-        $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -579,7 +579,7 @@ function blocks_order(): void {
 
 # Favorites list view
 function fav_aliste(int $obj = 0): string {
- global $db, $conf;
+ global $db, $conf, $tpl;
     $newlistnum = intval($conf['favorites']['anum']);
     $cid = getVar('get', 'cid', 'num', 1);
     $offset = ($cid-1) * $newlistnum;
@@ -654,10 +654,10 @@ function fav_aliste(int $obj = 0): string {
             $numpages = ceil($fav_num / $newlistnum);
             $cont .= num_ajax('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, '0', 5, 'fav_aliste', 'fav_aliste', 0, '', '');
         } else {
-            $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+            $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
     } else {
-        $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -674,7 +674,7 @@ function fav_adel(): void {
 
 # Private messages list view
 function ajax_privat(int $obj = 0): string {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $newlistnum = intval($conf['privat']['anum']);
     $cid    = getVar('get', 'cid', 'num', 1);
     $offset = intval(($cid - 1) * $newlistnum);
@@ -701,7 +701,7 @@ function ajax_privat(int $obj = 0): string {
         $numpages = ceil($fav_num / $newlistnum);
         $cont .= num_ajax('pagenum', $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, '0', 5, 'ajax_privat', 'ajax_privat', 0, '', '');
     } else {
-        $cont = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
     if ($obj) { return $cont; }
     echo $cont;
@@ -718,7 +718,7 @@ function ajax_privat_del(): void {
 
 # Show uploads files for admin
 function ashow_files(): void {
- global $user, $conf;
+ global $user, $conf, $tpl;
     $conf['uploads'] = $conf['uploads'] ?? [];
     $id   = filterVar(getVar('get', 'id',   'text', ''));
     $dir  = strtolower(getVar('get', 'dir',  'text', ''));
@@ -774,7 +774,7 @@ function ashow_files(): void {
         $contnum = ($a > $connum) ? num_ajax('pagenum', $a, $numpages, $connum, 8, $num, '0', 5, 'ashow_files', 'f'.$id, $id, '', $dir) : '';
         $content = ($cont) ? '<table class="sl_table_list"><thead><tr><th>'.cutstr(_IMG, 4, 1).'</th><th>'._FILE.'</th><th>'._DATE.'</th><th>'._SIZE.'</th><th>'._WIDTH.' x '._HEIGHT.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>'.$cont.'</tbody></table>'.$contnum : '';
     } else {
-        $content = setTemplateWarning('warn', ['time' => '', 'url' => '', 'id' => 'info', 'text' => _NO_INFO]);
+        $content = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
     echo $content;
 }
