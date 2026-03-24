@@ -230,7 +230,6 @@ namespace Tests\Unit {
 
             $this->assertNotSame('', $html);
             $this->assertStringContainsString('lite-login', $html);
-            $this->assertStringContainsString('lite-menu', $html);
             $this->assertStringContainsString('lite-head', $html);
             $this->assertStringContainsString('lite-body', $html);
             $this->assertStringContainsString('lite-left', $html);

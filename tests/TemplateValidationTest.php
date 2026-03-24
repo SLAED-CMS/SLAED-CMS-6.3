@@ -76,7 +76,7 @@ class TemplateValidationTest extends TestCase
             $relativePath = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
 
             // Считаем открывающие и закрывающие теги
-            preg_match_all('/\{%\s*if\s+\w+\s*%\}/', $content, $ifMatches);
+            preg_match_all('/\{%\s*if\s+[^%]+%\}/', $content, $ifMatches);
             preg_match_all('/\{%\s*endif\s*%\}/', $content, $endifMatches);
 
             $ifCount = count($ifMatches[0]);
@@ -115,6 +115,9 @@ class TemplateValidationTest extends TestCase
 
             $content = file_get_contents($file);
             $relativePath = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
+
+            // Убираем template-токены перед подсчётом HTML-тегов
+            $content = preg_replace('/\{%[^%]*%\}/', '', $content);
 
             // Проверяем незакрытые теги (базовая проверка)
             $openTags = [];

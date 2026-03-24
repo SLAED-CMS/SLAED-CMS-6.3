@@ -73,20 +73,6 @@ if (!function_exists('getSiteToken')) {
     }
 }
 
-if (!function_exists('getThemeLoad')) {
-    function getThemeLoad(string $tpl): string
-    {
-        return $GLOBALS['__test_templates'][$tpl] ?? '';
-    }
-}
-
-if (!function_exists('getThemeFile')) {
-    function getThemeFile(string $tpl): string|false
-    {
-        return isset($GLOBALS['__test_templates'][$tpl]) ? $tpl : false;
-    }
-}
-
 if (!class_exists('Template', false)) {
     require_once BASE_DIR.'/core/classes/template.php';
 }
