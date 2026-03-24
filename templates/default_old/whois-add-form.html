@@ -1,8 +1,0 @@
-<form name="post" action="index.php?name={%name%}" method="post"><table class="sl_table_form">
-{%if is_user%}<tr><td>{%lbl_yourname%}:</td><td>{%username_value%}</td></tr>{%else%}<tr><td>{%lbl_yourname%}:</td><td><input type="text" name="postname" value="{%username_value%}" class="sl_field {%style%}" placeholder="{%lbl_yourname%}" required></td></tr>{%endif%}
-<tr><td>{%lbl_site%}:</td><td><input type="url" name="domain" value="{%domain%}" maxlength="255" class="sl_field {%style%}" placeholder="{%lbl_site%}" required></td></tr>
-<tr><td>{%lbl_host%}:</td><td><input type="url" name="host" value="{%host%}" maxlength="255" class="sl_field {%style%}" placeholder="{%lbl_host%}"></td></tr>
-<tr><td>{%lbl_dc%}:</td><td><input type="url" name="dc" value="{%dc%}" maxlength="255" class="sl_field {%style%}" placeholder="{%lbl_dc%}"></td></tr>
-<tr><td>{%lbl_comment%}:</td><td><textarea name="hometext" cols="65" rows="5" class="sl_field {%style%}" placeholder="{%lbl_comment%}">{%hometext%}</textarea></td></tr>
-<tr><td colspan="2" class="sl_center">{%captcha%}<input type="hidden" name="token" value="{%token%}"><input type="hidden" name="op" value="send"><input type="submit" value="{%submit_label%}" class="sl_but_blue"></td></tr>
-</table></form>

@@ -826,7 +826,7 @@ function getOpenXsl(): string {
 switch(getVar('get', 'stat', 'num', 0)) {
     case 1:
     $img = getVar('get', 'img', 'num', 0) ? '_'.getVar('get', 'img', 'num', 0) : '';
-    $sdate = file(CONFIG_DIR.'/statistic.log');
+    $sdate = file(COUNTER_DIR.'/statistic.log');
     $con = explode('|', trim($sdate[0]));
     $image = imagecreatefrompng(img_find('banners/stat'.$img.'.png'));
     $white = imagecolorallocate($image, 255, 255, 255);

@@ -1886,7 +1886,7 @@ function updateStatsTrack(string $request, int $guest): void {
 
 # Format head
 function setHead(array $seo = []): void {
-    global $home, $index, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
+    global $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
     $name = $name ?? '';
     $ctime = time();
     $request = getenv('REQUEST_URI');
@@ -2114,14 +2114,15 @@ function setHead(array $seo = []): void {
 
 # Format foot
 function setFoot(): void {
- global $home, $name, $index, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
+    global $home, $name, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars, $blocks, $blocks_c, $foot;
     if (defined('ADMIN_FILE')) {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
         $vars['content'] = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
+        $cvar = explode(',', $conf['variables']);
         $vars = array_replace($vars, [
-            'time_html' => addblocks('{%BLOCKS time%}'),
+            'time_html' => ($conf['db_t'] == '1') ? getTimeLoads() : '',
             'foot_html' => '<a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="thide">'._PAGETOP.'</a>',
-            'debug_html' => addblocks('{%BLOCKS variables%}'),
+            'debug_html' => (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '',
         ]);
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
         echo $tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin');
@@ -2131,23 +2132,46 @@ function setFoot(): void {
     $vars = is_array($sitevars ?? null) ? $sitevars : [];
     $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
     $time = ($conf['db_t'] == '1') ? getTimeLoads() : '';
-    $debug = addblocks('{%BLOCKS variables%}');
-    $foot = addblocks('{%BLOCKS foot%}');
+    $cvar = explode(',', $conf['variables']);
+    $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '';
+    $foot = '';
+    getBlocks('f');
     $foot .= '<a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="thide">'._PAGETOP.'</a>';
     if ($time !== '') $foot .= '<div class="sl_generates">'.$time.'</div>';
     if (!empty($vars['license'])) $foot .= '<div class="sl_license">'.$vars['license'].'</div>';
     if ($debug !== '') $foot .= $debug;
+    if ($blocks == '' || $blocks == '0' || $blocks == '1') {
+        ob_start(); getBlocks('l'); $left = ob_get_clean();
+    } else {
+        $left = '';
+    }
+    if ($blocks == '' || $blocks == '0' || $blocks == '2') {
+        ob_start(); getBlocks('r'); $right = ob_get_clean();
+    } else {
+        $right = '';
+    }
+    if ($blocks_c == '' || $blocks_c == '0' || $blocks_c == '1') {
+        ob_start(); getBlocks('c'); $center = ob_get_clean();
+    } else {
+        $center = '';
+    }
+    if ($blocks_c == '' || $blocks_c == '0' || $blocks_c == '2') {
+        ob_start(); getBlocks('d'); $down = ob_get_clean();
+    } else {
+        $down = '';
+    }
+    $msg = ($home == 1) ? setMessageShow() : '';
     $vars = array_replace($vars, [
-        'content' => addblocks('{%BLOCKS message%}').addblocks('{%BLOCKS center%}').$body,
-        'blocks_left' => addblocks('{%BLOCKS left%}'),
-        'blocks_right' => addblocks('{%BLOCKS right%}'),
-        'blocks_down' => addblocks('{%BLOCKS down%}'),
+        'content' => $msg.$center.$body,
+        'blocks_left' => $left,
+        'blocks_right' => $right,
+        'blocks_down' => $down,
         'foot_html' => $foot,
     ]);
     if (function_exists('getThemeFootVars')) $vars = array_replace($vars, getThemeFootVars());
     $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
     echo $tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app');
-    unset($sitepage, $sitevars, $index);
+    unset($sitepage, $sitevars);
     if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
         $dir = 'config/cache/';
         $url = str_replace('/', '', getenv('REQUEST_URI'));
@@ -2827,6 +2851,21 @@ function setConfigFile(string $fp, array $arr, array $act = []): void {
     file_put_contents($fp, $cnt, LOCK_EX);
 }
 
+# Returns list of asset files found in standard theme subdirectories
+function getThemeAssets(string $theme, string $ext): array {
+    $base = 'templates/'.$theme.'/';
+    $out = [];
+    foreach (glob($base.'*.'.$ext) ?: [] as $file) $out[] = $file;
+    foreach (glob($base.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) {
+        foreach (glob($sub.'*.'.$ext) ?: [] as $file) $out[] = $file;
+    }
+    foreach (glob($base.'assets/'.$ext.'/*.'.$ext) ?: [] as $file) $out[] = $file;
+    if ($ext === 'js') {
+        foreach (glob($base.'js/*.'.$ext) ?: [] as $file) $out[] = $file;
+    }
+    return $out;
+}
+
 # Definition and processing of header scripts files
 function doScript(): string {
  global $theme, $conf;
@@ -2835,6 +2874,7 @@ function doScript(): string {
     $array = explode(',', $conf['script_f']);
     $array = is_array($array) ? $array : [];
     $array = (!$conf['security']['error_java']) ? array_merge($array, ['plugins/system/block-error.js']) : $array;
+    foreach (getThemeAssets($theme, 'js') as $file) $array[] = $file;
     if (!defined('ADMIN_FILE')) {
         if ($conf['cache_script'] && file_exists($sfile) && filesize($sfile) != 0 && (time() - $conf['cache_t']) < filemtime($sfile)) {
             $cont = ($conf['script_h']) ? file_get_contents($sfile) : '<script '.$async.'src="index.php?go=script"></script>';
@@ -2876,6 +2916,11 @@ function doCss(): string {
  global $theme, $conf;
     $array = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
     if (is_array($array)) {
+        $tbase = 'templates/'.$theme.'/';
+        $tdirs = [$tbase];
+        foreach (glob($tbase.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) $tdirs[] = $sub;
+        $tdirs[] = $tbase.'assets/css/';
+        $array = array_merge($array, $tdirs);
         if (!defined('ADMIN_FILE')) {
             $cfile = 'config/cache/'.md5($theme.'style').'.txt';
             if ($conf['cache_css'] && file_exists($cfile) && filesize($cfile) != 0 && (time() - $conf['cache_t']) < filemtime($cfile)) {
@@ -3502,53 +3547,6 @@ function getTheme(): string {
 }
 
 # Format theme file
-function getThemeFile(string $name): string|false {
- global $home, $conf, $op;
-    static $cache = [];
-    static $files = null;
-    static $dir = null;
-    if ($files === null) {
-        $dir = BASE_DIR.'/templates/'.getTheme().'/';
-        $files = array_flip(scandir($dir, SCANDIR_SORT_NONE) ?: []);
-    }
-    $tpl = $conf['template'] ?? '';
-    $mod = $conf['name'] ?? '';
-    $opv = $op ?? '';
-    $cat = getVar('get', 'cat', 'num', 0);
-    $key = $name.'|'.(int)$home.'|'.$tpl.'|'.$mod.'|'.$opv.'|'.$cat;
-    if (array_key_exists($key, $cache)) return $cache[$key];
-    $candidates = [];
-    if ($home) {
-        $candidates[] = $name.'-home';
-    } elseif ($tpl !== '') {
-        $candidates[] = $name.'-'.$tpl;
-    } elseif ($mod !== '' && $opv !== '') {
-        $candidates[] = $name.'-'.$mod.'-'.$opv;
-        $candidates[] = $name.'-'.$mod;
-    } elseif ($mod !== '' && $cat > 0) {
-        $candidates[] = $name.'-'.$mod.'-cat-'.$cat;
-        $candidates[] = $name.'-'.$mod;
-    } elseif ($mod !== '') {
-        $candidates[] = $name.'-'.$mod;
-    }
-    $candidates[] = $name;
-    foreach ($candidates as $fname) {
-        $file = $fname.'.html';
-        if (isset($files[$file])) return $cache[$key] = $dir.$file;
-    }
-    return $cache[$key] = false;
-}
-
-# Get theme load
-function getThemeLoad(string $tpl): string {
-    $path = getThemeFile($tpl);
-    if (!$path) return '';
-    static $cache = [];
-    if (array_key_exists($path, $cache)) return $cache[$path];
-    $raw = file_get_contents($path);
-    return $cache[$path] = $raw !== false ? $raw : '';
-}
-
 # Determining the load time
 function getTimeLoads(): string {
  global $db, $sgtime;
@@ -5070,80 +5068,6 @@ function checkemail(string $mail): array {
 }
 
 # Format add block
-function addblocks(string $str): string {
- global $blocks, $blocks_c, $home, $showbanners, $foot, $db, $conf, $foot;
-    preg_match_all('#{%BLOCKS([^%]+)%}#iUs', $str, $blk);
-    $ci = count($blk[1]);
-    for ($i = 0; $i < $ci; $i++) {
-        $blk[0][$i] = '#'.$blk[0][$i].'#';
-        $telo = trim($blk[1][$i]);
-        $pos = strtolower($telo[0]);
-        switch($pos) {
-            case 'l':
-            if ($blocks == '' || $blocks == '0'|| $blocks == '1') {
-                ob_start();
-                getBlocks('l');
-                $blk[1][$i] = ob_get_clean();
-            } else {
-                $blk[1][$i] = '';
-            }
-            break;
-            case 'r':
-            if ($blocks == '' || $blocks == '0'|| $blocks == '2') {
-                ob_start();
-                getBlocks('r');
-                $blk[1][$i] = ob_get_clean();
-            } else {
-                $blk[1][$i] = '';
-            }
-            break;
-            case 'c':
-            if ($blocks_c == '' || $blocks_c == '0' || $blocks_c == '1') {
-                ob_start();
-                getBlocks('c');
-                $blk[1][$i] = ob_get_clean();
-            } else {
-                $blk[1][$i] = '';
-            }
-            break;
-            case 'd':
-            if ($blocks_c == '' || $blocks_c == '0'|| $blocks_c == '2') {
-                ob_start();
-                getBlocks('d');
-                $blk[1][$i] = ob_get_clean();
-            } else {
-                $blk[1][$i] = '';
-            }
-            break;
-            case 'b':
-            getBlocks('b');
-            $blk[1][$i] = $showbanners;
-            break;
-            case 'f':
-            getBlocks('f');
-            $blk[1][$i] = $foot;
-            break;
-            case 'm':
-            $blk[1][$i] = ($home == 1) ? setMessageShow() : '';
-            break;
-            case 't':
-            $blk[1][$i] = ($conf['db_t'] == '1') ? getTimeLoads() : '';
-            break;
-            case 'v':
-            $cvar = explode(',', $conf['variables']);
-            $blk[1][$i] = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '';
-            break;
-            default:
-            $telo = explode(',', $telo);
-            ob_start();
-            getBlocks($telo[0], $telo[1]);
-            $blk[1][$i] = ob_get_clean();
-            break;
-        }
-    }
-    return preg_replace($blk[0], $blk[1], $str);
-}
-
 # Format block
 function render_blocks(string $side, string $bfile, string $blocktitle, string $content, mixed $bid, string $url): string {
     global $showbanners, $foot, $tpl;

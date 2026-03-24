@@ -7,33 +7,42 @@
 if (!defined('FUNC_FILE')) die('Illegal file access');
 
 function getAdminHeadVars(): array {
-    global $conf, $db, $admin, $afile;
+    global $conf, $db, $admin, $afile, $tpl;
     $langs = $menu = $blocks = $login = '';
     if (isAdmin()) {
         if ($conf['multilingual'] == 1) {
             foreach (scandir(BASE_DIR.'/lang') as $file) {
                 if (preg_match('#^(.+)\.php$#', $file, $matches)) {
                     $lfound = $matches[1];
-                    $title = getLangName($lfound);
-                    $langs .= '<a href="'.$afile.'.php?newlang='.$lfound.'"><img src="'.img_find('lang/'.$lfound.'_mini.png').'" alt="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'" title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"></a>';
+                    $langs .= $tpl->getHtmlFrag('admin-lang-item', [
+                        'href' => $afile.'.php?newlang='.$lfound,
+                        'src' => img_find('lang/'.$lfound.'_mini.png'),
+                        'alt' => getLangName($lfound),
+                    ]);
                 }
             }
         }
         if (!isAdmin(true)) {
-            $uname = htmlspecialchars(_HELLO.', '.substr($admin[1], 0, 25).'!', ENT_QUOTES, 'UTF-8');
-            $menu = '<li class="sl_first"><a href="#" title="'.$uname.'"><b>'.$uname.'</b></a></li>'
-            .'<li><a href="'.$afile.'.php" title="'._ADMINMENU.'"><b>'._HOME.'</b></a></li>'
-            .'<li><a href="index.php" target="_blank" title="'._SITE.'"><b>'._SITE.'</b></a></li>'
-            .'<li><a href="index.php?name=account" target="_blank" title="'._ACCOUNT.'"><b>'._ACCOUNT.'</b></a></li>'
-            .'<li><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'"><b>'._LOGOUT.'</b></a></li>';
+            $items = [
+                ['cls' => 'sl_first', 'href' => '#', 'label' => _HELLO.', '.substr($admin[1], 0, 25).'!', 'blank' => false],
+                ['cls' => '', 'href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
+                ['cls' => '', 'href' => 'index.php', 'label' => _SITE, 'blank' => true],
+                ['cls' => '', 'href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
+                ['cls' => '', 'href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
+            ];
         } else {
-            $menu = '<li class="sl_first"><a href="'.$afile.'.php" title="'._ADMINMENU.'"><b>'._HOME.'</b></a></li>'
-            .'<li><a href="'.$afile.'.php?name=blocks" title="'._BLOCKS.'"><b>'._BLOCKS.'</b></a></li>'
-            .'<li><a href="'.$afile.'.php?name=modules" title="'._MODULES.'"><b>'._MODULES.'</b></a></li>'
-            .'<li><a href="'.$afile.'.php?name=categories" title="'._CATEGORIES.'"><b>'._CATEGORIES.'</b></a></li>'
-            .'<li><a href="index.php" target="_blank" title="'._SITE.'"><b>'._SITE.'</b></a></li>'
-            .'<li><a href="index.php?name=account" target="_blank" title="'._ACCOUNT.'"><b>'._ACCOUNT.'</b></a></li>'
-            .'<li><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'"><b>'._LOGOUT.'</b></a></li>';
+            $items = [
+                ['cls' => 'sl_first', 'href' => $afile.'.php', 'label' => _HOME, 'blank' => false],
+                ['cls' => '', 'href' => $afile.'.php?name=blocks', 'label' => _BLOCKS, 'blank' => false],
+                ['cls' => '', 'href' => $afile.'.php?name=modules', 'label' => _MODULES, 'blank' => false],
+                ['cls' => '', 'href' => $afile.'.php?name=categories', 'label' => _CATEGORIES, 'blank' => false],
+                ['cls' => '', 'href' => 'index.php', 'label' => _SITE, 'blank' => true],
+                ['cls' => '', 'href' => 'index.php?name=account', 'label' => _ACCOUNT, 'blank' => true],
+                ['cls' => '', 'href' => $afile.'.php?op=logout', 'label' => _LOGOUT, 'blank' => false],
+            ];
+        }
+        foreach ($items as $item) {
+            $menu .= $tpl->getHtmlFrag('admin-menu-item', $item);
         }
         $blocks = getAdminPanelBlocks().admininfo().adminblock();
     } else {
