@@ -1,1 +1,15 @@
-{% if title %}<h3 class="h4 mb-3">{{ title }}</h3>{% endif %}
+{% if content or icon or subtitle %}
+<div class="basecont">
+    <div class="bpad">
+        <div class="headmodule">
+            {% if icon %}<span class="lcolomn"><img src="templates/admin/images/admin/{{ icon }}" title="{{ title }}" alt="{{ title }}"></span>{% endif %}
+            <div class="rcolomn"><h1>{{ title }}</h1>{{{ subtitle }}}</div>
+            <div class="clr"></div>
+        </div>
+        <br>
+        {{{ content }}}
+    </div>
+</div>
+{% elseif title %}
+<h3 class="h4 mb-3">{{ title }}</h3>
+{% endif %}

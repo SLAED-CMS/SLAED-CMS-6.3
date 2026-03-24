@@ -34,23 +34,36 @@ function getIp(): string {
 # Format exit info
 function setExit(string $msg, string $typ = ''): never {
     global $conf, $path;
-    $cont = '<!doctype html>'.PHP_EOL
-    .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
-    .'<head>'.PHP_EOL
-    .'<meta charset="'._CHARSET.'">'.PHP_EOL
-    .'<title>'.$conf['sitename'].' '.urldecode($conf['defis']).' '.$conf['slogan'].'</title>'.PHP_EOL
-    .'<meta name="author" content="'.$conf['sitename'].'">'.PHP_EOL
-    .'<meta name="generator" content="SLAED CMS '.$conf['version'].'">'.PHP_EOL;
-    $cont .= ($typ) ? '<meta http-equiv="refresh" content="5; url='.$conf['homeurl'].'/index.php">'.PHP_EOL : '';
-    $cont .= '</head>'.PHP_EOL
-    .'<body>'.PHP_EOL
-    .'<div style="margin: 25%;">'.PHP_EOL
-    .'<div style="text-align: center;"><img src="'.$path.'templates/'.$conf['theme'].'/images/logos/'.$conf['site_logo'].'" alt="'.$conf['sitename'].'" title="'.$conf['sitename'].'"></div>'.PHP_EOL
-    .'<div style="margin-top: 50px; font: 18px Arial, Tahoma, sans-serif, Verdana; color: #1a4674; font-weight: bold; text-align: center;">'.$msg.'</div>'.PHP_EOL
-    .'</div>'.PHP_EOL
-    .'</body>'.PHP_EOL
-    .'</html>';
-    die($cont);
+    $file = $path.'core/classes/template.php';
+    if (!class_exists('Template') && is_file($file)) require_once $file;
+    if (!class_exists('Template')) die('Template engine unavailable');
+    if (!defined('BASE_DIR')) define('BASE_DIR', realpath($path) ?: $path);
+    $theme = $conf['theme'] ?? 'default';
+    $tpl = new Template($theme);
+    $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
+    $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.($conf['homeurl'] ?? '').'/index.php">'.PHP_EOL : '';
+    $meta = '<meta charset="'._CHARSET.'">'.PHP_EOL
+    .'<meta name="viewport" content="width=device-width, initial-scale=1.0">'.PHP_EOL
+    .'<title>'.($conf['sitename'] ?? '').' '.urldecode((string)($conf['defis'] ?? '')).'</title>'.PHP_EOL
+    .'<meta name="author" content="'.($conf['sitename'] ?? '').'">'.PHP_EOL
+    .'<meta name="generator" content="SLAED CMS '.($conf['version'] ?? '').'">'.PHP_EOL
+    .$jump;
+    $license = base64_decode((string)($conf['lic_h'] ?? '')).date('Y').base64_decode((string)($conf['lic_f'] ?? ''));
+    $links = '<link rel="shortcut icon" href="'.$path.'templates/admin/favicon.png">'.PHP_EOL
+    .'<link rel="stylesheet" href="'.$path.'templates/admin/theme.css">'.PHP_EOL
+    .'<link rel="stylesheet" href="'.$path.'templates/admin/system.css">'.PHP_EOL;
+    die($tpl->getHtmlPage('message', [
+        'lang' => substr(_LOCALE, 0, 2),
+        'theme' => $theme,
+        'sitename' => $conf['sitename'] ?? '',
+        'meta' => $meta,
+        'links' => $links,
+        'scripts' => '',
+        'login' => _MESSAGE,
+        'license' => $license,
+        'title' => '',
+        'message_html' => $text,
+    ]));
 }
 
 if ($conf['security']['admin_ip'] != '') {

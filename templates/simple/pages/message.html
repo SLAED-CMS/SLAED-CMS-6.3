@@ -1,0 +1,12 @@
+{% extends 'layouts/bare.html' %}
+
+{% block content %}
+{% if title %}
+{{{ title }}}
+{% endif %}
+{% if message_html %}
+{{{ message_html }}}
+{% else %}
+{{{ content }}}
+{% endif %}
+{% endblock %}

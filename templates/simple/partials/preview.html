@@ -1,0 +1,23 @@
+<div class="admin-preview">
+    {% if title %}
+    <div class="admin-preview-title">{{ title }}</div>
+    {% endif %}
+
+    <div class="admin-preview-body">
+        {% if fields %}
+        <div class="admin-preview-fields">{{{ fields }}}</div>
+        {% endif %}
+
+        {% if fields1 %}
+        <div class="admin-preview-fields1">{{{ fields1 }}}</div>
+        {% endif %}
+
+        {% if fields2 %}
+        <div class="admin-preview-fields2">{{{ fields2 }}}</div>
+        {% endif %}
+
+        {% if fields3 %}
+        <div class="admin-preview-fields3">{{{ fields3 }}}</div>
+        {% endif %}
+    </div>
+</div>

@@ -40,13 +40,13 @@ function getAdminHeadVars(): array {
         $login = ($db->getSqlRowCount($db->getSqlQuery('SELECT 1 FROM '.PREFIX_DB.'_admins LIMIT 1')) == 0) ? _ADMINLOGIN_NEW : _ADMINLOGIN;
     }
     return [
-        '{%langs%}'  => $langs,
-        '{%menu%}'   => $menu,
-        '{%blocks%}' => $blocks,
-        '{%login%}'  => $login,
+        'admin_langs' => $langs,
+        'menu' => $menu,
+        'admin_blocks' => $blocks,
+        'login' => $login,
     ];
 }
 
 function getThemeFootVars(): array {
-    return ['{%upper%}' => _PAGETOP];
+    return ['upper' => _PAGETOP];
 }

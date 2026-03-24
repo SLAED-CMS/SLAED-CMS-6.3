@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1280">
+    <meta name="format-detection" content="telephone=no">
+    {{{ meta }}}
+    {{{ links }}}
+    <title>{% block title %}{{ sitename }}{% endblock %}</title>
+    {{{ scripts }}}
+</head>
+<body{% if season %} class="{{ season }}"{% endif %}>
+    <div id="topbar">
+        <div class="wrp">
+            {% if faqtitle %}
+            <ul class="top_contact"><li class="head_marquee">{{{ faqtitle }}}</li></ul>
+            {% endif %}
+        </div>
+    </div>
+    <header id="header">
+        <div class="wrp clrfix">
+            <a href="/" class="thd logo" title="{{ sitename }}">{{ sitename }}</a>
+            {% if slogan %}
+            <p class="font slogan">{{ slogan }}</p>
+            {% endif %}
+            {{{ login }}}
+        </div>
+    </header>
+    <div id="hmenu">
+        <div class="wrp clrfix">
+            {{{ menu }}}
+        </div>
+    </div>
+    {% if head_html %}
+    <div id="head-content">
+        <div class="wrp">{{{ head_html }}}</div>
+    </div>
+    {% endif %}
+    <div class="wrp">
+        <div id="container" class="clrfix">
+            {% if blocks_left %}
+            <aside id="leftbar">{{{ blocks_left }}}</aside>
+            {% endif %}
+            <section id="content">
+                {% block content %}{{{ content }}}{% endblock %}
+                {% if blocks_down %}{{{ blocks_down }}}{% endif %}
+            </section>
+            {% if blocks_right %}
+            <aside id="sidebar">{{{ blocks_right }}}</aside>
+            {% endif %}
+        </div>
+    </div>
+    <div id="footbox">
+        <div class="wrp grid_1_4">
+            <footer class="grid">{{{ foot_html }}}</footer>
+            {% if forumblock %}{{{ forumblock }}}{% endif %}
+            {% if contactblock %}{{{ contactblock }}}{% endif %}
+        </div>
+    </div>
+</body>
+</html>

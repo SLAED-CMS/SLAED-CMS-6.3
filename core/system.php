@@ -114,7 +114,7 @@ if (defined('MODULE_FILE')) {
 $theme = getTheme();
 if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'/templates/'.$theme.'/index.php';
 require_once BASE_DIR.'/core/classes/template.php';
-$tpl = defined('ADMIN_FILE') ? new Template('admin') : new Template($theme);
+$tpl = new Template($theme);
 
 # Returns a normalized 5-part cron schedule or an empty string when invalid
 function getSchedulerSchedule(array|string $job): string {
@@ -1886,7 +1886,7 @@ function updateStatsTrack(string $request, int $guest): void {
 
 # Format head
 function setHead(array $seo = []): void {
-    global $home, $index, $conf, $user, $name, $theme, $op, $tpl;
+    global $home, $index, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
     $name = $name ?? '';
     $ctime = time();
     $request = getenv('REQUEST_URI');
@@ -1925,14 +1925,8 @@ function setHead(array $seo = []): void {
             }
         }
     }
-    $index = file_get_contents(getThemeFile('index'));
-    if (defined('ADMIN_FILE') && ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==' || !preg_match('#{%LICENSE%}#', $index))) setExit(_NO_LICENSE);
+    if (defined('ADMIN_FILE') && ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==')) setExit(_NO_LICENSE);
     $licens = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
-    $index = str_replace('{%LICENSE%}', $licens, $index);
-    preg_match('#^(.*){%MODULE%}#iUs', $index, $head);
-    $head = (isset($head[1])) ? $head[1] : die('Error in Head!');
-    preg_match('#{%MODULE%}(.*)$#iUs', $index, $index);
-    $index = (isset($index[1])) ? $index[1] : die('Error in Foot!');
     $strmeta = '<meta charset="'._CHARSET.'">'."\n"
         .'<meta name="htmx-config" content=\'{"defaultHXHeaders":{"X-CSRF-Token":"'.getSiteToken('ajax').'"}}\'>'."\n";
     $strlink = $stscript = '';
@@ -2011,125 +2005,149 @@ function setHead(array $seo = []): void {
         $stscript = str_replace($seofrom, $seoto, $conf['schema']);
     }
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
-    $head = str_replace(['{%META%}', '{%LINK%}', '{%SCRIPT%}'], [$strmeta, $strlink, $script], addblocks($head));
-    $surl = (!defined('ADMIN_FILE')) ? addSchedulerTrigger() : '';
+    if (defined('ADMIN_FILE')) {
+        $adminvars = [
+            'theme' => getTheme(),
+            'lang' => substr(_LOCALE, 0, 2),
+            'sitename' => $conf['sitename'] ?? '',
+            'homeurl' => $conf['homeurl'] ?? '',
+            'slogan' => $conf['slogan'] ?? '',
+            'meta' => $strmeta,
+            'links' => $strlink,
+            'scripts' => $script,
+            'license' => $licens,
+            'menu' => '',
+            'admin_langs' => '',
+            'admin_blocks' => '',
+            'login' => '',
+            'content' => '',
+            'foot_html' => '',
+            'debug_html' => '',
+        ];
+        if (function_exists('getAdminHeadVars')) $adminvars = array_replace($adminvars, getAdminHeadVars());
+        $adminpage = isAdmin() ? 'admin' : 'login';
+        ob_start();
+        return;
+    }
+    $surl = addSchedulerTrigger();
     if ($surl !== '') {
-        $js = '<script>window.addEventListener("load",function(){window.setTimeout(function(){fetch("'.$surl.'",{credentials:"same-origin"});},1);});</script>';
-        $head = preg_replace('#<body(.*?)>#si', '<body$1>'.$js, $head, 1);
+        $script .= '<script>window.addEventListener("load",function(){window.setTimeout(function(){fetch("'.$surl.'",{credentials:"same-origin"});},1);});</script>';
     }
-    $vars = [
-        '{%theme%}'     => $theme,
-        '{%lang%}'      => substr(_LOCALE, 0, 2),
-        '{%sitename%}'  => $conf['sitename'] ?? '',
-        '{%logo%}'      => $conf['site_logo'] ?? '',
-        '{%homeurl%}'   => $conf['homeurl'] ?? '',
-        '{%slogan%}'    => $conf['slogan'] ?? '',
-        '{%home%}'      => _HOME,
-        '{%account%}'   => _ACCOUNT,
-        '{%album%}'     => _ALBUM,
-        '{%alinks%}'    => _A_LINKS,
-        '{%feedback%}'  => _FEEDBACK,
-        '{%content%}'   => _CONTENT,
-        '{%faq%}'       => _FAQ,
-        '{%files%}'     => _FILES,
-        '{%forum%}'     => _FORUM,
-        '{%help%}'      => _HELP,
-        '{%radio%}'     => _RADIO,
-        '{%jokes%}'     => _JOKES,
-        '{%links%}'     => _LINKS,
-        '{%media%}'     => _MEDIA,
-        '{%users%}'     => _USERS,
-        '{%news%}'      => _NEWS,
-        '{%order%}'     => _ORDER,
-        '{%pages%}'     => _PAGES,
-        '{%recommend%}' => _RECOMMEND,
-        '{%rss%}'       => _RSS,
-        '{%search%}'    => _SEARCH,
-        '{%shop%}'      => _SHOP,
-        '{%topusers%}'  => _TOPUSERS,
-        '{%voting%}'    => _VOTING,
-        '{%favorites%}' => _S_FAVORITEN,
-        '{%homepage%}'  => _S_STARTSEITE,
+    $login = '';
+    if (is_user()) {
+        $uname = htmlspecialchars(substr((string)$user[1], 0, 25), ENT_QUOTES, 'UTF-8');
+        $userinfo = getUserInfo();
+        $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.($userinfo['avatar'] ?? '');
+        $avatar = (!empty($userinfo['avatar']) && is_file($avpath)) ? $userinfo['avatar'] : 'default/00.gif';
+        $login = $tpl->getHtmlFrag('login-logged', [
+            'title'  => _ACCOUNT,
+            'avatar' => $conf['users']['adirectory'].'/'.$avatar,
+            'user'   => $uname,
+            'logout' => _LOGOUT,
+        ]);
+    } elseif ($conf['users']['enter']) {
+        $gfx = (int)($conf['gfx_chk'] ?? 0);
+        $captcha = in_array($gfx, [2, 4, 5, 7], true) ? getCaptcha(2) : '';
+        $login = $tpl->getHtmlFrag('login', [
+            'login'    => _LOGIN,
+            'nickname' => _NICKNAME,
+            'password' => _PASSWORD,
+            'captcha'  => $captcha,
+            'token'    => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
+            'lost'     => _PASSFOR,
+            'register' => _REG,
+        ]);
+    } else {
+        $login = $tpl->getHtmlFrag('login-without', ['register' => _BREG]);
+    }
+    $sitevars = [
+        'theme' => getTheme(),
+        'lang' => substr(_LOCALE, 0, 2),
+        'sitename' => $conf['sitename'] ?? '',
+        'logo' => $conf['site_logo'] ?? '',
+        'homeurl' => $conf['homeurl'] ?? '',
+        'slogan' => $conf['slogan'] ?? '',
+        'license' => $licens,
+        'meta' => $strmeta,
+        'links' => $strlink,
+        'scripts' => $script,
+        'content' => '',
+        'head_html' => $login,
+        'foot_html' => '',
+        'blocks_left' => '',
+        'blocks_right' => '',
+        'blocks_down' => '',
+        'login' => $login,
+        'home' => _HOME,
+        'account' => _ACCOUNT,
+        'album' => _ALBUM,
+        'alinks' => _A_LINKS,
+        'feedback' => _FEEDBACK,
+        'content_label' => _CONTENT,
+        'faq' => _FAQ,
+        'files' => _FILES,
+        'forum' => _FORUM,
+        'help' => _HELP,
+        'radio' => _RADIO,
+        'jokes' => _JOKES,
+        'links_label' => _LINKS,
+        'media' => _MEDIA,
+        'users' => _USERS,
+        'news' => _NEWS,
+        'order' => _ORDER,
+        'pages' => _PAGES,
+        'recommend' => _RECOMMEND,
+        'rss' => _RSS,
+        'search' => _SEARCH,
+        'shop' => _SHOP,
+        'topusers' => _TOPUSERS,
+        'voting' => _VOTING,
+        'favorites' => _S_FAVORITEN,
+        'homepage' => _S_STARTSEITE,
     ];
-    if (!defined('ADMIN_FILE')) {
-        if (is_user()) {
-            $uname = htmlspecialchars(substr((string)$user[1], 0, 25), ENT_QUOTES, 'UTF-8');
-            $userinfo = getUserInfo();
-            $avpath = BASE_DIR.'/'.$conf['users']['adirectory'].'/'.($userinfo['avatar'] ?? '');
-            $avatar = (!empty($userinfo['avatar']) && is_file($avpath)) ? $userinfo['avatar'] : 'default/00.gif';
-            $vars['{%login%}'] = $tpl->getHtmlFrag('login-logged', [
-                'title'  => _ACCOUNT,
-                'avatar' => $conf['users']['adirectory'].'/'.$avatar,
-                'user'   => $uname,
-                'logout' => _LOGOUT,
-            ]);
-        } elseif ($conf['users']['enter']) {
-            $gfx = (int)($conf['gfx_chk'] ?? 0);
-            $captcha = in_array($gfx, [2, 4, 5, 7], true) ? getCaptcha(2) : '';
-            $vars['{%login%}'] = $tpl->getHtmlFrag('login', [
-                'login'    => _LOGIN,
-                'nickname' => _NICKNAME,
-                'password' => _PASSWORD,
-                'captcha'  => $captcha,
-                'token'    => htmlspecialchars(getSiteToken('account'), ENT_QUOTES, 'UTF-8'),
-                'lost'     => _PASSFOR,
-                'register' => _REG,
-            ]);
-        } else {
-            $vars['{%login%}'] = $tpl->getHtmlFrag('login-without', ['register' => _BREG]);
-        }
-        if (function_exists('getThemeHeadVars')) $vars += getThemeHeadVars();
-    } elseif (function_exists('getAdminHeadVars')) {
-        $vars += getAdminHeadVars();
-    }
-    echo strtr($head, $vars);
-    unset($head);
-    if (!defined('ADMIN_FILE')) update_points(1);
+    if (function_exists('getThemeHeadVars')) $sitevars = array_replace($sitevars, getThemeHeadVars());
+    $sitepage = $home ? 'home' : 'module';
+    ob_start();
+    update_points(1);
+    return;
 }
 
 # Format foot
 function setFoot(): void {
- global $home, $name, $index, $conf;
-    $index = addblocks($index);
-    $index = (!defined('ADMIN_FILE') && !empty($conf['script_b'])) ? str_replace('{%SCRIPT%}', doScript(), $index) : str_replace('{%SCRIPT%}', '', $index);
-    $vars = [
-        '{%theme%}'     => getTheme(),
-        '{%lang%}'      => substr(_LOCALE, 0, 2),
-        '{%sitename%}'  => $conf['sitename'] ?? '',
-        '{%logo%}'      => $conf['site_logo'] ?? '',
-        '{%homeurl%}'   => $conf['homeurl'] ?? '',
-        '{%slogan%}'    => $conf['slogan'] ?? '',
-        '{%home%}'      => _HOME,
-        '{%account%}'   => _ACCOUNT,
-        '{%album%}'     => _ALBUM,
-        '{%alinks%}'    => _A_LINKS,
-        '{%feedback%}'  => _FEEDBACK,
-        '{%content%}'   => _CONTENT,
-        '{%faq%}'       => _FAQ,
-        '{%files%}'     => _FILES,
-        '{%forum%}'     => _FORUM,
-        '{%help%}'      => _HELP,
-        '{%radio%}'     => _RADIO,
-        '{%jokes%}'     => _JOKES,
-        '{%links%}'     => _LINKS,
-        '{%media%}'     => _MEDIA,
-        '{%users%}'     => _USERS,
-        '{%news%}'      => _NEWS,
-        '{%order%}'     => _ORDER,
-        '{%pages%}'     => _PAGES,
-        '{%recommend%}' => _RECOMMEND,
-        '{%rss%}'       => _RSS,
-        '{%search%}'    => _SEARCH,
-        '{%shop%}'      => _SHOP,
-        '{%topusers%}'  => _TOPUSERS,
-        '{%voting%}'    => _VOTING,
-        '{%favorites%}' => _S_FAVORITEN,
-        '{%homepage%}'  => _S_STARTSEITE,
-        '{%login%}'     => '',
-    ];
-    if (function_exists('getThemeFootVars')) $vars += getThemeFootVars();
-    echo strtr($index, $vars);
-    unset($index);
+ global $home, $name, $index, $conf, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
+    if (defined('ADMIN_FILE')) {
+        $vars = is_array($adminvars ?? null) ? $adminvars : [];
+        $vars['content'] = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
+        $vars = array_replace($vars, [
+            'time_html' => addblocks('{%BLOCKS time%}'),
+            'foot_html' => '<a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="thide">'._PAGETOP.'</a>',
+            'debug_html' => addblocks('{%BLOCKS variables%}'),
+        ]);
+        $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
+        echo $tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin');
+        unset($adminpage, $adminvars);
+        return;
+    }
+    $vars = is_array($sitevars ?? null) ? $sitevars : [];
+    $body = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
+    $time = ($conf['db_t'] == '1') ? getTimeLoads() : '';
+    $debug = addblocks('{%BLOCKS variables%}');
+    $foot = addblocks('{%BLOCKS foot%}');
+    $foot .= '<a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="thide">'._PAGETOP.'</a>';
+    if ($time !== '') $foot .= '<div class="sl_generates">'.$time.'</div>';
+    if (!empty($vars['license'])) $foot .= '<div class="sl_license">'.$vars['license'].'</div>';
+    if ($debug !== '') $foot .= $debug;
+    $vars = array_replace($vars, [
+        'content' => addblocks('{%BLOCKS message%}').addblocks('{%BLOCKS center%}').$body,
+        'blocks_left' => addblocks('{%BLOCKS left%}'),
+        'blocks_right' => addblocks('{%BLOCKS right%}'),
+        'blocks_down' => addblocks('{%BLOCKS down%}'),
+        'foot_html' => $foot,
+    ]);
+    if (function_exists('getThemeFootVars')) $vars = array_replace($vars, getThemeFootVars());
+    $page = (is_string($sitepage ?? '') && $sitepage !== '') ? $sitepage : ($home ? 'home' : 'module');
+    echo $tpl->getHtmlPage($page, $vars, $page === 'home' ? 'home' : 'app');
+    unset($sitepage, $sitevars, $index);
     if ((!defined('ADMIN_FILE') && $conf['cache'] == 1) || (!defined('ADMIN_FILE') && $conf['cache'] == 2 && $home)) {
         $dir = 'config/cache/';
         $url = str_replace('/', '', getenv('REQUEST_URI'));
@@ -3476,7 +3494,6 @@ function getTheme(): string {
     static $cached = null;
     if ($cached !== null) return $cached;
  global $user, $conf;
-    if (defined('ADMIN_FILE')) return $cached = 'admin';
     $default = $conf['theme'] ?? 'default';
     if (!is_user()) return $cached = $default;
     $utheme = $user[5] ?? '';

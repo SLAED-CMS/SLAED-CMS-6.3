@@ -50,7 +50,7 @@ namespace Tests\Unit {
     {
         protected function setUp(): void
         {
-            $GLOBALS['__test_theme'] = 'admin';
+            $GLOBALS['__test_theme'] = 'default';
             $GLOBALS['__test_is_user'] = false;
             $GLOBALS['__test_user_info'] = [];
             $GLOBALS['__test_captcha'] = '';
@@ -80,7 +80,7 @@ namespace Tests\Unit {
         {
             $GLOBALS['__test_captcha'] = '<div class="admin-captcha">captcha</div>';
 
-            $html = (new \Template('admin'))->getHtmlPart('login', [
+            $html = (new \Template('default'))->getHtmlPart('login', [
                 'route' => 'admin',
                 'nickname' => 'Nickname',
                 'password' => 'Password',
@@ -89,7 +89,7 @@ namespace Tests\Unit {
             ]);
 
             $this->assertNotSame('', $html);
-            $this->assertStringContainsString('admin-login-form', $html);
+            $this->assertStringContainsString('login-form', $html);
             $this->assertStringContainsString('Nickname', $html);
             $this->assertStringContainsString('Password', $html);
             $this->assertStringContainsString('Login', $html);
@@ -99,7 +99,7 @@ namespace Tests\Unit {
         #[Test]
         public function adminRegistrationFlowUsesNewRegistrationPartialHappyPath(): void
         {
-            $html = (new \Template('admin'))->getHtmlPart('registration', [
+            $html = (new \Template('default'))->getHtmlPart('registration', [
                 'route' => 'admin',
                 'nickname' => 'Nickname',
                 'aname' => 'AdminUser',

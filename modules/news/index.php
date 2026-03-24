@@ -426,7 +426,7 @@ function add(): void {
             'lbl_cat' => _CATEGORY,
             'lbl_text' => _TEXT,
             'lbl_body' => _ENDTEXT,
-            'username' => filterText(substr($user[1], 0, 25)),
+            'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
             'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'],'<option value="">'._HOMECAT.'</option>'),

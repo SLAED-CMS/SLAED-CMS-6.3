@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{{ meta }}}
+    {{{ links }}}
+    <title>{% block title %}{{ sitename }}{% endblock %}</title>
+    {{{ scripts }}}
+</head>
+<body>
+    <div class="site-shell d-flex flex-column sl-home-shell">
+        <header class="site-header bg-white py-3">
+            <div class="container">
+                {% if head_html %}
+                {{{ head_html }}}
+                {% endif %}
+            </div>
+        </header>
+
+        <main class="site-main flex-grow-1">
+            <div class="container">
+                {% if blocks_left %}
+                <aside class="site-side site-side-left">{{{ blocks_left }}}</aside>
+                {% endif %}
+
+                <section class="site-content">
+                    {% block content %}{{{ content }}}{% endblock %}
+                </section>
+
+                {% if blocks_right %}
+                <aside class="site-side site-side-right">{{{ blocks_right }}}</aside>
+                {% endif %}
+            </div>
+        </main>
+
+        {% if blocks_down %}
+        <div class="site-down">
+            <div class="container">{{{ blocks_down }}}</div>
+        </div>
+        {% endif %}
+
+        <footer class="site-footer py-4">
+            <div class="container">
+                {{{ foot_html }}}
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

@@ -3,18 +3,29 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="templates/simple/assets/vendor/bootstrap/bootstrap.min.css">
-    <link rel="stylesheet" href="templates/simple/assets/css/theme.css">
+    {{{ meta }}}
+    {{{ links }}}
+    <title>{% block title %}{{ sitename }}{% endblock %}</title>
 </head>
 <body>
-    <main class="py-5">
-        <div class="container">
-            {{{ content_html }}}
+    {% if login %}
+    <div class="wrapper slaenter">
+        <div class="wraptop"></div>
+        <div class="wrapmid">
+            <div class="header">
+                <div class="lcolomn leftside"><h1><a href="//slaed.net" target="_blank" class="thide" title="SLAED CMS">SLAED CMS</a></h1></div>
+                <div class="rcolomn midside"><b title="{{ login }}">{{ login }}</b></div>
+            </div>
+            <div class="entercont">
+    {% endif %}
+    {% block content %}{% endblock %}
+    {% if login %}
+            </div>
+            <div class="footer"><div class="copyright">{{{ license }}}</div></div>
         </div>
-    </main>
-
-    <script src="templates/simple/assets/vendor/bootstrap/bootstrap.bundle.min.js"></script>
-    <script src="templates/simple/assets/js/theme.js"></script>
+        <div class="wrapfoot"></div>
+    </div>
+    {% endif %}
+    {{{ scripts }}}
 </body>
 </html>

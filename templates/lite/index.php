@@ -138,13 +138,17 @@ function getThemeHeadVars(): array {
     [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));
     $ftitle = htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8');
     $faq = '<a class="ico i_fav" href="index.php?name=faq&amp;op=view&amp;id='.(int)$fid.'" title="'.$ftitle.'">'.$ftitle.'</a>';
+    $head = '';
+    if ($mname !== '' || $cname !== '') {
+        $head = '<a class="ico i_rss2" href="index.php?name=rss_info" title="RSS информер"><span class="thide">Чтение RSS каналов</span></a>'
+            .'<h1 class="font">'.$mname.'</h1>'
+            .'<b class="breadcrumbs">'.$cname.'</b>';
+    }
     return [
-        '{%season%}'    => setTemplateSeason(),
-        '{%modul%}'     => $conf['name'],
-        '{%menu%}'      => setTemplateMenu(),
-        '{%modulname%}' => $mname,
-        '{%catname%}'   => $cname,
-        '{%faqtitle%}'  => $faq,
+        'season' => setTemplateSeason(),
+        'menu' => setTemplateMenu(),
+        'faqtitle' => $faq,
+        'head_html' => $head,
     ];
 }
 
@@ -170,7 +174,7 @@ function getThemeFootVars(): array {
         </form>
     </div>';
     return [
-        '{%forumblock%}'   => setTemplateForum(),
-        '{%contactblock%}' => $contactblock,
+        'forumblock' => setTemplateForum(),
+        'contactblock' => $contactblock,
     ];
 }

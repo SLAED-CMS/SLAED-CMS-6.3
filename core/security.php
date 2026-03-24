@@ -586,22 +586,35 @@ function isAdmin(bool $super = false): bool {
 # Format exit and displaying information
 function setExit(string $msg, string $typ = ''): never {
     global $conf;
-    $cont = '<!doctype html>'.PHP_EOL
-    .'<html lang="'.substr(_LOCALE, 0, 2).'">'.PHP_EOL
-    .'<head>'.PHP_EOL
-    .'<meta charset="'._CHARSET.'">'.PHP_EOL
-    .'<meta name="viewport" content="width=device-width, initial-scale=1.0">'.PHP_EOL
-    .'<title>'.$conf['sitename'].' '.urldecode($conf['defis']).' '.$conf['slogan'].'</title>'.PHP_EOL
-    .'<meta name="author" content="'.$conf['sitename'].'">'.PHP_EOL
-    .'<meta name="generator" content="SLAED CMS '.$conf['version'].'">'.PHP_EOL;
-    $cont .= ($typ) ? '<meta http-equiv="refresh" content="5; url='.$conf['homeurl'].'/index.php">'.PHP_EOL : '';
-    $cont .= '</head>'.PHP_EOL
-    .'<body style="margin: 0; height: 100vh; display: flex; justify-content: center; align-items: center; flex-direction: column;">'.PHP_EOL
-    .'<img src="'.$conf['homeurl'].'/templates/'.$conf['theme'].'/images/logos/'.$conf['site_logo'].'" alt="'.$conf['sitename'].'" title="'.$conf['sitename'].'" style="max-width: 90%; height: auto;">'.PHP_EOL
-    .'<div style="margin-top: 40px; font: 24px Arial, Tahoma, Verdana, sans-serif; color: #1a4674; font-weight: bold; text-align: center;">'.$msg.'</div>'.PHP_EOL
-    .'</body>'.PHP_EOL
-    .'</html>';
-    die($cont);
+    $file = defined('BASE_DIR') ? BASE_DIR.'/core/classes/template.php' : '';
+    if (!class_exists('Template') && $file !== '' && is_file($file)) require_once $file;
+    if (!class_exists('Template')) die('Template engine unavailable');
+    $theme = getTheme();
+    $tpl = new Template($theme);
+    $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
+    $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.($conf['homeurl'] ?? '').'/index.php">'.PHP_EOL : '';
+    $meta = '<meta charset="'._CHARSET.'">'.PHP_EOL
+        .'<meta name="viewport" content="width=device-width, initial-scale=1.0">'.PHP_EOL
+        .'<title>'.($conf['sitename'] ?? '').' '.urldecode((string)($conf['defis'] ?? '')).'</title>'.PHP_EOL
+        .'<meta name="author" content="'.($conf['sitename'] ?? '').'">'.PHP_EOL
+        .'<meta name="generator" content="SLAED CMS '.($conf['version'] ?? '').'">'.PHP_EOL
+        .$jump;
+    $license = base64_decode((string)($conf['lic_h'] ?? '')).date('Y').base64_decode((string)($conf['lic_f'] ?? ''));
+    $links = '<link rel="shortcut icon" href="templates/admin/favicon.png">'.PHP_EOL
+        .'<link rel="stylesheet" href="templates/admin/theme.css">'.PHP_EOL
+        .'<link rel="stylesheet" href="templates/admin/system.css">'.PHP_EOL;
+    die($tpl->getHtmlPage('message', [
+        'lang' => substr(_LOCALE, 0, 2),
+        'theme' => $theme,
+        'sitename' => $conf['sitename'] ?? '',
+        'meta' => $meta,
+        'links' => $links,
+        'scripts' => '',
+        'login' => _MESSAGE,
+        'license' => $license,
+        'title' => '',
+        'message_html' => $text,
+    ]));
 }
 
 # Cookie set

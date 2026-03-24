@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {{{ meta }}}
+    {{{ links }}}
+    <title>{% block title %}{{ sitename }}{% endblock %}</title>
+    {{{ scripts }}}
+</head>
+<body>
+    <div id="sl_wrap">
+        <header id="sl_top">
+            {{{ head_html }}}
+        </header>
+
+        <div id="sl_main">
+            {% if blocks_left %}
+            <aside id="sl_col_left">{{{ blocks_left }}}</aside>
+            {% endif %}
+
+            <main id="sl_content">
+                {% block content %}{{{ content }}}{% endblock %}
+            </main>
+
+            {% if blocks_right %}
+            <aside id="sl_col_right">{{{ blocks_right }}}</aside>
+            {% endif %}
+        </div>
+
+        {% if blocks_down %}
+        <div id="sl_down">
+            {{{ blocks_down }}}
+        </div>
+        {% endif %}
+
+        <footer id="sl_bot">
+            {{{ foot_html }}}
+        </footer>
+    </div>
+</body>
+</html>

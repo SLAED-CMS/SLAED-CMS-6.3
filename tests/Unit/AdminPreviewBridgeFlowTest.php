@@ -62,7 +62,7 @@ namespace Tests\Unit {
         #[Test]
         public function previewHappyPathUsesNewAdminPartial(): void
         {
-            $tpl = new \Template('admin');
+            $tpl = new \Template('default');
             $html = $tpl->getHtmlPart('preview', [
                 'title' => 'Preview',
                 'fields' => '<b>Title</b>',
@@ -105,7 +105,7 @@ namespace Tests\Unit {
                 'fields2' => 'Body two',
                 'fields3' => 'Body three',
             ];
-            $html = (new \Template('admin'))->getHtmlPart('preview', $view);
+            $html = (new \Template('default'))->getHtmlPart('preview', $view);
 
             $this->assertStringContainsString('Preview', $html);
             $this->assertStringContainsString('<b>Mapped</b>', $html);
@@ -119,7 +119,7 @@ namespace Tests\Unit {
         {
             $GLOBALS['__test_filter_markdown']['Html text'] = '<em>Html text</em>';
 
-            $html = (new \Template('admin'))->getHtmlPart('preview', [
+            $html = (new \Template('default'))->getHtmlPart('preview', [
                 'title' => 'Preview',
                 'fields' => '<b>Title</b>',
                 'fields1' => '<em>Html text</em>',
