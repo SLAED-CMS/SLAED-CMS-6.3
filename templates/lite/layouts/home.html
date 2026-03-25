@@ -11,9 +11,7 @@
 <body{% if season %} class="{{ season }}"{% endif %}>
     <div id="topbar">
         <div class="wrp">
-            {% if faqtitle %}
-            <ul class="top_contact"><li class="head_marquee">{{{ faqtitle }}}</li></ul>
-            {% endif %}
+            <ul class="top_contact"><li class="head_marquee">{% if faqtitle %}{{{ faqtitle }}}{% endif %}</li></ul>
             <div class="top_social">
                 <a class="thd i_yt" rel="nofollow" target="_blank" href="//youtu.be/zw8_KjhTW-g" title="Мы в YouTube">Мы в YouTube</a>
                 <a class="thd i_tw" rel="nofollow" target="_blank" href="//twitter.com/slaed_cms" title="Мы в Twitter">Мы в Twitter</a>
@@ -29,9 +27,7 @@
     <header id="header">
         <div class="wrp clrfix">
             <a href="/" class="thd logo" title="{{ sitename }}">{{ sitename }}</a>
-            {% if slogan %}
-            <p class="font slogan">{{ slogan }}</p>
-            {% endif %}
+            <p class="font slogan">{% if slogan %}{{ slogan }}{% else %}Все великое<br>просто{% endif %}</p>
             {{{ login }}}
             <ul class="d_pane">
                 <li class="d_info">Aктуальная<br>версия</li>
@@ -88,7 +84,7 @@
                 <ul class="block_contact">
                     <li class="ico i_geo">D-49179, Deutschland<br>Ostercappeln, Im Siek 6</li>
                     <li class="ico i_phone">+49 176 61966679</li>
-                    <li class="ico i_geo"><a href="//slaed.net" title="{{ sitename }}">https://slaed.net</a></li>
+                    <li class="ico i_geo"><script>"mysi".AddMail('support', 'slaed.net');</script><noscript>support<!-- slaed --><span>&#64;</span><!-- slaed -->slaed.net</noscript><br><a href="//slaed.net" title="{{ sitename }}">https://slaed.net</a></li>
                 </ul>
             </div>
         </div>

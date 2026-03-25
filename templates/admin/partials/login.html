@@ -1,22 +1,10 @@
-<form action="{{ route }}.php" method="post" class="admin-login-form">
-    <div class="admin-login-panel">
-        <div class="admin-login-row">
-            <label class="admin-login-label">{{ nickname }}</label>
-            <input type="text" name="name" maxlength="25" placeholder="{{ nickname }}" required>
-        </div>
-
-        <div class="admin-login-row">
-            <label class="admin-login-label">{{ password }}</label>
-            <input type="password" name="pwd" maxlength="25" placeholder="{{ password }}" required>
-        </div>
-
-        {% if captcha %}
-        <div class="admin-login-captcha">{{{ captcha }}}</div>
-        {% endif %}
-
-        <div class="admin-login-actions">
-            <input type="hidden" name="op" value="check_admin">
-            <button type="submit">{{ login }}</button>
-        </div>
+<form action="{{ route }}.php" method="post">
+    <div class="entborder">
+        <ul class="reset">
+            <li><span>{{ nickname }}:</span><div class="adm_login"><input type="text" name="name" maxlength="25" placeholder="{{ nickname }}" autocomplete="username" required></div><br></li>
+            <li><span>{{ password }}:</span><div class="adm_login"><input type="password" name="pwd" maxlength="25" placeholder="{{ password }}" autocomplete="current-password" required></div><br></li>
+            {% if captcha %}<li><span>&nbsp;</span><div class="adm_login">{{{ captcha }}}</div><br></li>{% endif %}
+        </ul>
     </div>
+    <div class="submit"><input type="hidden" name="op" value="check_admin"><input type="submit" value="{{ login }}"></div>
 </form>

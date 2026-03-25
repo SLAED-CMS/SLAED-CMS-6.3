@@ -216,7 +216,7 @@ class Template {
     protected function filterEcho(string $code): string {
         if ($code === '' || !str_contains($code, '{{')) return $code;
         return (string)preg_replace_callback(
-            '/(?<!\{)\{\{\s*([a-z][a-z0-9_]*)\s*\}\}(?!\})/',
+            '/(?<!\{)\{\{\s*([_a-z][_a-z0-9]*)\s*\}\}(?!\})/',
             fn(array $data): string => '<?= $this->getSafe($'.$data[1].' ?? null); ?>',
             $code
         );
@@ -226,7 +226,7 @@ class Template {
     protected function filterRaw(string $code): string {
         if ($code === '' || !str_contains($code, '{{{')) return $code;
         return (string)preg_replace_callback(
-            '/\{\{\{\s*([a-z][a-z0-9_]*)\s*\}\}\}/',
+            '/\{\{\{\s*([_a-z][_a-z0-9]*)\s*\}\}\}/',
             fn(array $data): string => '<?= $this->getRaw($'.$data[1].' ?? null); ?>',
             $code
         );
@@ -236,7 +236,7 @@ class Template {
     protected function filterIf(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*(if|elseif)\s+(!?)([a-z][a-z0-9_]*)\s*%\}|\{%\s*(else|endif)\s*%\}/',
+            '/\{%\s*(if|elseif)\s+(!?)([_a-z][_a-z0-9]*)\s*%\}|\{%\s*(else|endif)\s*%\}/',
             function(array $data): string {
                 if (!empty($data[4])) {
                     return ($data[4] === 'else') ? '<?php else: ?>' : '<?php endif; ?>';
@@ -253,7 +253,7 @@ class Template {
     protected function filterFor(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*for\s+([a-z][a-z0-9_]*)\s+in\s+([a-z][a-z0-9_]*)\s*%\}|\{%\s*endfor\s*%\}/',
+            '/\{%\s*for\s+([_a-z][_a-z0-9]*)\s+in\s+([_a-z][_a-z0-9]*)\s*%\}|\{%\s*endfor\s*%\}/',
             function(array $data): string {
                 if (!empty($data[2])) {
                     $item = '$'.$data[1];
@@ -271,7 +271,7 @@ class Template {
     protected function filterUse(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*include\s+\'([a-z0-9\/.-]+\.html)\'(?:\s+with\s+([a-z][a-z0-9_]*))?\s*%\}/',
+            '/\{%\s*include\s+\'([a-z0-9\/.-]+\.html)\'(?:\s+with\s+([_a-z][_a-z0-9]*))?\s*%\}/',
             function(array $data): string {
                 $path = $data[1] ?? '';
                 if (!$this->checkIncl($path)) return $data[0];
@@ -289,7 +289,7 @@ class Template {
     protected function filterComp(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*component\s+\'([a-z0-9\/.-]+\.html)\'(?:\s+with\s+([a-z][a-z0-9_]*))?\s*%\}(.*?)\{%\s*endcomponent\s*%\}/s',
+            '/\{%\s*component\s+\'([a-z0-9\/.-]+\.html)\'(?:\s+with\s+([_a-z][_a-z0-9]*))?\s*%\}(.*?)\{%\s*endcomponent\s*%\}/s',
             function(array $data): string {
                 $path = $data[1] ?? '';
                 $body = $data[3] ?? '';
@@ -310,7 +310,7 @@ class Template {
     protected function filterSlot(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*slot(?:\s+([a-z][a-z0-9_]*))?\s*%\}(.*?)\{%\s*endslot\s*%\}/s',
+            '/\{%\s*slot(?:\s+([_a-z][_a-z0-9]*))?\s*%\}(.*?)\{%\s*endslot\s*%\}/s',
             function(array $data): string {
                 $name = $data[1] ?? 'default';
                 $raw = $data[2] ?? '';

@@ -3997,6 +3997,7 @@ function user_sainfo(string $id = ''): string {
 function adminblock(): string {
  global $db, $afile, $tpl;
     if (isAdmin()) {
+        $cltit = defined('_OPCL') ? _OPCL : ((defined('_CLOSE') ? _CLOSE : 'Close').' / '.(defined('_WHO') ? _WHO : 'Open'));
         $title = '';
         $content = '';
         $cont = $tpl->getHtmlFrag('admin-shortcuts', [
@@ -4012,8 +4013,8 @@ function adminblock(): string {
             $cont .= '<hr>'.$content;
         }
         $a_title = ($title) ? $title : _ADMINS;
-        return $tpl->getHtmlFrag('block-left', ['title' => $a_title, 'content' => $cont, 'id' => '7', 'close' => _OPCL])
-            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => $tpl->getHtmlFrag('admin-session-box', ['content' => user_sainfo(1)]), 'id' => '8', 'close' => _OPCL]);
+        return $tpl->getHtmlFrag('block-left', ['title' => $a_title, 'content' => $cont, 'id' => '7', 'close' => $cltit])
+            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => $tpl->getHtmlFrag('admin-session-box', ['content' => user_sainfo(1)]), 'id' => '8', 'close' => $cltit]);
     }
     return '';
 }
@@ -5735,7 +5736,7 @@ function cutstr(mixed $strip, int $size, string $type = ''): string {
     $strip = (string)$strip;
     $size = (int)$size;
     if (!$type) {
-        $end = '&hellip;';
+        $end = '...';
     } elseif ($type == '1') {
         $end = '.';
     } elseif ($type == '2') {
@@ -6049,15 +6050,26 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
             }
             $smilies = '';
                 $i = 1;
-                $dir = opendir(img_find('smilies'));
-                while (false !== ($entry = readdir($dir))) {
+                $smdir = img_find('smilies');
+                if (!is_dir($smdir)) {
+                    foreach (['templates/admin/images/smilies', 'templates/lite/images/smilies'] as $fdir) {
+                        if (is_dir($fdir)) {
+                            $smdir = $fdir;
+                            break;
+                        }
+                    }
+                }
+                $slist = is_dir($smdir) ? scandir($smdir) : false;
+                if ($slist !== false) {
+                foreach ($slist as $entry) {
                     if (preg_match("#(\.gif)$#i", $entry) && $entry != '.' && $entry != '..') {
                         $i = ($i < 10) ? '0'.$i : $i;
-                        $smilies .= ' <img src="'.img_find('smilies/'.$i.'.gif')."\" OnClick=\"InsertCode('smilies', ' *".$i."', '', '', '".$id."');\" style=\"cursor: pointer; margin: 3px 2px 0px 0px;\" alt=\""._SMILIE.' - '.$i.'" title="'._SMILIE.' - '.$i.'">';
+                        $smsrc = is_file($smdir.'/'.$i.'.gif') ? $smdir.'/'.$i.'.gif' : img_find('smilies/'.$i.'.gif');
+                        $smilies .= ' <img src="'.$smsrc."\" OnClick=\"InsertCode('smilies', ' *".$i."', '', '', '".$id."');\" style=\"cursor: pointer; margin: 3px 2px 0px 0px;\" alt=\""._SMILIE.' - '.$i.'" title="'._SMILIE.' - '.$i.'">';
                         $i++;
                     }
                 }
-                closedir($dir);
+                }
             $bottomHtml .= editorDropPanel(
                 editorToolbarButton("HideShow('s-form-".$id."', 'blind', 'up', 500);", 'sl_bb_smile', _ESMILIE),
                 editorSmiliesPanel('s-form-'.$id, $smilies)

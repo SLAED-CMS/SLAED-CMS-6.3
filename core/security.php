@@ -593,26 +593,45 @@ function setExit(string $msg, string $typ = ''): never {
     $tpl = new Template($theme);
     $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
     $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.($conf['homeurl'] ?? '').'/index.php">'.PHP_EOL : '';
-    $meta = '<meta charset="'._CHARSET.'">'.PHP_EOL
-        .'<meta name="viewport" content="width=device-width, initial-scale=1.0">'.PHP_EOL
-        .'<title>'.($conf['sitename'] ?? '').' '.urldecode((string)($conf['defis'] ?? '')).'</title>'.PHP_EOL
-        .'<meta name="author" content="'.($conf['sitename'] ?? '').'">'.PHP_EOL
+    $meta = '<meta name="author" content="'.($conf['sitename'] ?? '').'">'.PHP_EOL
         .'<meta name="generator" content="SLAED CMS '.($conf['version'] ?? '').'">'.PHP_EOL
         .$jump;
     $license = base64_decode((string)($conf['lic_h'] ?? '')).date('Y').base64_decode((string)($conf['lic_f'] ?? ''));
-    $links = '<link rel="shortcut icon" href="templates/admin/favicon.png">'.PHP_EOL
-        .'<link rel="stylesheet" href="templates/admin/theme.css">'.PHP_EOL
-        .'<link rel="stylesheet" href="templates/admin/system.css">'.PHP_EOL;
+    $themedir = 'templates/'.$theme;
+    $linksrc = [];
+    if (is_file(BASE_DIR.'/'.$themedir.'/favicon.png')) {
+        $linksrc[] = '<link rel="shortcut icon" href="'.$themedir.'/favicon.png">';
+    } elseif (is_file(BASE_DIR.'/'.$themedir.'/favicon.ico')) {
+        $linksrc[] = '<link rel="shortcut icon" href="'.$themedir.'/favicon.ico">';
+    }
+    foreach (['theme.css', 'system.css', 'blocks.css'] as $asset) {
+        if (is_file(BASE_DIR.'/'.$themedir.'/'.$asset)) {
+            $linksrc[] = '<link rel="stylesheet" href="'.$themedir.'/'.$asset.'">';
+        }
+    }
+    $links = implode(PHP_EOL, $linksrc);
     die($tpl->getHtmlPage('message', [
         'lang' => substr(_LOCALE, 0, 2),
         'theme' => $theme,
         'sitename' => $conf['sitename'] ?? '',
+        'homeurl' => $conf['homeurl'] ?? '',
+        'slogan' => $conf['slogan'] ?? '',
         'meta' => $meta,
         'links' => $links,
         'scripts' => '',
-        'login' => _MESSAGE,
+        'login' => '',
         'license' => $license,
-        'title' => '',
+        'home' => _HOME,
+        'search' => _SEARCH,
+        'feedback' => _FEEDBACK,
+        'recommend' => _RECOMMEND,
+        'favorites' => _S_FAVORITEN,
+        'head_html' => '',
+        'foot_html' => $license,
+        'blocks_left' => '',
+        'blocks_right' => '',
+        'blocks_down' => '',
+        'title' => _MESSAGE,
         'message_html' => $text,
     ]));
 }

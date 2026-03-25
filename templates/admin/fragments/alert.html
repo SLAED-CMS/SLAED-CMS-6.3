@@ -1,2 +1,1 @@
-{% if text %}<div class="sl_{{ type }}">{{{ text }}}</div>
-{% endif %}
+{% if text %}{% if is_warn %}<div class="sl_warn">{{{ text }}}</div>{% else %}<div class="sl_info">{{{ text }}}</div>{% endif %}{% endif %}{% if meta %}{{{ meta }}}{% endif %}

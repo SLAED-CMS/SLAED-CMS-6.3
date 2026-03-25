@@ -1,39 +1,13 @@
-<form action="{{ route }}.php" method="post" class="admin-registration-form">
-    <div class="admin-registration-panel">
-        <div class="admin-registration-row">
-            <label class="admin-registration-label">{{ nickname }}</label>
-            <input type="text" name="aname" value="{{ aname }}" maxlength="25" placeholder="{{ nickname }}" required>
-        </div>
-
-        <div class="admin-registration-row">
-            <label class="admin-registration-label">{{ homepage }}</label>
-            <input type="url" name="aurl" value="http://{{ host }}" maxlength="255" placeholder="{{ homepage }}" required>
-        </div>
-
-        <div class="admin-registration-row">
-            <label class="admin-registration-label">{{ email }}</label>
-            <input type="email" name="aemail" value="{{ aemail }}" maxlength="255" placeholder="{{ email }}" required>
-        </div>
-
-        <div class="admin-registration-row">
-            <label class="admin-registration-label">{{ password }}</label>
-            <input type="password" name="apwd" maxlength="25" placeholder="{{ password }}" required>
-        </div>
-
-        <div class="admin-registration-row">
-            <label class="admin-registration-label">{{ retype }}</label>
-            <input type="password" name="apwd2" maxlength="25" placeholder="{{ retype }}" required>
-        </div>
-
-        <div class="admin-registration-choice">
-            <span class="admin-registration-label">{{ createuserdata }}</span>
-            <label><input type="radio" name="auser_new" value="1" checked> {{ yes }}</label>
-            <label><input type="radio" name="auser_new" value="0"> {{ no }}</label>
-        </div>
-
-        <div class="admin-registration-actions">
-            <input type="hidden" name="op" value="add_admin">
-            <button type="submit">{{ send }}</button>
-        </div>
+<form action="{{ route }}.php" method="post">
+    <div class="entborder">
+        <ul class="reset">
+            <li><span>{{ nickname }}:</span><div class="adm_login"><input type="text" name="aname" value="{{ aname }}" maxlength="25" placeholder="{{ nickname }}" required></div><br></li>
+            <li><span>{{ homepage }}:</span><div class="adm_login"><input type="url" name="aurl" value="http://{{ host }}" maxlength="255" placeholder="{{ homepage }}" required></div><br></li>
+            <li><span>{{ email }}:</span><div class="adm_login"><input type="email" name="aemail" value="{{ aemail }}" maxlength="255" placeholder="{{ email }}" required></div><br></li>
+            <li><span>{{ password }}:</span><div class="adm_login"><input type="password" name="apwd" maxlength="25" placeholder="{{ password }}" required></div><br></li>
+            <li><span>{{ retype }}:</span><div class="adm_login"><input type="password" name="apwd2" maxlength="25" placeholder="{{ retype }}" required></div><br></li>
+            <li><span>{{ createuserdata }}</span><div><input type="radio" name="auser_new" value="1" checked>{{ yes }} <input type="radio" name="auser_new" value="0">{{ no }}</div><br></li>
+        </ul>
     </div>
+    <div class="submit"><input type="hidden" name="op" value="add_admin"><input type="submit" value="{{ send }}" class="sl_but_blue"></div>
 </form>

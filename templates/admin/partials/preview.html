@@ -1,23 +1,6 @@
-<div class="admin-preview">
-    {% if title %}
-    <div class="admin-preview-title">{{ title }}</div>
-    {% endif %}
-
-    <div class="admin-preview-body">
-        {% if title_html %}
-        <div class="admin-preview-fields">{{{ title_html }}}</div>
-        {% endif %}
-
-        {% if body_a %}
-        <div class="admin-preview-fields1">{% if title_html %}<br><br>{% endif %}{{{ body_a }}}</div>
-        {% endif %}
-
-        {% if body_b %}
-        <div class="admin-preview-fields2"><br><br>{{{ body_b }}}</div>
-        {% endif %}
-
-        {% if body_c %}
-        <div class="admin-preview-fields3"><br><br>{{{ body_c }}}</div>
-        {% endif %}
+<div class="basecont">
+    <div class="bpad">
+        <div class="tabpad"><fieldset><legend>{{ title }}</legend>{{{ title_html }}}{% if body_a %} {{{ body_a }}}{% endif %}{% if body_b %} {{{ body_b }}}{% endif %}{% if body_c %} {{{ body_c }}}{% endif %}</fieldset></div>
     </div>
+    <div class="hsep"></div>
 </div>
