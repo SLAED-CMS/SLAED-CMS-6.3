@@ -2016,12 +2016,16 @@ function setHead(array $seo = []): void {
             'links' => $strlink,
             'scripts' => $script,
             'license' => $licens,
+            'head_html' => '',
             'menu' => '',
             'admin_langs' => '',
             'admin_blocks' => '',
             'login' => '',
             'content' => '',
             'foot_html' => '',
+            'blocks_left' => '',
+            'blocks_right' => '',
+            'blocks_down' => '',
             'debug_html' => '',
         ];
         if (function_exists('getAdminHeadVars')) $adminvars = array_replace($adminvars, getAdminHeadVars());
@@ -2119,10 +2123,11 @@ function setFoot(): void {
         $vars = is_array($adminvars ?? null) ? $adminvars : [];
         $vars['content'] = (ob_get_level() > 0) ? (string)ob_get_clean() : '';
         $cvar = explode(',', $conf['variables']);
+        $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '';
         $vars = array_replace($vars, [
             'time_html' => ($conf['db_t'] == '1') ? getTimeLoads() : '',
-            'foot_html' => '<a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="thide">'._PAGETOP.'</a>',
-            'debug_html' => (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '',
+            'foot_html' => renderFootControls(_PAGETOP, _PAGETOP),
+            'debug_html' => $debug,
         ]);
         $page = (is_string($adminpage ?? '') && $adminpage !== '') ? $adminpage : 'admin';
         echo $tpl->getHtmlPage($page, $vars, $page === 'login' ? 'bare' : 'admin');
@@ -2134,12 +2139,9 @@ function setFoot(): void {
     $time = ($conf['db_t'] == '1') ? getTimeLoads() : '';
     $cvar = explode(',', $conf['variables']);
     $debug = (!$cvar[0] && ($conf['var_view'] || (isAdmin() && !$conf['var_view']))) ? '<div>'.getVariables().'</div>' : '';
-    $foot = '';
+    $license = !empty($vars['license']) ? (string)$vars['license'] : '';
     getBlocks('f');
-    $foot .= '<a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="thide">'._PAGETOP.'</a>';
-    if ($time !== '') $foot .= '<div class="sl_generates">'.$time.'</div>';
-    if (!empty($vars['license'])) $foot .= '<div class="sl_license">'.$vars['license'].'</div>';
-    if ($debug !== '') $foot .= $debug;
+    $foot = renderFootControls(_PAGETOP, _PAGETOP, $time, $license, $debug);
     if ($blocks == '' || $blocks == '0' || $blocks == '1') {
         ob_start(); getBlocks('l'); $left = ob_get_clean();
     } else {
@@ -2568,13 +2570,15 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                     if (is_acess($val[6])) {
                         $style = '';
                         $href = getSeoUrl(['name' => $mod, 'cat' => $val[0]]);
-                        $ilink = ($val[3]) ? '<a href="'.$href.'" title="'.$val[1].'"><img src="'.img_find('categories/'.$val[3]).'" alt="'.$val[1].'" title="'.$val[1].'"></a>' : '<a href="'.$href.'" title="'.$val[1].'" class="sl_cat"></a>';
-                        $alink = '<a href="'.$href.'" title="'.$val[1].'"><b>'.$val[1].'</b></a>';
+                        $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
+                        $ilink = categoryIconLink($href, $val[1], $isrc);
+                        $alink = categoryTitleLink($href, $val[1]);
                     } else {
                         $style = ' sl_hidden';
                         $htitle = $val[1].' - '._CCLOSED;
-                        $ilink = ($val[3]) ? '<img src="'.img_find('categories/'.$val[3]).'" alt="'.$htitle.'" title="'.$htitle.'">' : '<span title="'.$htitle.'" class="sl_cat"></span>';
-                        $alink = '<b>'.$val[1].'</b>';
+                        $isrc = $val[3] ? img_find('categories/'.$val[3]) : '';
+                        $ilink = categoryIconText($htitle, $isrc);
+                        $alink = categoryTitleText($val[1]);
                     }
                     $subcat = '';
                     foreach ($massiv as $sval) {
@@ -2583,13 +2587,13 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
                             if ($sub == 1) {
                                 $sval[1] = getConst($sval[1]);
                                 $shref = getSeoUrl(['name' => $mod, 'cat' => $sval[0]]);
-                                $sublink = (is_acess($sval[6])) ? ' <a href="'.$shref.'" title="'.$sval[1].'" class="sl_cat">'.$sval[1].'</a>' : '';
-                                $subcat .= '<div>'.$sublink.'</div>';
+                                $sublink = is_acess($sval[6]) ? categoryTextLink($shref, $sval[1]) : '';
+                                $subcat .= categorySubItem($sublink);
                             }
                         }
                     }
                     $description = ($desc) ? '<br><i>'.$val[2].'</i>' : '';
-                    $cont .= '<div class="sl_catflex-box'.$style.'"><div class="sl_catflex-inbox"><div>'.$ilink.'</div><div>'.$alink.$description.'</div></div>'.$subcat.'</div>';
+                    $cont .= categoryRow($ilink, $alink, $description, $subcat, $style);
                 }
             }
         }
@@ -2676,27 +2680,32 @@ function setPageNumbers(string $frag, string $mod, int $count, int $pages, int $
         $cont = '';
         if ($num > 1) {
             $prev  = $num - 1;
-            $cprev = (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $mod, $url.$n => $prev]).$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>' : '<a href="'.$afile.'.php?'.$url.$n.'='.$prev.$anchor.'" class="sl_num" title="'._BACK.'">'._BACK.'</a>';
+            $prevHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $prev]).$anchor : $afile.'.php?'.$url.$n.'='.$prev.$anchor;
+            $cprev = pagerLink($prevHref, _BACK, _BACK, 'sl_num');
         } else {
-            $cprev = '<span class="sl_num" title="'._BACK.'">'._BACK.'</span>';
+            $cprev = pagerCurrent(_BACK, _BACK, 'sl_num');
         }
         for ($i = 1; $i < $pages+1; $i++) {
             if ($i == $num) {
-                $cont .= '<span title="'.$i.'">'.$i.'</span>';
+                $cont .= pagerCurrent((string)$i, (string)$i);
             } else {
-                if ((($i > ($num - $maxpg)) && ($i < ($num + $maxpg))) || ($i == $pages) || ($i == 1)) $cont .= (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $mod, $url.$n => $i]).$anchor.'" title="'.$i.'">'.$i.'</a>' : '<a href="'.$afile.'.php?'.$url.$n.'='.$i.$anchor.'" title="'.$i.'">'.$i.'</a>';
+                if ((($i > ($num - $maxpg)) && ($i < ($num + $maxpg))) || ($i == $pages) || ($i == 1)) {
+                    $href = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $i]).$anchor : $afile.'.php?'.$url.$n.'='.$i.$anchor;
+                    $cont .= pagerLink($href, (string)$i, (string)$i);
+                }
             }
             if ($i < $pages) {
                 if (($i > ($num - $nnum)) && ($i < ($num + $maxpg))) $cont .= ' ';
-                if (($num > $nnum) && ($i == 1)) $cont .= '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
-                if (($num < ($pages - $maxpg)) && ($i == ($pages - 1))) $cont .= '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
+                if (($num > $nnum) && ($i == 1)) $cont .= pagerDots();
+                if (($num < ($pages - $maxpg)) && ($i == ($pages - 1))) $cont .= pagerDots();
             }
         }
         if ($num < $pages) {
             $next  = $num + 1;
-            $cnext = (!defined('ADMIN_FILE')) ? '<a href="'.getSeoUrl(['name' => $mod, $url.$n => $next]).$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>' : '<a href="'.$afile.'.php?'.$url.$n.'='.$next.$anchor.'" class="sl_num" title="'._NEXT.'">'._NEXT.'</a>';
+            $nextHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $next]).$anchor : $afile.'.php?'.$url.$n.'='.$next.$anchor;
+            $cnext = pagerLink($nextHref, _NEXT, _NEXT, 'sl_num');
         } else {
-            $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
+            $cnext = pagerCurrent(_NEXT, _NEXT, 'sl_num');
         }
         $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $limit, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
         return $tpl->getHtmlFrag($frag, $data);
@@ -2775,7 +2784,16 @@ function setModuleNavi(array $p): string {
 
 # Set bottom navigation
 function setNaviLower(string $mod): string {
-    return '<span class="sl_pos_center"><a href="javascript:window.history.go(-1);" title="'._BACK.'" class="sl_but_foot">'._BACK.'</a><a href="index.php?name='.$mod.'" title="'._PAGEHOME.'" class="sl_but_foot">'._PAGEHOME.'</a><a OnClick="Upper(\'html, body\', 600);" title="'._PAGETOP.'" class="sl_but_foot">'._PAGETOP.'</a></span>';
+    global $tpl;
+    return $tpl->getHtmlFrag('navi-lower', [
+        'back_title' => _BACK,
+        'back_label' => _BACK,
+        'home_href' => 'index.php?name='.$mod,
+        'home_title' => _PAGEHOME,
+        'home_label' => _PAGEHOME,
+        'top_title' => _PAGETOP,
+        'top_label' => _PAGETOP,
+    ]);
 }
 
 # Load configuration file or directory and return chmod warning if needed
@@ -3153,9 +3171,9 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
         $tabs,
         $conts
     ));
-    $tlinks = implode('', array_map(fn($p) => '<li><a href="#'.$pref.'_'.$id.'_'.$p['id'].'">'.$p['tab'].'</a></li>', $pairs));
-    $cdivs = implode('', array_map(fn($p) => '<div id="'.$pref.'_'.$id.'_'.$p['id'].'">'.$p['cont'].'</div>', $pairs));
-    return '<div id="sl_tabs_'.$id.'"><ul>'.$tlinks.'</ul>'.$cdivs.'</div>';
+    $tlinks = implode('', array_map(fn($p) => naviTabsLink('#'.$pref.'_'.$id.'_'.$p['id'], $p['tab']), $pairs));
+    $cdivs = implode('', array_map(fn($p) => naviTabsContent($pref.'_'.$id.'_'.$p['id'], $p['cont']), $pairs));
+    return naviTabsWrap($tlinks, $cdivs, $id);
 }
 
 # Transliteration
@@ -3299,11 +3317,14 @@ function getVoting(int $id = 0, string $votid = ''): string {
                 }
             }
             list($vnum) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_voting WHERE '.$querylang, $qlang_params));
-            $admin = (is_moder('voting') && $votid == 'voting') ? add_menu('<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$title."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
-            $post = (!$rate) ? "<span OnClick=\"AjaxLoad('POST', '1', '".$votid."', 'go=1&amp;op=avoting_save&amp;id=".$id.'&amp;votid='.$votid."', { 'body%5B%5D':'"._SEROR1."' }); return false;\" title=\""._VOTE.'" class="sl_but_blue">'._VOTE.'</span>' : '';
-            $polls = ($vnum > 1) ? '<a href="index.php?name=voting" title="'._POLLS.'" class="sl_but">'._POLLS.'</a>' : '';
-            $votes = (!$modul && $votid != 'voting') ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'" title="'._VOTES.'" class="sl_votes">'._VOTES.': '.$vote.'</a>' : '<span class="sl_votes">'._VOTES.': '.$vote.'</span>';
-            $comm = (!$modul && $acomm) ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id.'" title="'._COMMENTS.'" class="sl_coms">'._COMMENTS.': '.$comments.'</a>' : '';
+            $admin = (is_moder('voting') && $votid == 'voting') ? votingActionMenu([
+                votingActionLink($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                votingActionDelete($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+            ]) : '';
+            $post = (!$rate) ? votingActionAjax($votid, 'go=1&amp;op=avoting_save&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl_but_blue', _SEROR1) : '';
+            $polls = ($vnum > 1) ? votingActionLink('index.php?name=voting', _POLLS, _POLLS, 'sl_but') : '';
+            $votes = (!$modul && $votid != 'voting') ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : $tpl->getHtmlFrag('voting-stat-text', ['class' => 'sl_votes', 'label' => _VOTES.': '.$vote]);
+            $comm = (!$modul && $acomm) ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, _COMMENTS, _COMMENTS.': '.$comments, 'sl_coms') : '';
             $formend = (!$rate) ? '</form>' : '';
             $cont .= $tpl->getHtmlFrag('voting-close', ['admin' => $admin, 'post' => $post, 'polls' => $polls, 'votes' => $votes, 'comm' => $comm, 'formend' => $formend]);
         } else {
@@ -3413,7 +3434,6 @@ function getVariables(): string {
             $cpucls = 'sl_orange sl_note';
             $cputtl = _RATE3.(($info) ? ' - '.$info : '');
         }
-        $cpucont = _PLOAD.': <span title="'.$cputtl.'" class="'.$cpucls.'">'.$cpu.'</span> % <progress max="100" value="'.$cpu.'">'.$cpu.' %</progress>';
         $memuse = memory_get_usage();
         $memtxt = filterSize((string)$memuse);
         $memcls = 'sl_red sl_note';
@@ -3425,16 +3445,16 @@ function getVariables(): string {
             $memcls = 'sl_orange sl_note';
             $memttl = _RATE3;
         }
-        $memcont = _MEML.': <span title="'.$memttl.'" class="'.$memcls.'">'.$memtxt.'</span> <progress max="'.(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024).'" value="'.$memuse.'">'.$memtxt.'</progress>';
-        $cont .= '<fieldset class="sl_sys_var"><legend style="color: darkgreen;">'._SYSTEM_INFO.'</legend>'.$cpucont.'<br>'.$memcont.'<br>'.getTimeLoads().'</fieldset>';
+        $memLimit = (int)(str_replace('M', '', ini_get('memory_limit')) * 1024 * 1024);
+        $cont .= debugSection(_SYSTEM_INFO, 'darkgreen', debugStats($cputtl, $cpucls, (string)$cpu, $memttl, $memcls, $memtxt, $memuse, $memLimit, getTimeLoads()));
     }
-    if ($cvar[2] && $_POST) $cont .= '<fieldset class="sl_sys_var"><legend style="color: green;">'._AVARIABLES.': POST</legend>'.htmlspecialchars(print_r($_POST, true)).'</fieldset>';
-    if ($cvar[3] && $_GET) $cont .= '<fieldset class="sl_sys_var"><legend style="color: blue;">'._AVARIABLES.': GET</legend>'.htmlspecialchars(print_r($_GET, true)).'</fieldset>';
-    if ($cvar[4] && $_COOKIE) $cont .= '<fieldset class="sl_sys_var"><legend style="color: orangered;">'._AVARIABLES.': COOKIE</legend>'.print_r($_COOKIE, true).'</fieldset>';
-    if ($cvar[5] && $_FILES) $cont .= '<fieldset class="sl_sys_var"><legend style="color: purple;">'._AVARIABLES.': FILES</legend>'.print_r($_FILES, true).'</fieldset>';
-    if ($cvar[6] && $_SESSION) $cont .= '<fieldset class="sl_sys_var"><legend style="color: fuchsia;">'._AVARIABLES.': SESSION</legend>'.print_r($_SESSION, true).'</fieldset>';
-    if ($cvar[7] && $_SERVER) $cont .= '<fieldset class="sl_sys_var"><legend style="color: red;">'._AVARIABLES.': SERVER</legend>'.print_r($_SERVER, true).'</fieldset>';
-    if ($cvar[8]) $cont .= '<fieldset class="sl_sys_var"><legend style="color: green;">'._AQUERY_DB.': MySQL</legend>'.$db->qtime.'</fieldset>';
+    if ($cvar[2] && $_POST) $cont .= debugSection(_AVARIABLES.': POST', 'green', htmlspecialchars(print_r($_POST, true)));
+    if ($cvar[3] && $_GET) $cont .= debugSection(_AVARIABLES.': GET', 'blue', htmlspecialchars(print_r($_GET, true)));
+    if ($cvar[4] && $_COOKIE) $cont .= debugSection(_AVARIABLES.': COOKIE', 'orangered', print_r($_COOKIE, true));
+    if ($cvar[5] && $_FILES) $cont .= debugSection(_AVARIABLES.': FILES', 'purple', print_r($_FILES, true));
+    if ($cvar[6] && $_SESSION) $cont .= debugSection(_AVARIABLES.': SESSION', 'fuchsia', print_r($_SESSION, true));
+    if ($cvar[7] && $_SERVER) $cont .= debugSection(_AVARIABLES.': SERVER', 'red', print_r($_SERVER, true));
+    if ($cvar[8]) $cont .= debugSection(_AQUERY_DB.': MySQL', 'green', $db->qtime);
     return $cont;
 }
 
@@ -3792,7 +3812,7 @@ function user_geo_ip(string $ip, int $id = 4): string {
 
 # User information for user
 function user_sinfo(string $id = ''): string {
- global $db, $conf;
+ global $db, $conf, $tpl;
     if ($conf['session']) {
         $who_online = ''; $m = 0; $b = 0; $u = 0; $i = 0;
         $result = $db->getSqlQuery('SELECT uname, time, ip, guest, modul FROM '.PREFIX_DB.'_session ORDER BY uname');
@@ -3802,10 +3822,24 @@ function user_sinfo(string $id = ''): string {
             $module = getModuleName($module);
             $linkstrip = cutstr($module, 15);
             if ($guest == 2) {
-                $who_online .= '<tr><td>'.user_geo_ip($host, 3).'<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($uname).'" title="'.getDuration($time).'">'.$strip.'</a></td><td title="'.$module.'" class="sl_right sl_note">'.$linkstrip.'</td></tr>';
+                $who_online .= $tpl->getHtmlFrag('session-row', [
+                    'geo_html' => user_geo_ip($host, 3),
+                    'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
+                    'name_title' => getDuration($time),
+                    'name_text' => $strip,
+                    'module_title' => $module,
+                    'module_text' => $linkstrip,
+                ]);
                 $m++;
             } elseif ($guest == 1 && $conf['botsact']) {
-                $who_online .= '<tr><td>'.user_geo_ip($host, 3).'<span title="'.getDuration($time).'" class="sl_note">'.$strip.'</span></td><td title="'.$module.'" class="sl_right sl_note">'.$linkstrip.'</td></tr>';
+                $who_online .= $tpl->getHtmlFrag('session-row', [
+                    'geo_html' => user_geo_ip($host, 3),
+                    'name_title' => getDuration($time),
+                    'name_text' => $strip,
+                    'name_class' => 'sl_note',
+                    'module_title' => $module,
+                    'module_text' => $linkstrip,
+                ]);
                 $b++;
             } else {
                 $who_online .= '';
@@ -3813,10 +3847,26 @@ function user_sinfo(string $id = ''): string {
             }
             $i++;
         }
-        $content = '<hr><table class="sl_table_block"><tr><td>'._BMEM.':</td><td class="sl_right">'.$m.'</td></tr>';
-        if ($conf['botsact']) $content .= '<tr><td>'._BOTS.':</td><td class="sl_right">'.$b.'</td></tr>';
-        $content .= '<tr><td>'._BVIS.':</td><td class="sl_right">'.$u.'</td></tr><tr><td>'._OVERALL.':</td><td class="sl_right">'.$i."</td></tr></table><hr><table class=\"sl_table_block\"><tr><td class=\"sl_center\"><a OnClick=\"AjaxLoad('GET', '0', 'sinfo', 'go=1&amp;op=user_sinfo', ''); return false;\" title=\""._UPDATE.'" class="sl_but_green">'._UPDATE.'</a>';
-        $content .= ($who_online) ? "<a OnClick=\"HideShow('u-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_but_blue">'._READMORE.'</a></td></tr></table><table id="u-block" class="sl_table_block sl_none">'.$who_online.'</table>' : '</td></tr></table>';
+        $content = $tpl->getHtmlFrag('session-summary', [
+            'members_label' => _BMEM,
+            'members_count' => $m,
+            'show_bots' => $conf['botsact'],
+            'bots_label' => _BOTS,
+            'bots_count' => $b,
+            'visitors_label' => _BVIS,
+            'visitors_count' => $u,
+            'overall_label' => _OVERALL,
+            'overall_count' => $i,
+            'update_title' => _UPDATE,
+            'update_label' => _UPDATE,
+            'toggle_title' => _READMORE,
+            'toggle_label' => _READMORE,
+            'rows_html' => $who_online,
+            'has_rows' => $who_online !== '',
+            'toggle_id' => 'u-block',
+            'update_target' => 'sinfo',
+            'update_query' => 'go=1&amp;op=user_sinfo',
+        ]);
         if ($id) { return $content; } else { echo $content; }
     }
     return '';
@@ -3824,7 +3874,7 @@ function user_sinfo(string $id = ''): string {
 
 # User information for admin
 function user_sainfo(string $id = ''): string {
- global $db, $conf;
+ global $db, $conf, $tpl;
     if ($conf['session'] && isAdmin()) {
         $a = $b = $m = $u = $i = 0;
         $who_online = ['0' => '', '1' => '', '2' => '', '3' => ''];
@@ -3838,30 +3888,106 @@ function user_sainfo(string $id = ''): string {
             $alstrip = cutstr($alink, 15);
             $guest = intval($guest);
             if ($guest == 3) {
-                $title_who = '<tr><td>'.user_geo_ip($host, 3).'<a href="'.$conf['ip_link'].$host.'" title="'.getDuration($time).' - '._IP.': '.$host.'" target="_blank">'.$namestrip.'</a></td><td class="sl_right"><a href="'.$alink.'" title="'.$alink.'" target="_blank">'.$alstrip.'</a></td></tr>';
+                $title_who = $tpl->getHtmlFrag('session-row', [
+                    'geo_html' => user_geo_ip($host, 3),
+                    'name_href' => $conf['ip_link'].$host,
+                    'name_title' => getDuration($time).' - '._IP.': '.$host,
+                    'name_text' => $namestrip,
+                    'name_target' => ' target="_blank"',
+                    'module_href' => $alink,
+                    'module_title' => $alink,
+                    'module_text' => $alstrip,
+                    'module_target' => ' target="_blank"',
+                    'module_class' => 'sl_right',
+                ]);
                 $a++;
             } elseif ($guest == 2) {
                 if ($lstrip != '') {
-                    $title_who = '<tr><td>'.user_geo_ip($host, 3).'<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($uname).'" title="'.getDuration($time).' - '._IP.': '.$host.'" target="_blank">'.$namestrip.'</a></td><td class="sl_right"><a href="'.$alink.'" title="'.$alink.'" target="_blank">'.$lstrip.'</a></td></tr>';
+                    $title_who = $tpl->getHtmlFrag('session-row', [
+                        'geo_html' => user_geo_ip($host, 3),
+                        'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
+                        'name_title' => getDuration($time).' - '._IP.': '.$host,
+                        'name_text' => $namestrip,
+                        'name_target' => ' target="_blank"',
+                        'module_href' => $alink,
+                        'module_title' => $alink,
+                        'module_text' => $lstrip,
+                        'module_target' => ' target="_blank"',
+                        'module_class' => 'sl_right',
+                    ]);
                     $m++;
                 } else {
-                    $title_who = '<tr><td>'.user_geo_ip($host, 3).'<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($uname).'" title="'.getDuration($time).' - '._IP.': '.$host.'" target="_blank">'.$namestrip.'</a></td><td class="sl_right"><a href="'.$alink.'" title="'.$alink.'" target="_blank">'.$alstrip.'</a></td></tr>';
+                    $title_who = $tpl->getHtmlFrag('session-row', [
+                        'geo_html' => user_geo_ip($host, 3),
+                        'name_href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($uname),
+                        'name_title' => getDuration($time).' - '._IP.': '.$host,
+                        'name_text' => $namestrip,
+                        'name_target' => ' target="_blank"',
+                        'module_href' => $alink,
+                        'module_title' => $alink,
+                        'module_text' => $alstrip,
+                        'module_target' => ' target="_blank"',
+                        'module_class' => 'sl_right',
+                    ]);
                 }
             } elseif ($guest == 1) {
-                $title_who = '<tr><td>'.user_geo_ip($host, 3).'<a href="'.$conf['ip_link'].$host.'" title="'.getDuration($time).' - '._IP.': '.$host.'" target="_blank">'.$namestrip.'</a></td><td class="sl_right"><a href="'.$alink.'" title="'.$alink.'" target="_blank">'.$lstrip.'</a></td></tr>';
+                $title_who = $tpl->getHtmlFrag('session-row', [
+                    'geo_html' => user_geo_ip($host, 3),
+                    'name_href' => $conf['ip_link'].$host,
+                    'name_title' => getDuration($time).' - '._IP.': '.$host,
+                    'name_text' => $namestrip,
+                    'name_target' => ' target="_blank"',
+                    'module_href' => $alink,
+                    'module_title' => $alink,
+                    'module_text' => $lstrip,
+                    'module_target' => ' target="_blank"',
+                    'module_class' => 'sl_right',
+                ]);
                 $b++;
             } else {
-                $title_who = ($u < 250) ? '<tr><td>'.user_geo_ip($host, 3).'<a href="'.$conf['ip_link'].$host.'" title="'.getDuration($time).'" target="_blank">'.$uname.'</a></td><td class="sl_right"><a href="'.$alink.'" title="'.$alink.'" target="_blank">'.$lstrip.'</a></td></tr>' : '';
+                $title_who = ($u < 250) ? $tpl->getHtmlFrag('session-row', [
+                    'geo_html' => user_geo_ip($host, 3),
+                    'name_href' => $conf['ip_link'].$host,
+                    'name_title' => getDuration($time),
+                    'name_text' => $uname,
+                    'name_target' => ' target="_blank"',
+                    'module_href' => $alink,
+                    'module_title' => $alink,
+                    'module_text' => $lstrip,
+                    'module_target' => ' target="_blank"',
+                    'module_class' => 'sl_right',
+                ]) : '';
                 $u++;
             }
             $who_online[$guest] .= $title_who;
             $i++;
         }
-        $content_who .= (isAdmin(true)) ? "<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('ad-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._ADMINS.':</a></td><td class="sl_right">'.$a.'</td></tr></table><table id="ad-block" class="sl_table_block sl_none">'.$who_online[3].'</table>' : '';
-        $content_who .= "<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('us-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._BMEM.':</a></td><td class="sl_right">'.$m.'</td></tr></table><table id="us-block" class="sl_table_block sl_none">'.$who_online[2].'</table>'
-        ."<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('bo-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._BOTS.':</a></td><td class="sl_right">'.$b.'</td></tr></table><table id="bo-block" class="sl_table_block sl_none">'.$who_online[1].'</table>'
-        ."<table class=\"sl_table_block\"><tr><td><a OnClick=\"HideShow('an-block', 'slide', 'up', 500);\" title=\""._READMORE.'" class="sl_plus">'._BVIS.':</a></td><td class="sl_right">'.$u.'</td></tr></table><table id="an-block" class="sl_table_block sl_none">'.$who_online[0].'</table>'
-        .'<table class="sl_table_block"><tr><td>'._OVERALL.':</td><td class="sl_right">'.$i."</td></tr></table><hr><table class=\"sl_table_block\"><tr><td class=\"sl_center\"><a OnClick=\"AjaxLoad('GET', '0', 'sainfo', 'go=1&amp;op=user_sainfo', ''); return false;\" title=\""._UPDATE.'" class="sl_but_green">'._UPDATE.'</a></td></tr></table>';
+        $content_who .= $tpl->getHtmlFrag('session-admin-summary', [
+            'show_admins' => isAdmin(true),
+            'admins_label' => _ADMINS,
+            'admins_count' => $a,
+            'admins_rows_html' => $who_online[3],
+            'admins_toggle_id' => 'ad-block',
+            'members_label' => _BMEM,
+            'members_count' => $m,
+            'members_rows_html' => $who_online[2],
+            'members_toggle_id' => 'us-block',
+            'bots_label' => _BOTS,
+            'bots_count' => $b,
+            'bots_rows_html' => $who_online[1],
+            'bots_toggle_id' => 'bo-block',
+            'visitors_label' => _BVIS,
+            'visitors_count' => $u,
+            'visitors_rows_html' => $who_online[0],
+            'visitors_toggle_id' => 'an-block',
+            'overall_label' => _OVERALL,
+            'overall_count' => $i,
+            'readmore_title' => _READMORE,
+            'update_title' => _UPDATE,
+            'update_label' => _UPDATE,
+            'update_target' => 'sainfo',
+            'update_query' => 'go=1&amp;op=user_sainfo',
+        ]);
         if ($id) { return $content_who; } else { echo $content_who; }
     }
     return '';
@@ -3873,15 +3999,21 @@ function adminblock(): string {
     if (isAdmin()) {
         $title = '';
         $content = '';
-        $cont = '<table class="sl_table_block"><tr><td><a href="'.$afile.'.php" title="'._ADMINMENU.'">'._ADMINMENU.'</a></td></tr>'
-        .'<tr><td><a href="'.$afile.'.php?op=logout" title="'._LOGOUT.'">'._LOGOUT.'</a></td></tr></table>';
+        $cont = $tpl->getHtmlFrag('admin-shortcuts', [
+            'admin_href' => $afile.'.php',
+            'admin_title' => _ADMINMENU,
+            'admin_label' => _ADMINMENU,
+            'logout_href' => $afile.'.php?op=logout',
+            'logout_title' => _LOGOUT,
+            'logout_label' => _LOGOUT,
+        ]);
         if (isAdmin(true)) {
             list($title, $content) = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
             $cont .= '<hr>'.$content;
         }
         $a_title = ($title) ? $title : _ADMINS;
         return $tpl->getHtmlFrag('block-left', ['title' => $a_title, 'content' => $cont, 'id' => '7', 'close' => _OPCL])
-            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => '<div id="repsainfo">'.user_sainfo(1).'</div>', 'id' => '8', 'close' => _OPCL]);
+            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => $tpl->getHtmlFrag('admin-session-box', ['content' => user_sainfo(1)]), 'id' => '8', 'close' => _OPCL]);
     }
     return '';
 }
@@ -3925,15 +4057,35 @@ function show_kasse(string $info = ''): string {
             }
             $price = $price * $i;
             $ptotal += $price;
-            $ptitle = '<a href="index.php?name=shop&amp;op=view&amp;id='.$id.'" title="'.$title.'">'.$title.'</a> '.new_graphic($time);
-            $mtitle = ($i > 1) ? _PMINUS : _DELETE;
-            $plus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=add_kasse&amp;id=".$id."', ''); return false;\" title=\""._PPLUS.'" class="sl_shop_plus"></a>';
-            $minus = "<a OnClick=\"AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=del_kasse&amp;id=".$id."', ''); return false;\" title=\"".$mtitle.'" class="sl_shop_minus"></a>';
-            $cont .= $tpl->getHtmlFrag('kasse-basic', ['id' => $id, 'title' => $ptitle, 'qty' => $i, 'price' => $price.' '.$conf['shop']['valute'], 'plus' => $plus, 'minus' => $minus]);
+            $cont .= $tpl->getHtmlFrag('kasse-basic', [
+                'id' => $id,
+                'title_href' => 'index.php?name=shop&amp;op=view&amp;id='.$id,
+                'title_attr' => $title,
+                'title_text' => $title,
+                'title_new' => new_graphic($time),
+                'qty' => $i,
+                'price_text' => $price.' '.$conf['shop']['valute'],
+                'plus_title' => _PPLUS,
+                'plus_query' => 'go=2&amp;op=add_kasse&amp;id='.$id,
+                'minus_title' => ($i > 1) ? _PMINUS : _DELETE,
+                'minus_query' => 'go=2&amp;op=del_kasse&amp;id='.$id,
+            ]);
         }
-        $cart = '<a href="index.php?name=shop&amp;op=kasse" title="'._SCACH.'" class="sl_shop_kasse">'._SCACH.'</a>';
-        $total = '<span title="'._PARTNERGES.'" class="sl_shop_total">'._PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'].'</span>';
-        return $tpl->getHtmlFrag('kasse-wrap', ['open' => true, 'title' => _PBASKET, 'col_id' => _ID, 'col_product' => _PRODUCT, 'col_qty' => cutstr(_QUANTITY, 3, 1), 'col_price' => _PREIS, 'col_fn' => _FUNCTIONS]).$cont.$tpl->getHtmlFrag('kasse-wrap', ['cart' => $cart, 'total' => $total]);
+        return $tpl->getHtmlFrag('kasse-wrap', [
+            'open' => true,
+            'title' => _PBASKET,
+            'col_id' => _ID,
+            'col_product' => _PRODUCT,
+            'col_qty' => cutstr(_QUANTITY, 3, 1),
+            'col_price' => _PREIS,
+            'col_fn' => _FUNCTIONS,
+        ]).$cont.$tpl->getHtmlFrag('kasse-wrap', [
+            'cart_href' => 'index.php?name=shop&amp;op=kasse',
+            'cart_title' => _SCACH,
+            'cart_label' => _SCACH,
+            'total_title' => _PARTNERGES,
+            'total_text' => _PARTNERGES.': '.$ptotal.' '.$conf['shop']['valute'],
+        ]);
     }
     return '';
 }
@@ -4020,25 +4172,591 @@ function ajax_rating(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor,
         $nrate = 'sl_rate-num';
     }
     if ($stl == 1) {
-        $img = '<span class="sl_none">'.$result.'</span><div class="sl_rate-like"><p title="'._RATE1.'" class="sl_rate-minus"><p title="'._RATE5.'" class="sl_rate-plus"></div><span title="'.$title.'" class="'.$nrate.'">'.$result.'</span>';
-        $imgr = '<span class="sl_none">'.$result."</span><div OnMouseOver=\"AjaxLoad('GET', '0', '".$id.$obj."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$obj.'&amp;mod='.$mod."&amp;stl=1', ''); return false;\" class=\"sl_rate-like\"><p title=\""._RATE1.'" class="sl_rate-minus"><p title="'._RATE5.'" class="sl_rate-plus"></div><span class="'.$nrate.'" title="'.$title.'">'.$result.'</span>';
+        $img = ratingLike($result, $title, $nrate);
+        $imgr = ratingLikeHover($result, $title, $nrate, $id.$obj, 'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1');
         $crate = 'sl_rate-like';
     } else {
-        $img = '<span class="sl_none">'.$result.'</span><ul title="'.$title.'" class="sl_urating"><li class="sl_crating" style="width: '.$width.'%;"></li></ul><span title="'._VOTES.'" class="'.$nrate.'">'.$votnum.'</span>';
-        $imgr = '<span class="sl_none">'.$result."</span><ul OnMouseOver=\"AjaxLoad('GET', '0', '".$id.$obj."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$obj.'&amp;mod='.$mod."', ''); return false;\" title=\"".$title.'" class="sl_urating"><li class="sl_crating" style="width: '.$width.'%;"></li></ul><span title="'._VOTES.'" class="'.$nrate.'">'.$votnum.'</span>';
+        $img = ratingBar($result, $title, $nrate, (string) $width, $votnum);
+        $imgr = ratingBarHover($result, $title, $nrate, (string) $width, $votnum, $id.$obj, 'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod);
         $crate = 'sl_rate';
     }
     if ($typ == 2) {
-        $content = '<div class="'.$crate.'">'.$img.'</div>';
+        $content = ratingWrap($crate, $img);
     } else {
         $con = explode('|', $conf['ratings'][strtolower($mod)]);
         if (($con[1] && $id && $mod) || ($rat && $scor)) {
-            $content = (($con[1] && $typ) || ($con[1] && !$con[2] && !$typ)) ? '<div id="rep'.$id.$obj.'" class="'.$crate.'">'.$imgr.'</div>' : '<div class="'.$crate.'">'.$img.'</div>';
+            $content = (($con[1] && $typ) || ($con[1] && !$con[2] && !$typ)) ? ratingWrap($crate, $imgr, 'rep'.$id.$obj) : ratingWrap($crate, $img);
         } else {
             $content = '';
         }
     }
     return $content;
+}
+
+function editorFilePreview(int $index, string $imageUrl, string $fallbackUrl, bool $showImage): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-file-preview', [
+        'preview_id' => 'sf-form-'.$index,
+        'toggle_onclick' => "HideShow('sf-form-".$index."', 'fold', 'up', 500);",
+        'image_url' => $imageUrl,
+        'fallback_url' => $fallbackUrl,
+        'image_title' => _IMG,
+        'no_title' => _NO,
+        'show_image' => $showImage,
+    ]);
+}
+
+function editorInsertAction(string $command, string $value, string $id, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-action-insert', [
+        'command' => $command,
+        'value' => $value,
+        'editor_id' => $id,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function editorAjaxAction(string $target, string $query, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-action-ajax', [
+        'target' => $target,
+        'query' => $query,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function editorActionMenu(array $items): string {
+ global $tpl;
+    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
+    if (!$items) {
+        return '';
+    }
+    return $tpl->getHtmlFrag('editor-action-menu', [
+        'editor_label' => _EDITOR,
+        'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
+    ]);
+}
+
+function editorFilesRow(array $row): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-files-row', $row);
+}
+
+function editorFilesTable(string $rowsHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-files-table', [
+        'image_label' => cutstr(_IMG, 4, 1),
+        'file_label' => _FILE,
+        'size_label' => _SIZE,
+        'functions_label' => _FUNCTIONS,
+        'rows_html' => $rowsHtml,
+    ]);
+}
+
+function editorToolbarButton(string $onclick, string $class, string $title, string $onMouseOver = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-toolbar-button', [
+        'onclick' => $onclick,
+        'onmouseover' => $onMouseOver,
+        'class' => $class,
+        'title' => $title,
+    ]);
+}
+
+function editorToolbarSeparator(): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-toolbar-separator');
+}
+
+function editorDropPanel(string $buttonHtml, string $contentHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-drop-panel', [
+        'button_html' => $buttonHtml,
+        'content_html' => $contentHtml,
+    ]);
+}
+
+function editorBbShell(string $topHtml, string $textareaHtml, string $bottomHtml, string $uploadHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-bb-shell', [
+        'top_html' => $topHtml,
+        'textarea_html' => $textareaHtml,
+        'bottom_html' => $bottomHtml,
+        'upload_html' => $uploadHtml,
+    ]);
+}
+
+function editorUploadPanel(string $panelId, string $contentHtml, string $replyId): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-upload-panel', [
+        'panel_id' => $panelId,
+        'content_html' => $contentHtml,
+        'reply_id' => $replyId,
+    ]);
+}
+
+function editorInfoPanel(string $panelId, string $content): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-info-panel', [
+        'panel_id' => $panelId,
+        'content' => $content,
+    ]);
+}
+
+function editorSmiliesPanel(string $panelId, string $itemsHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-smilies-panel', [
+        'panel_id' => $panelId,
+        'items_html' => $itemsHtml,
+    ]);
+}
+
+function editorTranslatePanel(string $panelId): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-translate-panel', [
+        'panel_id' => $panelId,
+    ]);
+}
+
+function editorTextPanel(string $panelId, string $editorId, string $fonts, string $colors, string $sizes): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-text-panel', [
+        'panel_id' => $panelId,
+        'editor_id' => $editorId,
+        'fonts_html' => $fonts,
+        'colors_html' => $colors,
+        'sizes_html' => $sizes,
+    ]);
+}
+
+function editorCodePanel(string $panelId, string $editorId, string $codes): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('editor-code-panel', [
+        'panel_id' => $panelId,
+        'editor_id' => $editorId,
+        'codes_html' => $codes,
+    ]);
+}
+
+function commentActionLink(string $href, string $title, string $label, string $class = '', string $target = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-action-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => $class,
+        'target' => $target,
+    ]);
+}
+
+function commentActionJs(string $href, string $title, string $label, string $class = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-action-js', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => $class,
+    ]);
+}
+
+function commentActionAjax(string $target, string $query, string $title, string $label, string $class = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-action-ajax', [
+        'target' => $target,
+        'query' => $query,
+        'title' => $title,
+        'label' => $label,
+        'class' => $class,
+    ]);
+}
+
+function commentActionDelete(string $href, string $confirmText, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-action-delete', [
+        'href' => $href,
+        'confirm_text' => $confirmText,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function commentActionMenu(array $items): string {
+ global $tpl;
+    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
+    if (!$items) {
+        return '';
+    }
+    return $tpl->getHtmlFrag('comment-action-menu', [
+        'editor_label' => _EDITOR,
+        'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
+    ]);
+}
+
+function commentMetaText(string $label, string $value): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-meta-text', [
+        'label' => $label,
+        'value' => $value,
+    ]);
+}
+
+function commentMetaColor(string $label, string $value, string $color): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-meta-color', [
+        'label' => $label,
+        'value' => $value,
+        'color' => $color,
+    ]);
+}
+
+function commentAvatar(string $username, string $avatar): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-avatar', [
+        'username' => $username,
+        'avatar' => $avatar,
+    ]);
+}
+
+function commentRankImage(string $src, string $title): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-rank-image', [
+        'src' => $src,
+        'title' => $title,
+    ]);
+}
+
+function commentSignature(string $content): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('comment-signature', [
+        'content' => $content,
+    ]);
+}
+
+function alphaNavLink(string $href, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('alpha-nav-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function alphaNavText(string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('alpha-nav-text', [
+        'label' => $label,
+    ]);
+}
+
+function naviTabsLink(string $href, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('navi-tabs-link', [
+        'href' => $href,
+        'label' => $label,
+    ]);
+}
+
+function naviTabsContent(string $id, string $content): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('navi-tabs-content', [
+        'id' => $id,
+        'content' => $content,
+    ]);
+}
+
+function naviTabsWrap(string $tabsHtml, string $contentHtml, int $id): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('navi-tabs-wrap', [
+        'tabs_html' => $tabsHtml,
+        'content_html' => $contentHtml,
+        'id' => $id,
+    ]);
+}
+
+function pagerLink(string $href, string $title, string $label, string $class = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('pager-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => $class,
+    ]);
+}
+
+function pagerCurrent(string $title, string $label, string $class = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('pager-current', [
+        'title' => $title,
+        'label' => $label,
+        'class' => $class,
+    ]);
+}
+
+function pagerDots(): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('pager-dots', []);
+}
+
+function pagerAjaxLink(string $loadId, string $targetId, string $query, string $title, string $label, string $class = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('pager-ajax-link', [
+        'load_id' => $loadId,
+        'target_id' => $targetId,
+        'query' => $query,
+        'title' => $title,
+        'label' => $label,
+        'class' => $class,
+    ]);
+}
+
+function categoryIconLink(string $href, string $title, string $src = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-icon-link', [
+        'href' => $href,
+        'title' => $title,
+        'src' => $src,
+    ]);
+}
+
+function categoryIconText(string $title, string $src = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-icon-text', [
+        'title' => $title,
+        'src' => $src,
+    ]);
+}
+
+function categoryTitleLink(string $href, string $title): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-title-link', [
+        'href' => $href,
+        'title' => $title,
+    ]);
+}
+
+function categoryTextLink(string $href, string $title): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-link', [
+        'href' => $href,
+        'title' => $title,
+        'text' => $title,
+    ]);
+}
+
+function categoryTitleText(string $title): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-title-text', [
+        'title' => $title,
+    ]);
+}
+
+function categorySubItem(string $content): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-subitem', [
+        'content' => $content,
+    ]);
+}
+
+function categoryRow(string $imageHtml, string $titleHtml, string $descriptionHtml = '', string $subItemsHtml = '', string $style = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-row', [
+        'image_html' => $imageHtml,
+        'title_html' => $titleHtml,
+        'description_html' => $descriptionHtml,
+        'subitems_html' => $subItemsHtml,
+        'style' => $style,
+    ]);
+}
+
+function categorySelect(string $selectName, string $class, string $title, string $optionsHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-select', [
+        'select_name' => $selectName,
+        'class' => $class,
+        'title' => $title,
+        'options_html' => $optionsHtml,
+    ]);
+}
+
+function categorySelectOption(string $value, string $label, bool $selected = false): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('category-select-option', [
+        'value' => $value,
+        'label' => $label,
+        'selected' => $selected,
+    ]);
+}
+
+function breadcrumbLink(string $href, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('breadcrumb-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string $memTitle, string $memClass, string $memValue, int|string $memUse, int|string $memLimit, string $timeLoads): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('debug-stats', [
+        'lbl_pload' => _PLOAD,
+        'cpu_title' => $cpuTitle,
+        'cpu_class' => $cpuClass,
+        'cpu_value' => $cpuValue,
+        'lbl_meml' => _MEML,
+        'mem_title' => $memTitle,
+        'mem_class' => $memClass,
+        'mem_value' => $memValue,
+        'mem_use' => (string)$memUse,
+        'mem_limit' => (string)$memLimit,
+        'timeloads' => $timeLoads,
+    ]);
+}
+
+function debugSection(string $legend, string $color, string $content): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('debug-section', [
+        'legend' => $legend,
+        'color' => $color,
+        'content' => $content,
+    ]);
+}
+
+function votingActionLink(string $href, string $title, string $label, string $class = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('voting-action-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => $class,
+    ]);
+}
+
+function votingActionAjax(string $target, string $query, string $title, string $label, string $class = '', string $errorText = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('voting-action-ajax', [
+        'target' => $target,
+        'query' => $query,
+        'title' => $title,
+        'label' => $label,
+        'class' => $class,
+        'error_text' => $errorText,
+    ]);
+}
+
+function votingActionDelete(string $href, string $confirmText, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('voting-action-delete', [
+        'href' => $href,
+        'confirm_text' => $confirmText,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function votingActionMenu(array $items): string {
+ global $tpl;
+    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
+    if (!$items) {
+        return '';
+    }
+    return $tpl->getHtmlFrag('voting-action-menu', [
+        'editor_label' => _EDITOR,
+        'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
+    ]);
+}
+
+function ratingLike(string $result, string $title, string $nrate): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('rating-like', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'rate1_title' => _RATE1,
+        'rate5_title' => _RATE5,
+    ]);
+}
+
+function ratingLikeHover(string $result, string $title, string $nrate, string $targetId, string $query): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('rating-like-hover', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'target_id' => $targetId,
+        'query' => $query,
+        'rate1_title' => _RATE1,
+        'rate5_title' => _RATE5,
+    ]);
+}
+
+function ratingBar(string $result, string $title, string $nrate, string $width, int|string $votes): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('rating-bar', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'width' => $width,
+        'votes' => (string) $votes,
+        'votes_title' => _VOTES,
+    ]);
+}
+
+function ratingBarHover(string $result, string $title, string $nrate, string $width, int|string $votes, string $targetId, string $query): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('rating-bar-hover', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'width' => $width,
+        'votes' => (string) $votes,
+        'votes_title' => _VOTES,
+        'target_id' => $targetId,
+        'query' => $query,
+    ]);
+}
+
+function ratingWrap(string $class, string $content, string $id = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('rating-wrap', [
+        'class' => $class,
+        'content' => $content,
+        'id' => $id,
+        'has_id' => $id !== '',
+    ]);
+}
+
+function ratingLikeLive(string $result, string $title, string $nrate, string $targetId, string $rate1Query, string $rate5Query): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('rating-like-live', [
+        'result' => $result,
+        'title' => $title,
+        'nrate' => $nrate,
+        'target_id' => $targetId,
+        'rate1_query' => $rate1Query,
+        'rate5_query' => $rate5Query,
+        'rate1_title' => _RATE1,
+        'rate5_title' => _RATE5,
+    ]);
+}
+
+function ratingStarsLive(string $width, string $targetId, string $baseQuery, string $nrate, int|string $votes): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('rating-stars-live', [
+        'width' => $width,
+        'target_id' => $targetId,
+        'base_query' => $baseQuery,
+        'nrate' => $nrate,
+        'votes' => (string) $votes,
+        'votes_title' => _VOTES,
+        'rate1_title' => _RATE1,
+        'rate2_title' => _RATE2,
+        'rate3_title' => _RATE3,
+        'rate4_title' => _RATE4,
+        'rate5_title' => _RATE5,
+    ]);
 }
 
 # Show editor files
@@ -4079,17 +4797,29 @@ function show_files(): void {
                 $type = strtolower(substr(strrchr($entry[1], '.'), 1));
                 $ftype = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
                 if (in_array($type, $ftype) && $imgwidth && $imgheight) {
-                    $img = "<div OnClick=\"HideShow('sf-form-".$a."', 'fold', 'up', 500);\" class=\"sl_drop sl_preview_mini\" style=\"background-image: url(".$path.$entry[1].');" title="'._IMG.'"><span id="sf-form-'.$a.'" class="sl_drop-form"><img src="'.$path.$entry[1].'" alt="'._IMG.'" title="'._IMG.'"></span></div>';
-                    $show = "<a OnClick=\"InsertCode('attach', '".$entry[1]."', '', '', '".$id."')\" title=\""._INSERT.' '.$imgwidth.' x '.$imgheight.'">'._INSERT."</a>||<a OnClick=\"InsertCode('img', '".$path.$entry[1]."', '', '', '".$id."')\" return false;\" title=\""._EIMG.' '.$imgwidth.' x '.$imgheight.'">'._EIMG.'</a>';
+                    $img = editorFilePreview($a, $path.$entry[1], 'templates/'.$conf['theme'].'/images/categories/no.png', true);
+                    $show = [
+                        editorInsertAction('attach', $entry[1], (string) $id, _INSERT.' '.$imgwidth.' x '.$imgheight, _INSERT),
+                        editorInsertAction('img', $path.$entry[1], (string) $id, _EIMG.' '.$imgwidth.' x '.$imgheight, _EIMG),
+                    ];
                 } else {
-                    $img = '<div class="sl_preview_mini" style="background-image: url(templates/'.$conf['theme'].'/images/categories/no.png);" title="'._NO.'"></div>';
-                    $show = "<a OnClick=\"InsertCode('attach', '".$entry[1]."', '', '', '".$id."')\" title=\""._INSERT.'">'._INSERT.'</a>';
+                    $img = editorFilePreview($a, '', 'templates/'.$conf['theme'].'/images/categories/no.png', false);
+                    $show = [
+                        editorInsertAction('attach', $entry[1], (string) $id, _INSERT, _INSERT),
+                    ];
                 }
                 if (is_moder($dir)) {
-                    $show .= (in_array(true, checkCompress(), true)) ? "||<a OnClick=\"AjaxLoad('GET', '0', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1]."', ''); return false;\" title=\""._ZIP.'">'._ZIP.'</a>' : '';
-                    $show .= "||<a OnClick=\"AjaxLoad('GET', '0', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1]."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>';
+                    if (in_array(true, checkCompress(), true)) {
+                        $show[] = editorAjaxAction('f'.$id, 'go=1&amp;op=show_files&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], _ZIP, _ZIP);
+                    }
+                    $show[] = editorAjaxAction('f'.$id, 'go=1&amp;op=show_files&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], _ONDELETE, _ONDELETE);
                 }
-                $contents[] = '<tr><td>'.$img.'</td><td>'.$entry[1].'</td><td>'.filterSize($filesize).'</td><td>'.add_menu($show).'</td></tr>';
+                $contents[] = editorFilesRow([
+                    'preview_html' => $img,
+                    'file_name' => $entry[1],
+                    'size_value' => filterSize($filesize),
+                    'functions_html' => editorActionMenu($show),
+                ]);
                 $a++;
             }
             if ($eallf && $a == $eallf) break;
@@ -4103,7 +4833,7 @@ function show_files(): void {
         if (!empty($contents[$i])) $cont .= $contents[$i];
     }
     $contnum = ($a > $connum) ? num_ajax('pagenum', $a, $numpages, $connum, 8, $num, '0', 1, 'show_files', 'f'.$id, $id, '', $dir) : '';
-    $content = ($cont) ? '<table class="sl_table_ajax"><thead class="sl_table_ajax_head"><tr><th>'.cutstr(_IMG, 4, 1).'</th><th>'._FILE.'</th><th>'._SIZE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_ajax_body">'.$cont.'</tbody></table>'.$contnum : '';
+    $content = ($cont) ? editorFilesTable($cont).$contnum : '';
     echo $content;
 }
 
@@ -4165,15 +4895,31 @@ function letter(string $mod): string {
     } else {
         $alpha = [];
     }
-    $cont = '';
-    foreach(range(0, 9) as $num) $cont .= (in_array("$num", $alpha)) ? '<a href="index.php?name='.$mod.'&amp;op=liste&amp;let='.$num.'" title="'.$num.'"><span class="sl_letter">'.$num.'</span></a>' : '<span class="sl_letter">'.$num.'</span>';
-    $cont .= '<br>';
-    foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) $cont .= (in_array($char, $alpha)) ? '<a href="index.php?name='.$mod.'&amp;op=liste&amp;let='.urlencode($char).'" title="'.$char.'"><span class="sl_letter">'.$char.'</span></a>' : '<span class="sl_letter">'.$char.'</span>';
-    if (substr(_LOCALE, 0, 2) != 'fr') {
-        $cont .= '<br>';
-        foreach(range('A', 'Z') as $eng) $cont .= (in_array($eng, $alpha)) ? '<a href="index.php?name='.$mod.'&amp;op=liste&amp;let='.$eng.'" title="'.$eng.'"><span class="sl_letter">'.$eng.'</span></a>' : '<span class="sl_letter">'.$eng.'</span>';
+    $rows = [];
+    $digits = '';
+    foreach (range(0, 9) as $num) {
+        $digits .= in_array((string)$num, $alpha)
+            ? alphaNavLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.$num, (string)$num, (string)$num)
+            : alphaNavText((string)$num);
     }
-    return $cont;
+    $rows[] = $digits;
+    $locale = '';
+    foreach (preg_split('//u', _ALPHABET, -1, PREG_SPLIT_NO_EMPTY) as $char) {
+        $locale .= in_array($char, $alpha)
+            ? alphaNavLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.urlencode($char), $char, $char)
+            : alphaNavText($char);
+    }
+    $rows[] = $locale;
+    if (substr(_LOCALE, 0, 2) != 'fr') {
+        $latin = '';
+        foreach (range('A', 'Z') as $eng) {
+            $latin .= in_array($eng, $alpha)
+                ? alphaNavLink('index.php?name='.$mod.'&amp;op=liste&amp;let='.$eng, $eng, $eng)
+                : alphaNavText($eng);
+        }
+        $rows[] = $latin;
+    }
+    return implode('<br>', $rows);
 }
 
 # Format admin menu
@@ -4330,18 +5076,36 @@ function rss_load(mixed $bid): void {
 if (!function_exists('preview')) {
     function preview(string $title = '', string $texta = '', string $textb = '', string $textc = '', string $mod = ''): string {
         global $tpl;
-        $field = $title ? '<b>'.$title.'</b>' : '';
-        $fielda = $texta ? (($field) ? '<br><br>'.filterReplaceText(filterMarkdown($texta, $mod, false), $mod) : filterReplaceText(filterMarkdown($texta, $mod, false), $mod)) : '';
-        $fieldb = $textb ? '<br><br>'.filterReplaceText(filterMarkdown($textb, $mod, false), $mod) : '';
-        $fieldc = $textc ? '<br><br>'.fields_out(filterReplaceText(filterMarkdown($textc, $mod, false), $mod), $mod) : '';
+        $titleHtml = $title ? $tpl->getHtmlFrag('preview-title', ['title' => $title]) : '';
+        $bodyA = $texta ? filterReplaceText(filterMarkdown($texta, $mod, false), $mod) : '';
+        $bodyB = $textb ? filterReplaceText(filterMarkdown($textb, $mod, false), $mod) : '';
+        $bodyC = $textc ? fields_out(filterReplaceText(filterMarkdown($textc, $mod, false), $mod), $mod) : '';
         return $tpl->getHtmlPart('preview', [
             'title' => _PREVIEW,
-            'fields' => $field,
-            'fields1' => $fielda,
-            'fields2' => $fieldb,
-            'fields3' => $fieldc,
+            'title_html' => $titleHtml,
+            'body_a' => $bodyA,
+            'body_b' => $bodyB,
+            'body_c' => $bodyC,
         ]);
     }
+}
+
+# Render shared footer controls through a fragment
+function renderFootControls(
+    string $topTitle,
+    string $topLabel,
+    string $timeHtml = '',
+    string $licenseHtml = '',
+    string $debugHtml = ''
+): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('foot-controls', [
+        'top_title' => $topTitle,
+        'top_label' => $topLabel,
+        'time_html' => $timeHtml,
+        'license_html' => $licenseHtml,
+        'debug_html' => $debugHtml,
+    ]);
 }
 
 # Fields in
@@ -4874,7 +5638,7 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
     }
     $result = $db->getSqlQuery('SELECT id, title, parent, pview FROM '.PREFIX_DB.'_categories '.$where, $params);
     if ($db->getSqlRowCount($result) > 0) {
-        $content = (!$noSelect) ? '<select name="'.$selectName.'" title="'._CATEGORIES.'" class="'.$class.'">' : '';
+        $options = '';
         while (list($cid, $title, $parentid, $pview) = $db->getSqlRow($result)) if (is_acess($pview)) $massiv[$cid] = [getConst($title), $parentid];
         foreach ($massiv as $key => $val) {
             $cont[$key] = $val[0];
@@ -4883,12 +5647,11 @@ function getcat(string $modul = '', int $id = 0, string $selectName = '', string
                 $cont[$key] = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'.$cont[$key];
                 $flag = intval($massiv[$flag][1]);
             }
-            $sel     = ($id == $key) ? ' selected' : '';
-            $content .= '<option value="'.$key.'"'.$sel.'>'.$cont[$key].'</option>';
+            $options .= categorySelectOption((string)$key, $cont[$key], $id == $key);
         }
-        return (!$noSelect) ? $content.'</select>' : $content;
+        return (!$noSelect) ? categorySelect($selectName, $class, _CATEGORIES, $options) : $options;
     } elseif ($emptyOption) {
-        return '<select name="'.$selectName.'" title="'._CATEGORIES.'" class="'.$class.'">'.$emptyOption.'</select>';
+        return categorySelect($selectName, $class, _CATEGORIES, $emptyOption);
     }
     return '';
 }
@@ -4898,7 +5661,7 @@ function catlink(string $mod = '', int $id = 0, string $sep = '', string $home =
  global $db, $conf;
     $mod     = filterVar($mod);
     $sep     = $sep ? ' '.urldecode($sep).' ' : ' '.urldecode($conf['defis']).' ';
-    $content = $home ? '<a href="index.php?name='.$conf['name'].'" title="'.$home.'">'.$home.'</a>'.$sep : '';
+    $content = $home ? breadcrumbLink('index.php?name='.$conf['name'], $home, $home).$sep : '';
     if ($mod) {
         $where  = 'WHERE modul = :modul';
         $params = ['modul' => $mod];
@@ -4911,9 +5674,9 @@ function catlink(string $mod = '', int $id = 0, string $sep = '', string $home =
         while (list($cid, $title, $parentid) = $db->getSqlRow($result)) $massiv[$cid] = [getConst($title), $parentid];
         foreach ($massiv as $key => $val) {
             $flag = $val[1];
-            $cont[$key] = ($flag != 0) ? $val[0] : '<a href="index.php?name='.$conf['name'].'&amp;cat='.$key.'" title="'.$val[0].'">'.$val[0].'</a>';
+            $cont[$key] = ($flag != 0) ? $val[0] : breadcrumbLink('index.php?name='.$conf['name'].'&amp;cat='.$key, $val[0], $val[0]);
             while ($flag != 0) {
-                $cont[$key] = '<a href="index.php?name='.$conf['name'].'&amp;cat='.$flag.'" title="'.$massiv[$flag][0].'">'.$massiv[$flag][0].'</a>'.$sep.'<a href="index.php?name='.$conf['name'].'&amp;cat='.$key.'" title="'.$val[0].'">'.$cont[$key].'</a>';
+                $cont[$key] = breadcrumbLink('index.php?name='.$conf['name'].'&amp;cat='.$flag, $massiv[$flag][0], $massiv[$flag][0]).$sep.breadcrumbLink('index.php?name='.$conf['name'].'&amp;cat='.$key, $val[0], $cont[$key]);
                 $flag = intval($massiv[$flag][1]);
             }
             if ($id == $key) $content .= $cont[$key];
@@ -5173,20 +5936,22 @@ function rating(): void {
                 $nrate = 'sl_rate-num';
             }
             if ($stl == 1) {
-                echo '<span class="sl_none">'.$result."</span>
-                <div class=\"sl_rate-like\">
-                    <p OnClick=\"AjaxLoad('GET', '1', '".$id.$typ."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$typ.'&amp;mod='.$mod."&amp;rate=1&amp;stl=1', ''); return false;\" title=\""._RATE1."\" class=\"sl_rate-minus sl_out\">
-                    <p OnClick=\"AjaxLoad('GET', '1', '".$id.$typ."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$typ.'&amp;mod='.$mod."&amp;rate=5&amp;stl=1', ''); return false;\" title=\""._RATE5.'" class="sl_rate-plus sl_out">
-                </div><span class="'.$nrate.'" title="'.$title.'">'.$result.'</span>';
+                echo ratingLikeLive(
+                    $result,
+                    $title,
+                    $nrate,
+                    $id.$typ,
+                    'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=1&amp;stl=1',
+                    'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=5&amp;stl=1'
+                );
             } else {
-                echo '<ul class="sl_urating">
-                    <li class="sl_crating" style="width:'.$width."%;\"></li>
-                    <li><div OnMouseOver=\"this.className='sl_over1';\" OnMouseOut=\"this.className='sl_out1';\" OnClick=\"AjaxLoad('GET', '1', '".$id.$typ."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$typ.'&amp;mod='.$mod."&amp;rate=1', ''); return false;\" title=\""._RATE1."\" class=\"sl_out1\"></div></li>
-                    <li><div OnMouseOver=\"this.className='sl_over2';\" OnMouseOut=\"this.className='sl_out2';\" OnClick=\"AjaxLoad('GET', '1', '".$id.$typ."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$typ.'&amp;mod='.$mod."&amp;rate=2', ''); return false;\" title=\""._RATE2."\" class=\"sl_out2\"></div></li>
-                    <li><div OnMouseOver=\"this.className='sl_over3';\" OnMouseOut=\"this.className='sl_out3';\" OnClick=\"AjaxLoad('GET', '1', '".$id.$typ."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$typ.'&amp;mod='.$mod."&amp;rate=3', ''); return false;\" title=\""._RATE3."\" class=\"sl_out3\"></div></li>
-                    <li><div OnMouseOver=\"this.className='sl_over4';\" OnMouseOut=\"this.className='sl_out4';\" OnClick=\"AjaxLoad('GET', '1', '".$id.$typ."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$typ.'&amp;mod='.$mod."&amp;rate=4', ''); return false;\" title=\""._RATE4."\" class=\"sl_out4\"></div></li>
-                    <li><div OnMouseOver=\"this.className='sl_over5';\" OnMouseOut=\"this.className='sl_out5';\" OnClick=\"AjaxLoad('GET', '1', '".$id.$typ."', 'go=1&amp;op=rating&amp;id=".$id.'&amp;typ='.$typ.'&amp;mod='.$mod."&amp;rate=5', ''); return false;\" title=\""._RATE5.'" class="sl_out5"></div></li>
-                </ul><span class="'.$nrate.'" title="'._VOTES.'">'.$votnum.'</span>';
+                echo ratingStarsLive(
+                    (string) $width,
+                    $id.$typ,
+                    'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod,
+                    $nrate,
+                    $votnum
+                );
             }
         } elseif (!$cookies && !$num && $rate) {
             setcookie(substr($mod, 0, 2).'-'.$id, $id, time() + intval($con[0]));
@@ -5251,70 +6016,59 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
         $code = ($id == 1) ? '<script src="plugins/system/insert-code.js"></script>' : '';
-        $code .= "<table class=\"sl_table_form\"><tr><td><div class=\"sl_bb-editor\">
-        <div class=\"sl_bb-panel\">
-            <div class=\"sl_pos_right\">
-                <span OnClick=\"RowsTextarea(1, '".$id."')\" class=\"sl_bb_plus\" title=\""._EPLUS."\"></span>
-                <span OnClick=\"RowsTextarea(0, '".$id."')\" class=\"sl_bb_minus\" title=\""._EMINUS."\"></span>
-            </div>
-            <span OnClick=\"InsertCode('b', '', '', '', '".$id."')\" class=\"sl_bb_b\" title=\""._EBOLD."\"></span>
-            <span OnClick=\"InsertCode('i', '', '', '', '".$id."')\" class=\"sl_bb_i\" title=\""._EITALIC."\"></span>
-            <span OnClick=\"InsertCode('u', '', '', '', '".$id."')\" class=\"sl_bb_u\" title=\""._EUNDERLINE."\"></span>
-            <span OnClick=\"InsertCode('s', '', '', '', '".$id."')\" class=\"sl_bb_s\" title=\""._ESTRIKET."\"></span>
-            <span OnClick=\"InsertCode('li', '', '', '', '".$id."')\" class=\"sl_bb_li\" title=\""._ELI."\"></span>
-            <span OnClick=\"InsertCode('hr', '', '', '', '".$id."')\" class=\"sl_bb_hr\" title=\""._EHR."\"></span>
-            <div class=\"sl_bb_sep\"></div>
-            <span OnClick=\"InsertCode('left', '', '', '', '".$id."')\" class=\"sl_bb_left\" title=\""._ELEFT."\"></span>
-            <span OnClick=\"InsertCode('center', '', '', '', '".$id."')\" class=\"sl_bb_center\" title=\""._ECENTER."\"></span>
-            <span OnClick=\"InsertCode('right', '', '', '', '".$id."')\" class=\"sl_bb_right\" title=\""._ERIGHT."\"></span>
-            <span OnClick=\"InsertCode('justify', '', '', '', '".$id."')\" class=\"sl_bb_justify\" title=\""._EYUSTIFY."\"></span>
-            <div class=\"sl_bb_sep\"></div>
-            <span OnClick=\"InsertCode('hide', '', '', '', '".$id."')\" class=\"sl_bb_hide\" title=\""._HIDE."\"></span>
-            <span OnClick=\"InsertCode('url', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')\" class=\"sl_bb_link\" title=\""._EURL."\"></span>
-            <span OnClick=\"InsertCode('mail', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')\" class=\"sl_bb_mail\" title=\""._EEMAIL."\"></span>
-            <span OnClick=\"InsertCode('img', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')\" class=\"sl_bb_img\" title=\""._EIMG."\"></span>
-            <!-- <span OnClick=\"InsertCode('media', '"._EMEDIA."', '', '', '".$id."')\" class=\"sl_bb_media\" title=\""._EMEDIA."\"></span> -->
-            <span OnMouseOver=\"CopyText();\" OnClick=\"InsertCode('quote', '"._JQUOTE."', '', '', '".$id."')\" class=\"sl_bb_quote\" title=\""._EQUOTE."\"></span>
-            <!-- <span OnClick=\"InsertCode('spoiler', '"._ESPOIL."', '', '', '".$id."')\" class=\"sl_bb_spoiler\" title=\""._ESPOIL.'"></span> -->
-        </div>';
-        $code .= '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows."\" OnKeyPress=\"TransliteFeld(this, event)\" OnSelect=\"FieldName(this, '".$id."')\" OnClick=\"FieldName(this, '".$id."')\" OnKeyUp=\"FieldName(this, '".$id."')\" class=\"sl_field".$style.'"'.$placeholder.$required.'>'.replace_break($desc)."</textarea>
-        <div class=\"sl_bb-panel\">
-            <div class=\"sl_pos_right\">
-                <div class=\"sl_drop\">
-                    <span OnClick=\"HideShow('i-form-".$id."', 'blind', 'up', 500);\" class=\"sl_bb_info\" title=\""._INFO.'"></span>
-                    <div id="i-form-'.$id.'" class="sl_drop-form">'._INFO_BB.' '.$conf['version'].'</div>
-                </div>
-            </div>';
-            if ((defined('ADMIN_FILE') && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) $code .= "<span OnClick=\"HideShow('af-form-".$id."', 'slide', 'up', 500); AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_bb_file\" title=\""._EUPLOAD.'"></span>';
-            $code .= "<div class=\"sl_drop\">
-                <span OnClick=\"HideShow('s-form-".$id."', 'blind', 'up', 500);\" class=\"sl_bb_smile\" title=\""._ESMILIE.'"></span>
-                <div id="s-form-'.$id.'" class="sl_drop-form">';
+        $topHtml = '<div class="sl_pos_right">'
+            .editorToolbarButton("RowsTextarea(1, '".$id."')", 'sl_bb_plus', _EPLUS)
+            .editorToolbarButton("RowsTextarea(0, '".$id."')", 'sl_bb_minus', _EMINUS)
+            .'</div>'
+            .editorToolbarButton("InsertCode('b', '', '', '', '".$id."')", 'sl_bb_b', _EBOLD)
+            .editorToolbarButton("InsertCode('i', '', '', '', '".$id."')", 'sl_bb_i', _EITALIC)
+            .editorToolbarButton("InsertCode('u', '', '', '', '".$id."')", 'sl_bb_u', _EUNDERLINE)
+            .editorToolbarButton("InsertCode('s', '', '', '', '".$id."')", 'sl_bb_s', _ESTRIKET)
+            .editorToolbarButton("InsertCode('li', '', '', '', '".$id."')", 'sl_bb_li', _ELI)
+            .editorToolbarButton("InsertCode('hr', '', '', '', '".$id."')", 'sl_bb_hr', _EHR)
+            .editorToolbarSeparator()
+            .editorToolbarButton("InsertCode('left', '', '', '', '".$id."')", 'sl_bb_left', _ELEFT)
+            .editorToolbarButton("InsertCode('center', '', '', '', '".$id."')", 'sl_bb_center', _ECENTER)
+            .editorToolbarButton("InsertCode('right', '', '', '', '".$id."')", 'sl_bb_right', _ERIGHT)
+            .editorToolbarButton("InsertCode('justify', '', '', '', '".$id."')", 'sl_bb_justify', _EYUSTIFY)
+            .editorToolbarSeparator()
+            .editorToolbarButton("InsertCode('hide', '', '', '', '".$id."')", 'sl_bb_hide', _HIDE)
+            .editorToolbarButton("InsertCode('url', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')", 'sl_bb_link', _EURL)
+            .editorToolbarButton("InsertCode('mail', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')", 'sl_bb_mail', _EEMAIL)
+            .editorToolbarButton("InsertCode('img', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')", 'sl_bb_img', _EIMG)
+            .editorToolbarButton("InsertCode('quote', '"._JQUOTE."', '', '', '".$id."')", 'sl_bb_quote', _EQUOTE, 'CopyText();');
+        $textareaHtml = '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows."\" OnKeyPress=\"TransliteFeld(this, event)\" OnSelect=\"FieldName(this, '".$id."')\" OnClick=\"FieldName(this, '".$id."')\" OnKeyUp=\"FieldName(this, '".$id."')\" class=\"sl_field".$style.'"'.$placeholder.$required.'>'.replace_break($desc).'</textarea>';
+        $bottomHtml = '<div class="sl_pos_right">'
+            .editorDropPanel(
+                editorToolbarButton("HideShow('i-form-".$id."', 'blind', 'up', 500);", 'sl_bb_info', _INFO),
+                editorInfoPanel('i-form-'.$id, _INFO_BB.' '.$conf['version'])
+            )
+            .'</div>';
+            if ((defined('ADMIN_FILE') && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) {
+                $bottomHtml .= editorToolbarButton("HideShow('af-form-".$id."', 'slide', 'up', 500); AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;", 'sl_bb_file', _EUPLOAD);
+            }
+            $smilies = '';
                 $i = 1;
                 $dir = opendir(img_find('smilies'));
                 while (false !== ($entry = readdir($dir))) {
                     if (preg_match("#(\.gif)$#i", $entry) && $entry != '.' && $entry != '..') {
                         $i = ($i < 10) ? '0'.$i : $i;
-                        $code .= ' <img src="'.img_find('smilies/'.$i.'.gif')."\" OnClick=\"InsertCode('smilies', ' *".$i."', '', '', '".$id."');\" style=\"cursor: pointer; margin: 3px 2px 0px 0px;\" alt=\""._SMILIE.' - '.$i.'" title="'._SMILIE.' - '.$i.'">';
+                        $smilies .= ' <img src="'.img_find('smilies/'.$i.'.gif')."\" OnClick=\"InsertCode('smilies', ' *".$i."', '', '', '".$id."');\" style=\"cursor: pointer; margin: 3px 2px 0px 0px;\" alt=\""._SMILIE.' - '.$i.'" title="'._SMILIE.' - '.$i.'">';
                         $i++;
                     }
                 }
                 closedir($dir);
-            $code .= '</div></div>';
+            $bottomHtml .= editorDropPanel(
+                editorToolbarButton("HideShow('s-form-".$id."', 'blind', 'up', 500);", 'sl_bb_smile', _ESMILIE),
+                editorSmiliesPanel('s-form-'.$id, $smilies)
+            );
         if ($stloc == 'ru') {
-            $code .= "<div class=\"sl_drop\"><span OnClick=\"HideShow('l-form-".$id."', 'blind', 'up', 500); changelanguage();\" class=\"sl_bb_translate\" title=\""._EAUTOTR.'"></span>
-            <div id="l-form-'.$id."\" class=\"sl_drop-form\">
-                <table class=\"sl_bb_trans\"><tr>
-                <td>ÃÂ</td><td>Ãâ€˜</td><td>Ãâ€™</td><td>Ãâ€œ</td><td>Ãâ€</td><td>Ãâ€¢</td><td>ÃÂ</td><td>Ãâ€“</td><td>Ãâ€”</td><td>ÃËœ</td><td>Ãâ„¢</td>
-                <td>ÃÅ¡</td><td>Ãâ€º</td><td>ÃÅ“</td><td>ÃÂ</td><td>ÃÅ¾</td><td>ÃÅ¸</td><td>ÃÂ </td><td>ÃÂ¡</td><td>ÃÂ¢</td><td>ÃÂ£</td><td>ÃÂ¤</td>
-                <td>ÃÂ¥</td><td>ÃÂ¦</td><td>ÃÂ§</td><td>ÃÂ¨</td><td>ÃÂ©</td><td>ÃÂª</td><td>ÃÂ«</td><td>ÃÂ¬</td><td>ÃÂ­</td><td>ÃÂ®</td><td>ÃÂ¯</td>
-                </tr><tr>
-                <td>A</td><td>B</td><td>V</td><td>G</td><td>D</td><td>E</td><td>JO</td><td>ZH</td><td>Z</td><td>I</td><td>J</td>
-                <td>K</td><td>L</td><td>M</td><td>N</td><td>O</td><td>P</td><td>R</td><td>S</td><td>T</td><td>U</td><td>F</td>
-                <td>X</td><td>C</td><td>CH</td><td>SH</td><td>W</td><td>'</td><td>Y</td><td>#</td><td>JE</td><td>JU</td><td>JA</td>
-                </tr></table>
-            </div></div>
-            <span OnClick=\"translateAlltoCyrillic()\" class=\"sl_bb_translit\" title=\""._ERUS.'"></span>
-            <span OnClick="translateAlltoLatin()" class="sl_bb_trans" title="'._ELAT.'"></span>';
+            $bottomHtml .= editorDropPanel(
+                editorToolbarButton("HideShow('l-form-".$id."', 'blind', 'up', 500); changelanguage();", 'sl_bb_translate', _EAUTOTR),
+                editorTranslatePanel('l-form-'.$id)
+            );
+            $bottomHtml .= editorToolbarButton('translateAlltoCyrillic()', 'sl_bb_translit', _ERUS)
+                .editorToolbarButton('translateAlltoLatin()', 'sl_bb_trans', _ELAT);
         }
         $fonts = '<option value="">'._FONT.'</option>';
         $font = ['Arial', 'Courier', 'Mistral', 'Impact', 'Sans Serif', 'Tahoma', 'Helvetica', 'Verdana'];
@@ -5332,33 +6086,29 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
         $fcode = ['Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml'];
         foreach ($fcode as $val) if ($val != '') $fcodes .= '<option value="'.strtolower($val).'">'.$val.'</option>';
 
-        $code .= "<div class=\"sl_drop\">
-            <span OnClick=\"HideShow('t-form-".$id."', 'blind', 'up', 500);\" class=\"sl_bb_text\" title=\""._TEXT.'"></span>
-            <div id="t-form-'.$id."\" class=\"sl_drop-form\">
-                <ul>
-                    <li><select name=\"family\" OnChange=\"InsertCode('family', this.options[this.selectedIndex].value, '', '', '".$id."'); this.selectedIndex=0;\" class=\"sl_field\" multiple>".$fonts."</select></li>
-                    <li><select name=\"color\" OnChange=\"InsertCode('color', this.options[this.selectedIndex].value, '', '', '".$id."'); this.selectedIndex=0;\" class=\"sl_field\" multiple>".$colors."</select></li>
-                    <li><select name=\"size\" OnChange=\"InsertCode('size', this.options[this.selectedIndex].value, '', '', '".$id."'); this.selectedIndex=0;\" class=\"sl_field\" multiple>".$fsizes."</select></li>
-                </ul>
-            </div>
-        </div>
-        <div class=\"sl_drop\">
-            <span OnClick=\"HideShow('c-form-".$id."', 'blind', 'up', 500);\" class=\"sl_bb_code\" title=\""._CODE.'"></span>
-            <div id="c-form-'.$id."\" class=\"sl_drop-form\"><ul><li><select name=\"code\" OnChange=\"InsertCode('code', this.options[this.selectedIndex].value, '', '', '".$id."'); this.selectedIndex=0;\" class=\"sl_field\" multiple>".$fcodes.'</select></li></ul></div>
-        </div>';
+        $bottomHtml .= editorDropPanel(
+            editorToolbarButton("HideShow('t-form-".$id."', 'blind', 'up', 500);", 'sl_bb_text', _TEXT),
+            editorTextPanel('t-form-'.$id, (string) $id, $fonts, $colors, $fsizes)
+        );
+        $bottomHtml .= editorDropPanel(
+            editorToolbarButton("HideShow('c-form-".$id."', 'blind', 'up', 500);", 'sl_bb_code', _CODE),
+            editorCodePanel('c-form-'.$id, (string) $id, $fcodes)
+        );
         if (isAdmin()) {
-            $code .= '<div class="sl_bb_sep"></div>'
-            ."<span OnClick=\"InsertCode('usehtml', '', '', '', '".$id."')\" class=\"sl_bb_html\" title=\""._EUSEHTML.'"></span>'
-            ."<span OnClick=\"InsertCode('usephp', '', '', '', '".$id."')\" class=\"sl_bb_php\" title=\""._EUSEPHP.'"></span>';
+            $bottomHtml .= editorToolbarSeparator()
+            .editorToolbarButton("InsertCode('usehtml', '', '', '', '".$id."')", 'sl_bb_html', _EUSEHTML)
+            .editorToolbarButton("InsertCode('usephp', '', '', '', '".$id."')", 'sl_bb_php', _EUSEPHP);
             $conf['name'] = (!empty($conf['name'])) ? $conf['name'] : '';
-            if ($op == 'faq_add' || $op == 'news_add' || $op == 'page_add' || $conf['name'] == 'faq' || $conf['name'] == 'news' || $conf['name'] == 'page') $code .= "<span OnClick=\"InsertCode('pagebreak', '', '', '', '".$id."')\" class=\"sl_bb_break\" title=\""._EBREAK.'"></span>';
+            if ($op == 'faq_add' || $op == 'news_add' || $op == 'page_add' || $conf['name'] == 'faq' || $conf['name'] == 'news' || $conf['name'] == 'page') {
+                $bottomHtml .= editorToolbarButton("InsertCode('pagebreak', '', '', '', '".$id."')", 'sl_bb_break', _EBREAK);
+            }
         }
-        $code .= '</div>';
+        $uploadHtml = '';
         if ((defined('ADMIN_FILE') && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) {
-            $code .= '<div id="af-form-'.$id.'" class="sl_bbup-panel sl_none">';
+            $uploadInner = '';
             if ($id == 1) {
                 $uinfo = '<div class="ico sl_info sl_left"><b>'._UPLOADINFO.'</b><br>'._FTYPE.': '.str_replace(',', ', ', $con[0]).'<br>'._FSIZEALL.': '.filterSize($con[1]).'<br>'._FSIZE.': '.filterSize($con[2]).'<br>'._AWIDTH.': '.$con[3].' px<br>'._AHEIGHT.': '.$con[4].' px<br>'._FILEUP.': '.$con[5].'<br>'.'</div>';
-                $code .= "<script>
+                $uploadInner .= "<script>
                 $(document).ready(function(e) {
                     $('#msg').html('".$uinfo."');
                     $('#file_upload').on('change', function () {
@@ -5398,11 +6148,12 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
                 <input type=\"file\" id=\"file_upload\" name=\"file[]\" multiple=\"multiple\" class=\"sl_field\">
                 <input type=\"button\" value=\""._UPDATE."\" OnClick=\"AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_but_green\"></div>";
             } else {
-                $code .= '<div class="sl_pos_center"><input type="button" value="'._UPDATE."\" OnClick=\"AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_but_green\"></div>";
+                $uploadInner .= '<div class="sl_pos_center"><input type="button" value="'._UPDATE."\" OnClick=\"AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_but_green\"></div>";
             }
-            $code .= '<div id="repf'.$id.'" style="margin: 5px;"></div></div>';
+            $uploadInner .= '<div id="repf'.$id.'" style="margin: 5px;"></div>';
+            $uploadHtml = editorUploadPanel('af-form-'.$id, $uploadInner, 'repf'.$id);
         }
-        $code .= '</div></td></tr></table>';
+        $code .= editorBbShell($topHtml, $textareaHtml, $bottomHtml, $uploadHtml);
     } elseif ((defined('ADMIN_FILE') && $editor == 2) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 2)) {
         static $jscript;
         if (defined('ADMIN_FILE') && $editor == 2) {
@@ -5587,27 +6338,27 @@ function num_ajax(string $frag, int $count, int $pages, int $page, int $mnum = 8
         $cont = '';
         if ($num > 1) {
             $prev = $num - 1;
-            $cprev = "<a href=\"#\" OnClick=\"AjaxLoad('GET', '".$ld."', '".$id."', 'go=".$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$prev.'&amp;typ='.$typ.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_num\" title=\""._BACK.'">'._BACK.'</a>';
+            $cprev = pagerAjaxLink($ld, $id, 'go='.$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$prev.'&amp;typ='.$typ.'&amp;dir='.$mod, _BACK, _BACK, 'sl_num');
         } else {
-            $cprev = '<span class="sl_num" title="'._BACK.'">'._BACK.'</span>';
+            $cprev = pagerCurrent(_BACK, _BACK, 'sl_num');
         }
         for ($i = 1; $i < $pages+1; $i++) {
             if ($i == $num) {
-                $cont .= '<span title="'.$i.'">'.$i.'</span>';
+                $cont .= pagerCurrent((string)$i, (string)$i);
             } else {
-                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $pages) || ($i == 1)) $cont .= "<a href=\"#\" OnClick=\"AjaxLoad('GET', '".$ld."', '".$id."', 'go=".$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$i.'&amp;typ='.$typ.'&amp;dir='.$mod."', ''); return false;\" title=\"".$i.'">'.$i.'</a>';
+                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $pages) || ($i == 1)) $cont .= pagerAjaxLink($ld, $id, 'go='.$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$i.'&amp;typ='.$typ.'&amp;dir='.$mod, (string)$i, (string)$i);
             }
             if ($i < $pages) {
                 if (($i > ($num - $nnum)) && ($i < ($num + $mnum))) $cont .= ' ';
-                if (($num > $nnum) && ($i == 1)) $cont .= '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
-                if (($num < ($pages - $mnum)) && ($i == ($pages - 1))) $cont .= '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
+                if (($num > $nnum) && ($i == 1)) $cont .= pagerDots();
+                if (($num < ($pages - $mnum)) && ($i == ($pages - 1))) $cont .= pagerDots();
             }
         }
         if ($num < $pages) {
             $next = $num + 1;
-            $cnext = " <a href=\"#\" OnClick=\"AjaxLoad('GET', '".$ld."', '".$id."', 'go=".$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$next.'&amp;typ='.$typ.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_num\" title=\""._NEXT.'">'._NEXT.'</a>';
+            $cnext = pagerAjaxLink($ld, $id, 'go='.$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$next.'&amp;typ='.$typ.'&amp;dir='.$mod, _NEXT, _NEXT, 'sl_num');
         } else {
-            $cnext = '<span class="sl_num" title="'._NEXT.'">'._NEXT.'</span>';
+            $cnext = pagerCurrent(_NEXT, _NEXT, 'sl_num');
         }
         $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $page, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
         return $tpl->getHtmlFrag($frag, $data);
@@ -5954,25 +6705,25 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 }
             }
             $avname = (!empty($user_name)) ? $user_name : $com_name.' ('._ANONYM.')';
-            $date = '<span title="'._PADD.'" class="sl_t_post">'.format_time($com_date, _TIMESTRING).'</span>';
+            $date = $tpl->getHtmlFrag('comment-date', ['title' => _PADD, 'text' => format_time($com_date, _TIMESTRING)]);
             $ip = (is_moder($com_modul)) ? user_geo_ip($com_host, 4) : '';
-            $amess = '<a href="#'.$com_id.'" title="'._COMMENT.': '.$a.'" class="sl_pnum">'.$a.'</a>';
+            $amess = $tpl->getHtmlFrag('comment-number', ['href' => '#'.$com_id, 'title' => _COMMENT.': '.$a, 'text' => (string) $a]);
             $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
-            $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? '<img src="'.img_find('ranks/'.$user_grank).'" alt="'.$trank.'" title="'.$trank.'">' : '';
+            $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? commentRankImage(img_find('ranks/'.$user_grank), $trank) : '';
             $rate = (!empty($user_id)) ? ajax_rating(0, $user_id, 'account', $user_votes, $user_totalvotes, $com_id, 1) : '';
-            $rwarn = (!empty($user_warnings)) ? _UWARNS.': '.warnings($user_warnings) : '';
-            $group = (!empty($user_gname)) ? _GROUP.': <span style="color: '.$user_gcolor.'">'.$user_gname.'</span>' : '';
-            $point = ($conf['users']['point'] && !empty($user_points)) ? _POINTS.': '.$user_points : '';
-            $regdate = (!empty($user_regdate)) ? _REG.': '.format_time($user_regdate) : _NO_INFO;
-            $gender = (!empty($user_gender)) ? _GENDER.': '.gender($user_gender) : '';
-            $from = (!empty($user_from)) ? _FROM.': '.$user_from : '';
-            $sig = (!empty($user_sig)) ? '<hr>'.$user_sig : '';
-            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? "<a href=\"javascript: InsertCode('name', '".$avname."', '', '', '1');\" title=\""._PERSONAL.'" class="sl_but_blue">'._PERS.'</a>' : '';
-            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? '<a href="index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name).'" title="'._SENDMES.'" class="sl_but_green">'._MESSAGE.'</a>' : '';
-            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? '<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name).'" title="'._PERSONALINFO.'" class="sl_but">'._ACCOUNT.'</a>' : '';
-            $web = ($conf['comments']['web'] && !empty($user_website)) ? '<a href="'.$user_website.'" target="_blank" title="'._DOWNLLINK.'" class="sl_but">'._SITE.'</a>' : '';
+            $rwarn = (!empty($user_warnings)) ? commentMetaText(_UWARNS, warnings($user_warnings)) : '';
+            $group = (!empty($user_gname)) ? commentMetaColor(_GROUP, $user_gname, $user_gcolor) : '';
+            $point = ($conf['users']['point'] && !empty($user_points)) ? commentMetaText(_POINTS, (string) $user_points) : '';
+            $regdate = (!empty($user_regdate)) ? commentMetaText(_REG, format_time($user_regdate)) : _NO_INFO;
+            $gender = (!empty($user_gender)) ? commentMetaText(_GENDER, gender($user_gender)) : '';
+            $from = (!empty($user_from)) ? commentMetaText(_FROM, $user_from) : '';
+            $sig = (!empty($user_sig)) ? commentSignature($user_sig) : '';
+            $personal = (is_moder($com_modul) || is_user() || $conf['comments']['anonpost'] != 0) ? commentActionJs("javascript: InsertCode('name', '".$avname."', '', '', '1');", _PERSONAL, _PERS, 'sl_but_blue') : '';
+            $privat = ($conf['comments']['privat'] && $conf['privat']['act'] && !empty($user_name)) ? commentActionLink('index.php?name=account&amp;op=privat&amp;uname='.urlencode($user_name), _SENDMES, _MESSAGE, 'sl_but_green') : '';
+            $profil = ($conf['comments']['profil'] && !empty($user_name)) ? commentActionLink('index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), _PERSONALINFO, _ACCOUNT, 'sl_but') : '';
+            $web = ($conf['comments']['web'] && !empty($user_website)) ? commentActionLink($user_website, _DOWNLLINK, _SITE, 'sl_but', ' target="_blank"') : '';
 
             # Future functions
             #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
@@ -5982,13 +6733,24 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
 
             if (is_moder($com_modul)) {
                 if (defined('ADMIN_FILE')) {
-                    $edit = add_menu('<a href="index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?op=comm_edit&amp;id='.$com_id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?op=comm_act&amp;id='.$com_id.'&amp;refer=1" title="'._ACTIVATE.'">'._ACTIVATE.'</a>||<a href="'.$afile.'.php?op=comm_del&amp;id='.$com_id."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.cutstr(filterText(filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul)), 10)."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>');
+                    $edit = commentActionMenu([
+                        commentActionLink('index.php?name='.$com_modul.'&amp;op=view&amp;id='.$com_cid.'#'.$com_id, _MVIEW, _MVIEW),
+                        commentActionLink($afile.'.php?op=comm_edit&amp;id='.$com_id, _FULLEDIT, _FULLEDIT),
+                        commentActionLink($afile.'.php?op=comm_act&amp;id='.$com_id.'&amp;refer=1', _ACTIVATE, _ACTIVATE),
+                        commentActionDelete($afile.'.php?op=comm_del&amp;id='.$com_id.'&amp;refer=1', _DELETE.' "'.cutstr(filterText(filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul)), 10).'"?', _ONDELETE, _ONDELETE),
+                    ]);
                 } else {
-                    $edit = add_menu("<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=editcom&amp;id=".$com_id.'&amp;typ=1&amp;mod='.$com_modul."', ''); return false;\" title=\""._ONEDIT.'">'._ONEDIT."</a>||<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=closecom&amp;id=".$com_id.'&amp;typ=0&amp;mod='.$com_modul."', ''); return false;\" title=\""._FMODC.'">'._FMODC."</a>||<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=closecom&amp;id=".$com_id.'&amp;typ=1&amp;mod='.$com_modul."', ''); return false;\" title=\""._ACTIVATE.'">'._ACTIVATE.'</a>');
+                    $edit = commentActionMenu([
+                        commentActionAjax('com'.$com_id, 'go=1&amp;op=editcom&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ONEDIT, _ONEDIT),
+                        commentActionAjax('com'.$com_id, 'go=1&amp;op=closecom&amp;id='.$com_id.'&amp;typ=0&amp;mod='.$com_modul, _FMODC, _FMODC),
+                        commentActionAjax('com'.$com_id, 'go=1&amp;op=closecom&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ACTIVATE, _ACTIVATE),
+                    ]);
                 }
             } else {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
-                $edit = (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) ? add_menu("<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'com".$com_id."', 'go=1&amp;op=editcom&amp;id=".$com_id.'&amp;typ=1&amp;mod='.$com_modul."', ''); return false;\" title=\""._ONEDIT.'">'._ONEDIT.'</a>') : '';
+                $edit = (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) ? commentActionMenu([
+                    commentActionAjax('com'.$com_id, 'go=1&amp;op=editcom&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ONEDIT, _ONEDIT),
+                ]) : '';
             }
             $hclass = (!defined('ADMIN_FILE') && !$com_status) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
             $text = '<div id="repcom'.$com_id.'">'.filterReplaceText(filterMarkdown($com_text, $com_modul, false), $com_modul).'</div>';
@@ -5998,11 +6760,19 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             } else {
                 $checkb = '';
             }
-            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => filterReplaceText(filterMarkdown($sig, $com_modul, false), $com_modul), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'hclass' => $hclass, 'checkb' => $checkb]);
+            $cont .= $tpl->getHtmlFrag('comment', ['id' => $com_id, 'username' => $avname, 'date' => $date, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'avatar_html' => commentAvatar($avname, $avatar), 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => $sig, 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_edit' => $edit, 'hclass' => $hclass, 'checkb' => $checkb]);
             if ($conf['comments']['sort']) { $a++; } else { $a--; }
         }
         if (defined('ADMIN_FILE')) {
-            $selms = _CHECKOP.': <select name="op"><option value="comm_act">'._ACTIVATE.'</option><option value="comm_del">'._DELETE.'</option></select> <input type="hidden" name="refer" value="1"><input type="submit" value="'._OK.'" class="sl_but_blue">';
+            $selms = $tpl->getHtmlFrag('comment-bulk-actions', [
+                'label' => _CHECKOP,
+                'activate_value' => 'comm_act',
+                'activate_label' => _ACTIVATE,
+                'delete_value' => 'comm_del',
+                'delete_label' => _DELETE,
+                'refer_value' => '1',
+                'submit_label' => _OK,
+            ]);
             $pag = (getVar('get', 'status', 'num', 0) == 1) ? 'op=comm_show&amp;status=1' : 'op=comm_show';
             $numpt = setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&amp;', $plnum, 0, '', 'com');
             $cont .= $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]);

@@ -2,7 +2,7 @@
 <table class="sl_table_list">
 	<thead><tr class="forum-table-head"><th class="fl-col-num">{{ col_id }}</th><th>{{ col_product }}</th><th class="fl-col-num">{{ col_qty }}</th><th class="fl-col-stat">{{ col_price }}</th><th class="fl-col-stat">{{ col_fn }}</th></tr></thead>
 	<tbody>
-{% else %}		<tr class="forum-table-foot"><td colspan="2">{{{ cart }}}</td><td colspan="3">{{{ total }}}</td></tr>
+{% else %}		<tr class="forum-table-foot"><td colspan="2"><a href="{{{ cart_href }}}" title="{{ cart_title }}" class="sl_shop_kasse">{{ cart_label }}</a></td><td colspan="3"><span title="{{ total_title }}" class="sl_shop_total">{{ total_text }}</span></td></tr>
 	</tbody>
 </table>
 {% endif %}

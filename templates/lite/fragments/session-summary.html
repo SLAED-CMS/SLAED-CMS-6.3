@@ -1,0 +1,21 @@
+<hr>
+<table class="sl_table_block">
+    <tr><td>{{ members_label }}:</td><td class="sl_right">{{ members_count }}</td></tr>
+    {% if show_bots %}<tr><td>{{ bots_label }}:</td><td class="sl_right">{{ bots_count }}</td></tr>{% endif %}
+    <tr><td>{{ visitors_label }}:</td><td class="sl_right">{{ visitors_count }}</td></tr>
+    <tr><td>{{ overall_label }}:</td><td class="sl_right">{{ overall_count }}</td></tr>
+</table>
+<hr>
+<table class="sl_table_block">
+    <tr>
+        <td class="sl_center">
+            <a OnClick="AjaxLoad('GET', '0', '{{ update_target }}', '{{{ update_query }}}', ''); return false;" title="{{ update_title }}" class="sl_but_green">{{ update_label }}</a>
+            {% if has_rows %}
+            <a OnClick="HideShow('{{ toggle_id }}', 'slide', 'up', 500);" title="{{ toggle_title }}" class="sl_but_blue">{{ toggle_label }}</a>
+            {% endif %}
+        </td>
+    </tr>
+</table>
+{% if has_rows %}
+<table id="{{ toggle_id }}" class="sl_table_block sl_none">{{{ rows_html }}}</table>
+{% endif %}

@@ -221,34 +221,82 @@ function setAdminNavi(array $p): string {
     $hassub = (bool)($p['subtab'] ?? false);
     $actsub = $p['legacy'] ?? 0;
     $mtab   = $p['id']     ?? 'menutab';
-    $cnt = '<ul id="'.$mtab.'" class="reset tabmenu">';
+    $cnt = adminTabListOpen($mtab, 'tabmenu');
     $scnt = '';
     $k = 0;
     foreach ($tabs as $tab) {
         if ($tab === '') { $k++; continue; }
-        $sel = ($k === $act) ? ' class="selected"' : '';
         if ($hassub && !empty($stabs)) {
-            $scnt = '<ul id="'.$mtab.'s" class="reset tabsubmenu">';
+            $scnt = adminTabListOpen($mtab.'s', 'tabsubmenu');
             $l = 0;
             foreach ($stabs as $stab) {
                 if ($stab === '') { $l++; continue; }
-                $ssel = ($l === $actsub) ? ' class="selected"' : '';
-                $hrefsub = !empty($sops[$l])
-                    ? 'href="'.$afile.'.php?'.$sops[$l].'"'
-                    : 'rel="tabcs'.$l.'" href="#"';
-                $scnt .= '<li><a '.$hrefsub.$ssel.'><b>'.$stab.'</b></a></li>';
+                $hrefsub = !empty($sops[$l]) ? $afile.'.php?'.$sops[$l] : '#';
+                $relsub = !empty($sops[$l]) ? '' : 'tabcs'.$l;
+                $scnt .= adminTabLink($hrefsub, $stab, $l === $actsub, $relsub);
                 $l++;
             }
-            $scnt .= '</ul>';
+            $scnt .= adminTabListClose();
         }
-        $href = !empty($ops[$k])
-            ? 'href="'.$afile.'.php?'.$ops[$k].'"'
-            : 'rel="tabc'.$k.'" href="#"';
-        $cnt .= '<li><a '.$href.$sel.'><b>'.$tab.'</b></a></li>';
+        $href = !empty($ops[$k]) ? $afile.'.php?'.$ops[$k] : '#';
+        $rel = !empty($ops[$k]) ? '' : 'tabc'.$k;
+        $cnt .= adminTabLink($href, $tab, $k === $act, $rel);
         $k++;
     }
-    $cnt .= ($scnt !== '') ? '</ul>'.$scnt : '</ul>';
+    $cnt .= adminTabListClose();
+    if ($scnt !== '') $cnt .= $scnt;
     return $tpl->getHtmlFrag('title', ['title' => $ttl, 'icon' => $ico, 'subtitle' => $sub, 'content' => $cnt]);
+}
+
+function adminTabListOpen(string $id, string $class): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-list-open', [
+        'id' => $id,
+        'class' => $class,
+    ]);
+}
+
+function adminTabListClose(): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-list-close', []);
+}
+
+function adminTabLink(string $href, string $label, bool $selected = false, string $rel = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-link', [
+        'href' => $href,
+        'label' => $label,
+        'selected' => $selected,
+        'rel' => $rel,
+    ]);
+}
+
+function adminInfoCountValue(int|string $count): string {
+ global $tpl;
+    if (!is_numeric($count)) {
+        return '-';
+    }
+    return $tpl->getHtmlFrag('admin-info-count', [
+        'count' => (string) $count,
+        'class' => ((int) $count >= 1) ? 'sl_red' : 'sl_green',
+    ]);
+}
+
+function adminInfoRow(string $href, string $title, string $label, int|string $count): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-info-row', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'count_html' => adminInfoCountValue($count),
+    ]);
+}
+
+function adminInfoTable(array $rows): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-info-table', [
+        'rows_html' => implode('', $rows),
+    ]);
 }
 
 function admininfo() {
@@ -256,11 +304,10 @@ function admininfo() {
     if (isAdmin()) {
         $ablocks = '';
         if ($panel) {
-            $n_cont = '<table class="sl_tab_bl">';
+            $newRows = [];
             if (is_active('account') && is_admin_modul('account')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users_temp'));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=account&op=newuser" title="'._NEW_USER.'">'._USERS.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=account&op=newuser', _NEW_USER, _USERS, $num);
             }
             if (is_active('album') && is_admin_modul('album')) {
                 #$num = $db->getSqlRowCount($db->getSqlQuery("SELECT pid FROM ".PREFIX_DB."_album_pictures_newpicture"));
@@ -269,79 +316,67 @@ function admininfo() {
             }
             if (is_active('faq') && is_admin_modul('faq')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_faq WHERE status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=faq&status=1" title="'._FAQ.'">'._FAQ.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=faq&status=1', _FAQ, _FAQ, $num);
             }
             if (is_active('files') && is_admin_modul('files')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=files&status=1" title="'._FILES.'">'._FILES.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=files&status=1', _FILES, _FILES, $num);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '2'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=files&status=2" title="'._BROCFILES.'">'._BROCFILES.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=files&status=2', _BROCFILES, _BROCFILES, $num);
             }
             if (is_active('help') && is_admin_modul('help')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=help" title="'._HELP.'">'._HELP.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=help', _HELP, _HELP, $num);
             }
             if (is_active('jokes') && is_admin_modul('jokes')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_jokes WHERE status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=jokes&status=1" title="'._JOKES.'">'._JOKES.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=jokes&status=1', _JOKES, _JOKES, $num);
             }
             if (is_active('links') && is_admin_modul('links')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=links&status=1" title="'._LINKS.'">'._LINKS.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=links&status=1', _LINKS, _LINKS, $num);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '2'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=links&status=2" title="'._BROCLINKS.'">'._BROCLINKS.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=links&status=2', _BROCLINKS, _BROCLINKS, $num);
             }
             if (is_active('media') && is_admin_modul('media')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=media&status=1" title="'._MEDIA.'">'._MEDIA.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=media&status=1', _MEDIA, _MEDIA, $num);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '2'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=media&status=2" title="'._BROCMFILES.'">'._BROCMFILES.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=media&status=2', _BROCMFILES, _BROCMFILES, $num);
             }
             if (is_active('news') && is_admin_modul('news')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_news WHERE status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=news&status=1" title="'._NEWS.'">'._NEWS.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=news&status=1', _NEWS, _NEWS, $num);
             }
             if (is_active('pages') && is_admin_modul('pages')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_pages WHERE status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=pages&status=1" title="'._PAGES.'">'._PAGES.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=pages&status=1', _PAGES, _PAGES, $num);
             }
             if (is_active('shop') && is_admin_modul('shop')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_clients WHERE status = '2'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=shop&op=clients" title="'._CLIENTS.'">'._CLIENTS.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=shop&op=clients', _CLIENTS, _CLIENTS, $num);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_partners WHERE status = '2'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=shop&op=partners" title="'._PARTNERS.'">'._PARTNERS.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=shop&op=partners', _PARTNERS, _PARTNERS, $num);
             }
             if (is_active('whois') && is_admin_modul('whois')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_whois WHERE status = '0'"));
-                $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-                $n_cont .= '<tr><td><a href="'.$afile.'.php?name=whois&status=1" title="'._WHOIS.'">'._WHOIS.'</a>:</td><td>'.$num.'</td></tr>';
+                $newRows[] = adminInfoRow($afile.'.php?name=whois&status=1', _WHOIS, _WHOIS, $num);
             }
-            $n_cont .= '</table>';
-            $ablocks = $tpl->getHtmlFrag('block-left', ['title' => _NEW, 'content' => $n_cont, 'id' => '3', 'close' => _OPCL]);
+            $ablocks = $tpl->getHtmlFrag('block-left', ['title' => _NEW, 'content' => adminInfoTable($newRows), 'id' => '3', 'close' => _OPCL]);
             
-            $w_cont = '<table class="sl_tab_bl">';
+            $waitingRows = [];
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
-            $num = (is_numeric($num)) ? (($num >= 1) ? '<span class="sl_red">'.$num.'</span>' : '<span class="sl_green">'.$num.'</span>') : '-';
-            $w_cont .= '<tr><td><a href="'.$afile.'.php?name=comments&status=1" title="'._COMMENTS.'">'._COMMENTS.'</a>:</td><td>'.$num.'</td></tr>';
-            $w_cont .= '</table>';
-            $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _WAITINGCONT, 'content' => $w_cont, 'id' => '4', 'close' => _OPCL]);
+            $waitingRows[] = adminInfoRow($afile.'.php?name=comments&status=1', _COMMENTS, _COMMENTS, $num);
+            $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _WAITINGCONT, 'content' => adminInfoTable($waitingRows), 'id' => '4', 'close' => _OPCL]);
             
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
-        $e_cont = '<form method="post" action="'.$afile.'.php"><table><tr><td>'.redaktor('1', 'editor', '', $editor, 1).'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
+        $e_cont = $tpl->getHtmlFrag('admin-editor-form', [
+            'action' => $afile.'.php',
+            'editor_html' => redaktor('1', 'editor', '', $editor, 1),
+            'refer' => '1',
+            'op' => 'changeeditor',
+        ]);
         $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _EDITOR, 'content' => $e_cont, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
@@ -351,6 +386,203 @@ function db_version() {
  global $db;
     list($dbv) = $db->getSqlRow($db->getSqlQuery('SELECT VERSION()'));
     return $dbv;
+}
+
+function adminCategoryTable(string $rowsHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-category-table', [
+        'id_label' => _ID,
+        'category_label' => _CATEGORY,
+        'content_label' => cutstr(_CONTENT, 3, 1),
+        'subcategory_label' => cutstr(_SUBCATEGORY, 3, 1),
+        'image_label' => cutstr(_IMG, 2, 1),
+        'weight_label' => _WEIGHT,
+        'status_label' => _STATUS,
+        'functions_label' => _FUNCTIONS,
+        'rows_html' => $rowsHtml,
+    ]);
+}
+
+function adminCategoryRow(array $row): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-category-row', $row);
+}
+
+function adminBlockTable(string $rowsHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-block-table', [
+        'id_label' => _ID,
+        'title_label' => _TITLE,
+        'type_label' => _TYPE,
+        'view_label' => _VIEW,
+        'position_label' => _POSITION,
+        'weight_label' => _WEIGHT,
+        'status_label' => _STATUS,
+        'functions_label' => _FUNCTIONS,
+        'rows_html' => $rowsHtml,
+    ]);
+}
+
+function adminBlockRow(array $row): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-block-row', $row);
+}
+
+function adminFavoritesTable(string $rowsHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-favorites-table', [
+        'id_label' => _ID,
+        'title_label' => _TITLE,
+        'module_label' => _MODUL,
+        'posted_by_label' => _POSTEDBY,
+        'functions_label' => _FUNCTIONS,
+        'rows_html' => $rowsHtml,
+    ]);
+}
+
+function adminFavoritesRow(array $row): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-favorites-row', $row);
+}
+
+function adminPrivateTable(string $rowsHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-private-table', [
+        'id_label' => _ID,
+        'title_label' => _TITLE,
+        'sender_label' => _PRSE,
+        'receiver_label' => _PRRE,
+        'date_label' => _DATE,
+        'status_label' => _STATUS,
+        'functions_label' => _FUNCTIONS,
+        'rows_html' => $rowsHtml,
+    ]);
+}
+
+function adminPrivateRow(array $row): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-private-row', $row);
+}
+
+function adminFilesTable(string $rowsHtml): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-files-table', [
+        'image_label' => cutstr(_IMG, 4, 1),
+        'file_label' => _FILE,
+        'date_label' => _DATE,
+        'size_label' => _SIZE,
+        'dimensions_label' => _WIDTH.' x '._HEIGHT,
+        'functions_label' => _FUNCTIONS,
+        'rows_html' => $rowsHtml,
+    ]);
+}
+
+function adminFilesRow(array $row): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-files-row', $row);
+}
+
+function adminInfoForm(array $data): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-info-form', $data);
+}
+
+function adminFlagBox(bool $state, string $yesLabel, string $noLabel): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-flag-box', [
+        'class' => $state ? 'sl_green' : 'sl_red',
+        'label' => $state ? $yesLabel : $noLabel,
+    ]);
+}
+
+function adminNoteLabel(string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-note-label', [
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function adminMoveControls(string $target, string $upQuery = '', string $downQuery = ''): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-move-controls', [
+        'target' => $target,
+        'up_query' => $upQuery,
+        'up_title' => _BLOCKUP,
+        'down_query' => $downQuery,
+        'down_title' => _BLOCKDOWN,
+    ]);
+}
+
+function adminFilePreview(int $index, string $path, bool $hasImage): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-file-preview', [
+        'preview_id' => 'sf-form-'.$index,
+        'toggle_onclick' => "HideShow('sf-form-".$index."', 'fold', 'up', 500);",
+        'image_url' => $path,
+        'image_title' => _IMG,
+        'no_title' => _NO,
+        'show_image' => $hasImage,
+    ]);
+}
+
+function adminDangerText(string $text): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-danger-text', [
+        'text' => $text,
+    ]);
+}
+
+function adminTitleTip(string $data): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-title-tip', [
+        'content' => $data,
+    ]);
+}
+
+function adminTitleTipLabel(string $tip, string $title, string $label): string {
+    return adminTitleTip($tip).adminNoteLabel($title, $label);
+}
+
+function adminLinkAction(string $href, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-action-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function adminAjaxAction(string $target, string $query, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-action-ajax', [
+        'target' => $target,
+        'query' => $query,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function adminDeleteAction(string $href, string $confirmText, string $title, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-action-delete', [
+        'href' => $href,
+        'confirm_text' => $confirmText,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+function adminMenuItems(array $items): string {
+ global $tpl;
+    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
+    if (!$items) {
+        return '';
+    }
+    return $tpl->getHtmlFrag('admin-action-menu', [
+        'editor_label' => _EDITOR,
+        'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
+    ]);
 }
 
 function ajax_cat(string $modul = '', int $obj = 0): string {
@@ -365,7 +597,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
             $massiv[$id] = [$id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2];
             unset($id, $modul, $title, $description, $imgcat, $language, $parentid, $ordern, $cstatus, $con1, $modul1, $order1, $con2, $modul2, $order2);
         }
-        $fcont = '';
+        $rows = [];
         foreach ($massiv as $key => $val) {
             $id = $val[0];
             $modul = $val[1];
@@ -406,8 +638,8 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
             list($ispid) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_categories WHERE parent = :id', ['id' => $id]));
             $ordernm = $ordern - 1;
             $ordernp = $ordern + 1;
-            $active = ($parentid) ? '<div class="sl_green">'._YES.'</div>' : '<div class="sl_red">'._NO.'</div>';
-            $img = ($imgcat) ? '<div class="sl_green">'._YES.'</div>' : '<div class="sl_red">'._NO.'</div>';
+            $active = adminFlagBox((bool) $parentid, _YES, _NO);
+            $img = adminFlagBox((bool) $imgcat, _YES, _NO);
             $flag = $parentid;
             while ($flag != '0') {
                 $title = $massiv[$flag][2].' / '.$title;
@@ -416,19 +648,32 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
             $descript = ($description) ? $description : _NO;
             $subcat = ($ispid) ? $ispid : _NO;
             $clang = ($conf['multilingual'] == 1) ? ((!$language) ? '<br>'._LANGUAGE.': '._ALL : '<br>'._LANGUAGE.': '.getLangName($language)) : '';
-            $delete = (!$pnum && !$ispid) ? '||<a href="'.$afile.'.php?op=cat_del&amp;id='.$id.$modlink."&amp;refer=1\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$title."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>' : '';
-            $fcont .= '<tr><td>'.$id.'</td>'
-            .'<td>'.title_tip(_DESCRIPTION.': '.$descript.'<br>'._CATEGORIES.': '.$subcat.$clang).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span></td>'
-            .'<td>'.$pnum.'</td>'
-            .'<td>'.$active.'</td>'
-            .'<td>'.$img.'</td>'
-            .'<td>'.$ordern.'</td><td>';
-            $fcont .= ($con1) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_cat', 'go=5&amp;op=cat_order&amp;id=".$id.'&amp;cid='.$con1.'&amp;typ='.$ordernm.'&amp;mod='.$modul.'&amp;ordern='.$ordern."', ''); return false;\" title=\""._BLOCKUP.'" class="sl_bl_up"></span>' : '';
-            $fcont .= ($con2) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_cat', 'go=5&amp;op=cat_order&amp;id=".$id.'&amp;cid='.$con2.'&amp;typ='.$ordernp.'&amp;mod='.$modul.'&amp;ordern='.$ordern."', ''); return false;\" title=\""._BLOCKDOWN.'" class="sl_bl_down"></span>' : '';
-            $fcont .= '</td><td>'.ad_status('', $cstatus).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?name=categories&amp;op=edit&amp;cid='.$id.$modlink.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$delete).'</td></tr>';
+            $delete = (!$pnum && !$ispid)
+                ? adminDeleteAction(
+                    $afile.'.php?op=cat_del&amp;id='.$id.$modlink.'&amp;refer=1',
+                    _DELETE.' "'.$title.'"?',
+                    _ONDELETE,
+                    _ONDELETE
+                )
+                : '';
+            $moveUp = ($con1) ? 'go=5&amp;op=cat_order&amp;id='.$id.'&amp;cid='.$con1.'&amp;typ='.$ordernm.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
+            $moveDown = ($con2) ? 'go=5&amp;op=cat_order&amp;id='.$id.'&amp;cid='.$con2.'&amp;typ='.$ordernp.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
+            $rows[] = adminCategoryRow([
+                'id' => (string) $id,
+                'title_html' => adminTitleTipLabel(_DESCRIPTION.': '.$descript.'<br>'._CATEGORIES.': '.$subcat.$clang, $title, cutstr($title, 50)),
+                'content_count' => (string) $pnum,
+                'active_html' => $active,
+                'image_html' => $img,
+                'weight_value' => (string) $ordern,
+                'move_html' => adminMoveControls('ajax_cat', $moveUp, $moveDown),
+                'status_html' => ad_status('', $cstatus),
+                'functions_html' => adminMenuItems([
+                    adminLinkAction($afile.'.php?name=categories&amp;op=edit&amp;cid='.$id.$modlink, _FULLEDIT, _FULLEDIT),
+                    $delete,
+                ]),
+            ]);
         }
-        $cont = '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._CATEGORY.'</th><th>'.cutstr(_CONTENT, 3, 1).'</th><th>'.cutstr(_SUBCATEGORY, 3, 1).'</th><th>'.cutstr(_IMG, 2, 1).'</th><th colspan="2">'._WEIGHT.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>'.$fcont.'</tbody></table>';
+        $cont = adminCategoryTable(implode('', $rows));
     } else {
         $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
@@ -510,7 +755,7 @@ function scatacess($auth) {
 
 function ajax_block(): string {
  global $db, $conf, $afile;
-    $fcont  = '';
+    $rows = [];
     $result = $db->getSqlQuery('SELECT a.id, a.bkey, a.title, a.url, a.bpos, a.weight, a.status, a.lang, a.bfile, a.view, a.expire, a.action, b.id, b.bpos, b.weight, c.id, c.bpos, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bpos = a.bpos AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bpos = a.bpos AND c.weight = a.weight+1) ORDER BY a.bpos, a.weight');
     while (list($bid, $bkey, $title, $url, $bpos, $weight, $active, $lang, $bfile, $view, $expire, $action, $con1, $bpos1, $weight1, $con2, $bpos2, $weight2) = $db->getSqlRow($result)) {
         if (($expire && $expire < time()) || (!$active && $expire)) {
@@ -525,19 +770,19 @@ function ajax_block(): string {
         $exp = intval($expire - time());
         $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
         $blang = ($conf['multilingual'] == 1) ? ((!$lang) ? '<br>'._LANGUAGE.': '._ALL : '<br>'._LANGUAGE.': '.getLangName($lang)) : '';
-        $fcont .= '<tr><td>'.$bid.'</td><td>'.title_tip(_NAME.': '.$title.'<br>'._PURCHASED.': '.$exp.$blang).cutstr(getConst($title), 15).'</td>';
+        $titleHtml = adminTitleTip(_NAME.': '.$title.'<br>'._PURCHASED.': '.$exp.$blang).cutstr(getConst($title), 15);
         if ($bpos == 'l') {
-            $bpos = '<span title="'._LEFTBLOCK.'" class="sl_note">'._LEFT.'</span>';
+            $bpos = adminNoteLabel(_LEFTBLOCK, _LEFT);
         } elseif ($bpos == 'r') {
-            $bpos = '<span title="'._RIGHTBLOCK.'" class="sl_note">'._RIGHT.'</span>';
+            $bpos = adminNoteLabel(_RIGHTBLOCK, _RIGHT);
         } elseif ($bpos == 'c') {
-            $bpos = '<span title="'._CENTERBLOCK.'" class="sl_note">'._CENTERUP.'</span>';
+            $bpos = adminNoteLabel(_CENTERBLOCK, _CENTERUP);
         } elseif ($bpos == 'd') {
-            $bpos = '<span title="'._CENTERBLOCK.'" class="sl_note">'._CENTERDOWN.'</span>';
+            $bpos = adminNoteLabel(_CENTERBLOCK, _CENTERDOWN);
         } elseif ($bpos == 'b') {
-            $bpos = '<span title="'._BANNER.'" class="sl_note">'._BANNERUP.'</span>';
+            $bpos = adminNoteLabel(_BANNER, _BANNERUP);
         } elseif ($bpos == 'f') {
-            $bpos = '<span title="'._BANNER.'" class="sl_note">'._BANNERDOWN.'</span>';
+            $bpos = adminNoteLabel(_BANNER, _BANNERDOWN);
         }
         if ($bkey == '') {
             $type = ($url) ? 'RSS/RDF' : 'HTML';
@@ -545,7 +790,6 @@ function ajax_block(): string {
         } elseif ($bkey != '') {
             $type = _BLOCKSYSTEM;
         }
-        $fcont .= '<td>'.$type.'</td>';
         if ($view == 0) {
             $who_view = _MVALL;
         } elseif ($view == 1) {
@@ -555,15 +799,25 @@ function ajax_block(): string {
         } elseif ($view == 3) {
             $who_view = _MVANON;
         }
-        $fcont .= '<td>'.$who_view.'</td>'
-        .'<td>'.$bpos.'</td>'
-        .'<td>'.$weight.'</td><td>';
-        $fcont .= ($con1) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_block', 'go=5&amp;op=blocks_order&amp;id=".$bid.'&amp;cid='.$con1.'&amp;typ='.$weight_minus.'&amp;ordern='.$weight."', ''); return false;\" title=\""._BLOCKUP.'" class="sl_bl_up"></span>' : '';
-        $fcont .= ($con2) ? "<span OnClick=\"AjaxLoad('GET', '0', 'ajax_block', 'go=5&amp;op=blocks_order&amp;id=".$bid.'&amp;cid='.$con2.'&amp;typ='.$weight_plus.'&amp;ordern='.$weight."', ''); return false;\" title=\""._BLOCKDOWN.'" class="sl_bl_down"></span>' : '';
-        $fcont .= '</td><td>'.ad_status('', $active).'</td><td>'.add_menu(ad_status($afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active, $active).'||<a href="'.$afile.'.php?name=blocks&amp;op=edit&amp;id='.$bid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=blocks&amp;op=delete&amp;id='.$bid."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$title."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+        $moveUp = ($con1) ? 'go=5&amp;op=blocks_order&amp;id='.$bid.'&amp;cid='.$con1.'&amp;typ='.$weight_minus.'&amp;ordern='.$weight : '';
+        $moveDown = ($con2) ? 'go=5&amp;op=blocks_order&amp;id='.$bid.'&amp;cid='.$con2.'&amp;typ='.$weight_plus.'&amp;ordern='.$weight : '';
+        $rows[] = adminBlockRow([
+            'id' => (string) $bid,
+            'title_html' => $titleHtml,
+            'type_label' => $type,
+            'view_label' => $who_view,
+            'position_html' => $bpos,
+            'weight_value' => (string) $weight,
+            'move_html' => adminMoveControls('ajax_block', $moveUp, $moveDown),
+            'status_html' => ad_status('', $active),
+            'functions_html' => adminMenuItems([
+                ad_status($afile.'.php?name=blocks&amp;op=change&amp;id='.$bid.'&amp;act='.$active, $active),
+                adminLinkAction($afile.'.php?name=blocks&amp;op=edit&amp;id='.$bid, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=blocks&amp;op=delete&amp;id='.$bid, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+            ]),
+        ]);
     }
-    $cont = '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._TYPE.'</th><th>'._VIEW.'</th><th>'._POSITION.'</th><th colspan="2">'._WEIGHT.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>'.$fcont.'</tbody></table>';
-    return $cont;
+    return adminBlockTable(implode('', $rows));
 }
 
 function blocks_order(): void {
@@ -636,21 +890,25 @@ function fav_aliste(int $obj = 0): string {
             }
         }
         if ($ffmassiv) {
-            $cont = '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._MODUL.'</th><th>'._POSTEDBY.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>';
+            $rows = [];
             foreach ($ffmassiv as $key => $val) {
                 $id = $val[0];
                 $fid = $val[1];
                 $modul = $val[2];
                 $title = $val[3];
                 $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
-                $cont .= '<tr>'
-                .'<td>'.$id.'</td>'
-                .'<td><span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
-                .'<td>'.getModuleName($modul).'</td>'
-                .'<td>'.$uname.'</td>'
-                .'<td>'.add_menu('<a href="index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid.'" title="'._MVIEW.'">'._MVIEW."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'fav_aliste', 'go=5&amp;op=fav_adel&amp;id=".$id."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>').'</td>';
+                $rows[] = adminFavoritesRow([
+                    'id' => (string) $id,
+                    'title_html' => adminNoteLabel($title, cutstr($title, 60)),
+                    'module_label' => getModuleName($modul),
+                    'posted_by_html' => $uname,
+                    'functions_html' => adminMenuItems([
+                        adminLinkAction('index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid, _MVIEW, _MVIEW),
+                        adminAjaxAction('fav_aliste', 'go=5&amp;op=fav_adel&amp;id='.$id, _ONDELETE, _ONDELETE),
+                    ]),
+                ]);
             }
-            $cont .= '</tbody></table>';
+            $cont = adminFavoritesTable(implode('', $rows));
             $numpages = ceil($fav_num / $newlistnum);
             $cont .= num_ajax('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, '0', 5, 'fav_aliste', 'fav_aliste', 0, '', '');
         } else {
@@ -682,22 +940,25 @@ function ajax_privat(int $obj = 0): string {
 
     $result = $db->getSqlQuery('SELECT p.id, p.title, p.body, p.time, p.status, i.name, o.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS i ON (p.uidin = i.id) LEFT JOIN '.PREFIX_DB.'_users AS o ON (p.uidout = o.id) ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum));
     if ($db->getSqlRowCount($result) > 0) {
-        $cont = '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._PRSE.'</th><th>'._PRRE.'</th><th>'._DATE.'</th><th>'._STATUS.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $rows = [];
         while (list($id, $title, $body, $date, $status, $user_re, $user_se) = $db->getSqlRow($result)) {
             $unre = ($user_re) ? user_info($user_re) : _ANONYM;
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
             $info = filterReplaceText(filterMarkdown($body, 'privat', false), 'privat');
-            $cont .= '<tr>'
-            .'<td>'.$id.'</td>'
-            .'<td>'.title_tip($info).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 30).'</span></td>'
-            .'<td>'.$unse.'</td>'
-            .'<td>'.$unre.'</td>'
-            .'<td>'.$date.'</td>'
-            .'<td>'.ad_status('', $status, 1).'</td>'
-            .'<td>'.add_menu("<a OnClick=\"AjaxLoad('GET', '0', 'ajax_privat', 'go=5&amp;op=ajax_privat_del&amp;id=".$id."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>').'</td>';
+            $rows[] = adminPrivateRow([
+                'id' => (string) $id,
+                'title_html' => adminTitleTipLabel($info, $title, cutstr($title, 30)),
+                'sender_html' => $unse,
+                'receiver_html' => $unre,
+                'date_value' => $date,
+                'status_html' => ad_status('', $status, 1),
+                'functions_html' => adminMenuItems([
+                    adminAjaxAction('ajax_privat', 'go=5&amp;op=ajax_privat_del&amp;id='.$id, _ONDELETE, _ONDELETE),
+                ]),
+            ]);
         }
-        $cont .= '</tbody></table>';
+        $cont = adminPrivateTable(implode('', $rows));
         $numpages = ceil($fav_num / $newlistnum);
         $cont .= num_ajax('pagenum', $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, '0', 5, 'ajax_privat', 'ajax_privat', 0, '', '');
     } else {
@@ -750,17 +1011,27 @@ function ashow_files(): void {
                 list($imgwidth, $imgheight) = getimagesize($path.$entry[1]);
                 $type = strtolower(substr(strrchr($entry[1], '.'), 1));
                 $ftype = ['png', 'jpg', 'jpeg', 'gif', 'bmp'];
-                $dirfile = (preg_match('#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i', $type)) ? '<span class="sl_red">'.$entry[1].'</span>' : $entry[1];
+                $dirfile = (preg_match('#php.*|js|htm|html|phtml|cgi|pl|perl|asp#i', $type)) ? adminDangerText($entry[1]) : $entry[1];
                 if (in_array($type, $ftype) && $imgwidth && $imgheight) {
-                    $img = "<div OnClick=\"HideShow('sf-form-".$a."', 'fold', 'up', 500);\" class=\"sl_drop sl_preview_mini\" style=\"background-image: url(".$path.$entry[1].');" title="'._IMG.'"><span id="sf-form-'.$a.'" class="sl_drop-form"><img src="'.$path.$entry[1].'" alt="'._IMG.'" title="'._IMG.'"></span></div>';
+                    $img = adminFilePreview($a, $path.$entry[1], true);
                     $isize = $imgwidth.' x '.$imgheight;
                 } else {
-                    $img = '<div class="sl_preview_mini" style="background-image: url(templates/admin/images/admin/no.png);" title="'._NO.'"></div>';
+                    $img = adminFilePreview($a, '', false);
                     $isize = _NO;
                 }
-                $show = (in_array(true, checkCompress(), true)) ? "||<a OnClick=\"AjaxLoad('GET', '0', 'f".$id."', 'go=5&amp;op=ashow_files&amp;id=".$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1]."', ''); return false;\" title=\""._ZIP.'">'._ZIP.'</a>' : '';
-                $show .= "||<a OnClick=\"AjaxLoad('GET', '0', 'f".$id."', 'go=5&amp;op=ashow_files&amp;id=".$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1]."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>';
-                $contents[] = '<tr><td>'.$img.'</td><td>'.$dirfile.'</td><td>'.date(_TIMESTRING, $entry[0]).'</td><td>'.filterSize($filesize).'</td><td>'.$isize.'</td><td>'.add_menu($show).'</td></tr>';
+                $show = [];
+                if (in_array(true, checkCompress(), true)) {
+                    $show[] = adminAjaxAction('f'.$id, 'go=5&amp;op=ashow_files&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], _ZIP, _ZIP);
+                }
+                $show[] = adminAjaxAction('f'.$id, 'go=5&amp;op=ashow_files&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], _ONDELETE, _ONDELETE);
+                $contents[] = adminFilesRow([
+                    'preview_html' => $img,
+                    'file_html' => $dirfile,
+                    'date_value' => date(_TIMESTRING, $entry[0]),
+                    'size_value' => filterSize($filesize),
+                    'dimensions_value' => $isize,
+                    'functions_html' => adminMenuItems($show),
+                ]);
                 $a++;
             }
         }
@@ -772,7 +1043,7 @@ function ashow_files(): void {
             if (!empty($contents[$i])) $cont .= $contents[$i];
         }
         $contnum = ($a > $connum) ? num_ajax('pagenum', $a, $numpages, $connum, 8, $num, '0', 5, 'ashow_files', 'f'.$id, $id, '', $dir) : '';
-        $content = ($cont) ? '<table class="sl_table_list"><thead><tr><th>'.cutstr(_IMG, 4, 1).'</th><th>'._FILE.'</th><th>'._DATE.'</th><th>'._SIZE.'</th><th>'._WIDTH.' x '._HEIGHT.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody>'.$cont.'</tbody></table>'.$contnum : '';
+        $content = ($cont) ? adminFilesTable($cont).$contnum : '';
     } else {
         $content = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
@@ -883,10 +1154,12 @@ function getAdminInfo(): string {
     $cont .= $tpl->getHtmlFrag('open');
     $cont .= filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
     if ($conf['adminfo']) {
-        $cont .= '<hr><form name="post" id="formadm_info" method="post"><table class="sl_table_edit">'
-        .'<tr><td>'.textarea('1', 'text', $thefile, 'info', '25').'</td></tr>'
-        ."<tr><td class=\"sl_center\"><input type=\"submit\" OnClick=\"AjaxLoad('POST', '1', 'adm_info', 'go=5&amp;op=adm_info&amp;id=1&amp;type=".$type.'&amp;name='.$name."', { 'text':'"._CERROR1."' }); return false;\" value=\""._SAVECHANGES.'" title="'._SAVECHANGES.'" class="sl_but_blue"></td></tr>'
-        .'</table></form>';
+        $cont .= adminInfoForm([
+            'textarea_html' => textarea('1', 'text', $thefile, 'info', '25'),
+            'submit_onclick' => "AjaxLoad('POST', '1', 'adm_info', 'go=5&amp;op=adm_info&amp;id=1&amp;type=".$type.'&amp;name='.$name."', { 'text':'"._CERROR1."' }); return false;",
+            'submit_label' => _SAVECHANGES,
+            'submit_title' => _SAVECHANGES,
+        ]);
     }
     $cont .= $tpl->getHtmlFrag('close');
     return $cont;

@@ -4,20 +4,20 @@
     {% endif %}
 
     <div class="admin-preview-body">
-        {% if fields %}
-        <div class="admin-preview-fields">{{{ fields }}}</div>
+        {% if title_html %}
+        <div class="admin-preview-fields">{{{ title_html }}}</div>
         {% endif %}
 
-        {% if fields1 %}
-        <div class="admin-preview-fields1">{{{ fields1 }}}</div>
+        {% if body_a %}
+        <div class="admin-preview-fields1">{% if title_html %}<br><br>{% endif %}{{{ body_a }}}</div>
         {% endif %}
 
-        {% if fields2 %}
-        <div class="admin-preview-fields2">{{{ fields2 }}}</div>
+        {% if body_b %}
+        <div class="admin-preview-fields2"><br><br>{{{ body_b }}}</div>
         {% endif %}
 
-        {% if fields3 %}
-        <div class="admin-preview-fields3">{{{ fields3 }}}</div>
+        {% if body_c %}
+        <div class="admin-preview-fields3"><br><br>{{{ body_c }}}</div>
         {% endif %}
     </div>
 </div>
