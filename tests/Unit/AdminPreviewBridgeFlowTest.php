@@ -65,10 +65,10 @@ namespace Tests\Unit {
             $tpl = new \Template('default');
             $html = $tpl->getHtmlPart('preview', [
                 'title' => 'Preview',
-                'fields' => '<b>Title</b>',
-                'fields1' => 'Text one',
-                'fields2' => 'Text two',
-                'fields3' => 'Text three',
+                'title_html' => '<b>Title</b>',
+                'body_a' => 'Text one',
+                'body_b' => 'Text two',
+                'body_c' => 'Text three',
             ]);
 
             $this->assertNotSame('', $html);
@@ -86,10 +86,10 @@ namespace Tests\Unit {
             $tpl = new \Template('missing-theme');
             $html = $tpl->getHtmlPart('preview', [
                 'title' => 'Preview',
-                'fields' => '<b>Title</b>',
-                'fields1' => 'Text one',
-                'fields2' => 'Text two',
-                'fields3' => 'Text three',
+                'title_html' => '<b>Title</b>',
+                'body_a' => 'Text one',
+                'body_b' => 'Text two',
+                'body_c' => 'Text three',
             ]);
 
             $this->assertSame('', $html);
@@ -100,10 +100,10 @@ namespace Tests\Unit {
         {
             $view = [
                 'title' => 'Preview',
-                'fields' => '<b>Mapped</b>',
-                'fields1' => 'Body one',
-                'fields2' => 'Body two',
-                'fields3' => 'Body three',
+                'title_html' => '<b>Mapped</b>',
+                'body_a' => 'Body one',
+                'body_b' => 'Body two',
+                'body_c' => 'Body three',
             ];
             $html = (new \Template('default'))->getHtmlPart('preview', $view);
 
@@ -121,10 +121,10 @@ namespace Tests\Unit {
 
             $html = (new \Template('default'))->getHtmlPart('preview', [
                 'title' => 'Preview',
-                'fields' => '<b>Title</b>',
-                'fields1' => '<em>Html text</em>',
-                'fields2' => '',
-                'fields3' => '',
+                'title_html' => '<b>Title</b>',
+                'body_a' => '<em>Html text</em>',
+                'body_b' => '',
+                'body_c' => '',
             ]);
 
             $this->assertNotSame('', $html);

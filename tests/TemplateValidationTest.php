@@ -184,8 +184,8 @@ class TemplateValidationTest extends TestCase
             }
         }
 
-        // Обязательные шаблоны для каждой темы
-        $required = ['basic.html', 'title.html'];
+        // Обязательные фрагменты для каждой frontend-темы
+        $required = ['fragments/basic.html', 'fragments/title.html'];
 
         foreach ($themes as $theme) {
             // Пропускаем admin тему
