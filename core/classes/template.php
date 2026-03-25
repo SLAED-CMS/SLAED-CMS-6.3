@@ -11,6 +11,7 @@ class Template {
     protected string $base = '';
     protected string $cache = '';
     protected array $blocks = [];
+    protected array $slots = [];
     protected array $stack = [];
 
     # Set base template and cache paths for the selected theme
@@ -19,7 +20,7 @@ class Template {
         $root = defined('BASE_DIR') ? BASE_DIR : dirname(__DIR__, 2);
         $root = str_replace('\\', '/', rtrim($root, '\\/'));
         $this->base = $root.'/templates/'.$this->theme;
-        $this->cache = $root.'/storage/cache/view/'.$this->theme;
+        $this->cache = $root.'/storage/cache/templates/'.$this->theme;
     }
 
     # Return compiled page markup after validation and cache resolution
@@ -206,6 +207,8 @@ class Template {
         $code = $this->filterEcho($code);
         $code = $this->filterIf($code);
         $code = $this->filterFor($code);
+        $code = $this->filterComp($code);
+        $code = $this->filterSlot($code);
         return $this->filterUse($code);
     }
 
@@ -282,6 +285,43 @@ class Template {
         );
     }
 
+    # Compile component tags with optional isolated props and slot payloads
+    protected function filterComp(string $code): string {
+        if ($code === '' || !str_contains($code, '{%')) return $code;
+        return (string)preg_replace_callback(
+            '/\{%\s*component\s+\'([a-z0-9\/.-]+\.html)\'(?:\s+with\s+([a-z][a-z0-9_]*))?\s*%\}(.*?)\{%\s*endcomponent\s*%\}/s',
+            function(array $data): string {
+                $path = $data[1] ?? '';
+                $body = $data[3] ?? '';
+                if (!$this->checkIncl($path) || !str_starts_with($path, 'partials/')) return $data[0];
+                if (str_contains($body, '{% component') || str_contains($body, '{% endcomponent')) return $data[0];
+                $props = '[]';
+                if (!empty($data[2])) {
+                    $name = '$'.$data[2].' ?? null';
+                    $props = 'is_array('.$name.') ? '.$name.' : []';
+                }
+                return '<?= $this->getComp(\''.$path.'\', '.$props.', '.var_export($body, true).', $this->getScope(get_defined_vars())); ?>';
+            },
+            $code
+        );
+    }
+
+    # Compile slot placeholders inside component templates
+    protected function filterSlot(string $code): string {
+        if ($code === '' || !str_contains($code, '{%')) return $code;
+        return (string)preg_replace_callback(
+            '/\{%\s*slot(?:\s+([a-z][a-z0-9_]*))?\s*%\}(.*?)\{%\s*endslot\s*%\}/s',
+            function(array $data): string {
+                $name = $data[1] ?? 'default';
+                $raw = $data[2] ?? '';
+                if (str_contains($raw, '{% slot') || str_contains($raw, '{% endslot')) return $data[0];
+                $body = $this->filterBody($raw);
+                return '<?= $this->getSlot(\''.$name.'\', '.var_export($body, true).', $this->getScope(get_defined_vars())); ?>';
+            },
+            $code
+        );
+    }
+
     # Compile layout block tags with override support and default fallback
     protected function filterBlock(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
@@ -332,6 +372,47 @@ class Template {
     protected function getRaw(mixed $data): string {
         if ($data === null || is_array($data) || is_object($data) || is_resource($data)) return '';
         return (string)$data;
+    }
+
+    # Render one component instance with named slots and a default body slot
+    protected function getComp(string $path, array $props, string $body, array $scope = []): string {
+        if (!$this->checkIncl($path) || !str_starts_with($path, 'partials/')) return '';
+        $slots = $this->getSlotData($body, $scope);
+        $data = $this->setData($props + $scope);
+        $data['slot'] = $slots['default'] ?? '';
+        $data['slots'] = $slots;
+        $prev = $this->slots;
+        $this->slots = $slots;
+        try {
+            return $this->getIncl($path, $data);
+        } finally {
+            $this->slots = $prev;
+        }
+    }
+
+    # Render one slot with fallback content compiled through the shared view path
+    protected function getSlot(string $name, string $body, array $scope = []): string {
+        if (!preg_match('/^[a-z][a-z0-9_]*$/', $name)) return '';
+        if (array_key_exists($name, $this->slots)) return $this->getRaw($this->slots[$name]);
+        return ($body !== '') ? $this->getView($body, $scope, true) : '';
+    }
+
+    # Collect named component slots and the remaining default slot content
+    protected function getSlotData(string $body, array $scope = []): array {
+        $out = ['default' => ''];
+        if ($body === '') return $out;
+        $fill = '/\{%\s*slot\s+([a-z][a-z0-9_]*)\s*%\}(.*?)\{%\s*endslot\s*%\}/s';
+        if (preg_match_all($fill, $body, $all, PREG_SET_ORDER) > 0) {
+            foreach ($all as $item) {
+                $name = $item[1] ?? '';
+                $code = $item[2] ?? '';
+                if ($name === '' || str_contains($code, '{% slot') || str_contains($code, '{% endslot')) continue;
+                $out[$name] = $this->getView($this->filterBody($code), $scope, true);
+            }
+            $body = (string)preg_replace($fill, '', $body);
+        }
+        if (trim($body) !== '') $out['default'] = $this->getView($this->filterBody($body), $scope, true);
+        return $out;
     }
 
     /**
@@ -403,6 +484,4 @@ class Template {
         }
         return true;
     }
-
-    # TODO add slots and component syntax if required later
 }
