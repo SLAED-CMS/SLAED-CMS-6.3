@@ -1,1 +1,1 @@
-<tr><td>{{{ preview_html }}}</td><td>{{{ file_html }}}</td><td>{{ date_value }}</td><td>{{ size_value }}</td><td>{{ dimensions_value }}</td><td>{{{ functions_html }}}</td></tr>
+<tr><td>{{{ preview_html }}}</td><td>{% if file_html %}{{{ file_html }}}{% else %}{{ file_name }}{% endif %}</td>{% if date_value %}<td>{{ date_value }}</td>{% endif %}<td>{{ size_value }}</td>{% if dimensions_value %}<td>{{ dimensions_value }}</td>{% endif %}<td>{{{ functions_html }}}</td></tr>

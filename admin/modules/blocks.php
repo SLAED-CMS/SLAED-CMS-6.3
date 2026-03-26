@@ -160,7 +160,7 @@ function addsave(): void {
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
     $url = ($headline) ? $headline : $url;
-    $blockwhere = getVar('post', 'blockwhere', 'var', []);
+    $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
     [$weight] = $db->getSqlRow($db->getSqlQuery('SELECT weight FROM '.PREFIX_DB.'_blocks WHERE bpos = :bpos ORDER BY weight DESC', ['bpos' => $bpos]));
     $weight++;
     $bkey = '';
@@ -264,7 +264,7 @@ function filecodesave(): void {
 }
 
 function edit(): void {
-    global $tpl;
+    global $afile, $conf, $db, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
     $bid = getVar('get', 'id', 'num');
@@ -409,7 +409,7 @@ function editsave(): void {
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
-    $blockwhere = getVar('post', 'blockwhere', 'var', []);
+    $blockwhere = getVar('post', 'blockwhere[]', 'var', []);
     if (isset($blockwhere)) {
         $which = '';
         if (in_array('all', $blockwhere)) $which = 'all';

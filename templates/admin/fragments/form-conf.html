@@ -25,21 +25,15 @@
 <tr><td>{{ _name_block }}:<div class="sl_small">{{ _nokoma }}</div></td><td><textarea name="name" cols="65" rows="5" class="sl_conf" placeholder="{{ _name_block }}">{{ name_b }}</textarea></td></tr>
 <tr><td>{{ _mail_block }}:<div class="sl_small">{{ _nokoma }}</div></td><td><textarea name="mail" cols="65" rows="5" class="sl_conf" placeholder="{{ _mail_block }}">{{ mail_b }}</textarea></td></tr>
 {% elseif comments %}
-<tr><td>{{ _c33 }}:</td><td><input type="number" name="num" value="{{ num }}" class="sl_conf" placeholder="{{ _c33 }}" required></td></tr>
-<tr><td>{{ _c34 }}:</td><td><input type="number" name="anum" value="{{ anum }}" class="sl_conf" placeholder="{{ _c34 }}" required></td></tr>
-<tr><td>{{ _c35 }}:</td><td><input type="number" name="nump" value="{{ nump }}" class="sl_conf" placeholder="{{ _c35 }}" required></td></tr>
-<tr><td>{{ _c36 }}:</td><td><input type="number" name="anump" value="{{ anump }}" class="sl_conf" placeholder="{{ _c36 }}" required></td></tr>
-<tr><td>{{ _comletter }}:</td><td><input type="number" name="letter" value="{{ letter }}" class="sl_conf" placeholder="{{ _comletter }}" required></td></tr>
+{% include 'admin-config-base' %}
+{% include 'admin-config-communication' %}
 <tr><td>{{ _ceditt }}:</td><td><input type="number" name="edit" value="{{ edit }}" class="sl_conf" placeholder="{{ _ceditt }}" required></td></tr>
-<tr><td>{{ _csend }}:</td><td><input type="number" name="send" value="{{ send }}" class="sl_conf" placeholder="{{ _csend }}" required></td></tr>
 <tr><td>{{ _sort }}:</td><td>{{{ s_sort }}}</td></tr>
 <tr><td>{{ _allowanonpost }}</td><td>{{{ s_anonpost }}}</td></tr>
 <tr><td>{{ _nolinkp }}:<div class="sl_small">{{ _noaum }}</div></td><td>{{{ s_link }}}</td></tr>
 <tr><td>{{ _noalinkp }}:<div class="sl_small">{{ _noaum }}</div></td><td>{{{ s_alink }}}</td></tr>
 <tr><td>{{ _addamail }}</td><td>{{{ r_addmail }}}</td></tr>
 <tr><td>{{ _vprivat }}</td><td>{{{ r_privat }}}</td></tr>
-<tr><td>{{ _vprofil }}</td><td>{{{ r_profil }}}</td></tr>
-<tr><td>{{ _vweb }}</td><td>{{{ r_web }}}</td></tr>
 {% elseif content %}
 <tr><td>{{ _c33 }}:</td><td><input type="number" name="num" value="{{ num }}" class="sl_conf" placeholder="{{ _c33 }}" required></td></tr>
 <tr><td>{{ _c34 }}:</td><td><input type="number" name="anum" value="{{ anum }}" class="sl_conf" placeholder="{{ _c34 }}" required></td></tr>
@@ -67,10 +61,7 @@
 <tr><td>{{ _c20 }}</td><td>{{{ r_letter }}}</td></tr>
 <tr><td>{{ _pagelink }}</td><td>{{{ r_link }}}</td></tr>
 {% elseif favorites %}
-<tr><td>{{ _c33 }}:</td><td><input type="number" name="num" value="{{ num }}" class="sl_conf" placeholder="{{ _c33 }}" required></td></tr>
-<tr><td>{{ _c34 }}:</td><td><input type="number" name="anum" value="{{ anum }}" class="sl_conf" placeholder="{{ _c34 }}" required></td></tr>
-<tr><td>{{ _c35 }}:</td><td><input type="number" name="nump" value="{{ nump }}" class="sl_conf" placeholder="{{ _c35 }}" required></td></tr>
-<tr><td>{{ _c36 }}:</td><td><input type="number" name="anump" value="{{ anump }}" class="sl_conf" placeholder="{{ _c36 }}" required></td></tr>
+{% include 'admin-config-base' %}
 <tr><td>{{ _favor_umax }}:</td><td><input type="number" name="favorites" value="{{ favorites }}" class="sl_conf" placeholder="{{ _favor_umax }}" required></td></tr>
 <tr><td>{{ _favor_act }}</td><td>{{{ r_favact }}}</td></tr>
 {% elseif files %}
@@ -278,18 +269,12 @@
 <tr><td>{{ _c20 }}</td><td>{{{ r_letter }}}</td></tr>
 <tr><td>{{ _pagelink }}</td><td>{{{ r_link }}}</td></tr>
 {% elseif privat %}
-<tr><td>{{ _c33 }}:</td><td><input type="number" name="num" value="{{ num }}" class="sl_conf" placeholder="{{ _c33 }}" required></td></tr>
-<tr><td>{{ _c34 }}:</td><td><input type="number" name="anum" value="{{ anum }}" class="sl_conf" placeholder="{{ _c34 }}" required></td></tr>
-<tr><td>{{ _c35 }}:</td><td><input type="number" name="nump" value="{{ nump }}" class="sl_conf" placeholder="{{ _c35 }}" required></td></tr>
-<tr><td>{{ _c36 }}:</td><td><input type="number" name="anump" value="{{ anump }}" class="sl_conf" placeholder="{{ _c36 }}" required></td></tr>
-<tr><td>{{ _comletter }}:</td><td><input type="number" name="letter" value="{{ letter }}" class="sl_conf" placeholder="{{ _comletter }}" required></td></tr>
-<tr><td>{{ _csend }}:</td><td><input type="number" name="send" value="{{ send }}" class="sl_conf" placeholder="{{ _csend }}" required></td></tr>
+{% include 'admin-config-base' %}
+{% include 'admin-config-communication' %}
 <tr><td>{{ _prinm }}:</td><td><input type="number" name="messin" value="{{ messin }}" class="sl_conf" placeholder="{{ _prinm }}" required></td></tr>
 <tr><td>{{ _prsavem }}:</td><td><input type="number" name="messsav" value="{{ messsav }}" class="sl_conf" placeholder="{{ _prsavem }}" required></td></tr>
 <tr><td>{{ _prmail }}</td><td>{{{ r_newmail }}}</td></tr>
 <tr><td>{{ _prself }}</td><td>{{{ r_himself }}}</td></tr>
-<tr><td>{{ _vprofil }}</td><td>{{{ r_profil }}}</td></tr>
-<tr><td>{{ _vweb }}</td><td>{{{ r_web }}}</td></tr>
 <tr><td>{{ _pract }}</td><td>{{{ r_act }}}</td></tr>
 {% elseif referers %}
 <tr><td>{{ _c34 }}:</td><td><input type="number" name="anum" value="{{ anum }}" class="sl_conf" placeholder="{{ _c34 }}" required></td></tr>

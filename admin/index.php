@@ -92,7 +92,7 @@ function getAdminPanel(): void {
                     );
                 }
             }
-            $content .= $tpl->getHtmlFrag('panel-admin', ['title' => _MODULESADMIN, 'content' => $cont]);
+            $content .= $tpl->getHtmlFrag('panel-admin', ['title' => _MODULESADMIN, 'content' => $cont, 'panelid' => 'sl_close_1']);
         }
         $count = 1;
         $cont = '';
@@ -113,7 +113,7 @@ function getAdminPanel(): void {
                 }
             }
         }
-        $content .= $tpl->getHtmlFrag('panel-modul', ['title' => _MODULESADMIN, 'content' => $cont]);
+        $content .= $tpl->getHtmlFrag('panel-admin', ['title' => _MODULESADMIN, 'content' => $cont, 'panelid' => 'sl_close_2']);
     }
     echo $content;
     setFoot();

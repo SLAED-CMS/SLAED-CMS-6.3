@@ -1,1 +1,1 @@
-<a href="{{ href }}" title="{{ title }}"{% if class %} class="{{ class }}"{% endif %}>{{ label }}</a>
+{% if query %}<a href="#" OnClick="AjaxLoad('GET', '{{ load_id }}', '{{ target_id }}', '{{{ query }}}', ''); return false;"{% if class %} class="{{ class }}"{% endif %} title="{{ title }}">{{ label }}</a>{% elseif href %}<a href="{{ href }}" title="{{ title }}"{% if class %} class="{{ class }}"{% endif %}>{{ label }}</a>{% else %}<span{% if title %} title="{{ title }}"{% endif %}{% if class %} class="{{ class }}"{% endif %}>{{ label }}</span>{% endif %}

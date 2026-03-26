@@ -793,7 +793,7 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                 function(array $m): string {
                     global $tpl;
                     $txt  = str_replace('?', '&#063;', (string)$m[1]);
-                    $html = $tpl->getHtmlFrag('code', ['title' => _CODE, 'content' => $this->filterEsc($txt)]);
+                    $html = '<div class="code" title="'.htmlspecialchars(_CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$this->filterEsc($txt).'</div>';
                     return $this->addStash((string)$html);
                 },
                 $src
@@ -824,7 +824,7 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                     function(array $m) use ($safe): string {
                         global $tpl;
                         $txt  = $this->filterNest($m[1], $safe);
-                        $html = $tpl->getHtmlFrag('quote', ['title' => _QUOTE, 'text' => $txt]);
+                        $html = '<blockquote><p title="'.htmlspecialchars(_QUOTE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
                         return $this->addStash((string)$html);
                     },
                     $src
@@ -839,7 +839,7 @@ function filterMarkdown(string $src, string $mod = '', bool $safe = true): strin
                         global $tpl;
                         $show = (defined('ADMIN_FILE') || is_user());
                         $txt  = $show ? $this->filterNest($m[1], $safe) : (string)_HIDETEXT;
-                        $html = $tpl->getHtmlFrag('hide', ['title' => _HIDE, 'text' => $txt]);
+                        $html = '<blockquote class="hide"><p title="'.htmlspecialchars(_HIDE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$txt.'</p></blockquote>';
                         return $this->addStash((string)$html);
                     },
                     $src
@@ -3329,7 +3329,7 @@ function getVoting(int $id = 0, string $votid = ''): string {
             $answer = explode('|', $answer);
             $vote = array_sum($answer);
             $form = (!$rate) ? '<form name="voting" id="form'.$votid.'" method="post">' : '';
-            $cont = $tpl->getHtmlFrag('voting-open', ['form' => $form, 'title' => $title]);
+            $cont = $form.'<h4 class="vote-title">'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</h4><ul class="vote-list">';
             $pn = 0;
             for ($i = 0; $i < count($body); $i++) {
                 $pn++;
@@ -3355,10 +3355,10 @@ function getVoting(int $id = 0, string $votid = ''): string {
             ]) : '';
             $post = (!$rate) ? votingActionAjax($votid, 'go=1&amp;op=avoting_save&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl_but_blue', _SEROR1) : '';
             $polls = ($vnum > 1) ? votingActionLink('index.php?name=voting', _POLLS, _POLLS, 'sl_but') : '';
-            $votes = (!$modul && $votid != 'voting') ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : $tpl->getHtmlFrag('voting-stat-text', ['class' => 'sl_votes', 'label' => _VOTES.': '.$vote]);
+            $votes = (!$modul && $votid != 'voting') ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : '<span class="sl_votes">'.htmlspecialchars(_VOTES.': '.$vote, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
             $comm = (!$modul && $acomm) ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, _COMMENTS, _COMMENTS.': '.$comments, 'sl_coms') : '';
             $formend = (!$rate) ? '</form>' : '';
-            $cont .= $tpl->getHtmlFrag('voting-close', ['admin' => $admin, 'post' => $post, 'polls' => $polls, 'votes' => $votes, 'comm' => $comm, 'formend' => $formend]);
+            $cont .= '</ul><!-- <div class="vote-btns">'.$admin.$post.$polls.'</div> --><div class="vote-links">'.$votes.' '.$comm.'</div>'.$formend;
         } else {
             $cont = $tpl->getHtmlFrag('alert', ['text' => _VCLINFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
@@ -4032,21 +4032,17 @@ function adminblock(): string {
         $cltit = defined('_OPCL') ? _OPCL : ((defined('_CLOSE') ? _CLOSE : 'Close').' / '.(defined('_WHO') ? _WHO : 'Open'));
         $title = '';
         $content = '';
-        $cont = $tpl->getHtmlFrag('admin-shortcuts', [
-            'admin_href' => $afile.'.php',
-            'admin_title' => _ADMINMENU,
-            'admin_label' => _ADMINMENU,
-            'logout_href' => $afile.'.php?op=logout',
-            'logout_title' => _LOGOUT,
-            'logout_label' => _LOGOUT,
-        ]);
+        $cont = '<table class="sl_table_block"><tr><td><a href="'.$afile.'.php" title="'
+            .htmlspecialchars(_ADMINMENU, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'._ADMINMENU
+            .'</a></td></tr><tr><td><a href="'.$afile.'.php?op=logout" title="'
+            .htmlspecialchars(_LOGOUT, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'._LOGOUT.'</a></td></tr></table>';
         if (isAdmin(true)) {
             list($title, $content) = $db->getSqlRow($db->getSqlQuery('SELECT title, content FROM '.PREFIX_DB."_blocks WHERE bkey = 'admin'"));
             $cont .= '<hr>'.$content;
         }
         $a_title = ($title) ? $title : _ADMINS;
         return $tpl->getHtmlFrag('block-left', ['title' => $a_title, 'content' => $cont, 'id' => '7', 'close' => $cltit])
-            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => $tpl->getHtmlFrag('admin-session-box', ['content' => user_sainfo(1)]), 'id' => '8', 'close' => $cltit]);
+            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => '<div id="repsainfo">'.user_sainfo(1).'</div>', 'id' => '8', 'close' => $cltit]);
     }
     return '';
 }
@@ -4252,11 +4248,13 @@ function editorInsertAction(string $command, string $value, string $id, string $
 
 function editorAjaxAction(string $target, string $query, string $title, string $label): string {
  global $tpl;
-    return $tpl->getHtmlFrag('editor-action-ajax', [
+    return $tpl->getHtmlFrag('comment-action-ajax', [
+        'load_id' => '0',
         'target' => $target,
         'query' => $query,
         'title' => $title,
         'label' => $label,
+        'class' => '',
     ]);
 }
 
@@ -4266,7 +4264,7 @@ function editorActionMenu(array $items): string {
     if (!$items) {
         return '';
     }
-    return $tpl->getHtmlFrag('editor-action-menu', [
+    return $tpl->getHtmlFrag('action-menu', [
         'editor_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
     ]);
@@ -4274,15 +4272,20 @@ function editorActionMenu(array $items): string {
 
 function editorFilesRow(array $row): string {
  global $tpl;
-    return $tpl->getHtmlFrag('editor-files-row', $row);
+    return $tpl->getHtmlFrag('admin-files-row', $row);
 }
 
 function editorFilesTable(string $rowsHtml): string {
  global $tpl;
-    return $tpl->getHtmlFrag('editor-files-table', [
+    return $tpl->getHtmlFrag('admin-files-table', [
+        'table_class' => 'sl_table_ajax',
+        'head_class' => 'sl_table_ajax_head',
+        'body_class' => 'sl_table_ajax_body',
         'image_label' => cutstr(_IMG, 4, 1),
         'file_label' => _FILE,
+        'date_label' => '',
         'size_label' => _SIZE,
+        'dimensions_label' => '',
         'functions_label' => _FUNCTIONS,
         'rows_html' => $rowsHtml,
     ]);
@@ -4299,8 +4302,7 @@ function editorToolbarButton(string $onclick, string $class, string $title, stri
 }
 
 function editorToolbarSeparator(): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-toolbar-separator');
+    return '<div class="sl_bb_sep"></div>';
 }
 
 function editorDropPanel(string $buttonHtml, string $contentHtml): string {
@@ -4386,28 +4388,31 @@ function commentActionLink(string $href, string $title, string $label, string $c
 
 function commentActionJs(string $href, string $title, string $label, string $class = ''): string {
  global $tpl;
-    return $tpl->getHtmlFrag('comment-action-js', [
+    return $tpl->getHtmlFrag('comment-action-link', [
         'href' => $href,
         'title' => $title,
         'label' => $label,
         'class' => $class,
+        'target' => '',
     ]);
 }
 
 function commentActionAjax(string $target, string $query, string $title, string $label, string $class = ''): string {
  global $tpl;
     return $tpl->getHtmlFrag('comment-action-ajax', [
+        'load_id' => '1',
         'target' => $target,
         'query' => $query,
         'title' => $title,
         'label' => $label,
         'class' => $class,
+        'error_text' => '',
     ]);
 }
 
 function commentActionDelete(string $href, string $confirmText, string $title, string $label): string {
  global $tpl;
-    return $tpl->getHtmlFrag('comment-action-delete', [
+    return $tpl->getHtmlFrag('action-delete', [
         'href' => $href,
         'confirm_text' => $confirmText,
         'title' => $title,
@@ -4421,82 +4426,58 @@ function commentActionMenu(array $items): string {
     if (!$items) {
         return '';
     }
-    return $tpl->getHtmlFrag('comment-action-menu', [
+    return $tpl->getHtmlFrag('action-menu', [
         'editor_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
     ]);
 }
 
 function commentMetaText(string $label, string $value): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-meta-text', [
-        'label' => $label,
-        'value' => $value,
-    ]);
+    return htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': '
+        .htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 function commentMetaColor(string $label, string $value, string $color): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-meta-color', [
-        'label' => $label,
-        'value' => $value,
-        'color' => $color,
-    ]);
+    return htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').': <span style="color: '
+        .htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
+        .htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'</span>';
 }
 
 function commentAvatar(string $username, string $avatar): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-avatar', [
-        'username' => $username,
-        'avatar' => $avatar,
-    ]);
+    return '<a title="'.htmlspecialchars($username, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'" class="sl_avatar" style="background-image: url('
+        .htmlspecialchars($avatar, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').');"></a>';
 }
 
 function commentRankImage(string $src, string $title): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-rank-image', [
-        'src' => $src,
-        'title' => $title,
-    ]);
+    return '<img src="'.htmlspecialchars($src, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'" alt="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'" title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
 }
 
 function commentSignature(string $content): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-signature', [
-        'content' => $content,
-    ]);
+    return '<hr>'.$content;
 }
 
 function alphaNavLink(string $href, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('alpha-nav-link', [
-        'href' => $href,
-        'title' => $title,
-        'label' => $label,
-    ]);
+    return '<a href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" title="'
+        .htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"><span class="sl_letter">'
+        .htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span></a>';
 }
 
 function alphaNavText(string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('alpha-nav-text', [
-        'label' => $label,
-    ]);
+    return '<span class="sl_letter">'.htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
 }
 
 function naviTabsLink(string $href, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('navi-tabs-link', [
-        'href' => $href,
-        'label' => $label,
-    ]);
+    return '<li><a href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
+        .htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'</a></li>';
 }
 
 function naviTabsContent(string $id, string $content): string {
- global $tpl;
-    return $tpl->getHtmlFrag('navi-tabs-content', [
-        'id' => $id,
-        'content' => $content,
-    ]);
+    return '<div id="'.htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$content.'</div>';
 }
 
 function naviTabsWrap(string $tabsHtml, string $contentHtml, int $id): string {
@@ -4512,6 +4493,9 @@ function pagerLink(string $href, string $title, string $label, string $class = '
  global $tpl;
     return $tpl->getHtmlFrag('pager-link', [
         'href' => $href,
+        'query' => '',
+        'load_id' => '',
+        'target_id' => '',
         'title' => $title,
         'label' => $label,
         'class' => $class,
@@ -4520,7 +4504,11 @@ function pagerLink(string $href, string $title, string $label, string $class = '
 
 function pagerCurrent(string $title, string $label, string $class = ''): string {
  global $tpl;
-    return $tpl->getHtmlFrag('pager-current', [
+    return $tpl->getHtmlFrag('pager-link', [
+        'href' => '',
+        'query' => '',
+        'load_id' => '',
+        'target_id' => '',
         'title' => $title,
         'label' => $label,
         'class' => $class,
@@ -4528,13 +4516,13 @@ function pagerCurrent(string $title, string $label, string $class = ''): string 
 }
 
 function pagerDots(): string {
- global $tpl;
-    return $tpl->getHtmlFrag('pager-dots', []);
+    return '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
 }
 
 function pagerAjaxLink(string $loadId, string $targetId, string $query, string $title, string $label, string $class = ''): string {
  global $tpl;
-    return $tpl->getHtmlFrag('pager-ajax-link', [
+    return $tpl->getHtmlFrag('pager-link', [
+        'href' => '',
         'load_id' => $loadId,
         'target_id' => $targetId,
         'query' => $query,
@@ -4546,7 +4534,7 @@ function pagerAjaxLink(string $loadId, string $targetId, string $query, string $
 
 function categoryIconLink(string $href, string $title, string $src = ''): string {
  global $tpl;
-    return $tpl->getHtmlFrag('category-icon-link', [
+    return $tpl->getHtmlFrag('category-icon', [
         'href' => $href,
         'title' => $title,
         'src' => $src,
@@ -4555,7 +4543,8 @@ function categoryIconLink(string $href, string $title, string $src = ''): string
 
 function categoryIconText(string $title, string $src = ''): string {
  global $tpl;
-    return $tpl->getHtmlFrag('category-icon-text', [
+    return $tpl->getHtmlFrag('category-icon', [
+        'href' => '',
         'title' => $title,
         'src' => $src,
     ]);
@@ -4563,7 +4552,7 @@ function categoryIconText(string $title, string $src = ''): string {
 
 function categoryTitleLink(string $href, string $title): string {
  global $tpl;
-    return $tpl->getHtmlFrag('category-title-link', [
+    return $tpl->getHtmlFrag('category-title', [
         'href' => $href,
         'title' => $title,
     ]);
@@ -4580,16 +4569,14 @@ function categoryTextLink(string $href, string $title): string {
 
 function categoryTitleText(string $title): string {
  global $tpl;
-    return $tpl->getHtmlFrag('category-title-text', [
+    return $tpl->getHtmlFrag('category-title', [
+        'href' => '',
         'title' => $title,
     ]);
 }
 
 function categorySubItem(string $content): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-subitem', [
-        'content' => $content,
-    ]);
+    return '<div>'.$content.'</div>';
 }
 
 function categoryRow(string $imageHtml, string $titleHtml, string $descriptionHtml = '', string $subItemsHtml = '', string $style = ''): string {
@@ -4614,21 +4601,13 @@ function categorySelect(string $selectName, string $class, string $title, string
 }
 
 function categorySelectOption(string $value, string $label, bool $selected = false): string {
- global $tpl;
-    return $tpl->getHtmlFrag('category-select-option', [
-        'value' => $value,
-        'label' => $label,
-        'selected' => $selected,
-    ]);
+    return '<option value="'.htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'
+        .($selected ? ' selected' : '')
+        .'>'.$label.'</option>';
 }
 
 function breadcrumbLink(string $href, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('breadcrumb-link', [
-        'href' => $href,
-        'title' => $title,
-        'label' => $label,
-    ]);
+    return '<a href="'.$href.'" title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$label.'</a>';
 }
 
 function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string $memTitle, string $memClass, string $memValue, int|string $memUse, int|string $memLimit, string $timeLoads): string {
@@ -4649,27 +4628,27 @@ function debugStats(string $cpuTitle, string $cpuClass, string $cpuValue, string
 }
 
 function debugSection(string $legend, string $color, string $content): string {
- global $tpl;
-    return $tpl->getHtmlFrag('debug-section', [
-        'legend' => $legend,
-        'color' => $color,
-        'content' => $content,
-    ]);
+    return '<fieldset class="sl_sys_var"><legend style="color: '
+        .htmlspecialchars($color, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
+        .htmlspecialchars($legend, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'</legend>'.$content.'</fieldset>';
 }
 
 function votingActionLink(string $href, string $title, string $label, string $class = ''): string {
  global $tpl;
-    return $tpl->getHtmlFrag('voting-action-link', [
+    return $tpl->getHtmlFrag('comment-action-link', [
         'href' => $href,
         'title' => $title,
         'label' => $label,
         'class' => $class,
+        'target' => '',
     ]);
 }
 
 function votingActionAjax(string $target, string $query, string $title, string $label, string $class = '', string $errorText = ''): string {
  global $tpl;
-    return $tpl->getHtmlFrag('voting-action-ajax', [
+    return $tpl->getHtmlFrag('comment-action-ajax', [
+        'load_id' => '1',
         'target' => $target,
         'query' => $query,
         'title' => $title,
@@ -4681,7 +4660,7 @@ function votingActionAjax(string $target, string $query, string $title, string $
 
 function votingActionDelete(string $href, string $confirmText, string $title, string $label): string {
  global $tpl;
-    return $tpl->getHtmlFrag('voting-action-delete', [
+    return $tpl->getHtmlFrag('action-delete', [
         'href' => $href,
         'confirm_text' => $confirmText,
         'title' => $title,
@@ -4695,7 +4674,7 @@ function votingActionMenu(array $items): string {
     if (!$items) {
         return '';
     }
-    return $tpl->getHtmlFrag('voting-action-menu', [
+    return $tpl->getHtmlFrag('action-menu', [
         'editor_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
     ]);
@@ -4709,17 +4688,19 @@ function ratingLike(string $result, string $title, string $nrate): string {
         'nrate' => $nrate,
         'rate1_title' => _RATE1,
         'rate5_title' => _RATE5,
+        'hover_query' => '',
+        'target_id' => '',
     ]);
 }
 
 function ratingLikeHover(string $result, string $title, string $nrate, string $targetId, string $query): string {
  global $tpl;
-    return $tpl->getHtmlFrag('rating-like-hover', [
+    return $tpl->getHtmlFrag('rating-like', [
         'result' => $result,
         'title' => $title,
         'nrate' => $nrate,
         'target_id' => $targetId,
-        'query' => $query,
+        'hover_query' => $query,
         'rate1_title' => _RATE1,
         'rate5_title' => _RATE5,
     ]);
@@ -4734,12 +4715,14 @@ function ratingBar(string $result, string $title, string $nrate, string $width, 
         'width' => $width,
         'votes' => (string) $votes,
         'votes_title' => _VOTES,
+        'hover_query' => '',
+        'target_id' => '',
     ]);
 }
 
 function ratingBarHover(string $result, string $title, string $nrate, string $width, int|string $votes, string $targetId, string $query): string {
  global $tpl;
-    return $tpl->getHtmlFrag('rating-bar-hover', [
+    return $tpl->getHtmlFrag('rating-bar', [
         'result' => $result,
         'title' => $title,
         'nrate' => $nrate,
@@ -4747,18 +4730,13 @@ function ratingBarHover(string $result, string $title, string $nrate, string $wi
         'votes' => (string) $votes,
         'votes_title' => _VOTES,
         'target_id' => $targetId,
-        'query' => $query,
+        'hover_query' => $query,
     ]);
 }
 
 function ratingWrap(string $class, string $content, string $id = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('rating-wrap', [
-        'class' => $class,
-        'content' => $content,
-        'id' => $id,
-        'has_id' => $id !== '',
-    ]);
+    $attr = ($id !== '') ? ' id="'.htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '';
+    return '<div'.$attr.' class="'.htmlspecialchars($class, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$content.'</div>';
 }
 
 function ratingLikeLive(string $result, string $title, string $nrate, string $targetId, string $rate1Query, string $rate5Query): string {
@@ -5109,7 +5087,7 @@ function rss_load(mixed $bid): void {
 if (!function_exists('preview')) {
     function preview(string $title = '', string $texta = '', string $textb = '', string $textc = '', string $mod = ''): string {
         global $tpl;
-        $titleHtml = $title ? $tpl->getHtmlFrag('preview-title', ['title' => $title]) : '';
+        $titleHtml = $title ? '<b>'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b>' : '';
         $bodyA = $texta ? filterReplaceText(filterMarkdown($texta, $mod, false), $mod) : '';
         $bodyB = $textb ? filterReplaceText(filterMarkdown($textb, $mod, false), $mod) : '';
         $bodyC = $textc ? fields_out(filterReplaceText(filterMarkdown($textc, $mod, false), $mod), $mod) : '';
@@ -5850,7 +5828,7 @@ function encode_php(array $text): string {
         }
         $format = $scripts.'<pre class="brush: '.$ucname.';">'.$replace.'</pre>';
     }
-    return $tpl->getHtmlFrag('code', ['title' => $cname.' - '._CODE, 'content' => $format]);
+    return '<div class="code" title="'.htmlspecialchars($cname.' - '._CODE, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'.$format.'</div>';
 }
 
 # Mail check
@@ -6749,9 +6727,13 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                 }
             }
             $avname = (!empty($user_name)) ? $user_name : $com_name.' ('._ANONYM.')';
-            $date = $tpl->getHtmlFrag('comment-date', ['title' => _PADD, 'text' => format_time($com_date, _TIMESTRING)]);
+            $date = '<span title="'.htmlspecialchars(_PADD, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="sl_t_post">'
+                .htmlspecialchars(format_time($com_date, _TIMESTRING), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                .'</span>';
             $ip = (is_moder($com_modul)) ? user_geo_ip($com_host, 4) : '';
-            $amess = $tpl->getHtmlFrag('comment-number', ['href' => '#'.$com_id, 'title' => _COMMENT.': '.$a, 'text' => (string) $a]);
+            $amess = '<a href="#'.$com_id.'" title="'.htmlspecialchars(_COMMENT.': '.$a, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="sl_pnum">'
+                .htmlspecialchars((string) $a, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                .'</a>';
             $avatar = (!empty($user_name)) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;

@@ -1,0 +1,20 @@
+<form action="{{ route }}.php" method="post">
+<table class="sl_table_form">
+<tr><td>{{ ttl }}:<div class="sl_small">{{ addnote }}</div></td><td><input type="text" name="title" maxlength="60" class="sl_form" placeholder="{{ ttl }}" required></td></tr>
+<tr><td>{{ rssfile }}:</td><td><input type="text" name="url" class="sl_form" placeholder="{{ rssfile }}"></td></tr>
+<tr><td><div class="sl_small">{{ rssnote }} {{ rssinfo }}</div></td><td><select name="headline" class="sl_form"><option value="0" selected>{{ custom }}</option>{{{ rssopts }}}</select></td></tr>
+<tr><td>{{ refresh }}:<div class="sl_small">{{ refnote }}</div></td><td><select name="refresh" class="sl_form"><option value="1800">30 {{ min }}.</option><option value="3600" selected>1 {{ hour }}</option><option value="18000">5 {{ hour }}.</option><option value="36000">10 {{ hour }}.</option><option value="86400">24 {{ hour }}.</option></select></td></tr>
+<tr><td>{{ fname }}:<div class="sl_small">{{ finfo }}</div></td><td><select name="bfile" class="sl_form"><option value="" selected>{{ none }}</option>{{{ fileopts }}}</select></td></tr>
+<tr><td>{{ content }}:</td><td>{{{ editor }}}</td></tr>
+<tr><td>{{ pos }}:</td><td><select name="bpos" class="sl_form"><option value="l">{{ left }}</option><option value="c">{{ cup }}</option><option value="d">{{ cdown }}</option><option value="r">{{ right }}</option><option value="b">{{ bnrup }}</option><option value="f">{{ bnrdown }}</option></select></td></tr>
+<tr><td>{{ blview }}:</td><td>{{{ modules }}}</td></tr>
+{% if langopts %}
+<tr><td>{{ lang }}:</td><td><select name="lang" class="sl_form">{{{ langopts }}}</select></td></tr>
+{% endif %}
+<tr><td>{{ activate }}:</td><td>{{{ status }}}</td></tr>
+<tr><td>{{ expire }}:<div class="sl_small">{{ expnote }}</div></td><td><input type="number" name="expire" value="0" class="sl_form" placeholder="{{ expire }}" required></td></tr>
+<tr><td>{{ afterexp }}:</td><td><select name="action" class="sl_form"><option value="d">{{ deact }}</option><option value="r">{{ delete }}</option></select></td></tr>
+<tr><td>{{ privs }}:</td><td>{{{ viewopts }}}</td></tr>
+<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="addsave"><input type="submit" value="{{ btn }}" class="sl_but_blue"></td></tr>
+</table>
+</form>

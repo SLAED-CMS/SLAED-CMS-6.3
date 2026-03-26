@@ -14,11 +14,13 @@ function getAdminHeadVars(): array {
             foreach (scandir(BASE_DIR.'/lang') as $file) {
                 if (preg_match('#^(.+)\.php$#', $file, $matches)) {
                     $lfound = $matches[1];
-                    $langs .= $tpl->getHtmlFrag('admin-lang-item', [
-                        'href' => $afile.'.php?newlang='.$lfound,
-                        'src' => img_find('lang/'.$lfound.'_mini.png'),
-                        'alt' => getLangName($lfound),
-                    ]);
+                    $href = $afile.'.php?newlang='.$lfound;
+                    $src = img_find('lang/'.$lfound.'_mini.png');
+                    $alt = getLangName($lfound);
+                    $langs .= '<a href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"><img src="'
+                        .htmlspecialchars($src, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" alt="'
+                        .htmlspecialchars($alt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" title="'
+                        .htmlspecialchars($alt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"></a>';
                 }
             }
         }
@@ -42,7 +44,12 @@ function getAdminHeadVars(): array {
             ];
         }
         foreach ($items as $item) {
-            $menu .= $tpl->getHtmlFrag('admin-menu-item', $item);
+            $menu .= '<li'.(($item['cls'] ?? '') !== '' ? ' class="'.htmlspecialchars((string)$item['cls'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '').'>'
+                .'<a href="'.htmlspecialchars((string)$item['href'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'
+                .(!empty($item['blank']) ? ' target="_blank"' : '')
+                .' title="'.htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"><b>'
+                .htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+                .'</b></a></li>';
         }
         $blocks = getAdminPanelBlocks().admininfo().adminblock();
     } else {

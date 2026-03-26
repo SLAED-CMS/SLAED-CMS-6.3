@@ -249,54 +249,37 @@ function setAdminNavi(array $p): string {
 }
 
 function adminTabListOpen(string $id, string $class): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-tab-list-open', [
-        'id' => $id,
-        'class' => $class,
-    ]);
+    return '<ul id="'.htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="reset '
+        .htmlspecialchars($class, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
 }
 
 function adminTabListClose(): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-tab-list-close', []);
+    return '</ul>';
 }
 
 function adminTabLink(string $href, string $label, bool $selected = false, string $rel = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-tab-link', [
-        'href' => $href,
-        'label' => $label,
-        'selected' => $selected,
-        'rel' => $rel,
-    ]);
+    return '<li><a href="'.$href.'"'
+        .($rel !== '' ? ' rel="'.htmlspecialchars($rel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '')
+        .($selected ? ' class="selected"' : '')
+        .'><b>'.htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b></a></li>';
 }
 
 function adminInfoCountValue(int|string $count): string {
- global $tpl;
     if (!is_numeric($count)) {
         return '-';
     }
-    return $tpl->getHtmlFrag('admin-info-count', [
-        'count' => (string) $count,
-        'class' => ((int) $count >= 1) ? 'sl_red' : 'sl_green',
-    ]);
+    $css = ((int) $count >= 1) ? 'sl_red' : 'sl_green';
+    return '<span class="'.$css.'">'.htmlspecialchars((string) $count, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
 }
 
 function adminInfoRow(string $href, string $title, string $label, int|string $count): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-info-row', [
-        'href' => $href,
-        'title' => $title,
-        'label' => $label,
-        'count_html' => adminInfoCountValue($count),
-    ]);
+    return '<tr><td><a href="'.$href.'" title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
+        .htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'</a>:</td><td>'.adminInfoCountValue($count).'</td></tr>';
 }
 
 function adminInfoTable(array $rows): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-info-table', [
-        'rows_html' => implode('', $rows),
-    ]);
+    return '<table class="sl_tab_bl">'.implode('', $rows).'</table>';
 }
 
 function admininfo() {
@@ -371,12 +354,9 @@ function admininfo() {
             
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
-        $e_cont = $tpl->getHtmlFrag('admin-editor-form', [
-            'action' => $afile.'.php',
-            'editor_html' => redaktor('1', 'editor', '', $editor, 1),
-            'refer' => '1',
-            'op' => 'changeeditor',
-        ]);
+        $e_cont = '<form method="post" action="'.$afile.'.php"><table><tr><td>'
+            .redaktor('1', 'editor', '', $editor, 1)
+            .'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
         $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _EDITOR, 'content' => $e_cont, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
@@ -483,43 +463,51 @@ function adminFilesRow(array $row): string {
 }
 
 function adminInfoForm(array $data): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-info-form', $data);
+    return '<hr><form name="post" id="formadm_info" method="post"><table class="sl_table_edit"><tr><td>'
+        .($data['textarea_html'] ?? '')
+        .'</td></tr><tr><td class="sl_center"><input type="submit" OnClick="'
+        .htmlspecialchars((string)($data['submit_onclick'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'" value="'.htmlspecialchars((string)($data['submit_label'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'" title="'.htmlspecialchars((string)($data['submit_title'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'" class="sl_but_blue"></td></tr></table></form>';
 }
 
 function adminFlagBox(bool $state, string $yesLabel, string $noLabel): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-flag-box', [
-        'class' => $state ? 'sl_green' : 'sl_red',
-        'label' => $state ? $yesLabel : $noLabel,
-    ]);
+    $css = $state ? 'sl_green' : 'sl_red';
+    $txt = $state ? $yesLabel : $noLabel;
+    return '<div class="'.htmlspecialchars($css, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
+        .htmlspecialchars($txt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'</div>';
 }
 
 function adminNoteLabel(string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-note-label', [
-        'title' => $title,
-        'label' => $label,
-    ]);
+    return '<span title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="sl_note">'
+        .htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .'</span>';
 }
 
 function adminMoveControls(string $target, string $upQuery = '', string $downQuery = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-move-controls', [
-        'target' => $target,
-        'up_query' => $upQuery,
-        'up_title' => _BLOCKUP,
-        'down_query' => $downQuery,
-        'down_title' => _BLOCKDOWN,
-    ]);
+    $out = '';
+    if ($upQuery !== '') {
+        $out .= '<span OnClick="AjaxLoad(\'GET\', \'0\', \''.htmlspecialchars($target, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+            .'\', \''.$upQuery.'\', \'\'); return false;" title="'.htmlspecialchars(_BLOCKUP, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+            .'" class="sl_bl_up"></span>';
+    }
+    if ($downQuery !== '') {
+        $out .= '<span OnClick="AjaxLoad(\'GET\', \'0\', \''.htmlspecialchars($target, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+            .'\', \''.$downQuery.'\', \'\'); return false;" title="'.htmlspecialchars(_BLOCKDOWN, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+            .'" class="sl_bl_down"></span>';
+    }
+    return $out;
 }
 
 function adminFilePreview(int $index, string $path, bool $hasImage): string {
  global $tpl;
-    return $tpl->getHtmlFrag('admin-file-preview', [
+    return $tpl->getHtmlFrag('editor-file-preview', [
         'preview_id' => 'sf-form-'.$index,
         'toggle_onclick' => "HideShow('sf-form-".$index."', 'fold', 'up', 500);",
         'image_url' => $path,
+        'fallback_url' => 'templates/admin/images/admin/no.png',
         'image_title' => _IMG,
         'no_title' => _NO,
         'show_image' => $hasImage,
@@ -527,17 +515,11 @@ function adminFilePreview(int $index, string $path, bool $hasImage): string {
 }
 
 function adminDangerText(string $text): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-danger-text', [
-        'text' => $text,
-    ]);
+    return '<span class="sl_red">'.htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
 }
 
 function adminTitleTip(string $data): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-title-tip', [
-        'content' => $data,
-    ]);
+    return '<nav class="sl_tip"><div>'.$data.'</div></nav>';
 }
 
 function adminTitleTipLabel(string $tip, string $title, string $label): string {
@@ -546,26 +528,30 @@ function adminTitleTipLabel(string $tip, string $title, string $label): string {
 
 function adminLinkAction(string $href, string $title, string $label): string {
  global $tpl;
-    return $tpl->getHtmlFrag('admin-action-link', [
+    return $tpl->getHtmlFrag('comment-action-link', [
         'href' => $href,
         'title' => $title,
         'label' => $label,
+        'class' => '',
+        'target' => '',
     ]);
 }
 
 function adminAjaxAction(string $target, string $query, string $title, string $label): string {
  global $tpl;
-    return $tpl->getHtmlFrag('admin-action-ajax', [
+    return $tpl->getHtmlFrag('comment-action-ajax', [
+        'load_id' => '0',
         'target' => $target,
         'query' => $query,
         'title' => $title,
         'label' => $label,
+        'class' => '',
     ]);
 }
 
 function adminDeleteAction(string $href, string $confirmText, string $title, string $label): string {
  global $tpl;
-    return $tpl->getHtmlFrag('admin-action-delete', [
+    return $tpl->getHtmlFrag('action-delete', [
         'href' => $href,
         'confirm_text' => $confirmText,
         'title' => $title,
@@ -579,7 +565,7 @@ function adminMenuItems(array $items): string {
     if (!$items) {
         return '';
     }
-    return $tpl->getHtmlFrag('admin-action-menu', [
+    return $tpl->getHtmlFrag('action-menu', [
         'editor_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
     ]);
