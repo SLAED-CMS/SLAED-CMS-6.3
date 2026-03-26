@@ -2971,8 +2971,20 @@ function doCss(): string {
                     if (file_exists($file)) {
                         if ($conf['cache_css'] || $conf['css_h']) {
                             $dir = rtrim(str_replace('\\', '/', dirname($file)), '/').'/';
-                            $cont = str_replace('../', '', file_get_contents($file));
-                            $cont = preg_replace('#url\((\'|"|)(.*?)(\'|"|)\)#i', 'url('.$dir.'\\2)', $cont);
+                            $cont = file_get_contents($file);
+                            $cont = preg_replace_callback(
+                                '#url\((\'|"|)((?!data:|https?:|//|/).*?)(\'|"|)\)#i',
+                                function(array $m) use ($dir): string {
+                                    $parts = explode('/', $dir.$m[2]);
+                                    $out = [];
+                                    foreach ($parts as $part) {
+                                        if ($part === '..') array_pop($out);
+                                        elseif ($part !== '' && $part !== '.') $out[] = $part;
+                                    }
+                                    return 'url('.$m[1].implode('/', $out).$m[3].')';
+                                },
+                                $cont
+                            );
                             if ($conf['css_e']) $cont = preg_replace_callback('#url\((.*?\.(png|jpg|jpeg|gif|svg|bmp))\)#i', 'getImgEncode', $cont);
                             $arr[] = ($conf['css_c']) ? getCompressCss($cont) : $cont;
                         } else {

@@ -377,7 +377,7 @@ function rech(): void {
 		$result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, p.id, p.title, p.intro, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id = c.prod) WHERE c.id = :id ORDER BY c.id ASC', ['id' => $id]);
 		if ($db->getSqlRowCount($result) > 0) {
 			[$cid, $cuid, $cprod, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $pid, $stitle, $text, $pprice] = $db->getSqlRow($result);
-			$themeCss = file_exists('templates/'.$theme.'/theme.css') ? 'templates/'.$theme.'/theme.css' : '';
+			$themeCss = file_exists('templates/'.$theme.'/assets/css/theme.css') ? 'templates/'.$theme.'/assets/css/theme.css' : '';
 			$cenddate = ($cenddate != '0') ? date(_TIMESTRING, $cenddate) : _UNLIMITED;
 			echo $tpl->getHtmlFrag('shop-rech', [
 				'charset' => _CHARSET,
