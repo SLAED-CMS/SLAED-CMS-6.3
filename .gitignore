@@ -59,9 +59,9 @@ node_modules/
 package-lock.json
 
 # Composer
-vendor/
-composer.lock
-composer.phar
+/vendor/
+/composer.lock
+/composer.phar
 
 # PHPUnit
 .phpunit.cache/
