@@ -179,6 +179,7 @@ Two template layers currently coexist:
 - modern runtime `core/classes/template.php`
 
 New template work should target the modern runtime and theme HTML files under `templates/`.
+The modern engine supports automatic CSS and JS injection for components placed in `partials/` (e.g., `{% component 'modal' %}` auto-loads `modal.css` and `modal.js` at compile time).
 
 ### Themes
 

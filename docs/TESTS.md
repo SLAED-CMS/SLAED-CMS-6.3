@@ -74,16 +74,13 @@ Directory:
 
 Current unit test files include:
 - `AdminLoginBridgeFlowTest.php`
+- `AdminPageRenderFlowTest.php`
 - `AdminPreviewBridgeFlowTest.php`
 - `AdminSearchboxBridgeFlowTest.php`
 - `ExampleTest.php`
 - `InputFilterTest.php`
 - `PasswordHashTest.php`
 - `StructureTest.php`
-- `TemplateBridgeFallbackTest.php`
-- `TemplateBridgeFlowTest.php`
-- `TemplateIfTest.php`
-- `TemplateTest.php`
 - `ViewBridgeSmokeTest.php`
 
 ### Validation

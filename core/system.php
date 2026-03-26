@@ -2876,12 +2876,34 @@ function getThemeAssets(string $theme, string $ext): array {
     foreach (glob($base.'*.'.$ext) ?: [] as $file) $out[] = $file;
     foreach (glob($base.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) {
         foreach (glob($sub.'*.'.$ext) ?: [] as $file) $out[] = $file;
+        foreach (glob($sub.'*/', GLOB_ONLYDIR) ?: [] as $subsub) {
+            foreach (glob($subsub.'*.'.$ext) ?: [] as $file) $out[] = $file;
+        }
     }
     foreach (glob($base.'assets/'.$ext.'/*.'.$ext) ?: [] as $file) $out[] = $file;
     if ($ext === 'js') {
         foreach (glob($base.'js/*.'.$ext) ?: [] as $file) $out[] = $file;
     }
-    return $out;
+    return array_values(array_unique($out));
+}
+
+# Resolves asset config entries that may point to files or directories
+function getAssetFiles(array $entries, string $ext): array {
+    $out = [];
+    foreach ($entries as $entry) {
+        $entry = trim((string)$entry);
+        if ($entry === '') continue;
+        if (is_file($entry) && strtolower(pathinfo($entry, PATHINFO_EXTENSION)) === $ext) {
+            $out[] = $entry;
+            continue;
+        }
+        if (is_dir($entry)) {
+            foreach (glob(rtrim($entry, '/\\').'/*.'.$ext) ?: [] as $file) {
+                if (is_file($file)) $out[] = $file;
+            }
+        }
+    }
+    return array_values(array_unique($out));
 }
 
 # Definition and processing of header scripts files
@@ -2889,10 +2911,11 @@ function doScript(): string {
  global $theme, $conf;
     $async = ($conf['script_a']) ? 'async ' : '';
     $sfile = 'config/cache/'.md5($theme.'script').'.txt';
-    $array = explode(',', $conf['script_f']);
-    $array = is_array($array) ? $array : [];
-    $array = (!$conf['security']['error_java']) ? array_merge($array, ['plugins/system/block-error.js']) : $array;
-    foreach (getThemeAssets($theme, 'js') as $file) $array[] = $file;
+    $entries = explode(',', $conf['script_f']);
+    $entries = is_array($entries) ? $entries : [];
+    $entries = (!$conf['security']['error_java']) ? array_merge($entries, ['plugins/system/block-error.js']) : $entries;
+    $array = array_merge(getAssetFiles($entries, 'js'), getThemeAssets($theme, 'js'));
+    $array = array_values(array_unique($array));
     if (!defined('ADMIN_FILE')) {
         if ($conf['cache_script'] && file_exists($sfile) && filesize($sfile) != 0 && (time() - $conf['cache_t']) < filemtime($sfile)) {
             $cont = ($conf['script_h']) ? file_get_contents($sfile) : '<script '.$async.'src="index.php?go=script"></script>';
@@ -2932,29 +2955,28 @@ function doScript(): string {
 # Definition and processing of CSS files
 function doCss(): string {
  global $theme, $conf;
-    $array = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
+    $entries = explode(',', str_replace('[theme]', $theme, $conf['css_f']));
+    $array = array_merge(
+        getAssetFiles(is_array($entries) ? $entries : [], 'css'),
+        getThemeAssets($theme, 'css')
+    );
+    $array = array_values(array_unique($array));
     if (is_array($array)) {
-        $tbase = 'templates/'.$theme.'/';
-        $tdirs = [$tbase];
-        foreach (glob($tbase.'assets/vendor/*/', GLOB_ONLYDIR) ?: [] as $sub) $tdirs[] = $sub;
-        $tdirs[] = $tbase.'assets/css/';
-        $array = array_merge($array, $tdirs);
         if (!defined('ADMIN_FILE')) {
             $cfile = 'config/cache/'.md5($theme.'style').'.txt';
             if ($conf['cache_css'] && file_exists($cfile) && filesize($cfile) != 0 && (time() - $conf['cache_t']) < filemtime($cfile)) {
                 $cont = ($conf['css_h']) ? file_get_contents($cfile) : '<link rel="stylesheet" href="index.php?go=css">';
             } else {
-                foreach ($array as $dir) {
-                    foreach (glob($dir.'*.css') as $file) {
-                        if (file_exists($file)) {
-                            if ($conf['cache_css'] || $conf['css_h']) {
-                                $cont = str_replace('../', '', file_get_contents($file));
-                                $cont = preg_replace('#url\((\'|"|)(.*?)(\'|"|)\)#i', 'url('.$dir.'\\2)', $cont);
-                                if ($conf['css_e']) $cont = preg_replace_callback('#url\((.*?\.(png|jpg|jpeg|gif|svg|bmp))\)#i', 'getImgEncode', $cont);
-                                $arr[] = ($conf['css_c']) ? getCompressCss($cont) : $cont;
-                            } else {
-                                $arr[] = '<link rel="stylesheet" href="'.$file.'">';
-                            }
+                foreach ($array as $file) {
+                    if (file_exists($file)) {
+                        if ($conf['cache_css'] || $conf['css_h']) {
+                            $dir = rtrim(str_replace('\\', '/', dirname($file)), '/').'/';
+                            $cont = str_replace('../', '', file_get_contents($file));
+                            $cont = preg_replace('#url\((\'|"|)(.*?)(\'|"|)\)#i', 'url('.$dir.'\\2)', $cont);
+                            if ($conf['css_e']) $cont = preg_replace_callback('#url\((.*?\.(png|jpg|jpeg|gif|svg|bmp))\)#i', 'getImgEncode', $cont);
+                            $arr[] = ($conf['css_c']) ? getCompressCss($cont) : $cont;
+                        } else {
+                            $arr[] = '<link rel="stylesheet" href="'.$file.'">';
                         }
                     }
                 }
@@ -2965,11 +2987,9 @@ function doCss(): string {
                 }
             }
         } else {
-            foreach ($array as $dir) {
-                foreach (glob($dir.'*.css') as $file) {
-                    if (file_exists($file)) {
-                        $arr[] = '<link rel="stylesheet" href="'.$file.'">';
-                    }
+            foreach ($array as $file) {
+                if (file_exists($file)) {
+                    $arr[] = '<link rel="stylesheet" href="'.$file.'">';
                 }
             }
             $cont = implode("\n", $arr);

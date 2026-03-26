@@ -100,9 +100,14 @@ The current `Template` runtime supports:
 - loops:
   - `{% for item in items %}`
   - `{% endfor %}`
-- includes
+- includes:
+  - `{% include 'header' %}` (auto-resolves to `partials/header.html`)
+  - `{% include 'partials/custom.html' %}`
 - layout inheritance
 - blocks
+- components:
+  - `{% component 'modal' %}` (auto-resolves to `partials/modal.html`)
+  - `{% slot header %}`
 
 ## Current Migration Direction
 New template work should:
@@ -134,6 +139,9 @@ Recommended pattern:
 
 Example already present:
 - `templates/simple/assets/vendor/bootstrap/`
+
+### Smart Asset Loading (Zero-Overhead)
+The final runtime automatically injects CSS and JS files for components and blocks. If a file named identically to the included partial exists (e.g., `partials/alerts.css` or `partials/alerts.js`), the engine detects it at compile-time and injects `<link>` and `<script defer>` tags into the compiled PHP output. This feature ensures assets are loaded exactly once per request, with absolutely no file I/O overhead at runtime.
 
 ## Migration Source Of Truth
 For active migration rules and sequence, use:

@@ -238,6 +238,8 @@ For new template work:
 - Prefer the modern `Template` runtime.
 - Use the shared `$tpl` runtime object when available.
 - Keep HTML in template files under `templates/*`.
+- Place reusable components in `partials/` (e.g., `partials/modal.html`) to take advantage of shortname syntax (`{% component 'modal' %}`).
+- Keep component CSS and JS alongside the HTML file (`partials/modal.css` and `partials/modal.js`). The runtime will inject them automatically with zero runtime I/O overhead.
 - Do not add new legacy `setTemplateBasic()`-only rendering paths for new slices unless the task explicitly requires legacy work.
 
 Current modern runtime methods:

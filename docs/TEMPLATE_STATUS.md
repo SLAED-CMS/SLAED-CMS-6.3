@@ -21,6 +21,9 @@
 - include
 - layout inheritance
 - blocks
+- components
+- slots
+- automatic asset injection (CSS/JS)
 
 ## Current New-Only Slices
 Already running through the final runtime:
@@ -47,12 +50,11 @@ Reference minimal final theme:
 
 ## Tests
 Current relevant runtime-related tests:
-- `tests/Unit/ViewBridgeSmokeTest.php`
-- `tests/Unit/TemplateBridgeFlowTest.php`
-- `tests/Unit/TemplateBridgeFallbackTest.php`
 - `tests/Unit/AdminLoginBridgeFlowTest.php`
+- `tests/Unit/AdminPageRenderFlowTest.php`
 - `tests/Unit/AdminPreviewBridgeFlowTest.php`
 - `tests/Unit/AdminSearchboxBridgeFlowTest.php`
+- `tests/Unit/ViewBridgeSmokeTest.php`
 
 ## Not Migrated
 - main site layouts
@@ -62,7 +64,6 @@ Current relevant runtime-related tests:
 - most legacy template calls in PHP
 
 ## Limits
-- no slots/components system
 - no advanced expression language
 - no named include arguments
 - no deep inheritance chains

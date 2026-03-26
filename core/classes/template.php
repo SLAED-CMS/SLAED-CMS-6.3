@@ -13,6 +13,7 @@ class Template {
     protected array $blocks = [];
     protected array $slots = [];
     protected array $stack = [];
+    protected array $assets = ['css' => [], 'js' => []];
 
     # Set base template and cache paths for the selected theme
     public function __construct(string $theme = 'default') {
@@ -32,13 +33,17 @@ class Template {
     # Return compiled partial markup after validation and cache resolution
     public function getHtmlPart(string $name, array $data = []): string {
         if (!$this->checkName($name)) return '';
-        return $this->getHtml('partials', $name, $data);
+        $this->assets = ['css' => [], 'js' => []];
+        $html = $this->getHtml('partials', $name, $data);
+        return $this->getAssetMarkup().$html;
     }
 
     # Return compiled fragment markup after validation and cache resolution
     public function getHtmlFrag(string $name, array $data = []): string {
         if (!$this->checkName($name)) return '';
-        return $this->getHtml('fragments', $name, $data);
+        $this->assets = ['css' => [], 'js' => []];
+        $html = $this->getHtml('fragments', $name, $data);
+        return $this->getAssetMarkup().$html;
     }
 
     /**
@@ -48,6 +53,7 @@ class Template {
     protected function getPageHtml(string $name, array $data = [], string $layout = 'app'): string {
         $html = '';
         $this->blocks = [];
+        $this->assets = ['css' => [], 'js' => []];
         try {
             $code = $this->getCode('pages', $name);
             if ($code === '') return '';
@@ -57,18 +63,20 @@ class Template {
                 $file = $this->getFile($part[0], substr($part[1], 0, -5));
                 if ($file && $this->checkFile($file)) {
                     $this->blocks = $this->getBlocks($code, $data);
-                    return $this->getHtml($part[0], substr($part[1], 0, -5), $data);
+                    return $this->getHtml($part[0], substr($part[1], 0, -5), $this->mergePageAssets($data));
                 }
             }
             $file = $this->getFile('layouts', $layout);
             if ($file && $this->checkFile($file)) {
                 $body = $this->getHtml('pages', $name, $data);
                 $this->blocks = ['content' => $body];
-                return $this->getHtml('layouts', $layout, $data);
+                return $this->getHtml('layouts', $layout, $this->mergePageAssets($data));
             }
-            return $this->getHtml('pages', $name, $data);
+            $html = $this->getHtml('pages', $name, $data);
+            return $this->getAssetMarkup().$html;
         } finally {
             $this->blocks = [];
+            $this->assets = ['css' => [], 'js' => []];
         }
     }
 
@@ -271,15 +279,21 @@ class Template {
     protected function filterUse(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*include\s+\'([a-z0-9\/.-]+\.html)\'(?:\s+with\s+([_a-z][_a-z0-9]*))?\s*%\}/',
+            '/\{%\s*include\s+\'([a-z0-9\/.-]+)\'(?:\s+with\s+([_a-z][_a-z0-9]*))?\s*%\}/',
             function(array $data): string {
                 $path = $data[1] ?? '';
+                if (!str_contains($path, '/') && !str_ends_with($path, '.html')) {
+                    $path = 'partials/'.$path.'.html';
+                }
                 if (!$this->checkIncl($path)) return $data[0];
+                $prefix = '<?php $this->addAssetPath(\''.$path.'\'); ?>';
+                
                 if (!empty($data[2])) {
                     $name = '$'.$data[2].' ?? null';
-                    return '<?= $this->getIncl(\''.$path.'\', is_array('.$name.') ? '.$name.' : []); ?>';
+                    $props = 'is_array('.$name.') ? '.$name.' : []';
+                    return $prefix.'<?= $this->getIncl(\''.$path.'\', '.$props.'); ?>';
                 }
-                return '<?= $this->getIncl(\''.$path.'\', $this->getScope(get_defined_vars())); ?>';
+                return $prefix.'<?= $this->getIncl(\''.$path.'\', $this->getScope(get_defined_vars())); ?>';
             },
             $code
         );
@@ -289,18 +303,23 @@ class Template {
     protected function filterComp(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*component\s+\'([a-z0-9\/.-]+\.html)\'(?:\s+with\s+([_a-z][_a-z0-9]*))?\s*%\}(.*?)\{%\s*endcomponent\s*%\}/s',
+            '/\{%\s*component\s+\'([a-z0-9\/.-]+)\'(?:\s+with\s+([_a-z][_a-z0-9]*))?\s*%\}(.*?)\{%\s*endcomponent\s*%\}/s',
             function(array $data): string {
                 $path = $data[1] ?? '';
+                if (!str_contains($path, '/') && !str_ends_with($path, '.html')) {
+                    $path = 'partials/'.$path.'.html';
+                }
                 $body = $data[3] ?? '';
                 if (!$this->checkIncl($path) || !str_starts_with($path, 'partials/')) return $data[0];
                 if (str_contains($body, '{% component') || str_contains($body, '{% endcomponent')) return $data[0];
+                $prefix = '<?php $this->addAssetPath(\''.$path.'\'); ?>';
+                
                 $props = '[]';
                 if (!empty($data[2])) {
                     $name = '$'.$data[2].' ?? null';
                     $props = 'is_array('.$name.') ? '.$name.' : []';
                 }
-                return '<?= $this->getComp(\''.$path.'\', '.$props.', '.var_export($body, true).', $this->getScope(get_defined_vars())); ?>';
+                return $prefix.'<?= $this->getComp(\''.$path.'\', '.$props.', '.var_export($body, true).', $this->getScope(get_defined_vars())); ?>';
             },
             $code
         );
@@ -372,6 +391,42 @@ class Template {
     protected function getRaw(mixed $data): string {
         if ($data === null || is_array($data) || is_object($data) || is_resource($data)) return '';
         return (string)$data;
+    }
+
+    # Register companion CSS/JS assets for a template include path
+    protected function addAssetPath(string $path): void {
+        if (!$this->checkIncl($path)) return;
+        $base = substr($path, 0, -5);
+        $root = $this->base.'/'.$base;
+        if ($this->checkFile($root.'.css')) {
+            $href = 'templates/'.$this->theme.'/'.$base.'.css';
+            $this->assets['css'][$href] = '<link rel="stylesheet" href="'.$href.'">';
+        }
+        if ($this->checkFile($root.'.js')) {
+            $src = 'templates/'.$this->theme.'/'.$base.'.js';
+            $this->assets['js'][$src] = '<script src="'.$src.'" defer></script>';
+        }
+    }
+
+    # Render collected asset tags for fallback standalone output
+    protected function getAssetMarkup(): string {
+        $css = implode("\n", $this->assets['css']);
+        $js = implode("\n", $this->assets['js']);
+        if ($css !== '') $css .= "\n";
+        if ($js !== '') $js .= "\n";
+        return $css.$js;
+    }
+
+    # Merge collected assets into page-level links and scripts fields
+    protected function mergePageAssets(array $data = []): array {
+        $data = $this->setData($data);
+        $css = implode("\n", $this->assets['css']);
+        $js = implode("\n", $this->assets['js']);
+        $links = (string)($data['links'] ?? '');
+        $scripts = (string)($data['scripts'] ?? '');
+        $data['links'] = ($css !== '') ? trim($links."\n".$css) : $links;
+        $data['scripts'] = ($js !== '') ? trim($scripts."\n".$js) : $scripts;
+        return $data;
     }
 
     # Render one component instance with named slots and a default body slot
