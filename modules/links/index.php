@@ -76,10 +76,10 @@ function links(): void {
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $post = ($conf['links']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['links']['date']) ? format_time($time) : '';
-            $hits = ($conf['links']['hits']) ? '<span title="'._LINKHITS.'" class="sl_down">'.$hits.'</span>' : '';
+            $hits = ($conf['links']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _LINKHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
-            $cont .= $tpl->getHtmlFrag('basic', [
+            $cont .= getContentCard([
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -200,17 +200,15 @@ function view(): void {
         $cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
         $post = ($conf['links']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['links']['date']) ? format_time($date) : '';
-        $hits = ($conf['links']['hits']) ? '<span title="'._LINKHITS.'" class="sl_down">'.$hits.'</span>' : '';
+        $hits = ($conf['links']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _LINKHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
         $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
         $favorites = getFavorBtn($id, $conf['name']);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         if (is_user() || $conf['links']['links'] == '1') {
-            $download = '<form action="index.php?name='.$conf['name'].'" method="post" style="display: inline">'
-            .'<input type="hidden" name="id" value="'.$id.'">'
-            .'<input type="hidden" name="op" value="loading">'
-            .'<input type="submit" OnClick="javascript:window.open(\''.$authorurl.'\')" value="'._DOWNLLINK.'" class="sl_but_green"></form>';
+            $onclick = ' OnClick="javascript:window.open(\''.str_replace(["\\", "'"], ["\\\\", "\\'"], $authorurl).'\')"';
+            $download = $tpl->getHtmlFrag('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _DOWNLLINK]);
         }
-        $broken = ($conf['links']['broc'] == 1 && $status != '2') ? '<a OnClick="javascript:window.location.assign(\'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id.'\');" title="'._BROCLINK.'" class="sl_but_blue">'._COMPLAINT.'</a>' : '';
+        $broken = ($conf['links']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCLINK, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($authorurl) ? _SITE.': '.domain($authorurl) : '';
         $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=links_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=links_delete&amp;id='.$id, 'delete_ask' => $ask, 'delete_text' => _ONDELETE]) : '';
@@ -345,7 +343,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['links']['addmail'], $conf['name'], $puname, _LINKS);
             setHead(['title' => _ADD]);
-            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHL, 'meta' => $meta]);
             setFoot();
         } else {
@@ -362,7 +360,7 @@ function broken(): void {
     if ($conf['links']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCLINK]);
-        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'">';
+        $meta = getMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
         echo setModuleNavi(['title' => _BROCLINK, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEL, 'meta' => $meta]);
         setFoot();
     } else {

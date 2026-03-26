@@ -79,7 +79,7 @@ function files(): void {
             $hits = ($conf['files']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _FILEHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
-            $cont .= $tpl->getHtmlFrag('basic', [
+            $cont .= getContentCard([
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -223,7 +223,7 @@ function view(): void {
             $onclick = (!$conf['files']['stream']) ? ' OnClick="javascript:window.open(\''.$url.'\');"' : '';
             $download = $tpl->getHtmlFrag('files-download-form', ['name' => $conf['name'], 'id' => $id, 'onclick' => $onclick, 'submit_label' => _UPLOAD]);
         }
-        $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id, 'title' => _BROCFILE, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
+        $broken = ($conf['files']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCFILE, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
         $email = ($aemail) ? _AUEMAIL.': '.anti_spam($aemail) : '';
         $home = ($awebsite) ? _SITE.': '.domain($awebsite) : '';
         $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=files_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=files_delete&amp;id='.$id, 'delete_ask' => $ask, 'delete_text' => _ONDELETE]) : '';
@@ -335,7 +335,7 @@ function add(): void {
             'hometext' => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
             'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
             'siteval' => $home,
-            'site_attr' => 'home',
+            'site_attr' => 'site',
             'extrafields' => $extra,
             'captcha' => getCaptcha(1),
             'submit' => ad_save('', '', 'send'),
@@ -385,7 +385,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
             setHead(['title' => _ADD]);
-            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISH, 'meta' => $meta]);
             setFoot();
         } else {
@@ -402,7 +402,7 @@ function broken(): void {
     if ($conf['files']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET status = '2' WHERE id = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCFILE]);
-        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'">';
+        $meta = getMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
         echo setModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTE, 'meta' => $meta]);
         setFoot();
     } else {

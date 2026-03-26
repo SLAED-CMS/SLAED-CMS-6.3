@@ -26,23 +26,27 @@ function help(): void {
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th>'.cutstr(_MESSAGES, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th>'.cutstr(_MESSAGES, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $cid, $title, $time, $comments, $ip, $stat, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : _ANONYM;
             $stat = ($stat) ? 0 : 1;
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                '<a href="'.$afile.'.php?name=help&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>',
+                '<a href="'.$afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.$comments.'</td>'
             .'<td>'.ad_status('', $stat).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?name=help&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -52,11 +56,11 @@ function help(): void {
 
 function view(): void {
     global $db, $afile, $tpl;
-    $id = getVar('get', 'id', 'num', 0);
-    $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id]);
+    $vid = intval(getVar('get', 'id', 'num', 0) ?? 0);
+    $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $vid, 'id2' => $vid]);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
-    $cont .= $tpl->getHtmlFrag('open', []);
+    $html = '';
     $a = 0;
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $title = ($title) ? $title : _MESSAGE.': '.$a;
@@ -77,11 +81,11 @@ function view(): void {
             $reads =  '';
         }
         $admin = add_menu('<a href="'.$afile.'.php?name=help&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=help&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
-        $cont .= $tpl->getHtmlFrag('basic', ['ctitle' => $ctitle, 'id' => $id, 'title' => $title, 'text' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), 'post' => $post, 'date' => $date, 'reads' => $reads, 'comm' => $comm, 'rating' => $rating, 'admin' => $admin]);
+        $html .= $tpl->getHtmlFrag('basic', ['ctitle' => $ctitle, 'id' => $id, 'title' => $title, 'text' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), 'post' => $post, 'date' => $date, 'reads' => $reads, 'comm' => $comm, 'rating' => $rating, 'admin' => $admin]);
         $a++;
     }
-    $cont .= $tpl->getHtmlFrag('close', []);
-    $cont .= addview($id);
+    $cont .= getAdminBox($html);
+    $cont .= addview($vid);
     echo $cont;
     setFoot();
 }
@@ -90,15 +94,13 @@ function addview(int $id): string {
     global $db, $afile, $admin, $tpl;
     $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
     [$cid, $uid, $status] = $db->getSqlRow($result);
-    $cont = $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $admin[1] ?? '', '25', 'sl_form', '1').'</td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', 'help', '10', _TEXT, '1').'</td></tr>'
-    .'<tr><td>'._HELPGLOS.'</td><td>'.radio_form($status, 'status').'</td></tr>'
-    .'<tr><td>'._MAIL_SENDE.'</td><td>'.radio_form('1', 'umail').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="refer" value="1"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$cid.'"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="save"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    return $cont;
+    $rows = getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $admin[1] ?? '', '25', 'sl_form', '1'))
+        .getAdminFormRow(_TEXT.':', textarea('1', 'hometext', '', 'help', '10', _TEXT, '1'))
+        .getAdminFormRow(_HELPGLOS, radio_form($status, 'status'))
+        .getAdminFormRow(_MAIL_SENDE, radio_form('1', 'umail'))
+        .getAdminFormWide('<input type="submit" value="'._SEND.'" class="sl_but_blue">', '', 'sl_center');
+    $hide = '<input type="hidden" name="name" value="help"><input type="hidden" name="refer" value="1"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$cid.'"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="save">';
+    return getAdminForm($afile.'.php', $rows, $hide);
 }
 
 function add(): void {
@@ -123,16 +125,17 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>';
-    if (!$pid) $cont .= '<tr><td>'._TITLE.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>';
-    $cont .= '<tr><td>'._CATEGORY.':</td><td>'.getcat('help', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1').'</td></tr>'
-    .fields_in($field, 'help')
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="help"><input type="hidden" name="pid" value="'.$pid.'">'.ad_save('id', $id, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows = getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
+    if (!$pid) {
+        $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
+    }
+    $rows .= getAdminFormRow(_CATEGORY.':', getcat('help', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'))
+        .getAdminFormRow(_TEXT.':', textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1'))
+        .fields_in($field, 'help')
+        .getAdminFormRow(_CHNGSTORY.':', datetime(1, 'time', $time, 16, 'sl_form'))
+        .getAdminFormWide(ad_save('id', $id, 'save'), '', 'sl_center');
+    $hide = '<input type="hidden" name="name" value="help"><input type="hidden" name="pid" value="'.$pid.'">';
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -200,8 +203,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'help',
         'op' => 'configsave',
@@ -234,8 +236,7 @@ function config(): void {
         '_c20' => _C_20,
         'r_letter' => radio_form($conf['help']['letter'] ?? 0, 'letter'),
         'help' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -264,7 +265,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -278,6 +279,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
 

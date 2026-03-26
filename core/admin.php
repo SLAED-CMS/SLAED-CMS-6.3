@@ -249,37 +249,55 @@ function setAdminNavi(array $p): string {
 }
 
 function adminTabListOpen(string $id, string $class): string {
-    return '<ul id="'.htmlspecialchars($id, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="reset '
-        .htmlspecialchars($class, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-list-open', [
+        'list_class' => $class,
+        'list_id' => $id,
+    ]);
 }
 
 function adminTabListClose(): string {
-    return '</ul>';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-list-close', []);
 }
 
 function adminTabLink(string $href, string $label, bool $selected = false, string $rel = ''): string {
-    return '<li><a href="'.$href.'"'
-        .($rel !== '' ? ' rel="'.htmlspecialchars($rel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '')
-        .($selected ? ' class="selected"' : '')
-        .'><b>'.htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b></a></li>';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-link', [
+        'href' => $href,
+        'is_selected' => $selected,
+        'label' => $label,
+        'rel' => $rel,
+    ]);
 }
 
 function adminInfoCountValue(int|string $count): string {
+    global $tpl;
     if (!is_numeric($count)) {
         return '-';
     }
     $css = ((int) $count >= 1) ? 'sl_red' : 'sl_green';
-    return '<span class="'.$css.'">'.htmlspecialchars((string) $count, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
+    return $tpl->getHtmlFrag('admin-info-count', [
+        'count_text' => (string)$count,
+        'css_class' => $css,
+    ]);
 }
 
 function adminInfoRow(string $href, string $title, string $label, int|string $count): string {
-    return '<tr><td><a href="'.$href.'" title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
-        .htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'</a>:</td><td>'.adminInfoCountValue($count).'</td></tr>';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-info-row', [
+        'count_html' => adminInfoCountValue($count),
+        'href' => $href,
+        'label' => $label,
+        'title' => $title,
+    ]);
 }
 
 function adminInfoTable(array $rows): string {
-    return '<table class="sl_tab_bl">'.implode('', $rows).'</table>';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-info-table', [
+        'rows_html' => implode('', $rows),
+    ]);
 }
 
 function admininfo() {
@@ -354,9 +372,10 @@ function admininfo() {
             
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
-        $e_cont = '<form method="post" action="'.$afile.'.php"><table><tr><td>'
-            .redaktor('1', 'editor', '', $editor, 1)
-            .'<input type="hidden" name="refer" value="1"><input type="hidden" name="op" value="changeeditor"></td></tr></table></form>';
+        $e_cont = $tpl->getHtmlFrag('admin-editor-form', [
+            'action_url' => $afile.'.php',
+            'editor_html' => redaktor('1', 'editor', '', $editor, 1),
+        ]);
         $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _EDITOR, 'content' => $e_cont, 'id' => '6', 'close' => _OPCL]);
         return $ablocks;
     }
@@ -463,42 +482,40 @@ function adminFilesRow(array $row): string {
 }
 
 function adminInfoForm(array $data): string {
-    return '<hr><form name="post" id="formadm_info" method="post"><table class="sl_table_edit"><tr><td>'
-        .($data['textarea_html'] ?? '')
-        .'</td></tr><tr><td class="sl_center"><input type="submit" OnClick="'
-        .htmlspecialchars((string)($data['submit_onclick'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'" value="'.htmlspecialchars((string)($data['submit_label'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'" title="'.htmlspecialchars((string)($data['submit_title'] ?? ''), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'" class="sl_but_blue"></td></tr></table></form>';
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-info-form', [
+        'submit_label' => (string)($data['submit_label'] ?? ''),
+        'submit_onclick' => (string)($data['submit_onclick'] ?? ''),
+        'submit_title' => (string)($data['submit_title'] ?? ''),
+        'textarea_html' => (string)($data['textarea_html'] ?? ''),
+    ]);
 }
 
 function adminFlagBox(bool $state, string $yesLabel, string $noLabel): string {
-    $css = $state ? 'sl_green' : 'sl_red';
-    $txt = $state ? $yesLabel : $noLabel;
-    return '<div class="'.htmlspecialchars($css, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
-        .htmlspecialchars($txt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'</div>';
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-flag-box', [
+        'css_class' => $state ? 'sl_green' : 'sl_red',
+        'label_text' => $state ? $yesLabel : $noLabel,
+    ]);
 }
 
 function adminNoteLabel(string $title, string $label): string {
-    return '<span title="'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="sl_note">'
-        .htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-        .'</span>';
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-note-label', [
+        'label_text' => $label,
+        'title_attr' => $title,
+    ]);
 }
 
 function adminMoveControls(string $target, string $upQuery = '', string $downQuery = ''): string {
-    $out = '';
-    if ($upQuery !== '') {
-        $out .= '<span OnClick="AjaxLoad(\'GET\', \'0\', \''.htmlspecialchars($target, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-            .'\', \''.$upQuery.'\', \'\'); return false;" title="'.htmlspecialchars(_BLOCKUP, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-            .'" class="sl_bl_up"></span>';
-    }
-    if ($downQuery !== '') {
-        $out .= '<span OnClick="AjaxLoad(\'GET\', \'0\', \''.htmlspecialchars($target, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-            .'\', \''.$downQuery.'\', \'\'); return false;" title="'.htmlspecialchars(_BLOCKDOWN, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-            .'" class="sl_bl_down"></span>';
-    }
-    return $out;
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-move-controls', [
+        'down_query' => $downQuery,
+        'down_title' => _BLOCKDOWN,
+        'target' => $target,
+        'up_query' => $upQuery,
+        'up_title' => _BLOCKUP,
+    ]);
 }
 
 function adminFilePreview(int $index, string $path, bool $hasImage): string {
@@ -515,11 +532,17 @@ function adminFilePreview(int $index, string $path, bool $hasImage): string {
 }
 
 function adminDangerText(string $text): string {
-    return '<span class="sl_red">'.htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-danger-text', [
+        'text' => $text,
+    ]);
 }
 
 function adminTitleTip(string $data): string {
-    return '<nav class="sl_tip"><div>'.$data.'</div></nav>';
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-title-tip', [
+        'content_html' => $data,
+    ]);
 }
 
 function adminTitleTipLabel(string $tip, string $title, string $label): string {
@@ -685,16 +708,12 @@ function cat_order(): void {
 function catacess(string $name, string $class, string $selected, int $limit): string {
  global $db;
     $gids = explode('|', $selected);
-    $cont = '<select name="'.$name.'[]" multiple="multiple" class="'.$class.'">';
+    $opts = '';
     if ($limit < 1) {
-        $cont .= '<option value="0|0"';
-        $cont .= ($selected == '0|0') ? ' selected' : '';
-        $cont .= '>'._ALL.'</option>';
+        $opts .= getAdminOption('0|0', _ALL, $selected == '0|0');
     }
     if ($limit < 2) {
-        $cont .= '<option value="1|0"';
-        $cont .= ($selected == '1|0') ? ' selected' : '';
-        $cont .= '>'._USERS.'</option>';
+        $opts .= getAdminOption('1|0', _USERS, $selected == '1|0');
         $where  = '';
         $params = [];
     } else {
@@ -714,12 +733,10 @@ function catacess(string $name, string $class, string $selected, int $limit): st
             }
         }
         $title = ($extra) ? _SPEC_GROUP.' "'.$gname.'"' : _GROUP.' "'.$gname.'"';
-        $cont .= '<option value="2|'.$id.'"'.$sel.'>'.$title.'</option>';
+        $opts .= getAdminOption('2|'.$id, $title, $sel !== '');
     }
-    $cont .= '<option value="3|0"';
-    $cont .= ($selected == '3|0') ? ' selected' : '';
-    $cont .= '>'._ADMIN.'</option></select>';
-    return $cont;
+    $opts .= getAdminOption('3|0', _ADMIN, $selected == '3|0');
+    return getAdminSelect($name.'[]', $opts, $class, 'multiple="multiple"');
 }
 
 function scatacess($auth) {
@@ -1038,15 +1055,12 @@ function ashow_files(): void {
 
 # Format comments access
 function com_access(string $name, int $selected, string $extraClass = ''): string {
-    $class = $extraClass ? ' class="'.$extraClass.'"' : '';
-    $cont  = '<select name="'.$name.'"'.$class.'>';
+    $opts  = '';
     $mods  = [_DEACTIVATE, _APOSTMOD, _APOSTNOMOD];
     for ($i = 0; $i < count($mods); $i++) {
-        $sel   = ($selected == $i) ? ' selected' : '';
-        $cont .= '<option value="'.$i.'"'.$sel.'>'.$mods[$i].'</option>';
+        $opts .= getAdminOption((string)$i, $mods[$i], $selected == $i);
     }
-    $cont .= '</select>';
-    return $cont;
+    return getAdminSelect($name, $opts, $extraClass);
 }
 
 # Add voting
@@ -1061,32 +1075,39 @@ function add_voting(string $modul, string $selectName, int $selectedId, string $
     } else {
         $where  = "modul = :modul AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
     }
-    $cont   = '<select name="'.$selectName.'" class="'.$class.'"><option value="0">'._NO.'</option>';
+    $opts   = getAdminOption('0', _NO, false);
     $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_voting WHERE '.$where.' ORDER BY id DESC', $params);
     if ($db->getSqlRowCount($result) > 0) {
         while (list($id, $title) = $db->getSqlRow($result)) {
-            $sel   = ($selectedId == $id) ? ' selected' : '';
-            $cont .= '<option value="'.$id.'"'.$sel.'>'.$title.'</option>';
+            $opts .= getAdminOption((string)$id, $title, $selectedId == $id);
         }
     }
-    $cont .= '</select>';
-    return $cont;
+    return getAdminSelect($selectName, $opts, $class);
 }
 
 # Edit select list
 function edit_list(string $modul, string $name, string $extraClass = ''): string {
+ global $tpl;
     $modul = filterVar($modul);
-    $class = $extraClass ? ' class="'.$extraClass.'"' : '';
-    $cont  = '<select name="'.$name.'" title="'._CHECKOP.'"'.$class.'>';
-    $cont .= '<optgroup label="'._OPMOD.'" class="sl_label">';
-    $mass = [_ACTIVATE => 'a1', _DEACTIVATE => 'a0', _FIXED => 'f1', _LNFIX => 'f0', _LHOME => 'h1', _LNHOME => 'h0', _LADATE => 't', _DELETE => 'd'];
-    foreach ($mass as $var_n => $var_v) $cont .= '<option value="'.$var_v.'">'.$var_n.'</option>';
-    $cont .= '</optgroup><optgroup label="'._COMMENTS.'" class="sl_label">';
-    $coms = [_DEACTIVATE => 'c0', _APOSTMOD => 'c1', _APOSTNOMOD => 'c2'];
-    foreach ($coms as $var_n => $var_v) $cont .= '<option value="'.$var_v.'">'.$var_n.'</option>';
-    $cont .= '</optgroup><optgroup label="'._MOVETO.'" class="sl_label">'.getcat($modul, 0, '', '', '', '1').'</optgroup>';
-    $cont .= '</select>';
-    return $cont;
+    return $tpl->getHtmlFrag('admin-edit-list', [
+        'activate_label' => _ACTIVATE,
+        'apostmod_label' => _APOSTMOD,
+        'apostnomod_label' => _APOSTNOMOD,
+        'categories_html' => getcat($modul, 0, '', '', '', '1'),
+        'checkop_label' => _CHECKOP,
+        'class' => $extraClass,
+        'comments_label' => _COMMENTS,
+        'deactivate_label' => _DEACTIVATE,
+        'delete_label' => _DELETE,
+        'fixed_label' => _FIXED,
+        'ladate_label' => _LADATE,
+        'lhome_label' => _LHOME,
+        'lnfix_label' => _LNFIX,
+        'lnhome_label' => _LNHOME,
+        'moveto_label' => _MOVETO,
+        'name_attr' => $name,
+        'ops_label' => _OPMOD,
+    ]);
 }
 
 # Renders the info/help page for the current admin module
@@ -1137,16 +1158,15 @@ function getAdminInfo(): string {
             $cont .= checkPerms(BASE_DIR.'/'.$dir);
         }
     }
-    $cont .= $tpl->getHtmlFrag('open');
-    $cont .= filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
+    $html = filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
     if ($conf['adminfo']) {
-        $cont .= adminInfoForm([
+        $html .= adminInfoForm([
             'textarea_html' => textarea('1', 'text', $thefile, 'info', '25'),
             'submit_onclick' => "AjaxLoad('POST', '1', 'adm_info', 'go=5&amp;op=adm_info&amp;id=1&amp;type=".$type.'&amp;name='.$name."', { 'text':'"._CERROR1."' }); return false;",
             'submit_label' => _SAVECHANGES,
             'submit_title' => _SAVECHANGES,
         ]);
     }
-    $cont .= $tpl->getHtmlFrag('close');
+    $cont .= getAdminBox($html);
     return $cont;
 }

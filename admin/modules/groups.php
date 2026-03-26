@@ -13,8 +13,8 @@ function groups(): void {
     $cont = setAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th class="{sorter: false}">'._RANK.'</th><th>'._GROUP.'</th><th>'._POINTS.'</th><th>'.cutstr(_USERSCOUNT, 5, 1).'</th><th>'.cutstr(_SPEC, 4, 1).'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th class="{sorter: false}">'._RANK.'</th><th>'._GROUP.'</th><th>'._POINTS.'</th><th>'.cutstr(_USERSCOUNT, 5, 1).'</th><th>'.cutstr(_SPEC, 4, 1).'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
             if (intval($extra)) {
                 $extra = _YES;
@@ -25,17 +25,21 @@ function groups(): void {
                 [$users_num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(*) FROM '.PREFIX_DB.'_users WHERE points >= :points', ['points' => $points]));
                 $userlink = $afile.'.php?op=users_show&amp;search=7&amp;chng_user='.$points;
             }
-            $cont .= '<tr>'
-               .'<td>'.$grid.'</td>'
+            $acts = adminMenuItems([
+                '<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>',
+                '<a href="'.$afile.'.php?name=groups&amp;op=add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=groups&amp;op=delete&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$grid.'</td>'
                .'<td><img src="templates/'.$conf['theme'].'/images/ranks/'.$rank.'" alt="'._RANK.'" title="'._RANK.'"></td>'
                .'<td>'.title_tip(_DESCRIPTION.': '.$description).'<span style="color: '.$color.'">'.$grname.'</span></td>'
                .'<td>'.$points.'</td>'
                .'<td>'.$users_num.'</td>'
                .'<td>'.$extra.'</td>'
-               .'<td>'.add_menu('<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=groups&amp;op=add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=groups&amp;op=delete&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+               .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
-        $cont .= $tpl->getHtmlFrag('close', []);
+        $cont .= getAdminTable($head, $rows);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -66,25 +70,25 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _GROUPSI]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-       .'<tr><td>'._NAME.':</td><td><input type="text" name="grname" value="'.$grname.'" maxlength="255" class="sl_form" placeholder="'._NAME.'" required></td></tr>'
-       .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'">'.$description.'</textarea></td></tr>'
-       .'<tr><td>'._IMG.':</td><td><select name="rank" id="img_replace" class="sl_form">';
+    $hide = '<input type="hidden" name="gid" value="'.$gid.'"><input type="hidden" name="name" value="groups"><input type="hidden" name="op" value="save">';
+    $rows = '';
+    $rows .= getAdminFormRow(_NAME.':', '<input type="text" name="grname" value="'.$grname.'" maxlength="255" class="sl_form" placeholder="'._NAME.'" required>');
+    $rows .= getAdminFormRow(_DESCRIPTION.':', '<textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'">'.$description.'</textarea>');
     $path = 'templates/'.$conf['theme'].'/images/ranks/';
+    $pickopts = '';
     foreach (scandir($path) as $entry) {
         if (preg_match('#(\.gif|\.png|\.jpg|\.jpeg)$#is', $entry)) {
-            $sel = ($rank == $entry) ? ' selected' : '';
-            $cont .= '<option value="'.$path.$entry.'"'.$sel.'>'.$entry.'</option>';
+            $pickopts .= getAdminOption($path.$entry, $entry, $rank == $entry);
         }
     }
-    $cont .= '</select></td></tr>'
-       .'<tr><td>'._RANK.':</td><td><img src="'.$path.$rank.'" id="picture" alt="'._RANK.'"></td></tr>'
-       .'<tr><td>'._COLOR.':</td><td><input type="color" name="color" value="'.$color.'" class="sl_form"></td></tr>'
-       .'<tr><td>'._POINTSNEEDED.':</td><td><input type="number" name="points" value="'.$points.'" class="sl_form" placeholder="'._POINTSNEEDED.'"></td></tr>'
-       .'<tr><td>'._SPEC_GROUP.':<div class="sl_small">'._GRSINFO.'</div></td><td><input type="checkbox" name="grextra" value="1"'.$check.'></td></tr>'
-       .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="gid" value="'.$gid.'"><input type="hidden" name="name" value="groups"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $pick = getAdminSelect('rank', $pickopts, 'sl_form', 'id="img_replace"');
+    $rows .= getAdminFormRow(_IMG.':', $pick);
+    $rows .= getAdminFormRow(_RANK.':', '<img src="'.$path.$rank.'" id="picture" alt="'._RANK.'">');
+    $rows .= getAdminFormRow(_COLOR.':', '<input type="color" name="color" value="'.$color.'" class="sl_form">');
+    $rows .= getAdminFormRow(_POINTSNEEDED.':', '<input type="number" name="points" value="'.$points.'" class="sl_form" placeholder="'._POINTSNEEDED.'">');
+    $rows .= getAdminFormRow(_SPEC_GROUP.':<div class="sl_small">'._GRSINFO.'</div>', '<input type="checkbox" name="grextra" value="1"'.$check.'>');
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -115,23 +119,21 @@ function save(): void {
 }
 
 function points(): void {
-    global $afile, $conf, $tpl;
+    global $afile, $conf;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO], 'tab' => 2]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post">'
-       .'<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._DESCRIPTION.'</th><th class="{sorter: false}">'._POINTS.'</th></tr></thead><tbody>';
     $p = [_POINTS01, _POINTS02, _POINTS03, _POINTS04, _POINTS05, _POINTS06, _POINTS07, _POINTS08, _POINTS09, _POINTS10, _POINTS11, _POINTS12, _POINTS13, _POINTS14, _POINTS15, _POINTS16, _POINTS17, _POINTS18, _POINTS19, _POINTS20, _POINTS21, _POINTS22, _POINTS23, _POINTS24, _POINTS25, _POINTS26, _POINTS27, _POINTS28, _POINTS29, _POINTS30, _POINTS31, _POINTS32, _POINTS33, _POINTS34, _POINTS35, _POINTS36, _POINTS37, _POINTS38, _POINTS39, _POINTS40, _POINTS41, _POINTS42, _POINTS43, _POINTS44, _POINTS45];
     $d = [_DESC01, _DESC02, _DESC03, _DESC04, _DESC05, _DESC06, _DESC07, _DESC08, _DESC09, _DESC10, _DESC11, _DESC12, _DESC13, _DESC14, _DESC15, _DESC16, _DESC17, _DESC18, _DESC19, _DESC20, _DESC21, _DESC22, _DESC23, _DESC24, _DESC25, _DESC26, _DESC27, _DESC28, _DESC29, _DESC30, _DESC31, _DESC32, _DESC33, _DESC34, _DESC35, _DESC36, _DESC37, _DESC38, _DESC39, _DESC40, _DESC41, _DESC42, _DESC43, _DESC44, _DESC45];
-    $points = explode(',', $conf['users']['points']);
+    $pts = explode(',', $conf['users']['points']);
+    $phead = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._DESCRIPTION.'</th><th class="{sorter: false}">'._POINTS.'</th>';
+    $prows = '';
     $count = count($p);
     for ($i = 0; $i < $count; $i++) {
-        $a = $i + 1;
-        $cont .= '<tr><td>'.$a.'</td><td>'.$p[$i].'</td><td>'.$d[$i].'</td><td><input type="number" value="'.$points[$i].'" name="spoints[]" class="sl_field" placeholder="'._POINTS.'" required></td></tr>';
+        $cells = '<td>'.($i + 1).'</td><td>'.$p[$i].'</td><td>'.$d[$i].'</td><td><input type="number" value="'.$pts[$i].'" name="spoints[]" class="sl_field" placeholder="'._POINTS.'" required></td>';
+        $prows .= getAdminTableRow($cells);
     }
-    $cont .= '</tbody></table><table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="groups"><input type="hidden" name="op" value="pointssave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $pointv = getAdminConfSave(getAdminTable($phead, $prows), 'groups', 'pointssave', _SAVE);
+    echo $cont.getAdminBox($pointv);
     setFoot();
 }
 
@@ -166,7 +168,7 @@ function delete(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO], 'tab' => 3]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -179,3 +181,4 @@ switch ($op) {
     case 'pointssave': pointssave(); break;
     case 'info': info(); break;
 }
+

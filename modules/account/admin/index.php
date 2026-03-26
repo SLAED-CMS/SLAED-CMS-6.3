@@ -12,18 +12,12 @@ function account(): void {
     $search = getVar('req', 'search', 'num');
     $chng = getVar('req', 'chng');
     setHead();
-    $_search = getVar('post', 'search');
+    $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
-    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
-        $_sort = $_k + 1;
-        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
-    }
-    $box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
+        'sub'  => getAccountSearchBox($_search, $_chng),
     ]);
     if (getVar('get','send','num')) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
     $where = '1 = 1';
@@ -75,19 +69,24 @@ function account(): void {
     $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
     $res = $db->getSqlQuery($sql,$params);
     if ($db->getSqlRowCount($res) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._EMAIL.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._EMAIL.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->getSqlRow($res)) {
             $sgroup = $gname ? '<span style="color: '.$gcolor.'">'.$gname.'</span>' : _NO;
             $web = $site ? domain($site, 40) : _NO;
-            $cont .= '<tr><td>'.filterTextHighlight($uid, $chng).'</td>'
-                .'<td>'.title_tip(_HASH.': '.md5($agent).'<br>'._LAST_VISIT.': '.format_time($last, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.filterTextHighlight($web,$chng).'<br>'._GENDER.': '.gender($gender).'<br>'._POINTS.': '.$point).filterTextHighlight(user_info($name), $chng).'</td><td>'.filterTextHighlight(user_geo_ip($ip, 4), $chng).'</td><td>'.filterTextHighlight($mail, $chng).'</td><td>'.format_time($reg, _TIMESTRING).'</td><td>'.add_menu('<a href="'.$afile.'.php?name=account&amp;op=add&amp;id='.$uid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>||<a href="'.$afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            $acts = adminMenuItems([
+                '<a href="'.$afile.'.php?name=account&amp;op=add&amp;id='.$uid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip.'" OnClick="return DelCheck(this, \''._BANIPSENDER.' &quot;'.$ip.'&quot;?\');" title="'._BANIPSENDER.'">'._BANIPSENDER.'</a>',
+                '<a href="'.$afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.filterTextHighlight($uid, $chng).'</td>'
+                .'<td>'.title_tip(_HASH.': '.md5($agent).'<br>'._LAST_VISIT.': '.format_time($last, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.filterTextHighlight($web,$chng).'<br>'._GENDER.': '.gender($gender).'<br>'._POINTS.': '.$point).filterTextHighlight(user_info($name), $chng).'</td><td>'.filterTextHighlight(user_geo_ip($ip, 4), $chng).'</td><td>'.filterTextHighlight($mail, $chng).'</td><td>'.format_time($reg, _TIMESTRING).'</td><td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $lsear = $search ? '&amp;search='.$search : '';
         $lchg = $chng ? '&amp;chng='.$chng : '';
         $cont .= setArticleNumbers('pagenum', '', $conf['users']['anum'], 'name=account'.$lsear.$lchg.'&amp;', 'id', '_users', '', $wcnt, $conf['users']['anump'], $pars);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERNOEXIST]);
     }
@@ -149,48 +148,40 @@ function add(): void {
     $field = (string)$field;
     $warn = is_array($warn) ? $warn : [];
     setHead();
-    $_search = getVar('post', 'search');
+    $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
-    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
-        $_sort = $_k + 1;
-        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
-    }
-    $box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
+        'sub'  => getAccountSearchBox($_search, $_chng),
         'tab'  => 1,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._NICKNAME.':</td><td><input type="text" name="uname" value="'.$uname.'" maxlength="25" class="sl_form" placeholder="'._NICKNAME.'" required></td></tr>'
-    .'<tr><td>'._URANK.':</td><td><input type="text" name="rank" value="'.$rank.'" maxlength="25" class="sl_form" placeholder="'._URANK.'"></td></tr>'
-    .'<tr><td>'._EMAIL.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required></td></tr>'
-    .'<tr><td>'._SITEURL.':</td><td><input type="url" name="site" value="'.$site.'" maxlength="255" class="sl_form" placeholder="'._SITEURL.'"></td></tr>';
-    if ($avatar) $cont .= '<tr><td>'._AVATAR.':</td><td><input type="text" name="avatar" value="'.$avatar.'" maxlength="255" class="sl_form" placeholder="'._AVATAR.'"></td></tr>';
-    $cont .= '<tr><td>'._REG.':</td><td>'.datetime(1, 'reg', $reg ?? '', 16, 'sl_form').'</td></tr>'
-    .'<tr><td>'._OCCUPATION.':</td><td><input type="text" name="occ" value="'.$occ.'" maxlength="100" class="sl_form" placeholder="'._OCCUPATION.'"></td></tr>'
-    .'<tr><td>'._LOCATION.':</td><td><input type="text" name="from" value="'.$from.'" maxlength="100" class="sl_form" placeholder="'._LOCATION.'"></td></tr>'
-    .'<tr><td>'._INTERESTS.':</td><td><input type="text" name="inter" value="'.$inter.'" maxlength="150" class="sl_form" placeholder="'._INTERESTS.'"></td></tr>'
-    .'<tr><td>'._SIGNATURE.':<div class="sl_small">'._SIGNATURE_TEXT.'</div></td><td>'.textarea('1', 'sig', $sig, 'account', '5', _SIGNATURE, '').'</td></tr>'
-    .'<tr><td>'._ALLOWUSERS.'</td><td>'.radio_form($view, 'view').'</td></tr>';
+    $rows = getAdminFormRow(_NICKNAME.':', '<input type="text" name="uname" value="'.$uname.'" maxlength="25" class="sl_form" placeholder="'._NICKNAME.'" required>')
+        .getAdminFormRow(_URANK.':', '<input type="text" name="rank" value="'.$rank.'" maxlength="25" class="sl_form" placeholder="'._URANK.'">')
+        .getAdminFormRow(_EMAIL.':', '<input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required>')
+        .getAdminFormRow(_SITEURL.':', '<input type="url" name="site" value="'.$site.'" maxlength="255" class="sl_form" placeholder="'._SITEURL.'">');
+    if ($avatar) $rows .= getAdminFormRow(_AVATAR.':', '<input type="text" name="avatar" value="'.$avatar.'" maxlength="255" class="sl_form" placeholder="'._AVATAR.'">');
+    $rows .= getAdminFormRow(_REG.':', datetime(1, 'reg', $reg ?? '', 16, 'sl_form'))
+        .getAdminFormRow(_OCCUPATION.':', '<input type="text" name="occ" value="'.$occ.'" maxlength="100" class="sl_form" placeholder="'._OCCUPATION.'">')
+        .getAdminFormRow(_LOCATION.':', '<input type="text" name="from" value="'.$from.'" maxlength="100" class="sl_form" placeholder="'._LOCATION.'">')
+        .getAdminFormRow(_INTERESTS.':', '<input type="text" name="inter" value="'.$inter.'" maxlength="150" class="sl_form" placeholder="'._INTERESTS.'">')
+        .getAdminFormRow(_SIGNATURE.':<div class="sl_small">'._SIGNATURE_TEXT.'</div>', textarea('1', 'sig', $sig, 'account', '5', _SIGNATURE, ''))
+        .getAdminFormRow(_ALLOWUSERS, radio_form($view, 'view'));
     if ($conf['users']['news'] == 1) {
-        $cont .= '<tr><td>'._C_12.':</td><td><select name="story" class="sl_form">';
+        $storyopts = '';
         $xusnum = 3;
         while ($xusnum <= 20) {
             $sel = ($xusnum == $story) ? ' selected' : '';
-            $cont .= '<option value="'.$xusnum.'"'.$sel.'>'.$xusnum.'</option>';
+            $storyopts .= '<option value="'.$xusnum.'"'.$sel.'>'.$xusnum.'</option>';
             $xusnum++;
         }
-        $cont .= '</select></td></tr>';
+        $rows .= getAdminFormRow(_C_12.':', '<select name="story" class="sl_form">'.$storyopts.'</select>');
     } else {
-        $cont .= '<input type="hidden" name="story" value="'.$conf['news']['num'].'">';
+        $rows .= '<input type="hidden" name="story" value="'.$conf['news']['num'].'">';
     }
-    $cont .= '<tr><td>'._ACTIVATEPERSONAL.'</td><td>'.radio_form($blockon, 'blockon').'</td></tr>'
-    .'<tr><td>'._MENUCONF.':<div class="sl_small">'._MENUINFO.'</div></td><td>'.textarea('2', 'block', $block, 'account', '5', _MENUCONF, '').'</td></tr>';
+    $rows .= getAdminFormRow(_ACTIVATEPERSONAL, radio_form($blockon, 'blockon'))
+        .getAdminFormRow(_MENUCONF.':<div class="sl_small">'._MENUINFO.'</div>', textarea('2', 'block', $block, 'account', '5', _MENUCONF, ''));
     if ($conf['users']['theme']) {
         $tcategory = '';
         $tcount = 0;
@@ -201,40 +192,41 @@ function add(): void {
                 $tcount++;
             }
         }
-        if ($tcount > 1) $cont .= '<tr><td>'._THEME.':</td><td><select name="theme" class="sl_form">'.$tcategory.'</select></td></tr>';
+        if ($tcount > 1) $rows .= getAdminFormRow(_THEME.':', '<select name="theme" class="sl_form">'.$tcategory.'</select>');
     }
-    $cont .= '<tr><td>'._RNEWSLETTER.':</td><td>'.radio_form($news, 'news').'</td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language($lang).'</select></td></tr>';
-    $cont .= '<tr><td>'._POINTS.':</td><td><input type="number" name="point" value="'.$point.'" class="sl_form" placeholder="'._POINTS.'"></td></tr>'
-    .'<tr><td colspan="2">';
+    $rows .= getAdminFormRow(_RNEWSLETTER.':', radio_form($news, 'news'));
+    if ($conf['multilingual'] == 1) $rows .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language($lang).'</select>');
+    $rows .= getAdminFormRow(_POINTS.':', '<input type="number" name="point" value="'.$point.'" class="sl_form" placeholder="'._POINTS.'">');
+    $warnhtml = '';
     $i = 0;
     while ($i < 5) {
         $a = $i + 1;
         $warnv = empty($warn[$i]) ? '' : $warn[$i];
         $class = (empty($warnv) && $i != 0) ? ' class="sl_none"' : '';
-        $cont .= '<table id="warn'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'warn'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._UWARN.' - '.$a.':</a></td><td><input type="text" name="warn[]" value="'.filterText($warnv).'" class="sl_form" placeholder="'._UWARN.' - '.$a.'"></td></tr></table>';
+        $warnhtml .= '<table id="warn'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'warn'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._UWARN.' - '.$a.':</a></td><td><input type="text" name="warn[]" value="'.filterText($warnv).'" class="sl_form" placeholder="'._UWARN.' - '.$a.'"></td></tr></table>';
         $i++;
     }
-    $cont .= '</td></tr>'
-    .'<tr><td>'._UACESS.'</td><td>'.radio_form($access, 'access').'</td></tr>'
-    .'<tr><td>'._SPEC_GROUP.':</td><td><select name="group" class="sl_form">'
-    .'<option value="0">'._NO.'</option>';
+    $rows .= getAdminFormWide($warnhtml)
+        .getAdminFormRow(_UACESS, radio_form($access, 'access'));
+    $grpopts = '<option value="0">'._NO.'</option>';
     $result = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
     while ([$grid, $grname] = $db->getSqlRow($result)) {
         $sel = ($grid == $group) ? ' selected' : '';
-        $cont .= '<option value="'.$grid.'"'.$sel.'>'.$grname.'</option>';
+        $grpopts .= '<option value="'.$grid.'"'.$sel.'>'.$grname.'</option>';
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._BIRTHDAY.':</td><td>'.datetime(2, 'birth', $birth, 10, 'sl_form').'</td></tr>'
-    .'<tr><td>'._GENDER.':</td><td>'.get_gender('gender', $gender, 'sl_form').'</td></tr>';
+    $gender = intval($gender ?? 0);
+    $rows .= getAdminFormRow(_SPEC_GROUP.':', '<select name="group" class="sl_form">'.$grpopts.'</select>')
+        .getAdminFormRow(_BIRTHDAY.':', datetime(2, 'birth', $birth, 10, 'sl_form'))
+        .getAdminFormRow(_GENDER.':', get_gender('gender', $gender, 'sl_form'));
     $check = (getVar('cookie', 'sl_close_9', 'num') == 0) ? '' : ' checked';
-    $cont .= fields_in($field, 'account')
-    .'<tr><td>'._PASSWORD.':</td><td><input type="password" name="pass" value="" maxlength="25" class="sl_form" placeholder="'._PASSWORD.'"></td></tr>'
-    .'<tr><td>'._RETYPEPASSWORD.':</td><td><input type="password" name="pass2" value="" maxlength="25" class="sl_form" placeholder="'._RETYPEPASSWORD.'"></td></tr>'
-    .'<tr><td>'._MAIL_SENDE.'</td><td><input type="checkbox" name="mail" value="1" OnClick="CloseOpen(\'sl_close_9\', 0);"'.$check.'></td></tr>'
-    .'<tr><td colspan="2"><div id="sl_close_9"><table class="sl_table_form"><tr><td>'._MAIL_TEXT.':<div class="sl_small">'._MAIL_PASS_INFO.'</div></td><td class="sl_form">'.textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, '').'</td></tr></table></div></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $mailblock = '<div id="sl_close_9">'.getAdminForm('', getAdminFormRow(_MAIL_TEXT.':<div class="sl_small">'._MAIL_PASS_INFO.'</div>', textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''), 'sl_form')).'</div>';
+    $rows .= fields_in($field, 'account')
+        .getAdminFormRow(_PASSWORD.':', '<input type="password" name="pass" value="" maxlength="25" class="sl_form" placeholder="'._PASSWORD.'">')
+        .getAdminFormRow(_RETYPEPASSWORD.':', '<input type="password" name="pass2" value="" maxlength="25" class="sl_form" placeholder="'._RETYPEPASSWORD.'">')
+        .getAdminFormRow(_MAIL_SENDE, '<input type="checkbox" name="mail" value="1" OnClick="CloseOpen(\'sl_close_9\', 0);"'.$check.'>')
+        .getAdminFormWide($mailblock)
+        .getAdminFormWide('<input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, '', 'sl_table_form', 'post', 'post'));
     echo $cont;
     setFoot();
 }
@@ -320,37 +312,35 @@ function addsave(): void {
 function newuser(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $_search = getVar('post', 'search');
+    $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
-    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
-        $_sort = $_k + 1;
-        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
-    }
-    $box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
+        'sub'  => getAccountSearchBox($_search, $_chng),
         'tab'  => 2,
     ]);
     $num = getVar('get', 'num', 'num', '1');
     $offset = ($num - 1) * $conf['users']['anum'];
     $result = $db->getSqlQuery('SELECT id, name, email, password, regdate, code FROM '.PREFIX_DB.'_users_temp LIMIT :offset, :limit', ['offset' => $offset, 'limit' => $conf['users']['anum']]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._EMAIL.'</th><th>'._PASSWORD.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._EMAIL.'</th><th>'._PASSWORD.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$uid, $name, $mail, $pass, $reg, $check] = $db->getSqlRow($result)) {
-            $cont .= '<tr><td>'.$uid.'</td>'
+            $acts = adminMenuItems([
+                ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check, 0),
+                '<a href="'.$afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$uid.'</td>'
             .'<td>'.$name.'</td>'
             .'<td>'.$mail.'</td>'
             .'<td>'.$pass.'</td>'
             .'<td>'.$reg.'</td>'
-            .'<td>'.add_menu(ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check, 0).'||<a href="'.$afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', (int)$conf['users']['anum'], 'name=account&amp;op=newuser&amp;', 'id', '_users_temp', '', '', (int)$conf['users']['anump'], []);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -361,28 +351,21 @@ function newuser(): void {
 function pointreset(): void {
     global $afile, $tpl;
     setHead();
-    $_search = getVar('post', 'search');
+    $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
-    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
-        $_sort = $_k + 1;
-        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
-    }
-    $box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
+        'sub'  => getAccountSearchBox($_search, $_chng),
         'tab'  => 3,
     ]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._POINTS.':</td><td>'.radio_form(0, 'points').'</td></tr>'
-    .'<tr><td>'._RATINGS.':</td><td>'.radio_form(0, 'votes').'</td></tr>'
-    .'<tr><td>'._UWARNS.':</td><td>'.radio_form(0, 'warnings').'</td></tr>'
-    .'<tr><td>'._SIGNATURE.':</td><td>'.radio_form(0, 'sig').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="resave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows = getAdminFormRow(_POINTS.':', radio_form(0, 'points'))
+        .getAdminFormRow(_RATINGS.':', radio_form(0, 'votes'))
+        .getAdminFormRow(_UWARNS.':', radio_form(0, 'warnings'))
+        .getAdminFormRow(_SIGNATURE.':', radio_form(0, 'sig'))
+        .getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $hide = '<input type="hidden" name="name" value="account"><input type="hidden" name="op" value="resave">';
+    $cont .= getAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
     echo $cont;
     setFoot();
 }
@@ -403,18 +386,12 @@ function resave(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $_search = getVar('post', 'search');
+    $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
-    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
-        $_sort = $_k + 1;
-        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
-    }
-    $box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
+        'sub'  => getAccountSearchBox($_search, $_chng),
         'tab'  => 4,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/users.php');
@@ -429,8 +406,7 @@ function config(): void {
         .'<option value="0"'.($conf['users']['enter'] == '0' ? ' selected' : '').'>'._LOGINL.'</option>'
         .'<option value="1"'.($conf['users']['enter'] == '1' ? ' selected' : '').'>'._LOGINF.'</option>'
         .'</select>';
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'account',
         'op' => 'save',
@@ -486,8 +462,7 @@ function config(): void {
         '_mail_block' => _MAIL_BLOCK,
         'mail_b' => $conf['users']['mail_b'],
         'account' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -547,21 +522,15 @@ function delete(): void {
 function info(): void {
     global $afile, $tpl;
     setHead();
-    $_search = getVar('post', 'search');
+    $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $box = '<form method="post" action="'.$afile.'.php">'._SEARCH.': <select name="search">';
-    foreach ([_ID, _NICKNAME, _EMAIL, _IP, _URL] as $_k => $_v) {
-        $_sort = $_k + 1;
-        $box .= '<option value="'.$_sort.'"'.($_search == $_sort || (!$_search && $_sort == 2) ? ' selected' : '').'>'.$_v.'</option>';
-    }
-    $box .= '</select> '.get_user_search('chng', $_chng, '30').' <input type="hidden" name="name" value="account"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => $tpl->getHtmlPart('searchbox', ['searchbox' => $box]),
+        'sub'  => getAccountSearchBox($_search, $_chng),
         'tab'  => 5,
     ]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -578,3 +547,5 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+
+

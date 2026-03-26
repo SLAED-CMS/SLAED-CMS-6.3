@@ -25,16 +25,14 @@ function ratings(): void {
            .'<tr><td>'._C_22.'</td><td>'.radio_form($con[2], $i.'view').'</td></tr>';
         $i++;
     }
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'ratings',
         'op' => 'save',
         'save' => _SAVECHANGES,
         'fields' => $content,
     ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -58,7 +56,7 @@ function save(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=ratings', 'name=ratings&amp;op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -67,3 +65,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+

@@ -1,0 +1,13 @@
+<tr><td>{{ nickname_label }}:</td><td>{{{ nickname_html }}}</td></tr>
+<tr><td>{{ rank_label }}:</td><td><input type="text" name="title" value="{{ rank_value }}" maxlength="50" class="sl_form" placeholder="{{ rank_label }}"></td></tr>
+<tr><td>{{ email_label }}:</td><td><input type="email" name="email" value="{{ email_value }}" maxlength="255" class="sl_form" placeholder="{{ email_label }}" required></td></tr>
+<tr><td>{{ url_label }}:</td><td><input type="url" name="url" value="{{ url_value }}" maxlength="255" class="sl_form" placeholder="{{ url_label }}"></td></tr>
+<tr><td>{{ password_label }}:{{{ password_hint_html }}}</td><td><input type="password" name="pwd" value="" maxlength="25" class="sl_form" placeholder="{{ password_label }}"{% if password_need %} required{% endif %}></td></tr>
+<tr><td>{{ retype_label }}:</td><td><input type="password" name="pwdtwo" value="" maxlength="25" class="sl_form" placeholder="{{ retype_label }}"{% if password_need %} required{% endif %}></td></tr>
+<tr><td>{{ smail_label }}</td><td>{{{ smail_html }}}</td></tr>
+<tr><td>{{ mail_send_label }}</td><td><input type="checkbox" name="mail" value="1" OnClick="CloseOpen('sl_close_9', 0);"{% if mail_checked %} checked{% endif %}></td></tr>
+<tr><td colspan="2">{{{ mail_panel_html }}}</td></tr>
+<tr><td>{{ editor_label }}:</td><td>{{{ editor_html }}}</td></tr>
+{% if has_lang %}<tr><td>{{ language_label }}:</td><td>{{{ lang_html }}}</td></tr>{% endif %}
+<tr><td>{{ permissions_label }}:</td><td>{{{ permissions_html }}}</td></tr>
+<tr><td colspan="2" class="sl_center"><input type="submit" value="{{ submit_label }}" class="sl_but_blue"></td></tr>

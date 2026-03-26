@@ -26,8 +26,8 @@ function jokes(): void {
     }
     $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.ip, c.title, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.status = :status ORDER BY j.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$jokeid, $uname, $date, $title, $cat, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cat) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
@@ -39,15 +39,20 @@ function jokes(): void {
                 $view = '';
                 $active = '0';
             }
-            $cont .= '<tr><td>'.$jokeid.'</td>'
+            $acts = adminMenuItems([
+                rtrim($view, '|'),
+                '<a href="'.$afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=jokes&amp;op=delete&amp;id='.$jokeid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$jokeid.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=jokes&amp;op=delete&amp;id='.$jokeid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_jokes', '', 'status = \''.$status.'\'', $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -75,15 +80,14 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($joke)) $cont .= preview($title, $joke, '', '', 'all');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
-    .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
-    .'<tr><td>'._CATEGORY.':</td><td>'.getcat('jokes', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-    .'<tr><td>'._JOKE.':</td><td>'.textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1').'</td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="jokes">'.ad_save('jokeid', $jokeid, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows = '';
+    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
+    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
+    $rows .= getAdminFormRow(_CATEGORY.':', getcat('jokes', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
+    $rows .= getAdminFormRow(_JOKE.':', textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1'));
+    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
+    $rows .= getAdminFormWide('<input type="hidden" name="name" value="jokes">'.ad_save('jokeid', $jokeid, 'save'), '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows);
     echo $cont;
     setFoot();
 }
@@ -134,8 +138,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/jokes.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'jokes',
         'op' => 'configsave',
@@ -168,8 +171,7 @@ function config(): void {
         '_c19' => _C_19,
         'r_rate' => radio_form($conf['jokes']['rate'] ?? 0, 'rate'),
         'jokes' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -198,7 +200,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -211,7 +213,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 
 
 

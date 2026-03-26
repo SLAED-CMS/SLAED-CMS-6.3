@@ -25,7 +25,7 @@ function getRefererSearch(): string {
         $search .= '<option value="'.$idx.'"'.$sel.'>'.$value.'</option>';
     }
     $search .= '</select> <input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="referers"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $search]);
+    return getAdminSearchBox($search);
 }
 
 function referers(): void {
@@ -49,30 +49,29 @@ function referers(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'sub' => getRefererSearch()]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
         $a = 0;
         $massiv = [];
         while ([$hits, $uid, $name, $ip, $referer, $url, $date] = $db->getSqlRow($result)) {
             $massiv[] = [$hits, $uid, $name, $ip, $referer, $url, $date];
             $a++;
         }
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._IP.'</th><th>'._HITS.'</th><th>'._REFERERS.'</th><th>'._SWORD.'</th><th class="{sorter: false}">'._ID.'</th></tr></thead><tbody>';
+        $head = '<th>'._IP.'</th><th>'._HITS.'</th><th>'._REFERERS.'</th><th>'._SWORD.'</th><th class="{sorter: false}">'._ID.'</th>';
+        $rows = '';
         for ($i = $offset; $i < $tnum; $i++) {
             if (isset($massiv[$i]) && $massiv[$i] != '') {
                 $name = ($massiv[$i][1]) ? user_info($massiv[$i][2]) : $massiv[$i][2];
                 $words = engines_word($massiv[$i][4]) ?: _NO;
-                $cont .= '<tr>'
-                   .'<td>'.title_tip(_NICKNAME.': '.$name.'<br>'._DATE.': '.format_time($massiv[$i][6], _TIMESTRING)).$massiv[$i][3].'</td>'
+                $cols = '<td>'.title_tip(_NICKNAME.': '.$name.'<br>'._DATE.': '.format_time($massiv[$i][6], _TIMESTRING)).$massiv[$i][3].'</td>'
                    .'<td>'.domain($massiv[$i][5], 30).'</td>'
                    .'<td>'.domain($massiv[$i][4], 30).'</td>'
                    .'<td><span title="'.$words.'" class="sl_note">'.cutstr($words, 25).'</span></td>'
-                   .'<td>'.$massiv[$i][0].'</td></tr>';
+                   .'<td>'.$massiv[$i][0].'</td>';
+                $rows .= getAdminTableRow($cols);
             }
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $numpages = ceil($a / $conf['referers']['anum']);
         $cont .= setPageNumbers('pagenum', '', $a, $numpages, $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump']);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -85,8 +84,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'referers',
         'op' => 'save',
@@ -104,8 +102,7 @@ function config(): void {
         'r_referb' => radio_form($conf['referers']['referb'], 'referb'),
         'referers' => true,
     ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -131,7 +128,7 @@ function delete(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 3, 'sub' => getRefererSearch()]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -142,3 +139,5 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
+
+

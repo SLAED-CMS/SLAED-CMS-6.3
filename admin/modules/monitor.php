@@ -629,8 +629,8 @@ function getCpuDetails(): array {
 
 # Formats boolean status into colored HTML badges used by monitor status indicators
 function getStatusHtml(?bool $state): string {
-    if ($state === null) return '<span style="color:#9ca3af">N/A</span>';
-    return $state ? '<span style="color:#21c45d">On</span>' : '<span style="color:#ef4444">Off</span>';
+    if ($state === null) return '<span class="sl_muted">N/A</span>';
+    return adminFlagBox($state, 'On', 'Off');
 }
 
 # Queries database runtime health metrics and returns normalized diagnostics for monitor output
@@ -1118,7 +1118,7 @@ function getMonitorServerStats(): array {
     $srvport = getServerValue('SERVER_PORT', 'N/A');
     $https = strtolower(getServerValue('HTTPS', ''));
     $ishttps = ($https === 'on' || $https === '1') || ((int)$srvport === 443);
-    $srvhttps = $ishttps ? '<span style="color:#21c45d">enabled</span>' : '<span style="color:#ef4444">disabled</span>';
+    $srvhttps = adminFlagBox($ishttps, 'enabled', 'disabled');
     $loaded = get_loaded_extensions();
     $ext_dir = ini_get('extension_dir');
     $off = [];
@@ -1209,9 +1209,8 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
     $reqtime = (float)getServerValue('REQUEST_TIME_FLOAT', '0');
     if ($reqtime <= 0) $reqtime = microtime(true);
     $extras = getMonitorRuntimeExtras();
-    $diskwarn = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10)
-        ? '<span style="color:#ef4444">Low free space</span>'
-        : '<span style="color:#21c45d">Normal</span>';
+    $islowdisk = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10);
+    $diskwarn = adminFlagBox(!$islowdisk, 'Normal', 'Low free space');
     return [
         'diskio' => getDiskIoMetrics(),
         'disktotal' => $disktot,
@@ -1377,7 +1376,7 @@ function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot
     $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
     $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
     $navi = setAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO]]);
-    echo $navi.$tpl->getHtmlFrag('open', []).$tpl->getHtmlFrag('basic-monitor', $vars).$tpl->getHtmlFrag('close', []);
+    echo $navi.getAdminBox($tpl->getHtmlFrag('basic-monitor', $vars));
 }
 
 # Renders the main monitor page including navigation, panels, and full dashboard layout
@@ -1392,7 +1391,7 @@ function monitor(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -1423,3 +1422,4 @@ switch ($op) {
     case 'status': status(); break;
     case 'sync': sync(); break;
 }
+

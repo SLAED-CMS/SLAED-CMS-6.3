@@ -32,11 +32,11 @@ function lang(): void {
 
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+    $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+    $rows = '';
     $sys_admin = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
     $sys_modul = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit" title="'._FULLEDIT.'">'._MODUL.'</a>';
-    $cont .= '<tr><td>1</td><td>'._SYSTEM.'</td><td>'._ALL.'</td><td>'._MVALL.'</td><td>'.ad_status('', 1).'</td><td>'.add_menu($sys_admin.'||'.$sys_modul).'</td></tr>';
+    $rows .= getAdminTableRow('<td>1</td><td>'._SYSTEM.'</td><td>'._ALL.'</td><td>'._MVALL.'</td><td>'.ad_status('', 1).'</td><td>'.adminMenuItems([$sys_admin, $sys_modul]).'</td>');
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
     foreach ($files as $file) {
@@ -48,7 +48,6 @@ function lang(): void {
         $a = $i + 2;
         $act = isset($modbase[$mod[$i]]) && $modbase[$mod[$i]] ? 1 : 0;
         $view = $who_view[$mod[$i]] ?? _MVALL;
-        $cont .= '<tr><td>'.$a.'</td><td>'.getModuleName($mod[$i]).'</td><td>'.$mod[$i].'</td><td>'.$view.'</td><td>'.ad_status('', $act).'</td>';
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $eadmin = '';
         $emodul = '';
@@ -57,10 +56,12 @@ function lang(): void {
             $sep = $eadmin ? '||' : '';
             $emodul = $sep.'<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
         }
-        $cont .= '<td>'.add_menu($eadmin.$emodul).'</td></tr>';
+        $acts = [];
+        if ($eadmin !== '') $acts[] = $eadmin;
+        if ($emodul !== '') $acts[] = ltrim($emodul, '|');
+        $rows .= getAdminTableRow('<td>'.$a.'</td><td>'.getModuleName($mod[$i]).'</td><td>'.$mod[$i].'</td><td>'.$view.'</td><td>'.ad_status('', $act).'</td><td>'.adminMenuItems($acts).'</td>');
     }
-    $cont .= '</tbody></table>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $cont .= getAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -76,6 +77,11 @@ function fileedit(): void {
     $lng_cn = [];
     $cnst_arr = [];
     $lang_path = getLangPath($mod, $typ);
+    if (!is_dir($lang_path)) {
+        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _NO_INFO]);
+        setFoot();
+        return;
+    }
     foreach (scandir($lang_path) as $file) {
         if (preg_match('#^(.+)\.php#', $file, $matches)) $lng_cn[] = $matches[1];
     }
@@ -108,44 +114,43 @@ function fileedit(): void {
     $total_pages = max(1, (int)ceil($total / $per_page));
     $page = max(1, min($page, $total_pages));
     $offset = ($page - 1) * $per_page;
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
+    $hide = '';
+    $cj = count($lng_cn);
+    for ($j = 0; $j < $cj; $j++) $hide .= '<input type="hidden" name="lcn[]" value="'.$lng_cn[$j].'">';
+    $hide .= '<input type="hidden" name="typ" value="'.$typ.'">';
+    $hide .= '<input type="hidden" name="mod" value="'.$mod.'">';
+    $hide .= '<input type="hidden" name="page" value="'.$page.'">';
+    $hide .= '<input type="hidden" name="name" value="lang">';
+    $hide .= '<input type="hidden" name="op" value="save">';
+    $hide .= '<input type="hidden" name="refer" value="1">';
+    $rows = '';
     $ci = min($per_page, $total - $offset);
     for ($i = 0; $i < $ci; $i++) {
         $idx = $offset + $i;
         $n = $idx + 1;
-        $hr = ($i == '0') ? '' : '<tr><td colspan="3"><hr></td></tr>';
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
-        $cont .= $hr.'<tr id="'.$n.'"><td>'._CONST.':</td><td><input type="text" name="cnst[]" value="'.$valc.'" class="sl_form" placeholder="'._CONST.'"></td><td><a href="#'.$n.'" title="'._ID.': '.$n.'" class="sl_pnum">'.$n.'</a></td></tr>';
+        if ($i !== 0) $rows .= getAdminFormWide('<hr>');
+        $rows .= getAdminFormRow(_CONST.':', '<input type="text" name="cnst[]" value="'.$valc.'" class="sl_form" placeholder="'._CONST.'"> <a href="#'.$n.'" title="'._ID.': '.$n.'" class="sl_pnum">'.$n.'</a>', 'id="'.$n.'"');
         $cj = count($lng_cn);
         for ($j = 0; $j < $cj; $j++) {
             $val = ($valc) ? trim(str_replace('\"', '&quot;', $lng_arr[$lng_cn[$j]][$cnst_arr[$idx]])) : '';
             if ($lng_cn[$j] == $conf['lang']['lang']) {
                 $class = 'from_'.$i;
-                $button = '';
+                $btn = '';
             } else {
                 $class = 'to_'.$i.'-'.$j;
                 $floc = substr($conf['lang']['lang'], 0, 2);
                 $tloc = substr($lng_cn[$j], 0, 2);
-                $button = '<input type="button" OnClick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');" value="'._OK.'" title="'._EAUTOTR.'" class="sl_but_blue">';
+                $btn = '<input type="button" OnClick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');" value="'._OK.'" title="'._EAUTOTR.'" class="sl_but_blue">';
             }
-            $cont .= '<tr><td>'.getLangName($lng_cn[$j]).':</td><td><input type="text" name="lng['.$lng_cn[$j].'][]" value="'.$val.'" class="sl_form '.$class.'" placeholder="'.getLangName($lng_cn[$j]).'"></td><td>'.$button.'</td></tr>';
+            $rows .= getAdminFormRow(getLangName($lng_cn[$j]).':', '<input type="text" name="lng['.$lng_cn[$j].'][]" value="'.$val.'" class="sl_form '.$class.'" placeholder="'.getLangName($lng_cn[$j]).'">'.$btn);
         }
     }
-    $cont .= '<tr><td colspan="3" class="sl_center">';
-    $cj = count($lng_cn);
-    for ($j = 0; $j < $cj; $j++) $cont .= '<input type="hidden" name="lcn[]" value="'.$lng_cn[$j].'">';
-    $cont .= '<input type="hidden" name="typ" value="'.$typ.'">';
-    $cont .= '<input type="hidden" name="mod" value="'.$mod.'">';
-    $cont .= '<input type="hidden" name="page" value="'.$page.'">';
-    $cont .= '<input type="hidden" name="name" value="lang">';
-    $cont .= '<input type="hidden" name="op" value="save">';
-    $cont .= '<input type="hidden" name="refer" value="1">';
-    $cont .= '<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $box = getAdminForm($afile.'.php', $rows, $hide);
     $url = 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
-    $cont .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $box .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');
+    echo $cont.getAdminBox($box);
     setFoot();
 }
 
@@ -201,8 +206,7 @@ function config(): void {
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = '<select name="lang" class="sl_conf">'.language($conf['lang']['lang'], 1).'</select>';
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'lang',
         'op' => 'configsave',
@@ -217,8 +221,7 @@ function config(): void {
         'per_page' => $conf['lang']['per_page'] ?? 100,
         'lang' => true,
     ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -237,7 +240,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -249,3 +252,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
+

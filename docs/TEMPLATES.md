@@ -5,19 +5,7 @@ This document describes the current template reality in the repository.
 ## Current State
 The repository contains two template layers:
 
-### 1. Legacy Template Layer
-File:
-- `core/template.php`
-
-Role:
-- legacy placeholder-based rendering
-- still used by large parts of the project
-
-Status:
-- legacy-only
-- not the target for new template architecture work
-
-### 2. Final Template Runtime
+### Template Runtime
 File:
 - `core/classes/template.php`
 
@@ -39,7 +27,6 @@ Created in:
 Current theme directories:
 - `templates/admin`
 - `templates/default`
-- `templates/default_old`
 - `templates/lite`
 - `templates/simple`
 

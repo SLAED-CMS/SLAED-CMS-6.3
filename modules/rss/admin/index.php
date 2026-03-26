@@ -29,15 +29,14 @@ function rss(): void {
         $out2 = $out[2] ?? '';
         
         $content .= '<div id="rss'.$c.'"'.$display.'>'.$hr
-        .'<table class="sl_table_conf">'
-        .'<tr><td><a OnClick="HideShow(\'rss'.$b.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._RSSC.': '.$b.'</a></td><td>'
-        .'<table><tr><td>'._NAME.':</td><td><input type="text" name="field1[]" value="'.$out1.'" class="sl_conf" placeholder="'._NAME.'" required></td></tr>'
-        .'<tr><td>'._ADDRESS.':</td><td><input type="text" name="field2[]" value="'.$out2.'" class="sl_conf" placeholder="'._ADDRESS.'"></td></tr>'
-        .'<tr><td>'._USES.':</td><td>'.$field.'</td></tr></table>'
-        .'</td></tr></table></div>';
+            .'<table class="sl_table_conf">'
+            .'<tr><td><a OnClick="HideShow(\'rss'.$b.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._RSSC.': '.$b.'</a></td><td>'
+            .'<table><tr><td>'._NAME.':</td><td><input type="text" name="field1[]" value="'.$out1.'" class="sl_conf" placeholder="'._NAME.'" required></td></tr>'
+            .'<tr><td>'._ADDRESS.':</td><td><input type="text" name="field2[]" value="'.$out2.'" class="sl_conf" placeholder="'._ADDRESS.'"></td></tr>'
+            .'<tr><td>'._USES.':</td><td>'.$field.'</td></tr></table>'
+            .'</td></tr></table></div>';
     }
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC]);
-    $cont .= $tpl->getHtmlFrag('open', []);
     $cont .= '<form action="'.$afile.'.php?name=rss" method="post">'
     .'<input type="hidden" name="op" value="save">'
     .'<div id="tabc0" class="tabcont">'.$content.'</div>'
@@ -55,8 +54,7 @@ function rss(): void {
         countries.setselectedClassTarget("link")
         countries.init()
     </script>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo getAdminBox($cont);
     setFoot();
 }
 
@@ -84,7 +82,7 @@ function save(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=rss', 'name=rss', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'tab' => 2]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 

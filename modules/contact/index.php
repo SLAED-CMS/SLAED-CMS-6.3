@@ -84,7 +84,7 @@ function contact(): void {
             $msg = $conf['sitename'].' - '._FEEDBACK.'<br><br>'._SENDERNAME.': '.$sname.'<br>'._SENDEREMAIL.': '.$semail.'<br><br>'._MESSAGE.': '.$message;
             addMail($to, $semail, $subject, $msg, 1, 1);
             update_points(5);
-            $meta = '<meta http-equiv="refresh" content="5; url=index.php">';
+            $meta = getMetaRefresh('index.php', 5);
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _FBMAILSENT, 'meta' => $meta]);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);

@@ -79,7 +79,7 @@ function jokes(): void {
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $rating = ajax_rating(1, $id, $conf['name'], $ratingtot, $rating, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$jtitle.'&quot;?');
-            $cont .= $tpl->getHtmlFrag('basic', [
+            $cont .= getContentCard([
                 'id' => $id,
                 'title_href' => '#'.$id,
                 'title_attr' => $jtitle,
@@ -184,7 +184,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['jokes']['addmail'], $conf['name'], $puname, _JOKES);
             setHead(['title' => _JOKES.' '._ADD, 'desc' => _UPLOADFINISHJ]);
-            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD] + JOKES_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHJ, 'meta' => $meta]);
             setFoot();
         } else {

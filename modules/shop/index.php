@@ -328,7 +328,7 @@ function kasse(): void {
 			$cont .= $form;
 		}
 	} else {
-		$meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+		$meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
 		$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop, 'meta' => $meta]);
 	}
 	echo $cont;

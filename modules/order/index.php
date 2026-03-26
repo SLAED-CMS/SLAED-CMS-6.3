@@ -24,11 +24,17 @@ function order(): void {
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-        $cont .= '<h2>'._OR_1.'</h2><form name="post" action="index.php?name='.$conf['name'].'" method="post"><table class="sl_table_form">'
-        .'<tr><td>'._OR_2.':</td><td><input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._OR_2.'" required></td></tr>'
-        .fields_in($field, $conf['name'])
-        .'<tr><td>'._OR_3.':</td><td><textarea name="note" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$note.'</textarea></td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="hidden" name="op" value="send"><input type="submit" value="'._OR_4.'" class="sl_but_blue"></td></tr></table></form>';
+        $rows = getFormAddRow(_OR_2.':', '<input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._OR_2.'" required>');
+        $rows .= fields_in($field, $conf['name']);
+        $rows .= getFormAddRow(_OR_3.':', textarea('1', 'note', $note, $conf['name'], 5, _OR_3));
+        $cont .= '<h2>'._OR_1.'</h2>'.$tpl->getHtmlFrag('form-add', [
+            'captcha' => getCaptcha(1),
+            'extrafields' => $rows,
+            'name' => $conf['name'],
+            'style' => $conf['style'],
+            'submit' => getFormSubmit('send', _OR_4),
+            'token' => '',
+        ]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_11]);
     }
@@ -64,7 +70,7 @@ function send(): void {
             }
             update_points(34);
             setHead(['title' => _ORDER]);
-            $meta = '<meta http-equiv="refresh" content="30; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name'], 30);
             echo $tpl->getHtmlFrag('title', ['title' => _ORDER]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['order']['info'], 'all', false), 'all'), 'meta' => $meta]);
             setFoot();
         } else {

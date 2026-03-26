@@ -35,16 +35,14 @@ function replace(): void {
             $k++;
         }
     }
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="replace"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
+    $repv = getAdminConfSave($content, 'replace', 'save')
     .'<script>
         var countries=new ddtabcontent("replace")
         countries.setpersist(true)
         countries.setselectedClassTarget("link")
         countries.init()
     </script>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($repv);
     setFoot();
 }
 
@@ -71,7 +69,7 @@ function save(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=replace', 'name=replace', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'tab' => 2]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -80,3 +78,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+

@@ -12,7 +12,7 @@ function modules(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = $tpl->getHtmlPart('searchbox', ['searchbox' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
+    $search = getAdminSearchBox('<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>');
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
     if (isset($infos)) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $infos]);
@@ -20,8 +20,7 @@ function modules(): void {
     $modlist = [];
     $new = [];
     $removed = [];
-    $handle = opendir('admin/modules');
-    while (false !== ($file = readdir($handle))) {
+    foreach (scandir('admin/modules') as $file) {
         if (preg_match('/^([a-z_]+)\.php$/i', $file, $matches)) {
             $module = $matches[1];
             $modlist[] = $module;
@@ -42,10 +41,8 @@ function modules(): void {
             }
         }
     }
-    closedir($handle);
-    $handle = opendir('modules');
-    while (false !== ($file = readdir($handle))) {
-        if (!preg_match("/\./", $file) && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) {
+    foreach (scandir('modules') as $file) {
+        if ($file !== '.' && $file !== '..' && (file_exists('modules/'.$file.'/index.php') || file_exists('modules/'.$file.'/admin/index.php'))) {
             $modlist[] = $file;
             if (!isset($conf['modules'][$file])) {
                 $conf['modules'][$file] = [
@@ -64,7 +61,6 @@ function modules(): void {
             }
         }
     }
-    closedir($handle);
     $duplicates = array_diff_assoc($modlist, array_unique($modlist));
     if (!empty($duplicates)) {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _MODULES_DUPLICATE.': '.implode(', ', array_unique($duplicates))]);
@@ -100,8 +96,8 @@ function modules(): void {
         if ($ta === $tb) return strnatcasecmp($a, $b);
         return $ta <=> $tb;
     });
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+    $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+    $rows = '';
     $a = 1;
     foreach ($mods as $title => $mod) {
         $lang = (defined($mod['lang']) ? constant($mod['lang']) : $mod['lang']);
@@ -155,28 +151,18 @@ function modules(): void {
             $dbu = '';
             $sqluimg = '';
         }
-        $cont .= '<tr><td>'.$a.'</td><td><i class="bi bi-'.$typel.'"></i> '.$titlel.'</td><td>'.$title.'</td><td>'.$who_view.'</td><td>'.$group_name.'</td><td>'.$dbc.$dbu.'  
-        
-        
-        
-        <!-- <i class="bi bi-database" style="font-size:14px; color:#dc3545"></i>
-        <i class="bi bi-exclamation-triangle" style="font-size:14px; color:#dc3545"></i>
-        
-        <i class="bi bi-person-fill-check" style="font-size:18px; color:#dc3545"></i>
-
-        <i class="bi bi-exclamation-square-fill" style="font-size:16px; color:#dc3545"></i>
-        <i class="bi bi-info-square-fill" style="font-size:16px; color:green"></i>
-
-        
-        
-        '.ad_status('', $active).'-->
-        
-        </td><td>'.add_menu(ad_status($afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active).'||<a href="'.$afile.'.php?name=modules&amp;op=edit&amp;mod='.$title.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'.$sqlimg.$sqluimg).'</td></tr>';
+        $acts = adminMenuItems([
+            ad_status($afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active),
+            '<a href="'.$afile.'.php?name=modules&amp;op=edit&amp;mod='.$title.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+            ltrim($sqlimg, '|'),
+            ltrim($sqluimg, '|'),
+        ]);
+        $cols = '<td>'.$a.'</td><td><i class="bi bi-'.$typel.'"></i> '.$titlel.'</td><td>'.$title.'</td><td>'.$who_view.'</td><td>'.$group_name.'</td><td>'.$dbc.$dbu.'</td><td>'.$acts.'</td>';
+        $rows .= getAdminTableRow($cols);
         $a++;
     }
 
-    $cont .= '</tbody></table>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $cont .= getAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -196,68 +182,57 @@ function edit(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = $tpl->getHtmlPart('searchbox', ['searchbox' => '<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>']);
+    $search = getAdminSearchBox('<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>');
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_conf">'
-    .'<tr><td>'._LANGUAGE.':</td><td><input type="text" name="lang" value="'.$lang.'" maxlength="50" class="sl_conf" placeholder="'._LANGUAGE.'"></td></tr>'
-    .'<tr><td>'._LOGO.':</td><td><select name="img" id="img_replace" class="sl_conf">';
+    $hide = '<input type="hidden" name="mod" value="'.$mod.'"><input type="hidden" name="name" value="modules"><input type="hidden" name="op" value="save">';
+    $rows = '';
+    $rows .= getAdminFormRow(_LANGUAGE.':', '<input type="text" name="lang" value="'.$lang.'" maxlength="50" class="sl_conf" placeholder="'._LANGUAGE.'">');
     $path = 'templates/admin/images/admin/';
     $entries = is_dir($path) ? scandir($path) : [];
-    if (is_array($entries)) {
-        foreach ($entries as $entry) {
-            if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
-                $sel = ($img == $entry) ? ' selected' : '';
-                $cont .= '<option value="'.$path.$entry.'"'.$sel.'>'.$entry.'</option>';
-            }
+    $pickopts = '';
+    foreach ($entries as $entry) {
+        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
+            $pickopts .= getAdminOption($path.$entry, $entry, $img == $entry);
         }
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._PREVIEW.':</td><td><img src="'.$path.$img.'" id="picture" alt="'._LOGO.'"></td></tr>'
-    .'<tr><td>'._STATUS.':</td><td>'.radio_form($active, 'active').'</td></tr>'
-    .'<tr><td>'._VIEWPRIV.'</td><td><select name="view" id="img_replace" class="sl_conf">';
-    $privs = [_MVALL, _MVUSERS, _MVADMIN];
-    foreach ($privs as $key => $value) {
-        $sel = ($view == $key) ? ' selected' : '';
-        $cont .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
+    $rows .= getAdminFormRow(_LOGO.':', getAdminSelect('img', $pickopts, 'sl_conf', 'id="img_replace"'));
+    $rows .= getAdminFormRow(_PREVIEW.':', '<img src="'.$path.$img.'" id="picture" alt="'._LOGO.'">');
+    $rows .= getAdminFormRow(_STATUS.':', radio_form($active, 'active'));
+    $privopts = '';
+    foreach ([_MVALL, _MVUSERS, _MVADMIN] as $key => $value) {
+        $privopts .= getAdminOption((string)$key, $value, $view == $key);
     }
-    $cont .= '</select></td></tr>';
+    $rows .= getAdminFormRow(_VIEWPRIV, getAdminSelect('view', $privopts, 'sl_conf'));
     $numrow = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
-        $cont .= '<tr><td>'._UGROUP.':</td><td><select name="group" class="sl_conf">';
+        $grpopts = '';
         $result2 = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups');
+        $first = true;
         while ([$gid, $gname] = $db->getSqlRow($result2)) {
-            $gsel = ($gid == $group) ? ' selected' : '';
-            if (empty($none)) {
-                $ggsel = ($group == 0) ? ' selected' : '';
-                $cont .= '<option value="0"'.$ggsel.'>'._NONE.'</option>';
-                $none = 1;
+            if ($first) {
+                $grpopts .= getAdminOption('0', _NONE, $group == 0);
+                $first = false;
             }
-            $cont .= '<option value="'.$gid.'"'.$gsel.'>'.$gname.'</option>';
-            $gsel = '';
+            $grpopts .= getAdminOption((string)$gid, $gname, $gid == $group);
         }
-        $cont .= '</select></td></tr>';
+        $rows .= getAdminFormRow(_UGROUP.':', getAdminSelect('group', $grpopts, 'sl_conf'));
     } else {
-        $cont .= '<input type="hidden" name="group" value="0">';
+        $hide .= '<input type="hidden" name="group" value="0">';
     }
-    $cont .= '<tr><td>'._BLOCKS_MOD.':</td><td><select name="side" class="sl_conf">';
-    $bmods = [_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3];
-    foreach ($bmods as $key => $value) {
-        $sel = ($side == $key) ? ' selected' : '';
-        $cont .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
+    $sideopts = '';
+    foreach ([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3] as $key => $value) {
+        $sideopts .= getAdminOption((string)$key, $value, $side == $key);
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._BLOCKS_MOD.':</td><td><select name="top" class="sl_conf">';
-    $bmodcs = [_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3];
-    foreach ($bmodcs as $key => $value) {
-        $sel = ($top == $key) ? ' selected' : '';
-        $cont .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
+    $rows .= getAdminFormRow(_BLOCKS_MOD.':', getAdminSelect('side', $sideopts, 'sl_conf'));
+    $topopts = '';
+    foreach ([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3] as $key => $value) {
+        $topopts .= getAdminOption((string)$key, $value, $top == $key);
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._SHOWINMENU.'</td><td>'.radio_form($menu, 'menu').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="mod" value="'.$mod.'"><input type="hidden" name="name" value="modules"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows .= getAdminFormRow(_BLOCKS_MOD.':', getAdminSelect('top', $topopts, 'sl_conf'));
+    $rows .= getAdminFormRow(_SHOWINMENU, radio_form($menu, 'menu'));
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
     echo $cont;
     setFoot();
 }
@@ -326,7 +301,7 @@ function add(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules', 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -338,3 +313,5 @@ switch ($op) {
     case 'add': add(); break;
     case 'info': info(); break;
 }
+
+

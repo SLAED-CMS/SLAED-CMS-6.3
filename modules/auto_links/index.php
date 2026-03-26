@@ -41,11 +41,11 @@ function autolink(): void {
     if (!$home) $cont .= setModuleNavi(['title' => $ntitle, 'best_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'new']), 'btitle' => _NEW, 'pop_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'pop']), 'add_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'add'])] + AUTO_LINKS_NAVI);
     if ($db->getSqlRowCount($result) > 0) {
         while ([$id, $sitename, $intro, $hits, $outs, $time] = $db->getSqlRow($result)) {
-            $thref = 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id;
+            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id]);
             $date = format_time($time);
             $hits = $tpl->getHtmlFrag('hit-badge', ['title' => _HITS, 'text' => $hits, 'cls' => 'sl_hits']);
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$sitename.'&quot;?');
-            $cont .= $tpl->getHtmlFrag('basic', [
+            $cont .= getContentCard([
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $sitename,

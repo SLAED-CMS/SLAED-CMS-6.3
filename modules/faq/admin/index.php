@@ -26,8 +26,8 @@ function faq(): void {
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, t.title, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._QUESTION.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._QUESTION.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
@@ -39,15 +39,20 @@ function faq(): void {
                 $view = '';
                 $active = '0';
             }
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                rtrim($view, '|'),
+                '<a href="'.$afile.'.php?name=faq&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=faq&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=faq&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=faq&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_faq', '', 'status = \''.$status.'\'', $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -78,17 +83,17 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     if ($hometext) $cont .= preview($subject, $hometext, '', '', 'faq');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
-    .'<tr><td>'._TITLE.' / '._QUESTION.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.' / '._QUESTION.'" required></td></tr>'
-    .'<tr><td>'._CATEGORY.':</td><td>'.getcat('faq', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-    .'<tr><td>'._ANSWER.':</td><td>'.textarea('1', 'hometext', $hometext, 'faq', '10', _ANSWER, '1').'</td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
-    .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
-    .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="faq">'.ad_save('fid', $fid, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $hide = '<input type="hidden" name="name" value="faq">';
+    $rows = '';
+    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
+    $rows .= getAdminFormRow(_TITLE.' / '._QUESTION.':', '<input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.' / '._QUESTION.'" required>');
+    $rows .= getAdminFormRow(_CATEGORY.':', getcat('faq', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
+    $rows .= getAdminFormRow(_ANSWER.':', textarea('1', 'hometext', $hometext, 'faq', '10', _ANSWER, '1'));
+    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'time', $time, 16, 'sl_form'));
+    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
+    $rows .= getAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'));
+    $rows .= getAdminFormWide(ad_save('fid', $fid, 'save'), '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -142,8 +147,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/faq.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'faq',
         'op' => 'configsave',
@@ -190,8 +194,7 @@ function config(): void {
         '_pagelink' => _PAGELINK,
         'r_link' => radio_form($conf['faq']['link'] ?? 0, 'link'),
         'faq' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -227,7 +230,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -240,7 +243,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 
 
 

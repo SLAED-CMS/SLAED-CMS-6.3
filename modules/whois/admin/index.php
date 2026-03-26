@@ -27,8 +27,8 @@ function whois(): void {
 
     $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list"><thead><tr><th>'._ID.'</th><th>'._POSTEDBY.'</th><th colspan="2">'._SITE.'</th><th colspan="2">'._HOST.'</th><th colspan="2">'._DC.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._POSTEDBY.'</th><th colspan="2">'._SITE.'</th><th colspan="2">'._HOST.'</th><th colspan="2">'._DC.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $uname, $ipSender, $time, $domain, $host, $dc, $hometext, $statusDomain, $statusHost, $statusDc, $userName] = $db->getSqlRow($result)) {
             $post = $userName ? user_info($userName) : ($uname ?: _ANONYM);
             $ipSender = $ipSender ? user_geo_ip($ipSender, 4) : _NO;
@@ -40,16 +40,20 @@ function whois(): void {
                 .'||'.ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=3&amp;refer=1', $statusDc, '', _DC)
                 .'||<a href="'.$afile.'.php?name=whois&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'
                 .'||<a href="'.$afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$domain.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>';
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = [];
+            foreach (explode('||', $actions) as $item) {
+                if ($item !== '') $acts[] = $item;
+            }
+            $cols = '<td>'.$id.'</td>'
                 .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ipSender.'<br>'._COMMENT.': '.$hometext).$post.'</td>'
                 .'<td>'.domain($domain).'</td><td>'.ad_status('', $statusDomain).'</td>'
                 .'<td>'.$host.'</td><td>'.ad_status('', $statusHost).'</td>'
                 .'<td>'.$dc.'</td><td>'.ad_status('', $statusDc).'</td>'
-                .'<td>'.add_menu($actions).'</td></tr>';
+                .'<td>'.adminMenuItems($acts).'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows, 'sl_table_list');
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_whois', '', "status = '".$status."'", $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -95,15 +99,14 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', $stop)]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-        .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
-        .'<tr><td>'._SITE.':</td><td><input type="url" name="domain" value="'.$domain.'" maxlength="255" class="sl_form" placeholder="'._SITE.'" required></td></tr>'
-        .'<tr><td>'._HOST.':</td><td><input type="url" name="host" value="'.$host.'" maxlength="255" class="sl_form" placeholder="'._HOST.'"></td></tr>'
-        .'<tr><td>'._DC.':</td><td><input type="url" name="dc" value="'.$dc.'" maxlength="255" class="sl_form" placeholder="'._DC.'"></td></tr>'
-        .'<tr><td>'._COMMENT.':</td><td><textarea name="hometext" cols="65" rows="5" class="sl_form" placeholder="'._COMMENT.'">'.$hometext.'</textarea></td></tr>'
-        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="whois">'.ad_save('wid', $wid, 'save', 1).'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows = '';
+    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
+    $rows .= getAdminFormRow(_SITE.':', '<input type="url" name="domain" value="'.$domain.'" maxlength="255" class="sl_form" placeholder="'._SITE.'" required>');
+    $rows .= getAdminFormRow(_HOST.':', '<input type="url" name="host" value="'.$host.'" maxlength="255" class="sl_form" placeholder="'._HOST.'">');
+    $rows .= getAdminFormRow(_DC.':', '<input type="url" name="dc" value="'.$dc.'" maxlength="255" class="sl_form" placeholder="'._DC.'">');
+    $rows .= getAdminFormRow(_COMMENT.':', '<textarea name="hometext" cols="65" rows="5" class="sl_form" placeholder="'._COMMENT.'">'.$hometext.'</textarea>');
+    $rows .= getAdminFormWide('<input type="hidden" name="name" value="whois">'.ad_save('wid', $wid, 'save', 1), 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows);
     echo $cont;
     setFoot();
 }
@@ -151,8 +154,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'whois',
         'op' => 'configsave',
@@ -169,8 +171,7 @@ function config(): void {
         '_whoisaddg' => _WHOISADDG,
         'r_addquest' => radio_form($conf['whois']['addquest'] ?? 0, 'addquest'),
         'whois' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -191,7 +192,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -205,7 +206,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 
 
 

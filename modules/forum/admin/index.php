@@ -29,16 +29,16 @@ function forum(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHIN]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._FORUM.'</th><th>'._NEWTOPICS.'</th><th>'._MESSAGES.'</th><th class="{sorter: false}">'._STATUS.'</th></tr></thead><tbody>';
+    $head = '<th>'._ID.'</th><th>'._FORUM.'</th><th>'._NEWTOPICS.'</th><th>'._MESSAGES.'</th><th class="{sorter: false}">'._STATUS.'</th>';
+    $rows = '';
     $query = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     while ([$id, $title, $intro, $state, $topics, $posts] = $db->getSqlRow($query)) {
         $detail = ($intro) ? $intro : _NO;
         $link = title_tip(_DESCRIPTION.': '.$detail).'<a href="index.php?name=forum&amp;cat='.$id.'" target="_blank" title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</a>';
-        $cont .= '<tr><td>'.$id.'</td><td>'.$link.'</td><td>'.$topics.'</td><td>'.$posts.'</td><td>'.ad_status('', $state).'</td></tr>';
+        $cols = '<td>'.$id.'</td><td>'.$link.'</td><td>'.$topics.'</td><td>'.$posts.'</td><td>'.ad_status('', $state).'</td>';
+        $rows .= getAdminTableRow($cols);
     }
-    $cont .= '</tbody></table>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $cont .= getAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -57,8 +57,7 @@ function config(): void {
         .'<option value="0"'.(($conf['forum']['anonpost'] ?? null) == '0' ? ' selected' : '').'>'._APOSTMOD.'</option>'
         .'<option value="1"'.(($conf['forum']['anonpost'] ?? null) == '1' ? ' selected' : '').'>'._APOSTNOMOD.'</option>'
         .'</select>';
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'forum',
         'op' => 'configsave',
@@ -98,8 +97,7 @@ function config(): void {
         '_vweb' => _VWEB,
         'r_web' => radio_form($conf['forum']['web'] ?? 0, 'web'),
         'forum' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -131,7 +129,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 2]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -141,3 +139,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
+

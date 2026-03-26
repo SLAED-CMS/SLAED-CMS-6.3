@@ -206,6 +206,84 @@ class TemplateValidationTest extends TestCase
         );
     }
 
+    public function testSharedFrontendFragmentsStayInSyncAcrossThemes(): void
+    {
+        $themes = ['default', 'lite', 'simple'];
+        $allowed = [
+            'fragments/basic-changelog-commit.html',
+            'fragments/basic.html',
+            'fragments/comment.html',
+            'fragments/kasse-basic.html',
+            'fragments/kasse-wrap.html',
+            'fragments/pagenum.html',
+            'fragments/title.html',
+            'fragments/voting-close.html',
+        ];
+        $errors = [];
+        $maps = [];
+
+        foreach ($themes as $theme) {
+            $path = self::$templatesPath.'/'.$theme.'/fragments';
+            $maps[$theme] = [];
+            foreach (scandir($path) ?: [] as $file) {
+                if ($file === '.' || $file === '..') {
+                    continue;
+                }
+                if (!is_file($path.'/'.$file)) {
+                    continue;
+                }
+                $maps[$theme]['fragments/'.$file] = hash_file('sha256', $path.'/'.$file) ?: '';
+            }
+        }
+
+        $common = array_values(array_intersect(
+            array_keys($maps['default']),
+            array_keys($maps['lite']),
+            array_keys($maps['simple'])
+        ));
+        sort($common);
+
+        $different = [];
+        foreach ($common as $file) {
+            $hashes = [
+                'default' => $maps['default'][$file],
+                'lite' => $maps['lite'][$file],
+                'simple' => $maps['simple'][$file],
+            ];
+            if (count(array_unique($hashes)) > 1) {
+                $different[] = $file;
+                if (!in_array($file, $allowed, true)) {
+                    $parts = [];
+                    foreach ($hashes as $theme => $hash) {
+                        $parts[] = $theme.':'.$hash;
+                    }
+                    $errors[] = $file.' - неразрешённое расхождение между темами: '.implode(', ', $parts);
+                }
+            }
+        }
+
+        sort($different);
+        $expected = $allowed;
+        sort($expected);
+
+        $this->assertSame(
+            $expected,
+            $different,
+            "Набор разрешённых theme-specific fragments изменился"
+        );
+
+        $this->assertGreaterThan(
+            100,
+            count($common),
+            'Слишком мало общих frontend fragments для cross-theme проверки'
+        );
+
+        $this->assertEmpty(
+            $errors,
+            "Shared frontend fragments рассинхронизированы:\n".implode("\n", $errors)
+        );
+    }
+
     /**
      * Проверяет кодировку шаблонов
      */

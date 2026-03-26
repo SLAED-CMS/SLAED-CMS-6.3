@@ -17,12 +17,12 @@ function money(): void {
     $offset = (int)(($num - 1) * $anum);
     $result = $db->getSqlQuery('SELECT id, sum, email, intro, note, ip, agent, time, status FROM '.PREFIX_DB.'_money ORDER BY time DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
         [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_money'));
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._SUM.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._SUM.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         $form = explode(',', $conf['money']['form'] ?? '');
         while ([$id, $sum, $email, $intro, $note, $ip, $agent, $time, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
@@ -35,18 +35,24 @@ function money(): void {
                     $i++;
                 }
             }
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                ad_status($afile.'.php?name=money&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status),
+                '<a href="'.$afile.'.php?name=money&amp;op=invoice&amp;id='.$id.'&amp;rnum='.$r.'" title="'._RECHN_B.'">'._RECHN_B.'</a>',
+                '<a href="'.$afile.'.php?name=money&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=money&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.$sum.' EUR</td>'
             .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email).'</td>'
             .'<td>'.user_geo_ip($ip, 4).'</td>'
             .'<td>'.format_time($time, _TIMESTRING).'</td>'
             .'<td>'.ad_status('', $status).'</td>'
-            .'<td>'.add_menu(ad_status($afile.'.php?name=money&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status).'||<a href="'.$afile.'.php?name=money&amp;op=invoice&amp;id='.$id.'&amp;rnum='.$r.'" title="'._RECHN_B.'">'._RECHN_B.'</a>||<a href="'.$afile.'.php?name=money&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=money&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
             $r--;
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=money&amp;', $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -85,22 +91,22 @@ function add(): void {
         }
         $cont .= preview($email, $infos, _COMMENT.': '.$note, '', 'all');
     }
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._MA_17.':</td><td><input type="number" name="sum" value="'.$sum.'" class="sl_form" placeholder="'._MA_17.'" required></td></tr>'
-    .'<tr><td>'._MA_18.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._MA_18.'" required></td></tr>';
+    $hide = '<input type="hidden" name="name" value="money">';
+    $rows = '';
+    $rows .= getAdminFormRow(_MA_17.':', '<input type="number" name="sum" value="'.$sum.'" class="sl_form" placeholder="'._MA_17.'" required>');
+    $rows .= getAdminFormRow(_MA_18.':', '<input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._MA_18.'" required>');
     $form = explode(',', $conf['money']['form'] ?? '');
     $i = 0;
     foreach ($form as $val) {
         if ($val != '') {
-            $cont .= '<tr><td>'.$val.':</td><td><input type="text" name="intro[]" value="'.($intro[$i] ?? '').'" maxlength="255" class="sl_form" placeholder="'.$val.'"></td></tr>';
+            $rows .= getAdminFormRow($val.':', '<input type="text" name="intro[]" value="'.($intro[$i] ?? '').'" maxlength="255" class="sl_form" placeholder="'.$val.'">');
             $i++;
         }
     }
-    $cont .= '<tr><td>'._MA_19.':</td><td><textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._MA_19.'">'.$note.'</textarea></td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="money">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows .= getAdminFormRow(_MA_19.':', '<textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._MA_19.'">'.$note.'</textarea>');
+    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'time', $time, 16, 'sl_form'));
+    $rows .= getAdminFormWide(ad_save('mid', $mid, 'save'), '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -208,8 +214,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'money',
         'op' => 'configsave',
@@ -246,8 +251,7 @@ function config(): void {
         '_ma14' => _MA_14,
         't_autor' => textarea('4', 'autor', $conf['money']['autor'] ?? '', 'all', '5', _MA_14, '1'),
         'money' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -281,7 +285,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -296,7 +300,5 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
 
 

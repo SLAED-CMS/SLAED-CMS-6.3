@@ -77,15 +77,14 @@ function getSearchTypeList(int $typ): string {
 
 function getSearchForm(array $state): string {
     global $conf;
-    $cont = '<form action="index.php?name='.htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8').'" method="post"><table class="sl_table_form">'
-        .'<tr><td>'._MODUL.':</td><td><select name="mod" onchange="submit()" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'"><option value="">'._SEARCHALL.'</option>'
-        .getSearchModList($state['mods'], (string)$state['mod']).'</select></td></tr>';
+    $sty = htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8');
+    $rows = getFormAddRow(_MODUL.':', '<select name="mod" onchange="submit()" class="sl_field '.$sty.'"><option value="">'._SEARCHALL.'</option>'.getSearchModList($state['mods'], (string)$state['mod']).'</select>');
     if ($state['mod'] === 'media') {
-        $cont .= '<tr><td>'._SEARCHFROM.':</td><td><select name="typ" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'">'.getSearchTypeList(intval($state['typ'])).'</select></td></tr>';
+        $rows .= getFormAddRow(_SEARCHFROM.':', '<select name="typ" class="sl_field '.$sty.'">'.getSearchTypeList(intval($state['typ'])).'</select>');
     }
-    $cont .= '<tr><td>'._SEARCH.':</td><td><input type="text" name="word" value="'.htmlspecialchars((string)$state['word'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_field '.htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8').'" placeholder="'._SEARCH.'" required></td></tr>'
-        .'<tr><td colspan="2" class="sl_center"><input type="submit" title="'._SEARCH.'" value="'._SEARCH.'" class="sl_but_blue"></td></tr></table></form>';
-    return $cont;
+    $rows .= getFormAddRow(_SEARCH.':', '<input type="text" name="word" value="'.htmlspecialchars((string)$state['word'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_field '.$sty.'" placeholder="'._SEARCH.'" required>');
+    $rows .= '<tr><td colspan="2" class="sl_center"><input type="submit" title="'._SEARCH.'" value="'._SEARCH.'" class="sl_but_blue"></td></tr>';
+    return getForumReplyForm(htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8'), $rows);
 }
 
 function addSearchStat(array $state): void {

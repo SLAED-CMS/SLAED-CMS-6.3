@@ -13,20 +13,23 @@ function newsletter(): void {
     $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._NLEND.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._NLEND.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $title, $mails, $sended, $time, $endtime] = $db->getSqlRow($result)) {
             $sendtime = ($endtime > $time) ? strtotime($endtime) - strtotime($time) : 0;
             $active = ($mails && $sended && $conf['newsletter']['active']) ? 1 : 0;
-            $cont .= '<tr>'
-            .'<td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                '<a href="'.$afile.'.php?name=newsletter&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.getDuration($sendtime)).$title.'</td>'
             .'<td>'.$sended.' '._NLUSER.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?name=newsletter&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
-        $cont .= $tpl->getHtmlFrag('close', []);
+        $cont .= getAdminTable($head, $rows);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -170,13 +173,13 @@ function add(): void {
             $option .= '<option value="'.$email9.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9.'</option>';
         }
     }
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" method="post" action="'.$afile.'.php"><table class="sl_table_form">'
-    .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="50" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'body', $body, 'all', '10', _TEXT, '1').'</td></tr>'
-    .'<tr><td>'._NLWHERE.':</td><td><select name="mails" class="sl_form">'.$option.'</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="nid" value="'.$nid.'"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $hide = '<input type="hidden" name="nid" value="'.$nid.'"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save">';
+    $rows = '';
+    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="50" class="sl_form" placeholder="'._TITLE.'" required>');
+    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'body', $body, 'all', '10', _TEXT, '1'));
+    $rows .= getAdminFormRow(_NLWHERE.':', '<select name="mails" class="sl_form">'.$option.'</select>');
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -229,8 +232,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'newsletter',
         'op' => 'configsave',
@@ -243,8 +245,7 @@ function config(): void {
         'count' => $conf['newsletter']['count'],
         'newsletter' => true,
     ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -261,7 +262,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -274,3 +275,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
+

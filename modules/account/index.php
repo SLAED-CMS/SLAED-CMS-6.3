@@ -161,7 +161,7 @@ function finnewuser(): void {
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
                 $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
-                $meta = '<meta http-equiv="refresh" content="30; url=index.php">';
+                $meta = getMetaRefresh('index.php', 30);
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.'<br><br>'._FINISHUSERCONF.'<br><br>'._THANKSUSER, 'meta' => $meta]);
             }
             echo $cont;
@@ -243,7 +243,7 @@ function network(): void {
             }
         } else {
             setHead(['title' => _ERRORINPUT]);
-            $meta = '<meta http-equiv="refresh" content="15; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name'], 15);
             echo $tpl->getHtmlFrag('title', ['title' => _ERRORINPUT]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ERRORSESS, 'meta' => $meta]);
             setFoot();
         }
@@ -269,14 +269,14 @@ function activate(): void {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_users (id, name, rank, email, avatar, regdate, password, lang, ip, agent, network, block, warnings, field) VALUES (NULL, :uname, :rank, :email, :avatar, :regdate, :pwd, :lang, :ip, :agent, :network, :block, :warnings, :field)', ['uname' => $nick, 'rank' => $rank, 'email' => $mail, 'avatar' => 'default/00.gif', 'regdate' => $reg, 'pwd' => getPassHash($pass), 'lang' => $locale, 'ip' => $uip, 'agent' => $uagent, 'network' => '', 'block' => '', 'warnings' => '', 'field' => '']);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_users_temp WHERE name = :uname AND code = :cnum', ['uname' => $nick, 'cnum' => $check]);
             $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_session WHERE uname = :uname AND guest = 0', ['uname' => $uip]);
-            $meta = '<meta http-equiv="refresh" content="15; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name'], 15);
             echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONYES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ACTMSG, 'meta' => $meta]);
         } else {
-            $meta = '<meta http-equiv="refresh" content="15; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name'], 15);
             echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR1, 'meta' => $meta]);
         }
     } else {
-        $meta = '<meta http-equiv="refresh" content="15; url=index.php?name='.$conf['name'].'">';
+        $meta = getMetaRefresh('index.php?name='.$conf['name'], 15);
         echo $tpl->getHtmlFrag('title', ['title' => _ACTIVATIONERROR]).$tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _ACTERROR2, 'meta' => $meta]);
     }
     setFoot();
@@ -478,13 +478,13 @@ function view(): void {
             setFoot();
         } else {
             setHead(['title' => _USERNOEXIST]);
-            $meta = '<meta http-equiv="refresh" content="3; url=index.php">';
+            $meta = getMetaRefresh('index.php', 3);
             echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERNOEXIST, 'meta' => $meta]);
             setFoot();
         }
     } else {
         setHead(['title' => _MODULEUSERS]);
-        $meta = '<meta http-equiv="refresh" content="15; url=index.php">';
+        $meta = getMetaRefresh('index.php', 15);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MODULEUSERS, 'meta' => $meta]);
         setFoot();
     }
@@ -608,7 +608,7 @@ function last(int|string $uid, string $modul): string {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_forum WHERE uid = :user_id AND pid = '0' AND time <= NOW() AND status > '1' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=forum&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title]);
             $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -628,7 +628,7 @@ function last(int|string $uid, string $modul): string {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_links WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=links&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title]);
             $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -638,7 +638,7 @@ function last(int|string $uid, string $modul): string {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_media WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=media&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title]);
             $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -648,7 +648,7 @@ function last(int|string $uid, string $modul): string {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_news WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=news&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title]);
             $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -658,7 +658,7 @@ function last(int|string $uid, string $modul): string {
         $result = $db->getSqlQuery('SELECT id, title, time FROM '.PREFIX_DB."_pages WHERE uid = :user_id AND time <= NOW() AND status != '0' ORDER BY id DESC LIMIT 0,".$limit, ['user_id' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= $tpl->getHtmlFrag('account-last-wrap', ['open' => true]);
-            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => 'index.php?name=pages&amp;op=view&amp;id='.$id, 'title_attr' => $title, 'title_text' => $title]);
+            while([$id, $title, $time] = $db->getSqlRow($result)) $cont .= $tpl->getHtmlFrag('account-last-row', ['date_iso' => date('c', strtotime($time)), 'date_title' => _CHNGSTORY.': '.format_time($time, _TIMESTRING), 'date_text' => format_time($time), 'href' => getSeoUrl(['name' => $modul, 'op' => 'view', 'id' => $id, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title]);
             $cont .= $tpl->getHtmlFrag('account-last-wrap', []);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -773,7 +773,7 @@ function passmail(): void {
             setHead([
                 'title' => _PASSWORDLOST,
             ]);
-            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name']);
             echo $tpl->getHtmlFrag('title', ['title' => _PASSWORDLOST]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _USERPASSWORD.' '.$nick.' '._MAILED, 'meta' => $meta]);
             setFoot();
         } else {

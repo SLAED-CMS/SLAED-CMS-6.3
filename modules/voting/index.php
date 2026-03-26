@@ -65,7 +65,7 @@ function view(): void {
 		if ($acomm) $cont .= setComShow($id, $acomm);
 	} else {
 		setHead(['title' => _VOTING]);
-		$meta = '<meta http-equiv="refresh" content="3; url=index.php?name='.$conf['name'].'">';
+		$meta = getMetaRefresh('index.php?name='.$conf['name'], 3);
 		$cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO, 'meta' => $meta]);
 	}
 	echo $cont;

@@ -18,9 +18,19 @@ Keine neue Template-Arbeit gegen uneinheitliches PHP.
 
 ## Feste Regeln
 
+### Regel 0: Neue Hilfsfunktionen zentralisieren
+
+Pflicht:
+
+- neue Funktionsnamen nur in `camelCase`, nur Buchstaben, 6-24 Zeichen, mit Pflicht-Praefix `get`, `set`, `add`, `update`, `delete`, `is`, `check` oder `filter`
+- neue Variablennamen nur in Kleinbuchstaben, nur Buchstaben, 2-8 Zeichen, ohne `_`, ohne Ziffern, ohne `camelCase`
+- neue Funktionen nur in `core/helpers.php` anlegen
+- bestehende neue Hilfsfunktionen nur in `core/helpers.php` erweitern oder aendern
+- Details und Ausnahmen folgen weiter den Projektregeln in `.rules/`
+
 ### Regel 1: Keine Mikro-Fragmente erweitern
 
-Diese Muster werden nicht weiter ausgebaut:
+Diese historischen Muster werden nicht weiter ausgebaut:
 
 - `open.html`
 - `close.html`
@@ -28,7 +38,8 @@ Diese Muster werden nicht weiter ausgebaut:
 - `*-close.html`
 - technische Grid-Open-/Close-Fragmente
 
-Sie werden spaeter entfernt, sobald der umgebende PHP-Schnitt normalisiert ist.
+Die alten `open`/`close`-Dateien sind im aktuellen Repo-Stand bereits entfernt.
+Gemeint bleibt das historische Wrapper-Muster, nicht ein neuer Dateityp.
 
 ### Regel 2: `basic` ist kein Endzustand
 
@@ -177,11 +188,16 @@ Master-Richtung:
 Ist-Stand:
 
 - Frontend ist weiter normalisiert als Admin
-- `basic` wird in mehreren Content-Modulen weiter als Allzweck-Schnitt genutzt
+- die alten Theme-Fragmente `open.html` / `close.html` sind entfernt
+- der alte Allzweck-Schnitt `basic` ist aus den Frontend-Content-Pfaden entfernt; uebrig bleiben nur eigene Fachschnitte wie `basic-download-view` und `basic-media-view`
 - `liste-wrap` und `liste-basic` sind fuer `news`, `files`, `faq`, `links`, `pages` weitgehend angeglichen
-- `media` weicht noch bei URL-Aufbau von `getSeoUrl()` ab
-- `links/view()` ist noch nicht an `files/view()` angeglichen
-- `form-add` wird in mehreren Modulen produktiv genutzt, aber `fields` und `extrafields` sind noch nicht sauber getrennt
+- `media` nutzt fuer Karten-, Listen- und relevante Detailpfade `getSeoUrl()`
+- `links/view()` ist innerhalb von `basic-download-view` an `files/view()` angeglichen
+- `content-card` ist produktiv in `news`, `auto_links`, `pages`, `files`, `faq`, `links`, `help`, `jokes`, `media`
+- `content-view` ist produktiv in `news`, `pages`, `faq`
+- `form-add` ist in den Zielmodulen produktiv, `site_attr` ist dort vereinheitlicht und die auditierte Trennung `fields` / `extrafields` ist stabil
+- representative GET-/Smoke-Pruefungen fuer die migrierten Frontend-Pfade laufen grün; der fruehere Warning-Hinweis in `help/view()` ist behoben
+- die identischen Shared-Fragmente `content-card`, `content-view`, `content-list-basic` und `content-list-open` bleiben theme-lokal, sind aber jetzt per Test gegen Drift abgesichert
 - Mikro-Fragmente und Theme-Duplizierung bestehen weiter
 
 ---
@@ -191,6 +207,7 @@ Ist-Stand:
 ### Gruppe A: Content-Karten
 
 - `news`
+- `auto_links`
 - `files`
 - `faq`
 - `links`
@@ -342,26 +359,37 @@ Verbindliche Feldnamen:
 
 Status:
 
-- `news`   - Karten/Listen weitgehend normalisiert
-- `files`  - Karten/Listen weitgehend normalisiert
-- `faq`    - Karten/Listen weitgehend normalisiert
-- `links`  - Listen weitgehend normalisiert | `view()` offen
-- `pages`  - Listen weitgehend normalisiert
-- `media`  - offen
-- `jokes`  - Karten separat pruefen
-- `help`   - Karten separat pruefen
+- `news`   - `news()` auf `content-card`, `liste()` auf `liste-wrap` / `liste-basic`, `view()` auf `content-view`
+- `auto_links` - `autolink()` auf `content-card`, `view()` bleibt Redirect-Fachpfad
+- `files`  - `files()` auf `content-card`, `liste()` stabil, `view()` bleibt `basic-download-view`
+- `faq`    - `faq()` auf `content-card`, `liste()` stabil, `view()` Hauptartikel auf `content-view`
+- `links`  - `links()` auf `content-card`, `liste()` stabil, `view()` bleibt `basic-download-view`
+- `pages`  - `pages()` auf `content-card`, `liste()` stabil, `view()` auf `content-view`
+- `media`  - `media()` auf `content-card`, `liste()` stabil, `view()` bleibt `basic-media-view`
+- `jokes`  - `jokes()` auf `content-card`
+- `help`   - `help()` auf `content-card`, `view()` bleibt eigener Thread-Detailpfad
 
 Rueckstaende:
 
-- `media` nutzt teils rohe Frontend-URLs statt `getSeoUrl()`
-- `basic` ist noch Allzweck-Template
-- `links/view()` ist noch nicht an `files/view()` angeglichen
+- `basic` ist in den Frontend-Content-Pfaden entfernt
+- `help/addview()` ist als Reply-Form jetzt auf `form-add` gezogen, bleibt aber fachlich ein eigener Pfad
+- `media/view()` bleibt absichtlich auf `basic-media-view`
 
 ### Batch 2: Detailansichten
 
 Status:
 
-- offen
+- weitgehend abgeschlossen
+
+Stand:
+
+- `news/view()` auf `content-view`
+- `pages/view()` auf `content-view`
+- `faq/view()` Hauptartikel auf `content-view`, Restblocke bleiben angehaengt
+- `files/view()` bleibt `basic-download-view`
+- `links/view()` bleibt `basic-download-view` und ist in den betroffenen Fachbloecken an `files/view()` angeglichen
+- `help/view()` bleibt eigener Thread-/Reply-Detailpfad, nutzt aber keinen generischen `basic`-Schnitt mehr
+- `media/view()` bleibt eigener Fachschnitt `basic-media-view`
 
 Zielmodule:
 
@@ -373,13 +401,19 @@ Zielmodule:
 
 Status:
 
-- offen
+- weitgehend abgeschlossen
 
 Rueckstaende:
 
-- `site_attr` noch nicht ueberall auf `site`
-- `fields` und `extrafields` noch nicht sauber getrennt
-- `form-add` noch mit dauerhaften Roh-Sammelslots
+- `help/addview()` nutzt jetzt ebenfalls `form-add`, bleibt aber als eigener Reply-Form-Pfad fachlich getrennt
+- `media` nutzt weiter `media-form-add` als eigenen Fachschnitt
+- `form-add` hat weiter vorhandene Roh-Sammelslots, bekommt aber keine neuen
+
+Stand:
+
+- `order()` nutzt `form-add` mit shared row-/submit-fragments
+- `money()` nutzt `form-add` fuer den Antragsblock; die Rechnerformulare bleiben vorerst fachlich separat
+- `help/addview()` nutzt `form-add` fuer den Reply-Pfad ohne neuen allgemeinen Sondermodus
 
 Zielmodule:
 
@@ -395,27 +429,43 @@ Zielmodule:
 
 Status:
 
-- offen
+- audit abgeschlossen, bleibt als eigene Fachgruppe getrennt
+
+Stand:
+
+- `account` bleibt ein eigener Satz aus Login-, Register-, Profil-, PM- und Setup-Schnitten
+- `users` bleibt ein eigener Satz aus Ranking-/Rules-/Stats-Tabellen
+- `forum` bleibt ein eigener Satz aus Kategorie-, Themenlisten-, Thread- und Reply-Schnitten
+- in `account/last()` und in forumeigenen self-links laufen lokale URL-Bereinigungen auf `getSeoUrl()`
+
+Festlegung:
+
+- keine erzwungene Migration auf `content-card`
+- keine erzwungene Migration auf `content-view`
+- keine erzwungene Migration auf `form-add`
+- nur lokale Aufraeumarbeiten und URL-/Fragment-Hygiene innerhalb der eigenen Fachschnitte
 
 ### Batch 5: Fragment-Bestand und Themes
 
 Status:
 
-- offen
+- teilweise abgeschlossen
+
+Stand:
+
+- `default`, `lite` und `simple` teilen aktuell `193` gemeinsame Fragment-Dateien; davon sind `185` byte-identisch und nur `8` bewusst theme-spezifisch
+- physische Zusammenlegung wurde bewusst nicht ueber den Loader erzwungen, weil der aktuelle Runtime-Contract theme-lokal ist
+- ein automatischer Test schuetzt jetzt den gesamten identischen Shared-Layer gegen weiteres Auseinanderlaufen und bewacht zugleich die `8` erlaubten Unterschiede
 
 ---
 
 ## Ausfuehrungsreihenfolge
 
 1. Repo-Sync aktualisieren
-2. `media` bereinigen
-3. `links/view()` an `files/view()` angleichen
-4. `site_attr` vereinheitlichen
-5. `form-add`-Nutzer auf festen Schnitt bringen
-6. `basic` aufspalten
-7. Account/Users/Forum separat normalisieren
-8. Mikro-Fragmente entfernen
-9. Theme-Duplizierung reduzieren
+2. Restfaelle klar als eigene Fachschnitte markieren
+3. Account/Users/Forum separat normalisieren
+4. Mikro-Fragmente erst nach stabiler PHP-Normalisierung entfernen
+5. Theme-Duplizierung reduzieren
 
 ### Ausfuehrung pro Modul
 
@@ -459,7 +509,7 @@ Dann:
 
 ### Batch 3: Formulare
 
-- `site_attr` ist ueberall `site`, ausser dokumentierte Ausnahme
+- `site_attr` ist in den Zielmodulen vereinheitlicht und `files/add()` nutzt jetzt ebenfalls `site`
 - `fields` und `extrafields` sind fachlich sauber getrennt
 - `form-add` bekommt keine neuen dauerhaften Roh-Sammelslots
 
@@ -474,6 +524,7 @@ Dann:
 - Mikro-Fragmente werden nicht mehr erweitert
 - Loeschungen passieren erst nach stabiler PHP-Normalisierung
 - Theme-Duplizierung wird nicht weiter verfestigt
+- der identische Shared-Layer ueber `default`, `lite` und `simple` bleibt bis zu einer expliziten Loader-Strategie synchron und testgesichert
 
 ### Gesamt
 

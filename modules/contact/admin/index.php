@@ -8,15 +8,14 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('contact')) die('Illegal file acce
 
 function contact(): void {
     global $afile, $conf, $tpl;
-        setHead();
+    setHead();
     $cont = setAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO]]);
     $cont .= checkPerms(CONFIG_DIR.'/contact.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._CONTACTINFO.':</td><td>'.textarea('1', 'info', $conf['contact']['info'], 'all', '10', _CONTACTINFO, '0').'</td></tr>'
-    .'<tr><td>'._CONTACTALL.'</td><td>'.radio_form($conf['contact']['admins'], 'admins').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="contact"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows = '';
+    $rows .= getAdminFormRow(_CONTACTINFO.':', textarea('1', 'info', $conf['contact']['info'], 'all', '10', _CONTACTINFO, '0'));
+    $rows .= getAdminFormRow(_CONTACTALL, radio_form($conf['contact']['admins'], 'admins'));
+    $rows .= getAdminFormWide('<input type="hidden" name="name" value="contact"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows);
     echo $cont;
     setFoot();
 }
@@ -34,7 +33,7 @@ function save(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO], 'tab' => 1]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 

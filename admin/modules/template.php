@@ -16,7 +16,7 @@ function getTemplateSearch(string $templ): string {
         }
     }
     $search .= '</select> <input type="hidden" name="name" value="template"><input type="hidden" name="op" value="template"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $search]);
+    return getAdminSearchBox($search);
 }
 
 function template(): void {
@@ -46,7 +46,7 @@ function template(): void {
             }
             closedir($handle);
         }
-        $cont .= $tpl->getHtmlFrag('open', []).$conts.$tpl->getHtmlFrag('close', []);
+        $cont .= getAdminBox($conts);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -80,7 +80,7 @@ function style(): void {
             }
             closedir($handle);
         }
-        $cont .= $tpl->getHtmlFrag('open', []).$conts.$tpl->getHtmlFrag('close', []);
+        $cont .= getAdminBox($conts);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -121,7 +121,7 @@ function info(): void {
     global $conf;
     $templ = getVar('get', 'templ', 'var', $conf['theme']);
     $cont = setAdminNavi(['ops' => ['name=template&amp;templ='.$templ, 'name=template&amp;op=style&amp;templ='.$templ, 'name=template&amp;op=info'], 'tabs' => [_TEMPLATES, _STYLES, _INFO], 'tab' => 2, 'sub' => getTemplateSearch($templ)]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -132,3 +132,5 @@ switch ($op) {
     case 'stylesave': stylesave(); break;
     case 'info': info(); break;
 }
+
+

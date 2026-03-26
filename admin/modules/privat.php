@@ -8,10 +8,9 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function privat(): void {
-    global $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.$tpl->getHtmlFrag('open', []).'<div id="repajax_privat">'.ajax_privat(1).'</div>'.$tpl->getHtmlFrag('close', []);
+    echo $cont.getAdminPlaceholderBox('repajax_privat', ajax_privat(1));
     setFoot();
 }
 
@@ -20,8 +19,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'privat',
         'op' => 'save',
@@ -55,8 +53,7 @@ function config(): void {
         'r_act' => radio_form($conf['privat']['act'], 'act'),
         'privat' => true,
     ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -84,7 +81,7 @@ function save(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -94,3 +91,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+

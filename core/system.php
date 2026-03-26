@@ -116,6 +116,9 @@ if (is_file(BASE_DIR.'/templates/'.$theme.'/index.php')) require_once BASE_DIR.'
 require_once BASE_DIR.'/core/classes/template.php';
 $tpl = new Template($theme);
 
+# Helpers include
+require_once BASE_DIR.'/core/helpers.php';
+
 # Returns a normalized 5-part cron schedule or an empty string when invalid
 function getSchedulerSchedule(array|string $job): string {
     $schedule = is_array($job) ? (string)($job['schedule'] ?? '') : (string)$job;
@@ -6802,7 +6805,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $pag = (getVar('get', 'status', 'num', 0) == 1) ? 'op=comm_show&amp;status=1' : 'op=comm_show';
             $numpt = setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&amp;', $plnum, 0, '', 'com');
             $cont .= $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]);
-            $out = $tpl->getHtmlFrag('open').$cont.$tpl->getHtmlFrag('close');
+            $out = getAdminBox($cont);
         } else {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;

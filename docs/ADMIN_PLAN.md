@@ -18,6 +18,14 @@ Keine neue Template-Arbeit gegen uneinheitliches PHP.
 
 ## Feste Regeln
 
+### Regel 0: Neue Hilfsfunktionen zentralisieren
+
+- neue Funktionsnamen nur in `camelCase`, nur Buchstaben, 6-24 Zeichen, mit Pflicht-Praefix `get`, `set`, `add`, `update`, `delete`, `is`, `check` oder `filter`
+- neue Variablennamen nur in Kleinbuchstaben, nur Buchstaben, 2-8 Zeichen, ohne `_`, ohne Ziffern, ohne `camelCase`
+- neue Funktionen nur in `core/helpers.php` anlegen
+- bestehende neue Hilfsfunktionen nur in `core/helpers.php` erweitern oder aendern
+- Details und Ausnahmen bleiben in `.rules/` verbindlich
+
 ### Regel 1: Erst PHP, dann Template
 
 - gleiche Datenstruktur zuerst
@@ -69,7 +77,21 @@ Pflicht:
 
 ### Regel 5: Raw-Slots dokumentieren
 
-Diese Admin-Raw-Slots sind erlaubt, aber dokumentationspflichtig:
+Diese Admin-Raw-Slots sind erlaubt, aber dokumentationspflichtig.
+Massgeblich ist der reale Registry-Stand in `docs/RAW_SLOTS_ADMIN.md`.
+
+Aktuell produktiv verdrahtete Shared-Slots:
+
+- `head_html`
+- `rows_html`
+- `cells_html`
+- `hidden_html`
+- `form_attr`
+- `label_html`
+- `field_html`
+- `content_html`
+
+Zusatz-Slots in bestehenden aelteren Strukturen:
 
 - `status_html`
 - `actions_html`
@@ -107,9 +129,11 @@ In PHP bleiben:
 
 Ist-Stand Template-Verzeichnis:
 
-- unter `templates/admin/fragments/` existieren **59** Fragmente
-- darunter weiter technische Mikro-Fragmente wie `open.html`, `close.html`, `alert.html`, `form-conf.html`
-- unter `templates/admin/partials/` existieren **7** Dateien:
+- unter `templates/admin/fragments/` existieren **63** Fragmente
+- darunter weiter technische Fragmente wie `alert.html`, `form-conf.html`, dazu produktive Shared-Cuts wie `admin-box`, `admin-form`, `admin-table`
+- unter `templates/admin/partials/` existieren **9** Dateien:
+- `admin-config-base.html`
+- `admin-config-communication.html`
 - `blocks/add.html`
 - `blocks/edit.html`
 - `changelog.html`
@@ -121,10 +145,11 @@ Ist-Stand Template-Verzeichnis:
 Ist-Stand Modulmigration:
 
 - produktiv verwendet wird vor allem `searchbox`
+- `admin-config-base` und `admin-config-communication` sind produktiv als `form-conf`-Teilbloecke verdrahtet
 - `blocks/add.html` und `blocks/edit.html` sind vorbereitet, aber nicht verdrahtet
 - ausser `searchbox` gibt es keine bestaetigte produktive Nutzung fachlicher Admin-Partials fuer Modul-Hauptstrukturen
 - Config-Module nutzen weiter `form-conf`
-- viele Module nutzen weiter `open`, `close`, `alert`
+- produktive PHP-Aufrufer von `open` und `close` sind entfernt; der Rest ist jetzt Shared-Helper-Layer plus fachliche Sonderlayouts
 
 ---
 
@@ -141,6 +166,9 @@ Ist-Stand Modulmigration:
 - `open`
 - `close`
 
+Die frueheren Fragment-Dateien `open.html` und `close.html` sind entfernt.
+Deprecated bleibt das historische Wrapper-Muster, nicht ein aktiver Dateibestand.
+
 ### Eingefuehrt als `form-conf`-Includes
 
 - `admin-config-base`
@@ -149,11 +177,14 @@ Ist-Stand Modulmigration:
 Sie sind aktuell keine eigenstaendigen Standard-Einstiege.
 Sie gelten als interne Teilblaecke von `form-conf`.
 
-### Geplante Standardschnitte
+### Bestaetigte Standardschnitte
 
 - `admin-table`
 - `admin-table-row`
 - `admin-form`
+- `admin-form-row`
+- `admin-form-wide`
+- `admin-box`
 
 ### Verbindliche Felder
 
@@ -197,6 +228,7 @@ Slot-Namen:
 
 - `fields`
 - `searchbox_html`
+- reale Shared-Raw-Slots siehe `docs/RAW_SLOTS_ADMIN.md`
 
 ### Listen-Schnitt
 
@@ -231,6 +263,7 @@ Slot-Namen:
 - `rows_html`
 - `status_html`
 - `actions_html`
+- reale Shared-Raw-Slots siehe `docs/RAW_SLOTS_ADMIN.md`
 
 ### Formular-Schnitt
 
@@ -256,6 +289,7 @@ Raw-Slots:
 - `category_select`
 - `body_editor`
 - `extra_fields`
+- reale Shared-Raw-Slots siehe `docs/RAW_SLOTS_ADMIN.md`
 
 Stop-Bedingung:
 
@@ -269,25 +303,43 @@ Stop-Bedingung:
 
 Status:
 
-- teilweise abgeschlossen
-- `comments`      - `form-conf`: ja | `open`/`close` entfernt: nein
-- `favorites`     - `form-conf`: ja | `open`/`close` entfernt: nein
-- `privat`        - `form-conf`: ja | `open`/`close` entfernt: nein
-- `referers`      - `form-conf`: ja | `open`/`close` entfernt: nein
-- `statistic`     - `form-conf`: ja | `open`/`close` entfernt: nein
-- `newsletter`    - `form-conf`: ja | `open`/`close` entfernt: nein
-- `ratings`       - `form-conf`: ja | `open`/`close` entfernt: nein
-- `lang`          - `form-conf`: ja | `open`/`close` entfernt: nein
-- `forum`         - offen
-- `files`         - offen
+- code-seitig abgeschlossen auf Wrapper-Ebene
+- `form-conf`- und Config-Faelle wurden repo-weit auf `admin-box` oder bestehende stabile Config-Struktur gezogen
+- produktive `open`/`close`-Aufrufer in `admin/modules/*.php`, `modules/*/admin/index.php`, `core/admin.php` und `core/system.php` sind entfernt
+- gemischte Config- und Tab-Screens bleiben fachlich gemischt, aber nicht mehr auf `open`/`close`
+- Batch-Status fachlich noch in Verifikation, weil nicht alle migrierten Save-Pfade manuell Kernpfad-geprueft wurden
 
-Batch 1 ist nicht abgeschlossen, solange die bestaetigten Module noch produktive `open`/`close`-Aufrufer haben.
+Bestaetigte Config-/Box-Faelle:
+
+- `admin/modules/comments.php`
+- `admin/modules/favorites.php`
+- `admin/modules/privat.php`
+- `admin/modules/referers.php`
+- `admin/modules/newsletter.php`
+- `admin/modules/ratings.php`
+- `admin/modules/statistic.php`
+- `admin/modules/lang.php`
+- `admin/modules/security.php`
+- `admin/modules/config.php`
+- `admin/modules/uploads.php`
+- `admin/modules/database.php`
+- `modules/news/admin/index.php`
+- `modules/order/admin/index.php`
+- `modules/rss/admin/index.php`
+- `modules/whois/admin/index.php`
+- `modules/faq/admin/index.php`
+- `modules/pages/admin/index.php`
+- `modules/search/admin/index.php`
+- `modules/shop/admin/index.php`
 
 ### Batch 2: Listen
 
 Status:
 
-- offen
+- code-seitig abgeschlossen fuer stabile Listen-Schnitte
+- `admin-table` und `admin-table-row` sind bestaetigte Mehrfachschnitte
+- gemischte Listen mit eigenem Bulk-/Tab-/Audit-Layout wurden nur wrapper-seitig bereinigt und nicht in einen falschen Standardschnitt gepresst
+- Batch-Status fachlich noch in Verifikation, weil nicht alle migrierten Listen-Pfade manuell kernpfadgeprueft wurden
 
 Zielmodule:
 
@@ -303,13 +355,19 @@ Scope:
 
 - nur Module mit strukturierter Listenansicht
 - Module ohne echte Listenansicht sind aus Batch 2 ausgenommen
-- noch nicht zugeordnet fuer Batch-2-Pruefung: `auto_links`, `changelog`, `clients`, `contact`, `content`, `faq`, `help`, `jokes`, `links`, `media`, `money`, `order`, `pages`, `rss`, `search`, `shop`, `sitemap`, `voting`, `whois`
+- bestaetigte Listen-Faelle wurden ausserdem erfolgreich auf weitere Module ausgerollt:
+- `groups`, `messages`, `newsletter`, `lang`, `scheduler`, `security`
+- `news`, `files`, `account`, `forum`
+- `faq`, `help`, `content`, `pages`, `links`, `clients`, `order`, `money`, `voting`, `whois`, `jokes`, `media`, `auto_links`
 
 ### Batch 3: Formulare
 
 Status:
 
-- offen
+- code-seitig abgeschlossen fuer stabile Add/Edit-Formulare
+- `admin-form`, `admin-form-row`, `admin-form-wide` sind bestaetigte Mehrfachschnitte
+- verbleibende gemischte Editor-Screens bleiben bewusst lokal oder special und wurden nicht in einen falschen Standardschnitt gepresst
+- Batch-Status fachlich noch in Verifikation, weil kein vollstaendiger manueller Submit-Durchlauf fuer alle migrierten Form-Pfade dokumentiert ist
 
 Zielmodule:
 
@@ -321,11 +379,37 @@ Zielmodule:
 - `modules/files/admin/index.php`
 - `modules/account/admin/index.php`
 
+Bestaetigte Form-Faelle:
+
+- `admin/modules/admins.php`
+- `admin/modules/groups.php`
+- `admin/modules/messages.php`
+- `admin/modules/newsletter.php`
+- `admin/modules/comments.php`
+- `admin/modules/modules.php`
+- `admin/modules/scheduler.php`
+- `admin/modules/security.php` (`passwd()`)
+- `modules/news/admin/index.php`
+- `modules/content/admin/index.php`
+- `modules/order/admin/index.php`
+- `modules/money/admin/index.php`
+- `modules/voting/admin/index.php`
+- `modules/files/admin/index.php`
+- `modules/media/admin/index.php`
+- `modules/contact/admin/index.php`
+- `modules/clients/admin/index.php`
+- `modules/faq/admin/index.php`
+- `modules/pages/admin/index.php`
+- `modules/help/admin/index.php`
+- `modules/search/admin/index.php`
+
 ### Batch 4: Sonderfaelle
 
 Status:
 
-- offen
+- weiter offen als fachliche Restklasse
+- Sonderfaelle sind jetzt echte Fachsonderfaelle und nicht mehr `open`/`close`-Restmuell
+- Wrapper-Cleanup fuer diese Klasse ist erledigt
 
 Sonderfaelle:
 
@@ -340,6 +424,17 @@ Sonderfaelle:
 - `template`
 - `replace`
 - `monitor`
+- `lang/fileedit()`
+- `categories` innere Tab-/Multi-Form-Struktur
+- `account/add()` als schwerer Mixed-Editor
+- `shop` innere Shop-Layouts
+
+Repo-Stand 2026-03-26:
+
+- `open`/`close` sind im aktiven PHP-Admin-Layer entfernt
+- `admin-box`, `admin-table`, `admin-table-row`, `admin-form`, `admin-form-row`, `admin-form-wide` sind produktiv verdrahtet
+- representative GET-/Smoke-Pruefungen fuer migrierte Admin-Routen laufen grün; fuer `comments`, `newsletter`, `files`, `search` und `shop` wurden no-op Config-Saves ohne Dateiaenderung und ohne neue Logeintraege bestaetigt; `groups/save` und `modules/edit(news)` liefen als representative gekoppelte Edit-Submits mit grünem Redirect und ohne neue Logeintraege; verbleibende schwere Mehrfach-Editoren wie `categories/edit()`, `lang/fileedit()` und `account/add()` werden wegen Datenrisiko und hoher Formkomplexitaet als browser-only Kernpfade behandelt, laden nach den aktuellen Runtime-Fixes aber ohne neue PHP-Logeintraege
+- Restarbeit ist keine Wrapper-Bereinigung mehr, sondern manuelle Kernpfad-Verifikation, fachliche Sonderfaelle und spaetere Template-Reduktion
 
 Neubewertung nur wenn:
 

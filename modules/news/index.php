@@ -113,7 +113,7 @@ function news(): void {
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             if (($i - 1) % $conf['news']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
             $cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
-            $cont .= $tpl->getHtmlFrag('basic', [
+            $cont .= getContentCard([
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -297,10 +297,8 @@ function view(): void {
         $favorites = getFavorBtn($id, $conf['name']);
         $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVoting($vote, $conf['name']).'</div><hr>' : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-        $cont .= $tpl->getHtmlFrag('basic', [
-            'is_view' => true,
+        $cont .= getContentView([
             'is_moder' => is_moder($conf['name']),
-            'has_back' => true,
             'id' => $id,
             'title_href' => getSeoUrl([
                 'name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle,
@@ -473,7 +471,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);
             setHead(['title' => _ADD]);
-            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD, 'htitle' => _NEWS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {

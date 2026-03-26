@@ -12,15 +12,15 @@ function getStatisticSearch(): string {
     $files = [];
     foreach (scandir(COUNTER_DIR.'/statistic/') as $filev) $files[] = $filev;
     rsort($files);
-    $search = '<form method="post" action="'.$afile.'.php">'._STATFROM.': <select name="file"><option value="">'._NO_INFO.'</option>';
+    $sopts = getAdminOption('', _NO_INFO, !$file);
     foreach ($files as $val) {
         if ($val != '' && preg_match('/^statistic\_(.+)\.log/', $val, $matches)) {
-            $sel = ($file && $file == $val) ? ' selected' : '';
-            $search .= '<option value="'.$val.'"'.$sel.'>'.$matches[1].'</option>';
+            $sopts .= getAdminOption($val, $matches[1], $file === $val);
         }
     }
-    $search .= '</select> <input type="hidden" name="name" value="statistic"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $search]);
+    $sel = getAdminSelect('file', $sopts);
+    $search = '<form method="post" action="'.$afile.'.php">'._STATFROM.': '.$sel.' <input type="hidden" name="name" value="statistic"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+    return getAdminSearchBox($search);
 }
 
 function statistic(): void {
@@ -31,8 +31,7 @@ function statistic(): void {
     $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15" alt="'._STATGR.'" title="'._STATGR.'">';
+    $statv = '<img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15" alt="'._STATGR.'" title="'._STATGR.'">';
     if ($file || date('d') > 15) {
         if ($file) {
             $path = COUNTER_DIR.'/statistic/'.$file;
@@ -41,9 +40,9 @@ function statistic(): void {
         } else {
             $out = date('d');
         }
-        $cont .= '<hr><img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out.'" alt="'._STATGR.'" title="'._STATGR.'">';
+        $statv .= '<hr><img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out.'" alt="'._STATGR.'" title="'._STATGR.'">';
     }
-    $cont .= '<hr><table class="sl_table_list_sort"><thead><tr><th>'._DATE.'</th><th>'._UNIQUE.'</th><th>'._HITS.'</th><th>'._HOME.'</th><th>'._REFERERS.'</th><th>'._BOTSOPT.'</th><th>'._AUDIENCE.'</th><th class="{sorter: false}">'._USERS.'</th></tr></thead><tbody>';
+    $statv .= '<hr><table class="sl_table_list_sort"><thead><tr><th>'._DATE.'</th><th>'._UNIQUE.'</th><th>'._HITS.'</th><th>'._HOME.'</th><th>'._REFERERS.'</th><th>'._BOTSOPT.'</th><th>'._AUDIENCE.'</th><th class="{sorter: false}">'._USERS.'</th></tr></thead><tbody>';
     $daysLog = COUNTER_DIR.'/days.log';
     $statLog = COUNTER_DIR.'/statistic.log';
     if ($file) {
@@ -72,11 +71,10 @@ function statistic(): void {
         $auditory += $out_aud;
         if ($auditory < 0) $auditory = 0;
         $regusers += rtrim($out[7]);
-        $cont .= '<tr><td>'.$out[0].'</td><td>'.$out[1].'</td><td>'.$out[2].'</td><td>'.$out[6].'</td><td>'.$out[5].'</td><td>'.$out[4].'</td><td>'.$out_aud.'</td><td>'.rtrim($out[7]).'</td></tr>';
+        $statv .= '<tr><td>'.$out[0].'</td><td>'.$out[1].'</td><td>'.$out[2].'</td><td>'.$out[6].'</td><td>'.$out[5].'</td><td>'.$out[4].'</td><td>'.$out_aud.'</td><td>'.rtrim($out[7]).'</td></tr>';
     }
-    $cont .= '<tr><th>'._ALL.'</th><th>'.$unique.'</th><th>'.$today.'</th><th>'.$homepage.'</th><th>'.$sites.'</th><th>'.$engines.'</th><th>'.$auditory.'</th><th>'.$regusers.'</th></tr></tbody></table>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $statv .= '<tr><th>'._ALL.'</th><th>'.$unique.'</th><th>'.$today.'</th><th>'.$homepage.'</th><th>'.$sites.'</th><th>'.$engines.'</th><th>'.$auditory.'</th><th>'.$regusers.'</th></tr></tbody></table>';
+    echo $cont.getAdminBox($statv);
     setFoot();
 }
 
@@ -89,8 +87,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'statistic',
         'op' => 'save',
@@ -104,8 +101,7 @@ function config(): void {
         'r_stat' => radio_form($conf['statistic']['stat'], 'stat'),
         'statistic' => true,
     ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -123,7 +119,7 @@ function save(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2, 'sub' => getStatisticSearch()]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -134,3 +130,5 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+
+

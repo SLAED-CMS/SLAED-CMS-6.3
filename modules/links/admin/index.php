@@ -32,8 +32,8 @@ function links(): void {
     }
     $result = $db->getSqlQuery('SELECT l.id, l.cid, l.name, l.title, l.url, l.time, l.ip, c.title, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.status = :status ORDER BY l.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._SITEURL.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._SITEURL.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $cid, $uname, $title, $url, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
@@ -46,16 +46,22 @@ function links(): void {
                 $view = '';
                 $active = '0';
             }
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                rtrim($view, '|'),
+                rtrim($broc, '|'),
+                '<a href="'.$afile.'.php?name=links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=links&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span></td>'
             .'<td>'.domain($url).'</td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.$broc.'<a href="'.$afile.'.php?name=links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=links&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_links', '', 'status = \''.$status.'\'', $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -89,20 +95,20 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($description)) $cont .= preview($title, $description, $bodytext, '', 'links');
     $link = (!empty($site) && $site !== 'http://') ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
-    .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
-    .'<tr><td>'._CATEGORY.':</td><td>'.getcat('links', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'description', $description, 'links', '5', _TEXT, '1').'</td></tr>'
-    .'<tr><td>'._ENDTEXT.':</td><td>'.textarea('2', 'bodytext', $bodytext, 'links', '15', _ENDTEXT, '0').'</td></tr>'
-    .'<tr><td>'._AUEMAIL.':</td><td><input type="email" name="email" value="'.$email.'" class="sl_form" placeholder="'._AUEMAIL.'" required></td></tr>'
-    .'<tr><td>'.$link.':</td><td><input type="url" name="site" value="'.$site.'" class="sl_form" placeholder="'._URL.'" required></td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
-    .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
-    .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="links">'.ad_save('fid', $fid, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows = '';
+    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
+    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required>');
+    $rows .= getAdminFormRow(_CATEGORY.':', getcat('links', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
+    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'description', $description, 'links', '5', _TEXT, '1'));
+    $rows .= getAdminFormRow(_ENDTEXT.':', textarea('2', 'bodytext', $bodytext, 'links', '15', _ENDTEXT, '0'));
+    $rows .= getAdminFormRow(_AUEMAIL.':', '<input type="email" name="email" value="'.$email.'" class="sl_form" placeholder="'._AUEMAIL.'" required>');
+    $rows .= getAdminFormRow($link.':', '<input type="url" name="site" value="'.$site.'" class="sl_form" placeholder="'._URL.'" required>');
+    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
+    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
+    $rows .= getAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'));
+    $rows .= getAdminFormWide(ad_save('fid', $fid, 'save'), '', 'sl_center');
+    $hide = '<input type="hidden" name="name" value="links">';
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -168,8 +174,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/links.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'links',
         'op' => 'configsave',
@@ -222,8 +227,7 @@ function config(): void {
         '_pagelink' => _PAGELINK,
         'r_link' => radio_form($conf['links']['link'] ?? 0, 'link'),
         'links' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -262,7 +266,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 5]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -276,7 +280,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 
 
 

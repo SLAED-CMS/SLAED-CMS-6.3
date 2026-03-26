@@ -32,10 +32,10 @@ function sitemap(): void {
         $asize += $size;
     }
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add"><input type="submit" value="'._UPDATE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $hide = '<input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add">';
+    $rows = getAdminFormWide(textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)));
+    $rows .= getAdminFormWide('<input type="submit" value="'._UPDATE.'" class="sl_but_blue">', '', 'sl_center');
+    $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
     echo $cont;
     setFoot();
 }
@@ -54,10 +54,10 @@ function xsledit(): void {
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', 'application/xml', $conts).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="xslsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $hide = '<input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="xslsave">';
+    $rows = getAdminFormWide(textarea_code('code', 'template', 'sl_form', 'application/xml', $conts));
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
     echo $cont;
     setFoot();
 }
@@ -105,8 +105,7 @@ function config(): void {
         $sp = (($conf['sitemap']['pr_p'] ?? '0') === (string)$val) ? ' selected' : '';
         $popt .= '<option value="'.$val.'"'.$sp.'>'.$val.'</option>';
     }
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'sitemap',
         'op' => 'configsave',
@@ -158,8 +157,7 @@ function config(): void {
         '_map_site' => _MAP_SITE,
         'r_txt' => radio_form($conf['sitemap']['txt'] ?? 0, 'txt'),
         'sitemap' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -197,7 +195,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -210,3 +208,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
+

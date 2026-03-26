@@ -32,8 +32,8 @@ function media(): void {
     }
     $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.time, m.ip, c.title, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.status = :status ORDER BY m.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $cid, $uname, $title, $subtitle, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $title = ($subtitle) ? $title.' / '.$subtitle : $title;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
@@ -47,15 +47,21 @@ function media(): void {
                 $view = '';
                 $active = '0';
             }
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                rtrim($view, '|'),
+                rtrim($broc, '|'),
+                '<a href="'.$afile.'.php?name=media&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=media&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.$broc.'<a href="'.$afile.'.php?name=media&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=media&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_media', '', 'status = \''.$status.'\'', $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -102,67 +108,69 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($description) $cont .= preview($mtitle, $description, '', '', 'media');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
-    .'<tr><td>'._MTITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._MTITLE.'" required></td></tr>'
-    .'<tr><td>'._MSUBTITLE.':</td><td><input type="text" name="subtitle" value="'.$subtitle.'" maxlength="100" class="sl_form" placeholder="'._MSUBTITLE.'"></td></tr>'
-    .'<tr><td>'._CATEGORY.':</td><td>'.getcat('media', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-    .'<tr><td>'._MYEAR.':</td><td><select name="year" class="sl_form">';
+    $hide = '<input type="hidden" name="name" value="media">';
+    $rows = '';
+    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
+    $rows .= getAdminFormRow(_MTITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._MTITLE.'" required>');
+    $rows .= getAdminFormRow(_MSUBTITLE.':', '<input type="text" name="subtitle" value="'.$subtitle.'" maxlength="100" class="sl_form" placeholder="'._MSUBTITLE.'">');
+    $rows .= getAdminFormRow(_CATEGORY.':', getcat('media', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
+    $years = '<select name="year" class="sl_form">';
     $xyear = $date['year'] - 100;
     while ($xyear <= ($date['year'] + 1)) {
         $sel = ($xyear == $year) ? ' selected' : '';
-        $cont .= '<option value="'.$xyear.'"'.$sel.'>'.$xyear.'</option>';
+        $years .= '<option value="'.$xyear.'"'.$sel.'>'.$xyear.'</option>';
         $xyear++;
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._MDIRECTOR.':</td><td><input type="text" name="director" value="'.$director.'" maxlength="100" class="sl_form" placeholder="'._MDIRECTOR.'"></td></tr>'
-    .'<tr><td>'._MROLES.':</td><td><input type="text" name="roles" value="'.$roles.'" maxlength="255" class="sl_form" placeholder="'._MROLES.'"></td></tr>'
-    .'<tr><td>'._DESCRIPTION.':</td><td>'.textarea('1', 'description', $description, 'media', '10', _DESCRIPTION, '1').'</td></tr>'
-    .'<tr><td>'._MCREATEDBY.':</td><td><input type="text" name="createdby" value="'.$createdby.'" maxlength="100" class="sl_form" placeholder="'._MCREATEDBY.'"></td></tr>'
-    .'<tr><td>'._MDURATION.':</td><td><input type="text" name="duration" value="'.$duration.'" maxlength="100" class="sl_form" placeholder="'._MDURATION.'"></td></tr>'
-    .'<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">';
+    $years .= '</select>';
+    $rows .= getAdminFormRow(_MYEAR.':', $years);
+    $rows .= getAdminFormRow(_MDIRECTOR.':', '<input type="text" name="director" value="'.$director.'" maxlength="100" class="sl_form" placeholder="'._MDIRECTOR.'">');
+    $rows .= getAdminFormRow(_MROLES.':', '<input type="text" name="roles" value="'.$roles.'" maxlength="255" class="sl_form" placeholder="'._MROLES.'">');
+    $rows .= getAdminFormRow(_DESCRIPTION.':', textarea('1', 'description', $description, 'media', '10', _DESCRIPTION, '1'));
+    $rows .= getAdminFormRow(_MCREATEDBY.':', '<input type="text" name="createdby" value="'.$createdby.'" maxlength="100" class="sl_form" placeholder="'._MCREATEDBY.'">');
+    $rows .= getAdminFormRow(_MDURATION.':', '<input type="text" name="duration" value="'.$duration.'" maxlength="100" class="sl_form" placeholder="'._MDURATION.'">');
+    $langsel = '<select name="lang" class="sl_form">';
     $langs = explode(',', $conf['media']['lang'] ?? '');
     foreach ($langs as $val) {
         $sel = ($val == $lang && $val != '') ? ' selected' : '';
-        $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
+        $langsel .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._NOTE.':</td><td>'.textarea('2', 'note', $note, 'media', '10', _NOTE, '0').'</td></tr>'
-    .'<tr><td>'._MFORMAT.':</td><td><select name="format" class="sl_form">'
-    .'<option value="">'._NO_INFO.'</option>';
+    $langsel .= '</select>';
+    $rows .= getAdminFormRow(_LANGUAGE.':', $langsel);
+    $rows .= getAdminFormRow(_NOTE.':', textarea('2', 'note', $note, 'media', '10', _NOTE, '0'));
+    $formatc = '<select name="format" class="sl_form"><option value="">'._NO_INFO.'</option>';
     $formats = explode(',', $conf['media']['format'] ?? '');
     foreach ($formats as $val) {
         $sel = ($val == $format && $val != '') ? ' selected' : '';
-        $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
+        $formatc .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._MQUALITY.':</td><td><select name="quality" class="sl_form">'
-    .'<option value="">'._NO_INFO.'</option>';
+    $formatc .= '</select>';
+    $rows .= getAdminFormRow(_MFORMAT.':', $formatc);
+    $qualityc = '<select name="quality" class="sl_form"><option value="">'._NO_INFO.'</option>';
     $qualities = explode(',', $conf['media']['quality'] ?? '');
     foreach ($qualities as $val) {
         $sel = ($val == $quality && $val != '') ? ' selected' : '';
-        $cont .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
+        $qualityc .= '<option value="'.$val.'"'.$sel.'>'.$val.'</option>';
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._MSIZE.':</td><td><input type="text" name="size" value="'.$size.'" maxlength="100" class="sl_form" placeholder="'._MSIZE.'"></td></tr>'
-    .'<tr><td>'._MRELEASED.':</td><td><input type="text" name="released" value="'.$released.'" maxlength="100" class="sl_form" placeholder="'._MRELEASED.'"></td></tr>'
-    .'<tr><td colspan="2">';
+    $qualityc .= '</select>';
+    $rows .= getAdminFormRow(_MQUALITY.':', $qualityc);
+    $rows .= getAdminFormRow(_MSIZE.':', '<input type="text" name="size" value="'.$size.'" maxlength="100" class="sl_form" placeholder="'._MSIZE.'">');
+    $rows .= getAdminFormRow(_MRELEASED.':', '<input type="text" name="released" value="'.$released.'" maxlength="100" class="sl_form" placeholder="'._MRELEASED.'">');
+    $linkc = '';
     $i = 0;
     $lnum = (int)($conf['media']['links'] ?? 0);
     while ($i < $lnum) {
         $a = $i + 1;
         $link = $links[$i] ?? '';
         $class = ($i != 0 && $link == '') ? ' class="sl_none"' : '';
-        $cont .= '<table id="med'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._URL.' - '.$a.':</a></td><td><input type="text" name="links[]" value="'.filterText($link).'" class="sl_form" placeholder="'._URL.' - '.$a.'"></td></tr></table>';
+        $linkc .= '<table id="med'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'med'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._URL.' - '.$a.':</a></td><td><input type="text" name="links[]" value="'.filterText($link).'" class="sl_form" placeholder="'._URL.' - '.$a.'"></td></tr></table>';
         $i++;
     }
-    $cont .= '</td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'mdate', $mdate, 16, 'sl_form').'</td></tr>'
-    .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
-    .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="media">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows .= getAdminFormWide($linkc);
+    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'mdate', $mdate, 16, 'sl_form'));
+    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
+    $rows .= getAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'));
+    $rows .= getAdminFormWide(ad_save('mid', $mid, 'save'), '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -237,8 +245,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/media.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'media',
         'op' => 'configsave',
@@ -300,8 +307,7 @@ function config(): void {
         '_pagelink' => _PAGELINK,
         'r_link' => radio_form($conf['media']['link'] ?? 0, 'link'),
         'media' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -348,7 +354,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 5]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -362,8 +368,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
 
 
 

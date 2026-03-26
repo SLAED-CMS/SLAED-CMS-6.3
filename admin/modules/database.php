@@ -152,14 +152,16 @@ function deleteDblock(): void {
 
 function getSqltable(array $items): string {
     if (!$items) return '';
-    $cont = '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TYPE.'</th><th>'._TABLE.'</th><th class="{sorter: false}">'._DB_SQL.'</th><th class="{sorter: false}">'._STATUS.'</th></tr></thead><tbody>';
+    $head = '<th>'._ID.'</th><th>'._TYPE.'</th><th>'._TABLE.'</th><th class="{sorter: false}">'._DB_SQL.'</th><th class="{sorter: false}">'._STATUS.'</th>';
+    $rows = '';
     foreach ($items as $row) {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
         $status = $row['ok'] ? '<span class="sl_green">'._OK.'</span>' : '<span class="sl_red">'._ERROR.' - '.htmlspecialchars($row['error']).'</span>';
-        $cont .= '<tr><td>'.(int)$row['num'].'</td><td>'.htmlspecialchars($row['type']).'</td><td>'.$tab.'</td><td>'.$sql.'</td><td>'.$status.'</td></tr>';
+        $cells = '<td>'.(int)$row['num'].'</td><td>'.htmlspecialchars($row['type']).'</td><td>'.$tab.'</td><td>'.$sql.'</td><td>'.$status.'</td>';
+        $rows .= getAdminTableRow($cells);
     }
-    return $cont.'</tbody></table>';
+    return getAdminTable($head, $rows);
 }
 
 function getSqlsum(array $items, string $mode, string $name): string {
@@ -212,18 +214,16 @@ function database(): void {
     $allrows = 0;
     $item = 0;
 
-    $content = '<table class="sl_table_list_sort">';
-    $content .= '<thead><tr>'
-              .'<th>'._ID.'</th>'
-              .'<th>'._TABLE.'</th>'
-              .'<th>'._TYPE.'</th>'
-              .'<th>'._DBCOLL.'</th>'
-              .'<th>'._ROWS.'</th>'
-              .'<th>'._DATE.'</th>'
-              .'<th>'._SIZE.'</th>'
-              .'<th>'._DBFREE.'</th>'
-              .'<th class="{sorter: false}">'.$headtag.'</th>'
-              .'</tr></thead><tbody>';
+    $dbhead = '<th>'._ID.'</th>'
+            .'<th>'._TABLE.'</th>'
+            .'<th>'._TYPE.'</th>'
+            .'<th>'._DBCOLL.'</th>'
+            .'<th>'._ROWS.'</th>'
+            .'<th>'._DATE.'</th>'
+            .'<th>'._SIZE.'</th>'
+            .'<th>'._DBFREE.'</th>'
+            .'<th class="{sorter: false}">'.$headtag.'</th>';
+    $dbrows = '';
 
     foreach ($tables as $info) {
         $name = $info['Name'];
@@ -294,33 +294,29 @@ function database(): void {
 
         $item++;
 
-        $content .= '<tr>'
-                  .'<td>'.$item.'</td>'
-                  .'<td>'.$name.'</td>'
-                  .'<td>'.$tabeng.'</td>'
-                  .'<td>'.$tabloc.'</td>'
-                  .'<td>'.$rows.'</td>'
-                  .'<td>'.format_time($crtime, _TIMESTRING).'</td>'
-                  .'<td>'.filterSize($tabsize).'</td>'
-                  .'<td>'.$freetag.'</td>'
-                  .'<td>'.$stattag.'</td>'
-                  .'</tr>';
+        $cells = '<td>'.$item.'</td>'
+               .'<td>'.$name.'</td>'
+               .'<td>'.$tabeng.'</td>'
+               .'<td>'.$tabloc.'</td>'
+               .'<td>'.$rows.'</td>'
+               .'<td>'.format_time($crtime, _TIMESTRING).'</td>'
+               .'<td>'.filterSize($tabsize).'</td>'
+               .'<td>'.$freetag.'</td>'
+               .'<td>'.$stattag.'</td>';
+        $dbrows .= getAdminTableRow($cells);
     }
 
-    // --- Totals row ---
-    $content .= '<tr>'
-              .'<td><strong>'.$item.'</strong></td>'
-              .'<td>&nbsp;</td>'
-              .'<td>&nbsp;</td>'
-              .'<td>&nbsp;</td>'
-              .'<td><strong>'.$allrows.'</strong></td>'
-              .'<td>&nbsp;</td>'
-              .'<td><strong>'.filterSize($total).'</strong></td>'
-              .'<td><strong>'.filterSize($sumfree).'</strong></td>'
-              .'<td>&nbsp;</td>'
-              .'</tr>';
-
-    $content .= '</tbody></table>';
+    $totalcells = '<td><strong>'.$item.'</strong></td>'
+                .'<td>&nbsp;</td>'
+                .'<td>&nbsp;</td>'
+                .'<td>&nbsp;</td>'
+                .'<td><strong>'.$allrows.'</strong></td>'
+                .'<td>&nbsp;</td>'
+                .'<td><strong>'.filterSize($total).'</strong></td>'
+                .'<td><strong>'.filterSize($sumfree).'</strong></td>'
+                .'<td>&nbsp;</td>';
+    $dbrows .= getAdminTableRow($totalcells);
+    $content = getAdminTable($dbhead, $dbrows);
 
     // After OPTIMIZE: Totals to recalculate info box
     if ($type === 'optimize') {
@@ -365,10 +361,7 @@ function database(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
     }
 
-    echo $cont
-       .$tpl->getHtmlFrag('open', [])
-       .$content
-       .$tpl->getHtmlFrag('close', []);
+    echo $cont.getAdminBox($content);
 
     setFoot();
 }
@@ -423,41 +416,30 @@ function dump(): void {
                 }
             }
             $cont .= getSqlsum($reslist, $action, $conf['db']['name']);
-            $cont .= $tpl->getHtmlFrag('open', []);
-            $cont .= getSqltable($reslist);
-            $cont .= $tpl->getHtmlFrag('close', []);
+            $cont .= getAdminBox(getSqltable($reslist));
         }
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DBINFO]);
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DBWARN]);
     }
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post">
-        <table class="sl_table_edit">
-            <tr>
-                <td>'.textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)).'</td>
-            </tr>
-            <tr>
-                <td class="sl_center">
-                    <input type="hidden" name="name" value="database">
-                    <input type="hidden" name="op" value="dump">
-                    <input type="hidden" name="type" value="dump">
-                    <input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('db')).'">
-                    <button type="submit" name="action" value="parse" class="sl_but_blue">'._DB_PARSE.'</button>
-                    <button type="submit" name="action" value="dump" class="sl_but_blue">'._EXECUTE.'</button>
-                </td>
-            </tr>
-        </table>
-    </form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $fhide = '<input type="hidden" name="name" value="database">'
+           .'<input type="hidden" name="op" value="dump">'
+           .'<input type="hidden" name="type" value="dump">'
+           .'<input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('db')).'">';
+    $frows = getAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
+    $frows .= getAdminFormWide(
+        '<button type="submit" name="action" value="parse" class="sl_but_blue">'._DB_PARSE.'</button>'
+        .' <button type="submit" name="action" value="dump" class="sl_but_blue">'._EXECUTE.'</button>',
+        '', 'sl_center'
+    );
+    echo $cont.getAdminBox(getAdminForm($afile.'.php', $frows, $fhide, 'sl_table_edit'));
     setFoot();
 }
 
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 4]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -480,3 +462,4 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
+

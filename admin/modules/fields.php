@@ -19,22 +19,18 @@ function fields(): void {
         $content .= '<div id="tabc'.$k.'" class="tabcont">';
         for ($c = 0; $c < 10; $c++) {
             preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
-            $field = '<select name="field3'.$k.'[]" class="sl_conf">';
             $fieldname = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
+            $fopts = '';
             foreach ($fieldname as $key => $val2) {
-                $i = $key + 1;
-                $sel = ($out[3] == $i) ? ' selected' : '';
-                $field .= '<option value="'.$i.'"'.$sel.'>'.$val2.'</option>';
+                $fopts .= getAdminOption((string)($key + 1), $val2, $out[3] == ($key + 1));
             }
-            $field .= '</select>';
-            $field2 = '<select name="field4'.$k.'[]" class="sl_conf">';
+            $field = getAdminSelect('field3'.$k.'[]', $fopts, 'sl_conf');
             $fieldname2 = [_FIELDIN, _FIELDOUT];
+            $fopts2 = '';
             foreach ($fieldname2 as $key => $val3) {
-                $a = $key + 1;
-                $sel2 = ($out[4] == $a) ? ' selected' : '';
-                $field2 .= '<option value="'.$a.'"'.$sel2.'>'.$val3.'</option>';
+                $fopts2 .= getAdminOption((string)($key + 1), $val3, $out[4] == ($key + 1));
             }
-            $field2 .= '</select>';
+            $field2 = getAdminSelect('field4'.$k.'[]', $fopts2, 'sl_conf');
             $b = $c + 1;
             $display = (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '';
             $hr = ($c == '0') ? '' : '<hr>';
@@ -51,16 +47,14 @@ function fields(): void {
         $k++;
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _FIELDINFO]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post">'.$content.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="fields"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
+    $fieldv = getAdminConfSave($content, 'fields', 'save')
        .'<script>
         var countries=new ddtabcontent("fields")
         countries.setpersist(true)
         countries.setselectedClassTarget("link")
         countries.init()
     </script>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($fieldv);
     setFoot();
 }
 
@@ -89,7 +83,7 @@ function save(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'tab' => 6]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -98,3 +92,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+

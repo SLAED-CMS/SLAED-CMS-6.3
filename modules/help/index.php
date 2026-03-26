@@ -86,7 +86,7 @@ function help(): void {
             $cdesc = $cdesc ?: $ctitle;
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $date = ($conf['help']['date']) ? format_time($time) : '';
-            $cont .= $tpl->getHtmlFrag('basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => '', 'post_label' => '', 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['help']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => $thref.'#'.$id, 'comm_text' => $comm, 'comm_label' => _MESSAGES, 'rating' => '', 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => '', 'back_text' => '']);
+            $cont .= getContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => '', 'post_label' => '', 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['help']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => $thref.'#'.$id, 'comm_text' => $comm, 'comm_label' => _MESSAGES, 'rating' => '', 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => '', 'back_text' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_help', 'cid', $onum, $conf['help']['nump']);
     } else {
@@ -142,7 +142,7 @@ function view(): void {
     global $db, $afile, $user, $conf, $tpl;
     $id = getVar('get', 'id', 'num');
     $word = getVar('get', 'word', 'word');
-    $uid = intval($user[0]);
+    $uid = intval($user[0] ?? 0);
     $cwhere = catmids($conf['name'], 's.cid');
     $result = $db->getSqlQuery('SELECT s.id, s.pid, s.cid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, s.status, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE (s.id = :id1 OR s.pid = :id2) AND s.uid = :uid AND s.time <= NOW() '.$cwhere.' ORDER BY s.time ASC', ['id1' => $id, 'id2' => $id, 'uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -169,7 +169,9 @@ function view(): void {
         $a = 0;
         while ([$hid, $pid, $cid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $status, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
-            $title = ($title) ? filterTextHighlight($title, $word) : _MESSAGE.': '.$a;
+            $title = (string)$title;
+            $title = ($title !== '') ? $title : _MESSAGE.': '.$a;
+            $ttext = filterTextHighlight($title, $word);
             $fields = fields_out($field, $conf['name']);
             $fields = ($fields) ? '<br><br>'.$fields : '';
             $text = $hometext.$fields;
@@ -181,11 +183,78 @@ function view(): void {
                 $cdesc = $cdesc ?: $ctitle;
                 $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
                 $favorites = getFavorBtn($hid, $conf['name']);
+                $cont .= getContentView([
+                    'id' => $hid,
+                    'favorites' => $favorites,
+                    'title_text' => $ttext,
+                    'title_new' => '',
+                    'hits' => '',
+                    'reads_text' => $reads,
+                    'reads_label' => _READS,
+                    'post_text' => $post,
+                    'post_label' => _POSTEDBY,
+                    'date_text' => $date,
+                    'date_iso' => ($date) ? date('c', strtotime($time)) : '',
+                    'date_label' => _CHNGSTORY,
+                    'category_href' => $ctitle ? $chref : '',
+                    'category_attr' => $cdesc,
+                    'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '',
+                    'category_img' => $cimg,
+                    'text' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word),
+                    'voting' => '',
+                    'rating' => $rating,
+                    'back_title' => _BACK,
+                    'back_text' => _BACK,
+                    'is_moder' => false,
+                    'editor' => _EDITOR,
+                    'edit_href' => '',
+                    'edit_text' => '',
+                    'delete_href' => '',
+                    'delete_text' => '',
+                    'delete_ask' => '',
+                ]);
             } else {
-                $reads = $ctitle = $cimg = $favorites = '';
+                $reads = '';
+                $ctitle = '';
+                $cimg = '';
+                $favorites = '';
                 $cdesc = '';
+                $cont .= getContentCard([
+                    'id' => $hid,
+                    'title_href' => '#'.$hid,
+                    'title_attr' => strip_tags($title),
+                    'title_text' => $ttext,
+                    'title_new' => '',
+                    'category_href' => '',
+                    'category_attr' => '',
+                    'category_text' => '',
+                    'category_img' => '',
+                    'text' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word),
+                    'read_href' => '',
+                    'read_text' => '',
+                    'post_text' => $post,
+                    'post_label' => _POSTEDBY,
+                    'date_text' => $date,
+                    'date_iso' => ($date) ? date('c', strtotime($time)) : '',
+                    'date_label' => _CHNGSTORY,
+                    'reads_text' => '',
+                    'reads_label' => _READS,
+                    'hits' => '',
+                    'comm_href' => '',
+                    'comm_text' => '',
+                    'comm_label' => _COMMENTS,
+                    'rating' => $rating,
+                    'favorites' => '',
+                    'voting' => '',
+                    'editor' => _EDITOR,
+                    'edit_href' => '',
+                    'edit_text' => '',
+                    'delete_href' => '',
+                    'delete_text' => '',
+                    'delete_ask' => '',
+                    'is_moder' => false,
+                ]);
             }
-            $cont .= $tpl->getHtmlFrag('basic', ['is_view' => !$pid, 'has_back' => !$pid, 'id' => $hid, 'title_href' => '#'.$hid, 'title_attr' => strip_tags((string)$title), 'title_text' => filterTextHighlight($title, $word), 'title_new' => '', 'category_href' => (!$pid && $ctitle) ? $chref : '', 'category_attr' => $cdesc, 'category_text' => (!$pid && $ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterTextHighlight(filterReplaceText(filterMarkdown($text, $conf['name'], false), $conf['name']), $word), 'read_href' => '', 'read_text' => '', 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => $reads, 'reads_label' => _READS, 'hits' => '', 'comm_href' => '', 'comm_text' => '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => $favorites, 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => _BACK, 'back_text' => _BACK, 'is_moder' => false]);
             $a++;
         }
         $cont .= addview($id);
@@ -197,15 +266,21 @@ function view(): void {
 }
 
 function addview(int $id): string {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     if ((is_user() && $conf['help']['add'] == 1)) {
         $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$cid, $status] = $db->getSqlRow($result);
-        $cont = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">'
-        .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1').'</td></tr>'
-        .'<tr><td>'._HELPGLOS.'</td><td>'.radio_form($status, 'status').'</td></tr>'
-        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="catid" value="'.$cid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
-        return $cont;
+        $rows = getFormAddRow(_HELPGLOS, radio_form($status, 'status'));
+        $hide = '<input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="catid" value="'.$cid.'"><input type="hidden" name="posttype" value="save">';
+        return $tpl->getHtmlFrag('form-add', [
+            'extrafields' => $rows,
+            'hometext' => textarea('1', 'hometext', '', $conf['name'], 10, _TEXT, '1'),
+            'lbl_text' => _TEXT,
+            'name' => $conf['name'],
+            'style' => $conf['style'],
+            'submit' => getFormSubmit('send', _SEND, $hide),
+            'token' => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
+        ]);
     }
     return '';
 }
@@ -263,7 +338,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : '';
             addAdminMail($conf['help']['addmail'], $conf['name'], $puname, _HELP);
             setHead(['title' => _ADD]);
-            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD] + HELP_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HSUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {

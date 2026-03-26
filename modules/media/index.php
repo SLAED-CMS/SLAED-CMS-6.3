@@ -71,16 +71,16 @@ function media(): void {
     if ($db->getSqlRowCount($result) > 0) {
         while([$id, $cid, $uname, $title, $subtitle, $description, $links, $time, $acomm, $votes, $totalvotes, $comm, $hits, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($result)) {
             $cdesc = $cdesc ?: $ctitle;
-            $chref = 'index.php?name='.$conf['name'].'&amp;cat='.$cid;
+            $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $mtitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-            $thref = 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id;
+            $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $mtitle, 'ctitle' => $ctitle]);
             $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['media']['date']) ? format_time($time) : '';
             $links = (url_types($links)) ? $tpl->getHtmlFrag('hit-badge', ['title' => _MDOWN.': '.url_types($links), 'text' => url_types($links), 'cls' => 'sl_down']) : '';
             $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$mtitle.'&quot;?');
-            $cont .= $tpl->getHtmlFrag('basic', ['id' => $id, 'title_href' => $thref, 'title_attr' => $mtitle, 'title_text' => $mtitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['media']['read']) ? $hits : '', 'reads_label' => _READS, 'hits' => $links, 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
+            $cont .= getContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $mtitle, 'title_text' => $mtitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['media']['read']) ? $hits : '', 'reads_label' => _READS, 'hits' => $links, 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
     } else {
@@ -111,13 +111,13 @@ function liste(): void {
     setHead(['title' => _LIST]);
     $cont = setModuleNavi(['title' => _LIST, 'htitle' => _MEDIA]);
     if ($db->getSqlRowCount($result) > 0) {
-        $letter = ($conf['media']['letter']) ? letter($conf['name']) : '';
-        $cont .= $tpl->getHtmlFrag('liste-wrap', ['open' => true, 'letter' => $letter, 'id' => _ID, 'title' => _TITLE, 'category' => _CATEGORY, 'poster' => _POSTER, 'date' => _DATE]);
+            $letter = ($conf['media']['letter']) ? letter($conf['name']) : '';
+            $cont .= $tpl->getHtmlFrag('liste-wrap', ['open' => true, 'letter' => $letter, 'id' => _ID, 'title' => _TITLE, 'category' => _CATEGORY, 'poster' => _POSTER, 'date' => _DATE]);
         while([$id, $cid, $uname, $title, $subtitle, $time, $ctitle, $nick] = $db->getSqlRow($result)) {
             $stitle = ($subtitle) ? $title.' '.urldecode($conf['media']['mdefis']).' '.$subtitle : $title;
-            $chref = 'index.php?name='.$conf['name'].'&amp;cat='.$cid;
+            $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
             $post = ($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM);
-            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 'title_attr' => $stitle, 'title_text' => cutstr($stitle, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $ctitle, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
+            $cont .= $tpl->getHtmlFrag('liste-basic', ['id' => $id, 'title_href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $stitle, 'ctitle' => $ctitle]), 'title_attr' => $stitle, 'title_text' => cutstr($stitle, 40), 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $ctitle, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : _NO, 'post_text' => $post, 'time_text' => format_time($time), 'time_iso' => date('c', strtotime($time)), 'time_label' => _DATE]);
         }
         $cont .= $tpl->getHtmlFrag('liste-wrap', []);
         $onum = ($let) ? "title LIKE BINARY :let AND time <= NOW() AND status != '0'" : "time <= NOW() AND status != '0'";
@@ -159,8 +159,9 @@ function view(): void {
         if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['media']['defis'], _MEDIA)]);
         if ($conf['media']['viewcat']) $cont .= setCategories($conf['name'], $conf['media']['subcat'], $conf['media']['catdesc'], 0);
         $cdesc = ($cdesc) ? $cdesc : $ctitle;
-        $ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => 'index.php?name='.$conf['name'].'&amp;cat='.$cid, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
-        $cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => 'index.php?name='.$conf['name'].'&amp;cat='.$cid, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
+        $chref = getSeoUrl(['name' => $conf['name'], 'cat' => $cid]);
+        $ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
+        $cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
         $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $post = ($post) ? $tpl->getHtmlFrag('media-post-badge', ['title' => _POSTEDBY, 'text' => $post]) : '';
         $date = ($conf['media']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($date)), 'title' => _CHNGSTORY, 'text' => format_time($date)]) : '';
@@ -169,7 +170,7 @@ function view(): void {
         $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id, 'delete_ask' => _DELETE.' &quot;'.$ptitle.'&quot;?', 'delete_text' => _ONDELETE]) : '';
         $favorites = getFavorBtn($id, $conf['name']);
         $goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
-        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=broken&amp;id='.$id, 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
+        $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
         
         $year = ($year) ? _MYEAR.': '.$year : '';
         $director = ($director) ? _MDIRECTOR.': '.$director : '';
@@ -226,7 +227,7 @@ function view(): void {
                         $img = isset($match[2]) ? trim($match[2]) : (isset($match[1]) ? trim($match[1]) : '');
                     }
                     $img = ($img) ? (file_exists($img) ? $img : img_find('logos/slaed_logo_60x60.png')) : img_find('logos/slaed_logo_60x60.png');
-                    $cont .= $tpl->getHtmlFrag('assoc-basic', ['href' => 'index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$aid, 'title_attr' => $title, 'title_text' => $title, 'date_text' => $adate, 'date_iso' => ($conf['media']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $atext, 'img_src' => $img]);
+                    $cont .= $tpl->getHtmlFrag('assoc-basic', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $aid, 'title' => $title]), 'title_attr' => $title, 'title_text' => $title, 'date_text' => $adate, 'date_iso' => ($conf['media']['date']) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'text' => $atext, 'img_src' => $img]);
                 }
                 $cont .= $tpl->getHtmlFrag('assoc-wrap', []);
             }
@@ -382,7 +383,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
             setHead(['title' => _MEDIA.' '._ADD, 'desc' => _UPLOADFINISHM]);
-            $meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHM, 'meta' => $meta]);
             setFoot();
         } else {
@@ -399,7 +400,7 @@ function broken(): void {
     if ($conf['media']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCMEDIA]);
-        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id.'">';
+        $meta = getMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
         echo setModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEM, 'meta' => $meta]);
         setFoot();
     } else {

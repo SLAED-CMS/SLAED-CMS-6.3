@@ -17,26 +17,31 @@ function order(): void {
     $offset = (int)(($num - 1) * $anum);
     $result = $db->getSqlQuery('SELECT id, email, info, note, ip, agent, time, status FROM '.PREFIX_DB.'_order ORDER BY time DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
         [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_order'));
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $email, $info, $note, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $infos = fields_out($info, 'order');
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                ad_status($afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status),
+                '<a href="'.$afile.'.php?name=order&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=order&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email).'</td>'
             .'<td>'.user_geo_ip($ip, 4).'</td>'
             .'<td>'.format_time($date, _TIMESTRING).'</td>'
             .'<td>'.ad_status('', $status).'</td>'
-            .'<td>'.add_menu(ad_status($afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status).'||<a href="'.$afile.'.php?name=order&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=order&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
             $r--;
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=order&amp;', $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -63,14 +68,14 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._OR_9.':</td><td><input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._OR_9.'" required></td></tr>'
-    .fields_in($field, 'order')
-    .'<tr><td>'._OR_10.':</td><td><textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._OR_10.'">'.$note.'</textarea></td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="order">'.ad_save('mid', $mid, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $hide = '<input type="hidden" name="name" value="order">';
+    $rows = '';
+    $rows .= getAdminFormRow(_OR_9.':', '<input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._OR_9.'" required>');
+    $rows .= fields_in($field, 'order');
+    $rows .= getAdminFormRow(_OR_10.':', '<textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._OR_10.'">'.$note.'</textarea>');
+    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
+    $rows .= getAdminFormWide(ad_save('mid', $mid, 'save'), '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -129,8 +134,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'order',
         'op' => 'configsave',
@@ -155,8 +159,7 @@ function config(): void {
         '_or7' => _OR_7,
         't_sendinfo' => textarea('3', 'sendinfo', $conf['order']['sendinfo'] ?? '', 'all', '5', _OR_7, '1'),
         'order' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -181,7 +184,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -195,3 +198,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
+

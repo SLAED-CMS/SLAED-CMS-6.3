@@ -12,8 +12,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['', '', '', '', '', '', '', 'name=config&amp;op=info'], 'tabs' => [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO], 'id' => 'config']);
     $cont .= checkPerms(CONFIG_DIR.'/global.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post">'
+    $confv = '<form name="post" action="'.$afile.'.php" method="post">'
     .'<div id="tabc0" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._VERSION.':</td><td><a href="//slaed.net" target="_blank" title="'._VERSION.'">SLAED CMS '.$conf['version'].'</a></td></tr>'
@@ -260,8 +259,7 @@ function config(): void {
         countries.init()
     </script>'
     .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="config"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -382,7 +380,7 @@ function save(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=config', 'name=config', 'name=config', 'name=config', 'name=config&amp;op=show', 'name=config', 'name=config', 'name=config&amp;op=info'], 'tabs' => [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO], 'tab' => 8]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -391,3 +389,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+

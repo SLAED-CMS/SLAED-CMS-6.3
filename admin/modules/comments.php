@@ -22,11 +22,11 @@ function edit(): void {
     $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, modul, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._COMMENT.':</td><td>'.textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="editsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $hide = '<input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="editsave">';
+    $rows = '';
+    $rows .= getAdminFormRow(_COMMENT.':', textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1'));
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -44,25 +44,16 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
     $sval = (string)($conf['comments']['sort'] ?? '1');
-    $sort_sel = '<select name="sort" class="sl_conf">'
-        .'<option value="1"'.($sval === '1' ? ' selected' : '').'>'._ASC.'</option>'
-        .'<option value="0"'.($sval === '0' ? ' selected' : '').'>'._DESC.'</option>'
-        .'</select>';
+    $sort_sel = getAdminSelect('sort',
+        getAdminOption('1', _ASC, $sval === '1').getAdminOption('0', _DESC, $sval === '0'), 'sl_conf');
     $lval = (string)($conf['comments']['link'] ?? '0');
-    $link_sel = '<select name="link" class="sl_conf">'
-        .'<option value="0"'.($lval === '0' ? ' selected' : '').'>'._NO.'</option>'
-        .'<option value="1"'.($lval === '1' ? ' selected' : '').'>'._ANONIMP.'</option>'
-        .'<option value="2"'.($lval === '2' ? ' selected' : '').'>'._ALLUSER.'</option>'
-        .'</select>';
+    $link_sel = getAdminSelect('link',
+        getAdminOption('0', _NO, $lval === '0').getAdminOption('1', _ANONIMP, $lval === '1').getAdminOption('2', _ALLUSER, $lval === '2'), 'sl_conf');
     $alval = (string)($conf['comments']['alink'] ?? '0');
-    $alink_sel = '<select name="alink" class="sl_conf">'
-        .'<option value="0"'.($alval === '0' ? ' selected' : '').'>'._NO.'</option>'
-        .'<option value="1"'.($alval === '1' ? ' selected' : '').'>'._ANONIMP.'</option>'
-        .'<option value="2"'.($alval === '2' ? ' selected' : '').'>'._ALLUSER.'</option>'
-        .'</select>';
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $alink_sel = getAdminSelect('alink',
+        getAdminOption('0', _NO, $alval === '0').getAdminOption('1', _ANONIMP, $alval === '1').getAdminOption('2', _ALLUSER, $alval === '2'), 'sl_conf');
+    $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'comments',
         'op' => 'save',
@@ -101,8 +92,7 @@ function config(): void {
         'r_web' => radio_form($conf['comments']['web'], 'web'),
         'comments' => true,
     ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -170,7 +160,7 @@ function delete(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -184,3 +174,4 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
+

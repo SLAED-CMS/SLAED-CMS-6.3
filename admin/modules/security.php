@@ -26,8 +26,8 @@ function security(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._TITLE.'</th><th>'._SIZE.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+    $head = '<th>'._TITLE.'</th><th>'._SIZE.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+    $rows = '';
     $files = is_dir(LOGS_DIR) ? scandir(LOGS_DIR) : [];
     foreach ($files as $file) {
         if (preg_match('#(.*)\.log$#', $file)) {
@@ -35,14 +35,19 @@ function security(): void {
             $title = $labels[$name];
             $path = LOGS_DIR.'/'.$file;
             $filesize = filesize($path);
-            $cont .= '<tr><td>'.title_tip(_FILE.': storage/logs/'.$file).$title.'</td>'
+            $acts = adminMenuItems([
+                '<a href="'.$afile.'.php?name=security&amp;op=logview&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>',
+                '<a href="'.$afile.'.php?name=security&amp;op=download&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>',
+                '<a href="'.$afile.'.php?name=security&amp;op=delete&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.title_tip(_FILE.': storage/logs/'.$file).$title.'</td>'
             .'<td>'.filterSize($filesize).'</td>'
             .'<td>'.date(_TIMESTRING, filemtime($path)).'</td>'
-            .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=logview&amp;file='.$name.'" title="'._INFO.'">'._INFO.'</a>||<a href="'.$afile.'.php?name=security&amp;op=download&amp;file='.$name.'" title="'._DOWN.'">'._DOWN.'</a>||<a href="'.$afile.'.php?name=security&amp;op=delete&amp;file='.$name.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
     }
-    $cont .= '</tbody></table>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $cont .= getAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -63,7 +68,8 @@ function logview(): void {
             return;
         }
         $cont .= checkPerms($path);
-        $cont .= $tpl->getHtmlFrag('open', []).'<table class="sl_table_edit"><tr><td><h5>'.$title.'</h5></td></tr><tr><td>'.textarea_code('code', '', 'sl_form', 'message/http', $content).'</td></tr></table>'.$tpl->getHtmlFrag('close', []);
+        $logv = '<table class="sl_table_edit"><tr><td><h5>'.$title.'</h5></td></tr><tr><td>'.textarea_code('code', '', 'sl_form', 'message/http', $content).'</td></tr></table>';
+        $cont .= getAdminBox($logv);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -81,11 +87,10 @@ function banlist(): void {
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 1, 'subtab' => 1, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MAIL_SEND]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<div id="tabcs0" class="tabcont">';
+    $banv = '<div id="tabcs0" class="tabcont">';
     $bip = explode('||', $conf['security']['blocker_ip']);
     if ($conf['security']['blocker_ip']) {
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._IP.'</th><th>'._IP_CIDR.'</th><th>'._HASH.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $banv .= '<table class="sl_table_list_sort"><thead><tr><th>'._IP.'</th><th>'._IP_CIDR.'</th><th>'._HASH.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         foreach ($bip as $val) {
             if ($val != '') {
                 $binfo = explode('|', $val, 4);
@@ -94,41 +99,41 @@ function banlist(): void {
                 if ($tcidr === false) continue;
                 [$tip, $tmask] = explode('/', $tcidr, 2);
                 $l = '<a href="'.$afile.'.php?name=security&amp;op=bansave&amp;cidr='.urlencode($tcidr).'&amp;hash='.urlencode($binfo[1]).'&amp;time='.(int)$binfo[2].'&amp;id=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$tcidr.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>';
-                $cont .= '<tr><td>'.title_tip(_BANN_REAS.': '.$binfo[3]).user_geo_ip($tip, 4).'</td>'
+                $banv .= '<tr><td>'.title_tip(_BANN_REAS.': '.$binfo[3]).user_geo_ip($tip, 4).'</td>'
                 .'<td>/'.$tmask.'</td>'
                 .'<td>'.$binfo[1].'</td>'
                 .'<td>'.getTimeLeft((int)$binfo[2]).'</td>'
                 .'<td>'.add_menu($l).'</td></tr>';
             }
         }
-        $cont .= '</tbody></table><hr>';
+        $banv .= '</tbody></table><hr>';
     }
-    $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
+    $banv .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
     .'<tr><td>'._IP_CIDR.':<div class="sl_small">'._IP_CIDR_TIP.'</div></td><td><textarea name="cidr" cols="65" rows="5" class="sl_form" placeholder="'._IP_CIDR_EX.'" required>'.$cidr.'</textarea></td></tr>'
     .'<tr><td>'._HASH.':</td><td><input type="text" name="hash" value="'.$hash.'" maxlength="255" class="sl_form" placeholder="'._HASH.'"></td></tr>'
     .'<tr><td>'._TIME.':</td><td><input type="number" name="time" value="'.$time.'" class="sl_form" placeholder="'._TIME.'" required></td></tr>'
     .'<tr><td>'._BANN_REAS.':</td><td><textarea name="info" cols="65" rows="5" class="sl_form" placeholder="'._BANN_REAS.'" required>'.$info.'</textarea></td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="bansave"><input type="hidden" name="id" value="2"><input type="submit" value="'._ADD.'" class="sl_but_blue"></td></tr></table></form>'
     .'</div>';
-    $cont .= '<div id="tabcs1" class="tabcont">';
+    $banv .= '<div id="tabcs1" class="tabcont">';
     $bip = explode('||', $conf['security']['blocker_user']);
     if ($conf['security']['blocker_user']) {
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._BANN_REAS.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $banv .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._BANN_REAS.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
         foreach ($bip as $val) {
             if ($val != '') {
                 $binfo = explode('|', $val);
-                $cont .= '<tr><td>'.user_info($binfo[0]).'</td>'
+                $banv .= '<tr><td>'.user_info($binfo[0]).'</td>'
                 .'<td>'.$binfo[2].'</td>'
                 .'<td>'.getTimeLeft($binfo[1]).'</td>'
                 .'<td>'.add_menu('<a href="'.$afile.'.php?name=security&amp;op=bansave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$binfo[0].'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
             }
         }
-        $cont .= '</tbody></table><hr>';
+        $banv .= '</tbody></table><hr>';
     }
     $name = getVar('get', 'name', 'name');
     $cookie = $conf['user_c'].'-close-security';
     $check = (getCookies('close-security') == '0') ? '' : ' checked';
-    $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
+    $banv .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
     .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('name', $name, '25', 'sl_form', '1').'</td></tr>'
     .'<tr><td>'._TIME.':</td><td><input type="number" name="time" value="'.$time.'" class="sl_form" placeholder="'._TIME.'" required></td></tr>'
     .'<tr><td>'._BANN_REAS.':</td><td><textarea name="info" cols="65" rows="5" class="sl_form" placeholder="'._BANN_REAS.'" required>'.$info.'</textarea></td></tr>'
@@ -142,8 +147,7 @@ function banlist(): void {
         countries.setselectedClassTarget("link")
         countries.init()
     </script>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($banv);
     setFoot();
 }
 
@@ -201,17 +205,17 @@ function passwd(): void {
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 2, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$conf['security']['login'] || !$conf['security']['password']) ? $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _SEC_AUTH_INFO]) : $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _SEC_AUTH_OK]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._SEC_ADMIN_IP.':<div class="sl_small">'._IP_CIDR_TIP.'</div></td><td><textarea name="admin_ip" cols="65" rows="5" class="sl_form" placeholder="'._IP_CIDR_EX.'">'.$conf['security']['admin_ip'].'</textarea></td></tr>';
+    $hide = '<input type="hidden" name="op" value="passsave">';
+    $rows = '';
+    $rows .= getAdminFormRow(_SEC_ADMIN_IP.':<div class="sl_small">'._IP_CIDR_TIP.'</div>', '<textarea name="admin_ip" cols="65" rows="5" class="sl_form" placeholder="'._IP_CIDR_EX.'">'.$conf['security']['admin_ip'].'</textarea>');
     if (!$conf['security']['login'] || !$conf['security']['password']) {
-        $cont .= '<tr><td>'._SEC_LOGIN.':</td><td><input type="text" name="login" value="" maxlength="255" class="sl_form" placeholder="'._SEC_LOGIN.'"></td></tr>'
-        .'<tr><td>'._SEC_PASSWORD.':</td><td><input type="text" name="password" value="" maxlength="255" class="sl_form" placeholder="'._SEC_PASSWORD.'"></td></tr>';
+        $rows .= getAdminFormRow(_SEC_LOGIN.':', '<input type="text" name="login" value="" maxlength="255" class="sl_form" placeholder="'._SEC_LOGIN.'">');
+        $rows .= getAdminFormRow(_SEC_PASSWORD.':', '<input type="text" name="password" value="" maxlength="255" class="sl_form" placeholder="'._SEC_PASSWORD.'">');
     } else {
-        $cont .= '<input type="hidden" name="login" value=""><input type="hidden" name="password" value="">';
+        $hide .= '<input type="hidden" name="login" value=""><input type="hidden" name="password" value="">';
     }
-    $cont .= '<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="passsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php?name=security', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -246,8 +250,7 @@ function config(): void {
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 3, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_conf">'
+    $confv = '<form action="'.$afile.'.php?name=security" method="post"><table class="sl_table_conf">'
     .'<tr><td>'._SFLOOD.':</td><td><select name="flood" class="sl_conf">'
     .'<option value="0"'.(($conf['security']['flood'] == 0) ? ' selected' : '').'>'._NO.'</option>'
     .'<option value="1"'.(($conf['security']['flood'] == 1) ? ' selected' : '').'>'._SFLOOD_1.'</option>'
@@ -283,8 +286,7 @@ function config(): void {
     .'<tr><td>'._SEC_LOG_U.'</td><td>'.radio_form($conf['security']['log_u'], 'log_u').'</td></tr>'
     .'<tr><td>'._SEC_WARN_BLOCK.'</td><td>'.radio_form($conf['security']['block'], 'block').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="op" value="configsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -351,7 +353,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 4, 'id' => 'security']);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -393,3 +395,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
+

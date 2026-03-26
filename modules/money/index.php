@@ -50,28 +50,34 @@ function money(): void {
     }
     </script>";
     $cont .= '<h2>'._MO_1.'</h2>'
-    .'<form name="form"><table class="sl_table_form"><tr><td>'._MO_2.': <input type="number" name="a" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td>'._MO_3.' Z: <input name="total" style="width: 65px;" class="sl_field '.$conf['style'].'"> USD</td><td><input type="button" value="'._MO_4.'" class="sl_but_blue" OnClick=Rechner(this.form)></td></tr></table></form>'
-    .'<form name="form"><table class="sl_table_form"><tr><td>'._MO_2.': <input type="number" name="a" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td>'._MO_3.' R: <input name="total" style="width: 65px;" class="sl_field '.$conf['style'].'"> RUB</td><td><input type="button" value="'._MO_4.'" class="sl_but_blue" OnClick=Rechner1(this.form)></td></tr></table></form>'
-    .'<form name="form"><table class="sl_table_form"><tr><td>'._MO_2.': <input type="number" name="a" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td>'._MO_3.' E: <input name="total" style="width: 65px;" class="sl_field '.$conf['style'].'"> EUR</td><td><input type="button" value="'._MO_4.'" class="sl_but_blue" OnClick=Rechner2(this.form)></td></tr></table></form>';
+    .getMoneyCalcForm('Rechner', _MO_3.' Z:', 'USD')
+    .getMoneyCalcForm('Rechner1', _MO_3.' R:', 'RUB')
+    .getMoneyCalcForm('Rechner2', _MO_3.' E:', 'EUR');
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $intro = getVar('post', 'intro', 'array', []);
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-        $cont .= '<h2>'._MO_6.'</h2><form action="index.php?name='.$conf['name'].'" method="post">'
-        .'<table class="sl_table_form">'
-        .'<tr><td>'._MO_7.':</td><td><input type="number" name="sum" value="'.$sum.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_7.'" required></td></tr>'
-        .'<tr><td>'._MO_8.':</td><td><input type="email" name="email" value="'.$email.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_8.'" required></td></tr>';
+        $rows = '';
+        $rows .= getFormAddRow(_MO_7.':', '<input type="number" name="sum" value="'.$sum.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_7.'" required>');
+        $rows .= getFormAddRow(_MO_8.':', '<input type="email" name="email" value="'.$email.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_8.'" required>');
         $form = explode(',', $conf['money']['form']);
         $i = 0;
         foreach ($form as $val) {
             if ($val != '') {
-                $cont .= '<tr><td>'.$val.':</td><td><input type="text" name="intro[]" value="'.filterHtml($intro[$i] ?? '', 1).'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'.$val.'" required></td></tr>';
+                $rows .= getFormAddRow($val.':', '<input type="text" name="intro[]" value="'.filterHtml($intro[$i] ?? '', 1).'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'.$val.'" required>');
                 $i++;
             }
         }
-        $cont .= '<tr><td>'._MO_9.':</td><td><textarea name="note" cols="65" rows="5" class="sl_field '.$conf['style'].'">'.$note.'</textarea></td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="hidden" name="op" value="send"><input type="submit" value="'._MO_10.'" class="sl_but_blue"></td></tr></table></form>';
+        $rows .= getFormAddRow(_MO_9.':', textarea('1', 'note', $note, $conf['name'], 5, _MO_9));
+        $cont .= '<h2>'._MO_6.'</h2>'.$tpl->getHtmlFrag('form-add', [
+            'captcha' => getCaptcha(1),
+            'extrafields' => $rows,
+            'name' => $conf['name'],
+            'style' => $conf['style'],
+            'submit' => getFormSubmit('send', _MO_10),
+            'token' => '',
+        ]);
     }
     echo $cont;
     setFoot();
@@ -136,7 +142,7 @@ function send(): void {
                 addMail($email, $amail, $subject, $msg, 0, 3);
             }
             setHead(['title' => _MONEY]);
-            $meta = '<meta http-equiv="refresh" content="30; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name'], 30);
             echo $tpl->getHtmlFrag('title', ['title' => _MONEY]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['money']['info'], 'all', false), 'all'), 'meta' => $meta]);
             setFoot();
         } else {

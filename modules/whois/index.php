@@ -186,7 +186,7 @@ function send(): void {
 			$puname = (is_user()) ? $user[1] : $postname;
 			addAdminMail($conf['whois']['addmail'], $conf['name'], $puname, _WHOIS);
 			setHead(['title' => _WHOIS_LICENS_SEND]);
-			$meta = '<meta http-equiv="refresh" content="10; url=index.php?name='.$conf['name'].'">';
+			$meta = getMetaRefresh('index.php?name='.$conf['name']);
 			echo setModuleNavi(['title' => _WHOIS_LICENS_SEND] + WHOIS_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _ABTEXT, 'meta' => $meta]);
 			setFoot();
 		} else {

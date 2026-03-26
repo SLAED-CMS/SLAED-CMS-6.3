@@ -21,11 +21,10 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     $cont .= checkPerms($file);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $warn]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit"><tr><td>'.textarea_code('code', 'template', 'sl_form', $mtype, $text).'</td></tr>'
-    .'<tr><td class="sl_center"><input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="'.$edit.'"><input type="hidden" name="file" value="'.$file.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    return $cont;
+    $hide = '<input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="'.$edit.'"><input type="hidden" name="file" value="'.$file.'">';
+    $rows = getAdminFormWide(textarea_code('code', 'template', 'sl_form', $mtype, $text));
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    return $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
 }
 
 function editor(): void {
@@ -63,7 +62,7 @@ function robots(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => 4]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -86,3 +85,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
+

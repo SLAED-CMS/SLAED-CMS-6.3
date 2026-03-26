@@ -25,7 +25,7 @@ function blocks(): void {
     global $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO]]);
-    echo $cont.$tpl->getHtmlFrag('open', []).'<div id="repajax_block">'.ajax_block().'</div>'.$tpl->getHtmlFrag('close', []);
+    echo $cont.getAdminPlaceholderBox('repajax_block', ajax_block());
     setFoot();
 }
 
@@ -33,65 +33,46 @@ function add(): void {
     global $db, $conf, $afile, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post">'
-    .'<table class="sl_table_form">'
-    .'<tr><td>'._TITLE.':<div class="sl_small">'._ADDCONST.'</div></td><td><input type="text" name="title" maxlength="60" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
-    .'<tr><td>'._RSSFILE.':</td><td><input type="text" name="url" class="sl_form" placeholder="'._RSSFILE.'"></td></tr>'
-    .'<tr><td><div class="sl_small">'._RSSLINESINFO.' '._RSSINFO.'</div></td><td><select name="headline" class="sl_form"><option value="0" selected>'._CUSTOM.'</option>'.rss_select().'</select></td></tr>'
-    .'<tr><td>'._REFRESHTIME.':<div class="sl_small">'._REFINFO.'</div></td><td><select name="refresh" class="sl_form">'
-    .'<option value="1800">30 '._MIN.'.</option>'
-    .'<option value="3600" selected>1 '._HOUR.'</option>'
-    .'<option value="18000">5 '._HOUR.'.</option>'
-    .'<option value="36000">10 '._HOUR.'.</option>'
-    .'<option value="86400">24 '._HOUR.'.</option></select></td></tr>'
-    .'<tr><td>'._FILENAME.':<div class="sl_small">'._FILENAMEIN.'</div></td><td>'
-    .'<select name="bfile" class="sl_form">'
-    .'<option value="" selected>'._NONE.'</option>';
+    $rows = getAdminFormRow(_TITLE.':<div class="sl_small">'._ADDCONST.'</div>', '<input type="text" name="title" maxlength="60" class="sl_form" placeholder="'._TITLE.'" required>');
+    $rows .= getAdminFormRow(_RSSFILE.':', '<input type="text" name="url" class="sl_form" placeholder="'._RSSFILE.'">');
+    $rows .= getAdminFormRow('<div class="sl_small">'._RSSLINESINFO.' '._RSSINFO.'</div>', '<select name="headline" class="sl_form"><option value="0" selected>'._CUSTOM.'</option>'.rss_select().'</select>');
+    $rfsel = '<option value="1800">30 '._MIN.'.</option>'
+        .'<option value="3600" selected>1 '._HOUR.'</option>'
+        .'<option value="18000">5 '._HOUR.'.</option>'
+        .'<option value="36000">10 '._HOUR.'.</option>'
+        .'<option value="86400">24 '._HOUR.'.</option>';
+    $rows .= getAdminFormRow(_REFRESHTIME.':<div class="sl_small">'._REFINFO.'</div>', '<select name="refresh" class="sl_form">'.$rfsel.'</select>');
+    $bfopts = '<option value="" selected>'._NONE.'</option>';
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $cont .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
+            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
+                $bfopts .= '<option value="'.$file.'">'.$matches[0].'</option>';
+            }
         }
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._CONTENT.':</td><td>'.textarea('1', 'content', '', 'all', '15', _CONTENT, '').'</td></tr>'
-    .'<tr><td>'._POSITION.':</td><td><select name="bpos" class="sl_form">'
-    .'<option value="l">'._LEFT.'</option>'
-    .'<option value="c">'._CENTERUP.'</option>'
-    .'<option value="d">'._CENTERDOWN.'</option>'
-    .'<option value="r">'._RIGHT.'</option>'
-    .'<option value="b">'._BANNERUP.'</option>'
-    .'<option value="f">'._BANNERDOWN.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._BLOCK_VIEW.':</td><td><table>';
-    $a = 2;
-    $i = 1;
-    $modules = getBlockModules();
-    foreach ($modules as $title) {
-        $tdwidth = intval(100/$a);
-        if (($i - 1) % $a == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="blockwhere[]" value="'.$title.'"> <span title="'._MODUL.': '.$title.'" class="sl_note">'.getModuleName($title).'</span></td>';
-        if ($i % $a == 0) $cont .= '</tr>';
-        $i++;
-    }
-    $cont .= '<tr><td><input type="checkbox" name="blockwhere[]" value="ihome"> <b>'._HOME.'</b></td><td><input type="checkbox" name="blockwhere[]" value="home"> <b>'._INHOME.'</b></td></tr>'
-    .'<tr><td><input type="checkbox" name="blockwhere[]" value="all"> <b>'._BLOCK_ALL.'</b></td><td><input type="checkbox" name="blockwhere[]" value="otricanie"> <b>'._DENYING.'</b></td></tr>'
-    .'<tr><td><input type="checkbox" name="blockwhere[]" value="infly"> <b>'._INFLY.'</b></td><td><input type="checkbox" name="blockwhere[]" value="flyfix"> <b>'._FLY_FIX.'</b></td></tr></table>'
-    .'</td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language().'</select></td></tr>';
-    $cont .= '<tr><td>'._ACTIVATE2.'</td><td>'.radio_form(1, 'status').'</td></tr>'
-    .'<tr><td>'._EXPIRATION.':<div class="sl_small">'._CONFINES.'</div></td><td><input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required></td></tr>'
-    .'<tr><td>'._AFTEREXPIRATION.':</td><td><select name="action" class="sl_form">'
-    .'<option value="d">'._DEACTIVATE.'</option>'
-    .'<option value="r">'._DELETE.'</option></select></td></tr>'
-    .'<tr><td>'._VIEWPRIV.'</td><td><select name="view" class="sl_form">';
+    $rows .= getAdminFormRow(_FILENAME.':<div class="sl_small">'._FILENAMEIN.'</div>', '<select name="bfile" class="sl_form">'.$bfopts.'</select>');
+    $rows .= getAdminFormRow(_CONTENT.':', textarea('1', 'content', '', 'all', '15', _CONTENT, ''));
+    $posopts = '<option value="l">'._LEFT.'</option>'
+        .'<option value="c">'._CENTERUP.'</option>'
+        .'<option value="d">'._CENTERDOWN.'</option>'
+        .'<option value="r">'._RIGHT.'</option>'
+        .'<option value="b">'._BANNERUP.'</option>'
+        .'<option value="f">'._BANNERDOWN.'</option>';
+    $rows .= getAdminFormRow(_POSITION.':', '<select name="bpos" class="sl_form">'.$posopts.'</select>');
+    $rows .= getAdminFormRow(_BLOCK_VIEW.':', getBlockViewGrid());
+    if ($conf['multilingual'] == 1) $rows .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language().'</select>');
+    $rows .= getAdminFormRow(_ACTIVATE2, radio_form(1, 'status'));
+    $rows .= getAdminFormRow(_EXPIRATION.':<div class="sl_small">'._CONFINES.'</div>', '<input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required>');
+    $actsel = '<option value="d">'._DEACTIVATE.'</option><option value="r">'._DELETE.'</option>';
+    $rows .= getAdminFormRow(_AFTEREXPIRATION.':', '<select name="action" class="sl_form">'.$actsel.'</select>');
     $privs = [_MVALL, _MVUSERS, _MVADMIN, _MVANON];
-    foreach ($privs as $key => $value) $cont .= '<option value="'.$key.'">'.$value.'</option>';
-    $cont .= '</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $viopts = '';
+    foreach ($privs as $key => $value) $viopts .= '<option value="'.$key.'">'.$value.'</option>';
+    $rows .= getAdminFormRow(_VIEWPRIV, '<select name="view" class="sl_form">'.$viopts.'</select>');
+    $hide = '<input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="addsave">';
+    $rows .= getAdminFormWide('<input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue">', '', 'sl_center');
+    echo $cont.getAdminForm($afile.'.php', $rows, $hide);
     setFoot();
 }
 
@@ -100,13 +81,11 @@ function fileadd(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 2]);
     $cont .= checkPerms(BASE_DIR.'/blocks/');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._FILENAME.':</td><td><input type="text" name="bf" maxlength="200" class="sl_form" placeholder="'._FILENAME.'" required></td></tr>'
-    .'<tr><td>'._TYPE.':</td><td><input type="radio" name="flag" value="php" checked> PHP <input type="radio" name="flag" value="html"> HTML</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode"><input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $hide = '<input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode">';
+    $rows = getAdminFormRow(_FILENAME.':', '<input type="text" name="bf" maxlength="200" class="sl_form" placeholder="'._FILENAME.'" required>');
+    $rows .= getAdminFormRow(_TYPE.':', '<input type="radio" name="flag" value="php" checked> PHP <input type="radio" name="flag" value="html"> HTML');
+    $rows .= getAdminFormWide('<input type="submit" value="'._CREATEBLOCK.'" class="sl_but_blue">', '', 'sl_center');
+    echo $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide));
     setFoot();
     global $tpl;
 }
@@ -115,19 +94,17 @@ function fileedit(): void {
     global $db, $afile, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._FILENAME.':</td><td><select name="bf" class="sl_form">';
+    $opts = '';
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $cont .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
+            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $opts .= '<option value="'.$file.'">'.$matches[0].'</option>'."\n";
         }
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode"><input type="submit" value="'._EDITBLOCK.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $hide = '<input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode">';
+    $rows = getAdminFormRow(_FILENAME.':', '<select name="bf" class="sl_form">'.$opts.'</select>');
+    $rows .= getAdminFormWide('<input type="submit" value="'._EDITBLOCK.'" class="sl_but_blue">', '', 'sl_center');
+    echo $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide));
     setFoot();
 }
 
@@ -176,7 +153,7 @@ function addsave(): void {
     if (($content == '') && ($bfile == '')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _RSSFAIL]).$tpl->getHtmlFrag('open', []).'<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>'.$tpl->getHtmlFrag('close', []);
+        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _RSSFAIL]).getAdminBox('<table><tr><td class="sl_center">'._GOBACK.'</td></tr></table>');
         setFoot();
     } else {
         if ($expire == '' || $expire == 0) {
@@ -227,16 +204,13 @@ function filecode(): void {
             $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _B_FEDIT]);
         }
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _EINFOPHP]);
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_edit">'
-        .'<tr><td>'.textarea_code('code', 'blocktext', 'sl_form', 'text/x-php', trim($out[1])).'</td></tr>'
-        .'<tr><td class="sl_center"><input type="hidden" name="bf" value="'.$bf.'">'
+        $hide = '<input type="hidden" name="bf" value="'.$bf.'">'
         .'<input type="hidden" name="flag" value="'.$flaged.'">'
         .'<input type="hidden" name="name" value="blocks">'
-        .'<input type="hidden" name="op" value="filecodesave">'
-        .'<input type="submit" value="'._SAVE.'" class="sl_but_blue"> '._GOBACK.'</td></tr></table></form>';
-        $cont .= $tpl->getHtmlFrag('close', []);
-        echo $cont;
+        .'<input type="hidden" name="op" value="filecodesave">';
+        $rows = getAdminFormWide(textarea_code('code', 'blocktext', 'sl_form', 'text/x-php', trim($out[1])));
+        $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue"> '._GOBACK, '', 'sl_center');
+        echo $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
         setFoot();
     } else {
         setRedirect($afile.'.php?name=blocks&op=logview');
@@ -277,82 +251,37 @@ function edit(): void {
         $type = '('._BLOCKHTML.')';
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _BLOCK.': '.$title.' '.$type]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._TITLE.':<div class="sl_small">'._ADDCONST.'</div></td><td><input type="text" name="title" maxlength="50" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required></td></tr>';
+    $rows = getAdminFormRow(_TITLE.':<div class="sl_small">'._ADDCONST.'</div>', '<input type="text" name="title" maxlength="50" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required>');
     if ($bfile != '') {
-        $cont .= '<tr><td>'._FILENAME.':</td><td><select name="bfile" class="sl_form">';
+        $bfopts = '';
         $files = scandir('blocks');
         foreach ($files as $file) {
             if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-                $selected = ($bfile == $file) ? ' selected' : '';
-                $cont .= '<option value="'.$file.'"'.$selected.'>'.$matches[0].'</option>';
+                $sel = ($bfile == $file) ? ' selected' : '';
+                $bfopts .= '<option value="'.$file.'"'.$sel.'>'.$matches[0].'</option>';
             }
         }
-        $cont .= '</select></td></tr>';
+        $rows .= getAdminFormRow(_FILENAME.':', '<select name="bfile" class="sl_form">'.$bfopts.'</select>');
+    } elseif ($url != '') {
+        $rows .= getAdminFormRow(_RSSFILE.':', '<input type="text" name="url" maxlength="200" value="'.$url.'" class="sl_form" placeholder="'._RSSFILE.'">');
+        $rfopts = '<option value="1800"'.($refresh == '1800' ? ' selected' : '').'>30 '._MIN.'.</option>'
+            .'<option value="3600"'.($refresh == '3600' ? ' selected' : '').'>1 '._HOUR.'</option>'
+            .'<option value="18000"'.($refresh == '18000' ? ' selected' : '').'>5 '._HOUR.'.</option>'
+            .'<option value="36000"'.($refresh == '36000' ? ' selected' : '').'>10 '._HOUR.'.</option>'
+            .'<option value="86400"'.($refresh == '86400' ? ' selected' : '').'>24 '._HOUR.'.</option>';
+        $rows .= getAdminFormRow(_REFRESHTIME.':', '<select name="refresh" class="sl_form">'.$rfopts.'</select>');
     } else {
-        if ($url != '') {
-            $cont .= '<tr><td>'._RSSFILE.':</td><td><input type="text" name="url" maxlength="200" value="'.$url.'" class="sl_form" placeholder="'._RSSFILE.'"></td></tr>'
-            .'<tr><td>'._REFRESHTIME.':</td><td><select name="refresh" class="sl_form">'
-            .'<option value="1800"';
-            if ($refresh == '1800') $cont .= ' selected';
-            $cont .= '>30 '._MIN.'.</option>'
-            .'<option value="3600"';
-            if ($refresh == '3600') $cont .= ' selected';
-            $cont .= '>1 '._HOUR.'</option>'
-            .'<option value="18000"';
-            if ($refresh == '18000') $cont .= ' selected';
-            $cont .= '>5 '._HOUR.'.</option>'
-            .'<option value="36000"';
-            if ($refresh == '36000') $cont .= ' selected';
-            $cont .= '>10 '._HOUR.'.</option>'
-            .'<option value="86400"';
-            if ($refresh == '86400') $cont .= ' selected';
-            $cont .= '>24 '._HOUR.'.</option>'
-            .'</select></td></tr>';
-        } else {
-            $cont .= '<tr><td>'._CONTENT.':</td><td>'.textarea('1', 'content', $content, 'all', '15', _CONTENT, '').'</td></tr>';
-        }
+        $rows .= getAdminFormRow(_CONTENT.':', textarea('1', 'content', $content, 'all', '15', _CONTENT, ''));
     }
-    $sel1 = ($bpos == 'l') ? ' selected' : '';
-    $sel2 = ($bpos == 'c') ? ' selected' : '';
-    $sel3 = ($bpos == 'r') ? ' selected' : '';
-    $sel4 = ($bpos == 'd') ? ' selected' : '';
-    $sel5 = ($bpos == 'b') ? ' selected' : '';
-    $sel6 = ($bpos == 'f') ? ' selected' : '';
-    $cont .= '<tr><td>'._POSITION.':</td><td><select name="bpos" class="sl_form">'
-    .'<option value="l"'.$sel1.'>'._LEFT.'</option>'
-    .'<option value="c"'.$sel2.'>'._CENTERUP.'</option>'
-    .'<option value="d"'.$sel4.'>'._CENTERDOWN.'</option>'
-    .'<option value="r"'.$sel3.'>'._RIGHT.'</option>'
-    .'<option value="b"'.$sel5.'>'._BANNERUP.'</option>'
-    .'<option value="f"'.$sel6.'>'._BANNERDOWN.'</option>'
-    .'</select></td></tr>';
-    $cont .= '<tr><td>'._BLOCK_VIEW.':</td><td><table>';
-    $where_mas = explode(',', $which ?? '');
-    $a = 2;
-    $i = 1;
-    $modules = getBlockModules();
-    foreach ($modules as $title) {
-        $mel = '';
-        foreach ($where_mas as $val) if ($val == $title) $mel = ' checked';
-        $tdwidth = intval(100/$a);
-        if (($i - 1) % $a == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$tdwidth.'%;"><input type="checkbox" name="blockwhere[]" value="'.$title.'"'.$mel.'> <span title="'._MODUL.': '.$title.'" class="sl_note">'.getModuleName($title).'</span></td>';
-        if ($i % $a == 0) $cont .= '</tr>';
-        $i++;
-    }
-    $iel = (in_array('ihome', $where_mas)) ? ' checked' : '';
-    $hel = (in_array('home', $where_mas)) ? ' checked' : '';
-    $cel = (in_array('all', $where_mas) && empty($hel)) ? ' checked' : '';
-    $fel = (in_array('infly', $where_mas)) ? ' checked' : '';
-    $oel = (in_array('otricanie', $where_mas)) ? ' checked' : '';
-    $xel = (in_array('flyfix', $where_mas)) ? ' checked' : '';
-    $cont .= '<tr><td><input type="checkbox" name="blockwhere[]" value="ihome"'.$iel.'> <b>'._HOME.'</b></td><td><input type="checkbox" name="blockwhere[]" value="home"'.$hel.'> <b>'._INHOME.'</b></td></tr>'
-    .'<tr><td><input type="checkbox" name="blockwhere[]" value="all"'.$cel.'> <b>'._BLOCK_ALL.'</b></td><td><input type="checkbox" name="blockwhere[]" value="otricanie"'.$oel.'> <b>'._DENYING.'</b></td></tr>'
-    .'<tr><td><input type="checkbox" name="blockwhere[]" value="infly"'.$fel.'> <b>'._INFLY.'</b></td><td><input type="checkbox" name="blockwhere[]" value="flyfix"'.$xel.'> <b>'._FLY_FIX.'</b></td></tr></table>'
-    .'</td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language($lang).'</select></td></tr>';
+    $posopts = '<option value="l"'.($bpos == 'l' ? ' selected' : '').'>'._LEFT.'</option>'
+        .'<option value="c"'.($bpos == 'c' ? ' selected' : '').'>'._CENTERUP.'</option>'
+        .'<option value="d"'.($bpos == 'd' ? ' selected' : '').'>'._CENTERDOWN.'</option>'
+        .'<option value="r"'.($bpos == 'r' ? ' selected' : '').'>'._RIGHT.'</option>'
+        .'<option value="b"'.($bpos == 'b' ? ' selected' : '').'>'._BANNERUP.'</option>'
+        .'<option value="f"'.($bpos == 'f' ? ' selected' : '').'>'._BANNERDOWN.'</option>';
+    $rows .= getAdminFormRow(_POSITION.':', '<select name="bpos" class="sl_form">'.$posopts.'</select>');
+    $rows .= getAdminFormRow(_BLOCK_VIEW.':', getBlockViewGrid(explode(',', $which ?? '')));
+    if ($conf['multilingual'] == 1) $rows .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language($lang).'</select>');
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
@@ -363,31 +292,24 @@ function edit(): void {
         $newexpire = 1;
         $expire_text = '<input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required>';
     }
-    $selact1 = ($action == 'd') ? ' selected' : '';
-    $selact2 = ($action == 'r') ? ' selected' : '';
-    $cont .= '<tr><td>'._ACTIVATE2.'</td><td>'.radio_form($active, 'status').'</td></tr>'
-    .'<tr><td>'._EXPIRATION.':<div class="sl_small">'._CONFINES.'</div></td><td>'.$expire_text.'</td></tr>'
-    .'<tr><td>'._AFTEREXPIRATION.':</td><td><select name="action" class="sl_form">'
-    .'<option value="d"'.$selact1.'>'._DEACTIVATE.'</option>'
-    .'<option value="r"'.$selact2.'>'._DELETE.'</option></select></td></tr>'
-    .'<tr><td>'._VIEWPRIV.'</td><td><select name="view" class="sl_form">';
+    $rows .= getAdminFormRow(_ACTIVATE2, radio_form($active, 'status'));
+    $rows .= getAdminFormRow(_EXPIRATION.':<div class="sl_small">'._CONFINES.'</div>', $expire_text);
+    $actsel = '<option value="d"'.($action == 'd' ? ' selected' : '').'>'._DEACTIVATE.'</option>'
+        .'<option value="r"'.($action == 'r' ? ' selected' : '').'>'._DELETE.'</option>';
+    $rows .= getAdminFormRow(_AFTEREXPIRATION.':', '<select name="action" class="sl_form">'.$actsel.'</select>');
     $privs = [_MVALL, _MVUSERS, _MVADMIN, _MVANON];
-    foreach ($privs as $key => $value) {
-        $sel = ($view == $key) ? ' selected' : '';
-        $cont .= '<option value="'.$key.'"'.$sel.'>'.$value.'</option>';
-    }
-    $cont .= '</select></td></tr>'
-    .'<tr><td colspan="2" class="sl_center">'
-    .'<input type="hidden" name="oldposition" value="'.$bpos.'">'
-    .'<input type="hidden" name="bid" value="'.$bid.'">'
-    .'<input type="hidden" name="newexpire" value="'.$newexpire.'">'
-    .'<input type="hidden" name="bkey" value="'.$bkey.'">'
-    .'<input type="hidden" name="weight" value="'.$weight.'">'
-    .'<input type="hidden" name="name" value="blocks">'
-    .'<input type="hidden" name="op" value="editsave">'
-    .'<input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $viopts = '';
+    foreach ($privs as $key => $value) $viopts .= '<option value="'.$key.'"'.($view == $key ? ' selected' : '').'>'.$value.'</option>';
+    $rows .= getAdminFormRow(_VIEWPRIV, '<select name="view" class="sl_form">'.$viopts.'</select>');
+    $hide = '<input type="hidden" name="oldposition" value="'.$bpos.'">'
+        .'<input type="hidden" name="bid" value="'.$bid.'">'
+        .'<input type="hidden" name="newexpire" value="'.$newexpire.'">'
+        .'<input type="hidden" name="bkey" value="'.$bkey.'">'
+        .'<input type="hidden" name="weight" value="'.$weight.'">'
+        .'<input type="hidden" name="name" value="blocks">'
+        .'<input type="hidden" name="op" value="editsave">';
+    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    echo $cont.getAdminForm($afile.'.php', $rows, $hide);
     setFoot();
 }
 
@@ -528,7 +450,7 @@ function delete(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 5]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -547,3 +469,4 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
+

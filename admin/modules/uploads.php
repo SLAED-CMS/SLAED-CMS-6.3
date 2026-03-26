@@ -17,7 +17,7 @@ function getUploadsSearch(): string {
         }
     }
     $search .= '</select><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploads"></form>';
-    return $tpl->getHtmlPart('searchbox', ['searchbox' => $search]);
+    return getAdminSearchBox($search);
 }
 
 function uploads(): void {
@@ -28,18 +28,17 @@ function uploads(): void {
     $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f1\', \'go=5&amp;op=ashow_files&amp;id=1&amp;dir='.$dir.'\', \'\'); return false;">'._DGEN.'</span>', '<span OnClick="AjaxLoad(\'GET\', \'1\', \'f2\', \'go=5&amp;op=ashow_files&amp;id=2&amp;dir='.$dir.'\', \'\'); return false;">'._DTHUMB.'</span>'], 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
-    $cont .= '<div id="tabcs0" class="tabcont">';
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form enctype="multipart/form-data" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._FILE_USER.':</td><td><input type="file" name="userfile" class="sl_form"></td></tr>'
-    .'<tr><td>'._FILE_SITE.':</td><td><input type="text" name="sitefile" class="sl_form" placeholder="'._FILE_SITE.'"></td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploadsave"><input type="hidden" name="dir" value="'.$dir.'"><input type="submit" value="'._EXECUTE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    $cont .= '</div>'
+    $uplv = '<div id="tabcs0" class="tabcont">';
+    $uplv .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
+    $uphide = '<input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploadsave"><input type="hidden" name="dir" value="'.$dir.'">';
+    $uprows = getAdminFormRow(_FILE_USER.':', '<input type="file" name="userfile" class="sl_form">');
+    $uprows .= getAdminFormRow(_FILE_SITE.':', '<input type="text" name="sitefile" class="sl_form" placeholder="'._FILE_SITE.'">');
+    $uprows .= getAdminFormWide('<input type="submit" value="'._EXECUTE.'" class="sl_but_blue">', '', 'sl_center');
+    $uplv .= getAdminBox(getAdminForm($afile.'.php', $uprows, $uphide, 'sl_table_form', 'post', 'post', 'enctype="multipart/form-data"'));
+    $uplv .= '</div>'
     .'<div id="tabcs1" class="tabcont">';
     $fdir = 'uploads/'.$dir;
-    $cont .= checkPerms(BASE_DIR.'/'.$fdir);
+    $uplv .= checkPerms(BASE_DIR.'/'.$fdir);
     if (is_dir($fdir)) {
         $f = 0;
         $affilesize = 0;
@@ -50,15 +49,15 @@ function uploads(): void {
                 $affilesize += $filesize;
             }
         }
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
+        $uplv .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
+        $uplv .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
-    $cont .= $tpl->getHtmlFrag('open', []).'<div id="repf1"></div>'.$tpl->getHtmlFrag('close', []);
-    $cont .= '</div>'
+    $uplv .= getAdminPlaceholderBox('repf1');
+    $uplv .= '</div>'
     .'<div id="tabcs2" class="tabcont">';
     $tdir = 'uploads/'.$dir.'/thumb';
-    $cont .= checkPerms(BASE_DIR.'/'.$tdir);
+    $uplv .= checkPerms(BASE_DIR.'/'.$tdir);
     if (is_dir($tdir)) {
         $t = 0;
         $atfilesize = 0;
@@ -69,19 +68,19 @@ function uploads(): void {
                 $atfilesize += $filesize;
             }
         }
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
+        $uplv .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
+        $uplv .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
-    $cont .= $tpl->getHtmlFrag('open', []).'<div id="repf2"></div>'.$tpl->getHtmlFrag('close', []);
-    $cont .= '</div>'
+    $uplv .= getAdminPlaceholderBox('repf2');
+    $uplv .= '</div>'
     .'<script>
         var countries=new ddtabcontent("uploadss")
         countries.setpersist(true)
         countries.setselectedClassTarget("link")
         countries.init()
     </script>';
-    echo $cont;
+    echo $cont.$uplv;
     setFoot();
 }
 
@@ -108,8 +107,8 @@ function tplconfig(): void {
         $hr = ($i == 0) ? '' : '<hr>';
         $conts .= $hr.'<table class="sl_table_edit"><tr><td><h5>'._TPFOR.': '.$typm[$i].'</h5></td></tr><tr><td>'.textarea_code('code_'.$i.'', 'tmp[]', 'sl_form', 'text/html', $conf['filetype'][$typm[$i]] ?? '').'</td></tr></table>';
     }
-    $cont .= $tpl->getHtmlFrag('open', []).'<form action="'.$afile.'.php" method="post">'.$conts.'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="tplsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'.$tpl->getHtmlFrag('close', []);
-    echo $cont;
+    $tplv = getAdminConfSave($conts, 'uploads', 'tplsave');
+    echo $cont.getAdminBox($tplv);
     setFoot();
 }
 
@@ -168,8 +167,7 @@ function config(): void {
         }
     }
     $conts .= '</div>';
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $conts
+    $confv = $conts
     .'<script>
         var countries=new ddtabcontent("confs")
         countries.setpersist(true)
@@ -177,8 +175,7 @@ function config(): void {
         countries.init()
     </script>'
     .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="configsave"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
-    echo $cont;
+    echo $cont.getAdminBox($confv);
     setFoot();
 }
 
@@ -234,7 +231,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 3, 'sub' => getUploadsSearch()]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -247,3 +244,5 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
+
+

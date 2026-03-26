@@ -36,17 +36,11 @@ Already running through the final runtime:
 Present theme directories:
 - `templates/admin`
 - `templates/default`
-- `templates/default_old`
 - `templates/lite`
 - `templates/simple`
 
 Reference minimal final theme:
 - `templates/simple`
-
-## Legacy Boundary
-- `core/template.php` is legacy-only
-- legacy rendering still exists outside migrated slices
-- `templates/default_old` remains the main migration source set
 
 ## Tests
 Current relevant runtime-related tests:

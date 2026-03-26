@@ -15,10 +15,10 @@ function voting(): void {
     $offset = intval($offset);
     $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th>';
-        if ($conf['multilingual'] == 1) $cont .= '<th>'._LANGUAGE.'</th>';
-        $cont .= '<th>'._MODUL.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._TITLE.'</th>';
+        if ($conf['multilingual'] == 1) $head .= '<th>'._LANGUAGE.'</th>';
+        $head .= '<th>'._MODUL.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
                 $view = (!$modul) ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||' : '';
@@ -28,20 +28,25 @@ function voting(): void {
                 $active = '0';
             }
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                rtrim($view, '|'),
+                '<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.title_tip(_CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>';
             if ($conf['multilingual'] == 1) {
                 $lang = (!$lang) ? _ALL : $lang;
-                $cont .= '<td>'.getLangName($lang).'</td>';
+                $cols .= '<td>'.getLangName($lang).'</td>';
             }
             $mod = ($modul) ? getModuleName($modul) : _NONE;
-            $cont .= '<td>'.$mod.'</td>'
+            $cols .= '<td>'.$mod.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $conf['voting']['anum'], 'name=voting&amp;', 'id', '_voting', '', '', $conf['voting']['anump']);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -74,9 +79,9 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    if ($id) $cont .= $tpl->getHtmlFrag('open', []).'<div id="repvoting">'.getVoting($id, 'voting').'</div>'.$tpl->getHtmlFrag('close', []);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form action="'.$afile.'.php" method="post"><table class="sl_table_form">';
+    if ($id) $cont .= '<div class="basecont"><div class="bpad"><div class="tabpad"><div id="repvoting">'.getVoting($id, 'voting').'</div></div></div><div class="hsep"></div></div>';
+    $hide = '<input type="hidden" name="name" value="voting">';
+    $rows = '';
     $mname = ['news', 'shop'];
     $content = '';
     foreach ($mname as $val) {
@@ -85,42 +90,34 @@ function add(): void {
             $content .= '<option value="'.$val.'"'.$sel.'>'.getModuleName($val).'</option>';
         }
     }
-    $cont .= '<tr><td>'._MODUL.':</td><td><select name="modul" class="sl_form"><option value="">'._NO.'</option>'.$content.'</select></td></tr>'
-    .'<tr><td>'._TITLE.' / '._POLLTITLE.':</td><td><input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.' / '._POLLTITLE.'" required></td></tr>'
-    .'<tr><td colspan="2">';
+    $rows .= getAdminFormRow(_MODUL.':', '<select name="modul" class="sl_form"><option value="">'._NO.'</option>'.$content.'</select>');
+    $rows .= getAdminFormRow(_TITLE.' / '._POLLTITLE.':', '<input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.' / '._POLLTITLE.'" required>');
+    $quest = '';
     $i = 0;
     while ($i < $conf['voting']['answ']) {
         $a = $i + 1;
         $question = $body[$i] ?? '';
         $ansval = $answer[$i] ?? '';
         $class = ($i != 0 && $question == '') ? ' class="sl_none"' : '';
-        $cont .= '<table id="vot'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'vot'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._POLLEACH.' - '.$a.':</a></td><td class="sl_form"><input type="text" name="body[]" value="'.filterText($question).'" style="width: 375px;" class="sl_field" placeholder="'._POLLEACH.' - '.$a.'"> '._VOTES.': <input type="text" name="answer[]" value="'.filterText($ansval).'" style="width: 40px;" class="sl_field" placeholder="'._VOTES.'"></td></tr></table>';
+        $quest .= '<table id="vot'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'vot'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._POLLEACH.' - '.$a.':</a></td><td class="sl_form"><input type="text" name="body[]" value="'.filterText($question).'" style="width: 375px;" class="sl_field" placeholder="'._POLLEACH.' - '.$a.'"> '._VOTES.': <input type="text" name="answer[]" value="'.filterText($ansval).'" style="width: 40px;" class="sl_field" placeholder="'._VOTES.'"></td></tr></table>';
         $i++;
     }
-    $cont .= '</td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'date', $date, 16, 'sl_form').'</td></tr>'
-    .'<tr><td>'._ENDDATE.':</td><td>'.datetime(1, 'enddate', $enddate, 16, 'sl_form').'</td></tr>'
-    .'<tr><td>'._AFTEREXPIRATION.':</td><td><select name="status" class="sl_form">'
-    .'<option value="1"';
-    if ($status == '1') $cont .= ' selected';
-    $cont .= '>'._VCLOSED.'</option>'
-    .'<option value="0"';
-    if ($status == '0') $cont .= ' selected';
-    $cont .= '>'._VDEACT.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._TYPE.':</td><td><select name="typ" class="sl_form">'
-    .'<option value="1"';
-    if ($typ == '1') $cont .= ' selected';
-    $cont .= '>'._VOPEN.'</option>'
-    .'<option value="0"';
-    if ($typ == '0') $cont .= ' selected';
-    $cont .= '>'._VCLOSE.'</option>'
-    .'</select></td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language($lang).'</select></td></tr>';
-    $cont .= '<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
-    .'<tr><td>'._MULTI.'</td><td>'.radio_form($multi, 'multi').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="voting">'.ad_save('id', $id, 'save', 1).'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows .= getAdminFormWide($quest);
+    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
+    $rows .= getAdminFormRow(_ENDDATE.':', datetime(1, 'enddate', $enddate, 16, 'sl_form'));
+    $stat = getAdminSelect('status',
+        getAdminOption('1', _VCLOSED, $status == '1') .
+        getAdminOption('0', _VDEACT, $status == '0'));
+    $rows .= getAdminFormRow(_AFTEREXPIRATION.':', $stat);
+    $type = getAdminSelect('typ',
+        getAdminOption('1', _VOPEN, $typ == '1') .
+        getAdminOption('0', _VCLOSE, $typ == '0'));
+    $rows .= getAdminFormRow(_TYPE.':', $type);
+    if ($conf['multilingual'] == 1) $rows .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language($lang).'</select>');
+    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
+    $rows .= getAdminFormRow(_MULTI, radio_form($multi, 'multi'));
+    $rows .= getAdminFormWide(ad_save('id', $id, 'save', 1), '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -189,8 +186,7 @@ function config(): void {
         .'<option value="2"'.($bval === '2' ? ' selected' : '').'>'._VRANACT.'</option>'
         .'<option value="3"'.($bval === '3' ? ' selected' : '').'>'._VRANCLO.'</option>'
         .'</select>';
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'voting',
         'op' => 'configsave',
@@ -211,8 +207,7 @@ function config(): void {
         '_vblock' => _VBLOCK,
         's_block' => $block_sel,
         'voting' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -235,7 +230,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -248,8 +243,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
 
 
 

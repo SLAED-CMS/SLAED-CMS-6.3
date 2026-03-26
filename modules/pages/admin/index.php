@@ -26,8 +26,8 @@ function pages(): void {
     }
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
@@ -39,15 +39,20 @@ function pages(): void {
                 $view = '';
                 $active = '0';
             }
-            $cont .= '<tr><td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                rtrim($view, '|'),
+                '<a href="'.$afile.'.php?name=pages&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=pages&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
             .'<td>'.$post.'</td>'
             .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.add_menu($view.'<a href="'.$afile.'.php?name=pages&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=pages&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
+        $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_pages', '', 'status = \''.$status.'\'', $anump);
-        $cont .= $tpl->getHtmlFrag('close', []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -79,18 +84,18 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($hometext) $cont .= preview($subject, $hometext, $bodytext, '', 'pages');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._POSTEDBY.':</td><td>'.get_user_search('postname', $postname, '25', 'sl_form', '1').'</td></tr>'
-    .'<tr><td>'._TITLE.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required></td></tr>'
-    .'<tr><td>'._CATEGORY.':</td><td>'.getcat('pages', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>').'</td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', $hometext, 'pages', '5', _TEXT, '1').'</td></tr>'
-    .'<tr><td>'._ENDTEXT.':</td><td>'.textarea('2', 'bodytext', $bodytext, 'pages', '15', _ENDTEXT, '0').'</td></tr>'
-    .'<tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, 'sl_form').'</td></tr>'
-    .'<tr><td>'._COMMENTS.':</td><td>'.com_access('acomm', $acomm, 'sl_form').'</td></tr>'
-    .'<tr><td>'._PUBHOME.'</td><td>'.radio_form($ihome, 'ihome').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="pages">'.ad_save('pid', $pid, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $hide = '<input type="hidden" name="name" value="pages">';
+    $rows = '';
+    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
+    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
+    $rows .= getAdminFormRow(_CATEGORY.':', getcat('pages', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
+    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'hometext', $hometext, 'pages', '5', _TEXT, '1'));
+    $rows .= getAdminFormRow(_ENDTEXT.':', textarea('2', 'bodytext', $bodytext, 'pages', '15', _ENDTEXT, '0'));
+    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'time', $time, 16, 'sl_form'));
+    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
+    $rows .= getAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'));
+    $rows .= getAdminFormWide(ad_save('pid', $pid, 'save'), '', 'sl_center');
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -145,8 +150,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/pages.php');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= $tpl->getHtmlFrag('form-conf', [
+    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'pages',
         'op' => 'configsave',
@@ -193,8 +197,7 @@ function config(): void {
         '_pagelink' => _PAGELINK,
         'r_link' => radio_form($conf['pages']['link'] ?? 0, 'link'),
         'pages' => true,
-    ]);
-    $cont .= $tpl->getHtmlFrag('close', []);
+    ]));
     echo $cont;
     setFoot();
 }
@@ -230,7 +233,7 @@ function configsave(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=pages', 'name=pages&amp;op=add', 'name=pages&amp;status=1', 'name=pages&amp;op=config', 'name=pages&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -243,7 +246,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 
 
 

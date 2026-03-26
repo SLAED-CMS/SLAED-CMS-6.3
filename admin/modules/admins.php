@@ -67,27 +67,51 @@ function admins(): void {
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     if (getVar('get', 'send', 'num')) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MAIL_SEND]);
     if ($msg = trim(getVar('get', 'msg', 'text', ''))) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $msg]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._NICKNAME.'</th><th>'._URANK.'</th><th>'._EMAIL.'</th><th>'._LANGUAGE
-        .'</th><th>'._SUPERUSER.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+    $head = $tpl->getHtmlFrag('admin-admins-table-head', [
+        'actions_label' => _FUNCTIONS,
+        'email_label' => _EMAIL,
+        'language_label' => _LANGUAGE,
+        'nickname_label' => _NICKNAME,
+        'rank_label' => _URANK,
+        'super_label' => _SUPERUSER,
+    ]);
+    $rows = '';
+    $token = htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8');
     $result = $db->getSqlQuery(
         'SELECT id, name, title, email, lang, regdate, lastvis, super FROM '.PREFIX_DB.'_admins ORDER BY id'
     );
     while ([$aid, $name, $title, $email, $lang, $rdate, $vdate, $super] = $db->getSqlRow($result)) {
         $lang = $lang ? getLangName($lang) : _ALL;
         $show = htmlspecialchars((string)$name, ENT_QUOTES, 'UTF-8');
-        $drop = '<form id="drop'.$aid.'" action="'.$afile.'.php?name=admins&amp;op=delete" method="post" style="display:none;">'
-            .'<input type="hidden" name="op" value="delete"><input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="token" value="'
-            .htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8').'"></form>';
-        $edit = '<a href="'.$afile.'.php?name=admins&amp;op=add&amp;id='.$aid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>';
-        $drop .= '<a href="#" OnClick="if (DelCheck(this, \''._DELETE.' &quot;'.$show.'&quot;?\')) document.getElementById(\'drop'.$aid
-            .'\').submit(); return false;" title="'._ONDELETE.'">'._ONDELETE.'</a>';
+        $drop = $tpl->getHtmlFrag('admin-admins-delete-form', [
+            'action_url' => $afile.'.php?name=admins&amp;op=delete',
+            'admin_id' => $aid,
+            'token' => $token,
+        ]);
+        $edit = $tpl->getHtmlFrag('admin-action-link', [
+            'href' => $afile.'.php?name=admins&amp;op=add&amp;id='.$aid,
+            'label' => _FULLEDIT,
+            'title' => _FULLEDIT,
+        ]);
+        $drop .= $tpl->getHtmlFrag('admin-admins-delete-link', [
+            'admin_id' => $aid,
+            'confirm_text' => addcslashes(_DELETE.' "'.(string)$name.'"?', "\\'"),
+            'label' => _ONDELETE,
+            'title' => _ONDELETE,
+        ]);
         $tip = _REG.': '.format_time((string)$rdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time((string)$vdate, _TIMESTRING);
-        $cont .= '<tr><td>'.title_tip($tip).$name.'</td><td>'.$title.'</td><td>'.mailto($email).'</td><td>'.$lang.'</td><td>'
-            .(((int)$super === 1) ? _YES : _NO).'</td><td>'.add_menu($edit.'||'.$drop).'</td></tr>';
+        $acts = adminMenuItems([$edit, $drop]);
+        $cells = $tpl->getHtmlFrag('admin-admins-table-cells', [
+            'actions_html' => $acts,
+            'email_html' => mailto($email),
+            'language_text' => $lang,
+            'name_html' => title_tip($tip).$show,
+            'rank_text' => (string)$title,
+            'super_text' => ((int)$super === 1) ? _YES : _NO,
+        ]);
+        $rows .= getAdminTableRow($cells);
     }
-    $cont .= '</tbody></table>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $cont .= getAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -117,58 +141,98 @@ function add(): void {
         $stop = $GLOBALS['stop'] ?? [];
     }
     $need = $aid ? '' : ' required';
-    $hint = $aid ? '<div class="sl_small">'._ADMINPASSKEEP.'</div>' : '';
+    $hint = $aid ? $tpl->getHtmlFrag('admin-admins-password-hint', ['hint_text' => _ADMINPASSKEEP]) : '';
     $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
     setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => getAdmintext($stop)]);
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php?name=admins&amp;op=save" method="post"><input type="hidden" name="op" value="save">'
-        .'<input type="hidden" name="aid" value="'.$aid.'"><input type="hidden" name="token" value="'
-        .htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8').'"><table class="sl_table_form">'
-        .'<tr><td>'._NICKNAME.':</td><td>'.get_user_search('aname', (string)$name, 25, 'sl_form', '1').'</td></tr>'
-        .'<tr><td>'._URANK.':</td><td><input type="text" name="title" value="'.htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8')
-        .'" maxlength="50" class="sl_form" placeholder="'._URANK.'"></td></tr>'
-        .'<tr><td>'._EMAIL.':</td><td><input type="email" name="email" value="'.htmlspecialchars((string)$email, ENT_QUOTES, 'UTF-8')
-        .'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required></td></tr>'
-        .'<tr><td>'._URL.':</td><td><input type="url" name="url" value="'.htmlspecialchars((string)$url, ENT_QUOTES, 'UTF-8')
-        .'" maxlength="255" class="sl_form" placeholder="'._URL.'"></td></tr>'
-        .'<tr><td>'._PASSWORD.':'.$hint.'</td><td><input type="password" name="pwd" value="" maxlength="25" class="sl_form" placeholder="'
-        ._PASSWORD.'"'.$need.'></td></tr><tr><td>'._RETYPEPASSWORD.':</td><td><input type="password" name="pwdtwo" value="" maxlength="25" class="sl_form" placeholder="'
-        ._RETYPEPASSWORD.'"'.$need.'></td></tr><tr><td>'._SMAIL.'</td><td>'.radio_form((int)$smail, 'smail').'</td></tr>'
-        .'<tr><td>'._MAIL_SENDE.'</td><td><input type="checkbox" name="mail" value="1" OnClick="CloseOpen(\'sl_close_9\', 0);"'.$check.'></td></tr>'
-        .'<tr><td colspan="2"><div id="sl_close_9"><table class="sl_table_form"><tr><td>'._MAIL_TEXT.':<div class="sl_small">'
-        ._MAIL_PASS_INFO.'</div></td><td>'.textarea(
-            '1',
-            'mailtext',
-            replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])),
-            'account',
-            '10',
-            _MAIL_TEXT,
-            ''
-        ).'</td></tr></table></div></td></tr><tr><td>'._EDITOR.':</td><td>'.redaktor(1, 'editor', 'sl_form', (int)$editor, 0).'</td></tr>';
-    if ($conf['multilingual'] == 1) $cont .= '<tr><td>'._LANGUAGE.':</td><td><select name="lang" class="sl_form">'.language((string)$lang).'</select></td></tr>';
-    $cont .= '<tr><td>'._PERMISSIONS.':</td><td><table>';
+    $hide = $tpl->getHtmlFrag('admin-admins-form-hidden', [
+        'admin_id' => $aid,
+        'token' => htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8'),
+    ]);
+    $mailt = textarea(
+        '1',
+        'mailtext',
+        replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])),
+        'account',
+        '10',
+        _MAIL_TEXT,
+        ''
+    );
+    $mailc = $tpl->getHtmlFrag('admin-admins-mail-panel', [
+        'mail_info' => _MAIL_PASS_INFO,
+        'mail_label' => _MAIL_TEXT,
+        'textarea_html' => $mailt,
+    ]);
+    $perm = '';
     $cols = 3;
     $indx = 1;
+    $open = false;
     $mods = getAdminModuleNames((string)$mods);
     foreach (getAdminmods() as $name) {
-        $mark = in_array($name, $mods, true) ? ' checked' : '';
         $size = intval(100 / $cols);
-        if (($indx - 1) % $cols == 0) $cont .= '<tr>';
-        $cont .= '<td style="width: '.$size.'%;"><input type="checkbox" name="modules[]" value="'.$name.'"'.$mark.'> <span title="'
-            ._MODUL.': '.$name.'" class="sl_note">'.getModuleName($name).'</span></td>';
-        if ($indx % $cols == 0) $cont .= '</tr>';
+        if (($indx - 1) % $cols == 0) {
+            $perm .= $tpl->getHtmlFrag('admin-admins-permission-row-open', []);
+            $open = true;
+        }
+        $perm .= $tpl->getHtmlFrag('admin-admins-permission-cell', [
+            'checked' => in_array($name, $mods, true),
+            'module_name' => $name,
+            'module_title' => getModuleName($name),
+            'title' => _MODUL.': '.$name,
+            'width_num' => $size,
+        ]);
+        if ($indx % $cols == 0) {
+            $perm .= $tpl->getHtmlFrag('admin-admins-permission-row-close', []);
+            $open = false;
+        }
         $indx++;
     }
     while (($indx - 1) % $cols != 0) {
-        $cont .= '<td></td>';
+        $perm .= $tpl->getHtmlFrag('admin-admins-permission-empty', []);
         $indx++;
     }
-    $mark = ((int)$super === 1) ? ' checked' : '';
-    $cont .= '<tr><td colspan="'.$cols.'"><input type="checkbox" name="super" value="1"'.$mark.'> <b>'._SUPERUSER.'</b></td></tr></table>'
-        .'</td></tr><tr><td colspan="2" class="sl_center"><input type="submit" value="'._SAVE.'" class="sl_but_blue"></td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    if ($open) $perm .= $tpl->getHtmlFrag('admin-admins-permission-row-close', []);
+    $perm = $tpl->getHtmlFrag('admin-admins-permissions', [
+        'cells_html' => $perm,
+        'cols_num' => $cols,
+        'super_checked' => (int)$super === 1,
+        'super_label' => _SUPERUSER,
+    ]);
+    $langv = '';
+    if ($conf['multilingual'] == 1) {
+        $langv = $tpl->getHtmlFrag('admin-admins-language-select', [
+            'options_html' => language((string)$lang),
+        ]);
+    }
+    $rows = $tpl->getHtmlFrag('admin-admins-form-rows', [
+        'editor_html' => redaktor(1, 'editor', 'sl_form', (int)$editor, 0),
+        'editor_label' => _EDITOR,
+        'email_value' => htmlspecialchars((string)$email, ENT_QUOTES, 'UTF-8'),
+        'email_label' => _EMAIL,
+        'has_lang' => $conf['multilingual'] == 1,
+        'lang_html' => $langv,
+        'language_label' => _LANGUAGE,
+        'mail_checked' => $check !== '',
+        'mail_panel_html' => $mailc,
+        'mail_send_label' => _MAIL_SENDE,
+        'nickname_html' => get_user_search('aname', (string)$name, 25, 'sl_form', '1'),
+        'nickname_label' => _NICKNAME,
+        'password_hint_html' => $hint,
+        'password_label' => _PASSWORD,
+        'password_need' => $need,
+        'permissions_html' => $perm,
+        'permissions_label' => _PERMISSIONS,
+        'rank_value' => htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8'),
+        'rank_label' => _URANK,
+        'retype_label' => _RETYPEPASSWORD,
+        'smail_html' => radio_form((int)$smail, 'smail'),
+        'smail_label' => _SMAIL,
+        'submit_label' => _SAVE,
+        'url_value' => htmlspecialchars((string)$url, ENT_QUOTES, 'UTF-8'),
+        'url_label' => _URL,
+    ]);
+    $cont .= getAdminForm($afile.'.php?name=admins&amp;op=save', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -273,9 +337,12 @@ function delete(): void {
 }
 
 function info(): void {
+    global $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.$tpl->getHtmlFrag('admin-info-box', [
+        'info_html' => getAdminInfo(),
+    ]);
     setFoot();
 }
 

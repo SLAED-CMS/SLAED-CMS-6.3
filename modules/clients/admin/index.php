@@ -13,26 +13,27 @@ function clients(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
-        $cont .= $tpl->getHtmlFrag('open', []);
-        $cont .= '<table class="sl_table_list_sort"><thead><tr><th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CDATE.'</th><th>'._ID.'</th><th>'._CLOADS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th></tr></thead><tbody>';
+        $head = '<th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CDATE.'</th><th>'._ID.'</th><th>'._CLOADS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $rows = '';
         while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
-            $cont .= '<tr>'
-            .'<td>'.$id.'</td>'
+            $acts = adminMenuItems([
+                ad_status($afile.'.php?name=clients&amp;op=status&amp;id='.$id.'&amp;act='.$act, $status),
+                '<a href="'.$afile.'.php?name=clients&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+                '<a href="'.$afile.'.php?name=clients&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+            ]);
+            $cols = '<td>'.$id.'</td>'
             .'<td>'.$title.'</td>'
             .'<td>'.$num.'</td>'
             .'<td>'.$time.'</td>'
             .'<td>'.$prod.'</td>'
             .'<td>'.$hits.'</td>'
             .'<td>'.ad_status('', $status).'</td>'
-            .'<td>'.add_menu(ad_status($afile.'.php?name=clients&amp;op=status&amp;id='.$id.'&amp;act='.$act, $status)
-            .'||<a href="'.$afile.'.php?name=clients&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'
-            .'||<a href="'.$afile.'.php?name=clients&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>')
-            .'</td></tr>';
+            .'<td>'.$acts.'</td>';
+            $rows .= getAdminTableRow($cols);
         }
-        $cont .= '</tbody></table>';
-        $cont .= $tpl->getHtmlFrag('close', []);
+        $cont .= getAdminTable($head, $rows);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -63,17 +64,17 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stopText]);
     }
     if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $cont .= $tpl->getHtmlFrag('open', []);
-    $cont .= '<form name="post" action="'.$afile.'.php" method="post"><table class="sl_table_form">'
-    .'<tr><td>'._CTITLE.':</td><td><input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._CTITLE.'" required></td></tr>'
-    .'<tr><td>'._TEXT.':</td><td>'.textarea('1', 'body', $body, 'clients', '15', _TEXT, '1').'</td></tr>'
-    .'<tr><td>'._CURL.':</td><td><input type="text" name="url" value="'.$url.'" maxlength="100" class="sl_form" placeholder="'._CURL.'"></td></tr>'
-    .'<tr><td>'._CVERSION.':</td><td><input type="text" name="num" value="'.$num.'" maxlength="10" class="sl_form" placeholder="'._CVERSION.'"></td></tr>'
-    .'<tr><td>'._CODE.':</td><td><input type="text" name="code" value="'.$code.'" maxlength="100" class="sl_form" placeholder="'._CODE.'"></td></tr>'
-    .'<tr><td>'._ID.':</td><td><input type="number" name="prod" value="'.$prod.'" class="sl_form" placeholder="'._ID.'"></td></tr>'
-    .'<tr><td>'._CADOWN.'</td><td>'.radio_form($status, 'status').'</td></tr>'
-    .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="name" value="clients">'.ad_save('cid', $cid, 'save').'</td></tr></table></form>';
-    $cont .= $tpl->getHtmlFrag('close', []);
+    $rows = '';
+    $rows .= getAdminFormRow(_CTITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._CTITLE.'" required>');
+    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'body', $body, 'clients', '15', _TEXT, '1'));
+    $rows .= getAdminFormRow(_CURL.':', '<input type="text" name="url" value="'.$url.'" maxlength="100" class="sl_form" placeholder="'._CURL.'">');
+    $rows .= getAdminFormRow(_CVERSION.':', '<input type="text" name="num" value="'.$num.'" maxlength="10" class="sl_form" placeholder="'._CVERSION.'">');
+    $rows .= getAdminFormRow(_CODE.':', '<input type="text" name="code" value="'.$code.'" maxlength="100" class="sl_form" placeholder="'._CODE.'">');
+    $rows .= getAdminFormRow(_ID.':', '<input type="number" name="prod" value="'.$prod.'" class="sl_form" placeholder="'._ID.'">');
+    $rows .= getAdminFormRow(_CADOWN, radio_form($status, 'status'));
+    $rows .= getAdminFormWide(ad_save('cid', $cid, 'save'), '', 'sl_center');
+    $hide = '<input type="hidden" name="name" value="clients">';
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -124,7 +125,7 @@ function status(): void {
 function info(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
-    echo $cont.'<div id="repadm_info">'.getAdminInfo().'</div>';
+    echo $cont.getAdminInfoBox(getAdminInfo());
     setFoot();
 }
 
@@ -136,6 +137,5 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-
 
 

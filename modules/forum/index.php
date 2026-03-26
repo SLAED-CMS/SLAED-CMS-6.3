@@ -66,11 +66,11 @@ function forum(): void {
                     }
                     if ($val[9]) {
                         $data = _DATE.': '.format_time($val[21], _TIMESTRING);
-                        $topic = ($val[5]) ? _TOPIC.': <a href="index.php?name='.$mod.'&amp;op=view&amp;id='.$val[9].'" title="'.$val[17].'">'.cutstr($val[17], 14).'</a>' : _TOPIC.': '.cutstr($val[17], 14);
+                        $topic = ($val[5]) ? _TOPIC.': <a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'title' => $val[17]]).'" title="'.$val[17].'">'.cutstr($val[17], 14).'</a>' : _TOPIC.': '.cutstr($val[17], 14);
                         $post = ($val[18]) ? user_info($val[19]) : $val[19];
                         $post = _POSTER.': '.$post;
                         $lid = ($val[20]) ? $val[20] : $val[9];
-                        $lpost = ($val[5]) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$val[9].'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
+                        $lpost = ($val[5]) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'title' => $val[17]]).'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
                     } else {
                         $data = _NO_INFO;
                         $topic = $post = $lpost = '';
@@ -95,11 +95,11 @@ function forum(): void {
                             }
                             if ($valb[9]) {
                                 $data = _DATE.': '.format_time($valb[21], _TIMESTRING);
-                                $topic = ($valb[5]) ? _TOPIC.': <a href="index.php?name='.$mod.'&amp;op=view&amp;id='.$valb[9].'" title="'.$valb[17].'">'.cutstr($valb[17], 14).'</a>' : _TOPIC.': '.cutstr($valb[17], 14);
+                                $topic = ($valb[5]) ? _TOPIC.': <a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $valb[9], 'title' => $valb[17]]).'" title="'.$valb[17].'">'.cutstr($valb[17], 14).'</a>' : _TOPIC.': '.cutstr($valb[17], 14);
                                 $post = ($valb[18]) ? user_info($valb[19]) : $valb[19];
                                 $post = _POSTER.': '.$post;
                                 $lid = ($valb[20]) ? $valb[20] : $valb[9];
-                                $lpost = ($valb[5]) ? '<a href="index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$valb[9].'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
+                                $lpost = ($valb[5]) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $valb[9], 'title' => $valb[17]]).'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
                             } else {
                                 $data = _NO_INFO;
                                 $topic = $post = $lpost = '';
@@ -140,15 +140,15 @@ function forum(): void {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
                             $view = 0;
                             if (!$status && is_moder($conf['name'])) {
-                                $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICM.'" class="sl_t_clos_m"></span></a>';
+                                $timg = getForumIcon($thref, $title, 'sl_t_clos_m', _TOPICM);
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 1) {
                                 if (is_moder($conf['name'])) {
-                                    $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICA.'" class="sl_t_clos_a"></span></a>';
+                                    $timg = getForumIcon($thref, $title, 'sl_t_clos_a', _TOPICA);
                                     $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                    $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                    $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 } else {
                                     $timg = '<span title="'._TOPICA.'" class="sl_t_clos_a"></span>';
                                     $tlink = $title;
@@ -156,28 +156,28 @@ function forum(): void {
                                 }
                                 $view = 1;
                             } elseif ($status == 2) {
-                                $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICN.'" class="sl_t_clos_n"></span></a>';
+                                $timg = getForumIcon($thref, $title, 'sl_t_clos_n', _TOPICN);
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 3 && $time <= date('Y-m-d H:i:s')) {
                                 if ($ltime > $ulast) {
-                                    $timg = ($comments > $conf['forum']['pop']) ? '<a href="'.$thref.'" title="'.$title.'"><span title="'._TPOPN.'" class="sl_t_pop"></span></a>' : '<a href="'.$thref.'" title="'.$title.'"><span title="'._ISNEWPOST.'" class="sl_t_new"></span></a>';
+                                    $timg = ($comments > $conf['forum']['pop']) ? getForumIcon($thref, $title, 'sl_t_pop', _TPOPN) : getForumIcon($thref, $title, 'sl_t_new', _ISNEWPOST);
                                 } else {
-                                    $timg = ($comments > $conf['forum']['pop']) ? '<a href="'.$thref.'" title="'.$title.'"><span title="'._TPOP.'" class="sl_t_pold"></span></a>' : '<a href="'.$thref.'" title="'.$title.'"><span title="'._NONEWPOST.'" class="sl_t_old"></span></a>';
+                                    $timg = ($comments > $conf['forum']['pop']) ? getForumIcon($thref, $title, 'sl_t_pold', _TPOP) : getForumIcon($thref, $title, 'sl_t_old', _NONEWPOST);
                                 }
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 3 && $time > date('Y-m-d H:i:s') && is_moder($conf['name'])) {
-                                $timg = '<a href="'.$thref.'" title="'.$title.'"><span title="'._TOPICP.'" class="sl_t_clos_p"></span></a>';
+                                $timg = getForumIcon($thref, $title, 'sl_t_clos_p', _TOPICP);
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 4 || $status == 5) {
-                                $timg = ($status == 4) ? '<a href="'.$thref.'" title="'.$title.'"><span title="'._THOT.'" class="sl_t_hot"></span></a>' : '<a href="'.$thref.'" title="'.$title.'"><span title="'._TANNOUN.'" class="sl_t_announ"></span></a>';
+                                $timg = ($status == 4) ? getForumIcon($thref, $title, 'sl_t_hot', _THOT) : getForumIcon($thref, $title, 'sl_t_announ', _TANNOUN);
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = '<a href="'.$thref.'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>';
+                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             }
                             $ldata = _DATE.': '.format_time($ltime, _TIMESTRING);
@@ -211,7 +211,7 @@ function forum(): void {
                     $infom = ($ismod) ? sprintf(_ACINFOM, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOM, '<b>'._NOTCAN.'</b>');
                     $cont .= $tpl->getHtmlFrag('forum-list-info', ['new' => '<span title="'._ISNEWPOST.'" class="sl_t_new">'._ISNEWPOST.'</span>', 'old' => '<span title="'._NONEWPOST.'" class="sl_t_old">'._NONEWPOST.'</span>', 'popular_new' => '<span title="'._TPOPN.'" class="sl_t_pop">'._TPOPN.'</span>', 'popular' => '<span title="'._TPOP.'" class="sl_t_pold">'._TPOP.'</span>', 'announce' => '<span title="'._TANNOUN.'" class="sl_t_announ">'._TANNOUN.'</span>', 'hot' => '<span title="'._THOT.'" class="sl_t_hot">'._THOT.'</span>', 'mod' => '<span title="'._TOPICM.'" class="sl_t_clos_m">'._TOPICM.'</span>', 'admin' => '<span title="'._TOPICA.'" class="sl_t_clos_a">'._TOPICA.'</span>', 'closed' => '<span title="'._TOPICN.'" class="sl_t_clos_n">'._TOPICN.'</span>', 'pinned' => '<span title="'._TOPICP.'" class="sl_t_clos_p">'._TOPICP.'</span>', 'perm_view' => $infov, 'perm_read' => $infor, 'perm_topic' => $infot, 'perm_reply' => $infop, 'perm_edit' => $infoe, 'perm_delete' => $infod, 'perm_mod' => $infom]);
                 } else {
-                    $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+                    $meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
                     $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
                 }
                 $show = false;
@@ -225,7 +225,7 @@ function forum(): void {
         echo $cont;
     } else {
         setHead(['title' => _FORUM]);
-        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+        $meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NO_INFO, 'meta' => $meta]);
     }
     setFoot();
@@ -392,7 +392,7 @@ function view(): void {
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         } else {
-            $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+            $meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
             $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
         }
         echo $cont;
@@ -407,12 +407,12 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     $id = (int)$id;
     $catid = (int)$catid;
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
-        $cont = '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
-        $cont .= (!is_user()) ? '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>' : '';
-        $cont .= '<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1').'</td></tr>'
-        .fields_in(isset($field), $conf['name'])
-        .'<tr><td colspan="2" class="sl_center"><input type="hidden" name="subject" value="'.$subject.'"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$catid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="send"><input type="submit" value="'._SEND.'" class="sl_but_blue"></td></tr>'
-        .'</table></form>';
+        $rows = (!is_user()) ? getFormAddRow(_YOURNAME, '<input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required>') : '';
+        $rows .= getFormAddRow(_TEXT, textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1'));
+        $rows .= fields_in(isset($field), $conf['name']);
+        $hide = '<input type="hidden" name="subject" value="'.$subject.'"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$catid.'"><input type="hidden" name="posttype" value="save">';
+        $rows .= '<tr><td colspan="2" class="sl_center">'.getFormSubmit('send', _SEND, $hide).'</td></tr>';
+        $cont = getForumReplyForm($conf['name'], $rows);
         return $tpl->getHtmlFrag('forum-all-open', ['title' => _QUICKREPLY]).$cont;
     }
     return '';
@@ -536,23 +536,20 @@ function add(): void {
         $userinfo = getUserInfo();
         if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= $tpl->getHtmlFrag('forum-all-open', ['title' => $info]);
-        $cont .= '<form action="index.php?name='.$conf['name'].'" method="post" name="post" enctype="multipart/form-data"><table class="sl_table_form">';
-        $cont .= (!is_user()) ? '<tr><td>'._YOURNAME.':</td><td><input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required></td></tr>' : '';
-        $cont .= ($subh) ? '<input type="hidden" name="subject" value="'.$subject.'">' : '<tr><td>'._TITLE.':</td><td><input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._TITLE.'" required></td></tr>';
-        $cont .= '<tr><td>'._TEXT.':</td><td>'.textarea('1', 'hometext', $hometext, $conf['name'], '15', _TEXT, '1').'</td></tr>'.fields_in($field, $conf['name']);
-        $cont .= ($ismod) ? '<tr><td>'._OPMOD.':</td><td>'.pmoder($status, $subh).'</td></tr><tr><td>'._CHNGSTORY.':</td><td>'.datetime(1, 'time', $time, 16, $conf['style']).'</td></tr>' : '';
-        $cont .= '<tr><td colspan="2" class="sl_center">'
-        .'<input type="hidden" name="id" value="'.$id.'">'
-        .'<input type="hidden" name="fid" value="'.$fid.'">'
-        .'<input type="hidden" name="pid" value="'.$pid.'">'
-        .'<input type="hidden" name="cat" value="'.$catid.'">'
-        .ad_save('', '', 'send').'</td></tr></table></form>';
+        $rows = (!is_user()) ? getFormAddRow(_YOURNAME, '<input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required>') : '';
+        $rows .= ($subh) ? '<input type="hidden" name="subject" value="'.$subject.'">' : getFormAddRow(_TITLE, '<input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._TITLE.'" required>');
+        $rows .= getFormAddRow(_TEXT, textarea('1', 'hometext', $hometext, $conf['name'], '15', _TEXT, '1'));
+        $rows .= fields_in($field, $conf['name']);
+        $rows .= ($ismod) ? getFormAddRow(_OPMOD, pmoder($status, $subh)).getFormAddRow(_CHNGSTORY, datetime(1, 'time', $time, 16, $conf['style'])) : '';
+        $hide = '<input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="fid" value="'.$fid.'"><input type="hidden" name="pid" value="'.$pid.'"><input type="hidden" name="cat" value="'.$catid.'">';
+        $rows .= '<tr><td colspan="2" class="sl_center">'.$hide.ad_save('', '', 'send').'</td></tr>';
+        $cont .= getForumReplyForm($conf['name'], $rows);
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
         $head = _FORUM.' '.$ctitle.' '.$ctitle;
         setHead(['title' => $head]);
         $cont = $tpl->getHtmlFrag('forum-all-open', ['title' => $ctitle]);
-        $meta = '<meta http-equiv="refresh" content="5; url=index.php?name='.$conf['name'].'">';
+        $meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info, 'meta' => $meta]);
     }
     echo $cont;
@@ -561,26 +558,23 @@ function add(): void {
 
 function tmoder(int $typ): string {
     global $conf;
-    $cont = '<select name="tmove" title="'._CHECKOP.'" class="sl_field '.$conf['style'].'">';
-    $cont .= '<optgroup label="'._OPMOD.'" class="sl_label">';
     $mass = [_FMODC => 's0', _FMODCA => 's1', _FMODCR => 's2', _FMODCW => 's3', _FMODCH => 's4', _FMODCO => 's5'];
     $mass = ($typ) ? array_merge($mass, [_DELETE => 'd']) : $mass;
-    foreach ($mass as $vn => $vv) $cont .= '<option value="'.$vv.'">'.$vn.'</option>';
-    $cont .= '</optgroup><optgroup label="'._MOVETO.'" class="sl_label">'.getcat($conf['name'], 0, '', '', '', '1').'</optgroup>';
-    $cont .= '</select>';
-    return $cont;
+    $opts = '<optgroup label="'._OPMOD.'" class="sl_label">';
+    foreach ($mass as $vn => $vv) $opts .= '<option value="'.$vv.'">'.$vn.'</option>';
+    $opts .= '</optgroup><optgroup label="'._MOVETO.'" class="sl_label">'.getcat($conf['name'], 0, '', '', '', '1').'</optgroup>';
+    return getFormSelect('tmove', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
 }
 
 function pmoder(int|string $status, int $subh): string {
     global $conf;
-    $cont = '<select name="status" title="'._CHECKOP.'" class="sl_field '.$conf['style'].'">';
     $mass = ($subh) ? [_CLOSE => 0, _OPEN => 1] : [_FMODC => 0, _FMODCA => 1, _FMODCR => 2, _FMODCW => 3, _FMODCH => 4, _FMODCO => 5];
+    $opts = '';
     foreach ($mass as $vn => $vv) {
         $sel = ($status == $vv) ? ' selected' : '';
-        $cont .= '<option value="'.$vv.'"'.$sel.'>'.$vn.'</option>';
+        $opts .= '<option value="'.$vv.'"'.$sel.'>'.$vn.'</option>';
     }
-    $cont .= '</select>';
-    return $cont;
+    return getFormSelect('status', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
 }
 
 function send(): void {
