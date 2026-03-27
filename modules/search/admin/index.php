@@ -410,13 +410,13 @@ function config(): void {
         'anump' => (string)$anump,
         'asearch_label' => _ASEARCH,
         'modules_html' => modul('search', 'sl_conf', $conf['search']['mods'], 1, $allow),
-        'modules_label_html' => _SMODULE.':<div class="sl_small">'._CTRLINFO.'</div>',
+        'modules_label_html' => getAdminHintLabel(_SMODULE, _CTRLINFO),
         'radio_html' => radio_form($conf['search']['asearch'], 'asearch'),
         'savechanges_label' => _SAVECHANGES,
-        'searchletinfo_label_html' => _SEARCHLETMIN.':<div class="sl_small">'._SEARCHLETINFO.'</div>',
+        'searchletinfo_label_html' => getAdminHintLabel(_SEARCHLETMIN, _SEARCHLETINFO),
         'searchletmin_label' => _SEARCHLETMIN,
         'searchlimit_label' => _SEARCHLIMIT,
-        'searchlimitinfo_label_html' => _SEARCHLIMIT.':<div class="sl_small">'._SEARCHLIMITINFO.'</div>',
+        'searchlimitinfo_label_html' => getAdminHintLabel(_SEARCHLIMIT, _SEARCHLIMITINFO),
         'slimit' => (string)$conf['search']['slimit'],
         'slet' => (string)$conf['search']['slet'],
         'snum' => (string)$conf['search']['snum'],
@@ -426,15 +426,15 @@ function config(): void {
         'value_snum_label' => _SEARCHNUM,
         'value_snump_label' => _C_35,
     ]);
-    $cfghide = '<input type="hidden" name="op" value="save"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'">';
+    $cfghide = getAdminHidden('op', 'save').getAdminHidden('token', getSiteToken('search'));
     $html = getAdminForm($afile.'.php?name=search', $cfgrows, $cfghide, 'sl_table_conf');
     $html .= '<h3>'._SEARCHENABLED.'</h3>'.getSearchauditTable($elist, 'enabled');
     $rdyrows = $tpl->getHtmlFrag('admin-search-ready-rows', [
         'searchaddall_label' => _SEARCHADDALL,
         'searchaddsel_label' => _SEARCHADDSEL,
-        'searchauto_label_html' => _SEARCHAUTO.':<div class="sl_small">'._SEARCHAUTOINFO.'</div>',
+        'searchauto_label_html' => getAdminHintLabel(_SEARCHAUTO, _SEARCHAUTOINFO),
     ]);
-    $rdyhide = '<input type="hidden" name="op" value="modadd"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'">';
+    $rdyhide = getAdminHidden('op', 'modadd').getAdminHidden('token', getSiteToken('search'));
     $html .= '<h3>'._SEARCHREADY.'</h3>'.getSearchauditTable($rlist, 'ready').getAdminForm($afile.'.php?name=search', $rdyrows, $rdyhide, 'sl_table_conf');
     $html .= '<h3>'._SEARCHINVALID.'</h3>'.getSearchauditTable($ilist, 'invalid');
     $cont .= getAdminBox($html);
@@ -553,7 +553,7 @@ function edit(): void {
             'word_placeholder' => _SWORD,
             'word_value' => (string)$word,
         ]);
-        $hide = '<input type="hidden" name="op" value="editsave"><input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="sort" value="'.$sort.'"><input type="hidden" name="order" value="'.$order.'"><input type="hidden" name="num" value="'.$num.'"><input type="hidden" name="find" value="'.htmlspecialchars($find, ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="fmod" value="'.htmlspecialchars($fmod, ENT_QUOTES, 'UTF-8').'"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'">';
+        $hide = getAdminHidden('op', 'editsave').getAdminHidden('id', (string)$id).getAdminHidden('sort', (string)$sort).getAdminHidden('order', (string)$order).getAdminHidden('num', (string)$num).getAdminHidden('find', $find).getAdminHidden('fmod', $fmod).getAdminHidden('token', getSiteToken('search'));
         $cont .= getAdminForm($afile.'.php?name=search', $rows, $hide);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -613,7 +613,7 @@ function delete(): void {
         'modul_html' => getAdminSelect('cmod', getSearchmods(''), 'sl_form'),
         'modul_label' => _MODUL.':',
     ]);
-    $hide = '<input type="hidden" name="op" value="clear"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('search'), ENT_QUOTES, 'UTF-8').'">';
+    $hide = getAdminHidden('op', 'clear').getAdminHidden('token', getSiteToken('search'));
     $cont .= getAdminForm($afile.'.php?name=search', $rows, $hide, 'sl_table_conf');
     echo $cont;
     setFoot();

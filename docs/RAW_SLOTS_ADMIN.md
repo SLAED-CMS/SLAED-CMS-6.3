@@ -881,6 +881,18 @@
 - `multi_html`: raw output from `radio_form()`
 - `save_html`: prepared hidden/save action markup from `ad_save()`
 
+## admin-hidden-input
+
+- (no raw slots — all values are escaped by template)
+
+## admin-text-input
+
+- `input_attr`: prepared extra attribute string (e.g. `placeholder="..." maxlength="255"`) — output raw, trusted PHP-assembled literals only
+
+## admin-number-input
+
+- `input_attr`: prepared extra attribute string (e.g. `placeholder="..." required`) — output raw, trusted PHP-assembled literals only
+
 ## Rules
 
 - origin must stay obvious in the PHP caller

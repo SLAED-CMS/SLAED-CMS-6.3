@@ -18,9 +18,9 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $cont .= '<form name="post" id="formcsave" method="post">'
         .'<table class="sl_table_form">';
         if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).'<input type="hidden" name="name" value=""></td></tr>';
+            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).getAdminHidden('name', '').'</td></tr>';
         } else {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td><input type="text" name="name" value="'._ANONYM.'" maxlength="25" class="sl_field '.$conf['style'].'"></td></tr>';
+            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.getAdminTextInput('name', _ANONYM, 'sl_field '.$conf['style'], 'maxlength="25"').'</td></tr>';
         }
         $cont .= '<tr><td>'._COMMENT.':</td><td>'.textarea(1, 'text', '', $conf['name'], '5').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" OnClick="AjaxLoad(\'POST\', \'0\', \'csave\', \'go=1&amp;op=savecom&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'\', { \'text\':\''._CERROR1.'\' }); ClearForm(formcsave); return false;" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';

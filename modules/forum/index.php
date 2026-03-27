@@ -193,7 +193,7 @@ function forum(): void {
                         }
                         $cont .= $tpl->getHtmlFrag('forum-list-basic-wrap', []);
                         if ($ismod) {
-                            $selmm = tmoder(1).'<input type="hidden" name="op" value="move"><input type="hidden" name="cat" value="'.$cat.'"> <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+                            $selmm = tmoder(1).getAdminHidden('op', 'move').getAdminHidden('cat', (string)$cat).' <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
                             $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => $selmm]);
                         }
                     } else {
@@ -407,10 +407,10 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     $id = (int)$id;
     $catid = (int)$catid;
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
-        $rows = (!is_user()) ? getFormAddRow(_YOURNAME, '<input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required>') : '';
+        $rows = (!is_user()) ? getFormAddRow(_YOURNAME, getAdminTextInput('postname', _ANONYM, 'sl_field '.$conf['style'], 'placeholder="'._YOURNAME.'" required')) : '';
         $rows .= getFormAddRow(_TEXT, textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1'));
         $rows .= fields_in(isset($field), $conf['name']);
-        $hide = '<input type="hidden" name="subject" value="'.$subject.'"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$catid.'"><input type="hidden" name="posttype" value="save">';
+        $hide = getAdminHidden('subject', $subject).getAdminHidden('pid', (string)$id).getAdminHidden('cat', (string)$catid).getAdminHidden('posttype', 'save');
         $rows .= '<tr><td colspan="2" class="sl_center">'.getFormSubmit('send', _SEND, $hide).'</td></tr>';
         $cont = getForumReplyForm($conf['name'], $rows);
         return $tpl->getHtmlFrag('forum-all-open', ['title' => _QUICKREPLY]).$cont;
@@ -536,12 +536,12 @@ function add(): void {
         $userinfo = getUserInfo();
         if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= $tpl->getHtmlFrag('forum-all-open', ['title' => $info]);
-        $rows = (!is_user()) ? getFormAddRow(_YOURNAME, '<input type="text" name="postname" value="'._ANONYM.'" class="sl_field '.$conf['style'].'" placeholder="'._YOURNAME.'" required>') : '';
-        $rows .= ($subh) ? '<input type="hidden" name="subject" value="'.$subject.'">' : getFormAddRow(_TITLE, '<input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_field '.$conf['style'].'" placeholder="'._TITLE.'" required>');
+        $rows = (!is_user()) ? getFormAddRow(_YOURNAME, getAdminTextInput('postname', _ANONYM, 'sl_field '.$conf['style'], 'placeholder="'._YOURNAME.'" required')) : '';
+        $rows .= ($subh) ? getAdminHidden('subject', $subject) : getFormAddRow(_TITLE, getAdminTextInput('subject', $subject, 'sl_field '.$conf['style'], 'maxlength="100" placeholder="'._TITLE.'" required'));
         $rows .= getFormAddRow(_TEXT, textarea('1', 'hometext', $hometext, $conf['name'], '15', _TEXT, '1'));
         $rows .= fields_in($field, $conf['name']);
         $rows .= ($ismod) ? getFormAddRow(_OPMOD, pmoder($status, $subh)).getFormAddRow(_CHNGSTORY, datetime(1, 'time', $time, 16, $conf['style'])) : '';
-        $hide = '<input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="fid" value="'.$fid.'"><input type="hidden" name="pid" value="'.$pid.'"><input type="hidden" name="cat" value="'.$catid.'">';
+        $hide = getAdminHidden('id', (string)$id).getAdminHidden('fid', (string)$fid).getAdminHidden('pid', (string)$pid).getAdminHidden('cat', (string)$catid);
         $rows .= '<tr><td colspan="2" class="sl_center">'.$hide.ad_save('', '', 'send').'</td></tr>';
         $cont .= getForumReplyForm($conf['name'], $rows);
     } else {

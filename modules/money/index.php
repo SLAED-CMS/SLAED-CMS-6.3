@@ -59,13 +59,13 @@ function money(): void {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         $rows = '';
-        $rows .= getFormAddRow(_MO_7.':', '<input type="number" name="sum" value="'.$sum.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_7.'" required>');
+        $rows .= getFormAddRow(_MO_7.':', getAdminNumberInput('sum', $sum, 'sl_field '.$conf['style'], 'placeholder="'._MO_7.'" required'));
         $rows .= getFormAddRow(_MO_8.':', '<input type="email" name="email" value="'.$email.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_8.'" required>');
         $form = explode(',', $conf['money']['form']);
         $i = 0;
         foreach ($form as $val) {
             if ($val != '') {
-                $rows .= getFormAddRow($val.':', '<input type="text" name="intro[]" value="'.filterHtml($intro[$i] ?? '', 1).'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'.$val.'" required>');
+                $rows .= getFormAddRow($val.':', getAdminTextInput('intro[]', filterHtml($intro[$i] ?? '', 1), 'sl_field '.$conf['style'], 'maxlength="255" placeholder="'.$val.'" required'));
                 $i++;
             }
         }

@@ -77,8 +77,8 @@ function add(): void {
     $fields = ($field) ? '<br><br>'.fields_out($field, 'content') : '';
     if ($body) $cont .= preview($title, $body, '', $field, 'content');
     $rows = '';
-    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows .= getAdminFormRow(_RSSFILE.':<div class="sl_small">'._RSSINFO.'</div>', '<input type="text" name="url" value="'.$url.'" maxlength="200" class="sl_form" placeholder="'._RSSFILE.'">');
+    $rows .= getAdminFormRow(_TITLE.':', getAdminTextInput('title', $title, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'));
+    $rows .= getAdminFormRow(getAdminHintLabel(_RSSFILE, _RSSINFO), getAdminTextInput('url', $url, 'sl_form', 'maxlength="200" placeholder="'._RSSFILE.'"'));
     $opts = getAdminOption('1800', '30 '._MIN.'.', $refresh == '1800')
         .getAdminOption('3600', '1 '._HOUR, $refresh == '3600' || !$refresh)
         .getAdminOption('18000', '5 '._HOUR.'.', $refresh == '18000')
@@ -90,10 +90,10 @@ function add(): void {
         'date_html' => datetime(1, 'time', $time, 16, 'sl_form'),
         'fields_html' => fields_in($field, 'content'),
         'refresh_html' => $opts,
-        'refresh_label_html' => _REFRESHTIME.':<div class="sl_small">'._REFINFO.'</div>',
+        'refresh_label_html' => getAdminHintLabel(_REFRESHTIME, _REFINFO),
         'save_html' => ad_save('cid', $cid, 'save'),
     ]);
-    $hide = '<input type="hidden" name="name" value="content">';
+    $hide = getAdminHidden('name', 'content');
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();

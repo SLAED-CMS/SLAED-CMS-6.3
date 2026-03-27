@@ -100,13 +100,13 @@ function add(): void {
         }
         $cont .= preview($email, $infos, _COMMENT.': '.$note, '', 'all');
     }
-    $hide = '<input type="hidden" name="name" value="money">';
+    $hide = getAdminHidden('name', 'money');
     $introhtml = '';
     $form = explode(',', $conf['money']['form'] ?? '');
     $i = 0;
     foreach ($form as $val) {
         if ($val != '') {
-            $introhtml .= getAdminFormRow($val.':', '<input type="text" name="intro[]" value="'.($intro[$i] ?? '').'" maxlength="255" class="sl_form" placeholder="'.$val.'">');
+            $introhtml .= getAdminFormRow($val.':', getAdminTextInput('intro[]', $intro[$i] ?? '', 'sl_form', 'maxlength="255" placeholder="'.$val.'"'));
             $i++;
         }
     }

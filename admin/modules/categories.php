@@ -60,7 +60,7 @@ function add(): void {
     $rows2 .= getCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', '', 1));
     $rows2 .= getCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', '', 1));
     $rows2 .= getCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', '', 2));
-    $hide = '<input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="addsave">';
+    $hide = getAdminHidden('name', 'categories').getAdminHidden('op', 'addsave');
     $formv = getCatForm('post',
         getCatTab('tabcs0', $rows0)
         .getCatTab('tabcs1', $rows1)
@@ -106,7 +106,7 @@ function subadd(): void {
         $rows2 .= getCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', '', 1));
         $rows2 .= getCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', '', 1));
         $rows2 .= getCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', '', 2));
-        $hide = '<input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="addsave">';
+        $hide = getAdminHidden('name', 'categories').getAdminHidden('op', 'addsave');
         $formv = getCatForm('post2',
             getCatTab('tabcs0', $rows0)
             .getCatTab('tabcs1', $rows1)
@@ -130,7 +130,7 @@ function addedit(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'sub' => getCategoriesSearch($modul)]);
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $hide = '<input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="edit">';
+        $hide = getAdminHidden('name', 'categories').getAdminHidden('op', 'edit');
         $rows = $tpl->getHtmlFrag('admin-categories-editpick-rows', [
             'category_html' => getcat($modul, 0, 'cid', 'sl_form'),
             'category_label' => _CATEGORY.':',
@@ -163,7 +163,7 @@ function edit(): void {
         'description_label' => _DESCRIPTION.':',
         'description_placeholder' => _DESCRIPTION,
         'description_value' => $desc,
-        'hidden_parent_html' => $parent == 0 ? '<input type="hidden" name="parent" value="0">' : '',
+        'hidden_parent_html' => $parent == 0 ? getAdminHidden('parent', '0') : '',
         'img_html' => getCategoryImageSelect($path, $imgcat === 'no.png' ? '' : $imgcat),
         'img_label' => _IMG.':',
         'lang_html' => $conf['multilingual'] == 1 ? getAdminFormRow(_LANGUAGE.':', getAdminSelect('lang', language($lang), 'sl_form')) : '',
@@ -182,7 +182,7 @@ function edit(): void {
     $rows2 .= getCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', $pedit, 1));
     $rows2 .= getCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', $pdelete, 1));
     $rows2 .= getCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', $pmod, 2));
-    $hide = '<input type="hidden" name="id" value="'.$cid.'"><input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="save">';
+    $hide = getAdminHidden('id', (string)$cid).getAdminHidden('name', 'categories').getAdminHidden('op', 'save');
     $formv = getCatForm('post',
         getCatTab('tabcs0', $rows0)
         .getCatTab('tabcs1', $rows1)

@@ -116,7 +116,7 @@ function addview(int $id): string {
         'umail_html' => radio_form('1', 'umail'),
         'umail_label' => _MAIL_SENDE,
     ]);
-    $hide = '<input type="hidden" name="name" value="help"><input type="hidden" name="refer" value="1"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$cid.'"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="save">';
+    $hide = getAdminHidden('name', 'help').getAdminHidden('refer', '1').getAdminHidden('pid', (string)$id).getAdminHidden('cat', (string)$cid).getAdminHidden('uid', (string)$uid).getAdminHidden('posttype', 'save').getAdminHidden('op', 'save');
     return getAdminForm($afile.'.php', $rows, $hide);
 }
 
@@ -157,7 +157,7 @@ function add(): void {
         'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
         'time_label' => _CHNGSTORY.':',
     ]);
-    $hide = '<input type="hidden" name="name" value="help"><input type="hidden" name="pid" value="'.$pid.'">';
+    $hide = getAdminHidden('name', 'help').getAdminHidden('pid', (string)$pid);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();

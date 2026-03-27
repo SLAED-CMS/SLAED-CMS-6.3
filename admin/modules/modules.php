@@ -153,7 +153,7 @@ function modules(): void {
         }
         $acts = adminMenuItems([
             ad_status($afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active),
-            '<a href="'.$afile.'.php?name=modules&amp;op=edit&amp;mod='.$title.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
+            adminLinkAction($afile.'.php?name=modules&amp;op=edit&amp;mod='.$title, _FULLEDIT, _FULLEDIT),
             ltrim($sqlimg, '|'),
             ltrim($sqluimg, '|'),
         ]);
@@ -185,9 +185,9 @@ function edit(): void {
     $search = getAdminSearchBox('<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>');
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
-    $hide = '<input type="hidden" name="mod" value="'.$mod.'"><input type="hidden" name="name" value="modules"><input type="hidden" name="op" value="save">';
+    $hide = getAdminHidden('mod', $mod).getAdminHidden('name', 'modules').getAdminHidden('op', 'save');
     $rows = '';
-    $rows .= getAdminFormRow(_LANGUAGE.':', '<input type="text" name="lang" value="'.$lang.'" maxlength="50" class="sl_conf" placeholder="'._LANGUAGE.'">');
+    $rows .= getAdminFormRow(_LANGUAGE.':', getAdminTextInput('lang', $lang, 'sl_conf', 'maxlength="50" placeholder="'._LANGUAGE.'"'));
     $path = 'templates/admin/images/admin/';
     $entries = is_dir($path) ? scandir($path) : [];
     $pickopts = '';
@@ -218,7 +218,7 @@ function edit(): void {
         }
         $rows .= getAdminFormRow(_UGROUP.':', getAdminSelect('group', $grpopts, 'sl_conf'));
     } else {
-        $hide .= '<input type="hidden" name="group" value="0">';
+        $hide .= getAdminHidden('group', '0');
     }
     $sideopts = '';
     foreach ([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3] as $key => $value) {

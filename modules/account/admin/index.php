@@ -172,7 +172,7 @@ function add(): void {
     $rows = $tpl->getHtmlFrag('admin-account-add-basic-rows', [
         'allowusers_html' => radio_form($view, 'view'),
         'allowusers_label' => _ALLOWUSERS,
-        'avatar_html' => $avatar ? getAdminFormRow(_AVATAR.':', '<input type="text" name="avatar" value="'.$avatar.'" maxlength="255" class="sl_form" placeholder="'._AVATAR.'">') : '',
+        'avatar_html' => $avatar ? getAdminFormRow(_AVATAR.':', getAdminTextInput('avatar', $avatar, 'sl_form', 'maxlength="255" placeholder="'._AVATAR.'"')) : '',
         'email_label' => _EMAIL.':',
         'email_value' => $email,
         'interests_label' => _INTERESTS.':',
@@ -188,7 +188,7 @@ function add(): void {
         'reg_html' => datetime(1, 'reg', $reg ?? '', 16, 'sl_form'),
         'reg_label' => _REG.':',
         'signature_html' => textarea('1', 'sig', $sig, 'account', '5', _SIGNATURE, ''),
-        'signature_label_html' => _SIGNATURE.':<div class="sl_small">'._SIGNATURE_TEXT.'</div>',
+        'signature_label_html' => getAdminHintLabel(_SIGNATURE, _SIGNATURE_TEXT),
         'siteurl_label' => _SITEURL.':',
         'siteurl_value' => $site,
     ]);
@@ -199,21 +199,20 @@ function add(): void {
         }
         $rows .= getAdminFormRow(_C_12.':', getAdminSelect('story', $storyopts, 'sl_form'));
     } else {
-        $rows .= '<input type="hidden" name="story" value="'.$conf['news']['num'].'">';
+        $rows .= getAdminHidden('story', (string)$conf['news']['num']);
     }
     $rows .= $tpl->getHtmlFrag('admin-account-add-menu-rows', [
         'activatepersonal_html' => radio_form($blockon, 'blockon'),
         'activatepersonal_label' => _ACTIVATEPERSONAL,
         'menuconf_html' => textarea('2', 'block', $block, 'account', '5', _MENUCONF, ''),
-        'menuconf_label_html' => _MENUCONF.':<div class="sl_small">'._MENUINFO.'</div>',
+        'menuconf_label_html' => getAdminHintLabel(_MENUCONF, _MENUINFO),
     ]);
     if ($conf['users']['theme']) {
         $tcategory = '';
         $tcount = 0;
         foreach (scandir('templates') as $file) {
             if (!preg_match('/\./', $file) && $file != 'admin') {
-                $sel = ($file == $theme) ? ' selected' : '';
-                $tcategory .= '<option value="'.$file.'"'.$sel.'>'.$file.'</option>';
+                $tcategory .= getAdminOption($file, $file, $file == $theme);
                 $tcount++;
             }
         }
@@ -231,7 +230,7 @@ function add(): void {
             'language_label' => _LANGUAGE.':',
         ]);
     }
-    $rows .= getAdminFormRow(_POINTS.':', '<input type="number" name="point" value="'.$point.'" class="sl_form" placeholder="'._POINTS.'">');
+    $rows .= getAdminFormRow(_POINTS.':', getAdminNumberInput($point, 'point', 'sl_form', 'placeholder="'._POINTS.'"'));
     $warnhtml = '';
     $i = 0;
     while ($i < 5) {
@@ -260,7 +259,7 @@ function add(): void {
         .getAdminFormRow(_BIRTHDAY.':', datetime(2, 'birth', $birth, 10, 'sl_form'))
         .getAdminFormRow(_GENDER.':', get_gender('gender', $gender, 'sl_form'));
     $check = (getVar('cookie', 'sl_close_9', 'num') == 0) ? '' : ' checked';
-    $mailblock = '<div id="sl_close_9">'.getAdminForm('', getAdminFormRow(_MAIL_TEXT.':<div class="sl_small">'._MAIL_PASS_INFO.'</div>', textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''), 'sl_form')).'</div>';
+    $mailblock = '<div id="sl_close_9">'.getAdminForm('', getAdminFormRow(getAdminHintLabel(_MAIL_TEXT, _MAIL_PASS_INFO), textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''), 'sl_form')).'</div>';
     $rows .= $tpl->getHtmlFrag('admin-account-add-tail-rows', [
         'check_attr' => $check,
         'fields_html' => fields_in($field, 'account'),
@@ -268,7 +267,7 @@ function add(): void {
         'mailblock_html' => $mailblock,
         'password_label' => _PASSWORD.':',
         'retypepassword_label' => _RETYPEPASSWORD.':',
-        'save_html' => '<input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="name" value="account"><input type="hidden" name="op" value="addsave"><input type="submit" value="'._SAVE.'" class="sl_but_blue">',
+        'save_html' => getAdminHidden('uid', (string)$uid).getAdminHidden('name', 'account').getAdminHidden('op', 'addsave').'<input type="submit" value="'._SAVE.'" class="sl_but_blue">',
     ]);
     $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, '', 'sl_table_form', 'post', 'post'));
     echo $cont;
@@ -422,7 +421,7 @@ function pointreset(): void {
         'uwarns_html' => radio_form(0, 'warnings'),
         'uwarns_label' => _UWARNS.':',
     ]);
-    $hide = '<input type="hidden" name="name" value="account"><input type="hidden" name="op" value="resave">';
+    $hide = getAdminHidden('name', 'account').getAdminHidden('op', 'resave');
     $cont .= getAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
     echo $cont;
     setFoot();

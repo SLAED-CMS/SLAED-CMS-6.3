@@ -3746,7 +3746,7 @@ function datetime(int $id, string $name, string $time, int $max, string $class):
         $cont = '';
     }
     $cont .= getHtmlScriptInline("$(function() { $('#".$name."').".$typ.'({ changeMonth: true, changeYear: true, '.$format."}, $.timepicker.regional['".substr(_LOCALE, 0, 2)."']); });")
-    .'<input type="text" id="'.$name.'" name="'.$name.'" value="'.$time.'" maxlength="'.$max.'" class="'.$class.'">';
+    .getAdminTextInput($name, $time, $class, 'id="'.$name.'" maxlength="'.$max.'"');
     return $cont;
 }
 
@@ -4982,8 +4982,8 @@ function ad_save(string $name = '', string $val = '', string $op = '', string $n
     if (!$noPreview) $cont .= '<option value="preview">'._PREVIEW.'</option>';
     $cont .= '<option value="save">'._SEND.'</option>';
     $cont .= ($val) ? '<option value="delete">'._DELETE.'</option></select>' : '</select>';
-    $cont .= ($name && $val) ? '<input type="hidden" name="'.$name.'" value="'.$val.'">' : '';
-    $cont .= '<input type="hidden" name="op" value="'.$op.'">'
+    $cont .= ($name && $val) ? getAdminHidden($name, $val) : '';
+    $cont .= getAdminHidden('op', $op)
     .' <input type="submit" value="'._OK.'" class="sl_but_blue">';
     return $cont;
 }
@@ -5145,7 +5145,7 @@ function fields_in(mixed $fieldb, string $mod): string {
                 $requir = ($out[4] == 1) ? ' required' : '';
                 if ($out[3] == 1) {
                     $dvalue = ($fieldin) ? getConst($fieldin) : '';
-                    $field = '<input type="text" name="field[]" value="'.$dvalue.'" class="'.$style.'" placeholder="'.$dvalue.'"'.$requir.'>';
+                    $field = getAdminTextInput('field[]', $dvalue, $style, 'placeholder="'.$dvalue.'"'.$requir);
                 } elseif ($out[3] == 2) {
                     $field = '<textarea name="field[]" cols="15" rows="5" class="'.$style.'"'.$requir.'>'.$fieldin.'</textarea>';
                 } elseif ($out[3] == 3) {
@@ -5354,7 +5354,7 @@ function get_user_search(string $id, string $val, int $maxlength, string $extraC
     $class = $extraClass ? 'sl_field '.$extraClass : 'sl_field';
     $req   = $required ? ' required' : '';
     $cont = getHtmlScriptInline("$(function() { $(\"#".$id."\").autocomplete({ source: \"index.php?go=1&op=get_user\", minLength: ".$conf['search']['slet']." }); });")
-    .'<input type="text" id="'.$id.'" name="'.$id.'" value="'.$val.'" maxlength="'.$maxlength.'" class="'.$class.'" placeholder="'._NICKNAME.'"'.$req.'>';
+    .getAdminTextInput($id, $val, $class, 'id="'.$id.'" maxlength="'.$maxlength.'" placeholder="'._NICKNAME.'"'.$req);
     return $cont;
 }
 

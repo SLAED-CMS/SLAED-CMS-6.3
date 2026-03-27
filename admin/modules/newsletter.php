@@ -171,7 +171,7 @@ function add(): void {
             $option .= getAdminOption($email9, _CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9, $email9 == $mails);
         }
     }
-    $hide = '<input type="hidden" name="nid" value="'.$nid.'"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save">';
+    $hide = getAdminHidden('nid', (string)$nid).getAdminHidden('name', 'newsletter').getAdminHidden('op', 'save').getAdminHidden('posttype', 'save');
     $rows = $tpl->getHtmlFrag('admin-newsletter-add-rows', [
         'body_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'),
         'mails_html' => getAdminSelect('mails', $option, 'sl_form'),

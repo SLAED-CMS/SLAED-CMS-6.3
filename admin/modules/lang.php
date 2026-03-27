@@ -116,13 +116,8 @@ function fileedit(): void {
     $offset = ($page - 1) * $per_page;
     $hide = '';
     $cj = count($lng_cn);
-    for ($j = 0; $j < $cj; $j++) $hide .= '<input type="hidden" name="lcn[]" value="'.$lng_cn[$j].'">';
-    $hide .= '<input type="hidden" name="typ" value="'.$typ.'">';
-    $hide .= '<input type="hidden" name="mod" value="'.$mod.'">';
-    $hide .= '<input type="hidden" name="page" value="'.$page.'">';
-    $hide .= '<input type="hidden" name="name" value="lang">';
-    $hide .= '<input type="hidden" name="op" value="save">';
-    $hide .= '<input type="hidden" name="refer" value="1">';
+    for ($j = 0; $j < $cj; $j++) $hide .= getAdminHidden('lcn[]', $lng_cn[$j]);
+    $hide .= getAdminHidden('typ', $typ).getAdminHidden('mod', $mod).getAdminHidden('page', (string)$page).getAdminHidden('name', 'lang').getAdminHidden('op', 'save').getAdminHidden('refer', '1');
     $rows = '';
     $ci = min($per_page, $total - $offset);
     for ($i = 0; $i < $ci; $i++) {
@@ -130,7 +125,7 @@ function fileedit(): void {
         $n = $idx + 1;
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
         if ($i !== 0) $rows .= getAdminFormWide('<hr>');
-        $rows .= getAdminFormRow(_CONST.':', '<input type="text" name="cnst[]" value="'.$valc.'" class="sl_form" placeholder="'._CONST.'"> <a href="#'.$n.'" title="'._ID.': '.$n.'" class="sl_pnum">'.$n.'</a>', 'id="'.$n.'"');
+        $rows .= getAdminFormRow(_CONST.':', getAdminTextInput('cnst[]', $valc, 'sl_form', 'placeholder="'._CONST.'"').' <a href="#'.$n.'" title="'._ID.': '.$n.'" class="sl_pnum">'.$n.'</a>', 'id="'.$n.'"');
         $cj = count($lng_cn);
         for ($j = 0; $j < $cj; $j++) {
             $val = ($valc) ? trim(str_replace('\"', '&quot;', $lng_arr[$lng_cn[$j]][$cnst_arr[$idx]])) : '';
@@ -143,7 +138,7 @@ function fileedit(): void {
                 $tloc = substr($lng_cn[$j], 0, 2);
                 $btn = '<input type="button" OnClick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');" value="'._OK.'" title="'._EAUTOTR.'" class="sl_but_blue">';
             }
-            $rows .= getAdminFormRow(getLangName($lng_cn[$j]).':', '<input type="text" name="lng['.$lng_cn[$j].'][]" value="'.$val.'" class="sl_form '.$class.'" placeholder="'.getLangName($lng_cn[$j]).'">'.$btn);
+            $rows .= getAdminFormRow(getLangName($lng_cn[$j]).':', getAdminTextInput('lng['.$lng_cn[$j].'][]', $val, 'sl_form '.$class, 'placeholder="'.getLangName($lng_cn[$j]).'"').$btn);
         }
     }
     $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');

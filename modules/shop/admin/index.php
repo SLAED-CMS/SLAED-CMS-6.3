@@ -19,7 +19,7 @@ function buildShopSearchBox(): string {
     }
     return getAdminSearchBox($tpl->getHtmlFrag('admin-shop-search-box', [
         'action_url' => $afile.'.php',
-        'hidden_html' => '<input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients">',
+        'hidden_html' => getAdminHidden('name', 'shop').getAdminHidden('op', 'clients'),
         'input_html' => get_user_search('csearch', $txt, '30'),
         'ok_label' => _OK,
         'search_label' => _SEARCH,
@@ -233,7 +233,7 @@ function clientadd(): void {
             'percent_text' => $proz.' %',
         ]);
     }
-    $frows .= getAdminFormRow(_USER_ID.':', '<input type="number" name="uid" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'">');
+    $frows .= getAdminFormRow(_USER_ID.':', getAdminNumberInput($uid, 'uid', 'sl_form', 'placeholder="'._USER_ID.'"'));
     $productslist = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_products ORDER BY title');
     $prodopts = '';
     while([$pid, $ptitle] = $db->getSqlRow($productslist)) {
@@ -259,7 +259,7 @@ function clientadd(): void {
         'note_label' => _NOTE.':',
         'product_html' => getAdminSelect('product', $prodopts, 'sl_form'),
         'product_label' => _PRODUCT.':',
-        'save_html' => '<input type="hidden" name="cppi" value="'.$cppi.'">'.ad_save('cid', $cid, 'clientsave', 1),
+        'save_html' => getAdminHidden('cppi', (string)$cppi).ad_save('cid', $cid, 'clientsave', 1),
         'site_label' => _SITE.':',
         'userid_label' => _USER_ID.':',
         'uid' => (string)$uid,
@@ -409,7 +409,7 @@ function products(): void {
                 'value_attr' => (string)$pid,
             ]));
         }
-        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="productops"><input type="hidden" name="refer" value="1"> <input type="submit" value="'._OK.'" class="sl_but_blue">';
+        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' '.getAdminHidden('name', 'shop').getAdminHidden('op', 'productops').getAdminHidden('refer', '1').' <input type="submit" value="'._OK.'" class="sl_but_blue">';
         $numpt = setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_products', '', $sqlstatus, $conf['shop']['anump']);
         $html = getAdminListForm(getAdminTable($phead, $prows), $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]), '');
         $cont .= getAdminBox($html);
@@ -459,7 +459,7 @@ function productadd(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     $ptextpre = ($vote) ? '<div id="repshop">'.getVoting($vote, 'shop').'</div><hr>'.$ptext : $ptext;
     if ($ptextpre) $cont .= preview($ptitle, $ptextpre, $pbodytext, '', 'shop');
-    $parows = getAdminFormRow(_TITLE.' / '._PRODUCT.':', '<input type="text" name="ptitle" value="'.$ptitle.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>')
+    $parows = getAdminFormRow(_TITLE.' / '._PRODUCT.':', getAdminTextInput('ptitle', $ptitle, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'))
         .getAdminFormRow(_CATEGORY.':', getcat('shop', $pcid, 'pcid', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
     if ($db->getSqlRowCount($result2) > 0) {
@@ -475,11 +475,11 @@ function productadd(): void {
             $a++;
         }
         $associnner .= '</tr></table>';
-        $parows .= getAdminFormRow(_ASSOTOPIC.':<div class="sl_small">'._ASSOTOPICI.'</div>', $associnner);
+        $parows .= getAdminFormRow(getAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI), $associnner);
     }
     $parows .= getAdminFormRow(_TEXT.':', textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'))
         .getAdminFormRow(_ENDTEXT.':', textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0'))
-        .getAdminFormRow(_PREIS.':', '<input type="text" name="pprice" value="'.$pprice.'" maxlength="10" class="sl_form" placeholder="'._PREIS.'" required>')
+        .getAdminFormRow(_PREIS.':', getAdminTextInput('pprice', $pprice, 'sl_form', 'maxlength="10" placeholder="'._PREIS.'" required'))
         .getAdminFormRow(_CHNGSTORY.':', datetime(1, 'ptime', $ptime, 16, 'sl_form'))
         .getAdminFormRow(_VOTING.':', add_voting('shop', 'vote', $vote, 'sl_form'))
         .getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'))
@@ -711,7 +711,7 @@ function partneradd(): void {
         $nick = ($nick) ? user_info($nick) : _ANONYM;
         $parrows .= getAdminFormRow(_NICKNAME.':', $nick);
     }
-    $uidfield = ($uid == 0) ? '<input type="number" name="uid" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'" required>' : '<input type="hidden" name="uid" value="'.$uid.'">'.$uid;
+    $uidfield = ($uid == 0) ? getAdminNumberInput($uid, 'uid', 'sl_form', 'placeholder="'._USER_ID.'" required') : getAdminHidden('uid', (string)$uid).$uid;
     $parrows .= $tpl->getHtmlFrag('admin-shop-partneradd-main-rows', [
         'clientadres_label' => _CLIENTADRES.':',
         'clientname_label' => _CLIENTNAME.':',
@@ -954,7 +954,7 @@ function export(): void {
             $export = getAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-export-rows', [
                 'database_html' => getAdminSelect('bd', $bdopts, 'sl_form'),
                 'database_label' => _DATABASE.':',
-                'hidden_html' => '<input type="hidden" name="name" value="shop"><input type="hidden" name="id" value="1"><input type="hidden" name="op" value="export">',
+                'hidden_html' => getAdminHidden('name', 'shop').getAdminHidden('id', '1').getAdminHidden('op', 'export'),
                 'submit_label' => _SAVE,
             ]));
         } else {
@@ -977,7 +977,7 @@ function export(): void {
             $import = getAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-import-rows', [
                 'file_html' => getAdminSelect('bd', $ocont, 'sl_form'),
                 'file_label' => _FILE.':',
-                'hidden_html' => '<input type="hidden" name="name" value="shop"><input type="hidden" name="id" value="2"><input type="hidden" name="op" value="export">',
+                'hidden_html' => getAdminHidden('name', 'shop').getAdminHidden('id', '2').getAdminHidden('op', 'export'),
                 'submit_label' => _SEND,
             ]));
         } else {
@@ -1055,7 +1055,7 @@ function config(): void {
         'partinfo_label' => _C_29.':',
         'partinfoextra_html' => textarea('4', 'partinfo2', $conf['shop']['partinfo2'], 'shop', '5', _C_30, '1'),
         'partinfoextra_label' => _C_30.':',
-        'partlink_label_html' => _C_26.':<div class="sl_small">'._PART_ID.'</div>',
+        'partlink_label_html' => getAdminHintLabel(_C_26, _PART_ID),
         'partlink_value' => (string)$conf['shop']['partlink'],
         'proz_label' => _C_1.':',
         'proz_value' => (string)$conf['shop']['proz'],

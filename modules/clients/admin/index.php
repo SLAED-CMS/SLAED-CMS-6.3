@@ -74,7 +74,7 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stopText]);
     }
     if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $hide = '<input type="hidden" name="name" value="clients">';
+    $hide = getAdminHidden('name', 'clients');
     $rows = $tpl->getHtmlFrag('admin-clients-add-rows', [
         'body_html' => textarea('1', 'body', $body, 'clients', '15', _TEXT, '1'),
         'body_label' => _TEXT.':',

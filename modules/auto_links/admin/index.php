@@ -252,7 +252,7 @@ function config(): void {
             $opts .= getAdminOption($path.$entry, $entry, $conf['auto_links']['img'] == $entry);
         }
     }
-    $hide = '<input type="hidden" name="op" value="configsave">';
+    $hide = getAdminHidden('op', 'configsave');
     $rows = $tpl->getHtmlFrag('admin-auto-links-config-rows', [
         'addmail_html' => radio_form($conf['auto_links']['addmail'], 'addmail'),
         'addmail_label' => _ADDAMAIL,

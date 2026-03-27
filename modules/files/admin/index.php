@@ -119,7 +119,7 @@ function add(): void {
             }
         }
     }
-    $hide = '<input type="hidden" name="name" value="files">';
+    $hide = getAdminHidden('name', 'files');
     $path_html = '';
     if (file_exists($url)) {
         $path_html = getAdminSelect('path', getAdminOption('', _NO).getAdminOption($path, $path, true).$directory, 'sl_form');

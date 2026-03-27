@@ -82,7 +82,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $hide = '<input type="hidden" name="mid" value="'.$mid.'"><input type="hidden" name="name" value="messages"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save">';
+    $hide = getAdminHidden('mid', (string)$mid).getAdminHidden('name', 'messages').getAdminHidden('op', 'save').getAdminHidden('posttype', 'save');
     $langsel = '';
     if ($conf['multilingual'] == 1) $langsel = getAdminSelect('lang', language($lang), 'sl_form');
     if ($expire != 0) {
@@ -90,10 +90,10 @@ function add(): void {
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = '<input type="hidden" name="expire" value="'.$oldexpire.'">'._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = getAdminHidden('expire', (string)$oldexpire)._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = '<input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required>';
+        $expire_text = getAdminNumberInput(0, 'expire', 'sl_form', 'placeholder="'._EXPIRATION.'" required');
     }
     $privs = [_MVALL, _MVANON, _MVUSERS, _MVADMIN];
     $privopts = '';
@@ -106,7 +106,7 @@ function add(): void {
         'body_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'),
         'body_label' => _TEXT.':',
         'expire_html' => $expire_text,
-        'expire_label_html' => _EXPIRATION.':<div class="sl_small">'._CONFINES.'</div>',
+        'expire_label_html' => getAdminHintLabel(_EXPIRATION, _CONFINES),
         'lang_html' => $langsel,
         'lang_label' => _LANGUAGE.':',
         'newexpire_value' => (string)$newexpire,

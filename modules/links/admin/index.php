@@ -127,7 +127,7 @@ function add(): void {
         'title_label' => _TITLE.':',
         'title_value' => $title,
     ]);
-    $hide = '<input type="hidden" name="name" value="links">';
+    $hide = getAdminHidden('name', 'links');
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();

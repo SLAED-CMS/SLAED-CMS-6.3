@@ -114,7 +114,7 @@ function add(): void {
         'domain_value' => $domain,
         'host_value' => $host,
         'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
-        'save_html' => '<input type="hidden" name="name" value="whois">'.ad_save('wid', $wid, 'save', 1),
+        'save_html' => getAdminHidden('name', 'whois').ad_save('wid', $wid, 'save', 1),
     ]);
     $cont .= getAdminForm($afile.'.php', $rows);
     echo $cont;

@@ -85,7 +85,7 @@ function getSearchForm(array $state): string {
     if ($state['mod'] === 'media') {
         $rows .= getFormAddRow(_SEARCHFROM.':', getFormSelect('typ', getSearchTypeList(intval($state['typ'])), 'sl_field '.$sty));
     }
-    $rows .= getFormAddRow(_SEARCH.':', '<input type="text" name="word" value="'.htmlspecialchars((string)$state['word'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_field '.$sty.'" placeholder="'._SEARCH.'" required>');
+    $rows .= getFormAddRow(_SEARCH.':', getAdminTextInput('word', (string)$state['word'], 'sl_field '.$sty, 'maxlength="100" placeholder="'._SEARCH.'" required'));
     $rows .= '<tr><td colspan="2" class="sl_center">'.getFormSubmit('', _SEARCH).'</td></tr>';
     return getForumReplyForm(htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8'), $rows);
 }

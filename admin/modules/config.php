@@ -16,7 +16,7 @@ function config(): void {
     .'<div id="tabc0" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._VERSION.':</td><td><a href="//slaed.net" target="_blank" title="'._VERSION.'">SLAED CMS '.$conf['version'].'</a></td></tr>'
-    .'<tr><td>'._SITENAME.':</td><td><input type="text" name="sitename" value="'.$conf['sitename'].'" maxlength="255" class="sl_conf" placeholder="'._SITENAME.'" required></td></tr>'
+    .'<tr><td>'._SITENAME.':</td><td>'.getAdminTextInput('sitename', (string)$conf['sitename'], 'sl_conf', 'maxlength="255" placeholder="'._SITENAME.'" required').'</td></tr>'
     .'<tr><td>'._SITEURL.':</td><td><input type="url" name="homeurl" value="'.$conf['homeurl'].'" maxlength="255" class="sl_conf" placeholder="'._SITEURL.'" required></td></tr>';
     $path = 'templates/'.$conf['theme'].'/images/logos/';
     $entries = is_dir($path) ? scandir($path) : [];
@@ -31,13 +31,13 @@ function config(): void {
     $cont .= '<tr><td>'._LOGO.':</td><td>'.getAdminSelect('site_logo', $logoOpts, 'sl_conf', 'id="img_replace"').'</td></tr>'
     .'<tr><td>'._SITELOGO.':</td><td><img src="'.$path.$conf['site_logo'].'" id="picture" alt="'._SITELOGO.'"></td></tr>'
     .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="slogan" cols="65" rows="5" class="sl_conf" placeholder="'._DESCRIPTION.'" required>'.$conf['slogan'].'</textarea></td></tr>'
-    .'<tr><td>'._ADMININFO.':<div class="sl_small">'._ADMININFODES.'</div></td><td><textarea name="admininfo" cols="65" rows="5" class="sl_conf" placeholder="'._ADMININFO.'">'.$conf['admininfo'].'</textarea></td></tr>'
+    .'<tr><td>'.getAdminHintLabel(_ADMININFO, _ADMININFODES).'</td><td><textarea name="admininfo" cols="65" rows="5" class="sl_conf" placeholder="'._ADMININFO.'">'.$conf['admininfo'].'</textarea></td></tr>'
     .'<tr><td>'._STARTDATE.':</td><td>'.datetime(1, 'startdate', $conf['startdate'], 16, 'sl_conf').'</td></tr>'
     .'<tr><td>'._ADMINEMAIL.':</td><td><input type="email" name="adminmail" value="'.$conf['adminmail'].'" maxlength="255" class="sl_conf" placeholder="'._ADMINEMAIL.'" required></td></tr>'
-    .'<tr><td>'._USER_COOKIE.':</td><td><input type="text" name="user_c" value="'.$conf['user_c'].'" maxlength="255" class="sl_conf" placeholder="'._USER_COOKIE.'" required></td></tr>'
-    .'<tr><td>'._ADMIN_SESSION.':</td><td><input type="text" name="admin_c" value="'.$conf['admin_c'].'" maxlength="255" class="sl_conf" placeholder="'._ADMIN_SESSION.'" required></td></tr>'
-    .'<tr><td>'._USER_COOKIE_T.':</td><td><input type="number" name="user_c_t" value="'.intval($conf['user_c_t'] / 86400).'" class="sl_conf" placeholder="'._USER_COOKIE_T.'" required></td></tr>'
-    .'<tr><td>'._SESS_T.':</td><td><input type="number" name="sess_t" value="'.intval($conf['sess_t'] / 60).'" class="sl_conf" placeholder="'._SESS_T.'" required></td></tr>'
+    .'<tr><td>'._USER_COOKIE.':</td><td>'.getAdminTextInput('user_c', (string)$conf['user_c'], 'sl_conf', 'maxlength="255" placeholder="'._USER_COOKIE.'" required').'</td></tr>'
+    .'<tr><td>'._ADMIN_SESSION.':</td><td>'.getAdminTextInput('admin_c', (string)$conf['admin_c'], 'sl_conf', 'maxlength="255" placeholder="'._ADMIN_SESSION.'" required').'</td></tr>'
+    .'<tr><td>'._USER_COOKIE_T.':</td><td>'.getAdminNumberInput('user_c_t', (string)intval($conf['user_c_t'] / 86400), 'sl_conf', 'placeholder="'._USER_COOKIE_T.'" required').'</td></tr>'
+    .'<tr><td>'._SESS_T.':</td><td>'.getAdminNumberInput('sess_t', (string)intval($conf['sess_t'] / 60), 'sl_conf', 'placeholder="'._SESS_T.'" required').'</td></tr>'
     .'<tr><td>'._IP_LINK.':</td><td><input type="url" name="ip_link" value="'.$conf['ip_link'].'" maxlength="255" class="sl_conf" placeholder="'._IP_LINK.'" required></td></tr>'
     .'<tr><td>'._THEME.':</td><td>';
     $templates = is_dir('templates') ? scandir('templates') : [];
@@ -49,7 +49,7 @@ function config(): void {
             }
         }
     }
-    $cont .= getAdminSelect('theme', $themeOpts, 'sl_conf').'</td></tr><tr><td>'._PUTINHOME.':<div class="sl_small">'._PUTINHOMEINFO.' '._CTRLINFO.'</div></td><td>'.modul('module', 'sl_conf', $conf['module'], 1).'</td></tr>';
+    $cont .= getAdminSelect('theme', $themeOpts, 'sl_conf').'</td></tr><tr><td>'.getAdminHintLabel(_PUTINHOME, _PUTINHOMEINFO.' '._CTRLINFO).'</td><td>'.modul('module', 'sl_conf', $conf['module'], 1).'</td></tr>';
     $mods = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'page', 'shop_clients', 'voting'];
     $mname = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'pages', 'shop', 'voting'];
     $i = 0;
@@ -82,8 +82,8 @@ function config(): void {
         $xquality++;
     }
     $cont .= getAdminSelect('quality', $qualityOpts, 'sl_conf').'</td></tr>'
-    .'<tr><td>'._CAPKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td><input type="text" name="capkey" value="'.$conf['capkey'].'" maxlength="255" class="sl_conf" placeholder="'._CAPKEY.'"></td></tr>'
-    .'<tr><td>'._CAPSECKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td><input type="text" name="capsec" value="'.$conf['capsec'].'" maxlength="255" class="sl_conf" placeholder="'._CAPSECKEY.'"></td></tr>'
+    .'<tr><td>'._CAPKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td>'.getAdminTextInput('capkey', (string)$conf['capkey'], 'sl_conf', 'maxlength="255" placeholder="'._CAPKEY.'"').'</td></tr>'
+    .'<tr><td>'._CAPSECKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td>'.getAdminTextInput('capsec', (string)$conf['capsec'], 'sl_conf', 'maxlength="255" placeholder="'._CAPSECKEY.'"').'</td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
     .'<tr><td>'._EDITOR.':</td><td>'.redaktor('2', 'redaktor', 'sl_conf', $conf['redaktor'], 0).'</td></tr>';
     $gtime = timezone_identifiers_list();
@@ -101,7 +101,7 @@ function config(): void {
             $varOpts .= getAdminOption((string)$key, $val, !empty($variables[$key]));
         }
     }
-    $cont .= '<tr><td>'._VARIABLES.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.getAdminSelect('variables[]', $varOpts, 'sl_conf', 'multiple="multiple"').'</td></tr>'
+    $cont .= '<tr><td>'.getAdminHintLabel(_VARIABLES, _CTRLINFO).'</td><td>'.getAdminSelect('variables[]', $varOpts, 'sl_conf', 'multiple="multiple"').'</td></tr>'
     .'<tr><td>'._VAR_VIEW.':</td><td>'.getAdminSelect('var_view',
         getAdminOption('0', _MVADMIN, $conf['var_view'] == '0')
         .getAdminOption('1', _MVALL, $conf['var_view'] == '1'),
@@ -111,7 +111,7 @@ function config(): void {
         .getAdminOption('1', _SYNTAXPN, $conf['syntax'] == '1')
         .getAdminOption('2', _SYNTAXSH, $conf['syntax'] == '2'),
         'sl_conf').'</td></tr>'
-    .'<tr><td>'._ADMCOL.':</td><td><input type="number" name="admcol" value="'.$conf['admcol'].'" class="sl_conf" placeholder="'._ADMCOL.'" required></td></tr>'
+    .'<tr><td>'._ADMCOL.':</td><td>'.getAdminNumberInput('admcol', (string)$conf['admcol'], 'sl_conf', 'placeholder="'._ADMCOL.'" required').'</td></tr>'
     .'<tr><td>'._DB_SYNC.'</td><td>'.radio_form($conf['dbsync'], 'dbsync').'</td></tr>'
     .'<tr><td>'._SESSION.'</td><td>'.radio_form($conf['session'], 'session').'</td></tr>'
     .'<tr><td>'._MESSAGE_BOX.'</td><td>'.radio_form($conf['message'], 'message').'</td></tr>'
@@ -122,13 +122,13 @@ function config(): void {
     .'</div>'
     .'<div id="tabc1" class="tabcont">'
     .'<table class="sl_table_conf">'
-    .'<tr><td>'._DEFIS.':</td><td><input type="text" name="defis" value="'.urldecode($conf['defis']).'" maxlength="255" class="sl_conf" placeholder="'._DEFIS.'" required></td></tr>'
-    .'<tr><td>'._DLETTER.':</td><td><input type="number" name="dletter" value="'.$conf['dletter'].'" class="sl_conf" placeholder="'._DLETTER.'" required></td></tr>'
+    .'<tr><td>'._DEFIS.':</td><td>'.getAdminTextInput('defis', urldecode($conf['defis']), 'sl_conf', 'maxlength="255" placeholder="'._DEFIS.'" required').'</td></tr>'
+    .'<tr><td>'._DLETTER.':</td><td>'.getAdminNumberInput('dletter', (string)$conf['dletter'], 'sl_conf', 'placeholder="'._DLETTER.'" required').'</td></tr>'
     .'<tr><td>'._LTITLE.'</td><td>'.radio_form($conf['ltitle'], 'ltitle').'</td></tr>'
     .'<tr><td>'._ADESC.'</td><td>'.radio_form($conf['adesc'], 'adesc').'</td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
-    .'<tr><td>'._RSEP.':</td><td><input type="text" name="sep" value="'.urldecode($conf['sep']).'" maxlength="255" class="sl_conf" placeholder="'._RSEP.'" required></td></tr>'
-    .'<tr><td>'._TSEP.':</td><td><input type="text" name="tsep" value="'.urldecode($conf['tsep']).'" maxlength="255" class="sl_conf" placeholder="'._TSEP.'" required></td></tr>'
+    .'<tr><td>'._RSEP.':</td><td>'.getAdminTextInput('sep', urldecode($conf['sep']), 'sl_conf', 'maxlength="255" placeholder="'._RSEP.'" required').'</td></tr>'
+    .'<tr><td>'._TSEP.':</td><td>'.getAdminTextInput('tsep', urldecode($conf['tsep']), 'sl_conf', 'maxlength="255" placeholder="'._TSEP.'" required').'</td></tr>'
     .'<tr><td>'._REWRITE_MOD.'</td><td>'.radio_form($conf['rewrite'], 'rewrite').'</td></tr>'
     .'<tr><td>'._SEOTITLE.'</td><td>'.radio_form($conf['title'] ?? 1, 'title').'</td></tr>'
     .'<tr><td>'._SEOCTITLE.'</td><td>'.radio_form($conf['ctitle'] ?? 1, 'ctitle').'</td></tr>'
@@ -164,14 +164,14 @@ function config(): void {
         getAdminOption('0', _NO, $conf['censor'] == 0)
         .getAdminOption('1', _MATCHANY, $conf['censor'] == 1),
         'sl_conf').'</td></tr>'
-    .'<tr><td>'._CENSORREPLACE.':</td><td><input type="text" name="censor_r" value="'.$conf['censor_r'].'" maxlength="10" class="sl_conf" placeholder="'._CENSORREPLACE.'" required></td></tr>'
-    .'<tr><td>'._CENSOR.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="censor_l" cols="65" rows="5" class="sl_conf" placeholder="'._CENSOR.'" required>'.$conf['censor_l'].'</textarea></td></tr>'
+    .'<tr><td>'._CENSORREPLACE.':</td><td>'.getAdminTextInput('censor_r', (string)$conf['censor_r'], 'sl_conf', 'maxlength="10" placeholder="'._CENSORREPLACE.'" required').'</td></tr>'
+    .'<tr><td>'.getAdminHintLabel(_CENSOR, _NOKOMA).'</td><td><textarea name="censor_l" cols="65" rows="5" class="sl_conf" placeholder="'._CENSOR.'" required>'.$conf['censor_l'].'</textarea></td></tr>'
     .'<tr><td>'._CLICABLE.'<div class="sl_small">'._CLICABLEINFO.'</div></td><td>'.radio_form($conf['clickable'], 'clickable').'</td></tr></table>'
     .'</div>'
     .'<div id="tabc4" class="tabcont">'
     .'<table class="sl_table_conf">'
-    .'<tr><td>'._BOTSLIST.':<div class="sl_small">'._NOKOMA.' '._BOTSINFO.'</div></td><td><textarea name="bots" cols="65" rows="10" class="sl_conf" placeholder="'._BOTSLIST.'" required>'.$conf['bots'].'</textarea></td></tr>'
-    .'<tr><td>'._BOTSSITE.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="fbots" cols="65" rows="10" class="sl_conf" placeholder="'._BOTSSITE.'" required>'.$conf['fbots'].'</textarea></td></tr>'
+    .'<tr><td>'.getAdminHintLabel(_BOTSLIST, _NOKOMA.' '._BOTSINFO).'</td><td><textarea name="bots" cols="65" rows="10" class="sl_conf" placeholder="'._BOTSLIST.'" required>'.$conf['bots'].'</textarea></td></tr>'
+    .'<tr><td>'.getAdminHintLabel(_BOTSSITE, _NOKOMA).'</td><td><textarea name="fbots" cols="65" rows="10" class="sl_conf" placeholder="'._BOTSSITE.'" required>'.$conf['fbots'].'</textarea></td></tr>'
     .'<tr><td>'._BOTSACT.'</td><td>'.radio_form($conf['botsact'], 'botsact').'</td></tr></table>'
     .'</div>'
     .'<div id="tabc5" class="tabcont">';
@@ -188,19 +188,19 @@ function config(): void {
         .getAdminOption('1', _CACHE_1, $conf['cache'] == 1)
         .getAdminOption('2', _CACHE_2, $conf['cache'] == 2),
         'sl_conf').'</td></tr>'
-    .'<tr><td>'._CACHETIME.':</td><td><input type="number" name="cache_t" value="'.$conf['cache_t'].'" class="sl_conf" placeholder="'._CACHETIME.'" required></td></tr>'
-    .'<tr><td>'._CACHEDEL.':</td><td><input type="number" name="cache_d" value="'.$conf['cache_d'].'" class="sl_conf" placeholder="'._CACHEDEL.'" required></td></tr>'
+    .'<tr><td>'._CACHETIME.':</td><td>'.getAdminNumberInput('cache_t', (string)$conf['cache_t'], 'sl_conf', 'placeholder="'._CACHETIME.'" required').'</td></tr>'
+    .'<tr><td>'._CACHEDEL.':</td><td>'.getAdminNumberInput('cache_d', (string)$conf['cache_d'], 'sl_conf', 'placeholder="'._CACHEDEL.'" required').'</td></tr>'
     .'<tr><td>'._CACHECOMP.'</td><td>'.radio_form($conf['cache_c'], 'cache_c').'</td></tr>'
     .'<tr><td>'._CACHEBROW.'</td><td>'.radio_form($conf['cache_b'], 'cache_b').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><hr></td></tr>'
     .'<tr><td>'._CACHECSS.'</td><td>'.radio_form($conf['cache_css'], 'cache_css').'</td></tr>'
-    .'<tr><td>'._CSSDIR.':<div class="sl_small">'._CSSDIRINFO.' '._NOKOMA.'</div></td><td><textarea name="css_f" cols="65" rows="5" class="sl_conf" placeholder="'._CSSDIRINFO.'" required>'.$conf['css_f'].'</textarea></td></tr>'
+    .'<tr><td>'.getAdminHintLabel(_CSSDIR, _CSSDIRINFO.' '._NOKOMA).'</td><td><textarea name="css_f" cols="65" rows="5" class="sl_conf" placeholder="'._CSSDIRINFO.'" required>'.$conf['css_f'].'</textarea></td></tr>'
     .'<tr><td>'._CSSHEAD.'</td><td>'.radio_form($conf['css_h'], 'css_h').'</td></tr>'
     .'<tr><td>'._CSSCOMP.'</td><td>'.radio_form($conf['css_c'], 'css_c').'</td></tr>'
     .'<tr><td>'._CSSENC.'</td><td>'.radio_form($conf['css_e'], 'css_e').'</td></tr>'
     .'<tr><td colspan="2" class="sl_center"><hr></td></tr>'
     .'<tr><td>'._CACHESCRIPT.'</td><td>'.radio_form($conf['cache_script'], 'cache_script').'</td></tr>'
-    .'<tr><td>'._SCRIPTFILE.':<div class="sl_small">'._SCRIPTFILEINFO.' '._NOKOMA.'</div></td><td><textarea name="script_f" cols="65" rows="5" class="sl_conf" placeholder="'._SCRIPTFILEINFO.'" required>'.$conf['script_f'].'</textarea></td></tr>'
+    .'<tr><td>'.getAdminHintLabel(_SCRIPTFILE, _SCRIPTFILEINFO.' '._NOKOMA).'</td><td><textarea name="script_f" cols="65" rows="5" class="sl_conf" placeholder="'._SCRIPTFILEINFO.'" required>'.$conf['script_f'].'</textarea></td></tr>'
     .'<tr><td>'._SCRIPTHEAD.'</td><td>'.radio_form($conf['script_h'], 'script_h').'</td></tr>'
     .'<tr><td>'._SCRIPTCOMP.'</td><td>'.radio_form($conf['script_c'], 'script_c').'</td></tr>'
     .'<tr><td>'._SCRIPTASIN.'</td><td>'.radio_form($conf['script_a'], 'script_a').'</td></tr>'
@@ -208,7 +208,7 @@ function config(): void {
     .'</div>'
     .'<div id="tabc6" class="tabcont">'
     .'<table class="sl_table_conf">'
-    .'<tr><td>'._MAILTEMP.':<div class="sl_small">'._MAILTEMPINFO.'</div></td><td><textarea name="mtemp" cols="65" rows="10" class="sl_conf" placeholder="'._MAILTEMP.'" required>'.$conf['mtemp'].'</textarea></td></tr></table>'
+    .'<tr><td>'.getAdminHintLabel(_MAILTEMP, _MAILTEMPINFO).'</td><td><textarea name="mtemp" cols="65" rows="10" class="sl_conf" placeholder="'._MAILTEMP.'" required>'.$conf['mtemp'].'</textarea></td></tr></table>'
     .'</div>'
     .'<script>
         var countries=new ddtabcontent(\'config\')
@@ -216,7 +216,7 @@ function config(): void {
         countries.setselectedClassTarget(\'link\')
         countries.init()
     </script>'
-    .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="config"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
+    .'<table class="sl_table_conf"><tr><td class="sl_center">'.getAdminHidden('name', 'config').getAdminHidden('op', 'save').'<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
     echo $cont.getAdminBox($confv);
     setFoot();
 }

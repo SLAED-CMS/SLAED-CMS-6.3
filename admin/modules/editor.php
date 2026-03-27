@@ -21,7 +21,7 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     $cont .= checkPerms($file);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $warn]);
-    $hide = '<input type="hidden" name="name" value="editor"><input type="hidden" name="op" value="save"><input type="hidden" name="editor" value="'.$edit.'"><input type="hidden" name="file" value="'.$file.'">';
+    $hide = getAdminHidden('name', 'editor').getAdminHidden('op', 'save').getAdminHidden('editor', $edit).getAdminHidden('file', $file);
     $rows = getAdminFormWide(textarea_code('code', 'template', 'sl_form', $mtype, $text));
     $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
     return $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));

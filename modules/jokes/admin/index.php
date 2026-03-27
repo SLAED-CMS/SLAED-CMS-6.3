@@ -89,7 +89,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($joke)) $cont .= preview($title, $joke, '', '', 'all');
-    $hide = '<input type="hidden" name="name" value="jokes">';
+    $hide = getAdminHidden('name', 'jokes');
     $rows = $tpl->getHtmlFrag('admin-jokes-add-rows', [
         'cat_html' => getcat('jokes', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
         'cat_label' => _CATEGORY.':',

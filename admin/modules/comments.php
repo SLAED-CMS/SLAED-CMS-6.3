@@ -22,7 +22,7 @@ function edit(): void {
     $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, modul, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
-    $hide = '<input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="editsave">';
+    $hide = getAdminHidden('id', (string)$id).getAdminHidden('name', 'comments').getAdminHidden('op', 'editsave');
     $rows = $tpl->getHtmlFrag('admin-comments-edit-rows', [
         'comment_html' => textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1'),
         'save_label' => _SAVECHANGES,

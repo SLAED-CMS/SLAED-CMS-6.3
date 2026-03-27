@@ -157,7 +157,7 @@ function getSqltable(array $items): string {
     foreach ($items as $row) {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
-        $status = $row['ok'] ? '<span class="sl_green">'._OK.'</span>' : '<span class="sl_red">'._ERROR.' - '.htmlspecialchars($row['error']).'</span>';
+        $status = adminFlagBox((bool)$row['ok'], _OK, _ERROR.' - '.$row['error']);
         $cells = '<td>'.(int)$row['num'].'</td><td>'.htmlspecialchars($row['type']).'</td><td>'.$tab.'</td><td>'.$sql.'</td><td>'.$status.'</td>';
         $rows .= getAdminTableRow($cells);
     }
@@ -178,7 +178,7 @@ function getSqlsum(array $items, string $mode, string $name): string {
             if (!$stop) $stop = (int)$row['num'];
         }
     }
-    $stat = ($bad > 0) ? '<span class="sl_red">'._ERROR.'</span>' : '<span class="sl_green">'._OK.'</span>';
+    $stat = adminFlagBox($bad === 0, _OK, _ERROR);
     $mval = ($mode === 'dump') ? _DB_RUNMODE : _DB_PARSEMODE;
     $text = _INQUIRY.': '.$name
         .'<br>'._DB_MODE.': '.$mval
@@ -417,10 +417,7 @@ function dump(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DBINFO]);
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DBWARN]);
     }
-    $fhide = '<input type="hidden" name="name" value="database">'
-           .'<input type="hidden" name="op" value="dump">'
-           .'<input type="hidden" name="type" value="dump">'
-           .'<input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('db')).'">';
+    $fhide = getAdminHidden('name', 'database').getAdminHidden('op', 'dump').getAdminHidden('type', 'dump').getAdminHidden('token', getSiteToken('db'));
     $frows = getAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
     $frows .= getAdminFormWide(
         '<button type="submit" name="action" value="parse" class="sl_but_blue">'._DB_PARSE.'</button>'

@@ -80,9 +80,9 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _GROUPSI]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
-    $hide = '<input type="hidden" name="gid" value="'.$gid.'"><input type="hidden" name="name" value="groups"><input type="hidden" name="op" value="save">';
+    $hide = getAdminHidden('gid', (string)$gid).getAdminHidden('name', 'groups').getAdminHidden('op', 'save');
     $rows = '';
-    $rows .= getAdminFormRow(_NAME.':', '<input type="text" name="grname" value="'.$grname.'" maxlength="255" class="sl_form" placeholder="'._NAME.'" required>');
+    $rows .= getAdminFormRow(_NAME.':', getAdminTextInput('grname', $grname, 'sl_form', 'maxlength="255" placeholder="'._NAME.'" required'));
     $rows .= getAdminFormRow(_DESCRIPTION.':', '<textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'">'.$description.'</textarea>');
     $path = 'templates/'.$conf['theme'].'/images/ranks/';
     $pickopts = '';

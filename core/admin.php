@@ -656,7 +656,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
             }
             $descript = ($description) ? $description : _NO;
             $subcat = ($ispid) ? $ispid : _NO;
-            $clang = ($conf['multilingual'] == 1) ? ((!$language) ? '<br>'._LANGUAGE.': '._ALL : '<br>'._LANGUAGE.': '.getLangName($language)) : '';
+            $clang = getAdminLangHint($language);
             $delete = (!$pnum && !$ispid)
                 ? adminDeleteAction(
                     $afile.'.php?op=cat_del&amp;id='.$id.$modlink.'&amp;refer=1',
@@ -772,7 +772,7 @@ function ajax_block(): string {
         $weight_plus = $weight + 1;
         $exp = intval($expire - time());
         $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-        $blang = ($conf['multilingual'] == 1) ? ((!$lang) ? '<br>'._LANGUAGE.': '._ALL : '<br>'._LANGUAGE.': '.getLangName($lang)) : '';
+        $blang = getAdminLangHint($lang);
         $titleHtml = adminTitleTip(_NAME.': '.$title.'<br>'._PURCHASED.': '.$exp.$blang).cutstr(getConst($title), 15);
         if ($bpos == 'l') {
             $bpos = adminNoteLabel(_LEFTBLOCK, _LEFT);
@@ -1001,11 +1001,10 @@ function ashow_files(): void {
             }
         }
         $files = [];
-        $dh = opendir($path);
-        while ($entry = readdir($dh)) {
-            if ($entry != '.' && $entry != '..' && $entry != 'index.html' && !is_dir($path.$entry)) $files[] = [filemtime($path.$entry), $entry];
+        foreach (scandir($path) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..' || $entry === 'index.html' || is_dir($path.$entry)) continue;
+            $files[] = [filemtime($path.$entry), $entry];
         }
-        closedir($dh);
         if (is_array($files)) {
             $a = 0;
             rsort($files);

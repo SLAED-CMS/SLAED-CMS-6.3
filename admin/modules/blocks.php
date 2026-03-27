@@ -33,10 +33,10 @@ function add(): void {
     global $db, $conf, $afile, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-    $rows = getAdminFormRow(_TITLE.':<div class="sl_small">'._ADDCONST.'</div>', '<input type="text" name="title" maxlength="60" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows .= getAdminFormRow(_RSSFILE.':', '<input type="text" name="url" class="sl_form" placeholder="'._RSSFILE.'">');
+    $rows = getAdminFormRow(getAdminHintLabel(_TITLE, _ADDCONST), getAdminTextInput('title', '', 'sl_form', 'maxlength="60" placeholder="'._TITLE.'" required'));
+    $rows .= getAdminFormRow(_RSSFILE.':', getAdminTextInput('url', '', 'sl_form', 'placeholder="'._RSSFILE.'"'));
     $rows .= getAdminFormRow('<div class="sl_small">'._RSSLINESINFO.' '._RSSINFO.'</div>', getAdminSelect('headline', getAdminOption('0', _CUSTOM, true).rss_select(), 'sl_form'));
-    $rows .= getAdminFormRow(_REFRESHTIME.':<div class="sl_small">'._REFINFO.'</div>', getBlockRefreshSelect());
+    $rows .= getAdminFormRow(getAdminHintLabel(_REFRESHTIME, _REFINFO), getBlockRefreshSelect());
     $bfopts = getAdminOption('', _NONE, true);
     $files = scandir('blocks');
     foreach ($files as $file) {
@@ -52,12 +52,12 @@ function add(): void {
         'activate_html' => radio_form(1, 'status'),
         'activate_label' => _ACTIVATE2,
         'bfile_html' => getAdminSelect('bfile', $bfopts, 'sl_form'),
-        'bfile_label_html' => _FILENAME.':<div class="sl_small">'._FILENAMEIN.'</div>',
+        'bfile_label_html' => getAdminHintLabel(_FILENAME, _FILENAMEIN),
         'blockview_html' => getBlockViewGrid(),
         'blockview_label' => _BLOCK_VIEW.':',
         'content_html' => textarea('1', 'content', '', 'all', '15', _CONTENT, ''),
         'content_label' => _CONTENT.':',
-        'expiration_label_html' => _EXPIRATION.':<div class="sl_small">'._CONFINES.'</div>',
+        'expiration_label_html' => getAdminHintLabel(_EXPIRATION, _CONFINES),
         'expiration_placeholder' => _EXPIRATION,
         'language_html' => $conf['multilingual'] == 1 ? getAdminFormRow(_LANGUAGE.':', getAdminSelect('lang', language(), 'sl_form')) : '',
         'position_html' => getBlockPositionSelect(),
@@ -66,7 +66,7 @@ function add(): void {
         'viewpriv_html' => getBlockViewSelect(),
         'viewpriv_label' => _VIEWPRIV,
     ]);
-    $hide = '<input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="addsave">';
+    $hide = getAdminHidden('name', 'blocks').getAdminHidden('op', 'addsave');
     echo $cont.getAdminForm($afile.'.php', $rows, $hide);
     setFoot();
 }
@@ -76,7 +76,7 @@ function fileadd(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 2]);
     $cont .= checkPerms(BASE_DIR.'/blocks/');
-    $hide = '<input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode">';
+    $hide = getAdminHidden('name', 'blocks').getAdminHidden('op', 'filecode');
     $rows = $tpl->getHtmlFrag('admin-blocks-fileadd-rows', [
         'createblock_label' => _CREATEBLOCK,
         'filename_label' => _FILENAME.':',
@@ -98,7 +98,7 @@ function fileedit(): void {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $opts .= getAdminOption($file, $matches[0]);
         }
     }
-    $hide = '<input type="hidden" name="name" value="blocks"><input type="hidden" name="op" value="filecode">';
+    $hide = getAdminHidden('name', 'blocks').getAdminHidden('op', 'filecode');
     $rows = $tpl->getHtmlFrag('admin-blocks-fileedit-rows', [
         'bf_html' => getAdminSelect('bf', $opts, 'sl_form'),
         'editblock_label' => _EDITBLOCK,
@@ -206,10 +206,10 @@ function filecode(): void {
             $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _B_FEDIT]);
         }
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _EINFOPHP]);
-        $hide = '<input type="hidden" name="bf" value="'.$bf.'">'
-        .'<input type="hidden" name="flag" value="'.$flaged.'">'
-        .'<input type="hidden" name="name" value="blocks">'
-        .'<input type="hidden" name="op" value="filecodesave">';
+        $hide = getAdminHidden('bf', $bf)
+        .getAdminHidden('flag', $flaged)
+        .getAdminHidden('name', 'blocks')
+        .getAdminHidden('op', 'filecodesave');
         $rows = $tpl->getHtmlFrag('admin-blocks-filecode-rows', [
             'code_html' => textarea_code('code', 'blocktext', 'sl_form', 'text/x-php', trim($out[1])),
             'goback_label' => _GOBACK,
@@ -256,7 +256,7 @@ function edit(): void {
         $type = '('._BLOCKHTML.')';
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _BLOCK.': '.$title.' '.$type]);
-    $rows = getAdminFormRow(_TITLE.':<div class="sl_small">'._ADDCONST.'</div>', '<input type="text" name="title" maxlength="50" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required>');
+    $rows = getAdminFormRow(getAdminHintLabel(_TITLE, _ADDCONST), getAdminTextInput('title', $title, 'sl_form', 'maxlength="50" placeholder="'._TITLE.'" required'));
     if ($bfile != '') {
         $bfopts = '';
         $files = scandir('blocks');
@@ -267,7 +267,7 @@ function edit(): void {
         }
         $rows .= getAdminFormRow(_FILENAME.':', getAdminSelect('bfile', $bfopts, 'sl_form'));
     } elseif ($url != '') {
-        $rows .= getAdminFormRow(_RSSFILE.':', '<input type="text" name="url" maxlength="200" value="'.$url.'" class="sl_form" placeholder="'._RSSFILE.'">');
+        $rows .= getAdminFormRow(_RSSFILE.':', getAdminTextInput('url', $url, 'sl_form', 'maxlength="200" placeholder="'._RSSFILE.'"'));
         $rows .= getAdminFormRow(_REFRESHTIME.':', getBlockRefreshSelect((string)$refresh));
     } else {
         $rows .= getAdminFormRow(_CONTENT.':', textarea('1', 'content', $content, 'all', '15', _CONTENT, ''));
@@ -280,10 +280,10 @@ function edit(): void {
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = '<input type="hidden" name="expire" value="'.$oldexpire.'">'._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = getAdminHidden('expire', (string)$oldexpire)._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = '<input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required>';
+        $expire_text = getAdminNumberInput(0, 'expire', 'sl_form', 'placeholder="'._EXPIRATION.'" required');
     }
     $rows .= $tpl->getHtmlFrag('admin-blocks-edit-rows', [
         'action_html' => getBlockActionSelect((string)$action),
@@ -291,17 +291,17 @@ function edit(): void {
         'activate_html' => radio_form($active, 'status'),
         'activate_label' => _ACTIVATE2,
         'expiration_html' => $expire_text,
-        'expiration_label_html' => _EXPIRATION.':<div class="sl_small">'._CONFINES.'</div>',
+        'expiration_label_html' => getAdminHintLabel(_EXPIRATION, _CONFINES),
         'viewpriv_html' => getBlockViewSelect((int)$view),
         'viewpriv_label' => _VIEWPRIV,
     ]);
-    $hide = '<input type="hidden" name="oldposition" value="'.$bpos.'">'
-        .'<input type="hidden" name="bid" value="'.$bid.'">'
-        .'<input type="hidden" name="newexpire" value="'.$newexpire.'">'
-        .'<input type="hidden" name="bkey" value="'.$bkey.'">'
-        .'<input type="hidden" name="weight" value="'.$weight.'">'
-        .'<input type="hidden" name="name" value="blocks">'
-        .'<input type="hidden" name="op" value="editsave">';
+    $hide = getAdminHidden('oldposition', $bpos)
+        .getAdminHidden('bid', (string)$bid)
+        .getAdminHidden('newexpire', (string)$newexpire)
+        .getAdminHidden('bkey', $bkey)
+        .getAdminHidden('weight', (string)$weight)
+        .getAdminHidden('name', 'blocks')
+        .getAdminHidden('op', 'editsave');
     $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
     echo $cont.getAdminForm($afile.'.php', $rows, $hide);
     setFoot();

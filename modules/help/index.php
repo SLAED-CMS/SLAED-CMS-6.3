@@ -271,7 +271,7 @@ function addview(int $id): string {
         $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$cid, $status] = $db->getSqlRow($result);
         $rows = getFormAddRow(_HELPGLOS, radio_form($status, 'status'));
-        $hide = '<input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="catid" value="'.$cid.'"><input type="hidden" name="posttype" value="save">';
+        $hide = getAdminHidden('pid', (string)$id).getAdminHidden('catid', (string)$cid).getAdminHidden('posttype', 'save');
         return $tpl->getHtmlFrag('form-add', [
             'extrafields' => $rows,
             'hometext' => textarea('1', 'hometext', '', $conf['name'], 10, _TEXT, '1'),

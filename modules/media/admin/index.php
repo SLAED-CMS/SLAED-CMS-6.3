@@ -117,7 +117,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($description) $cont .= preview($mtitle, $description, '', '', 'media');
-    $hide = '<input type="hidden" name="name" value="media">';
+    $hide = getAdminHidden('name', 'media');
     $years = '';
     $xyear = $date['year'] - 100;
     while ($xyear <= ($date['year'] + 1)) {

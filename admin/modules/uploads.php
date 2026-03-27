@@ -35,7 +35,7 @@ function uploads(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $tabone = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
-    $uphide = '<input type="hidden" name="name" value="uploads"><input type="hidden" name="op" value="uploadsave"><input type="hidden" name="dir" value="'.$dir.'">';
+    $uphide = getAdminHidden('name', 'uploads').getAdminHidden('op', 'uploadsave').getAdminHidden('dir', $dir);
     $uprows = $tpl->getHtmlFrag('admin-uploads-upload-rows', [
         'execute_label' => _EXECUTE,
         'filesite_label' => _FILE_SITE.':',

@@ -93,7 +93,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($hometext) $cont .= preview($subject, $hometext, $bodytext, '', 'pages');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $hide = '<input type="hidden" name="name" value="pages">';
+    $hide = getAdminHidden('name', 'pages');
     $rows = $tpl->getHtmlFrag('admin-pages-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
         'acomm_label' => _COMMENTS.':',

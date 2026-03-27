@@ -32,7 +32,7 @@ function sitemap(): void {
         $asize += $size;
     }
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
-    $hide = '<input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add">';
+    $hide = getAdminHidden('name', 'sitemap').getAdminHidden('op', 'add');
     $rows = $tpl->getHtmlFrag('admin-sitemap-editor-rows', [
         'code_html' => textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)),
         'save_label' => _UPDATE,
@@ -56,7 +56,7 @@ function xsledit(): void {
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)]);
-    $hide = '<input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="xslsave">';
+    $hide = getAdminHidden('name', 'sitemap').getAdminHidden('op', 'xslsave');
     $rows = $tpl->getHtmlFrag('admin-sitemap-editor-rows', [
         'code_html' => textarea_code('code', 'template', 'sl_form', 'application/xml', $conts),
         'save_label' => _SAVE,

@@ -92,7 +92,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     if ($hometext) $cont .= preview($subject, $hometext, '', '', 'faq');
-    $hide = '<input type="hidden" name="name" value="faq">';
+    $hide = getAdminHidden('name', 'faq');
     $rows = $tpl->getHtmlFrag('admin-faq-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
         'acomm_label' => _COMMENTS.':',

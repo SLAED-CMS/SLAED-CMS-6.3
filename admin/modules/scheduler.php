@@ -52,15 +52,13 @@ function scheduler(): void {
         $tip .= '<br>'._SCHEDULER_FAILS.': '.$fail;
         if ($note !== '') $tip .= '<br>'._DESCRIPTION.': '.$note;
         $title = $job['title'];
-        $tok = htmlspecialchars(getSiteToken('scheduler'), ENT_QUOTES, 'UTF-8');
-        $esc = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');
         $aops = ['run' => _SCHEDULER_RUN, 'unlock' => _SCHEDULER_UNLOCK];
         if (($job['type'] ?? '') === 'custom') $aops['del'] = _DELETE;
         $aforms = '';
         $amenu = '<a href="'.$afile.'.php?name=scheduler&amp;op=add&amp;job='.$name.'" title="'._EDIT.'">'._EDIT.'</a>';
         foreach ($aops as $aop => $alabel) {
             $aid = 'sch'.$aop.$name;
-            $aforms .= '<form action="'.$afile.'.php" method="post" id="'.$aid.'" class="sl_none"><input type="hidden" name="name" value="scheduler"><input type="hidden" name="op" value="'.$aop.'"><input type="hidden" name="job" value="'.$esc.'"><input type="hidden" name="token" value="'.$tok.'"></form>';
+            $aforms .= '<form action="'.$afile.'.php" method="post" id="'.$aid.'" class="sl_none">'.getAdminHidden('name', 'scheduler').getAdminHidden('op', $aop).getAdminHidden('job', $name).getAdminHidden('token', getSiteToken('scheduler')).'</form>';
             $amenu .= '||<a href="#" OnClick="document.getElementById(\''.$aid.'\').submit(); return false;" title="'.$alabel.'">'.$alabel.'</a>';
         }
         $acts = [];
@@ -96,24 +94,24 @@ function add(string $name = ''): void {
     $iscustom = (($job['type'] ?? 'custom') === 'custom');
     $key = $isnew ? '' : $job['name'];
     $url = $job['settings']['url'] ?? '';
-    $schedule = htmlspecialchars((string)($job['schedule'] ?? ''), ENT_QUOTES, 'UTF-8');
+    $schedule = (string)($job['schedule'] ?? '');
     $info = $iscustom ? _SCHEDULER_URLINFO : _SCHEDULER_SYSINFO;
     $readonly = $isnew ? '' : ' readonly';
     $cont = checkPerms(CONFIG_DIR.'/scheduler.php');
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
-    $hide = '<input type="hidden" name="name" value="scheduler"><input type="hidden" name="op" value="save"><input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('scheduler'), ENT_QUOTES, 'UTF-8').'">';
+    $hide = getAdminHidden('name', 'scheduler').getAdminHidden('op', 'save').getAdminHidden('token', getSiteToken('scheduler'));
     $rows = '';
-    $rows .= getAdminFormRow(_SCHEDULER_JOBKEY.':', '<input type="text" name="job" value="'.htmlspecialchars($key, ENT_QUOTES, 'UTF-8').'" maxlength="32" class="sl_form"'.$readonly.' required>');
-    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.htmlspecialchars((string)$job['title'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_form" required>');
-    $rows .= getAdminFormRow(_TYPE.':', '<input type="text" value="'.htmlspecialchars((($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM, ENT_QUOTES, 'UTF-8').'" class="sl_form" disabled><input type="hidden" name="type" value="'.htmlspecialchars((string)$job['type'], ENT_QUOTES, 'UTF-8').'">');
+    $rows .= getAdminFormRow(_SCHEDULER_JOBKEY.':', getAdminTextInput('job', $key, 'sl_form', 'maxlength="32"'.$readonly.' required'));
+    $rows .= getAdminFormRow(_TITLE.':', getAdminTextInput('title', (string)$job['title'], 'sl_form', 'maxlength="100" required'));
+    $rows .= getAdminFormRow(_TYPE.':', getAdminTextInput('', (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM, 'sl_form', 'disabled').getAdminHidden('type', (string)$job['type']));
     if ($iscustom) {
-        $rows .= getAdminFormRow(_SCHEDULER_URL.':', '<input type="text" name="url" value="'.htmlspecialchars($url, ENT_QUOTES, 'UTF-8').'" maxlength="255" class="sl_form" placeholder="https://example.com/task" required>');
+        $rows .= getAdminFormRow(_SCHEDULER_URL.':', getAdminTextInput('url', $url, 'sl_form', 'maxlength="255" placeholder="https://example.com/task" required'));
     } else {
-        $rows .= getAdminFormRow(_SCHEDULER_SYSTEM.':', '<input type="text" value="'.htmlspecialchars((string)($job['system'] ?? ''), ENT_QUOTES, 'UTF-8').'" class="sl_form" disabled>');
+        $rows .= getAdminFormRow(_SCHEDULER_SYSTEM.':', getAdminTextInput('', (string)($job['system'] ?? ''), 'sl_form', 'disabled'));
     }
-    $rows .= getAdminFormRow(_SCHEDULER_SCHED.':<div class="sl_small">'._SCHEDULER_CRONFMT.'</div>', '<input type="text" name="schedule" value="'.$schedule.'" maxlength="100" class="sl_form" placeholder="0 2 * * *" required>');
-    $rows .= getAdminFormRow(_SCHEDULER_PRIO.':<div class="sl_small">'._SCHEDULER_PRIOTIP.'</div>', '<input type="number" name="priority" value="'.htmlspecialchars((string)$job['priority'], ENT_QUOTES, 'UTF-8').'" class="sl_form" min="1" max="999" required>');
-    $rows .= getAdminFormRow(_SCHEDULER_LOCK.':', '<input type="number" name="lock_timeout" value="'.htmlspecialchars((string)$job['lock_timeout'], ENT_QUOTES, 'UTF-8').'" class="sl_form" min="60" required>');
+    $rows .= getAdminFormRow(getAdminHintLabel(_SCHEDULER_SCHED, _SCHEDULER_CRONFMT), getAdminTextInput('schedule', $schedule, 'sl_form', 'maxlength="100" placeholder="0 2 * * *" required'));
+    $rows .= getAdminFormRow(getAdminHintLabel(_SCHEDULER_PRIO, _SCHEDULER_PRIOTIP), getAdminNumberInput('priority', (string)$job['priority'], 'sl_form', 'min="1" max="999" required'));
+    $rows .= getAdminFormRow(_SCHEDULER_LOCK.':', getAdminNumberInput('lock_timeout', (string)$job['lock_timeout'], 'sl_form', 'min="60" required'));
     $rows .= getAdminFormRow(_ACTIVATE2, radio_form((int)$job['active'], 'active'));
     $rows .= getAdminFormRow(_SCHEDULER_MANUAL.':', radio_form((int)$job['manual'], 'manual'));
     $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');

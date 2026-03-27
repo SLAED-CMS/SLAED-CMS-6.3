@@ -26,7 +26,7 @@ function news(): void {
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $hide = '<input type="hidden" name="name" value="news"><input type="hidden" name="op" value="actions"><input type="hidden" name="refer" value="1">';
+        $hide = getAdminHidden('name', 'news').getAdminHidden('op', 'actions').getAdminHidden('refer', '1');
         $head = $tpl->getHtmlFrag('admin-article-list-head', [
             'checkall_html' => '<th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th>',
             'functions_label' => _FUNCTIONS,
@@ -115,7 +115,7 @@ function add(): void {
     $homepre = ($vote) ? '<div id="repnews">'.getVoting($vote, 'news').'</div><hr>'.$hometext : $hometext;
     if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $hide = '<input type="hidden" name="name" value="news">';
+    $hide = getAdminHidden('name', 'news');
     $rows = '';
     $asso = '';
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parent, title');
@@ -142,7 +142,7 @@ function add(): void {
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
         'acomm_label' => _COMMENTS.':',
         'associated_html' => $asso,
-        'associated_label_html' => _ASSOTOPIC.':<div class="sl_small">'._ASSOTOPICI.'</div>',
+        'associated_label_html' => getAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI),
         'body_html' => textarea('2', 'bodytext', $bodytext, 'news', '15', _ENDTEXT, '0'),
         'body_label' => _ENDTEXT.':',
         'cat_html' => getcat('news', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),

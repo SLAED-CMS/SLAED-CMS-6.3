@@ -419,6 +419,18 @@ function getBlockViewSelect(int $selected = 0): string {
     return getAdminSelect('view', $opts, 'sl_form');
 }
 
+# Return a label string with an inline sl_small help-text div for admin form rows
+function getAdminHintLabel(string $label, string $hint): string {
+    return $label.':<div class="sl_small">'.$hint.'</div>';
+}
+
+# Return an inline language hint string for admin title tips; empty string when multilingual is off or lang is empty
+function getAdminLangHint(string $lang): string {
+    global $conf;
+    if ($conf['multilingual'] != 1) return '';
+    return '<br>'._LANGUAGE.': '.($lang ? getLangName($lang) : _ALL);
+}
+
 # Render one money calculator form with a JS function name, to-currency label and currency code
 function getMoneyCalcForm(string $fnname, string $tolbl, string $tocur): string {
     global $conf, $tpl;

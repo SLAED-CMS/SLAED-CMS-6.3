@@ -18,7 +18,7 @@ function contact(): void {
         'info_label' => _CONTACTINFO.':',
         'save_label' => _SAVECHANGES,
     ]);
-    $hide = '<input type="hidden" name="name" value="contact"><input type="hidden" name="op" value="save">';
+    $hide = getAdminHidden('name', 'contact').getAdminHidden('op', 'save');
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
