@@ -13,7 +13,15 @@ function groups(): void {
     $cont = setAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th class="{sorter: false}">'._RANK.'</th><th>'._GROUP.'</th><th>'._POINTS.'</th><th>'.cutstr(_USERSCOUNT, 5, 1).'</th><th>'.cutstr(_SPEC, 4, 1).'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-groups-list-head', [
+            'functions_label' => _FUNCTIONS,
+            'group_label' => _GROUP,
+            'id_label' => _ID,
+            'points_label' => _POINTS,
+            'rank_label' => _RANK,
+            'spec_label' => cutstr(_SPEC, 4, 1),
+            'users_label' => cutstr(_USERSCOUNT, 5, 1),
+        ]);
         $rows = '';
         while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
             if (intval($extra)) {
@@ -26,18 +34,20 @@ function groups(): void {
                 $userlink = $afile.'.php?op=users_show&amp;search=7&amp;chng_user='.$points;
             }
             $acts = adminMenuItems([
-                '<a href="'.$userlink.'" title="'._MVIEW.'">'._MVIEW.'</a>',
-                '<a href="'.$afile.'.php?name=groups&amp;op=add&amp;id='.$grid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=groups&amp;op=delete&amp;id='.$grid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$grname.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                adminLinkAction($userlink, _MVIEW, _MVIEW),
+                adminLinkAction($afile.'.php?name=groups&amp;op=add&amp;id='.$grid, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=groups&amp;op=delete&amp;id='.$grid, _DELETE.' "'.$grname.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$grid.'</td>'
-               .'<td><img src="templates/'.$conf['theme'].'/images/ranks/'.$rank.'" alt="'._RANK.'" title="'._RANK.'"></td>'
-               .'<td>'.title_tip(_DESCRIPTION.': '.$description).'<span style="color: '.$color.'">'.$grname.'</span></td>'
-               .'<td>'.$points.'</td>'
-               .'<td>'.$users_num.'</td>'
-               .'<td>'.$extra.'</td>'
-               .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-groups-list-row', [
+                'actions_html' => $acts,
+                'extra_text' => $extra,
+                'group_html' => title_tip(_DESCRIPTION.': '.$description).'<span style="color: '.$color.'">'.$grname.'</span>',
+                'id_text' => (string)$grid,
+                'points_text' => (string)$points,
+                'rank_alt' => _RANK,
+                'rank_src' => 'templates/'.$conf['theme'].'/images/ranks/'.$rank,
+                'users_text' => (string)$users_num,
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
     } else {
@@ -81,13 +91,15 @@ function add(): void {
             $pickopts .= getAdminOption($path.$entry, $entry, $rank == $entry);
         }
     }
-    $pick = getAdminSelect('rank', $pickopts, 'sl_form', 'id="img_replace"');
-    $rows .= getAdminFormRow(_IMG.':', $pick);
-    $rows .= getAdminFormRow(_RANK.':', '<img src="'.$path.$rank.'" id="picture" alt="'._RANK.'">');
-    $rows .= getAdminFormRow(_COLOR.':', '<input type="color" name="color" value="'.$color.'" class="sl_form">');
-    $rows .= getAdminFormRow(_POINTSNEEDED.':', '<input type="number" name="points" value="'.$points.'" class="sl_form" placeholder="'._POINTSNEEDED.'">');
-    $rows .= getAdminFormRow(_SPEC_GROUP.':<div class="sl_small">'._GRSINFO.'</div>', '<input type="checkbox" name="grextra" value="1"'.$check.'>');
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $rows .= $tpl->getHtmlFrag('admin-groups-add-rows', [
+        'check_attr' => $check,
+        'color_value' => $color,
+        'picture_alt' => _RANK,
+        'picture_src' => $path.$rank,
+        'points_value' => (string)$points,
+        'rank_html' => getAdminSelect('rank', $pickopts, 'sl_form', 'id="img_replace"'),
+        'save_label' => _SAVE,
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -125,12 +137,22 @@ function points(): void {
     $p = [_POINTS01, _POINTS02, _POINTS03, _POINTS04, _POINTS05, _POINTS06, _POINTS07, _POINTS08, _POINTS09, _POINTS10, _POINTS11, _POINTS12, _POINTS13, _POINTS14, _POINTS15, _POINTS16, _POINTS17, _POINTS18, _POINTS19, _POINTS20, _POINTS21, _POINTS22, _POINTS23, _POINTS24, _POINTS25, _POINTS26, _POINTS27, _POINTS28, _POINTS29, _POINTS30, _POINTS31, _POINTS32, _POINTS33, _POINTS34, _POINTS35, _POINTS36, _POINTS37, _POINTS38, _POINTS39, _POINTS40, _POINTS41, _POINTS42, _POINTS43, _POINTS44, _POINTS45];
     $d = [_DESC01, _DESC02, _DESC03, _DESC04, _DESC05, _DESC06, _DESC07, _DESC08, _DESC09, _DESC10, _DESC11, _DESC12, _DESC13, _DESC14, _DESC15, _DESC16, _DESC17, _DESC18, _DESC19, _DESC20, _DESC21, _DESC22, _DESC23, _DESC24, _DESC25, _DESC26, _DESC27, _DESC28, _DESC29, _DESC30, _DESC31, _DESC32, _DESC33, _DESC34, _DESC35, _DESC36, _DESC37, _DESC38, _DESC39, _DESC40, _DESC41, _DESC42, _DESC43, _DESC44, _DESC45];
     $pts = explode(',', $conf['users']['points']);
-    $phead = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._DESCRIPTION.'</th><th class="{sorter: false}">'._POINTS.'</th>';
+    $phead = $tpl->getHtmlFrag('admin-groups-points-head', [
+        'description_label' => _DESCRIPTION,
+        'id_label' => _ID,
+        'name_label' => _NAME,
+        'points_label' => _POINTS,
+    ]);
     $prows = '';
     $count = count($p);
     for ($i = 0; $i < $count; $i++) {
-        $cells = '<td>'.($i + 1).'</td><td>'.$p[$i].'</td><td>'.$d[$i].'</td><td><input type="number" value="'.$pts[$i].'" name="spoints[]" class="sl_field" placeholder="'._POINTS.'" required></td>';
-        $prows .= getAdminTableRow($cells);
+        $prows .= getAdminTableRow($tpl->getHtmlFrag('admin-groups-points-row', [
+            'description_text' => $d[$i],
+            'id_text' => (string)($i + 1),
+            'name_text' => $p[$i],
+            'points_placeholder' => _POINTS,
+            'points_value' => (string)$pts[$i],
+        ]));
     }
     $pointv = getAdminConfSave(getAdminTable($phead, $prows), 'groups', 'pointssave', _SAVE);
     echo $cont.getAdminBox($pointv);
@@ -181,4 +203,3 @@ switch ($op) {
     case 'pointssave': pointssave(); break;
     case 'info': info(); break;
 }
-

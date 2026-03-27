@@ -281,15 +281,10 @@ function database(): void {
 
         } else {
             // Default view with actions
-            $stattag = add_menu(
-                '<a href="'.$afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1" '
-                .'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.$name.'&quot;?\');" '
-                .'title="'._CLEAN.'">'._CLEAN.'</a>'
-                .'||'
-                .'<a href="'.$afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2" '
-                .'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" '
-                .'title="'._ONDELETE.'">'._ONDELETE.'</a>'
-            );
+            $stattag = adminMenuItems([
+                adminDeleteAction($afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1', _CLEAN.' "'.$name.'"?', _CLEAN, _CLEAN),
+                adminDeleteAction($afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+            ]);
         }
 
         $item++;

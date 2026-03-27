@@ -19,7 +19,10 @@ function getSearchRow(string $mod, string $afile, int $mid, string $time, int $c
         $pval = $nick ? user_info($nick) : ($user ?: _ANONYM);
         $pout = '<span title="'._POSTEDBY.'" class="sl_post">'.$pval.'</span>';
     }
-    $menu = is_moder($mod) ? add_menu('<a href="'.$afile.'.php?op='.$edit.'&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$url.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>') : '';
+    $menu = is_moder($mod) ? getMenuItems([
+        getLinkAction($afile.'.php?op='.$edit.'&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
+        getExternalAction($url, _WINDOWNEW, _WINDOWNEW),
+    ]) : '';
     return [$date, $mlab, $ctit, $pout, $menu];
 }
 
@@ -78,12 +81,12 @@ function getSearchTypeList(int $typ): string {
 function getSearchForm(array $state): string {
     global $conf;
     $sty = htmlspecialchars($conf['style'], ENT_QUOTES, 'UTF-8');
-    $rows = getFormAddRow(_MODUL.':', '<select name="mod" onchange="submit()" class="sl_field '.$sty.'"><option value="">'._SEARCHALL.'</option>'.getSearchModList($state['mods'], (string)$state['mod']).'</select>');
+    $rows = getFormAddRow(_MODUL.':', getFormSelect('mod', '<option value="">'._SEARCHALL.'</option>'.getSearchModList($state['mods'], (string)$state['mod']), 'sl_field '.$sty, 'onchange="submit()"'));
     if ($state['mod'] === 'media') {
-        $rows .= getFormAddRow(_SEARCHFROM.':', '<select name="typ" class="sl_field '.$sty.'">'.getSearchTypeList(intval($state['typ'])).'</select>');
+        $rows .= getFormAddRow(_SEARCHFROM.':', getFormSelect('typ', getSearchTypeList(intval($state['typ'])), 'sl_field '.$sty));
     }
     $rows .= getFormAddRow(_SEARCH.':', '<input type="text" name="word" value="'.htmlspecialchars((string)$state['word'], ENT_QUOTES, 'UTF-8').'" maxlength="100" class="sl_field '.$sty.'" placeholder="'._SEARCH.'" required>');
-    $rows .= '<tr><td colspan="2" class="sl_center"><input type="submit" title="'._SEARCH.'" value="'._SEARCH.'" class="sl_but_blue"></td></tr>';
+    $rows .= '<tr><td colspan="2" class="sl_center">'.getFormSubmit('', _SEARCH).'</td></tr>';
     return getForumReplyForm(htmlspecialchars($conf['name'], ENT_QUOTES, 'UTF-8'), $rows);
 }
 
@@ -216,7 +219,10 @@ function getSearchAuto(array $state): array {
         $titl = '<a href="'.$url.'" title="'.htmlspecialchars($titl, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($titl, $state['word']).'</a> '.new_graphic($time);
         $date = '<time datetime="'.date('c', strtotime($time)).'" title="'._CHNGSTORY.'" class="sl_date">'.format_time($time).'</time>';
         $mlab = '<a href="index.php?name=auto_links" title="'._MODUL.'" class="sl_modul">'.getModuleName('auto_links').'</a>';
-        $edit = is_moder('auto_links') ? add_menu('<a href="'.$afile.'.php?op=auto_links_add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$url.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>') : '';
+        $edit = is_moder('auto_links') ? getMenuItems([
+            getLinkAction($afile.'.php?op=auto_links_add&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
+            getExternalAction($url, _WINDOWNEW, _WINDOWNEW),
+        ]) : '';
         $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => '', 'post' => '', 'edit' => $edit];
     }
     return $rows;
@@ -240,7 +246,10 @@ function getSearchForum(array $state): array {
         $url = 'index.php?name=forum&amp;op=view&amp;id='.$tid.'&amp;word='.urlencode($state['word']);
         $titl = '<a href="'.$url.'" title="'.htmlspecialchars($titl, ENT_QUOTES, 'UTF-8').'">'.filterTextHighlight($titl, $state['word']).'</a> '.new_graphic($time);
         [$date, $mlab, $clab, $post, $edit] = getSearchRow('forum', $afile, intval($tid), $time, intval($cid), $ctit, $cdes, $nick, $user, 'forum_add', true, $url);
-        if (is_moder('forum')) $edit = add_menu('<a href="index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$url.'" target="_blank" title="'._WINDOWNEW.'">'._WINDOWNEW.'</a>');
+        if (is_moder('forum')) $edit = getMenuItems([
+            getLinkAction('index.php?name=forum&amp;op=add&amp;cat='.$cid.'&amp;id='.$tid.'&amp;pid='.$pid, _FULLEDIT, _FULLEDIT),
+            getExternalAction($url, _WINDOWNEW, _WINDOWNEW),
+        ]);
         $rows[] = ['title' => $titl, 'date' => $date, 'modul' => $mlab, 'ctitle' => $clab, 'post' => $post, 'edit' => $edit];
     }
     return $rows;

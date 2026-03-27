@@ -33,8 +33,10 @@ function sitemap(): void {
     }
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
     $hide = '<input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="add">';
-    $rows = getAdminFormWide(textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)));
-    $rows .= getAdminFormWide('<input type="submit" value="'._UPDATE.'" class="sl_but_blue">', '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-sitemap-editor-rows', [
+        'code_html' => textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)),
+        'save_label' => _UPDATE,
+    ]);
     $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
     echo $cont;
     setFoot();
@@ -55,8 +57,10 @@ function xsledit(): void {
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)]);
     $hide = '<input type="hidden" name="name" value="sitemap"><input type="hidden" name="op" value="xslsave">';
-    $rows = getAdminFormWide(textarea_code('code', 'template', 'sl_form', 'application/xml', $conts));
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-sitemap-editor-rows', [
+        'code_html' => textarea_code('code', 'template', 'sl_form', 'application/xml', $conts),
+        'save_label' => _SAVE,
+    ]);
     $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
     echo $cont;
     setFoot();
@@ -80,30 +84,22 @@ function config(): void {
     $frs = ['0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY, 'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER];
     $h = $m = $c = $popt = '';
     foreach ($frs as $key => $val) {
-        $sh = (($conf['sitemap']['fr_h'] ?? '0') === (string)$key) ? ' selected' : '';
-        $h .= '<option value="'.$key.'"'.$sh.'>'.$val.'</option>';
-        $sm = (($conf['sitemap']['fr_m'] ?? '0') === (string)$key) ? ' selected' : '';
-        $m .= '<option value="'.$key.'"'.$sm.'>'.$val.'</option>';
-        $sc = (($conf['sitemap']['fr_c'] ?? '0') === (string)$key) ? ' selected' : '';
-        $c .= '<option value="'.$key.'"'.$sc.'>'.$val.'</option>';
-        $sp = (($conf['sitemap']['fr_p'] ?? '0') === (string)$key) ? ' selected' : '';
-        $popt .= '<option value="'.$key.'"'.$sp.'>'.$val.'</option>';
+        $h .= getAdminOption((string)$key, $val, ($conf['sitemap']['fr_h'] ?? '0') === (string)$key);
+        $m .= getAdminOption((string)$key, $val, ($conf['sitemap']['fr_m'] ?? '0') === (string)$key);
+        $c .= getAdminOption((string)$key, $val, ($conf['sitemap']['fr_c'] ?? '0') === (string)$key);
+        $popt .= getAdminOption((string)$key, $val, ($conf['sitemap']['fr_p'] ?? '0') === (string)$key);
     }
-    $s_fr_h = '<select name="fr_h" class="sl_conf">'.$h.'</select>';
-    $s_fr_m = '<select name="fr_m" class="sl_conf">'.$m.'</select>';
-    $s_fr_c = '<select name="fr_c" class="sl_conf">'.$c.'</select>';
-    $s_fr_p = '<select name="fr_p" class="sl_conf">'.$popt.'</select>';
+    $s_fr_h = getAdminSelect('fr_h', $h, 'sl_conf');
+    $s_fr_m = getAdminSelect('fr_m', $m, 'sl_conf');
+    $s_fr_c = getAdminSelect('fr_c', $c, 'sl_conf');
+    $s_fr_p = getAdminSelect('fr_p', $popt, 'sl_conf');
     $prs = ['1.0', '0.9', '0.8', '0.7', '0.6', '0.5', '0.4', '0.3', '0.2', '0.1', '0'];
     $h = $m = $c = $popt = '';
     foreach ($prs as $val) {
-        $sh = (($conf['sitemap']['pr_h'] ?? '0') === (string)$val) ? ' selected' : '';
-        $h .= '<option value="'.$val.'"'.$sh.'>'.$val.'</option>';
-        $sm = (($conf['sitemap']['pr_m'] ?? '0') === (string)$val) ? ' selected' : '';
-        $m .= '<option value="'.$val.'"'.$sm.'>'.$val.'</option>';
-        $sc = (($conf['sitemap']['pr_c'] ?? '0') === (string)$val) ? ' selected' : '';
-        $c .= '<option value="'.$val.'"'.$sc.'>'.$val.'</option>';
-        $sp = (($conf['sitemap']['pr_p'] ?? '0') === (string)$val) ? ' selected' : '';
-        $popt .= '<option value="'.$val.'"'.$sp.'>'.$val.'</option>';
+        $h .= getAdminOption((string)$val, $val, ($conf['sitemap']['pr_h'] ?? '0') === (string)$val);
+        $m .= getAdminOption((string)$val, $val, ($conf['sitemap']['pr_m'] ?? '0') === (string)$val);
+        $c .= getAdminOption((string)$val, $val, ($conf['sitemap']['pr_c'] ?? '0') === (string)$val);
+        $popt .= getAdminOption((string)$val, $val, ($conf['sitemap']['pr_p'] ?? '0') === (string)$val);
     }
     $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -129,13 +125,13 @@ function config(): void {
         'r_auto' => radio_form($conf['sitemap']['auto'] ?? 0, 'auto'),
         '_map_pr_h' => _MAP_PR_H,
         '_info_null' => _INFO_NULL,
-        's_pr_h' => '<select name="pr_h" class="sl_conf">'.$h.'</select>',
+        's_pr_h' => getAdminSelect('pr_h', $h, 'sl_conf'),
         '_map_pr_m' => _MAP_PR_M,
-        's_pr_m' => '<select name="pr_m" class="sl_conf">'.$m.'</select>',
+        's_pr_m' => getAdminSelect('pr_m', $m, 'sl_conf'),
         '_map_pr_c' => _MAP_PR_C,
-        's_pr_c' => '<select name="pr_c" class="sl_conf">'.$c.'</select>',
+        's_pr_c' => getAdminSelect('pr_c', $c, 'sl_conf'),
         '_map_pr_p' => _MAP_PR_P,
-        's_pr_p' => '<select name="pr_p" class="sl_conf">'.$popt.'</select>',
+        's_pr_p' => getAdminSelect('pr_p', $popt, 'sl_conf'),
         '_map_dat_h' => _MAP_DAT_H,
         'r_dat_h' => radio_form($conf['sitemap']['dat_h'] ?? 0, 'dat_h'),
         '_map_dat_m' => _MAP_DAT_M,
@@ -208,4 +204,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-

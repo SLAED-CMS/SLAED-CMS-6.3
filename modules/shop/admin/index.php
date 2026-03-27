@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('shop')) die('Illegal file access'
 
 # Build the shared client/partner search box used on every shop admin page
 function buildShopSearchBox(): string {
-    global $afile;
+    global $afile, $tpl;
     $sel = getVar('post', 'search', 'num');
     $txt = getVar('post', 'csearch', 'text');
     $opts = '';
@@ -17,12 +17,14 @@ function buildShopSearchBox(): string {
         $sort = $k + 1;
         $opts .= getAdminOption((string)$sort, $v, $sel == $sort || (!$sel && $sort == 2));
     }
-    $inner = _SEARCH.': '.getAdminSelect('search', $opts)
-        .' '.get_user_search('csearch', $txt, '30')
-        .' <input type="hidden" name="name" value="shop">'
-        .'<input type="hidden" name="op" value="clients">'
-        .'<input type="submit" value="'._OK.'" class="sl_but_blue">';
-    return getAdminSearchBox('<form method="post" action="'.$afile.'.php">'.$inner.'</form>');
+    return getAdminSearchBox($tpl->getHtmlFrag('admin-shop-search-box', [
+        'action_url' => $afile.'.php',
+        'hidden_html' => '<input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="clients">',
+        'input_html' => get_user_search('csearch', $txt, '30'),
+        'ok_label' => _OK,
+        'search_label' => _SEARCH,
+        'select_html' => getAdminSelect('search', $opts),
+    ]));
 }
 
 
@@ -112,7 +114,15 @@ function clients(): void {
     [$numstories] = $db->getSqlRow($db->getSqlQuery('SELECT Count(c.id) FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = c.uid) WHERE c.'.$sqlstatus.$searchWhere, $searchParams));
     $numpages = ($conf['shop']['anum'] > 0) ? (int)ceil($numstories / $conf['shop']['anum']) : 1;
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._SITE.'</th><th>'._NICKNAME.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-shop-clients-head', [
+            'date_label' => _DATE,
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'nickname_label' => _NICKNAME,
+            'product_label' => _PRODUCT,
+            'site_label' => _SITE,
+            'status_label' => _STATUS,
+        ]);
         $trows = '';
         while([$cid, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $nick, $ptitle] = $db->getSqlRow($result)) {
             $cenddate = ($cenddate != '0') ? getTimeLeft($cenddate) : _UNLIMITED;
@@ -124,14 +134,19 @@ function clients(): void {
                 $name = _ANONYM;
                 $nick = _ANONYM;
             }
-            $cells = '<td>'.$cid.'</td>'
-                .'<td>'.title_tip(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.filterTextHighlight($cname, $csearch).'<br>'._CLIENTADRES.': '.$caddr.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 40).'</span></td>'
-                .'<td>'.filterTextHighlight(domain($cwebsite), $csearch).'</td>'
-                .'<td>'.$nick.'</td>'
-                .'<td>'.$cenddate.'</td>'
-                .'<td>'.ad_status('', $cactive).'</td>'
-                .'<td>'.add_menu(ad_status($afile.'.php?name=shop&op=clientset&amp;id='.$cid.$refer, $cactive).'||<a href="'.$afile.'.php?name=shop&op=clientadd&amp;cid='.$cid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=clientdel&amp;id='.$cid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>';
-            $trows .= getAdminTableRow($cells);
+            $trows .= getAdminTableRow($tpl->getHtmlFrag('admin-shop-clients-row', [
+                'actions_html' => adminMenuItems([
+                    ad_status($afile.'.php?name=shop&op=clientset&amp;id='.$cid.$refer, $cactive),
+                    adminLinkAction($afile.'.php?name=shop&op=clientadd&amp;cid='.$cid, _FULLEDIT, _FULLEDIT),
+                    adminDeleteAction($afile.'.php?name=shop&op=clientdel&amp;id='.$cid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+                ]),
+                'date_text' => $cenddate,
+                'id_text' => (string)$cid,
+                'nickname_html' => $nick,
+                'product_html' => title_tip(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.filterTextHighlight($cname, $csearch).'<br>'._CLIENTADRES.': '.$caddr.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 40).'</span>',
+                'site_html' => filterTextHighlight(domain($cwebsite), $csearch),
+                'status_html' => ad_status('', $cactive),
+            ]));
             $a++;
         }
         $html = getAdminTable($head, $trows);
@@ -209,29 +224,46 @@ function clientadd(): void {
             $cppi = 0;
         }
         $nick = ($nick) ? user_info($nick) : _ANONYM;
-        $frows .= getAdminFormRow(_PARTNER_NAME.':', $nick)
-            .getAdminFormRow(_PARTNER_ID.':', '<input type="hidden" name="partner" value="'.$partner.'">'.$partner)
-            .getAdminFormRow(_PERCENT.':', $proz.' %');
+        $frows .= $tpl->getHtmlFrag('admin-shop-client-partner-rows', [
+            'nickname_html' => $nick,
+            'partner_id' => (string)$partner,
+            'partnerid_label' => _PARTNER_ID.':',
+            'partnername_label' => _PARTNER_NAME.':',
+            'percent_label' => _PERCENT.':',
+            'percent_text' => $proz.' %',
+        ]);
     }
     $frows .= getAdminFormRow(_USER_ID.':', '<input type="number" name="uid" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'">');
     $productslist = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_products ORDER BY title');
     $prodopts = '';
     while([$pid, $ptitle] = $db->getSqlRow($productslist)) {
-        $prodopts .= '<option value="'.$pid.'\'';
-        if ($product == $pid) $prodopts .= ' selected';
-        $prodopts .= '>'.$ptitle.'</option>';
+        $prodopts .= getAdminOption((string)$pid, $ptitle, $product == $pid);
     }
-    $frows .= getAdminFormRow(_PRODUCT.':', '<select name="product" class="sl_form">'.$prodopts.'</select>')
-        .getAdminFormRow(_CLIENTNAME.':', '<input type="text" name="cname" value="'.$cname.'" maxlength="255" class="sl_form" placeholder="'._CLIENTNAME.'" required>')
-        .getAdminFormRow(_CLIENTADRES.':', '<input type="text" name="caddr" value="'.$caddr.'" maxlength="255" class="sl_form" placeholder="'._CLIENTADRES.'" required>')
-        .getAdminFormRow(_CLIENTPHONE.':', '<input type="text" name="cphone" value="'.$cphone.'" maxlength="255" class="sl_form" placeholder="'._CLIENTPHONE.'" required>')
-        .getAdminFormRow(_EMAIL.':', '<input type="email" name="cemail" value="'.$cemail.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required>')
-        .getAdminFormRow(_SITE.':', '<input type="url" name="cwebsite" value="'.$cwebsite.'" maxlength="255" class="sl_form" placeholder="'._SITE.'">')
-        .getAdminFormRow(_CLIENTSTR.':', datetime(1, 'cregdate', $cregdate, 16, 'sl_form'))
-        .getAdminFormRow(_CLIENTEND.':', datetime(1, 'cenddate', $cenddate, 16, 'sl_form'))
-        .getAdminFormRow(_NOTE.':', '<input type="text" name="cinfo" value="'.$cinfo.'" maxlength="255" class="sl_form" placeholder="'._NOTE.'">')
-        .getAdminFormRow(_ACTIVATE2, radio_form($cactive, 'cactive'))
-        .getAdminFormWide('<input type="hidden" name="cppi" value="'.$cppi.'">'.ad_save('cid', $cid, 'clientsave', 1), '', 'sl_center');
+    $frows .= $tpl->getHtmlFrag('admin-shop-clientadd-rows', [
+        'activate_html' => radio_form($cactive, 'cactive'),
+        'activate_label' => _ACTIVATE2,
+        'caddr' => $caddr,
+        'cemail' => $cemail,
+        'cenddate_html' => datetime(1, 'cenddate', $cenddate, 16, 'sl_form'),
+        'cinfo' => $cinfo,
+        'clientadres_label' => _CLIENTADRES.':',
+        'clientend_label' => _CLIENTEND.':',
+        'clientname_label' => _CLIENTNAME.':',
+        'clientphone_label' => _CLIENTPHONE.':',
+        'clientstr_label' => _CLIENTSTR.':',
+        'cname' => $cname,
+        'cphone' => $cphone,
+        'cregdate_html' => datetime(1, 'cregdate', $cregdate, 16, 'sl_form'),
+        'cwebsite' => $cwebsite,
+        'email_label' => _EMAIL.':',
+        'note_label' => _NOTE.':',
+        'product_html' => getAdminSelect('product', $prodopts, 'sl_form'),
+        'product_label' => _PRODUCT.':',
+        'save_html' => '<input type="hidden" name="cppi" value="'.$cppi.'">'.ad_save('cid', $cid, 'clientsave', 1),
+        'site_label' => _SITE.':',
+        'userid_label' => _USER_ID.':',
+        'uid' => (string)$uid,
+    ]);
     $cont .= getAdminBox(getAdminForm($afile.'.php', $frows));
     echo $cont;
     setFoot();
@@ -341,26 +373,41 @@ function products(): void {
     $cont = $navi;
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.price, p.vote, p.status, c.title FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) WHERE '.$sqlstatus.' ORDER BY p.fix DESC, p.time DESC LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $phead = '<th>'._ID.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th><th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th>';
+        $phead = $tpl->getHtmlFrag('admin-shop-products-head', [
+            'checkall_label' => _CHECKALL,
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'price_label' => _PREIS,
+            'product_label' => _PRODUCT,
+            'status_label' => _STATUS,
+        ]);
         $prows = '';
         while([$pid, $pcid, $ptime, $ptitle, $pprice, $pvote, $pactive, $ctitle] = $db->getSqlRow($result)) {
             $ctitle = ($pcid) ? $ctitle : _NO;
             if ($pactive && time() >= strtotime($ptime)) {
-                $view = '<a href="index.php?name=shop&amp;op=view&amp;id='.$pid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = adminLinkAction('index.php?name=shop&amp;op=view&amp;id='.$pid, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
-            $vote = ($pvote) ? '<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$pvote.'" title="'._EDITVOTE.'">'._EDITVOTE.'</a>||' : '';
+            $vote = ($pvote) ? adminLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$pvote, _EDITVOTE, _EDITVOTE) : '';
             $typ = ($pactive) ? '0' : '1';
-            $cells = '<td>'.$pid.'</td>'
-                .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime ?? '', _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span></td>'
-                .'<td>'.$pprice.' '.$conf['shop']['valute'].'</td>'
-                .'<td>'.ad_status('', $active).'</td>'
-                .'<td>'.add_menu($view.$vote.ad_status($afile.'.php?name=shop&op=productops&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive).'||<a href="'.$afile.'.php?name=shop&op=productadd&amp;id='.$pid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$ptitle.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>'
-                .'<td><input type="checkbox" name="id[]" class="sl_check" value="'.$pid.'"></td>';
-            $prows .= getAdminTableRow($cells);
+            $prows .= getAdminTableRow($tpl->getHtmlFrag('admin-shop-products-row', [
+                'actions_html' => adminMenuItems([
+                    $view,
+                    $vote,
+                    ad_status($afile.'.php?name=shop&op=productops&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive),
+                    adminLinkAction($afile.'.php?name=shop&op=productadd&amp;id='.$pid, _FULLEDIT, _FULLEDIT),
+                    adminDeleteAction($afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer, _DELETE.' "'.$ptitle.'"?', _ONDELETE, _ONDELETE),
+                ]),
+                'id_text' => (string)$pid,
+                'is_checked' => false,
+                'price_text' => $pprice.' '.$conf['shop']['valute'],
+                'status_html' => ad_status('', $active),
+                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime ?? '', _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span>',
+                'value_attr' => (string)$pid,
+            ]));
         }
         $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' <input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="productops"><input type="hidden" name="refer" value="1"> <input type="submit" value="'._OK.'" class="sl_but_blue">';
         $numpt = setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_products', '', $sqlstatus, $conf['shop']['anump']);
@@ -570,7 +617,15 @@ function partners(): void {
     $cont = $navi;
     $result = $db->getSqlQuery('SELECT p.id, p.name, p.addr, p.phone, p.email, p.website, p.regdate, p.rest, p.bek, p.status, u.name FROM '.PREFIX_DB.'_partners AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id = p.uid) WHERE '.$sqlstatus.' LIMIT '.$offset.', '.$conf['shop']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $pahead = '<th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PARTNERREST.'</th><th>'._PARTNERBEK.'</th><th>'._SITE.'</th><th>'._REG.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $pahead = $tpl->getHtmlFrag('admin-shop-partners-head', [
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'nickname_label' => _NICKNAME,
+            'partnerbek_label' => _PARTNERBEK,
+            'partnerrest_label' => _PARTNERREST,
+            'reg_label' => _REG,
+            'site_label' => _SITE,
+        ]);
         $parows = '';
         while([$paid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $paregdate, $parest, $pabek, $paactive, $nick] = $db->getSqlRow($result)) {
             if ($nick) {
@@ -580,14 +635,20 @@ function partners(): void {
                 $name = _ANONYM;
                 $nick = _ANONYM;
             }
-            $cells = '<td>'.$paid.'</td>'
-                .'<td>'.title_tip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paaddr.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$nick.'</td>'
-                .'<td>'.$parest.' '.$conf['shop']['valute'].'</td>'
-                .'<td>'.$pabek.' '.$conf['shop']['valute'].'</td>'
-                .'<td>'.domain($pawebsite).'</td>'
-                .'<td>'.date(_TIMESTRING, $paregdate).'</td>'
-                .'<td>'.add_menu(ad_status($afile.'.php?name=shop&op=partnerset&amp;id='.$paid.$refer, $paactive).'||<a href="'.$afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid.'" title="'._MVIEW.'">'._MVIEW.'</a>||<a href="'.$afile.'.php?name=shop&op=partneradd&amp;paid='.$paid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>').'</td>';
-            $parows .= getAdminTableRow($cells);
+            $parows .= getAdminTableRow($tpl->getHtmlFrag('admin-shop-partners-row', [
+                'actions_html' => adminMenuItems([
+                    ad_status($afile.'.php?name=shop&op=partnerset&amp;id='.$paid.$refer, $paactive),
+                    adminLinkAction($afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid, _MVIEW, _MVIEW),
+                    adminLinkAction($afile.'.php?name=shop&op=partneradd&amp;paid='.$paid, _FULLEDIT, _FULLEDIT),
+                    adminDeleteAction($afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+                ]),
+                'id_text' => (string)$paid,
+                'nickname_html' => title_tip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paaddr.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$nick,
+                'partnerbek_text' => $pabek.' '.$conf['shop']['valute'],
+                'partnerrest_text' => $parest.' '.$conf['shop']['valute'],
+                'reg_text' => date(_TIMESTRING, $paregdate),
+                'site_text' => domain($pawebsite),
+            ]));
         }
         $html = getAdminTable($pahead, $parows);
         $html .= setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_partners', '', $sqlstatus, $conf['shop']['anump']);
@@ -651,21 +712,39 @@ function partneradd(): void {
         $parrows .= getAdminFormRow(_NICKNAME.':', $nick);
     }
     $uidfield = ($uid == 0) ? '<input type="number" name="uid" value="'.$uid.'" class="sl_form" placeholder="'._USER_ID.'" required>' : '<input type="hidden" name="uid" value="'.$uid.'">'.$uid;
-    $parrows .= getAdminFormRow(_USER_ID.':', $uidfield)
-        .getAdminFormRow(_CLIENTNAME.':', '<input type="text" name="paname" value="'.$paname.'" maxlength="255" class="sl_form" placeholder="'._CLIENTNAME.'" required>')
-        .getAdminFormRow(_CLIENTADRES.':', '<input type="text" name="paaddr" value="'.$paaddr.'" maxlength="255" class="sl_form" placeholder="'._CLIENTADRES.'" required>')
-        .getAdminFormRow(_CLIENTPHONE.':', '<input type="text" name="paphone" value="'.$paphone.'" maxlength="255" class="sl_form" placeholder="'._CLIENTPHONE.'" required>')
-        .getAdminFormRow(_EMAIL.':', '<input type="email" name="paemail" value="'.$paemail.'" maxlength="255" class="sl_form" placeholder="'._EMAIL.'" required>')
-        .getAdminFormRow(_SITE.':', '<input type="url" name="pawebsite" value="'.$pawebsite.'" maxlength="255" class="sl_form" placeholder="'._SITE.'">')
-        .getAdminFormRow(_WEBMONEY.':', '<input type="text" name="pawebmoney" value="'.$pawebmoney.'" maxlength="255" class="sl_form" placeholder="'._WEBMONEY.'">')
-        .getAdminFormRow(_PAYPAL.':', '<input type="text" name="papaypal" value="'.$papaypal.'" maxlength="255" class="sl_form" placeholder="'._PAYPAL.'">')
-        .getAdminFormRow(_REG.':', datetime(1, 'paregdate', $paregdate, 16, 'sl_form'));
+    $parrows .= $tpl->getHtmlFrag('admin-shop-partneradd-main-rows', [
+        'clientadres_label' => _CLIENTADRES.':',
+        'clientname_label' => _CLIENTNAME.':',
+        'clientphone_label' => _CLIENTPHONE.':',
+        'email_label' => _EMAIL.':',
+        'paaddr' => $paaddr,
+        'paemail' => $paemail,
+        'paname' => $paname,
+        'papaypal' => $papaypal,
+        'paphone' => $paphone,
+        'paregdate_html' => datetime(1, 'paregdate', $paregdate, 16, 'sl_form'),
+        'pawebsite' => $pawebsite,
+        'pawebmoney' => $pawebmoney,
+        'paypal_label' => _PAYPAL.':',
+        'reg_label' => _REG.':',
+        'site_label' => _SITE.':',
+        'uid_html' => $uidfield,
+        'userid_label' => _USER_ID.':',
+        'webmoney_label' => _WEBMONEY.':',
+    ]);
     if ($paactive != 2) {
-        $parrows .= getAdminFormRow(_PARTNERREST.':', '<input type="text" name="parest" value="'.$parest.'" maxlength="255" class="sl_form" placeholder="'._PARTNERREST.'">')
-            .getAdminFormRow(_PARTNERBEK.':', '<input type="text" name="pabek" value="'.$pabek.'" maxlength="255" class="sl_form" placeholder="'._PARTNERBEK.'">');
+        $parrows .= $tpl->getHtmlFrag('admin-shop-partneradd-balance-rows', [
+            'pabek' => $pabek,
+            'parest' => $parest,
+            'partnerbek_label' => _PARTNERBEK.':',
+            'partnerrest_label' => _PARTNERREST.':',
+        ]);
     }
-    $parrows .= getAdminFormRow(_ACTIVATE2, radio_form($paactive, 'paactive'))
-        .getAdminFormWide(ad_save('paid', $paid, 'partnersave', 1), '', 'sl_center');
+    $parrows .= $tpl->getHtmlFrag('admin-shop-partneradd-submit', [
+        'activate_html' => radio_form($paactive, 'paactive'),
+        'activate_label' => _ACTIVATE2,
+        'save_html' => ad_save('paid', $paid, 'partnersave', 1),
+    ]);
     $cont .= getAdminBox(getAdminForm($afile.'.php', $parrows));
     echo $cont;
     setFoot();
@@ -733,7 +812,15 @@ function partnerinfo(): void {
     [$paid, $uid, $paname, $paaddr, $paphone, $paemail, $pawebsite, $pawebmoney, $papaypal, $paregdate, $parest, $pabek, $paactive] = $db->getSqlRow($result);
     $result = $db->getSqlQuery('SELECT c.id, c.uid, c.prod, c.part, c.proz, c.name, c.addr, c.phone, c.email, c.website, c.regdate, c.enddate, c.info, c.status, u.id, u.name, p.id, p.title, p.price FROM '.PREFIX_DB.'_clients AS c LEFT JOIN '.PREFIX_DB.'_users AS u ON (u.id=c.uid) LEFT JOIN '.PREFIX_DB.'_products AS p ON (p.id=c.prod) WHERE c.part = :uid AND c.status != 2 ORDER BY c.id ASC', ['uid' => $uid]);
     if ($db->getSqlRowCount($result) > 0) {
-        $pihead = '<th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._PRODUCT.'</th><th>'._PREIS.'</th><th>'._PERCENT.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._SUM.'</th>';
+        $pihead = $tpl->getHtmlFrag('admin-shop-partnerinfo-head', [
+            'date_label' => _DATE,
+            'id_label' => _ID,
+            'nickname_label' => _NICKNAME,
+            'percent_label' => _PERCENT,
+            'price_label' => _PREIS,
+            'product_label' => _PRODUCT,
+            'sum_label' => _SUM,
+        ]);
         $pirows = '';
         $partsum = 0;
         $partsumges = 0;
@@ -741,20 +828,35 @@ function partnerinfo(): void {
         while([$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $ptitle, $pprice] = $db->getSqlRow($result)) {
             $partsum = $pprice / 100 * $proz;
             $partsumges += $partsum;
-            $cells = '<td>'.$cid.'</td>'
-                .'<td>'.user_info($nick).'</td>'
-                .'<td>'.$ptitle.'</td>'
-                .'<td>'.$pprice.' '.$conf['shop']['valute'].'</td>'
-                .'<td>'.$proz.' %</td>'
-                .'<td>'.date(_TIMESTRING, $cregdate).'</td>'
-                .'<td>'.$partsum.' '.$conf['shop']['valute'].'</td>';
-            $pirows .= getAdminTableRow($cells);
+            $pirows .= getAdminTableRow($tpl->getHtmlFrag('admin-shop-partnerinfo-row', [
+                'date_text' => date(_TIMESTRING, $cregdate),
+                'id_text' => (string)$cid,
+                'nickname_html' => user_info($nick),
+                'percent_text' => $proz.' %',
+                'price_text' => $pprice.' '.$conf['shop']['valute'],
+                'product_text' => $ptitle,
+                'sum_text' => $partsum.' '.$conf['shop']['valute'],
+            ]));
             $a++;
         }
         $cont .= getAdminBox(getAdminTable($pihead, $pirows));
     }
-    $shead = '<th>'._CLIENTEN.'</th><th>'._WEBMONEY.'</th><th>'._PAYPAL.'</th><th>'._PARTNERGES.'</th><th>'._PARTNERREST.'</th><th class="{sorter: false}">'._PARTNERBEK.'</th>';
-    $srow = getAdminTableRow('<td>'.$a.'</td><td>'.$pawebmoney.'</td><td>'.$papaypal.'</td><td>'.$partsumges.' '.$conf['shop']['valute'].'</td><td>'.$parest.' '.$conf['shop']['valute'].'</td><td>'.$pabek.' '.$conf['shop']['valute'].'</td>');
+    $shead = $tpl->getHtmlFrag('admin-shop-partnersum-head', [
+        'clients_label' => _CLIENTEN,
+        'partnerbek_label' => _PARTNERBEK,
+        'partnerges_label' => _PARTNERGES,
+        'partnerrest_label' => _PARTNERREST,
+        'paypal_label' => _PAYPAL,
+        'webmoney_label' => _WEBMONEY,
+    ]);
+    $srow = getAdminTableRow($tpl->getHtmlFrag('admin-shop-partnersum-row', [
+        'clients_text' => (string)$a,
+        'partnerbek_text' => $pabek.' '.$conf['shop']['valute'],
+        'partnerges_text' => $partsumges.' '.$conf['shop']['valute'],
+        'partnerrest_text' => $parest.' '.$conf['shop']['valute'],
+        'paypal_text' => $papaypal,
+        'webmoney_text' => $pawebmoney,
+    ]));
     $cont .= getAdminBox(getAdminTable($shead, $srow));
     echo $cont;
     setFoot();
@@ -844,18 +946,20 @@ function export(): void {
         [$pr] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_products'));
         [$cl] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_clients'));
         [$pa] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_partners'));
-        $content = '<div id="tabcs0" class="tabcont">';
+        $export = '';
         if ($pr || $cl || $pa) {
-            $bdopts = ($pr ? '<option value="products">'._PRODUCTS.'</option>' : '')
-                .($cl ? '<option value="clients">'._CLIENTS.'</option>' : '')
-                .($pa ? '<option value="partners">'._PARTNERS.'</option>' : '');
-            $exrows = getAdminFormRow(_DATABASE.':', '<select name="bd" class="sl_form">'.$bdopts.'</select>')
-                .getAdminFormWide('<input type="hidden" name="name" value="shop"><input type="hidden" name="id" value="1"><input type="hidden" name="op" value="export"><input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
-            $content .= getAdminForm($afile.'.php', $exrows);
+            $bdopts = ($pr ? getAdminOption('products', _PRODUCTS) : '')
+                .($cl ? getAdminOption('clients', _CLIENTS) : '')
+                .($pa ? getAdminOption('partners', _PARTNERS) : '');
+            $export = getAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-export-rows', [
+                'database_html' => getAdminSelect('bd', $bdopts, 'sl_form'),
+                'database_label' => _DATABASE.':',
+                'hidden_html' => '<input type="hidden" name="name" value="shop"><input type="hidden" name="id" value="1"><input type="hidden" name="op" value="export">',
+                'submit_label' => _SAVE,
+            ]));
         } else {
-            $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+            $export = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
-        $content .= '</div><div id="tabcs1" class="tabcont">';
         $ocont = '';
         $entries = scandir('uploads/shop/temp');
         if ($entries !== false) {
@@ -864,24 +968,25 @@ function export(): void {
                     $in = ['#(.*?)products\\.csv#', '#(.*?)clients\\.csv#', '#(.*?)partners\\.csv#'];
                     $out = [_PRODUCTS, _CLIENTS, _PARTNERS];
                     $name = preg_replace($in, $out, $entry);
-                    $ocont .= '<option value="'.$entry.'">'.$name.' - '.$entry.'</option>';
+                    $ocont .= getAdminOption($entry, $name.' - '.$entry);
                 }
             }
         }
+        $import = '';
         if ($ocont) {
-            $improws = getAdminFormRow(_FILE.':', '<select name="bd" class="sl_form">'.$ocont.'</select>')
-                .getAdminFormWide('<input type="hidden" name="name" value="shop"><input type="hidden" name="id" value="2"><input type="hidden" name="op" value="export"><input type="submit" value="'._SEND.'" class="sl_but_blue">', '', 'sl_center');
-            $content .= getAdminForm($afile.'.php', $improws);
+            $import = getAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-import-rows', [
+                'file_html' => getAdminSelect('bd', $ocont, 'sl_form'),
+                'file_label' => _FILE.':',
+                'hidden_html' => '<input type="hidden" name="name" value="shop"><input type="hidden" name="id" value="2"><input type="hidden" name="op" value="export">',
+                'submit_label' => _SEND,
+            ]));
         } else {
-            $content .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
+            $import = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
-        $content .= '</div>'
-        .'<script>
-        var countries=new ddtabcontent(\'exports\')
-        countries.setpersist(true)
-        countries.setselectedClassTarget(\'link\')
-        countries.init()
-        </script>';
+        $content = $tpl->getHtmlFrag('admin-shop-export-tabs', [
+            'export_html' => $export,
+            'import_html' => $import,
+        ]).$tpl->getHtmlFrag('admin-shop-export-script', []);
         $cont .= getAdminBox($content);
         echo $cont;
         setFoot();
@@ -903,43 +1008,81 @@ function config(): void {
         'tab'  => 4,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/shop.php');
-    $cfgrows = getAdminFormRow(_CDEFIS.':', '<input type="text" name="defis" value="'.urldecode($conf['shop']['defis'] ?? '').'" maxlength="25" class="sl_conf" placeholder="'._CDEFIS.'" required>')
-        .getAdminFormRow(_C_0.':', '<input type="number" name="clients" value="'.$conf['shop']['clients'].'" class="sl_conf" placeholder="'._C_0.'" required>')
-        .getAdminFormRow(_C_1.':', '<input type="number" name="proz" value="'.$conf['shop']['proz'].'" class="sl_conf" placeholder="'._C_1.'" required>')
-        .getAdminFormRow(_C_2.':', '<input type="number" name="clients1" value="'.$conf['shop']['clients1'].'" class="sl_conf" placeholder="'._C_2.'" required>')
-        .getAdminFormRow(_C_3.':', '<input type="number" name="proz1" value="'.$conf['shop']['proz1'].'" class="sl_conf" placeholder="'._C_3.'" required>')
-        .getAdminFormRow(_C_4.':', '<input type="number" name="clients2" value="'.$conf['shop']['clients2'].'" class="sl_conf" placeholder="'._C_4.'" required>')
-        .getAdminFormRow(_C_5.':', '<input type="number" name="proz2" value="'.$conf['shop']['proz2'].'" class="sl_conf" placeholder="'._C_5.'" required>')
-        .getAdminFormRow(_C_6.':', '<input type="text" name="valute" value="'.$conf['shop']['valute'].'" maxlength="25" class="sl_conf" placeholder="'._C_6.'" required>')
-        .getAdminFormRow(_C_7.':', '<input type="email" name="mail" value="'.$conf['shop']['mail'].'" maxlength="25" class="sl_conf" placeholder="'._C_7.'" required>')
-        .getAdminFormRow(_C_8.':', '<input type="number" name="shop" value="'.intval($conf['shop']['shop_t'] / 86400).'" class="sl_conf" placeholder="'._C_8.'" required>')
-        .getAdminFormRow(_C_9.':', '<input type="number" name="part" value="'.intval($conf['shop']['part_t'] / 86400).'" class="sl_conf" placeholder="'._C_9.'" required>')
-        .getAdminFormRow(_BASCOL.':', '<input type="number" name="bascol" value="'.$conf['shop']['bascol'].'" class="sl_conf" placeholder="'._BASCOL.'" required>')
-        .getAdminFormRow(_C_11.':', '<input type="number" name="assocnum" value="'.$conf['shop']['assocnum'].'" class="sl_conf" placeholder="'._C_11.'" required>')
-        .getAdminFormRow(_C_13.':', '<input type="number" name="listnum" value="'.$conf['shop']['listnum'].'" class="sl_conf" placeholder="'._C_13.'" required>')
-        .getAdminFormRow(_C_33.':', '<input type="number" name="num" value="'.$conf['shop']['num'].'" class="sl_conf" placeholder="'._C_33.'" required>')
-        .getAdminFormRow(_C_34.':', '<input type="number" name="anum" value="'.$conf['shop']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required>')
-        .getAdminFormRow(_C_35.':', '<input type="number" name="nump" value="'.$conf['shop']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required>')
-        .getAdminFormRow(_C_36.':', '<input type="number" name="anump" value="'.$conf['shop']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required>')
-        .getAdminFormRow(_HOMCAT, radio_form($conf['shop']['homcat'], 'homcat'))
-        .getAdminFormRow(_VIEWCAT, radio_form($conf['shop']['viewcat'], 'viewcat'))
-        .getAdminFormRow(_C_32, radio_form($conf['shop']['catdesc'], 'catdesc'))
-        .getAdminFormRow(_C_15, radio_form($conf['shop']['subcat'], 'subcat'))
-        .getAdminFormRow(_C_14, radio_form($conf['shop']['mailuser'], 'mailuser'))
-        .getAdminFormRow(_C_17, radio_form($conf['shop']['date'], 'date'))
-        .getAdminFormRow(_C_18, radio_form($conf['shop']['read'], 'read'))
-        .getAdminFormRow(_C_19, radio_form($conf['shop']['rate'], 'rate'))
-        .getAdminFormRow(_C_20, radio_form($conf['shop']['letter'], 'letter'))
-        .getAdminFormRow(_C_23, radio_form($conf['shop']['assoc'], 'assoc'))
-        .getAdminFormRow(_C_24, radio_form($conf['shop']['mailsend'], 'mailsend'))
-        .getAdminFormRow(_C_25, radio_form($conf['shop']['part'], 'part'))
-        .getAdminFormRow(_C_26.':<div class="sl_small">'._PART_ID.'</div>', '<input type="url" name="partlink" value="'.$conf['shop']['partlink'].'" maxlength="25" class="sl_conf" placeholder="'._C_26.'" required>')
-        .getAdminFormRow(_C_27.':', textarea('1', 'sende', $conf['shop']['sende'], 'shop', '5', _C_27, '1'))
-        .getAdminFormRow(_C_28.':', textarea('2', 'userinfo', $conf['shop']['userinfo'], 'shop', '5', _C_28, '1'))
-        .getAdminFormRow(_C_29.':', textarea('3', 'partinfo', $conf['shop']['partinfo'], 'shop', '5', _C_29, '1'))
-        .getAdminFormRow(_C_30.':', textarea('4', 'partinfo2', $conf['shop']['partinfo2'], 'shop', '5', _C_30, '1'))
-        .getAdminFormRow(_C_31.':', textarea('5', 'shopinfo', $conf['shop']['shopinfo'], 'shop', '5', _C_31, '1'))
-        .getAdminFormWide('<input type="hidden" name="name" value="shop"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $cfgrows = $tpl->getHtmlFrag('admin-shop-config-rows', [
+        'assoc_html' => radio_form($conf['shop']['assoc'], 'assoc'),
+        'assoc_label' => _C_23,
+        'assocnum_label' => _C_11.':',
+        'assocnum_value' => (string)$conf['shop']['assocnum'],
+        'anump_label' => _C_36.':',
+        'anump_value' => (string)$conf['shop']['anump'],
+        'anum_label' => _C_34.':',
+        'anum_value' => (string)$conf['shop']['anum'],
+        'bascol_label' => _BASCOL.':',
+        'bascol_value' => (string)$conf['shop']['bascol'],
+        'catdesc_html' => radio_form($conf['shop']['catdesc'], 'catdesc'),
+        'catdesc_label' => _C_32,
+        'cdefis_label' => _CDEFIS.':',
+        'cdefis_value' => urldecode($conf['shop']['defis'] ?? ''),
+        'clients_label' => _C_0.':',
+        'clients_value' => (string)$conf['shop']['clients'],
+        'clientsone_label' => _C_2.':',
+        'clientsone_value' => (string)$conf['shop']['clients1'],
+        'clientstwo_label' => _C_4.':',
+        'clientstwo_value' => (string)$conf['shop']['clients2'],
+        'date_html' => radio_form($conf['shop']['date'], 'date'),
+        'date_label' => _C_17,
+        'homcat_html' => radio_form($conf['shop']['homcat'], 'homcat'),
+        'homcat_label' => _HOMCAT,
+        'letter_html' => radio_form($conf['shop']['letter'], 'letter'),
+        'letter_label' => _C_20,
+        'listnum_label' => _C_13.':',
+        'listnum_value' => (string)$conf['shop']['listnum'],
+        'mail_label' => _C_7.':',
+        'mail_value' => (string)$conf['shop']['mail'],
+        'mailsend_html' => radio_form($conf['shop']['mailsend'], 'mailsend'),
+        'mailsend_label' => _C_24,
+        'mailuser_html' => radio_form($conf['shop']['mailuser'], 'mailuser'),
+        'mailuser_label' => _C_14,
+        'num_label' => _C_33.':',
+        'num_value' => (string)$conf['shop']['num'],
+        'nump_label' => _C_35.':',
+        'nump_value' => (string)$conf['shop']['nump'],
+        'part_html' => radio_form($conf['shop']['part'], 'part'),
+        'part_label' => _C_25,
+        'partdays_label' => _C_9.':',
+        'partdays_value' => (string)intval($conf['shop']['part_t'] / 86400),
+        'partinfo_html' => textarea('3', 'partinfo', $conf['shop']['partinfo'], 'shop', '5', _C_29, '1'),
+        'partinfo_label' => _C_29.':',
+        'partinfoextra_html' => textarea('4', 'partinfo2', $conf['shop']['partinfo2'], 'shop', '5', _C_30, '1'),
+        'partinfoextra_label' => _C_30.':',
+        'partlink_label_html' => _C_26.':<div class="sl_small">'._PART_ID.'</div>',
+        'partlink_value' => (string)$conf['shop']['partlink'],
+        'proz_label' => _C_1.':',
+        'proz_value' => (string)$conf['shop']['proz'],
+        'prozone_label' => _C_3.':',
+        'prozone_value' => (string)$conf['shop']['proz1'],
+        'proztwo_label' => _C_5.':',
+        'proztwo_value' => (string)$conf['shop']['proz2'],
+        'rate_html' => radio_form($conf['shop']['rate'], 'rate'),
+        'rate_label' => _C_19,
+        'read_html' => radio_form($conf['shop']['read'], 'read'),
+        'read_label' => _C_18,
+        'savechanges_label' => _SAVECHANGES,
+        'sende_html' => textarea('1', 'sende', $conf['shop']['sende'], 'shop', '5', _C_27, '1'),
+        'sende_label' => _C_27.':',
+        'shopdays_label' => _C_8.':',
+        'shopdays_value' => (string)intval($conf['shop']['shop_t'] / 86400),
+        'shopinfo_html' => textarea('5', 'shopinfo', $conf['shop']['shopinfo'], 'shop', '5', _C_31, '1'),
+        'shopinfo_label' => _C_31.':',
+        'subcat_html' => radio_form($conf['shop']['subcat'], 'subcat'),
+        'subcat_label' => _C_15,
+        'userinfo_html' => textarea('2', 'userinfo', $conf['shop']['userinfo'], 'shop', '5', _C_28, '1'),
+        'userinfo_label' => _C_28.':',
+        'valute_label' => _C_6.':',
+        'valute_value' => (string)$conf['shop']['valute'],
+        'viewcat_html' => radio_form($conf['shop']['viewcat'], 'viewcat'),
+        'viewcat_label' => _VIEWCAT,
+    ]);
     $cont .= getAdminBox(getAdminForm($afile.'.php', $cfgrows, '', 'sl_table_conf', 'post', 'post'));
     echo $cont;
     setFoot();
@@ -1042,5 +1185,3 @@ switch($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-
-

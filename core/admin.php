@@ -590,7 +590,7 @@ function adminMenuItems(array $items): string {
     }
     return $tpl->getHtmlFrag('action-menu', [
         'editor_label' => _EDITOR,
-        'items_html' => implode('', array_map(static fn($item) => '<li>'.$item.'</li>', $items)),
+        'items_html' => implode('', array_map(static fn($item) => getMenuItem($item), $items)),
     ]);
 }
 

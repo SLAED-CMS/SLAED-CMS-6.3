@@ -115,6 +115,37 @@ function getAdminOption(string $valu, string $text, bool $isel = false): string 
     ]);
 }
 
+# Render one shared admin hidden input from a field name and value
+function getAdminHidden(string $name, string $valu): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-hidden-input', [
+        'name_attr' => $name,
+        'value_attr' => $valu,
+    ]);
+}
+
+# Render one shared admin text input with optional class and extra attributes
+function getAdminTextInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-text-input', [
+        'input_attr' => $attr,
+        'input_class' => $clas,
+        'name_attr' => $name,
+        'value_attr' => $valu,
+    ]);
+}
+
+# Render one shared admin number input with optional class and extra attributes
+function getAdminNumberInput(int|string $valu, string $name, string $clas = 'sl_form', string $attr = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-number-input', [
+        'input_attr' => $attr,
+        'input_class' => $clas,
+        'name_attr' => $name,
+        'value_attr' => (string)$valu,
+    ]);
+}
+
 # Render one shared frontend content card from one shared data cut
 function getContentCard(array $data): string {
     global $tpl;
@@ -292,6 +323,102 @@ function getBlockViewGrid(array $where = []): string {
     return $tpl->getHtmlFrag('admin-blocks-view-grid', ['rows_html' => $rows]);
 }
 
+# Render the search drop-form and delete link from row state and display word
+function getSearchDropForm(int $id, string $action, int $sort, int $order, int $num, string $find, string $fmod, string $show): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-search-drop-form', [
+        'action_url'   => $action,
+        'confirm_text' => _DELETE.' "'.$show.'"?',
+        'find'         => $find,
+        'fmod'         => $fmod,
+        'form_id'      => (string)$id,
+        'id'           => (string)$id,
+        'label'        => _ONDELETE,
+        'num'          => (string)$num,
+        'order'        => (string)$order,
+        'sort'         => (string)$sort,
+        'title'        => _ONDELETE,
+        'token'        => getSiteToken('search'),
+    ]);
+}
+
+# Render the categories module-filter search form from the active module name
+function getCategoriesSearch(string $modul): string {
+    global $afile, $tpl;
+    return getAdminSearchBox($tpl->getHtmlFrag('admin-categories-search-form', [
+        'action_url'  => $afile.'.php',
+        'modul_label' => _MODUL,
+        'select_html' => cat_modul('modul', '', $modul, 1),
+    ]));
+}
+
+# Render a categories image select from a path and optional pre-selected filename
+function getCategoryImageSelect(string $path, string $selected = ''): string {
+    $files = is_dir($path) ? scandir($path) : [];
+    $imgs  = [];
+    foreach ($files as $entry) {
+        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry !== 'no.png') {
+            $imgs[] = getAdminOption($path.$entry, $entry, $selected === $entry);
+        }
+    }
+    asort($imgs);
+    $opts = getAdminOption($path.'no.png', _NO).implode('', $imgs);
+    return getAdminSelect('imgcat', $opts, 'sl_form', 'id="img_replace"');
+}
+
+# Render a categories image preview tag from a full image path
+function getCategoryImgPreview(string $src): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-category-img-preview', [
+        'alt' => _IMG,
+        'src' => $src,
+    ]);
+}
+
+# Render a block position select with optional pre-selected value
+function getBlockPositionSelect(string $selected = ''): string {
+    $opts = getAdminOption('l', _LEFT,       $selected === 'l')
+          . getAdminOption('c', _CENTERUP,   $selected === 'c')
+          . getAdminOption('d', _CENTERDOWN, $selected === 'd')
+          . getAdminOption('r', _RIGHT,      $selected === 'r')
+          . getAdminOption('b', _BANNERUP,   $selected === 'b')
+          . getAdminOption('f', _BANNERDOWN, $selected === 'f');
+    return getAdminSelect('bpos', $opts, 'sl_form');
+}
+
+# Render a block RSS refresh-interval select with optional pre-selected value
+function getBlockRefreshSelect(string $selected = '3600'): string {
+    $times = [
+        '1800'  => '30 '._MIN.'.',
+        '3600'  => '1 '._HOUR,
+        '18000' => '5 '._HOUR.'.',
+        '36000' => '10 '._HOUR.'.',
+        '86400' => '24 '._HOUR.'.',
+    ];
+    $opts = '';
+    foreach ($times as $val => $label) {
+        $opts .= getAdminOption($val, $label, $selected === $val);
+    }
+    return getAdminSelect('refresh', $opts, 'sl_form');
+}
+
+# Render a block after-expiration action select with optional pre-selected value
+function getBlockActionSelect(string $selected = ''): string {
+    $opts = getAdminOption('d', _DEACTIVATE, $selected === 'd')
+          . getAdminOption('r', _DELETE,     $selected === 'r');
+    return getAdminSelect('action', $opts, 'sl_form');
+}
+
+# Render a block view-privilege select with optional pre-selected value
+function getBlockViewSelect(int $selected = 0): string {
+    $privs = [0 => _MVALL, 1 => _MVUSERS, 2 => _MVADMIN, 3 => _MVANON];
+    $opts  = '';
+    foreach ($privs as $key => $label) {
+        $opts .= getAdminOption((string)$key, $label, $selected === $key);
+    }
+    return getAdminSelect('view', $opts, 'sl_form');
+}
+
 # Render one money calculator form with a JS function name, to-currency label and currency code
 function getMoneyCalcForm(string $fnname, string $tolbl, string $tocur): string {
     global $conf, $tpl;
@@ -313,5 +440,88 @@ function getAdminListForm(string $table, string $bottom, string $hide): string {
         'bottom_html' => $bottom,
         'hide_html' => $hide,
         'table_html' => $table,
+    ]);
+}
+
+# Render a <link rel="stylesheet"> tag for an external CSS file
+function getHtmlCssLink(string $href): string {
+    return '<link rel="stylesheet" href="'.$href.'">';
+}
+
+# Render an inline <style> block
+function getHtmlCssInline(string $css): string {
+    return '<style type="text/css">'.$css.'</style>';
+}
+
+# Render a <script src="..."> tag, optionally with async attribute string ('async ' or '')
+function getHtmlScriptSrc(string $src, string $async = ''): string {
+    return '<script '.$async.'src="'.$src.'"></script>';
+}
+
+# Render an inline <script> block
+function getHtmlScriptInline(string $js): string {
+    return '<script>'.$js.'</script>';
+}
+
+# Render a generic <link> head tag with optional type and title attributes
+function getHtmlHeadLink(string $rel, string $href, string $type = '', string $title = ''): string {
+    $tag = '<link rel="'.$rel.'"';
+    if ($type !== '') $tag .= ' type="'.$type.'"';
+    if ($title !== '') $tag .= ' title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"';
+    $tag .= ' href="'.$href.'">';
+    return $tag;
+}
+
+# Render a safe link action item for getMenuItems()
+function getLinkAction(string $href, string $title, string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-action-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => '',
+        'target' => '',
+    ]);
+}
+
+# Render a safe delete action item with JS confirm for getMenuItems()
+function getDeleteAction(string $href, string $confirmText, string $title, string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-action-delete', [
+        'href' => $href,
+        'confirm_text' => $confirmText,
+        'title' => $title,
+        'label' => $label,
+    ]);
+}
+
+# Render a safe external (new window) link action item for getMenuItems()
+function getExternalAction(string $href, string $title, string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-action-link', [
+        'href' => $href,
+        'title' => $title,
+        'label' => $label,
+        'class' => '',
+        'target' => ' target="_blank"',
+    ]);
+}
+
+# Render one action-menu item wrapper from prepared action markup
+function getMenuItem(string $item): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('action-menu-item', [
+        'item_html' => $item,
+    ]);
+}
+
+# Render an editor action dropdown menu from an array of item HTML strings
+function getMenuItems(array $items): string {
+    global $tpl;
+    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
+    if (!$items) return '';
+    return $tpl->getHtmlFrag('editor-action-menu', [
+        'editor_label' => _EDITOR,
+        'items_html' => implode('', array_map(static fn($item) => getMenuItem($item), $items)),
     ]);
 }

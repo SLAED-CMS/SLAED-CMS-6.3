@@ -8,24 +8,27 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getRefererSearch(): string {
     global $afile, $tpl;
-    $search = '<form method="post" action="'.$afile.'.php">'._SORTE.': <select name="sort">';
     $priv = [_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF];
     $sort = getVar('post', 'sort', 'num', 0);
     $order = getVar('post', 'order', 'num', 0);
+    $sortOpts = '';
     foreach ($priv as $key => $value) {
         $idx = $key + 1;
-        $sel = ($sort == $idx) ? ' selected' : '';
-        $search .= '<option value="'.$idx.'"'.$sel.'>'.$value.'</option>';
+        $sortOpts .= getAdminOption((string) $idx, $value, $sort == $idx);
     }
-    $search .= '</select> <select name="order">';
+    $orderOpts = '';
     $privs = [_ASC, _DESC];
     foreach ($privs as $key => $value) {
         $idx = $key + 1;
-        $sel = ($order == $idx) ? ' selected' : '';
-        $search .= '<option value="'.$idx.'"'.$sel.'>'.$value.'</option>';
+        $orderOpts .= getAdminOption((string) $idx, $value, $order == $idx);
     }
-    $search .= '</select> <input type="hidden" name="name" value="referers"><input type="hidden" name="op" value="referers"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return getAdminSearchBox($search);
+    return getAdminSearchBox($tpl->getHtmlFrag('admin-referers-search-form', [
+        'ok_label' => _OK,
+        'route' => $afile,
+        'sort_html' => getAdminSelect('sort', $sortOpts, 'sl_form'),
+        'sort_label' => _SORTE.':',
+        'order_html' => getAdminSelect('order', $orderOpts, 'sl_form'),
+    ]));
 }
 
 function referers(): void {
@@ -55,18 +58,26 @@ function referers(): void {
             $massiv[] = [$hits, $uid, $name, $ip, $referer, $url, $date];
             $a++;
         }
-        $head = '<th>'._IP.'</th><th>'._HITS.'</th><th>'._REFERERS.'</th><th>'._SWORD.'</th><th class="{sorter: false}">'._ID.'</th>';
+        $head = $tpl->getHtmlFrag('admin-referers-list-head', [
+            'hits_label' => _HITS,
+            'id_label' => _ID,
+            'ip_label' => _IP,
+            'referers_label' => _REFERERS,
+            'sword_label' => _SWORD,
+        ]);
         $rows = '';
         for ($i = $offset; $i < $tnum; $i++) {
             if (isset($massiv[$i]) && $massiv[$i] != '') {
                 $name = ($massiv[$i][1]) ? user_info($massiv[$i][2]) : $massiv[$i][2];
                 $words = engines_word($massiv[$i][4]) ?: _NO;
-                $cols = '<td>'.title_tip(_NICKNAME.': '.$name.'<br>'._DATE.': '.format_time($massiv[$i][6], _TIMESTRING)).$massiv[$i][3].'</td>'
-                   .'<td>'.domain($massiv[$i][5], 30).'</td>'
-                   .'<td>'.domain($massiv[$i][4], 30).'</td>'
-                   .'<td><span title="'.$words.'" class="sl_note">'.cutstr($words, 25).'</span></td>'
-                   .'<td>'.$massiv[$i][0].'</td>';
-                $rows .= getAdminTableRow($cols);
+                $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-referers-list-row', [
+                    'hits_text' => (string)$massiv[$i][0],
+                    'ip_html' => title_tip(_NICKNAME.': '.$name.'<br>'._DATE.': '.format_time($massiv[$i][6], _TIMESTRING)).$massiv[$i][3],
+                    'referer_text' => domain($massiv[$i][4], 30),
+                    'search_attr' => $words,
+                    'search_text' => cutstr($words, 25),
+                    'url_text' => domain($massiv[$i][5], 30),
+                ]));
             }
         }
         $cont .= getAdminTable($head, $rows);
@@ -139,5 +150,4 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-
 

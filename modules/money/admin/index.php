@@ -21,7 +21,15 @@ function money(): void {
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
-        $head = '<th>'._ID.'</th><th>'._SUM.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-money-list-head', [
+            'date_label' => _DATE,
+            'email_label' => _EMAIL,
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'ip_label' => _IP,
+            'status_label' => _STATUS,
+            'sum_label' => _SUM,
+        ]);
         $rows = '';
         $form = explode(',', $conf['money']['form'] ?? '');
         while ([$id, $sum, $email, $intro, $note, $ip, $agent, $time, $status] = $db->getSqlRow($result)) {
@@ -37,18 +45,19 @@ function money(): void {
             }
             $acts = adminMenuItems([
                 ad_status($afile.'.php?name=money&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status),
-                '<a href="'.$afile.'.php?name=money&amp;op=invoice&amp;id='.$id.'&amp;rnum='.$r.'" title="'._RECHN_B.'">'._RECHN_B.'</a>',
-                '<a href="'.$afile.'.php?name=money&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=money&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                adminLinkAction($afile.'.php?name=money&amp;op=invoice&amp;id='.$id.'&amp;rnum='.$r, _RECHN_B, _RECHN_B),
+                adminLinkAction($afile.'.php?name=money&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=money&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.$sum.' EUR</td>'
-            .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email).'</td>'
-            .'<td>'.user_geo_ip($ip, 4).'</td>'
-            .'<td>'.format_time($time, _TIMESTRING).'</td>'
-            .'<td>'.ad_status('', $status).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-money-list-row', [
+                'actions_html' => $acts,
+                'date_text' => format_time($time, _TIMESTRING),
+                'email_html' => title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
+                'id_text' => (string)$id,
+                'ip_html' => user_geo_ip($ip, 4),
+                'status_html' => ad_status('', $status),
+                'sum_text' => $sum.' EUR',
+            ]));
             $r--;
         }
         $cont .= getAdminTable($head, $rows);
@@ -92,20 +101,28 @@ function add(): void {
         $cont .= preview($email, $infos, _COMMENT.': '.$note, '', 'all');
     }
     $hide = '<input type="hidden" name="name" value="money">';
-    $rows = '';
-    $rows .= getAdminFormRow(_MA_17.':', '<input type="number" name="sum" value="'.$sum.'" class="sl_form" placeholder="'._MA_17.'" required>');
-    $rows .= getAdminFormRow(_MA_18.':', '<input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._MA_18.'" required>');
+    $introhtml = '';
     $form = explode(',', $conf['money']['form'] ?? '');
     $i = 0;
     foreach ($form as $val) {
         if ($val != '') {
-            $rows .= getAdminFormRow($val.':', '<input type="text" name="intro[]" value="'.($intro[$i] ?? '').'" maxlength="255" class="sl_form" placeholder="'.$val.'">');
+            $introhtml .= getAdminFormRow($val.':', '<input type="text" name="intro[]" value="'.($intro[$i] ?? '').'" maxlength="255" class="sl_form" placeholder="'.$val.'">');
             $i++;
         }
     }
-    $rows .= getAdminFormRow(_MA_19.':', '<textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._MA_19.'">'.$note.'</textarea>');
-    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'time', $time, 16, 'sl_form'));
-    $rows .= getAdminFormWide(ad_save('mid', $mid, 'save'), '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-money-add-rows', [
+        'email_label' => _MA_18.':',
+        'email_value' => $email,
+        'intro_html' => $introhtml,
+        'note_label' => _MA_19.':',
+        'note_placeholder' => _MA_19,
+        'note_value' => $note,
+        'save_html' => ad_save('mid', $mid, 'save'),
+        'sum_label' => _MA_17.':',
+        'sum_value' => (string)$sum,
+        'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
+        'time_label' => _CHNGSTORY.':',
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -300,5 +317,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 

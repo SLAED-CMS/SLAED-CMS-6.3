@@ -15,45 +15,49 @@ function rss(): void {
     $fieldc = explode('||', $conf['rss']['rss']);
     for ($c = 0; $c < 50; $c++) {
         preg_match('#(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
-        $field = '<select name="field3[]" class="sl_conf">';
+        $field = '';
         for ($i = 0; $i < 2; $i++) {
             $fieldname = ($i == 0) ? _RSSSITE : _RSSHOME;
-            $sel = (isset($out[3]) && $out[3] == $i) ? ' selected' : '';
-            $field .= '<option value="'.$i.'"'.$sel.'>'.$fieldname.'</option>';
+            $field .= getAdminOption((string)$i, $fieldname, isset($out[3]) && $out[3] == $i);
         }
-        $field .= '</select>';
+        $field = getAdminSelect('field3[]', $field, 'sl_conf');
         $b = $c + 1;
         $out1 = $out[1] ?? '';
-        $display = (empty($out1) && $c != 0) ? ' class="sl_none"' : '';
-        $hr = ($c == 0) ? '' : '<hr>';
         $out2 = $out[2] ?? '';
-        
-        $content .= '<div id="rss'.$c.'"'.$display.'>'.$hr
-            .'<table class="sl_table_conf">'
-            .'<tr><td><a OnClick="HideShow(\'rss'.$b.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._RSSC.': '.$b.'</a></td><td>'
-            .'<table><tr><td>'._NAME.':</td><td><input type="text" name="field1[]" value="'.$out1.'" class="sl_conf" placeholder="'._NAME.'" required></td></tr>'
-            .'<tr><td>'._ADDRESS.':</td><td><input type="text" name="field2[]" value="'.$out2.'" class="sl_conf" placeholder="'._ADDRESS.'"></td></tr>'
-            .'<tr><td>'._USES.':</td><td>'.$field.'</td></tr></table>'
-            .'</td></tr></table></div>';
+        $content .= $tpl->getHtmlFrag('admin-rss-source-block', [
+            'add_label' => _ADD,
+            'address_label' => _ADDRESS.':',
+            'address_value' => $out2,
+            'block_id' => 'rss'.$c,
+            'hidden' => empty($out1) && $c != 0,
+            'index_text' => (string)$b,
+            'is_first' => $c == 0,
+            'name_label' => _NAME.':',
+            'name_value' => $out1,
+            'next_id' => 'rss'.$b,
+            'rssc_label' => _RSSC.':',
+            'uses_html' => $field,
+            'uses_label' => _USES.':',
+        ]);
     }
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _RSSDESC]);
-    $cont .= '<form action="'.$afile.'.php?name=rss" method="post">'
-    .'<input type="hidden" name="op" value="save">'
-    .'<div id="tabc0" class="tabcont">'.$content.'</div>'
-    .'<div id="tabc1" class="tabcont"><table class="sl_table_conf">'
-    .'<tr><td>'._RSSMIN.':</td><td><input type="number" name="min" value="'.$conf['rss']['min'].'" class="sl_conf" placeholder="'._RSSMIN.'" required></td></tr>'
-    .'<tr><td>'._RSSMAX.':</td><td><input type="number" name="max" value="'.$conf['rss']['max'].'" class="sl_conf" placeholder="'._RSSMAX.'" required></td></tr>'
-    .'<tr><td>'._RSSTEMP.':<div class="sl_small">'._RSSTEMPINFO.'</div></td><td><textarea name="temp" cols="65" rows="5" class="sl_conf" placeholder="'._RSSTEMP.'" required>'.$conf['rss']['temp'].'</textarea></td></tr>'
-    .'<tr><td>'._RSSACT.':</td><td>'.radio_form($conf['rss']['act'], 'act').'</td></tr>'
-    .'<tr><td>'._RSSUSE.'</td><td>'.radio_form($conf['rss']['use'], 'use').'</td></tr>'
-    .'</table></div>'
-    .'<table class="sl_table_conf"><tr><td class="sl_center"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>'
-    .'<script>
-        var countries=new ddtabcontent("rss")
-        countries.setpersist(true)
-        countries.setselectedClassTarget("link")
-        countries.init()
-    </script>';
+    $cont .= $tpl->getHtmlFrag('admin-rss-config-form', [
+        'act_html' => radio_form($conf['rss']['act'], 'act'),
+        'act_label' => _RSSACT.':',
+        'max_label' => _RSSMAX.':',
+        'max_value' => (string)$conf['rss']['max'],
+        'min_label' => _RSSMIN.':',
+        'min_value' => (string)$conf['rss']['min'],
+        'route' => $afile,
+        'rss_sources_html' => $content,
+        'save_label' => _SAVECHANGES,
+        'temp_hint' => _RSSTEMPINFO,
+        'temp_label' => _RSSTEMP.':',
+        'temp_placeholder' => _RSSTEMP,
+        'temp_value' => $conf['rss']['temp'],
+        'use_html' => radio_form($conf['rss']['use'], 'use'),
+        'use_label' => _RSSUSE,
+    ]);
     echo getAdminBox($cont);
     setFoot();
 }
@@ -91,4 +95,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-

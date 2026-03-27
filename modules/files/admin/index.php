@@ -32,32 +32,41 @@ function files(): void {
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, c.title, u.name FROM '.PREFIX_DB.'_files AS f LEFT JOIN '.PREFIX_DB.'_categories AS c ON (f.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $st]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-article-list-head', [
+            'checkall_html' => '',
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'postedby_label' => _POSTEDBY,
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+        ]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
-            $broc = ($st == '2') ? '<a href="'.$afile.'.php?name=files&amp;op=approve&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
+            $broc = ($st == '2') ? adminLinkAction($afile.'.php?name=files&amp;op=approve&amp;id='.$id, _IGNORE, _IGNORE) : '';
             if ($st == '1' && time() >= strtotime($date)) {
-                $view = '<a href="index.php?name=files&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = adminLinkAction('index.php?name=files&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
             $acts = adminMenuItems([
-                rtrim($view, '|'),
-                rtrim($broc, '|'),
-                '<a href="'.$afile.'.php?name=files&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=files&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                $view,
+                $broc,
+                adminLinkAction($afile.'.php?name=files&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=files&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
-            .'<td>'.$post.'</td>'
-            .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
+                'actions_html' => $acts,
+                'checkbox_html' => '',
+                'id_text' => (string)$id,
+                'post_html' => $post,
+                'status_html' => ad_status('', $active),
+                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span>',
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_files', '', 'status = \''.$st.'\'', $anump);
@@ -106,30 +115,50 @@ function add(): void {
         foreach ($entries as $entry) {
             if ($entry === '.' || $entry === '..') continue;
             if (!preg_match('/\./', $entry)) {
-                $selected = ($path === $path.'/'.$entry) ? ' selected' : '';
-                $directory .= '<option value="'.$path.'/'.$entry.'"'.$selected.'>'.$path.'/'.$entry.'</option>';
+                $directory .= getAdminOption($path.'/'.$entry, $path.'/'.$entry);
             }
         }
     }
     $hide = '<input type="hidden" name="name" value="files">';
-    $rows = '';
-    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
-    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows .= getAdminFormRow(_CATEGORY.':', getcat('files', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
-    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'description', $description, 'files', '5', _TEXT, '1'));
-    $rows .= getAdminFormRow(_ENDTEXT.':', textarea('2', 'bodytext', $bodytext, 'files', '15', _ENDTEXT, '0'));
-    $rows .= getAdminFormRow(_AUEMAIL.':', '<input type="email" name="email" value="'.$email.'" class="sl_form" placeholder="'._AUEMAIL.'">');
-    $rows .= getAdminFormRow(_SITE.':', '<input type="url" name="website" value="'.$website.'" class="sl_form" placeholder="'._SITE.'">');
-    $rows .= getAdminFormRow(_FILE_USER.':', '<input type="file" name="userfile" class="sl_form">');
-    $rows .= getAdminFormRow(_FILE_SITE.':', '<input type="text" name="sitefile" class="sl_form" placeholder="'._FILE_SITE.'">');
-    $rows .= getAdminFormRow($link.':', '<input type="text" name="url" value="'.$url.'" class="sl_form" placeholder="'._URL.'">');
-    if (file_exists($url)) $rows .= getAdminFormRow(_FILE_DIR.':', '<select name="path" class="sl_form"><option value="">'._NO.'</option><option value="'.$path.'">'.$path.'</option>'.$directory.'</select>');
-    $rows .= getAdminFormRow(_VERSION.':', '<input type="text" name="version" value="'.$version.'" class="sl_form" placeholder="'._VERSION.'">');
-    $rows .= getAdminFormRow(_SIZENOTE.':', '<input type="number" name="filesize" value="'.$filesize.'" class="sl_form" placeholder="'._SIZENOTE.'">');
-    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
-    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
-    $rows .= getAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'));
-    $rows .= getAdminFormWide(ad_save('fid', $fid, 'save'), '', 'sl_center');
+    $path_html = '';
+    if (file_exists($url)) {
+        $path_html = getAdminSelect('path', getAdminOption('', _NO).getAdminOption($path, $path, true).$directory, 'sl_form');
+    }
+    $rows = $tpl->getHtmlFrag('admin-files-add-rows', [
+        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
+        'acomm_label' => _COMMENTS.':',
+        'bodytext_html' => textarea('2', 'bodytext', $bodytext, 'files', '15', _ENDTEXT, '0'),
+        'bodytext_label' => _ENDTEXT.':',
+        'cat_html' => getcat('files', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_label' => _CATEGORY.':',
+        'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
+        'date_label' => _CHNGSTORY.':',
+        'description_html' => textarea('1', 'description', $description, 'files', '5', _TEXT, '1'),
+        'description_label' => _TEXT.':',
+        'email_label' => _AUEMAIL.':',
+        'email_value' => $email,
+        'filesize_label' => _SIZENOTE.':',
+        'filesize_value' => (string)$filesize,
+        'filesite_label' => _FILE_SITE.':',
+        'filesite_placeholder' => _FILE_SITE,
+        'fileuser_label' => _FILE_USER.':',
+        'ihome_html' => radio_form($ihome, 'ihome'),
+        'ihome_label' => _PUBHOME,
+        'link_label' => $link.':',
+        'path_html' => $path_html,
+        'path_label' => _FILE_DIR.':',
+        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_label' => _POSTEDBY.':',
+        'save_html' => ad_save('fid', $fid, 'save'),
+        'title_label' => _TITLE.':',
+        'title_value' => $title,
+        'url_placeholder' => _URL,
+        'url_value' => $url,
+        'version_label' => _VERSION.':',
+        'version_value' => $version,
+        'website_label' => _SITE.':',
+        'website_value' => $website,
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide, 'sl_table_form', 'post', 'post', 'enctype="multipart/form-data"');
     echo $cont;
     setFoot();
@@ -217,11 +246,11 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
-    $stream_sel = '<select name="stream" class="sl_conf">'
-        .'<option value="0"'.(($conf['files']['stream'] ?? null) == '0' ? ' selected' : '').'>'._STREAM_NO.'</option>'
-        .'<option value="1"'.(($conf['files']['stream'] ?? null) == '1' ? ' selected' : '').'>'._STREAM_1.'</option>'
-        .'<option value="2"'.(($conf['files']['stream'] ?? null) == '2' ? ' selected' : '').'>'._STREAM_2.'</option>'
-        .'</select>';
+    $stream_sel = getAdminSelect('stream',
+        getAdminOption('0', _STREAM_NO, ($conf['files']['stream'] ?? null) == '0')
+        .getAdminOption('1', _STREAM_1, ($conf['files']['stream'] ?? null) == '1')
+        .getAdminOption('2', _STREAM_2, ($conf['files']['stream'] ?? null) == '2'),
+    'sl_conf');
     $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'files',
@@ -349,7 +378,5 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
 
 

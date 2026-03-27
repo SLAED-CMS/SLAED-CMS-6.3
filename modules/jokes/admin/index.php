@@ -26,30 +26,39 @@ function jokes(): void {
     }
     $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.ip, c.title, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.status = :status ORDER BY j.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-article-list-head', [
+            'checkall_html' => '',
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'postedby_label' => _POSTEDBY,
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+        ]);
         $rows = '';
         while ([$jokeid, $uname, $date, $title, $cat, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cat) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status && time() >= strtotime($date)) {
-                $view = '<a href="index.php?name=jokes&amp;cat='.$cat.'#'.$jokeid.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = adminLinkAction('index.php?name=jokes&amp;cat='.$cat.'#'.$jokeid, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
             $acts = adminMenuItems([
-                rtrim($view, '|'),
-                '<a href="'.$afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=jokes&amp;op=delete&amp;id='.$jokeid.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                $view,
+                adminLinkAction($afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=jokes&amp;op=delete&amp;id='.$jokeid.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$jokeid.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
-            .'<td>'.$post.'</td>'
-            .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
+                'actions_html' => $acts,
+                'checkbox_html' => '',
+                'id_text' => (string)$jokeid,
+                'post_html' => $post,
+                'status_html' => ad_status('', $active),
+                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span>',
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_jokes', '', 'status = \''.$status.'\'', $anump);
@@ -80,14 +89,21 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($joke)) $cont .= preview($title, $joke, '', '', 'all');
-    $rows = '';
-    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
-    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows .= getAdminFormRow(_CATEGORY.':', getcat('jokes', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
-    $rows .= getAdminFormRow(_JOKE.':', textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1'));
-    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
-    $rows .= getAdminFormWide('<input type="hidden" name="name" value="jokes">'.ad_save('jokeid', $jokeid, 'save'), '', 'sl_center');
-    $cont .= getAdminForm($afile.'.php', $rows);
+    $hide = '<input type="hidden" name="name" value="jokes">';
+    $rows = $tpl->getHtmlFrag('admin-jokes-add-rows', [
+        'cat_html' => getcat('jokes', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_label' => _CATEGORY.':',
+        'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
+        'date_label' => _CHNGSTORY.':',
+        'joke_html' => textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1'),
+        'joke_label' => _JOKE.':',
+        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_label' => _POSTEDBY.':',
+        'save_html' => ad_save('jokeid', $jokeid, 'save'),
+        'title_label' => _TITLE.':',
+        'title_value' => $title,
+    ]);
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -213,7 +229,5 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
 
 

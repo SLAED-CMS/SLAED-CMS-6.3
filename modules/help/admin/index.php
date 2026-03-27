@@ -26,7 +26,14 @@ function help(): void {
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th>'.cutstr(_MESSAGES, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-help-list-head', [
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'messages_label' => cutstr(_MESSAGES, 4, 1),
+            'postedby_label' => _POSTEDBY,
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+        ]);
         $rows = '';
         while ([$id, $cid, $title, $time, $comments, $ip, $stat, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
@@ -34,16 +41,17 @@ function help(): void {
             $post = $nick ? user_info($nick) : _ANONYM;
             $stat = ($stat) ? 0 : 1;
             $acts = adminMenuItems([
-                '<a href="'.$afile.'.php?name=help&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>',
-                '<a href="'.$afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                adminLinkAction($afile.'.php?name=help&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW),
+                adminDeleteAction($afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
-            .'<td>'.$post.'</td>'
-            .'<td>'.$comments.'</td>'
-            .'<td>'.ad_status('', $stat).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-help-list-row', [
+                'actions_html' => $acts,
+                'comments_text' => (string)$comments,
+                'id_text' => (string)$id,
+                'post_html' => $post,
+                'status_html' => ad_status('', $stat),
+                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span>',
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
@@ -80,7 +88,10 @@ function view(): void {
             $ctitle = '';
             $reads =  '';
         }
-        $admin = add_menu('<a href="'.$afile.'.php?name=help&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=help&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>');
+        $admin = adminMenuItems([
+            adminLinkAction($afile.'.php?name=help&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+            adminDeleteAction($afile.'.php?name=help&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+        ]);
         $html .= $tpl->getHtmlFrag('basic', ['ctitle' => $ctitle, 'id' => $id, 'title' => $title, 'text' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), 'post' => $post, 'date' => $date, 'reads' => $reads, 'comm' => $comm, 'rating' => $rating, 'admin' => $admin]);
         $a++;
     }
@@ -94,11 +105,17 @@ function addview(int $id): string {
     global $db, $afile, $admin, $tpl;
     $result = $db->getSqlQuery('SELECT cid, uid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
     [$cid, $uid, $status] = $db->getSqlRow($result);
-    $rows = getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $admin[1] ?? '', '25', 'sl_form', '1'))
-        .getAdminFormRow(_TEXT.':', textarea('1', 'hometext', '', 'help', '10', _TEXT, '1'))
-        .getAdminFormRow(_HELPGLOS, radio_form($status, 'status'))
-        .getAdminFormRow(_MAIL_SENDE, radio_form('1', 'umail'))
-        .getAdminFormWide('<input type="submit" value="'._SEND.'" class="sl_but_blue">', '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-help-addview-rows', [
+        'hometext_html' => textarea('1', 'hometext', '', 'help', '10', _TEXT, '1'),
+        'hometext_label' => _TEXT.':',
+        'postname_html' => get_user_search('postname', $admin[1] ?? '', '25', 'sl_form', '1'),
+        'postname_label' => _POSTEDBY.':',
+        'save_label' => _SEND,
+        'status_html' => radio_form($status, 'status'),
+        'status_label' => _HELPGLOS,
+        'umail_html' => radio_form('1', 'umail'),
+        'umail_label' => _MAIL_SENDE,
+    ]);
     $hide = '<input type="hidden" name="name" value="help"><input type="hidden" name="refer" value="1"><input type="hidden" name="pid" value="'.$id.'"><input type="hidden" name="cat" value="'.$cid.'"><input type="hidden" name="uid" value="'.$uid.'"><input type="hidden" name="posttype" value="save"><input type="hidden" name="op" value="save">';
     return getAdminForm($afile.'.php', $rows, $hide);
 }
@@ -125,15 +142,21 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
-    $rows = getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
-    if (!$pid) {
-        $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
-    }
-    $rows .= getAdminFormRow(_CATEGORY.':', getcat('help', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'))
-        .getAdminFormRow(_TEXT.':', textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1'))
-        .fields_in($field, 'help')
-        .getAdminFormRow(_CHNGSTORY.':', datetime(1, 'time', $time, 16, 'sl_form'))
-        .getAdminFormWide(ad_save('id', $id, 'save'), '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-help-add-rows', [
+        'cat_html' => getcat('help', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_label' => _CATEGORY.':',
+        'field_html' => fields_in($field, 'help'),
+        'hometext_html' => textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1'),
+        'hometext_label' => _TEXT.':',
+        'is_reply' => (bool)$pid,
+        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_label' => _POSTEDBY.':',
+        'save_html' => ad_save('id', $id, 'save'),
+        'subject_label' => _TITLE.':',
+        'subject_value' => $subject,
+        'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
+        'time_label' => _CHNGSTORY.':',
+    ]);
     $hide = '<input type="hidden" name="name" value="help"><input type="hidden" name="pid" value="'.$pid.'">';
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
@@ -279,4 +302,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-

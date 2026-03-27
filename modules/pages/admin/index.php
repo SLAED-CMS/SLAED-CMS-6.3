@@ -26,30 +26,39 @@ function pages(): void {
     }
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-article-list-head', [
+            'checkall_html' => '',
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'postedby_label' => _POSTEDBY,
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+        ]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status && time() >= strtotime($time)) {
-                $view = '<a href="index.php?name=pages&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = adminLinkAction('index.php?name=pages&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
             $acts = adminMenuItems([
-                rtrim($view, '|'),
-                '<a href="'.$afile.'.php?name=pages&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=pages&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                $view,
+                adminLinkAction($afile.'.php?name=pages&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=pages&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>'
-            .'<td>'.$post.'</td>'
-            .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
+                'actions_html' => $acts,
+                'checkbox_html' => '',
+                'id_text' => (string)$id,
+                'post_html' => $post,
+                'status_html' => ad_status('', $active),
+                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span>',
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_pages', '', 'status = \''.$status.'\'', $anump);
@@ -85,16 +94,25 @@ function add(): void {
     if ($hometext) $cont .= preview($subject, $hometext, $bodytext, '', 'pages');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     $hide = '<input type="hidden" name="name" value="pages">';
-    $rows = '';
-    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
-    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="subject" value="'.$subject.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows .= getAdminFormRow(_CATEGORY.':', getcat('pages', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
-    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'hometext', $hometext, 'pages', '5', _TEXT, '1'));
-    $rows .= getAdminFormRow(_ENDTEXT.':', textarea('2', 'bodytext', $bodytext, 'pages', '15', _ENDTEXT, '0'));
-    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'time', $time, 16, 'sl_form'));
-    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
-    $rows .= getAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'));
-    $rows .= getAdminFormWide(ad_save('pid', $pid, 'save'), '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-pages-add-rows', [
+        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
+        'acomm_label' => _COMMENTS.':',
+        'body_html' => textarea('2', 'bodytext', $bodytext, 'pages', '15', _ENDTEXT, '0'),
+        'body_label' => _ENDTEXT.':',
+        'cat_html' => getcat('pages', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_label' => _CATEGORY.':',
+        'hometext_html' => textarea('1', 'hometext', $hometext, 'pages', '5', _TEXT, '1'),
+        'hometext_label' => _TEXT.':',
+        'ihome_html' => radio_form($ihome, 'ihome'),
+        'ihome_label' => _PUBHOME,
+        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_label' => _POSTEDBY.':',
+        'save_html' => ad_save('pid', $pid, 'save'),
+        'subject_label' => _TITLE.':',
+        'subject_value' => $subject,
+        'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
+        'time_label' => _CHNGSTORY.':',
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -246,7 +264,5 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
 
 

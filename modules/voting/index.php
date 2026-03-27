@@ -25,7 +25,10 @@ function voting(): void {
 			$vote = array_sum(explode('|', $answer));
 			$type = ($typ == '1') ? _VOPEN : _VCLOSE;
 			$report = _CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type;
-			$admin = (is_moder($conf['name'])) ? add_menu('<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($stitle, ENT_QUOTES).'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
+			$admin = (is_moder($conf['name'])) ? getMenuItems([
+				getLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+				getDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$stitle.'"?', _ONDELETE, _ONDELETE),
+			]) : '';
 			$cont .= $tpl->getHtmlFrag('voting-home', [
 				'id' => $id,
 				'title_href' => $thref,

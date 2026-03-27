@@ -13,25 +13,35 @@ function clients(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._CTITLE.'</th><th>'._CVERSION.'</th><th>'._CDATE.'</th><th>'._ID.'</th><th>'._CLOADS.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-clients-list-head', [
+            'date_label' => _CDATE,
+            'functions_label' => _FUNCTIONS,
+            'hits_label' => _CLOADS,
+            'id_label' => _ID,
+            'prod_label' => _ID,
+            'status_label' => _STATUS,
+            'title_label' => _CTITLE,
+            'version_label' => _CVERSION,
+        ]);
         $rows = '';
         while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
             $acts = adminMenuItems([
                 ad_status($afile.'.php?name=clients&amp;op=status&amp;id='.$id.'&amp;act='.$act, $status),
-                '<a href="'.$afile.'.php?name=clients&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=clients&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                adminLinkAction($afile.'.php?name=clients&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=clients&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.$title.'</td>'
-            .'<td>'.$num.'</td>'
-            .'<td>'.$time.'</td>'
-            .'<td>'.$prod.'</td>'
-            .'<td>'.$hits.'</td>'
-            .'<td>'.ad_status('', $status).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-clients-list-row', [
+                'actions_html' => $acts,
+                'date_text' => $time,
+                'hits_text' => (string)$hits,
+                'id_text' => (string)$id,
+                'prod_text' => (string)$prod,
+                'status_html' => ad_status('', $status),
+                'title_text' => $title,
+                'version_text' => $num,
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
     } else {
@@ -64,16 +74,24 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stopText]);
     }
     if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $rows = '';
-    $rows .= getAdminFormRow(_CTITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._CTITLE.'" required>');
-    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'body', $body, 'clients', '15', _TEXT, '1'));
-    $rows .= getAdminFormRow(_CURL.':', '<input type="text" name="url" value="'.$url.'" maxlength="100" class="sl_form" placeholder="'._CURL.'">');
-    $rows .= getAdminFormRow(_CVERSION.':', '<input type="text" name="num" value="'.$num.'" maxlength="10" class="sl_form" placeholder="'._CVERSION.'">');
-    $rows .= getAdminFormRow(_CODE.':', '<input type="text" name="code" value="'.$code.'" maxlength="100" class="sl_form" placeholder="'._CODE.'">');
-    $rows .= getAdminFormRow(_ID.':', '<input type="number" name="prod" value="'.$prod.'" class="sl_form" placeholder="'._ID.'">');
-    $rows .= getAdminFormRow(_CADOWN, radio_form($status, 'status'));
-    $rows .= getAdminFormWide(ad_save('cid', $cid, 'save'), '', 'sl_center');
     $hide = '<input type="hidden" name="name" value="clients">';
+    $rows = $tpl->getHtmlFrag('admin-clients-add-rows', [
+        'body_html' => textarea('1', 'body', $body, 'clients', '15', _TEXT, '1'),
+        'body_label' => _TEXT.':',
+        'code_label' => _CODE.':',
+        'code_value' => $code,
+        'prod_label' => _ID.':',
+        'prod_value' => (string)$prod,
+        'save_html' => ad_save('cid', $cid, 'save'),
+        'status_html' => radio_form($status, 'status'),
+        'status_label' => _CADOWN,
+        'title_label' => _CTITLE.':',
+        'title_value' => $title,
+        'url_label' => _CURL.':',
+        'url_value' => $url,
+        'version_label' => _CVERSION.':',
+        'version_value' => $num,
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -137,5 +155,4 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-
 

@@ -16,28 +16,36 @@ function content(): void {
     $offset = ($num - 1) * $anum;
     $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content ORDER BY id DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._DATE.'</th><th>'.cutstr(_READS, 4, 1).'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-content-list-head', [
+            'date_label' => _DATE,
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'reads_label' => cutstr(_READS, 4, 1),
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+        ]);
         $rows = '';
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             if (time() >= strtotime($time)) {
-                $view = '<a href="index.php?name=content&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = adminLinkAction('index.php?name=content&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
             $acts = adminMenuItems([
-                rtrim($view, '|'),
-                '<a href="'.$afile.'.php?name=content&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=content&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                $view,
+                adminLinkAction($afile.'.php?name=content&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=content&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.title_tip(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.'<br>'._ORTYPEURL.': '.$conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span></td>'
-            .'<td>'.format_time($time, _TIMESTRING).'</td>'
-            .'<td>'.$counter.'</td>'
-            .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-content-list-row', [
+                'actions_html' => $acts,
+                'date_text' => format_time($time, _TIMESTRING),
+                'id_text' => (string)$id,
+                'reads_text' => (string)$counter,
+                'status_html' => ad_status('', $active),
+                'title_html' => title_tip(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.'<br>'._ORTYPEURL.': '.$conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span>',
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, 'name=content&amp;', 'id', '_content', '', '', $anump);
@@ -71,27 +79,20 @@ function add(): void {
     $rows = '';
     $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
     $rows .= getAdminFormRow(_RSSFILE.':<div class="sl_small">'._RSSINFO.'</div>', '<input type="text" name="url" value="'.$url.'" maxlength="200" class="sl_form" placeholder="'._RSSFILE.'">');
-    $opts = '<select name="refresh" class="sl_form">'
-    .'<option value="1800"';
-    if ($refresh == '1800') $opts .= ' selected';
-    $opts .= '>30 '._MIN.'.</option>'
-    .'<option value="3600"';
-    if ($refresh == '3600' || !$refresh) $opts .= ' selected';
-    $opts .= '>1 '._HOUR.'</option>'
-    .'<option value="18000"';
-    if ($refresh == '18000') $opts .= ' selected';
-    $opts .= '>5 '._HOUR.'.</option>'
-    .'<option value="36000"';
-    if ($refresh == '36000') $opts .= ' selected';
-    $opts .= '>10 '._HOUR.'.</option>'
-    .'<option value="86400"';
-    if ($refresh == '86400') $opts .= ' selected';
-    $opts .= '>24 '._HOUR.'.</option></select>';
-    $rows .= getAdminFormRow(_REFRESHTIME.':<div class="sl_small">'._REFINFO.'</div>', $opts);
-    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'body', $body.$fields, 'content', '25', _TEXT, '0'));
-    $rows .= fields_in($field, 'content');
-    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'time', $time, 16, 'sl_form'));
-    $rows .= getAdminFormWide(ad_save('cid', $cid, 'save'), '', 'sl_center');
+    $opts = getAdminOption('1800', '30 '._MIN.'.', $refresh == '1800')
+        .getAdminOption('3600', '1 '._HOUR, $refresh == '3600' || !$refresh)
+        .getAdminOption('18000', '5 '._HOUR.'.', $refresh == '18000')
+        .getAdminOption('36000', '10 '._HOUR.'.', $refresh == '36000')
+        .getAdminOption('86400', '24 '._HOUR, $refresh == '86400');
+    $opts = getAdminSelect('refresh', $opts, 'sl_form');
+    $rows .= $tpl->getHtmlFrag('admin-content-add-rows', [
+        'body_html' => textarea('1', 'body', $body.$fields, 'content', '25', _TEXT, '0'),
+        'date_html' => datetime(1, 'time', $time, 16, 'sl_form'),
+        'fields_html' => fields_in($field, 'content'),
+        'refresh_html' => $opts,
+        'refresh_label_html' => _REFRESHTIME.':<div class="sl_small">'._REFINFO.'</div>',
+        'save_html' => ad_save('cid', $cid, 'save'),
+    ]);
     $hide = '<input type="hidden" name="name" value="content">';
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
@@ -186,7 +187,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 
 
 

@@ -27,7 +27,14 @@ function whois(): void {
 
     $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._POSTEDBY.'</th><th colspan="2">'._SITE.'</th><th colspan="2">'._HOST.'</th><th colspan="2">'._DC.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-whois-list-head', [
+            'dc_label' => _DC,
+            'functions_label' => _FUNCTIONS,
+            'host_label' => _HOST,
+            'id_label' => _ID,
+            'postedby_label' => _POSTEDBY,
+            'site_label' => _SITE,
+        ]);
         $rows = '';
         while ([$id, $uname, $ipSender, $time, $domain, $host, $dc, $hometext, $statusDomain, $statusHost, $statusDc, $userName] = $db->getSqlRow($result)) {
             $post = $userName ? user_info($userName) : ($uname ?: _ANONYM);
@@ -35,22 +42,24 @@ function whois(): void {
             $hometext = $hometext ?: _NO;
             $host = $host ? domain($host) : _NO_INFO;
             $dc = $dc ? domain($dc) : _NO_INFO;
-            $actions = ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=1&amp;refer=1', $statusDomain, '', _SITE)
-                .'||'.ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=2&amp;refer=1', $statusHost, '', _HOST)
-                .'||'.ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=3&amp;refer=1', $statusDc, '', _DC)
-                .'||<a href="'.$afile.'.php?name=whois&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>'
-                .'||<a href="'.$afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$domain.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>';
-            $acts = [];
-            foreach (explode('||', $actions) as $item) {
-                if ($item !== '') $acts[] = $item;
-            }
-            $cols = '<td>'.$id.'</td>'
-                .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ipSender.'<br>'._COMMENT.': '.$hometext).$post.'</td>'
-                .'<td>'.domain($domain).'</td><td>'.ad_status('', $statusDomain).'</td>'
-                .'<td>'.$host.'</td><td>'.ad_status('', $statusHost).'</td>'
-                .'<td>'.$dc.'</td><td>'.ad_status('', $statusDc).'</td>'
-                .'<td>'.adminMenuItems($acts).'</td>';
-            $rows .= getAdminTableRow($cols);
+            $acts = adminMenuItems([
+                ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=1&amp;refer=1', $statusDomain, '', _SITE),
+                ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=2&amp;refer=1', $statusHost, '', _HOST),
+                ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=3&amp;refer=1', $statusDc, '', _DC),
+                adminLinkAction($afile.'.php?name=whois&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$domain.'"?', _ONDELETE, _ONDELETE),
+            ]);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-whois-list-row', [
+                'actions_html' => $acts,
+                'dc_html' => $dc,
+                'dc_status_html' => ad_status('', $statusDc),
+                'domain_html' => domain($domain),
+                'domain_status_html' => ad_status('', $statusDomain),
+                'host_html' => $host,
+                'host_status_html' => ad_status('', $statusHost),
+                'id_text' => (string)$id,
+                'postedby_html' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ipSender.'<br>'._COMMENT.': '.$hometext).$post,
+            ]));
         }
         $cont .= getAdminTable($head, $rows, 'sl_table_list');
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_whois', '', "status = '".$status."'", $anump);
@@ -99,13 +108,14 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', $stop)]);
-    $rows = '';
-    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
-    $rows .= getAdminFormRow(_SITE.':', '<input type="url" name="domain" value="'.$domain.'" maxlength="255" class="sl_form" placeholder="'._SITE.'" required>');
-    $rows .= getAdminFormRow(_HOST.':', '<input type="url" name="host" value="'.$host.'" maxlength="255" class="sl_form" placeholder="'._HOST.'">');
-    $rows .= getAdminFormRow(_DC.':', '<input type="url" name="dc" value="'.$dc.'" maxlength="255" class="sl_form" placeholder="'._DC.'">');
-    $rows .= getAdminFormRow(_COMMENT.':', '<textarea name="hometext" cols="65" rows="5" class="sl_form" placeholder="'._COMMENT.'">'.$hometext.'</textarea>');
-    $rows .= getAdminFormWide('<input type="hidden" name="name" value="whois">'.ad_save('wid', $wid, 'save', 1), 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-whois-add-rows', [
+        'comment_value' => $hometext,
+        'dc_value' => $dc,
+        'domain_value' => $domain,
+        'host_value' => $host,
+        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'save_html' => '<input type="hidden" name="name" value="whois">'.ad_save('wid', $wid, 'save', 1),
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows);
     echo $cont;
     setFoot();
@@ -206,7 +216,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 
 
 

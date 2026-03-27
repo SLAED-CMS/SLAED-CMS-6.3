@@ -11,19 +11,30 @@ setCache('0');
 checkAccess();
 
 function getAdminMenu(string $url, string $title, string $image, string $class = ''): string {
- global $conf, $panel, $count;
+ global $conf, $panel, $count, $tpl;
     $ltitle = ($class !== '') ? $title.' - '._DEACT : $title;
     $path = img_find('admin/'.$image);
     $image = file_exists($path) ? $path : img_find('admin/components.png');
     if ($panel) {
-        $cont = '';
-        if (($count - 1) % $conf['admcol'] == 0) $cont = '<tr>';
-        $cont .= '<td class="sl_td_mod'.$class.'"><a href="'.$url.'" title="'.$ltitle.'"><img src="'.$image.'" alt="'.$ltitle.'" title="'.$ltitle.'" class="sl_img_mod"><br>'.$title.'</a></td>';
-        if ($count % $conf['admcol'] == 0) $cont .= '</tr>';
+        $cont = (($count - 1) % $conf['admcol'] === 0) ? '<tr>' : '';
+        $cont .= $tpl->getHtmlFrag('admin-panel-grid-item', [
+            'image' => $image,
+            'title' => $title,
+            'title_attr' => $ltitle,
+            'url' => $url,
+            'wrap_class' => 'sl_td_mod'.$class,
+        ]);
+        if ($count % $conf['admcol'] === 0) $cont .= '</tr>';
         $count++;
         return $cont;
     }
-    return '<table class="sl_tab_blm'.$class.'"><tr><td><a href="'.$url.'" title="'.$ltitle.'"><img src="'.$image.'" alt="'.$ltitle.'" title="'.$ltitle.'" class="sl_img_blm"></a></td><td><a href="'.$url.'" title="'.$ltitle.'">'.$title.'</a></td></tr></table>';
+    return $tpl->getHtmlFrag('admin-panel-list-item', [
+        'image' => $image,
+        'title' => $title,
+        'title_attr' => $ltitle,
+        'url' => $url,
+        'wrap_class' => 'sl_tab_blm'.$class,
+    ]);
 }
 
 function getAdminPanelBlocks(): string {

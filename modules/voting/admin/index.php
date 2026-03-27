@@ -15,13 +15,19 @@ function voting(): void {
     $offset = intval($offset);
     $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th>';
-        if ($conf['multilingual'] == 1) $head .= '<th>'._LANGUAGE.'</th>';
-        $head .= '<th>'._MODUL.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-voting-list-head', [
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'lang_label' => _LANGUAGE,
+            'modul_label' => _MODUL,
+            'show_lang' => $conf['multilingual'] == 1,
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+        ]);
         $rows = '';
         while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
-                $view = (!$modul) ? '<a href="index.php?name=voting&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||' : '';
+                $view = (!$modul) ? adminLinkAction('index.php?name=voting&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW) : '';
                 $active = '1';
             } else {
                 $view = '';
@@ -29,21 +35,22 @@ function voting(): void {
             }
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
             $acts = adminMenuItems([
-                rtrim($view, '|'),
-                '<a href="'.$afile.'.php?name=voting&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                $view,
+                adminLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.title_tip(_CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span></td>';
-            if ($conf['multilingual'] == 1) {
-                $lang = (!$lang) ? _ALL : $lang;
-                $cols .= '<td>'.getLangName($lang).'</td>';
-            }
+            $langtext = '';
+            if ($conf['multilingual'] == 1) $langtext = getLangName((!$lang) ? _ALL : $lang);
             $mod = ($modul) ? getModuleName($modul) : _NONE;
-            $cols .= '<td>'.$mod.'</td>'
-            .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-voting-list-row', [
+                'actions_html' => $acts,
+                'id_text' => (string)$id,
+                'lang_text' => $langtext,
+                'modul_text' => $mod,
+                'show_lang' => $conf['multilingual'] == 1,
+                'status_html' => ad_status('', $active),
+                'title_html' => title_tip(_CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span>',
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $conf['voting']['anum'], 'name=voting&amp;', 'id', '_voting', '', '', $conf['voting']['anump']);
@@ -79,44 +86,64 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    if ($id) $cont .= '<div class="basecont"><div class="bpad"><div class="tabpad"><div id="repvoting">'.getVoting($id, 'voting').'</div></div></div><div class="hsep"></div></div>';
+    if ($id) $cont .= $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVoting($id, 'voting')]);
     $hide = '<input type="hidden" name="name" value="voting">';
-    $rows = '';
     $mname = ['news', 'shop'];
-    $content = '';
+    $content = getAdminOption('', _NO);
     foreach ($mname as $val) {
         if ($val != '') {
-            $sel = ($modul == $val) ? ' selected' : '';
-            $content .= '<option value="'.$val.'"'.$sel.'>'.getModuleName($val).'</option>';
+            $content .= getAdminOption($val, getModuleName($val), $modul == $val);
         }
     }
-    $rows .= getAdminFormRow(_MODUL.':', '<select name="modul" class="sl_form"><option value="">'._NO.'</option>'.$content.'</select>');
-    $rows .= getAdminFormRow(_TITLE.' / '._POLLTITLE.':', '<input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.' / '._POLLTITLE.'" required>');
     $quest = '';
     $i = 0;
     while ($i < $conf['voting']['answ']) {
         $a = $i + 1;
         $question = $body[$i] ?? '';
         $ansval = $answer[$i] ?? '';
-        $class = ($i != 0 && $question == '') ? ' class="sl_none"' : '';
-        $quest .= '<table id="vot'.$i.'"'.$class.'><tr><td><a OnClick="HideShow(\'vot'.$a.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._POLLEACH.' - '.$a.':</a></td><td class="sl_form"><input type="text" name="body[]" value="'.filterText($question).'" style="width: 375px;" class="sl_field" placeholder="'._POLLEACH.' - '.$a.'"> '._VOTES.': <input type="text" name="answer[]" value="'.filterText($ansval).'" style="width: 40px;" class="sl_field" placeholder="'._VOTES.'"></td></tr></table>';
+        $quest .= $tpl->getHtmlFrag('admin-voting-answer-row', [
+            'add_label' => _ADD,
+            'answer_value' => filterText($ansval),
+            'block_id' => 'vot'.$i,
+            'hidden' => $i != 0 && $question == '',
+            'index_text' => (string)$a,
+            'next_id' => 'vot'.$a,
+            'poll_each_label' => _POLLEACH.' - '.$a.':',
+            'question_placeholder' => _POLLEACH.' - '.$a,
+            'question_value' => filterText($question),
+            'votes_label' => _VOTES.':',
+        ]);
         $i++;
     }
-    $rows .= getAdminFormWide($quest);
-    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
-    $rows .= getAdminFormRow(_ENDDATE.':', datetime(1, 'enddate', $enddate, 16, 'sl_form'));
     $stat = getAdminSelect('status',
         getAdminOption('1', _VCLOSED, $status == '1') .
         getAdminOption('0', _VDEACT, $status == '0'));
-    $rows .= getAdminFormRow(_AFTEREXPIRATION.':', $stat);
     $type = getAdminSelect('typ',
         getAdminOption('1', _VOPEN, $typ == '1') .
         getAdminOption('0', _VCLOSE, $typ == '0'));
-    $rows .= getAdminFormRow(_TYPE.':', $type);
-    if ($conf['multilingual'] == 1) $rows .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language($lang).'</select>');
-    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
-    $rows .= getAdminFormRow(_MULTI, radio_form($multi, 'multi'));
-    $rows .= getAdminFormWide(ad_save('id', $id, 'save', 1), '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-voting-add-rows', [
+        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
+        'acomm_label' => _COMMENTS.':',
+        'answers_html' => $quest,
+        'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
+        'date_label' => _CHNGSTORY.':',
+        'enddate_html' => datetime(1, 'enddate', $enddate, 16, 'sl_form'),
+        'enddate_label' => _ENDDATE.':',
+        'lang_html' => $conf['multilingual'] == 1 ? getAdminSelect('lang', language($lang), 'sl_form') : '',
+        'lang_label' => _LANGUAGE.':',
+        'modul_html' => getAdminSelect('modul', $content, 'sl_form'),
+        'modul_label' => _MODUL.':',
+        'multi_html' => radio_form($multi, 'multi'),
+        'multi_label' => _MULTI,
+        'save_html' => ad_save('id', $id, 'save', 1),
+        'show_lang' => $conf['multilingual'] == 1,
+        'status_html' => $stat,
+        'status_label' => _AFTEREXPIRATION.':',
+        'title_label' => _TITLE.' / '._POLLTITLE.':',
+        'title_value' => $title,
+        'type_html' => $type,
+        'type_label' => _TYPE.':',
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -180,12 +207,12 @@ function config(): void {
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $bval = (string)($conf['voting']['block'] ?? '0');
-    $block_sel = '<select name="block" class="sl_conf">'
-        .'<option value="0"'.($bval === '0' ? ' selected' : '').'>'._VLASTACT.'</option>'
-        .'<option value="1"'.($bval === '1' ? ' selected' : '').'>'._VLASTCLO.'</option>'
-        .'<option value="2"'.($bval === '2' ? ' selected' : '').'>'._VRANACT.'</option>'
-        .'<option value="3"'.($bval === '3' ? ' selected' : '').'>'._VRANCLO.'</option>'
-        .'</select>';
+    $block_sel = getAdminSelect('block',
+        getAdminOption('0', _VLASTACT, $bval === '0') .
+        getAdminOption('1', _VLASTCLO, $bval === '1') .
+        getAdminOption('2', _VRANACT, $bval === '2') .
+        getAdminOption('3', _VRANCLO, $bval === '3'),
+        'sl_conf');
     $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'voting',
@@ -243,6 +270,5 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 
 

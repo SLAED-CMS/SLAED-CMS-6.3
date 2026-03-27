@@ -106,39 +106,40 @@ function config(): void {
 
     $source = chlogSource((string) ($conf['changelog']['source'] ?? 'local'));
     $ghdisplay = $source === 'github' ? '' : ' style="display: none;"';
-
-    $srcsel = '<select name="source" class="sl_conf" onchange="toggleGithubFields(this.value)">'
-        .'<option value="local"'.($source === 'local' ? ' selected' : '').'>'._CHLOG_SOURCE_LOCAL.'</option>'
-        .'<option value="github"'.($source === 'github' ? ' selected' : '').'>'._CHLOG_SOURCE_GITHUB.'</option>'
-        .'</select>';
-
-    $rows = getAdminFormRow(_CHLOG_SOURCE.':<div class="sl_small">'._CHLOG_SOURCE_TITLE.'</div>', $srcsel);
-    $rows .= '<tr class="chlog-gh-row"'.$ghdisplay.'><td>'._CHLOG_GH_OWNER.':</td><td><input type="text" name="ghowner" value="'.chlogEsc($conf['changelog']['ghowner'] ?? '').'" class="sl_conf" placeholder="'._CHLOG_GH_OWNER.'" autocomplete="off"></td></tr>';
-    $rows .= '<tr class="chlog-gh-row"'.$ghdisplay.'><td>'._CHLOG_GH_REPO.':</td><td><input type="text" name="ghrepo" value="'.chlogEsc($conf['changelog']['ghrepo'] ?? '').'" class="sl_conf" placeholder="'._CHLOG_GH_REPO.'" autocomplete="off"></td></tr>';
-    $rows .= '<tr class="chlog-gh-row"'.$ghdisplay.'><td>'._CHLOG_GH_TOKEN.':</td><td><input type="password" name="ghtoken" value="'.chlogEsc($conf['changelog']['ghtoken'] ?? '').'" class="sl_conf" placeholder="'._CHLOG_GH_TOKEN.'" autocomplete="new-password"></td></tr>';
-    $rows .= getAdminFormRow(_CHLOG_LIMIT.':<div class="sl_small">'._CHLOG_STATS_TITLE.'</div>', '<input type="number" name="limit" value="'.($conf['changelog']['limit'] ?? 50).'" class="sl_conf" min="10" max="500" required>');
-    $rows .= getAdminFormRow(_CHLOG_PER_PAGE.':', '<input type="number" name="perpage" value="'.($conf['changelog']['perpage'] ?? 10).'" class="sl_conf" min="5" max="50" required>');
-    $rows .= getAdminFormRow(_CHLOG_CACHE_TTL.':', '<input type="number" name="cachettl" value="'.($conf['changelog']['cachettl'] ?? 900).'" class="sl_conf" min="0" max="3600" required>');
-    $rows .= getAdminFormRow(_CHLOG_GROUP_DATE, radio_form($conf['changelog']['grpdate'] ?? 0, 'grpdate'));
-    $rows .= getAdminFormRow(_CHLOG_SHOW_FILES, radio_form($conf['changelog']['showfile'] ?? 0, 'showfile'));
-    $rows .= getAdminFormRow(_CHLOG_SHOW_STATS, radio_form($conf['changelog']['showstat'] ?? 0, 'showstat'));
-    $rows .= getAdminFormRow(_CHLOG_EXPORT, radio_form($conf['changelog']['exporten'] ?? 0, 'exporten'));
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
-
     $hide = '<input type="hidden" name="name" value="changelog">'
         .'<input type="hidden" name="op" value="configsave">'
         .'<input type="hidden" name="token" value="'.chlogEsc(getSiteToken('changelog')).'">';
-
-    $script = '<script>
-    function toggleGithubFields(source) {
-        var rows = document.querySelectorAll(".chlog-gh-row");
-        for (var i = 0; i < rows.length; i++) {
-            rows[i].style.display = (source === "github") ? "" : "none";
-        }
-    }
-    </script>';
-
-    $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf').$script);
+    $cont .= getAdminBox(getAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-chlog-config-rows', [
+        'cachettl_label' => _CHLOG_CACHE_TTL.':',
+        'cachettl_value' => (string)($conf['changelog']['cachettl'] ?? 900),
+        'exporten_html' => radio_form($conf['changelog']['exporten'] ?? 0, 'exporten'),
+        'exporten_label' => _CHLOG_EXPORT,
+        'gh_owner_label' => _CHLOG_GH_OWNER.':',
+        'gh_owner_value' => chlogEsc($conf['changelog']['ghowner'] ?? ''),
+        'gh_repo_label' => _CHLOG_GH_REPO.':',
+        'gh_repo_value' => chlogEsc($conf['changelog']['ghrepo'] ?? ''),
+        'gh_token_label' => _CHLOG_GH_TOKEN.':',
+        'gh_token_value' => chlogEsc($conf['changelog']['ghtoken'] ?? ''),
+        'ghdisplay_attr' => $ghdisplay,
+        'grpdate_html' => radio_form($conf['changelog']['grpdate'] ?? 0, 'grpdate'),
+        'grpdate_label' => _CHLOG_GROUP_DATE,
+        'limit_hint' => _CHLOG_STATS_TITLE,
+        'limit_label' => _CHLOG_LIMIT.':',
+        'limit_value' => (string)($conf['changelog']['limit'] ?? 50),
+        'perpage_label' => _CHLOG_PER_PAGE.':',
+        'perpage_value' => (string)($conf['changelog']['perpage'] ?? 10),
+        'save_label' => _SAVECHANGES,
+        'showfile_html' => radio_form($conf['changelog']['showfile'] ?? 0, 'showfile'),
+        'showfile_label' => _CHLOG_SHOW_FILES,
+        'showstat_html' => radio_form($conf['changelog']['showstat'] ?? 0, 'showstat'),
+        'showstat_label' => _CHLOG_SHOW_STATS,
+        'source_hint' => _CHLOG_SOURCE_TITLE,
+        'source_html' => $tpl->getHtmlFrag('admin-chlog-source-select', [
+            'is_github' => $source === 'github',
+            'is_local' => $source === 'local',
+        ]),
+        'source_label' => _CHLOG_SOURCE.':',
+    ]), $hide, 'sl_table_conf').$tpl->getHtmlFrag('admin-chlog-config-script'));
     echo $cont;
     setFoot();
 }
@@ -243,4 +244,3 @@ switch ($op) {
     case 'export': export(); break;
     case 'info': info(); break;
 }
-

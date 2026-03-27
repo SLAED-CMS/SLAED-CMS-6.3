@@ -13,21 +13,28 @@ function newsletter(): void {
     $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._NLEND.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-newsletter-list-head', [
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'nlend_label' => _NLEND,
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+        ]);
         $rows = '';
         while ([$id, $title, $mails, $sended, $time, $endtime] = $db->getSqlRow($result)) {
             $sendtime = ($endtime > $time) ? strtotime($endtime) - strtotime($time) : 0;
             $active = ($mails && $sended && $conf['newsletter']['active']) ? 1 : 0;
             $acts = adminMenuItems([
-                '<a href="'.$afile.'.php?name=newsletter&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                adminLinkAction($afile.'.php?name=newsletter&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id, _DELETE.' &quot;'.$title.'&quot;?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.getDuration($sendtime)).$title.'</td>'
-            .'<td>'.$sended.' '._NLUSER.'</td>'
-            .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-newsletter-list-row', [
+                'actions_html' => $acts,
+                'id_text' => (string)$id,
+                'send_text' => $sended.' '._NLUSER,
+                'status_html' => ad_status('', $active),
+                'title_html' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.getDuration($sendtime)).$title,
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
     } else {
@@ -54,11 +61,9 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
-    $sel = ($mails == 1) ? ' selected' : '';
-    $option = '<option value="1"'.$sel.'>'._MASSMAIL.' - '.$num.'</option>';
+    $option = getAdminOption('1', _MASSMAIL.' - '.$num, $mails == 1);
     [$num2] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users WHERE newslet = 1'));
-    $sel = ($mails == 2) ? ' selected' : '';
-    $option .= '<option value="2"'.$sel.'>'._ANEWSLETTER.' - '.$num2.'</option>';
+    $option .= getAdminOption('2', _ANEWSLETTER.' - '.$num2, $mails == 2);
     $result3 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra = 1 ORDER BY id');
     if ($db->getSqlRowCount($result3) > 0) {
         while ([$grid, $grname, $points] = $db->getSqlRow($result3)) {
@@ -69,8 +74,7 @@ function add(): void {
                 $email3 .= $user_email.',';
                 $num3++;
             }
-            $sel = ($email3 == $mails) ? ' selected' : '';
-            $option .= '<option value="'.$email3.'"'.$sel.'>'._SPEC_GROUP.' "'.$grname.'" - '.$num3.'</option>';
+            $option .= getAdminOption($email3, _SPEC_GROUP.' "'.$grname.'" - '.$num3, $email3 == $mails);
         }
     }
     $result5 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 ORDER BY id');
@@ -83,8 +87,7 @@ function add(): void {
                 $email4 .= $user_email.',';
                 $num4++;
             }
-            $sel = ($email4 == $mails) ? ' selected' : '';
-            $option .= '<option value="'.$email4.'"'.$sel.'>'._GROUP.' "'.$grname.'" - '.$num4.'</option>';
+            $option .= getAdminOption($email4, _GROUP.' "'.$grname.'" - '.$num4, $email4 == $mails);
         }
     }
     if (is_active('money')) {
@@ -101,8 +104,7 @@ function add(): void {
                     $num5++;
                 }
             }
-            $sel = ($email5 == $mails) ? ' selected' : '';
-            $option .= '<option value="'.$email5.'"'.$sel.'>'._CLIENTSM.' "'._MONEY.'" - '.$num5.'</option>';
+            $option .= getAdminOption($email5, _CLIENTSM.' "'._MONEY.'" - '.$num5, $email5 == $mails);
         }
     }
     if (is_active('order')) {
@@ -119,8 +121,7 @@ function add(): void {
                     $num6++;
                 }
             }
-            $sel = ($email6 == $mails) ? ' selected' : '';
-            $option .= '<option value="'.$email6.'"'.$sel.'>'._CLIENTSM.' "'._ORDER.'" - '.$num6.'</option>';
+            $option .= getAdminOption($email6, _CLIENTSM.' "'._ORDER.'" - '.$num6, $email6 == $mails);
         }
     }
     if (is_active('shop')) {
@@ -137,8 +138,7 @@ function add(): void {
                     $num7++;
                 }
             }
-            $sel = ($email7 == $mails) ? ' selected' : '';
-            $option .= '<option value="'.$email7.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7.'</option>';
+            $option .= getAdminOption($email7, _CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7, $email7 == $mails);
         }
         $result10 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE status = 1');
         if ($db->getSqlRowCount($result10) > 0) {
@@ -153,8 +153,7 @@ function add(): void {
                     $num8++;
                 }
             }
-            $sel = ($email8 == $mails) ? ' selected' : '';
-            $option .= '<option value="'.$email8.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8.'</option>';
+            $option .= getAdminOption($email8, _CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8, $email8 == $mails);
         }
         $result11 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE status = 0');
         if ($db->getSqlRowCount($result11) > 0) {
@@ -169,16 +168,19 @@ function add(): void {
                     $num9++;
                 }
             }
-            $sel = ($email9 == $mails) ? ' selected' : '';
-            $option .= '<option value="'.$email9.'"'.$sel.'>'._CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9.'</option>';
+            $option .= getAdminOption($email9, _CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9, $email9 == $mails);
         }
     }
     $hide = '<input type="hidden" name="nid" value="'.$nid.'"><input type="hidden" name="name" value="newsletter"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save">';
-    $rows = '';
-    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="50" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'body', $body, 'all', '10', _TEXT, '1'));
-    $rows .= getAdminFormRow(_NLWHERE.':', '<select name="mails" class="sl_form">'.$option.'</select>');
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-newsletter-add-rows', [
+        'body_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'),
+        'mails_html' => getAdminSelect('mails', $option, 'sl_form'),
+        'mails_label' => _NLWHERE.':',
+        'save_label' => _SAVE,
+        'text_label' => _TEXT.':',
+        'title_label' => _TITLE.':',
+        'title_value' => $title,
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -275,4 +277,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-

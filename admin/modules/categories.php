@@ -6,10 +6,6 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-function getCategoriesSearch(string $modul): string {
-    global $afile;
-    return getAdminSearchBox('<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="categories">'._MODUL.': '.cat_modul('modul', '', $modul, 1).'</form>');
-}
 
 function categories(): void {
     global $tpl;
@@ -42,20 +38,21 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 1, 'subtab' => 1, 'sub' => getCategoriesSearch($modul), 'id' => 'add']);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
     $hint = _ACESSI.' '._CTRLINFO;
-    $files = is_dir($path) ? scandir($path) : [];
-    $imgs = [];
-    foreach ($files as $entry) {
-        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != 'no.png') $imgs[] = '<option value="'.$path.$entry.'">'.$entry.'</option>';
-    }
-    asort($imgs);
-    $opts = '<option value="'.$path.'no.png">'._NO.'</option>'.implode('', $imgs);
-    $rows0 = getAdminFormRow(_TITLE.':', '<input type="text" name="title" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows0 .= getAdminFormRow(_DESCRIPTION.':', '<textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'"></textarea>');
-    if ($conf['multilingual'] == 1) $rows0 .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language().'</select>');
-    $rows0 .= getAdminFormRow(_MODUL.':', cat_modul('modul', 'sl_form', $modul));
-    $rows0 .= getAdminFormRow(_IMG.':', '<select name="imgcat" id="img_replace" class="sl_form">'.$opts.'</select>');
-    $rows0 .= getAdminFormRow(_PREVIEW.':', '<img src="'.$path.'no.png" id="picture" alt="'._IMG.'">');
-    $rows0 .= getAdminFormRow(_ACTIVATE2, radio_form('', 'status'));
+    $rows0 = $tpl->getHtmlFrag('admin-categories-add-rows', [
+        'activate_html' => radio_form('', 'status'),
+        'activate_label' => _ACTIVATE2,
+        'description_label' => _DESCRIPTION.':',
+        'description_placeholder' => _DESCRIPTION,
+        'img_html' => getCategoryImageSelect($path),
+        'img_label' => _IMG.':',
+        'lang_html' => $conf['multilingual'] == 1 ? getAdminFormRow(_LANGUAGE.':', getAdminSelect('lang', language(), 'sl_form')) : '',
+        'modul_html' => cat_modul('modul', 'sl_form', $modul),
+        'modul_label' => _MODUL.':',
+        'preview_html' => getCategoryImgPreview($path.'no.png'),
+        'preview_label' => _PREVIEW.':',
+        'title_label' => _TITLE.':',
+        'title_placeholder' => _TITLE,
+    ]);
     $rows1 = getCatPermRow(_CAN.' '._AUTH_VIEW, $hint, catacess('pview', 'sl_form', '', 0));
     $rows1 .= getCatPermRow(_CAN.' '._AUTH_READ, $hint, catacess('pread', 'sl_form', '', 0));
     $rows2 = getCatPermRow(_CAN.' '._AUTH_POST, $hint, catacess('ppost', 'sl_form', '', 0));
@@ -85,21 +82,23 @@ function subadd(): void {
         $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 2, 'subtab' => 1, 'sub' => getCategoriesSearch($modul), 'id' => 'subadd']);
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
         $hint = _ACESSI.' '._CTRLINFO;
-        $files = is_dir($path) ? scandir($path) : [];
-        $imgs = [];
-        foreach ($files as $entry) {
-            if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != 'no.png') $imgs[] = '<option value="'.$path.$entry.'">'.$entry.'</option>';
-        }
-        asort($imgs);
-        $opts = '<option value="'.$path.'no.png">'._NO.'</option>'.implode('', $imgs);
-        $rows0 = getAdminFormRow(_TITLE.':', '<input type="text" name="title" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
-        $rows0 .= getAdminFormRow(_DESCRIPTION.':', '<textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'"></textarea>');
-        if ($conf['multilingual'] == 1) $rows0 .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language().'</select>');
-        $rows0 .= getAdminFormRow(_MODUL.':', cat_modul('modul', 'sl_form', $modul));
-        $rows0 .= getAdminFormRow(_CATEGORY.':', getcat($modul, 0, 'cid', 'sl_form'));
-        $rows0 .= getAdminFormRow(_IMG.':', '<select name="imgcat" id="img_replace" class="sl_form">'.$opts.'</select>');
-        $rows0 .= getAdminFormRow(_PREVIEW.':', '<img src="'.$path.'no.png" id="picture" alt="'._IMG.'">');
-        $rows0 .= getAdminFormRow(_ACTIVATE2, radio_form('', 'status'));
+        $rows0 = $tpl->getHtmlFrag('admin-categories-subadd-rows', [
+            'activate_html' => radio_form('', 'status'),
+            'activate_label' => _ACTIVATE2,
+            'category_html' => getcat($modul, 0, 'cid', 'sl_form'),
+            'category_label' => _CATEGORY.':',
+            'description_label' => _DESCRIPTION.':',
+            'description_placeholder' => _DESCRIPTION,
+            'img_html' => getCategoryImageSelect($path),
+            'img_label' => _IMG.':',
+            'lang_html' => $conf['multilingual'] == 1 ? getAdminFormRow(_LANGUAGE.':', getAdminSelect('lang', language(), 'sl_form')) : '',
+            'modul_html' => cat_modul('modul', 'sl_form', $modul),
+            'modul_label' => _MODUL.':',
+            'preview_html' => getCategoryImgPreview($path.'no.png'),
+            'preview_label' => _PREVIEW.':',
+            'title_label' => _TITLE.':',
+            'title_placeholder' => _TITLE,
+        ]);
         $rows1 = getCatPermRow(_CAN.' '._AUTH_VIEW, $hint, catacess('pview', 'sl_form', '', 0));
         $rows1 .= getCatPermRow(_CAN.' '._AUTH_READ, $hint, catacess('pread', 'sl_form', '', 0));
         $rows2 = getCatPermRow(_CAN.' '._AUTH_POST, $hint, catacess('ppost', 'sl_form', '', 0));
@@ -132,8 +131,11 @@ function addedit(): void {
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'sub' => getCategoriesSearch($modul)]);
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
         $hide = '<input type="hidden" name="name" value="categories"><input type="hidden" name="op" value="edit">';
-        $rows = getAdminFormRow(_CATEGORY.':', getcat($modul, 0, 'cid', 'sl_form'));
-        $rows .= getAdminFormWide('<input type="submit" value="'._EDIT.'" class="sl_but_blue">', '', 'sl_center');
+        $rows = $tpl->getHtmlFrag('admin-categories-editpick-rows', [
+            'category_html' => getcat($modul, 0, 'cid', 'sl_form'),
+            'category_label' => _CATEGORY.':',
+            'edit_label' => _EDIT,
+        ]);
         $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, $hide));
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
@@ -153,29 +155,26 @@ function edit(): void {
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'subtab' => 1, 'sub' => getCategoriesSearch($modul), 'id' => 'edit']);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
     $hint = _ACESSI.' '._CTRLINFO;
-    $files = is_dir($path) ? scandir($path) : [];
-    $imgs = [];
-    foreach ($files as $entry) {
-        if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry) && $entry != 'no.png') {
-            $sel = ($imgcat == $entry) ? ' selected' : '';
-            $imgs[] = '<option value="'.$path.$entry.'"'.$sel.'>'.$entry.'</option>';
-        }
-    }
     $imgcat = (!$imgcat) ? 'no.png' : $imgcat;
-    asort($imgs);
-    $opts = '<option value="'.$path.'no.png">'._NO.'</option>'.implode('', $imgs);
-    $rows0 = getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows0 .= getAdminFormRow(_DESCRIPTION.':', '<textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'">'.$desc.'</textarea>');
-    $rows0 .= getAdminFormRow(_MODUL.':', cat_modul('modul', 'sl_form', $modul));
-    if ($conf['multilingual'] == 1) $rows0 .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language($lang).'</select>');
-    if ($parent != 0) {
-        $rows0 .= getAdminFormRow(_CATEGORY.':', getcat($modul, $parent, 'parent', 'sl_form'));
-    } else {
-        $rows0 .= '<input type="hidden" name="parent" value="0">';
-    }
-    $rows0 .= getAdminFormRow(_IMG.':', '<select name="imgcat" id="img_replace" class="sl_form">'.$opts.'</select>');
-    $rows0 .= getAdminFormRow(_PREVIEW.':', '<img src="'.$path.$imgcat.'" id="picture" alt="'._IMG.'">');
-    $rows0 .= getAdminFormRow(_ACTIVATE2, radio_form($status, 'status'));
+    $rows0 = $tpl->getHtmlFrag('admin-categories-edit-rows', [
+        'activate_html' => radio_form($status, 'status'),
+        'activate_label' => _ACTIVATE2,
+        'category_html' => $parent != 0 ? getAdminFormRow(_CATEGORY.':', getcat($modul, $parent, 'parent', 'sl_form')) : '',
+        'description_label' => _DESCRIPTION.':',
+        'description_placeholder' => _DESCRIPTION,
+        'description_value' => $desc,
+        'hidden_parent_html' => $parent == 0 ? '<input type="hidden" name="parent" value="0">' : '',
+        'img_html' => getCategoryImageSelect($path, $imgcat === 'no.png' ? '' : $imgcat),
+        'img_label' => _IMG.':',
+        'lang_html' => $conf['multilingual'] == 1 ? getAdminFormRow(_LANGUAGE.':', getAdminSelect('lang', language($lang), 'sl_form')) : '',
+        'modul_html' => cat_modul('modul', 'sl_form', $modul),
+        'modul_label' => _MODUL.':',
+        'preview_html' => getCategoryImgPreview($path.$imgcat),
+        'preview_label' => _PREVIEW.':',
+        'title_label' => _TITLE.':',
+        'title_placeholder' => _TITLE,
+        'title_value' => $title,
+    ]);
     $rows1 = getCatPermRow(_CAN.' '._AUTH_VIEW, $hint, catacess('pview', 'sl_form', $pview, 0));
     $rows1 .= getCatPermRow(_CAN.' '._AUTH_READ, $hint, catacess('pread', 'sl_form', $pread, 0));
     $rows2 = getCatPermRow(_CAN.' '._AUTH_POST, $hint, catacess('ppost', 'sl_form', $ppost, 0));
@@ -289,5 +288,4 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-
 

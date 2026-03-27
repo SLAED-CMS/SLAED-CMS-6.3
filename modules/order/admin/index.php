@@ -21,23 +21,31 @@ function order(): void {
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
-        $head = '<th>'._ID.'</th><th>'._EMAIL.'</th><th>'._IP.'</th><th>'._DATE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-order-list-head', [
+            'date_label' => _DATE,
+            'email_label' => _EMAIL,
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'ip_label' => _IP,
+            'status_label' => _STATUS,
+        ]);
         $rows = '';
         while ([$id, $email, $info, $note, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $infos = fields_out($info, 'order');
             $acts = adminMenuItems([
                 ad_status($afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status),
-                '<a href="'.$afile.'.php?name=order&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=order&amp;op=delete&amp;id='.$id.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'._ID.': '.$id.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                adminLinkAction($afile.'.php?name=order&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=order&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email).'</td>'
-            .'<td>'.user_geo_ip($ip, 4).'</td>'
-            .'<td>'.format_time($date, _TIMESTRING).'</td>'
-            .'<td>'.ad_status('', $status).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-order-list-row', [
+                'actions_html' => $acts,
+                'date_text' => format_time($date, _TIMESTRING),
+                'email_html' => title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
+                'id_text' => (string)$id,
+                'ip_html' => user_geo_ip($ip, 4),
+                'status_html' => ad_status('', $status),
+            ]));
             $r--;
         }
         $cont .= getAdminTable($head, $rows);
@@ -69,12 +77,17 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
     $hide = '<input type="hidden" name="name" value="order">';
-    $rows = '';
-    $rows .= getAdminFormRow(_OR_9.':', '<input type="email" name="email" value="'.$email.'" maxlength="255" class="sl_form" placeholder="'._OR_9.'" required>');
-    $rows .= fields_in($field, 'order');
-    $rows .= getAdminFormRow(_OR_10.':', '<textarea name="note" cols="65" rows="5" class="sl_form" placeholder="'._OR_10.'">'.$note.'</textarea>');
-    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
-    $rows .= getAdminFormWide(ad_save('mid', $mid, 'save'), '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-order-add-rows', [
+        'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
+        'date_label' => _CHNGSTORY.':',
+        'email_label' => _OR_9.':',
+        'email_value' => $email,
+        'fields_html' => fields_in($field, 'order'),
+        'note_label' => _OR_10.':',
+        'note_placeholder' => _OR_10,
+        'note_value' => $note,
+        'save_html' => ad_save('mid', $mid, 'save'),
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -198,4 +211,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-

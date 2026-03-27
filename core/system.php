@@ -1988,18 +1988,18 @@ function setHead(array $seo = []): void {
         if (!empty($conf['agraph']) && !empty($conf['graph'])) {
             $strmeta .= str_replace($seofrom, $seoto, $conf['graph']);
         }
-        $strlink .= '<link rel="shortcut icon" href="templates/'.$theme.'/favicon.png">'."\n";
-        if (strpos($conf['homeurl'], getHost()) !== false) $strlink .= '<link rel="canonical" href="'.$purl.'">'."\n";
+        $strlink .= getHtmlHeadLink('shortcut icon', 'templates/'.$theme.'/favicon.png')."\n";
+        if (strpos($conf['homeurl'], getHost()) !== false) $strlink .= getHtmlHeadLink('canonical', $purl)."\n";
         if ($conf['rss']['act']) {
             $fieldc = explode('||', $conf['rss']['rss']);
             foreach ($fieldc as $val) {
                 if ($val != '') {
                     $out = explode('|', $val);
-                    if ($out[0] != '0' && $out[1] != '0' && $out[2] == '1') $strlink .= '<link rel="alternate" type="application/rss+xml" href="'.$out[1].'" title="'.$out[0].'">'."\n";
+                    if ($out[0] != '0' && $out[1] != '0' && $out[2] == '1') $strlink .= getHtmlHeadLink('alternate', $out[1], 'application/rss+xml', $out[0])."\n";
                 }
             }
         }
-        $strlink .= '<link rel="search" type="application/opensearchdescription+xml" href="'.$conf['homeurl'].'/index.php?go=search" title="'.$conf['sitename'].' - '._SEARCH.'">'."\n";
+        $strlink .= getHtmlHeadLink('search', $conf['homeurl'].'/index.php?go=search', 'application/opensearchdescription+xml', $conf['sitename'].' - '._SEARCH)."\n";
     } else {
         $strmeta .= '<title>'.$conf['sitename'].' '.$sep.' '._ADMIN.'</title>'."\n";
     }
@@ -2038,7 +2038,7 @@ function setHead(array $seo = []): void {
     }
     $surl = addSchedulerTrigger();
     if ($surl !== '') {
-        $script .= '<script>window.addEventListener("load",function(){window.setTimeout(function(){fetch("'.$surl.'",{credentials:"same-origin"});},1);});</script>';
+        $script .= getHtmlScriptInline('window.addEventListener("load",function(){window.setTimeout(function(){fetch("'.$surl.'",{credentials:"same-origin"});},1);});');
     }
     $login = '';
     if (is_user()) {
@@ -2921,7 +2921,7 @@ function doScript(): string {
     $array = array_values(array_unique($array));
     if (!defined('ADMIN_FILE')) {
         if ($conf['cache_script'] && file_exists($sfile) && filesize($sfile) != 0 && (time() - $conf['cache_t']) < filemtime($sfile)) {
-            $cont = ($conf['script_h']) ? file_get_contents($sfile) : '<script '.$async.'src="index.php?go=script"></script>';
+            $cont = ($conf['script_h']) ? file_get_contents($sfile) : getHtmlScriptSrc('index.php?go=script', $async);
         } else {
             foreach ($array as $file) {
                 if (file_exists($file)) {
@@ -2929,14 +2929,14 @@ function doScript(): string {
                         $cont = file_get_contents($file);
                         $arr[] = ($conf['script_c']) ? getCompressCode($cont) : $cont;
                     } else {
-                        $arr[] = '<script '.$async.'src="'.$file.'"></script>';
+                        $arr[] = getHtmlScriptSrc($file, $async);
                     }
                 }
             }
-            $cont = ($conf['script_h']) ? '<script>'.implode(' ', $arr).'</script>' : (($conf['cache_script']) ? implode(' ', $arr) : implode("\n", $arr));
+            $cont = ($conf['script_h']) ? getHtmlScriptInline(implode(' ', $arr)) : (($conf['cache_script']) ? implode(' ', $arr) : implode("\n", $arr));
             if ($conf['cache_script']) {
                 file_put_contents($sfile, $cont);
-                $cont = (file_exists($sfile) && !$conf['script_h']) ? '<script '.$async.'src="index.php?go=script"></script>' : $cont;
+                $cont = (file_exists($sfile) && !$conf['script_h']) ? getHtmlScriptSrc('index.php?go=script', $async) : $cont;
             }
         }
         if (file_exists('config/header.php')) {
@@ -2947,7 +2947,7 @@ function doScript(): string {
     } else {
         foreach ($array as $file) {
             if (file_exists($file)) {
-                $arr[] = '<script '.$async.'src="'.$file.'"></script>';
+                $arr[] = getHtmlScriptSrc($file, $async);
             }
         }
         $cont = implode("\n", $arr);
@@ -2968,7 +2968,7 @@ function doCss(): string {
         if (!defined('ADMIN_FILE')) {
             $cfile = 'config/cache/'.md5($theme.'style').'.txt';
             if ($conf['cache_css'] && file_exists($cfile) && filesize($cfile) != 0 && (time() - $conf['cache_t']) < filemtime($cfile)) {
-                $cont = ($conf['css_h']) ? file_get_contents($cfile) : '<link rel="stylesheet" href="index.php?go=css">';
+                $cont = ($conf['css_h']) ? file_get_contents($cfile) : getHtmlCssLink('index.php?go=css');
             } else {
                 foreach ($array as $file) {
                     if (file_exists($file)) {
@@ -2991,20 +2991,20 @@ function doCss(): string {
                             if ($conf['css_e']) $cont = preg_replace_callback('#url\((.*?\.(png|jpg|jpeg|gif|svg|bmp))\)#i', 'getImgEncode', $cont);
                             $arr[] = ($conf['css_c']) ? getCompressCss($cont) : $cont;
                         } else {
-                            $arr[] = '<link rel="stylesheet" href="'.$file.'">';
+                            $arr[] = getHtmlCssLink($file);
                         }
                     }
                 }
-                $cont = ($conf['css_h']) ? '<style type="text/css">'.implode(' ', $arr).'</style>' : (($conf['cache_css']) ? implode(' ', $arr) : implode("\n", $arr));
+                $cont = ($conf['css_h']) ? getHtmlCssInline(implode(' ', $arr)) : (($conf['cache_css']) ? implode(' ', $arr) : implode("\n", $arr));
                 if ($conf['cache_css']) {
                     file_put_contents($cfile, $cont);
-                    $cont = (file_exists($cfile) && !$conf['css_h']) ? '<link rel="stylesheet" href="index.php?go=css">' : $cont;
+                    $cont = (file_exists($cfile) && !$conf['css_h']) ? getHtmlCssLink('index.php?go=css') : $cont;
                 }
             }
         } else {
             foreach ($array as $file) {
                 if (file_exists($file)) {
-                    $arr[] = '<link rel="stylesheet" href="'.$file.'">';
+                    $arr[] = getHtmlCssLink($file);
                 }
             }
             $cont = implode("\n", $arr);
@@ -3237,8 +3237,8 @@ function getNetworks(): string {
 function getCaptcha(int $id): string {
  global $conf;
     if ($conf['gfx_chk'] >= '1' && ($id == 2 || ($id == 1 && !is_user()))) {
-        $cont = '<script src="https://www.google.com/recaptcha/api.js?render='.$conf['capkey'].'"></script>
-        <script>grecaptcha.ready(function() { grecaptcha.execute("'.$conf['capkey'].'", { action: "homepage" }) .then(function(token) { document.getElementById("recaptcha").value = token; }); });</script>';
+        $cont = getHtmlScriptSrc('https://www.google.com/recaptcha/api.js?render='.$conf['capkey'])
+            ."\n        ".getHtmlScriptInline('grecaptcha.ready(function() { grecaptcha.execute("'.$conf['capkey'].'", { action: "homepage" }) .then(function(token) { document.getElementById("recaptcha").value = token; }); });');
         $cont .= '<input type="hidden" id="recaptcha" name="recaptcha">';
     } else {
         $cont = '';
@@ -3739,13 +3739,13 @@ function datetime(int $id, string $name, string $time, int $max, string $class):
         $typ = 'datepicker';
     }
     if (!isset($jscript)) {
-        $cont = '<script src="plugins/jquery/ui/jquery-ui-timepicker.js"></script>'
-        .'<script src="plugins/jquery/ui/langs/'.substr(_LOCALE, 0, 2).'.js"></script>';
+        $cont = getHtmlScriptSrc('plugins/jquery/ui/jquery-ui-timepicker.js')
+        .getHtmlScriptSrc('plugins/jquery/ui/langs/'.substr(_LOCALE, 0, 2).'.js');
         $jscript = 1;
     } else {
         $cont = '';
     }
-    $cont .= "<script>$(function() { $('#".$name."').".$typ.'({ changeMonth: true, changeYear: true, '.$format."}, $.timepicker.regional['".substr(_LOCALE, 0, 2)."']); });</script>"
+    $cont .= getHtmlScriptInline("$(function() { $('#".$name."').".$typ.'({ changeMonth: true, changeYear: true, '.$format."}, $.timepicker.regional['".substr(_LOCALE, 0, 2)."']); });")
     .'<input type="text" id="'.$name.'" name="'.$name.'" value="'.$time.'" maxlength="'.$max.'" class="'.$class.'">';
     return $cont;
 }
@@ -4876,7 +4876,8 @@ function stream(string $url, string $name): void {
 # Anti spam
 function anti_spam(string $mail): string {
     preg_match('#^(.*?)(@)(.*?)$#', $mail, $info);
-    $cont = "<script>\"mysi\".AddMail('".$info[1]."', '".$info[3]."');</script><noscript>".$info[1].'<!-- slaed --><span>&#64;</span><!-- slaed -->'.$info[3].'</noscript>';
+    $cont = getHtmlScriptInline("\"mysi\".AddMail('".$info[1]."', '".$info[3]."');")
+        .'<noscript>'.$info[1].'<!-- slaed --><span>&#64;</span><!-- slaed -->'.$info[3].'</noscript>';
     return $cont;
 }
 
@@ -5352,14 +5353,7 @@ function get_user_search(string $id, string $val, int $maxlength, string $extraC
  global $conf;
     $class = $extraClass ? 'sl_field '.$extraClass : 'sl_field';
     $req   = $required ? ' required' : '';
-    $cont = '<script>
-    $(function() {
-        $("#'.$id.'").autocomplete({
-            source: "index.php?go=1&op=get_user",
-            minLength: '.$conf['search']['slet'].'
-        });
-    });
-    </script>'
+    $cont = getHtmlScriptInline("$(function() { $(\"#".$id."\").autocomplete({ source: \"index.php?go=1&op=get_user\", minLength: ".$conf['search']['slet']." }); });")
     .'<input type="text" id="'.$id.'" name="'.$id.'" value="'.$val.'" maxlength="'.$maxlength.'" class="'.$class.'" placeholder="'._NICKNAME.'"'.$req.'>';
     return $cont;
 }
@@ -5819,12 +5813,9 @@ function encode_php(array $text): string {
         $format = '<table class="sl_table_form">'.$replace.'</table>';
     } elseif ($conf['syntax'] == 2) {
         if ($sname != $cname) {
-            $scripts = '<script src="plugins/syntaxhighlighter/scripts/shCore.js"></script>';
-            $scripts .= (file_exists('plugins/syntaxhighlighter/scripts/shBrush'.$cname.'.js')) ? '<script src="plugins/syntaxhighlighter/scripts/shBrush'.$cname.'.js"></script>' : '<script src="plugins/syntaxhighlighter/scripts/shBrushPhp.js"></script>';
-            $scripts .= "<script>
-                SyntaxHighlighter.config.clipboardSwf = 'plugins/syntaxhighlighter/scripts/clipboard.swf';
-                SyntaxHighlighter.all();
-            </script>";
+            $scripts = getHtmlScriptSrc('plugins/syntaxhighlighter/scripts/shCore.js');
+            $scripts .= (file_exists('plugins/syntaxhighlighter/scripts/shBrush'.$cname.'.js')) ? getHtmlScriptSrc('plugins/syntaxhighlighter/scripts/shBrush'.$cname.'.js') : getHtmlScriptSrc('plugins/syntaxhighlighter/scripts/shBrushPhp.js');
+            $scripts .= getHtmlScriptInline("SyntaxHighlighter.config.clipboardSwf = 'plugins/syntaxhighlighter/scripts/clipboard.swf'; SyntaxHighlighter.all();");
             $sname = $cname;
         } else {
             $scripts = '';
@@ -6029,7 +6020,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
     $style = (defined('ADMIN_FILE')) ? ' sl_form' : ' '.$conf['style'];
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
-        $code = ($id == 1) ? '<script src="plugins/system/insert-code.js"></script>' : '';
+        $code = ($id == 1) ? getHtmlScriptSrc('plugins/system/insert-code.js') : '';
         $topHtml = '<div class="sl_pos_right">'
             .editorToolbarButton("RowsTextarea(1, '".$id."')", 'sl_bb_plus', _EPLUS)
             .editorToolbarButton("RowsTextarea(0, '".$id."')", 'sl_bb_minus', _EMINUS)
@@ -6133,17 +6124,16 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
             $uploadInner = '';
             if ($id == 1) {
                 $uinfo = '<div class="ico sl_info sl_left"><b>'._UPLOADINFO.'</b><br>'._FTYPE.': '.str_replace(',', ', ', $con[0]).'<br>'._FSIZEALL.': '.filterSize($con[1]).'<br>'._FSIZE.': '.filterSize($con[2]).'<br>'._AWIDTH.': '.$con[3].' px<br>'._AHEIGHT.': '.$con[4].' px<br>'._FILEUP.': '.$con[5].'<br>'.'</div>';
-                $uploadInner .= "<script>
-                $(document).ready(function(e) {
-                    $('#msg').html('".$uinfo."');
-                    $('#file_upload').on('change', function () {
+                $uploadInner .= getHtmlScriptInline("$(document).ready(function(e) {
+                    \$('#msg').html('".$uinfo."');
+                    \$('#file_upload').on('change', function () {
                         var form_data = new FormData();
                         var ins = document.getElementById('file_upload').files.length;
                         for (var x = 0; x < ins; x++) {
                             form_data.append('file[]', document.getElementById('file_upload').files[x]);
                         }
                         form_data.append('token', '".getSiteToken('upload')."');
-                        $.ajax({
+                        \$.ajax({
                             url: 'index.php?go=4&mod=".$mod.'&userid='.intval($user[0] ?? 0)."',
                             type: 'POST',
                             dataType: 'text',
@@ -6152,23 +6142,22 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
                             contentType: false,
                             processData: false,
                             beforeSend: function() {
-                                $('#msg').html('<div class=\"sl_loading\"></div><br>');
+                                \$('#msg').html('<div class=\"sl_loading\"></div><br>');
                             },
                             success: function (response) {
                                 console.log('Success: ', response);
-                                $('#msg').html(response);
+                                \$('#msg').html(response);
                                 AjaxLoad('GET', '1', 'f".$id."', 'go=1&op=show_files&id=".$id.'&dir='.$mod."', '');
                             },
                             error: function (response) {
                                 console.log('Error: ', response);
-                                $('#msg').html(response);
+                                \$('#msg').html(response);
                                 alert('File upload error!');
                             }
                         });
                     });
-                });
-                </script>
-                <div id=\"msg\"></div>
+                });")
+                ."<div id=\"msg\"></div>
                 <div class=\"sl_pos_center\">
                 <input type=\"file\" id=\"file_upload\" name=\"file[]\" multiple=\"multiple\" class=\"sl_field\">
                 <input type=\"button\" value=\""._UPDATE."\" OnClick=\"AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_but_green\"></div>";
@@ -6183,49 +6172,16 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
         static $jscript;
         if (defined('ADMIN_FILE') && $editor == 2) {
             if (!isset($jscript)) {
-                $code = '<script src="plugins/tinymce/tinymce.min.js"></script>
-                <script>
-                tinymce.init({
-                    selector: "textarea",
-                    theme: "modern",
-                    plugins: [
-                        "advlist autolink lists link image charmap print preview hr anchor pagebreak",
-                        "searchreplace wordcount visualblocks visualchars code fullscreen",
-                        "insertdatetime media nonbreaking save table contextmenu directionality",
-                        "emoticons template paste textcolor responsivefilemanager"
-                    ],
-                    toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-                    toolbar2: "responsivefilemanager print preview media | forecolor backcolor emoticons",
-                    image_advtab: true,
-                    templates: [
-                        { title: "Test template 1", content: "Test 1" },
-                        { title: "Test template 2", content: "Test 2" }
-                    ],
-                    language: "'.$stloc.'",
-                    external_filemanager_path: "../plugins/filemanager/",
-                    filemanager_title: "'._EUPLOAD.'" ,
-                    external_plugins: { "filemanager" : "../filemanager/plugin.min.js" }
-                });
-                </script>';
+                $code = getHtmlScriptSrc('plugins/tinymce/tinymce.min.js')
+                    .getHtmlScriptInline('tinymce.init({ selector: "textarea", theme: "modern", plugins: ["advlist autolink lists link image charmap print preview hr anchor pagebreak", "searchreplace wordcount visualblocks visualchars code fullscreen", "insertdatetime media nonbreaking save table contextmenu directionality", "emoticons template paste textcolor responsivefilemanager"], toolbar1: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image", toolbar2: "responsivefilemanager print preview media | forecolor backcolor emoticons", image_advtab: true, templates: [{ title: "Test template 1", content: "Test 1" }, { title: "Test template 2", content: "Test 2" }], language: "'.$stloc.'", external_filemanager_path: "../plugins/filemanager/", filemanager_title: "'._EUPLOAD.'", external_plugins: { "filemanager": "../filemanager/plugin.min.js" } });');
                 $jscript = 1;
             } else {
                 $code = '';
             }
         } elseif (!defined('ADMIN_FILE') && $conf['redaktor'] == 2) {
             if (!isset($jscript)) {
-                $code = '<script src="plugins/tinymce/tinymce.min.js"></script>
-                <script>
-                tinymce.init({
-                    selector: "textarea",
-                    plugins: [
-                        "advlist autolink lists link image charmap print preview anchor",
-                        "searchreplace visualblocks code fullscreen",
-                        "insertdatetime media table contextmenu paste"
-                    ],
-                    toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image",
-                    language: "'.$stloc.'"
-                });
-                </script>';
+                $code = getHtmlScriptSrc('plugins/tinymce/tinymce.min.js')
+                    .getHtmlScriptInline('tinymce.init({ selector: "textarea", plugins: ["advlist autolink lists link image charmap print preview anchor", "searchreplace visualblocks code fullscreen", "insertdatetime media table contextmenu paste"], toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image", language: "'.$stloc.'" });');
                 $jscript = 1;
             } else {
                 $code = '';
@@ -6235,66 +6191,39 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
     } elseif ((defined('ADMIN_FILE') && $editor == 3) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 3)) {
         if (defined('ADMIN_FILE') && $editor == 3) {
             if (!isset($jscript)) {
-                $code = '<script src="plugins/ckeditor/ckeditor.js"></script><script src="plugins/ckeditor/adapters/jquery.js"></script>';
+                $code = getHtmlScriptSrc('plugins/ckeditor/ckeditor.js').getHtmlScriptSrc('plugins/ckeditor/adapters/jquery.js');
                 $jscript = 1;
             } else {
                 $code = '';
             }
-            $code .= "<script>
-            $(document).ready( function() {
-                $('textarea#".$id."').ckeditor({
-                    language: '".$stloc."',
-                    filebrowserBrowseUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=',
-                    filebrowserUploadUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=',
-                    filebrowserImageBrowseUrl: '../plugins/filemanager/dialog.php?type=1&editor=ckeditor&fldr='
-                });
-            });
-            </script>";
+            $code .= getHtmlScriptInline("$(document).ready(function() { $('textarea#".$id."').ckeditor({ language: '".$stloc."', filebrowserBrowseUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=', filebrowserUploadUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=', filebrowserImageBrowseUrl: '../plugins/filemanager/dialog.php?type=1&editor=ckeditor&fldr=' }); });");
         } elseif (!defined('ADMIN_FILE') && $conf['redaktor'] == 3) {
             if (!isset($jscript)) {
-                $code = '<script src="plugins/ckeditor/ckeditor.js"></script><script src="plugins/ckeditor/adapters/jquery.js"></script>';
+                $code = getHtmlScriptSrc('plugins/ckeditor/ckeditor.js').getHtmlScriptSrc('plugins/ckeditor/adapters/jquery.js');
                 $jscript = 1;
             } else {
                 $code = '';
             }
-            $code .= "<script>
-            $(document).ready( function() {
-                $('textarea#".$id."').ckeditor({
-                    language: '".$stloc."'
-                });
-            });
-            </script>";
+            $code .= getHtmlScriptInline("$(document).ready(function() { $('textarea#".$id."').ckeditor({ language: '".$stloc."' }); });");
         }
         $code .= '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows.'" class="'.$style.'"'.$placeholder.'>'.$desc.'</textarea>';
     } elseif (defined('ADMIN_FILE') && $editor == 4) {
         if (!isset($jscript)) {
-            $code = '<script src="plugins/codemirror/lib/codemirror.js"></script>
-            <script src="plugins/codemirror/addon/edit/matchbrackets.js"></script>
-
-            <script src="plugins/codemirror/addon/hint/show-hint.js"></script>
-            <script src="plugins/codemirror/addon/hint/xml-hint.js"></script>
-            <script src="plugins/codemirror/addon/hint/html-hint.js"></script>
-
-            <script src="plugins/codemirror/mode/htmlmixed/htmlmixed.js"></script>
-            <script src="plugins/codemirror/mode/xml/xml.js"></script>
-            <script src="plugins/codemirror/mode/javascript/javascript.js"></script>
-            <script src="plugins/codemirror/mode/css/css.js"></script>';
+            $code = getHtmlScriptSrc('plugins/codemirror/lib/codemirror.js')
+                .getHtmlScriptSrc('plugins/codemirror/addon/edit/matchbrackets.js')
+                .getHtmlScriptSrc('plugins/codemirror/addon/hint/show-hint.js')
+                .getHtmlScriptSrc('plugins/codemirror/addon/hint/xml-hint.js')
+                .getHtmlScriptSrc('plugins/codemirror/addon/hint/html-hint.js')
+                .getHtmlScriptSrc('plugins/codemirror/mode/htmlmixed/htmlmixed.js')
+                .getHtmlScriptSrc('plugins/codemirror/mode/xml/xml.js')
+                .getHtmlScriptSrc('plugins/codemirror/mode/javascript/javascript.js')
+                .getHtmlScriptSrc('plugins/codemirror/mode/css/css.js');
             $jscript = 1;
         } else {
             $code = '';
         }
-        $code .= '<textarea id="'.$id.'" name="'.$name.'" class="'.$style.'"'.$placeholder.'>'.str_replace('&amp;', '&amp;amp;', $desc).'</textarea>
-        <script>
-        var editor = CodeMirror.fromTextArea(document.getElementById("'.$id.'"), {
-            lineNumbers: true,
-            matchBrackets: true,
-            mode: "text/html",
-            extraKeys: {"Ctrl": "autocomplete"},
-            value: document.documentElement.innerHTML,
-            indentUnit: 4,
-            indentWithTabs: true
-        });
-        </script>';
+        $code .= '<textarea id="'.$id.'" name="'.$name.'" class="'.$style.'"'.$placeholder.'>'.str_replace('&amp;', '&amp;amp;', $desc).'</textarea>'
+            .getHtmlScriptInline('var editor = CodeMirror.fromTextArea(document.getElementById("'.$id.'"), { lineNumbers: true, matchBrackets: true, mode: "text/html", extraKeys: {"Ctrl": "autocomplete"}, value: document.documentElement.innerHTML, indentUnit: 4, indentWithTabs: true });');
     } else {
         $code = '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows.'" class="'.$style.'"'.$placeholder.$required.'>'.str_replace('&amp;', '&amp;amp;', $desc).'</textarea>';
     }
@@ -6318,40 +6247,28 @@ function textareae(mixed $obj, mixed $go, mixed $op, mixed $id, mixed $cid, mixe
 function textarea_code(string $id, string $name, string $style, string $mode, string $text): string {
     static $jscript;
     if (!isset($jscript)) {
-        $code = '<script src="plugins/codemirror/lib/codemirror.js"></script>
-        <script src="plugins/codemirror/addon/edit/matchbrackets.js"></script>
-
-        <script src="plugins/codemirror/addon/hint/show-hint.js"></script>
-        <script src="plugins/codemirror/addon/hint/xml-hint.js"></script>
-        <script src="plugins/codemirror/addon/hint/html-hint.js"></script>
-        <script src="plugins/codemirror/addon/hint/css-hint.js"></script>
-        <script src="plugins/codemirror/addon/hint/sql-hint.js"></script>
-
-        <script src="plugins/codemirror/mode/htmlmixed/htmlmixed.js"></script>
-        <script src="plugins/codemirror/mode/xml/xml.js"></script>
-        <script src="plugins/codemirror/mode/javascript/javascript.js"></script>
-        <script src="plugins/codemirror/mode/css/css.js"></script>
-        <script src="plugins/codemirror/mode/clike/clike.js"></script>
-        <script src="plugins/codemirror/mode/php/php.js"></script>
-        <script src="plugins/codemirror/mode/sql/sql.js"></script>
-        <script src="plugins/codemirror/mode/http/http.js"></script>';
+        $code = getHtmlScriptSrc('plugins/codemirror/lib/codemirror.js')
+            .getHtmlScriptSrc('plugins/codemirror/addon/edit/matchbrackets.js')
+            .getHtmlScriptSrc('plugins/codemirror/addon/hint/show-hint.js')
+            .getHtmlScriptSrc('plugins/codemirror/addon/hint/xml-hint.js')
+            .getHtmlScriptSrc('plugins/codemirror/addon/hint/html-hint.js')
+            .getHtmlScriptSrc('plugins/codemirror/addon/hint/css-hint.js')
+            .getHtmlScriptSrc('plugins/codemirror/addon/hint/sql-hint.js')
+            .getHtmlScriptSrc('plugins/codemirror/mode/htmlmixed/htmlmixed.js')
+            .getHtmlScriptSrc('plugins/codemirror/mode/xml/xml.js')
+            .getHtmlScriptSrc('plugins/codemirror/mode/javascript/javascript.js')
+            .getHtmlScriptSrc('plugins/codemirror/mode/css/css.js')
+            .getHtmlScriptSrc('plugins/codemirror/mode/clike/clike.js')
+            .getHtmlScriptSrc('plugins/codemirror/mode/php/php.js')
+            .getHtmlScriptSrc('plugins/codemirror/mode/sql/sql.js')
+            .getHtmlScriptSrc('plugins/codemirror/mode/http/http.js');
         $jscript = 1;
     } else {
         $code = '';
     }
     $style = ($style) ? ' '.$style : '';
-    $code .= '<textarea id="'.$id.'" name="'.$name.'" class="sl_field'.$style.'">'.$text.'</textarea>
-    <script>
-        var editor = CodeMirror.fromTextArea(document.getElementById("'.$id.'"), {
-            lineNumbers: true,
-            matchBrackets: true,
-            mode: "'.$mode.'",
-            extraKeys: {"Ctrl": "autocomplete"},
-            value: document.documentElement.innerHTML,
-            indentUnit: 4,
-            indentWithTabs: true
-        });
-    </script>';
+    $code .= '<textarea id="'.$id.'" name="'.$name.'" class="sl_field'.$style.'">'.$text.'</textarea>'
+        .getHtmlScriptInline('var editor = CodeMirror.fromTextArea(document.getElementById("'.$id.'"), { lineNumbers: true, matchBrackets: true, mode: "'.$mode.'", extraKeys: {"Ctrl": "autocomplete"}, value: document.documentElement.innerHTML, indentUnit: 4, indentWithTabs: true });');
     return $code;
 }
 

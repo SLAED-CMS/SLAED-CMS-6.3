@@ -19,8 +19,12 @@ function getStatisticSearch(): string {
         }
     }
     $sel = getAdminSelect('file', $sopts);
-    $search = '<form method="post" action="'.$afile.'.php">'._STATFROM.': '.$sel.' <input type="hidden" name="name" value="statistic"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return getAdminSearchBox($search);
+    return getAdminSearchBox($tpl->getHtmlFrag('admin-statistic-search-form', [
+        'from_label' => _STATFROM.':',
+        'ok_label' => _OK,
+        'route' => $afile,
+        'select_html' => $sel,
+    ]));
 }
 
 function statistic(): void {
@@ -42,7 +46,17 @@ function statistic(): void {
         }
         $statv .= '<hr><img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out.'" alt="'._STATGR.'" title="'._STATGR.'">';
     }
-    $statv .= '<hr><table class="sl_table_list_sort"><thead><tr><th>'._DATE.'</th><th>'._UNIQUE.'</th><th>'._HITS.'</th><th>'._HOME.'</th><th>'._REFERERS.'</th><th>'._BOTSOPT.'</th><th>'._AUDIENCE.'</th><th class="{sorter: false}">'._USERS.'</th></tr></thead><tbody>';
+    $head = $tpl->getHtmlFrag('admin-statistic-table-head', [
+        'audience_label' => _AUDIENCE,
+        'bots_label' => _BOTSOPT,
+        'date_label' => _DATE,
+        'hits_label' => _HITS,
+        'home_label' => _HOME,
+        'referers_label' => _REFERERS,
+        'unique_label' => _UNIQUE,
+        'users_label' => _USERS,
+    ]);
+    $rows = '';
     $daysLog = COUNTER_DIR.'/days.log';
     $statLog = COUNTER_DIR.'/statistic.log';
     if ($file) {
@@ -71,9 +85,28 @@ function statistic(): void {
         $auditory += $out_aud;
         if ($auditory < 0) $auditory = 0;
         $regusers += rtrim($out[7]);
-        $statv .= '<tr><td>'.$out[0].'</td><td>'.$out[1].'</td><td>'.$out[2].'</td><td>'.$out[6].'</td><td>'.$out[5].'</td><td>'.$out[4].'</td><td>'.$out_aud.'</td><td>'.rtrim($out[7]).'</td></tr>';
+        $rows .= $tpl->getHtmlFrag('admin-statistic-table-row', [
+            'audience_text' => (string)$out_aud,
+            'bots_text' => $out[4],
+            'date_text' => $out[0],
+            'hits_text' => $out[2],
+            'home_text' => $out[6],
+            'referers_text' => $out[5],
+            'unique_text' => $out[1],
+            'users_text' => rtrim($out[7]),
+        ]);
     }
-    $statv .= '<tr><th>'._ALL.'</th><th>'.$unique.'</th><th>'.$today.'</th><th>'.$homepage.'</th><th>'.$sites.'</th><th>'.$engines.'</th><th>'.$auditory.'</th><th>'.$regusers.'</th></tr></tbody></table>';
+    $rows .= $tpl->getHtmlFrag('admin-statistic-table-total', [
+        'all_label' => _ALL,
+        'audience_text' => (string)$auditory,
+        'bots_text' => (string)$engines,
+        'hits_text' => (string)$today,
+        'home_text' => (string)$homepage,
+        'referers_text' => (string)$sites,
+        'unique_text' => (string)$unique,
+        'users_text' => (string)$regusers,
+    ]);
+    $statv .= '<hr>'.getAdminTable($head, $rows, 'sl_table_list_sort');
     echo $cont.getAdminBox($statv);
     setFoot();
 }
@@ -130,5 +163,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-
 

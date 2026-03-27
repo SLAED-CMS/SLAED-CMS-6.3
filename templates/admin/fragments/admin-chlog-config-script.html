@@ -1,0 +1,8 @@
+<script>
+function toggleGithubFields(source) {
+    var rows = document.querySelectorAll(".chlog-gh-row");
+    for (var i = 0; i < rows.length; i++) {
+        rows[i].style.display = (source === "github") ? "" : "none";
+    }
+}
+</script>

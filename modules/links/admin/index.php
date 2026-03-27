@@ -32,33 +32,41 @@ function links(): void {
     }
     $result = $db->getSqlQuery('SELECT l.id, l.cid, l.name, l.title, l.url, l.time, l.ip, c.title, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.status = :status ORDER BY l.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._SITEURL.'</th><th>'._POSTEDBY.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-links-list-head', [
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'postedby_label' => _POSTEDBY,
+            'siteurl_label' => _SITEURL,
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+        ]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $url, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             $ctitle = ($cid) ? $ctitle : _NO;
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
-            $broc = ($status == 2) ? '<a href="'.$afile.'.php?name=links&amp;op=approve&amp;id='.$id.'" title="'._IGNORE.'">'._IGNORE.'</a>||' : '';
+            $broc = ($status == 2) ? adminLinkAction($afile.'.php?name=links&amp;op=approve&amp;id='.$id, _IGNORE, _IGNORE) : '';
             if ($status && time() >= strtotime($date)) {
-                $view = '<a href="index.php?name=links&amp;op=view&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||';
+                $view = adminLinkAction('index.php?name=links&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
             $acts = adminMenuItems([
-                rtrim($view, '|'),
-                rtrim($broc, '|'),
-                '<a href="'.$afile.'.php?name=links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=links&amp;op=delete&amp;id='.$id.$refer.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                $view,
+                $broc,
+                adminLinkAction($afile.'.php?name=links&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=links&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-            .'<td>'.title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span></td>'
-            .'<td>'.domain($url).'</td>'
-            .'<td>'.$post.'</td>'
-            .'<td>'.ad_status('', $active).'</td>'
-            .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-links-list-row', [
+                'actions_html' => $acts,
+                'id_text' => (string)$id,
+                'postedby_html' => $post,
+                'site_html' => domain($url),
+                'status_html' => ad_status('', $active),
+                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span>',
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_links', '', 'status = \''.$status.'\'', $anump);
@@ -95,18 +103,30 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($description)) $cont .= preview($title, $description, $bodytext, '', 'links');
     $link = (!empty($site) && $site !== 'http://') ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
-    $rows = '';
-    $rows .= getAdminFormRow(_POSTEDBY.':', get_user_search('postname', $postname, '25', 'sl_form', '1'));
-    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows .= getAdminFormRow(_CATEGORY.':', getcat('links', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
-    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'description', $description, 'links', '5', _TEXT, '1'));
-    $rows .= getAdminFormRow(_ENDTEXT.':', textarea('2', 'bodytext', $bodytext, 'links', '15', _ENDTEXT, '0'));
-    $rows .= getAdminFormRow(_AUEMAIL.':', '<input type="email" name="email" value="'.$email.'" class="sl_form" placeholder="'._AUEMAIL.'" required>');
-    $rows .= getAdminFormRow($link.':', '<input type="url" name="site" value="'.$site.'" class="sl_form" placeholder="'._URL.'" required>');
-    $rows .= getAdminFormRow(_CHNGSTORY.':', datetime(1, 'date', $date, 16, 'sl_form'));
-    $rows .= getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'));
-    $rows .= getAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'));
-    $rows .= getAdminFormWide(ad_save('fid', $fid, 'save'), '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-links-add-rows', [
+        'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
+        'acomm_label' => _COMMENTS.':',
+        'bodytext_html' => textarea('2', 'bodytext', $bodytext, 'links', '15', _ENDTEXT, '0'),
+        'bodytext_label' => _ENDTEXT.':',
+        'cat_html' => getcat('links', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_label' => _CATEGORY.':',
+        'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
+        'date_label' => _CHNGSTORY.':',
+        'description_html' => textarea('1', 'description', $description, 'links', '5', _TEXT, '1'),
+        'description_label' => _TEXT.':',
+        'email_label' => _AUEMAIL.':',
+        'email_value' => $email,
+        'ihome_html' => radio_form($ihome, 'ihome'),
+        'ihome_label' => _PUBHOME,
+        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_label' => _POSTEDBY.':',
+        'save_html' => ad_save('fid', $fid, 'save'),
+        'site_label_html' => $link.':',
+        'site_placeholder' => _URL,
+        'site_value' => $site,
+        'title_label' => _TITLE.':',
+        'title_value' => $title,
+    ]);
     $hide = '<input type="hidden" name="name" value="links">';
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
@@ -280,8 +300,6 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
 
 
 

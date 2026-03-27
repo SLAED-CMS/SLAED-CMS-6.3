@@ -17,19 +17,18 @@ function config(): void {
     .'<table class="sl_table_conf">'
     .'<tr><td>'._VERSION.':</td><td><a href="//slaed.net" target="_blank" title="'._VERSION.'">SLAED CMS '.$conf['version'].'</a></td></tr>'
     .'<tr><td>'._SITENAME.':</td><td><input type="text" name="sitename" value="'.$conf['sitename'].'" maxlength="255" class="sl_conf" placeholder="'._SITENAME.'" required></td></tr>'
-    .'<tr><td>'._SITEURL.':</td><td><input type="url" name="homeurl" value="'.$conf['homeurl'].'" maxlength="255" class="sl_conf" placeholder="'._SITEURL.'" required></td></tr>'
-    .'<tr><td>'._LOGO.':</td><td><select name="site_logo" id="img_replace" class="sl_conf">';
+    .'<tr><td>'._SITEURL.':</td><td><input type="url" name="homeurl" value="'.$conf['homeurl'].'" maxlength="255" class="sl_conf" placeholder="'._SITEURL.'" required></td></tr>';
     $path = 'templates/'.$conf['theme'].'/images/logos/';
     $entries = is_dir($path) ? scandir($path) : [];
+    $logoOpts = '';
     if (is_array($entries)) {
         foreach ($entries as $entry) {
             if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
-                $sel = ($conf['site_logo'] == $entry) ? ' selected' : '';
-                $cont .= '<option value="'.$path.$entry.'"'.$sel.'>'.$entry.'</option>';
+                $logoOpts .= getAdminOption($path.$entry, $entry, $conf['site_logo'] == $entry);
             }
         }
     }
-    $cont .= '</select></td></tr>'
+    $cont .= '<tr><td>'._LOGO.':</td><td>'.getAdminSelect('site_logo', $logoOpts, 'sl_conf', 'id="img_replace"').'</td></tr>'
     .'<tr><td>'._SITELOGO.':</td><td><img src="'.$path.$conf['site_logo'].'" id="picture" alt="'._SITELOGO.'"></td></tr>'
     .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="slogan" cols="65" rows="5" class="sl_conf" placeholder="'._DESCRIPTION.'" required>'.$conf['slogan'].'</textarea></td></tr>'
     .'<tr><td>'._ADMININFO.':<div class="sl_small">'._ADMININFODES.'</div></td><td><textarea name="admininfo" cols="65" rows="5" class="sl_conf" placeholder="'._ADMININFO.'">'.$conf['admininfo'].'</textarea></td></tr>'
@@ -40,17 +39,17 @@ function config(): void {
     .'<tr><td>'._USER_COOKIE_T.':</td><td><input type="number" name="user_c_t" value="'.intval($conf['user_c_t'] / 86400).'" class="sl_conf" placeholder="'._USER_COOKIE_T.'" required></td></tr>'
     .'<tr><td>'._SESS_T.':</td><td><input type="number" name="sess_t" value="'.intval($conf['sess_t'] / 60).'" class="sl_conf" placeholder="'._SESS_T.'" required></td></tr>'
     .'<tr><td>'._IP_LINK.':</td><td><input type="url" name="ip_link" value="'.$conf['ip_link'].'" maxlength="255" class="sl_conf" placeholder="'._IP_LINK.'" required></td></tr>'
-    .'<tr><td>'._THEME.':</td><td><select name="theme" class="sl_conf">';
+    .'<tr><td>'._THEME.':</td><td>';
     $templates = is_dir('templates') ? scandir('templates') : [];
+    $themeOpts = '';
     if (is_array($templates)) {
         foreach ($templates as $tfile) {
             if (!preg_match('/\./', $tfile) && $tfile != 'admin') {
-                $selected = ($tfile == $conf['theme']) ? 'selected' : '';
-                $cont .= '<option value="'.$tfile.'" '.$selected.'>'.$tfile.'</option>';
+                $themeOpts .= getAdminOption($tfile, $tfile, $tfile == $conf['theme']);
             }
         }
     }
-    $cont .= '</select></td></tr><tr><td>'._PUTINHOME.':<div class="sl_small">'._PUTINHOMEINFO.' '._CTRLINFO.'</div></td><td>'.modul('module', 'sl_conf', $conf['module'], 1).'</td></tr>';
+    $cont .= getAdminSelect('theme', $themeOpts, 'sl_conf').'</td></tr><tr><td>'._PUTINHOME.':<div class="sl_small">'._PUTINHOMEINFO.' '._CTRLINFO.'</div></td><td>'.modul('module', 'sl_conf', $conf['module'], 1).'</td></tr>';
     $mods = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'page', 'shop_clients', 'voting'];
     $mname = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'pages', 'shop', 'voting'];
     $i = 0;
@@ -58,89 +57,60 @@ function config(): void {
     foreach ($mods as $val) {
         if ($val != '') {
             if (file_exists('modules/'.$mname[$i].'/admin/index.php')) {
-                $selected = ($conf['amod'] == $val) ? 'selected' : '';
-                $ocont .= '<option value="'.$val.'" '.$selected.'>'.getModuleName($mname[$i]).'</option>';
+                $ocont .= getAdminOption($val, getModuleName($mname[$i]), $conf['amod'] == $val);
             }
             $i++;
         }
     }
-    $cont .= '<tr><td>'._PUTINAHOME.':</td><td><select name="amod" class="sl_conf">'.$ocont.'</select></td></tr>'
+    $cont .= '<tr><td>'._PUTINAHOME.':</td><td>'.getAdminSelect('amod', $ocont, 'sl_conf').'</td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
-    .'<tr><td>'._CAPTCHA.':</td><td><select name="gfx_chk" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['gfx_chk'] == '0') $cont .= ' selected';
-    $cont .= '>'._CAPSEC0.'</option>'
-    .'<option value="1"';
-    if ($conf['gfx_chk'] == '1') $cont .= ' selected';
-    $cont .= '>'._CAPSEC1.'</option>'
-    .'<option value="2"';
-    if ($conf['gfx_chk'] == '2') $cont .= ' selected';
-    $cont .= '>'._CAPSEC2.'</option>'
-    .'<option value="3"';
-    if ($conf['gfx_chk'] == '3') $cont .= ' selected';
-    $cont .= '>'._CAPSEC3.'</option>'
-    .'<option value="4"';
-    if ($conf['gfx_chk'] == '4') $cont .= ' selected';
-    $cont .= '>'._CAPSEC4.'</option>'
-    .'<option value="5"';
-    if ($conf['gfx_chk'] == '5') $cont .= ' selected';
-    $cont .= '>'._CAPSEC5.'</option>'
-    .'<option value="6"';
-    if ($conf['gfx_chk'] == '6') $cont .= ' selected';
-    $cont .= '>'._CAPSEC6.'</option>'
-    .'<option value="7"';
-    if ($conf['gfx_chk'] == '7') $cont .= ' selected';
-    $cont .= '>'._CAPSEC7.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._CAPQUALITY.': <div class="sl_small">'._CAPQUALITYI.'</div></td><td><select name="quality" class="sl_conf">';
+    .'<tr><td>'._CAPTCHA.':</td><td>';
+    $captchaOpts = getAdminOption('0', _CAPSEC0, $conf['gfx_chk'] == '0')
+        .getAdminOption('1', _CAPSEC1, $conf['gfx_chk'] == '1')
+        .getAdminOption('2', _CAPSEC2, $conf['gfx_chk'] == '2')
+        .getAdminOption('3', _CAPSEC3, $conf['gfx_chk'] == '3')
+        .getAdminOption('4', _CAPSEC4, $conf['gfx_chk'] == '4')
+        .getAdminOption('5', _CAPSEC5, $conf['gfx_chk'] == '5')
+        .getAdminOption('6', _CAPSEC6, $conf['gfx_chk'] == '6')
+        .getAdminOption('7', _CAPSEC7, $conf['gfx_chk'] == '7');
+    $cont .= getAdminSelect('gfx_chk', $captchaOpts, 'sl_conf').'</td></tr>'
+    .'<tr><td>'._CAPQUALITY.': <div class="sl_small">'._CAPQUALITYI.'</div></td><td>';
+    $qualityOpts = '';
     $xquality = 1;
     while ($xquality <= 9) {
-        $sel = ($xquality == $conf['quality']) ? ' selected' : '';
-        $cont .= '<option value="'.$xquality.'"'.$sel.'>0.'.$xquality.'</option>';
+        $qualityOpts .= getAdminOption((string)$xquality, '0.'.$xquality, $xquality == $conf['quality']);
         $xquality++;
     }
-    $cont .= '</select></td></tr>'
+    $cont .= getAdminSelect('quality', $qualityOpts, 'sl_conf').'</td></tr>'
     .'<tr><td>'._CAPKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td><input type="text" name="capkey" value="'.$conf['capkey'].'" maxlength="255" class="sl_conf" placeholder="'._CAPKEY.'"></td></tr>'
     .'<tr><td>'._CAPSECKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td><input type="text" name="capsec" value="'.$conf['capsec'].'" maxlength="255" class="sl_conf" placeholder="'._CAPSECKEY.'"></td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
     .'<tr><td>'._EDITOR.':</td><td>'.redaktor('2', 'redaktor', 'sl_conf', $conf['redaktor'], 0).'</td></tr>';
     $gtime = timezone_identifiers_list();
-    $sel = $conf['gtime'] ?? '';
+    $gtimeCurrent = $conf['gtime'] ?? '';
     $gcont = '';
     foreach ($gtime as $gval) {
-        $selected = ($sel === $gval) ? ' selected' : '';
-        $gcont .= '<option value="'.$gval.'"'.$selected.'>'.$gval.'</option>';
+        $gcont .= getAdminOption($gval, $gval, $gtimeCurrent === $gval);
     }
-    $cont .= '<tr><td>'._GTIME.':</td><td><select name="gtime" class="sl_conf">'.$gcont.'</select></td></tr>';
-    $cont .= '<tr><td>'._VARIABLES.':<div class="sl_small">'._CTRLINFO.'</div></td><td><select name="variables[]" multiple="multiple" class="sl_conf">';
+    $cont .= '<tr><td>'._GTIME.':</td><td>'.getAdminSelect('gtime', $gcont, 'sl_conf').'</td></tr>';
     $variables = explode(',', $conf['variables']);
     $varconst = [_DEACTIVATE, _SYSTEM_INFO, _AVARIABLES.': POST', _AVARIABLES.': GET', _AVARIABLES.': COOKIE', _AVARIABLES.': FILES', _AVARIABLES.': SESSION', _AVARIABLES.': SERVER', _AQUERY_DB.': MySQL'];
+    $varOpts = '';
     foreach ($varconst as $key => $val) {
         if ($val != '') {
-            $selected = (!empty($variables[$key])) ? ' selected' : '';
-            $cont .= '<option value="'.$key.'"'.$selected.'>'.$val.'</option>';
+            $varOpts .= getAdminOption((string)$key, $val, !empty($variables[$key]));
         }
     }
-    $cont .= '</select></td></tr>'
-    .'<tr><td>'._VAR_VIEW.':</td><td><select name="var_view" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['var_view'] == '0') $cont .= ' selected';
-    $cont .= '>'._MVADMIN.'</option>'
-    .'<option value="1"';
-    if ($conf['var_view'] == '1') $cont .= ' selected';
-    $cont .= '>'._MVALL.'</option>'
-    .'</select></td></tr>'
-    .'<tr><td>'._SYNTAX.':</td><td><select name="syntax" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['syntax'] == '0') $cont .= ' selected';
-    $cont .= '>'._SYNTAXP.'</option>'
-    .'<option value="1"';
-    if ($conf['syntax'] == '1') $cont .= ' selected';
-    $cont .= '>'._SYNTAXPN.'</option>'
-    .'<option value="2"';
-    if ($conf['syntax'] == '2') $cont .= ' selected';
-    $cont .= '>'._SYNTAXSH.'</option>'
-    .'</select></td></tr>'
+    $cont .= '<tr><td>'._VARIABLES.':<div class="sl_small">'._CTRLINFO.'</div></td><td>'.getAdminSelect('variables[]', $varOpts, 'sl_conf', 'multiple="multiple"').'</td></tr>'
+    .'<tr><td>'._VAR_VIEW.':</td><td>'.getAdminSelect('var_view',
+        getAdminOption('0', _MVADMIN, $conf['var_view'] == '0')
+        .getAdminOption('1', _MVALL, $conf['var_view'] == '1'),
+        'sl_conf').'</td></tr>'
+    .'<tr><td>'._SYNTAX.':</td><td>'.getAdminSelect('syntax',
+        getAdminOption('0', _SYNTAXP, $conf['syntax'] == '0')
+        .getAdminOption('1', _SYNTAXPN, $conf['syntax'] == '1')
+        .getAdminOption('2', _SYNTAXSH, $conf['syntax'] == '2'),
+        'sl_conf').'</td></tr>'
     .'<tr><td>'._ADMCOL.':</td><td><input type="number" name="admcol" value="'.$conf['admcol'].'" class="sl_conf" placeholder="'._ADMCOL.'" required></td></tr>'
     .'<tr><td>'._DB_SYNC.'</td><td>'.radio_form($conf['dbsync'], 'dbsync').'</td></tr>'
     .'<tr><td>'._SESSION.'</td><td>'.radio_form($conf['session'], 'session').'</td></tr>'
@@ -171,18 +141,18 @@ function config(): void {
     .'</div>'
     .'<div id="tabc2" class="tabcont">'
     .'<table class="sl_table_conf">'
-    .'<tr><td>'._SELLANGUAGE.':</td><td><select name="language" class="sl_conf">';
+    .'<tr><td>'._SELLANGUAGE.':</td><td>';
     $entries = is_dir('lang') ? scandir('lang') : [];
+    $langOpts = '';
     if (is_array($entries)) {
         foreach ($entries as $file) {
             if (preg_match('/^(.+)\.php/', $file, $matches)) {
                 $langfound = $matches[1];
-                $selected = ($conf['language'] == $langfound) ? 'selected' : '';
-                $cont .= '<option value="'.$langfound.'" '.$selected.'>'.getLangName($langfound).'</option>';
+                $langOpts .= getAdminOption($langfound, getLangName($langfound), $conf['language'] == $langfound);
             }
         }
     }
-    $cont .= '</select></td></tr>'
+    $cont .= getAdminSelect('language', $langOpts, 'sl_conf').'</td></tr>'
     .'<tr><td>'._ACTMULTILINGUAL.'</td><td>'.radio_form($conf['multilingual'], 'multilingual').'</td></tr>'
     .'<tr><td>'._ACTUSEFLAGS.'</td><td>'.radio_form($conf['flags'], 'flags').'</td></tr>'
     .'<tr><td>'._GEO_IP.'</td><td>'.radio_form($conf['geo_ip'], 'geo_ip').'</td></tr>'
@@ -190,15 +160,10 @@ function config(): void {
     .'</div>'
     .'<div id="tabc3" class="tabcont">'
     .'<table class="sl_table_conf">'
-    .'<tr><td>'._CENSORMODE.':</td><td>'
-    .'<select name="censor" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['censor'] == 0) $cont .= ' selected';
-    $cont .= '>'._NO.'</option>'
-    .'<option value="1"';
-    if ($conf['censor'] == 1) $cont .= ' selected';
-    $cont .= '>'._MATCHANY.'</option>'
-    .'</select></td></tr>'
+    .'<tr><td>'._CENSORMODE.':</td><td>'.getAdminSelect('censor',
+        getAdminOption('0', _NO, $conf['censor'] == 0)
+        .getAdminOption('1', _MATCHANY, $conf['censor'] == 1),
+        'sl_conf').'</td></tr>'
     .'<tr><td>'._CENSORREPLACE.':</td><td><input type="text" name="censor_r" value="'.$conf['censor_r'].'" maxlength="10" class="sl_conf" placeholder="'._CENSORREPLACE.'" required></td></tr>'
     .'<tr><td>'._CENSOR.':<div class="sl_small">'._NOKOMA.'</div></td><td><textarea name="censor_l" cols="65" rows="5" class="sl_conf" placeholder="'._CENSOR.'" required>'.$conf['censor_l'].'</textarea></td></tr>'
     .'<tr><td>'._CLICABLE.'<div class="sl_small">'._CLICABLEINFO.'</div></td><td>'.radio_form($conf['clickable'], 'clickable').'</td></tr></table>'
@@ -218,18 +183,11 @@ function config(): void {
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DIR.': config/cache<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
     $cont .= '<table class="sl_table_conf">'
-    .'<tr><td>'._CACHE.':</td><td>'
-    .'<select name="cache" class="sl_conf">'
-    .'<option value="0"';
-    if ($conf['cache'] == 0) $cont .= ' selected';
-    $cont .= '>'._NO.'</option>'
-    .'<option value="1"';
-    if ($conf['cache'] == 1) $cont .= ' selected';
-    $cont .= '>'._CACHE_1.'</option>'
-    .'<option value="2"';
-    if ($conf['cache'] == 2) $cont .= ' selected';
-    $cont .= '>'._CACHE_2.'</option>'
-    .'</select></td></tr>'
+    .'<tr><td>'._CACHE.':</td><td>'.getAdminSelect('cache',
+        getAdminOption('0', _NO, $conf['cache'] == 0)
+        .getAdminOption('1', _CACHE_1, $conf['cache'] == 1)
+        .getAdminOption('2', _CACHE_2, $conf['cache'] == 2),
+        'sl_conf').'</td></tr>'
     .'<tr><td>'._CACHETIME.':</td><td><input type="number" name="cache_t" value="'.$conf['cache_t'].'" class="sl_conf" placeholder="'._CACHETIME.'" required></td></tr>'
     .'<tr><td>'._CACHEDEL.':</td><td><input type="number" name="cache_d" value="'.$conf['cache_d'].'" class="sl_conf" placeholder="'._CACHEDEL.'" required></td></tr>'
     .'<tr><td>'._CACHECOMP.'</td><td>'.radio_form($conf['cache_c'], 'cache_c').'</td></tr>'

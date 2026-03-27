@@ -17,31 +17,38 @@ function replace(): void {
     $k = 0;
     foreach ($mods as $val) {
         if ($val != '') {
-            $content .= '<div id="tabc'.$k.'" class="tabcont">';
+            $items = '';
             $fieldc = explode('||', $conf['replace'][$val]);
             for ($c = 0; $c < 50; $c++) {
                 preg_match('#(.*)\|(.*)#i', $fieldc[$c], $out);
                 $b = $c + 1;
                 $display = (empty($out[1]) && empty($out[1][$c]) != '0' && $c != '0') ? ' class="sl_none"' : '';
-                $hr = ($c == '0') ? '' : '<hr>';
-                $content .= '<div id="fi'.$k.$c.'"'.$display.'>'.$hr
-                .'<table class="sl_table_conf">'
-                .'<tr><td><a OnClick="HideShow(\'fi'.$k.$b.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._REPLACE_FIELD.': '.$b.'</a></td><td>'
-                .'<table><tr><td>'._WORD.':</td><td><input type="text" name="field1'.$k.'[]" value="'.$out[1].'" class="sl_conf" placeholder="'._WORD.'" required></td></tr>'
-                .'<tr><td>'._CONTENT.':<div class="sl_small">'._REPLACEIN.'</div></td><td><textarea name="field2'.$k.'[]" cols="65" rows="5" class="sl_conf" placeholder="'._CONTENT.'" required>'.$out[2].'</textarea></td></tr></table></td>'
-                .'</tr></table></div>';
+                $items .= $tpl->getHtmlFrag('admin-replace-field-block', [
+                    'block_id' => 'fi'.$k.$c,
+                    'content_label' => _CONTENT.':',
+                    'content_placeholder' => _CONTENT,
+                    'content_value' => $out[2] ?? '',
+                    'display_attr' => $display,
+                    'hr_html' => ($c === 0) ? '' : '<hr>',
+                    'info_text' => _REPLACEIN,
+                    'next_block_id' => 'fi'.$k.$b,
+                    'title_attr' => _ADD,
+                    'title_text' => _REPLACE_FIELD.': '.$b,
+                    'word_label' => _WORD.':',
+                    'word_placeholder' => _WORD,
+                    'word_value' => $out[1] ?? '',
+                    'xid' => (string)$k,
+                ]);
             }
-            $content .= '</div>';
+            $content .= $tpl->getHtmlFrag('admin-replace-tab-content', [
+                'items_html' => $items,
+                'tab_id' => 'tabc'.$k,
+            ]);
             $k++;
         }
     }
     $repv = getAdminConfSave($content, 'replace', 'save')
-    .'<script>
-        var countries=new ddtabcontent("replace")
-        countries.setpersist(true)
-        countries.setselectedClassTarget("link")
-        countries.init()
-    </script>';
+        .$tpl->getHtmlFrag('admin-uploads-tabs-script', ['group_id' => 'replace']);
     echo $cont.getAdminBox($repv);
     setFoot();
 }
@@ -78,4 +85,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-

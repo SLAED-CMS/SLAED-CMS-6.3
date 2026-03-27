@@ -49,14 +49,14 @@ function config(): void {
     $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
-    $sort_sel = '<select name="sort" class="sl_conf">'
-        .'<option value="1"'.(($conf['forum']['sort'] ?? null) == '1' ? ' selected' : '').'>'._ASC.'</option>'
-        .'<option value="0"'.(($conf['forum']['sort'] ?? null) == '0' ? ' selected' : '').'>'._DESC.'</option>'
-        .'</select>';
-    $anon_sel = '<select name="anonpost" class="sl_conf">'
-        .'<option value="0"'.(($conf['forum']['anonpost'] ?? null) == '0' ? ' selected' : '').'>'._APOSTMOD.'</option>'
-        .'<option value="1"'.(($conf['forum']['anonpost'] ?? null) == '1' ? ' selected' : '').'>'._APOSTNOMOD.'</option>'
-        .'</select>';
+    $sort_sel = getAdminSelect('sort',
+        getAdminOption('1', _ASC, ($conf['forum']['sort'] ?? null) == '1').
+        getAdminOption('0', _DESC, ($conf['forum']['sort'] ?? null) == '0'),
+        'sl_conf');
+    $anon_sel = getAdminSelect('anonpost',
+        getAdminOption('0', _APOSTMOD, ($conf['forum']['anonpost'] ?? null) == '0').
+        getAdminOption('1', _APOSTNOMOD, ($conf['forum']['anonpost'] ?? null) == '1'),
+        'sl_conf');
     $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'forum',

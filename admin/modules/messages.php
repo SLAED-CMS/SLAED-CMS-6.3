@@ -13,7 +13,15 @@ function messages(): void {
     $cont = setAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._TITLE.'</th><th>'._PURCHASED.'</th><th>'._VIEW.'</th><th>'._LANGUAGE.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-messages-list-head', [
+            'functions_label' => _FUNCTIONS,
+            'id_label' => _ID,
+            'lang_label' => _LANGUAGE,
+            'purchased_label' => _PURCHASED,
+            'status_label' => _STATUS,
+            'title_label' => _TITLE,
+            'view_label' => _VIEW,
+        ]);
         $rows = '';
         while ([$mid, $title, $body, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
             if (($expire && $expire < time()) || (!$active && $expire)) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active, expire = :expire WHERE id = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);
@@ -32,16 +40,19 @@ function messages(): void {
             $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
             $acts = adminMenuItems([
                 ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active),
-                '<a href="'.$afile.'.php?name=messages&amp;op=add&amp;id='.$mid.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>',
-                '<a href="'.$afile.'.php?name=messages&amp;op=delete&amp;id='.$mid.'" OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$title.'&quot;?\');" title="'._ONDELETE.'">'._ONDELETE.'</a>',
+                adminLinkAction($afile.'.php?name=messages&amp;op=add&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=messages&amp;op=delete&amp;id='.$mid, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$mid.'</td>'
-                .'<td><span title="'.$title.'" class="sl_note">'.cutstr($title, 35).'</span></td>'
-                .'<td>'.$exp.'</td>'
-                .'<td>'.$mview.'</td>'
-                .'<td>'.getLangName($lang).'</td>'
-                .'<td>'.ad_status('', $active).'</td><td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-messages-list-row', [
+                'actions_html' => $acts,
+                'id_text' => (string)$mid,
+                'lang_text' => getLangName($lang),
+                'purchased_text' => $exp,
+                'status_html' => ad_status('', $active),
+                'title_attr' => $title,
+                'title_text' => cutstr($title, 35),
+                'view_text' => $mview,
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
     } else {
@@ -72,10 +83,8 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     $hide = '<input type="hidden" name="mid" value="'.$mid.'"><input type="hidden" name="name" value="messages"><input type="hidden" name="op" value="save"><input type="hidden" name="posttype" value="save">';
-    $rows = '';
-    $rows .= getAdminFormRow(_TITLE.':', '<input type="text" name="title" value="'.$title.'" maxlength="100" class="sl_form" placeholder="'._TITLE.'" required>');
-    $rows .= getAdminFormRow(_TEXT.':', textarea('1', 'body', $body, 'all', '10', _TEXT, '1'));
-    if ($conf['multilingual'] == 1) $rows .= getAdminFormRow(_LANGUAGE.':', '<select name="lang" class="sl_form">'.language($lang).'</select>');
+    $langsel = '';
+    if ($conf['multilingual'] == 1) $langsel = getAdminSelect('lang', language($lang), 'sl_form');
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
@@ -86,15 +95,27 @@ function add(): void {
         $newexpire = 1;
         $expire_text = '<input type="number" name="expire" value="0" class="sl_form" placeholder="'._EXPIRATION.'" required>';
     }
-    $rows .= getAdminFormRow(_EXPIRATION.':<div class="sl_small">'._CONFINES.'</div>', $expire_text);
     $privs = [_MVALL, _MVANON, _MVUSERS, _MVADMIN];
     $privopts = '';
     foreach ($privs as $key => $value) {
         $privopts .= getAdminOption((string)($key + 1), $value, $view == ($key + 1));
     }
-    $rows .= getAdminFormRow(_VIEWPRIV, getAdminSelect('view', $privopts, 'sl_form'));
-    $rows .= getAdminFormRow(_ACTIVATE2, radio_form($active, 'status'));
-    $rows .= getAdminFormWide('<input type="hidden" name="newexpire" value="'.$newexpire.'"><input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-messages-add-rows', [
+        'active_html' => radio_form($active, 'status'),
+        'active_label' => _ACTIVATE2,
+        'body_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'),
+        'body_label' => _TEXT.':',
+        'expire_html' => $expire_text,
+        'expire_label_html' => _EXPIRATION.':<div class="sl_small">'._CONFINES.'</div>',
+        'lang_html' => $langsel,
+        'lang_label' => _LANGUAGE.':',
+        'newexpire_value' => (string)$newexpire,
+        'save_label' => _SAVE,
+        'title_label' => _TITLE.':',
+        'title_value' => $title,
+        'view_html' => getAdminSelect('view', $privopts, 'sl_form'),
+        'view_label' => _VIEWPRIV,
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -158,4 +179,3 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-

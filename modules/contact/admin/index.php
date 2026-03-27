@@ -11,11 +11,15 @@ function contact(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO]]);
     $cont .= checkPerms(CONFIG_DIR.'/contact.php');
-    $rows = '';
-    $rows .= getAdminFormRow(_CONTACTINFO.':', textarea('1', 'info', $conf['contact']['info'], 'all', '10', _CONTACTINFO, '0'));
-    $rows .= getAdminFormRow(_CONTACTALL, radio_form($conf['contact']['admins'], 'admins'));
-    $rows .= getAdminFormWide('<input type="hidden" name="name" value="contact"><input type="hidden" name="op" value="save"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', 'sl_center');
-    $cont .= getAdminForm($afile.'.php', $rows);
+    $rows = $tpl->getHtmlFrag('admin-contact-config-rows', [
+        'admins_html' => radio_form($conf['contact']['admins'], 'admins'),
+        'admins_label' => _CONTACTALL,
+        'info_html' => textarea('1', 'info', $conf['contact']['info'], 'all', '10', _CONTACTINFO, '0'),
+        'info_label' => _CONTACTINFO.':',
+        'save_label' => _SAVECHANGES,
+    ]);
+    $hide = '<input type="hidden" name="name" value="contact"><input type="hidden" name="op" value="save">';
+    $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -42,5 +46,4 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-
 

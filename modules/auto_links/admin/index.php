@@ -19,26 +19,29 @@ function auto_links(): void {
     $offset = ($num - 1) * $conf['auto_links']['anum'];
     $result = $db->getSqlQuery('SELECT id, title, url, hits, outs, added FROM '.PREFIX_DB.'_auto_links ORDER BY hits ASC LIMIT '.$offset.', '.$conf['auto_links']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = '<th>'._ID.'</th><th>'._SITENAME.'</th><th>'._SITEURL.'</th><th>'._HITS.'</th><th>'._OUTS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+        $head = $tpl->getHtmlFrag('admin-auto-links-list-head', [
+            'functions_label' => _FUNCTIONS,
+            'hits_label' => _HITS,
+            'id_label' => _ID,
+            'outs_label' => _OUTS,
+            'sitename_label' => _SITENAME,
+            'siteurl_label' => _SITEURL,
+        ]);
         $rows = '';
         while ([$id, $name, $url, $hits, $outs, $added] = $db->getSqlRow($result)) {
-            $vhits = ($hits) ? '<a href="'.$afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id.'" title="'._MVIEW.'">'._MVIEW.'</a>||' : '';
-            $edit = '<a href="'.$afile.'.php?name=auto_links&amp;op=add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>';
-            $drop = '<a href="'.$afile.'.php?name=auto_links&amp;op=delete&amp;id='.$id.'&amp;refer=1"'
-               .' OnClick="return DelCheck(this, \''._DELETE.' &quot;'.$name.'&quot;?\');"'
-               .' title="'._ONDELETE.'">'._ONDELETE.'</a>';
             $acts = adminMenuItems([
-                rtrim($vhits, '|'),
-                $edit,
-                $drop,
+                $hits ? adminLinkAction($afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id, _MVIEW, _MVIEW) : '',
+                adminLinkAction($afile.'.php?name=auto_links&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                adminDeleteAction($afile.'.php?name=auto_links&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $cols = '<td>'.$id.'</td>'
-               .'<td>'.title_tip(_REG.': '.format_time($added, _TIMESTRING)).'<span title="'.$name.'" class="sl_note">'.cutstr($name, 40).'</span></td>'
-               .'<td>'.domain($url).'</td>'
-               .'<td>'.$hits.'</td>'
-               .'<td>'.$outs.'</td>'
-               .'<td>'.$acts.'</td>';
-            $rows .= getAdminTableRow($cols);
+            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-auto-links-list-row', [
+                'actions_html' => $acts,
+                'hits_text' => (string)$hits,
+                'id_text' => (string)$id,
+                'outs_text' => (string)$outs,
+                'sitename_html' => title_tip(_REG.': '.format_time($added, _TIMESTRING)).'<span title="'.$name.'" class="sl_note">'.cutstr($name, 40).'</span>',
+                'siteurl_text' => domain($url),
+            ]));
         }
         $cont .= getAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $conf['auto_links']['anum'], 'name=auto_links&amp;', 'id', '_auto_links', '', '', $conf['auto_links']['anump']);
@@ -73,18 +76,26 @@ function stats(): void {
     $_id = getVar('req', 'id', 'num');
     $box = '';
     if ($_id) {
-        $box = '<form method="post" action="'.$afile.'.php?name=auto_links">'._SORTE.': <select name="sort">';
+        $opts = '';
         foreach ([_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF] as $_k => $_v) {
             $_sort = $_k + 1;
-            $box .= '<option value="'.$_sort.'"'.(getVar('post', 'sort', 'num') == $_sort ? ' selected' : '').'>'.$_v.'</option>';
+            $opts .= getAdminOption((string)$_sort, $_v, getVar('post', 'sort', 'num') == $_sort);
         }
-        $box .= '</select><select name="order">';
+        $sortSelect = getAdminSelect('sort', $opts);
+        $opts = '';
         foreach ([_ASC, _DESC] as $_k => $_v) {
             $_sort = $_k + 1;
-            $box .= '<option value="'.$_sort.'"'.(getVar('post', 'order', 'num') == $_sort ? ' selected' : '').'>'.$_v.'</option>';
+            $opts .= getAdminOption((string)$_sort, $_v, getVar('post', 'order', 'num') == $_sort);
         }
-        $box .= '</select> <input type="hidden" name="op" value="stats"><input type="hidden" name="id" value="'.$_id.'"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-        $box = getAdminSearchBox($box);
+        $orderSelect = getAdminSelect('order', $opts);
+        $box = getAdminSearchBox($tpl->getHtmlFrag('admin-auto-links-stats-search', [
+            'id_value' => (string)$_id,
+            'ok_label' => _OK,
+            'order_html' => $orderSelect,
+            'route' => $afile,
+            'sort_html' => $sortSelect,
+            'sort_label' => _SORTE.':',
+        ]));
     }
     $cont = setAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
@@ -99,17 +110,24 @@ function stats(): void {
         $a++;
     }
     if (isArray($list)) {
-        $head = '<th>'._ID.'</th><th>'._NICKNAME.'</th><th>'._IP.'</th><th>'._REF_URL.'</th><th>'._IN_URL.'</th>';
+        $head = $tpl->getHtmlFrag('admin-auto-links-stats-head', [
+            'id_label' => _ID,
+            'in_url_label' => _IN_URL,
+            'ip_label' => _IP,
+            'nickname_label' => _NICKNAME,
+            'ref_url_label' => _REF_URL,
+        ]);
         $rows = '';
         for ($i = $offset; $i < $tnum; $i++) {
             if (isset($list[$i])) {
                 $name = ($list[$i][1]) ? user_info($list[$i][2]) : $list[$i][2];
-                $cols = '<td>'.$list[$i][0].'</td>'
-                   .'<td>'.title_tip(_DATE.': '.date(_TIMESTRING, $list[$i][6])).$name.'</td>'
-                   .'<td>'.user_geo_ip($list[$i][3], 4).'</td>'
-                   .'<td>'.domain($list[$i][4], 35).'</td>'
-                   .'<td>'.domain($list[$i][5], 15).'</td>';
-                $rows .= getAdminTableRow($cols);
+                $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-auto-links-stats-row', [
+                    'hits_text' => (string)$list[$i][0],
+                    'in_url_text' => domain($list[$i][5], 15),
+                    'ip_html' => user_geo_ip($list[$i][3], 4),
+                    'nickname_html' => title_tip(_DATE.': '.date(_TIMESTRING, $list[$i][6])).$name,
+                    'ref_url_text' => domain($list[$i][4], 35),
+                ]));
             }
         }
         $cont .= getAdminTable($head, $rows);
@@ -146,14 +164,21 @@ function add(): void {
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', $stop)]);
     if ($desc) $cont .= preview($name, $desc, '', '', 'auto_links');
-    $rows = '';
-    $rows .= getAdminFormRow(_SITENAME.':', '<input type="text" name="name" value="'.$name.'" maxlength="255" class="sl_form" placeholder="'._SITENAME.'" required>');
-    $rows .= getAdminFormRow(_A_LINKS_E.':', '<input type="email" name="mail" value="'.$email.'" maxlength="100" class="sl_form" placeholder="'._A_LINKS_E.'" required>');
-    $rows .= getAdminFormRow(_A_LINKS_TEXT.':', textarea('1', 'desc', $desc, 'auto_links', '5', _A_LINKS_TEXT, '1'));
-    $rows .= getAdminFormRow(_A_LINKS_L.':', '<input type="url" name="site" value="'.$site.'" maxlength="100" class="sl_form" placeholder="'._A_LINKS_L.'" required>');
-    $rows .= getAdminFormRow(_HITS.':', '<input type="number" name="hits" value="'.$hits.'" class="sl_form" placeholder="'._HITS.'">');
-    $rows .= getAdminFormRow(_OUTS.':', '<input type="number" name="outs" value="'.$outs.'" class="sl_form" placeholder="'._OUTS.'">');
-    $rows .= getAdminFormWide(ad_save('id', $id, 'save'), '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-auto-links-add-rows', [
+        'desc_html' => textarea('1', 'desc', $desc, 'auto_links', '5', _A_LINKS_TEXT, '1'),
+        'desc_label' => _A_LINKS_TEXT.':',
+        'email_label' => _A_LINKS_E.':',
+        'email_value' => $email,
+        'hits_label' => _HITS.':',
+        'hits_value' => (string)$hits,
+        'name_label' => _SITENAME.':',
+        'name_value' => $name,
+        'outs_label' => _OUTS.':',
+        'outs_value' => (string)$outs,
+        'save_html' => ad_save('id', $id, 'save'),
+        'site_label' => _A_LINKS_L.':',
+        'site_value' => $site,
+    ]);
     $cont .= getAdminForm($afile.'.php?name=auto_links', $rows);
     echo $cont;
     setFoot();
@@ -224,21 +249,31 @@ function config(): void {
     $opts = '';
     foreach (scandir($path) as $entry) {
         if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry)) {
-            $sel = ($conf['auto_links']['img'] == $entry) ? ' selected' : '';
-            $opts .= '<option value="'.$path.$entry.'"'.$sel.'>'.$entry.'</option>';
+            $opts .= getAdminOption($path.$entry, $entry, $conf['auto_links']['img'] == $entry);
         }
     }
-    $rows = getAdminFormRow(_A_1.':', '<select name="img" id="img_replace" class="sl_conf">'.$opts.'</select>');
-    $rows .= getAdminFormRow(_A_2.':', '<img src="'.$path.$conf['auto_links']['img'].'" id="picture" alt="'._SITELOGO.'">');
-    $rows .= getAdminFormRow(_C_33.':', '<input type="number" name="num" value="'.$conf['auto_links']['num'].'" class="sl_conf" placeholder="'._C_33.'" required>');
-    $rows .= getAdminFormRow(_C_34.':', '<input type="number" name="anum" value="'.$conf['auto_links']['anum'].'" class="sl_conf" placeholder="'._C_34.'" required>');
-    $rows .= getAdminFormRow(_C_35.':', '<input type="number" name="nump" value="'.$conf['auto_links']['nump'].'" class="sl_conf" placeholder="'._C_35.'" required>');
-    $rows .= getAdminFormRow(_C_36.':', '<input type="number" name="anump" value="'.$conf['auto_links']['anump'].'" class="sl_conf" placeholder="'._C_36.'" required>');
-    $rows .= getAdminFormRow(_A_4.':', '<input type="number" name="strip" value="'.$conf['auto_links']['strip'].'" class="sl_conf" placeholder="'._A_4.'" required>');
-    $rows .= getAdminFormRow(_A_5.':', '<input type="number" name="limit" value="'.$conf['auto_links']['limit'].'" class="sl_conf" placeholder="'._A_5.'" required>');
-    $rows .= getAdminFormRow(_ADDAMAIL, radio_form($conf['auto_links']['addmail'], 'addmail'));
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
     $hide = '<input type="hidden" name="op" value="configsave">';
+    $rows = $tpl->getHtmlFrag('admin-auto-links-config-rows', [
+        'addmail_html' => radio_form($conf['auto_links']['addmail'], 'addmail'),
+        'addmail_label' => _ADDAMAIL,
+        'anum_label' => _C_34.':',
+        'anum_value' => (string)$conf['auto_links']['anum'],
+        'anump_label' => _C_36.':',
+        'anump_value' => (string)$conf['auto_links']['anump'],
+        'img_html' => getAdminSelect('img', $opts, 'sl_conf', 'id="img_replace"'),
+        'img_label' => _A_1.':',
+        'limit_label' => _A_5.':',
+        'limit_value' => (string)$conf['auto_links']['limit'],
+        'num_label' => _C_33.':',
+        'num_value' => (string)$conf['auto_links']['num'],
+        'nump_label' => _C_35.':',
+        'nump_value' => (string)$conf['auto_links']['nump'],
+        'preview_html' => '<img src="'.$path.$conf['auto_links']['img'].'" id="picture" alt="'._SITELOGO.'">',
+        'preview_label' => _A_2.':',
+        'save_label' => _SAVECHANGES,
+        'strip_label' => _A_4.':',
+        'strip_value' => (string)$conf['auto_links']['strip'],
+    ]);
     $cont .= getAdminForm($afile.'.php?name=auto_links', $rows, $hide, 'sl_table_conf', 'post', 'post');
     echo getAdminBox($cont);
     setFoot();
@@ -283,5 +318,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
 

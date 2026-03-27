@@ -16,7 +16,7 @@ function fields(): void {
     $k = 0;
     foreach ($mods as $val) {
         $fieldc = explode('||', $conf['fields'][$val]);
-        $content .= '<div id="tabc'.$k.'" class="tabcont">';
+        $tabcontent = '';
         for ($c = 0; $c < 10; $c++) {
             preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
             $fieldname = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
@@ -32,28 +32,35 @@ function fields(): void {
             }
             $field2 = getAdminSelect('field4'.$k.'[]', $fopts2, 'sl_conf');
             $b = $c + 1;
-            $display = (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '';
-            $hr = ($c == '0') ? '' : '<hr>';
-            $content .= '<div id="fi'.$k.$c.'"'.$display.'>'.$hr
-               .'<table class="sl_table_conf">'
-               .'<tr><td><a OnClick="HideShow(\'fi'.$k.$b.'\', \'slide\', \'up\', 500);" title="'._ADD.'" class="sl_plus">'._FIELD.': '.$b.'</a></td><td>'
-               .'<table><tr><td>'._NAME.':</td><td><input type="text" name="field1'.$k.'[]" value="'.$out[1].'" class="sl_conf" placeholder="'._NAME.'" required></td></tr>'
-               .'<tr><td>'._CONTENT.':</td><td><input type="text" name="field2'.$k.'[]" value="'.$out[2].'" class="sl_conf" placeholder="'._CONTENT.'" required></td></tr>'
-               .'<tr><td>'._TYPE.':</td><td>'.$field.'</td></tr>'
-               .'<tr><td>'._USES.':</td><td>'.$field2.'</td></tr></table>'
-               .'</td></tr></table></div>';
+            $tabcontent .= $tpl->getHtmlFrag('admin-fields-field-block', [
+                'block_id' => 'fi'.$k.$c,
+                'content_value' => $out[2] ?? '',
+                'display_attr' => (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '',
+                'field_html' => $field,
+                'field2_html' => $field2,
+                'hr_html' => ($c == '0') ? '' : '<hr>',
+                'next_block_id' => 'fi'.$k.$b,
+                'content_placeholder' => _CONTENT,
+                'content_label' => _CONTENT.':',
+                'field_label' => _FIELD.': '.$b,
+                'name_label' => _NAME.':',
+                'name_placeholder' => _NAME,
+                'name_value' => $out[1] ?? '',
+                'type_label' => _TYPE.':',
+                'uses_label' => _USES.':',
+                'title_attr' => _ADD,
+                'xid' => (string)$k,
+            ]);
         }
-        $content .= '</div>';
+        $content .= $tpl->getHtmlFrag('admin-fields-tab-content', [
+            'items_html' => $tabcontent,
+            'tab_id' => 'tabc'.$k,
+        ]);
         $k++;
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _FIELDINFO]);
     $fieldv = getAdminConfSave($content, 'fields', 'save')
-       .'<script>
-        var countries=new ddtabcontent("fields")
-        countries.setpersist(true)
-        countries.setselectedClassTarget("link")
-        countries.init()
-    </script>';
+       .$tpl->getHtmlFrag('admin-fields-tabs-script', ['group_id' => 'fields']);
     echo $cont.getAdminBox($fieldv);
     setFoot();
 }
@@ -92,4 +99,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-

@@ -205,7 +205,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
-    $s_lang = '<select name="lang" class="sl_conf">'.language($conf['lang']['lang'], 1).'</select>';
+    $s_lang = getAdminSelect('lang', language($conf['lang']['lang'], 1), 'sl_conf');
     $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'lang',

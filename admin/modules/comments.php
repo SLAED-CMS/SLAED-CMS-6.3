@@ -23,9 +23,10 @@ function edit(): void {
     $result = $db->getSqlQuery('SELECT id, modul, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
     $hide = '<input type="hidden" name="id" value="'.$id.'"><input type="hidden" name="name" value="comments"><input type="hidden" name="op" value="editsave">';
-    $rows = '';
-    $rows .= getAdminFormRow(_COMMENT.':', textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1'));
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $rows = $tpl->getHtmlFrag('admin-comments-edit-rows', [
+        'comment_html' => textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1'),
+        'save_label' => _SAVECHANGES,
+    ]);
     $cont .= getAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
@@ -174,4 +175,3 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-

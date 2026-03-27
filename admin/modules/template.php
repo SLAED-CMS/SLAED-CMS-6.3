@@ -8,15 +8,18 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function getTemplateSearch(string $templ): string {
     global $afile, $tpl;
-    $search = '<form method="post" action="'.$afile.'.php">'._THEME.': <select name="templ">';
+    $opts = '';
     foreach (scandir('templates') as $file) {
         if (!preg_match('/\./', $file)) {
-            $selected = ($file == $templ) ? ' selected' : '';
-            $search .= '<option value="'.$file.'"'.$selected.'>'.$file.'</option>';
+            $opts .= getAdminOption($file, $file, $file == $templ);
         }
     }
-    $search .= '</select> <input type="hidden" name="name" value="template"><input type="hidden" name="op" value="template"><input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
-    return getAdminSearchBox($search);
+    return getAdminSearchBox($tpl->getHtmlFrag('admin-template-search-form', [
+        'ok_label' => _OK,
+        'route' => $afile,
+        'select_html' => getAdminSelect('templ', $opts, 'sl_form'),
+        'theme_label' => _THEME.':',
+    ]));
 }
 
 function template(): void {
@@ -38,9 +41,20 @@ function template(): void {
                     $permtest = checkPerms(BASE_DIR.'/'.$filelink);
                     if ($permtest) $cont .= $permtest;
                     $comp = getModuleName(strtr($file, $langs));
-                    $conts .= '<table class="sl_bodyline"><tr><th class="sl_right"><a OnClick="CloseOpen(\'sl_open_'.$i.'\', 0);" title="'._EDIT.'" class="sl_plus">'.$comp.' | '._FILE.': '.$file.' | '.date(_TIMESTRING, filemtime($filelink)).'</a></th></tr></table>'
-                    .'<div id="sl_open_'.$i.'"><form action="'.$afile.'.php" method="post"><table class="sl_blockline"><tr><td>'.textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/html', file_get_contents($filelink)).'</td></tr>'
-                    .'<tr><td class="sl_center"><input type="hidden" name="name" value="template"><input type="hidden" name="op" value="save"><input type="hidden" name="templ" value="'.$templ.'"><input type="hidden" name="filelink" value="'.$filelink.'"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form></div>';
+                    $conts .= $tpl->getHtmlFrag('admin-template-editor-block', [
+                        'comp_text' => $comp,
+                        'editor_html' => textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/html', file_get_contents($filelink)),
+                        'edit_label' => _EDIT,
+                        'file_label' => _FILE.':',
+                        'file_text' => $file,
+                        'filelink' => $filelink,
+                        'group_id' => 'sl_open_'.$i,
+                        'mtime_text' => date(_TIMESTRING, filemtime($filelink)),
+                        'op_value' => 'save',
+                        'route' => $afile,
+                        'save_label' => _SAVECHANGES,
+                        'templ' => $templ,
+                    ]);
                     $i++;
                 }
             }
@@ -72,9 +86,20 @@ function style(): void {
                     $permtest = checkPerms(BASE_DIR.'/'.$filelink);
                     if ($permtest) $cont .= $permtest;
                     $comp = getModuleName(strtr($file, $langs));
-                    $conts .= '<table class="sl_bodyline"><tr><th class="sl_right"><a OnClick="CloseOpen(\'sl_open_'.$i.'\', 0);" title="'._EDIT.'" class="sl_plus">'.$comp.' | '._FILE.': '.$file.' | '.date(_TIMESTRING, filemtime($filelink)).'</a></th></tr></table>'
-                    .'<div id="sl_open_'.$i.'"><form action="'.$afile.'.php" method="post"><table class="sl_blockline"><tr><td>'.textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/css', file_get_contents($filelink)).'</td></tr>'
-                    .'<tr><td class="sl_center"><input type="hidden" name="name" value="template"><input type="hidden" name="op" value="stylesave"><input type="hidden" name="templ" value="'.$templ.'"><input type="hidden" name="filelink" value="'.$filelink.'"><input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form></div>';
+                    $conts .= $tpl->getHtmlFrag('admin-template-editor-block', [
+                        'comp_text' => $comp,
+                        'editor_html' => textarea_code('code_'.$i.'', 'template', 'sl_form', 'text/css', file_get_contents($filelink)),
+                        'edit_label' => _EDIT,
+                        'file_label' => _FILE.':',
+                        'file_text' => $file,
+                        'filelink' => $filelink,
+                        'group_id' => 'sl_open_'.$i,
+                        'mtime_text' => date(_TIMESTRING, filemtime($filelink)),
+                        'op_value' => 'stylesave',
+                        'route' => $afile,
+                        'save_label' => _SAVECHANGES,
+                        'templ' => $templ,
+                    ]);
                     $i++;
                 }
             }
@@ -132,5 +157,4 @@ switch ($op) {
     case 'stylesave': stylesave(); break;
     case 'info': info(); break;
 }
-
 
