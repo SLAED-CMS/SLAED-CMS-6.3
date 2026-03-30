@@ -34,8 +34,8 @@ function lang(): void {
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
     $rows = '';
-    $sys_admin = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
-    $sys_modul = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit" title="'._FULLEDIT.'">'._MODUL.'</a>';
+    $sys_admin = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', _FULLEDIT, _ADMIN);
+    $sys_modul = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit', _FULLEDIT, _MODUL);
     $rows .= getAdminTableRow('<td>1</td><td>'._SYSTEM.'</td><td>'._ALL.'</td><td>'._MVALL.'</td><td>'.ad_status('', 1).'</td><td>'.adminMenuItems([$sys_admin, $sys_modul]).'</td>');
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
@@ -49,16 +49,9 @@ function lang(): void {
         $act = isset($modbase[$mod[$i]]) && $modbase[$mod[$i]] ? 1 : 0;
         $view = $who_view[$mod[$i]] ?? _MVALL;
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
-        $eadmin = '';
-        $emodul = '';
-        if (is_dir($mod_path.'/admin/lang')) $eadmin = '<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin" title="'._FULLEDIT.'">'._ADMIN.'</a>';
-        if (is_dir($mod_path.'/lang')) {
-            $sep = $eadmin ? '||' : '';
-            $emodul = $sep.'<a href="'.$afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'" title="'._FULLEDIT.'">'._MODUL.'</a>';
-        }
         $acts = [];
-        if ($eadmin !== '') $acts[] = $eadmin;
-        if ($emodul !== '') $acts[] = ltrim($emodul, '|');
+        if (is_dir($mod_path.'/admin/lang')) $acts[] = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', _FULLEDIT, _ADMIN);
+        if (is_dir($mod_path.'/lang')) $acts[] = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], _FULLEDIT, _MODUL);
         $rows .= getAdminTableRow('<td>'.$a.'</td><td>'.getModuleName($mod[$i]).'</td><td>'.$mod[$i].'</td><td>'.$view.'</td><td>'.ad_status('', $act).'</td><td>'.adminMenuItems($acts).'</td>');
     }
     $cont .= getAdminTable($head, $rows);
@@ -141,7 +134,7 @@ function fileedit(): void {
             $rows .= getAdminFormRow(getLangName($lng_cn[$j]).':', getAdminTextInput('lng['.$lng_cn[$j].'][]', $val, 'sl_form '.$class, 'placeholder="'.getLangName($lng_cn[$j]).'"').$btn);
         }
     }
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $rows .= getAdminFormWide(getAdminSubmitButton(_SAVECHANGES), '', 'sl_center');
     $box = getAdminForm($afile.'.php', $rows, $hide);
     $url = 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
     $box .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');

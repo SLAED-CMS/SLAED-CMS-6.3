@@ -49,7 +49,7 @@ function voting(): void {
                 'modul_text' => $mod,
                 'show_lang' => $conf['multilingual'] == 1,
                 'status_html' => ad_status('', $active),
-                'title_html' => title_tip(_CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span>',
+                'title_html' => adminTitleTipLabel(_CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type, $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getAdminTable($head, $rows);

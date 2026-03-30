@@ -7,20 +7,6 @@
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
-function getBlockModules(): array {
-    global $conf;
-    static $mods = null;
-    if ($mods === null) {
-        $mods = [];
-        foreach ($conf['modules'] as $name => $info) {
-            if ((int)($info['type'] ?? 1) !== 1) continue;
-            $mods[] = $name;
-        }
-        sort($mods);
-    }
-    return $mods;
-}
-
 function blocks(): void {
     global $tpl;
     setHead();
@@ -302,7 +288,7 @@ function edit(): void {
         .getAdminHidden('weight', (string)$weight)
         .getAdminHidden('name', 'blocks')
         .getAdminHidden('op', 'editsave');
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $rows .= getAdminFormWide(getAdminSubmitButton(_SAVE), '', 'sl_center');
     echo $cont.getAdminForm($afile.'.php', $rows, $hide);
     setFoot();
 }

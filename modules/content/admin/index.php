@@ -44,7 +44,7 @@ function content(): void {
                 'id_text' => (string)$id,
                 'reads_text' => (string)$counter,
                 'status_html' => ad_status('', $active),
-                'title_html' => title_tip(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.'<br>'._ORTYPEURL.': '.$conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span>',
+                'title_html' => adminTitleTipLabel(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.'<br>'._ORTYPEURL.': '.$conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id, $title, cutstr($title, 50)),
             ]));
         }
         $cont .= getAdminTable($head, $rows);

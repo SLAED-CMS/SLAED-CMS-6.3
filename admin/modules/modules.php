@@ -115,7 +115,7 @@ function modules(): void {
             $who_view = _MVADMIN;
         }
         $typel = ($type == 0) ? 'tools' : 'people-fill';
-        $titlel = ($menu == 0) ? title_tip(_NO_SICHT).$lang : $lang;
+        $titlel = ($menu == 0) ? adminTitleTip(_NO_SICHT).$lang : $lang;
         if ($group != 0) {
             $grp = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
             $group_name = $grp['name'];

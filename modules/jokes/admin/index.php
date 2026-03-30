@@ -57,7 +57,7 @@ function jokes(): void {
                 'id_text' => (string)$jokeid,
                 'post_html' => $post,
                 'status_html' => ad_status('', $active),
-                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</span>',
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getAdminTable($head, $rows);

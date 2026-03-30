@@ -49,7 +49,7 @@ function security(): void {
                 'actions_html' => $acts,
                 'date_text' => date(_TIMESTRING, filemtime($path)),
                 'size_text' => filterSize($filesize),
-                'title_html' => title_tip(_FILE.': storage/logs/'.$file).$title,
+                'title_html' => adminTitleTip(_FILE.': storage/logs/'.$file).$title,
             ]));
         }
     }
@@ -112,7 +112,7 @@ function banlist(): void {
                     'cidr_text' => '/'.$tmask,
                     'date_text' => getTimeLeft((int)$binfo[2]),
                     'hash_text' => $binfo[1],
-                    'ip_html' => title_tip(_BANN_REAS.': '.$binfo[3]).user_geo_ip($tip, 4),
+                    'ip_html' => adminTitleTip(_BANN_REAS.': '.$binfo[3]).user_geo_ip($tip, 4),
                 ]));
             }
         }

@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function favorites(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.getAdminBox('<div id="repfav_aliste">'.fav_aliste(1).'</div>');
+    echo $cont.getAdminPlaceholderBox('repfav_aliste', fav_aliste(1));
     setFoot();
 }
 

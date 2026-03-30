@@ -41,7 +41,7 @@ function groups(): void {
             $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-groups-list-row', [
                 'actions_html' => $acts,
                 'extra_text' => $extra,
-                'group_html' => title_tip(_DESCRIPTION.': '.$description).'<span style="color: '.$color.'">'.$grname.'</span>',
+                'group_html' => adminTitleTip(_DESCRIPTION.': '.$description).adminColorLabel($color, $grname),
                 'id_text' => (string)$grid,
                 'points_text' => (string)$points,
                 'rank_alt' => _RANK,

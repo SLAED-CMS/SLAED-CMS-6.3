@@ -52,7 +52,7 @@ function money(): void {
             $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-money-list-row', [
                 'actions_html' => $acts,
                 'date_text' => format_time($time, _TIMESTRING),
-                'email_html' => title_tip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
+                'email_html' => adminTitleTip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
                 'id_text' => (string)$id,
                 'ip_html' => user_geo_ip($ip, 4),
                 'status_html' => ad_status('', $status),

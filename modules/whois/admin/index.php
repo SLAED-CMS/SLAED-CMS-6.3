@@ -58,7 +58,7 @@ function whois(): void {
                 'host_html' => $host,
                 'host_status_html' => ad_status('', $statusHost),
                 'id_text' => (string)$id,
-                'postedby_html' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ipSender.'<br>'._COMMENT.': '.$hometext).$post,
+                'postedby_html' => adminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ipSender.'<br>'._COMMENT.': '.$hometext).$post,
             ]));
         }
         $cont .= getAdminTable($head, $rows, 'sl_table_list');

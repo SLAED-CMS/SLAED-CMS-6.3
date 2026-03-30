@@ -549,6 +549,14 @@ function adminTitleTipLabel(string $tip, string $title, string $label): string {
     return adminTitleTip($tip).adminNoteLabel($title, $label);
 }
 
+function adminColorLabel(string $color, string $label): string {
+ global $tpl;
+    return $tpl->getHtmlFrag('admin-color-label', [
+        'color_val' => $color,
+        'label_text' => $label,
+    ]);
+}
+
 function adminLinkAction(string $href, string $title, string $label): string {
  global $tpl;
     return $tpl->getHtmlFrag('comment-action-link', [

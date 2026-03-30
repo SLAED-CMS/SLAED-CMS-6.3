@@ -687,6 +687,26 @@
 
 - `code_html`: raw output from `textarea_code()`
 
+## admin-blocks-view-grid
+
+- `rows_html`: prepared block visibility grid rows assembled in PHP from `admin-blocks-view-row-open`, `admin-blocks-view-module-cell`, `admin-blocks-view-special-cell`, and `admin-blocks-view-row-close` fragments
+
+## admin-blocks-view-module-cell
+
+- (no raw slots — all values are escaped by template)
+
+## admin-blocks-view-special-cell
+
+- (no raw slots — all values are escaped by template)
+
+## admin-blocks-view-row-open
+
+- (no raw slots — structural `<tr>` open tag)
+
+## admin-blocks-view-row-close
+
+- (no raw slots — structural `</tr>` close tag)
+
 ## admin-rss-source-block
 
 - `uses_html`: prepared source-target select markup from `getAdminSelect()`
@@ -892,6 +912,22 @@
 ## admin-number-input
 
 - `input_attr`: prepared extra attribute string (e.g. `placeholder="..." required`) — output raw, trusted PHP-assembled literals only
+
+## admin-shop-assoc-table
+
+- `rows_html`: prepared associated-category checkbox rows assembled in PHP from `admin-blocks-view-row-open`, `admin-shop-assoc-cell`, and `admin-blocks-view-row-close` fragments
+
+## admin-shop-assoc-cell
+
+- (no raw slots — all values are escaped by template)
+
+## admin-submit-button
+
+- (no raw slots — all values are escaped by template)
+
+## admin-section-heading
+
+- (no raw slots — all values are escaped by template)
 
 ## Rules
 

@@ -105,7 +105,7 @@ function admins(): void {
             'actions_html' => $acts,
             'email_html' => mailto($email),
             'language_text' => $lang,
-            'name_html' => title_tip($tip).$show,
+            'name_html' => adminTitleTip($tip).$show,
             'rank_text' => (string)$title,
             'super_text' => ((int)$super === 1) ? _YES : _NO,
         ]);

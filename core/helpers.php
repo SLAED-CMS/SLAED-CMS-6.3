@@ -292,34 +292,64 @@ function getAccountSearchBox(int $search, string $chng): string {
     ]));
 }
 
+# Return frontend-capable block module names from shared module config
+function getBlockModules(): array {
+    global $conf;
+    static $mods = null;
+    if ($mods === null) {
+        $mods = [];
+        foreach ($conf['modules'] as $name => $info) {
+            if ((int)($info['type'] ?? 1) !== 1) continue;
+            $mods[] = $name;
+        }
+        sort($mods);
+    }
+    return $mods;
+}
+
 # Render the 2-column block visibility checkbox grid from an active-values list
 function getBlockViewGrid(array $where = []): string {
     global $tpl;
     $cols = 2;
-    $idx = 1;
+    $idx  = 1;
     $rows = '';
+    $wide = intval(100 / $cols);
     $mods = getBlockModules();
     foreach ($mods as $name) {
-        $isch = in_array($name, $where);
-        $wide = intval(100 / $cols);
-        if (($idx - 1) % $cols === 0) $rows .= '<tr>';
-        $rows .= '<td style="width: '.$wide.'%;"><input type="checkbox" name="blockwhere[]" value="'.$name.'"'.($isch ? ' checked' : '').'> '
-            .'<span title="'._MODUL.': '.$name.'" class="sl_note">'.getModuleName($name).'</span></td>';
-        if ($idx % $cols === 0) $rows .= '</tr>';
+        if (($idx - 1) % $cols === 0) $rows .= $tpl->getHtmlFrag('admin-blocks-view-row-open', []);
+        $rows .= $tpl->getHtmlFrag('admin-blocks-view-module-cell', [
+            'checked'    => in_array($name, $where),
+            'label_text' => getModuleName($name),
+            'mod_label'  => _MODUL,
+            'name_attr'  => $name,
+            'width_num'  => $wide,
+        ]);
+        if ($idx % $cols === 0) $rows .= $tpl->getHtmlFrag('admin-blocks-view-row-close', []);
         $idx++;
     }
-    $iel = in_array('ihome', $where) ? ' checked' : '';
-    $hel = in_array('home', $where) ? ' checked' : '';
-    $cel = (in_array('all', $where) && $hel === '') ? ' checked' : '';
-    $oel = in_array('otricanie', $where) ? ' checked' : '';
-    $fel = in_array('infly', $where) ? ' checked' : '';
-    $xel = in_array('flyfix', $where) ? ' checked' : '';
-    $rows .= '<tr><td><input type="checkbox" name="blockwhere[]" value="ihome"'.$iel.'> <b>'._HOME.'</b></td>'
-        .'<td><input type="checkbox" name="blockwhere[]" value="home"'.$hel.'> <b>'._INHOME.'</b></td></tr>'
-        .'<tr><td><input type="checkbox" name="blockwhere[]" value="all"'.$cel.'> <b>'._BLOCK_ALL.'</b></td>'
-        .'<td><input type="checkbox" name="blockwhere[]" value="otricanie"'.$oel.'> <b>'._DENYING.'</b></td></tr>'
-        .'<tr><td><input type="checkbox" name="blockwhere[]" value="infly"'.$fel.'> <b>'._INFLY.'</b></td>'
-        .'<td><input type="checkbox" name="blockwhere[]" value="flyfix"'.$xel.'> <b>'._FLY_FIX.'</b></td></tr>';
+    $home_on  = in_array('home', $where);
+    $specials = [
+        ['ihome',     in_array('ihome',     $where),              _HOME],
+        ['home',      $home_on,                                   _INHOME],
+        ['all',       in_array('all',       $where) && !$home_on, _BLOCK_ALL],
+        ['otricanie', in_array('otricanie', $where),              _DENYING],
+        ['infly',     in_array('infly',     $where),              _INFLY],
+        ['flyfix',    in_array('flyfix',    $where),              _FLY_FIX],
+    ];
+    for ($i = 0; $i < count($specials); $i += 2) {
+        $rows .= $tpl->getHtmlFrag('admin-blocks-view-row-open', []);
+        $rows .= $tpl->getHtmlFrag('admin-blocks-view-special-cell', [
+            'checked'    => $specials[$i][1],
+            'label_text' => $specials[$i][2],
+            'value_attr' => $specials[$i][0],
+        ]);
+        $rows .= $tpl->getHtmlFrag('admin-blocks-view-special-cell', [
+            'checked'    => $specials[$i + 1][1],
+            'label_text' => $specials[$i + 1][2],
+            'value_attr' => $specials[$i + 1][0],
+        ]);
+        $rows .= $tpl->getHtmlFrag('admin-blocks-view-row-close', []);
+    }
     return $tpl->getHtmlFrag('admin-blocks-view-grid', ['rows_html' => $rows]);
 }
 
@@ -452,6 +482,22 @@ function getAdminListForm(string $table, string $bottom, string $hide): string {
         'bottom_html' => $bottom,
         'hide_html' => $hide,
         'table_html' => $table,
+    ]);
+}
+
+# Render one shared admin submit button from a label string
+function getAdminSubmitButton(string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-submit-button', [
+        'label_text' => $label,
+    ]);
+}
+
+# Render one shared admin section heading from a label string
+function getAdminSectionHeading(string $label): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-section-heading', [
+        'label_text' => $label,
     ]);
 }
 

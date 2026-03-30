@@ -65,7 +65,7 @@ function scheduler(): void {
         foreach (explode('||', $amenu) as $item) {
             if ($item !== '') $acts[] = $item;
         }
-        $cols = '<td>'.title_tip($tip).'<span title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'" class="sl_note">'.htmlspecialchars(cutstr($title, 22), ENT_QUOTES, 'UTF-8').'</span></td>'
+        $cols = '<td>'.adminTitleTipLabel($tip, $title, cutstr($title, 22)).'</td>'
         .'<td>'.htmlspecialchars($nextr, ENT_QUOTES, 'UTF-8').'</td>'
         .'<td>'.$stat.'</td>'
         .'<td>'.htmlspecialchars($job['priority'] ?? '100', ENT_QUOTES, 'UTF-8').'</td>'

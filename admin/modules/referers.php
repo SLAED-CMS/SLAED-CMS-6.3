@@ -72,7 +72,7 @@ function referers(): void {
                 $words = engines_word($massiv[$i][4]) ?: _NO;
                 $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-referers-list-row', [
                     'hits_text' => (string)$massiv[$i][0],
-                    'ip_html' => title_tip(_NICKNAME.': '.$name.'<br>'._DATE.': '.format_time($massiv[$i][6], _TIMESTRING)).$massiv[$i][3],
+                    'ip_html' => adminTitleTip(_NICKNAME.': '.$name.'<br>'._DATE.': '.format_time($massiv[$i][6], _TIMESTRING)).$massiv[$i][3],
                     'referer_text' => domain($massiv[$i][4], 30),
                     'search_attr' => $words,
                     'search_text' => cutstr($words, 25),

@@ -23,7 +23,7 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $warn]);
     $hide = getAdminHidden('name', 'editor').getAdminHidden('op', 'save').getAdminHidden('editor', $edit).getAdminHidden('file', $file);
     $rows = getAdminFormWide(textarea_code('code', 'template', 'sl_form', $mtype, $text));
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVE.'" class="sl_but_blue">', '', 'sl_center');
+    $rows .= getAdminFormWide(getAdminSubmitButton(_SAVE), '', 'sl_center');
     return $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
 }
 

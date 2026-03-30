@@ -311,7 +311,7 @@ function search(): void {
                 'date_text' => format_time((string)$time, _TIMESTRING),
                 'hits_text' => (string)intval($hits),
                 'modul_html' => $hmod,
-                'word_html' => title_tip(_MODUL.': '.htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8').'<br>'._DATE.': '.format_time((string)$time, _TIMESTRING)).$hword,
+                'word_html' => adminTitleTip(_MODUL.': '.htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8').'<br>'._DATE.': '.format_time((string)$time, _TIMESTRING)).$hword,
             ]));
         }
         $html = getAdminTable($head, $rows);
@@ -428,15 +428,15 @@ function config(): void {
     ]);
     $cfghide = getAdminHidden('op', 'save').getAdminHidden('token', getSiteToken('search'));
     $html = getAdminForm($afile.'.php?name=search', $cfgrows, $cfghide, 'sl_table_conf');
-    $html .= '<h3>'._SEARCHENABLED.'</h3>'.getSearchauditTable($elist, 'enabled');
+    $html .= getAdminSectionHeading(_SEARCHENABLED).getSearchauditTable($elist, 'enabled');
     $rdyrows = $tpl->getHtmlFrag('admin-search-ready-rows', [
         'searchaddall_label' => _SEARCHADDALL,
         'searchaddsel_label' => _SEARCHADDSEL,
         'searchauto_label_html' => getAdminHintLabel(_SEARCHAUTO, _SEARCHAUTOINFO),
     ]);
     $rdyhide = getAdminHidden('op', 'modadd').getAdminHidden('token', getSiteToken('search'));
-    $html .= '<h3>'._SEARCHREADY.'</h3>'.getSearchauditTable($rlist, 'ready').getAdminForm($afile.'.php?name=search', $rdyrows, $rdyhide, 'sl_table_conf');
-    $html .= '<h3>'._SEARCHINVALID.'</h3>'.getSearchauditTable($ilist, 'invalid');
+    $html .= getAdminSectionHeading(_SEARCHREADY).getSearchauditTable($rlist, 'ready').getAdminForm($afile.'.php?name=search', $rdyrows, $rdyhide, 'sl_table_conf');
+    $html .= getAdminSectionHeading(_SEARCHINVALID).getSearchauditTable($ilist, 'invalid');
     $cont .= getAdminBox($html);
     echo $cont;
     setFoot();

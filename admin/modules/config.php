@@ -12,8 +12,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['', '', '', '', '', '', '', 'name=config&amp;op=info'], 'tabs' => [_GENPREF, _SEO, _MULTILINGUAL, _CENSORS, _BOTSOPT, _OPTIMIZE, _MAILOPT, _INFO], 'id' => 'config']);
     $cont .= checkPerms(CONFIG_DIR.'/global.php');
-    $confv = '<form name="post" action="'.$afile.'.php" method="post">'
-    .'<div id="tabc0" class="tabcont">'
+    $content = '<div id="tabc0" class="tabcont">'
     .'<table class="sl_table_conf">'
     .'<tr><td>'._VERSION.':</td><td><a href="//slaed.net" target="_blank" title="'._VERSION.'">SLAED CMS '.$conf['version'].'</a></td></tr>'
     .'<tr><td>'._SITENAME.':</td><td>'.getAdminTextInput('sitename', (string)$conf['sitename'], 'sl_conf', 'maxlength="255" placeholder="'._SITENAME.'" required').'</td></tr>'
@@ -28,7 +27,7 @@ function config(): void {
             }
         }
     }
-    $cont .= '<tr><td>'._LOGO.':</td><td>'.getAdminSelect('site_logo', $logoOpts, 'sl_conf', 'id="img_replace"').'</td></tr>'
+    $content .= '<tr><td>'._LOGO.':</td><td>'.getAdminSelect('site_logo', $logoOpts, 'sl_conf', 'id="img_replace"').'</td></tr>'
     .'<tr><td>'._SITELOGO.':</td><td><img src="'.$path.$conf['site_logo'].'" id="picture" alt="'._SITELOGO.'"></td></tr>'
     .'<tr><td>'._DESCRIPTION.':</td><td><textarea name="slogan" cols="65" rows="5" class="sl_conf" placeholder="'._DESCRIPTION.'" required>'.$conf['slogan'].'</textarea></td></tr>'
     .'<tr><td>'.getAdminHintLabel(_ADMININFO, _ADMININFODES).'</td><td><textarea name="admininfo" cols="65" rows="5" class="sl_conf" placeholder="'._ADMININFO.'">'.$conf['admininfo'].'</textarea></td></tr>'
@@ -49,7 +48,7 @@ function config(): void {
             }
         }
     }
-    $cont .= getAdminSelect('theme', $themeOpts, 'sl_conf').'</td></tr><tr><td>'.getAdminHintLabel(_PUTINHOME, _PUTINHOMEINFO.' '._CTRLINFO).'</td><td>'.modul('module', 'sl_conf', $conf['module'], 1).'</td></tr>';
+    $content .= getAdminSelect('theme', $themeOpts, 'sl_conf').'</td></tr><tr><td>'.getAdminHintLabel(_PUTINHOME, _PUTINHOMEINFO.' '._CTRLINFO).'</td><td>'.modul('module', 'sl_conf', $conf['module'], 1).'</td></tr>';
     $mods = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'page', 'shop_clients', 'voting'];
     $mname = ['auto_links', 'faq', 'files', 'links', 'media', 'news', 'order', 'pages', 'shop', 'voting'];
     $i = 0;
@@ -62,7 +61,7 @@ function config(): void {
             $i++;
         }
     }
-    $cont .= '<tr><td>'._PUTINAHOME.':</td><td>'.getAdminSelect('amod', $ocont, 'sl_conf').'</td></tr>'
+    $content .= '<tr><td>'._PUTINAHOME.':</td><td>'.getAdminSelect('amod', $ocont, 'sl_conf').'</td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
     .'<tr><td>'._CAPTCHA.':</td><td>';
     $captchaOpts = getAdminOption('0', _CAPSEC0, $conf['gfx_chk'] == '0')
@@ -73,7 +72,7 @@ function config(): void {
         .getAdminOption('5', _CAPSEC5, $conf['gfx_chk'] == '5')
         .getAdminOption('6', _CAPSEC6, $conf['gfx_chk'] == '6')
         .getAdminOption('7', _CAPSEC7, $conf['gfx_chk'] == '7');
-    $cont .= getAdminSelect('gfx_chk', $captchaOpts, 'sl_conf').'</td></tr>'
+    $content .= getAdminSelect('gfx_chk', $captchaOpts, 'sl_conf').'</td></tr>'
     .'<tr><td>'._CAPQUALITY.': <div class="sl_small">'._CAPQUALITYI.'</div></td><td>';
     $qualityOpts = '';
     $xquality = 1;
@@ -81,7 +80,7 @@ function config(): void {
         $qualityOpts .= getAdminOption((string)$xquality, '0.'.$xquality, $xquality == $conf['quality']);
         $xquality++;
     }
-    $cont .= getAdminSelect('quality', $qualityOpts, 'sl_conf').'</td></tr>'
+    $content .= getAdminSelect('quality', $qualityOpts, 'sl_conf').'</td></tr>'
     .'<tr><td>'._CAPKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td>'.getAdminTextInput('capkey', (string)$conf['capkey'], 'sl_conf', 'maxlength="255" placeholder="'._CAPKEY.'"').'</td></tr>'
     .'<tr><td>'._CAPSECKEY.': <div class="sl_small">'._CAPKEYI.'</div></td><td>'.getAdminTextInput('capsec', (string)$conf['capsec'], 'sl_conf', 'maxlength="255" placeholder="'._CAPSECKEY.'"').'</td></tr>'
     .'<tr><td colspan="2"><hr></td></tr>'
@@ -92,7 +91,7 @@ function config(): void {
     foreach ($gtime as $gval) {
         $gcont .= getAdminOption($gval, $gval, $gtimeCurrent === $gval);
     }
-    $cont .= '<tr><td>'._GTIME.':</td><td>'.getAdminSelect('gtime', $gcont, 'sl_conf').'</td></tr>';
+    $content .= '<tr><td>'._GTIME.':</td><td>'.getAdminSelect('gtime', $gcont, 'sl_conf').'</td></tr>';
     $variables = explode(',', $conf['variables']);
     $varconst = [_DEACTIVATE, _SYSTEM_INFO, _AVARIABLES.': POST', _AVARIABLES.': GET', _AVARIABLES.': COOKIE', _AVARIABLES.': FILES', _AVARIABLES.': SESSION', _AVARIABLES.': SERVER', _AQUERY_DB.': MySQL'];
     $varOpts = '';
@@ -101,7 +100,7 @@ function config(): void {
             $varOpts .= getAdminOption((string)$key, $val, !empty($variables[$key]));
         }
     }
-    $cont .= '<tr><td>'.getAdminHintLabel(_VARIABLES, _CTRLINFO).'</td><td>'.getAdminSelect('variables[]', $varOpts, 'sl_conf', 'multiple="multiple"').'</td></tr>'
+    $content .= '<tr><td>'.getAdminHintLabel(_VARIABLES, _CTRLINFO).'</td><td>'.getAdminSelect('variables[]', $varOpts, 'sl_conf', 'multiple="multiple"').'</td></tr>'
     .'<tr><td>'._VAR_VIEW.':</td><td>'.getAdminSelect('var_view',
         getAdminOption('0', _MVADMIN, $conf['var_view'] == '0')
         .getAdminOption('1', _MVALL, $conf['var_view'] == '1'),
@@ -152,7 +151,7 @@ function config(): void {
             }
         }
     }
-    $cont .= getAdminSelect('language', $langOpts, 'sl_conf').'</td></tr>'
+    $content .= getAdminSelect('language', $langOpts, 'sl_conf').'</td></tr>'
     .'<tr><td>'._ACTMULTILINGUAL.'</td><td>'.radio_form($conf['multilingual'], 'multilingual').'</td></tr>'
     .'<tr><td>'._ACTUSEFLAGS.'</td><td>'.radio_form($conf['flags'], 'flags').'</td></tr>'
     .'<tr><td>'._GEO_IP.'</td><td>'.radio_form($conf['geo_ip'], 'geo_ip').'</td></tr>'
@@ -181,8 +180,8 @@ function config(): void {
         $f++;
         $asize += $size;
     }
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DIR.': config/cache<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
-    $cont .= '<table class="sl_table_conf">'
+    $content .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DIR.': config/cache<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
+    $content .= '<table class="sl_table_conf">'
     .'<tr><td>'._CACHE.':</td><td>'.getAdminSelect('cache',
         getAdminOption('0', _NO, $conf['cache'] == 0)
         .getAdminOption('1', _CACHE_1, $conf['cache'] == 1)
@@ -215,9 +214,8 @@ function config(): void {
         countries.setpersist(true)
         countries.setselectedClassTarget(\'link\')
         countries.init()
-    </script>'
-    .'<table class="sl_table_conf"><tr><td class="sl_center">'.getAdminHidden('name', 'config').getAdminHidden('op', 'save').'<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue"></td></tr></table></form>';
-    echo $cont.getAdminBox($confv);
+    </script>';
+    echo $cont.getAdminBox(getAdminConfSave($content, 'config', 'save'));
     setFoot();
 }
 

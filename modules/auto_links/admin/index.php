@@ -39,7 +39,7 @@ function auto_links(): void {
                 'hits_text' => (string)$hits,
                 'id_text' => (string)$id,
                 'outs_text' => (string)$outs,
-                'sitename_html' => title_tip(_REG.': '.format_time($added, _TIMESTRING)).'<span title="'.$name.'" class="sl_note">'.cutstr($name, 40).'</span>',
+                'sitename_html' => adminTitleTipLabel(_REG.': '.format_time($added, _TIMESTRING), $name, cutstr($name, 40)),
                 'siteurl_text' => domain($url),
             ]));
         }
@@ -125,7 +125,7 @@ function stats(): void {
                     'hits_text' => (string)$list[$i][0],
                     'in_url_text' => domain($list[$i][5], 15),
                     'ip_html' => user_geo_ip($list[$i][3], 4),
-                    'nickname_html' => title_tip(_DATE.': '.date(_TIMESTRING, $list[$i][6])).$name,
+                    'nickname_html' => adminTitleTip(_DATE.': '.date(_TIMESTRING, $list[$i][6])).$name,
                     'ref_url_text' => domain($list[$i][4], 35),
                 ]));
             }

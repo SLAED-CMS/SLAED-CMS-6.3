@@ -65,7 +65,7 @@ function links(): void {
                 'postedby_html' => $post,
                 'site_html' => domain($url),
                 'status_html' => ad_status('', $active),
-                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip).'<span title="'.$title.'" class="sl_note">'.cutstr($title, 50).'</span>',
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 50)),
             ]));
         }
         $cont .= getAdminTable($head, $rows);

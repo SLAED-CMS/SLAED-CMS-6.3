@@ -143,7 +143,7 @@ function clients(): void {
                 'date_text' => $cenddate,
                 'id_text' => (string)$cid,
                 'nickname_html' => $nick,
-                'product_html' => title_tip(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.filterTextHighlight($cname, $csearch).'<br>'._CLIENTADRES.': '.$caddr.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 40).'</span>',
+                'product_html' => adminTitleTipLabel(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.filterTextHighlight($cname, $csearch).'<br>'._CLIENTADRES.': '.$caddr.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo, $ptitle, cutstr($ptitle, 40)),
                 'site_html' => filterTextHighlight(domain($cwebsite), $csearch),
                 'status_html' => ad_status('', $cactive),
             ]));
@@ -405,11 +405,11 @@ function products(): void {
                 'is_checked' => false,
                 'price_text' => $pprice.' '.$conf['shop']['valute'],
                 'status_html' => ad_status('', $active),
-                'title_html' => title_tip(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime ?? '', _TIMESTRING)).'<span title="'.$ptitle.'" class="sl_note">'.cutstr($ptitle, 60).'</span>',
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime ?? '', _TIMESTRING), $ptitle, cutstr($ptitle, 60)),
                 'value_attr' => (string)$pid,
             ]));
         }
-        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' '.getAdminHidden('name', 'shop').getAdminHidden('op', 'productops').getAdminHidden('refer', '1').' <input type="submit" value="'._OK.'" class="sl_but_blue">';
+        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' '.getAdminHidden('name', 'shop').getAdminHidden('op', 'productops').getAdminHidden('refer', '1').' '.getAdminSubmitButton(_OK);
         $numpt = setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_products', '', $sqlstatus, $conf['shop']['anump']);
         $html = getAdminListForm(getAdminTable($phead, $prows), $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]), '');
         $cont .= getAdminBox($html);
@@ -463,18 +463,23 @@ function productadd(): void {
         .getAdminFormRow(_CATEGORY.':', getcat('shop', $pcid, 'pcid', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
     if ($db->getSqlRowCount($result2) > 0) {
-        $associnner = '<table class="sl_form"><tr>';
+        $assocrows = '';
         while ([$id, $title] = $db->getSqlRow($result2)) {
             if ($a == 2) {
-                $associnner .= '</tr><tr>';
+                $assocrows .= $tpl->getHtmlFrag('admin-blocks-view-row-close', []).$tpl->getHtmlFrag('admin-blocks-view-row-open', []);
                 $a = 0;
             }
-            $check = '';
-            if ($associated) foreach ($associated as $val) if ($val == $id) $check = ' checked';
-            $associnner .= '<td><input type="checkbox" name="associated[]" value="'.$id.'\''.$check.'> '.$title.'</td>';
+            $isch = false;
+            if ($associated) foreach ($associated as $val) if ($val == $id) $isch = true;
+            $assocrows .= $tpl->getHtmlFrag('admin-shop-assoc-cell', [
+                'checked'    => $isch,
+                'label_text' => $title,
+                'value_attr' => (string)$id,
+            ]);
             $a++;
         }
-        $associnner .= '</tr></table>';
+        $assocrows = $tpl->getHtmlFrag('admin-blocks-view-row-open', []).$assocrows.$tpl->getHtmlFrag('admin-blocks-view-row-close', []);
+        $associnner = $tpl->getHtmlFrag('admin-shop-assoc-table', ['rows_html' => $assocrows]);
         $parows .= getAdminFormRow(getAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI), $associnner);
     }
     $parows .= getAdminFormRow(_TEXT.':', textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'))
@@ -643,7 +648,7 @@ function partners(): void {
                     adminDeleteAction($afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
                 ]),
                 'id_text' => (string)$paid,
-                'nickname_html' => title_tip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paaddr.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$nick,
+                'nickname_html' => adminTitleTip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paaddr.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$nick,
                 'partnerbek_text' => $pabek.' '.$conf['shop']['valute'],
                 'partnerrest_text' => $parest.' '.$conf['shop']['valute'],
                 'reg_text' => date(_TIMESTRING, $paregdate),

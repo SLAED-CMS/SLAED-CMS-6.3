@@ -79,7 +79,7 @@ function account(): void {
         ]);
         $rows = '';
         while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->getSqlRow($res)) {
-            $sgroup = $gname ? '<span style="color: '.$gcolor.'">'.$gname.'</span>' : _NO;
+            $sgroup = $gname ? adminColorLabel($gcolor, $gname) : _NO;
             $web = $site ? domain($site, 40) : _NO;
             $acts = adminMenuItems([
                 adminLinkAction($afile.'.php?name=account&amp;op=add&amp;id='.$uid, _FULLEDIT, _FULLEDIT),
@@ -91,7 +91,7 @@ function account(): void {
                 'email_html' => filterTextHighlight($mail, $chng),
                 'id_html' => filterTextHighlight($uid, $chng),
                 'ip_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng),
-                'nickname_html' => title_tip(_HASH.': '.md5($agent).'<br>'._LAST_VISIT.': '.format_time($last, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.filterTextHighlight($web,$chng).'<br>'._GENDER.': '.gender($gender).'<br>'._POINTS.': '.$point).filterTextHighlight(user_info($name), $chng),
+                'nickname_html' => adminTitleTip(_HASH.': '.md5($agent).'<br>'._LAST_VISIT.': '.format_time($last, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.filterTextHighlight($web,$chng).'<br>'._GENDER.': '.gender($gender).'<br>'._POINTS.': '.$point).filterTextHighlight(user_info($name), $chng),
                 'reg_text' => format_time($reg, _TIMESTRING),
             ]));
         }
@@ -267,7 +267,7 @@ function add(): void {
         'mailblock_html' => $mailblock,
         'password_label' => _PASSWORD.':',
         'retypepassword_label' => _RETYPEPASSWORD.':',
-        'save_html' => getAdminHidden('uid', (string)$uid).getAdminHidden('name', 'account').getAdminHidden('op', 'addsave').'<input type="submit" value="'._SAVE.'" class="sl_but_blue">',
+        'save_html' => getAdminHidden('uid', (string)$uid).getAdminHidden('name', 'account').getAdminHidden('op', 'addsave').getAdminSubmitButton(_SAVE),
     ]);
     $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, '', 'sl_table_form', 'post', 'post'));
     echo $cont;
