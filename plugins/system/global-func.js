@@ -98,3 +98,79 @@ function FlyBasket(productId) {
 	if (moveX < 0 && currentXPos < shop_x) flyingDiv.style.display='none';
 	if (flyingDiv.style.display=='block') setTimeout('FlyBasket("' + productId + '")', 10);
 }
+
+function normalizeDateTimeValue(value, kind) {
+	if (!value) return '';
+	return kind === 'datetime-local' ? value.replace('T', ' ') : value;
+}
+
+function syncNativeDateTimeInput(input) {
+	if (!input || !input.dataset || !input.dataset.slDatetimeTarget) return;
+	var hidden = document.getElementById(input.dataset.slDatetimeTarget);
+	if (!hidden) return;
+	hidden.value = normalizeDateTimeValue(input.value, input.dataset.slDatetimeKind || '');
+}
+
+function fetchUserSuggestions(input) {
+	if (!input || !input.dataset || !input.dataset.slUserSearch) return;
+	var listId = input.getAttribute('list');
+	var minLength = parseInt(input.dataset.slUserMinlength || '1', 10);
+	var value = input.value || '';
+	if (!listId) return;
+	var list = document.getElementById(listId);
+	if (!list) return;
+	if (value.length < minLength) {
+		list.innerHTML = '';
+		return;
+	}
+	var url = input.dataset.slUserSearch.replace(/&amp;/g, '&') + '&term=' + encodeURIComponent(value);
+	if (input.dataset.slUserToken) {
+		url += '&token=' + encodeURIComponent(input.dataset.slUserToken);
+	}
+	window.fetch(url, {
+		credentials: 'same-origin',
+		headers: {
+			'X-Requested-With': 'XMLHttpRequest',
+			'X-CSRF-TOKEN': input.dataset.slUserToken || ''
+		}
+	})
+		.then(function (response) {
+			return response.ok ? response.json() : [];
+		})
+		.then(function (items) {
+			if (input.value !== value || !Array.isArray(items)) return;
+			list.innerHTML = '';
+			for (var i = 0; i < items.length; i++) {
+				var option = document.createElement('option');
+				option.value = items[i];
+				list.appendChild(option);
+			}
+		})
+		.catch(function () {
+			list.innerHTML = '';
+		});
+}
+
+document.addEventListener('input', function (event) {
+	var target = event.target;
+	if (target && target.matches('input[data-sl-datetime-target]')) {
+		syncNativeDateTimeInput(target);
+	}
+	if (target && target.matches('input[data-sl-user-search]')) {
+		fetchUserSuggestions(target);
+	}
+});
+
+document.addEventListener('change', function (event) {
+	var target = event.target;
+	if (target && target.matches('input[data-sl-datetime-target]')) {
+		syncNativeDateTimeInput(target);
+	}
+});
+
+document.addEventListener('submit', function (event) {
+	var fields = event.target.querySelectorAll('input[data-sl-datetime-target]');
+	for (var i = 0; i < fields.length; i++) {
+		syncNativeDateTimeInput(fields[i]);
+	}
+});

@@ -5,9 +5,6 @@
 .CodeMirror:hover { box-shadow: 0 0 3px #34c8ed; }
 .CodeMirror-hints { font: 12px Verdana; border: 1px #dee0e2 solid; border-radius: 3px; }
 
-/* jQuery UI Autocomplete - Автодополнение */
-.ui-autocomplete { max-height: 250px; overflow-y: auto; overflow-x: hidden; }
-
 /* Общие стили системы */
 /* Стиль 50 процентного белого фона */
 .sl_hidden { opacity: 0.5; color: #dee0e2; }

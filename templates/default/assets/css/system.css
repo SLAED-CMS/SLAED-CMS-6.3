@@ -1,7 +1,4 @@
 /* Подлючение плагинов системы */
-/* jQuery UI Autocomplete - Автодополнение */
-.ui-autocomplete { max-height: 250px; overflow-y: auto; overflow-x: hidden; }
-
 /* Общие стили системы */
 /* Стиль 50 процентного белого фона */
 .sl_hidden { opacity: 0.5; }

@@ -3267,7 +3267,7 @@ function getNaviTabs(int $id = 0, string $pref = '', array $tabs = [], array $co
 
 # Transliteration
 function getTranslit(string $st, string $lo = ''): string {
-    $st = strtr($st, ['ÃÂ°' => 'a', 'ÃÂ±' => 'b', 'ÃÂ²' => 'v', 'ÃÂ³' => 'g', 'ÃÂ´' => 'd', 'ÃÂµ' => 'e', 'ÃÂ¶' => 'g', 'ÃÂ·' => 'z', 'ÃÂ¸' => 'i', 'ÃÂ¹' => 'y', 'ÃÂº' => 'k', 'ÃÂ»' => 'l', 'ÃÂ¼' => 'm', 'ÃÂ½' => 'n', 'ÃÂ¾' => 'o', 'ÃÂ¿' => 'p', 'Ã‘â‚¬' => 'r', 'Ã‘Â' => 's', 'Ã‘â€š' => 't', 'Ã‘Æ’' => 'u', 'Ã‘â€ž' => 'f', 'Ã‘â€¹' => 'i', 'Ã‘Â' => 'e', 'ÃÂ' => 'A', 'Ãâ€˜' => 'B', 'Ãâ€™' => 'V', 'Ãâ€œ' => 'G', 'Ãâ€' => 'D', 'Ãâ€¢' => 'E', 'Ãâ€“' => 'G', 'Ãâ€”' => 'Z', 'ÃËœ' => 'I', 'Ãâ„¢' => 'Y', 'ÃÅ¡' => 'K', 'Ãâ€º' => 'L', 'ÃÅ“' => 'M', 'ÃÂ' => 'N', 'ÃÅ¾' => 'O', 'ÃÅ¸' => 'P', 'ÃÂ ' => 'R', 'ÃÂ¡' => 'S', 'ÃÂ¢' => 'T', 'ÃÂ£' => 'U', 'ÃÂ¤' => 'F', 'ÃÂ«' => 'I', 'ÃÂ­' => 'E', 'Ã‘â€˜' => 'yo', 'Ã‘â€¦' => 'h', 'Ã‘â€ ' => 'ts', 'Ã‘â€¡' => 'ch', 'Ã‘Ë†' => 'sh', 'Ã‘â€°' => 'shch', 'Ã‘Å ' => '', 'Ã‘Å’' => '', 'Ã‘Å½' => 'yu', 'Ã‘Â' => 'ya', 'ÃÂ' => 'Yo', 'ÃÂ¥' => 'H', 'ÃÂ¦' => 'Ts', 'ÃÂ§' => 'Ch', 'ÃÂ¨' => 'Sh', 'ÃÂ©' => 'Shch', 'ÃÂª' => '', 'ÃÂ¬' => '', 'ÃÂ®' => 'Yu', 'ÃÂ¯' => 'Ya']);
+    $st = strtr($st, ['а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'g', 'д' => 'd', 'е' => 'e', 'ж' => 'g', 'з' => 'z', 'и' => 'i', 'й' => 'y', 'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r', 'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f', 'ы' => 'i', 'э' => 'e', 'А' => 'A', 'Б' => 'B', 'В' => 'V', 'Г' => 'G', 'Д' => 'D', 'Е' => 'E', 'Ж' => 'G', 'З' => 'Z', 'И' => 'I', 'Й' => 'Y', 'К' => 'K', 'Л' => 'L', 'М' => 'M', 'Н' => 'N', 'О' => 'O', 'П' => 'P', 'Р' => 'R', 'С' => 'S', 'Т' => 'T', 'У' => 'U', 'Ф' => 'F', 'Ы' => 'I', 'Э' => 'E', 'ё' => 'yo', 'х' => 'h', 'ц' => 'ts', 'ч' => 'ch', 'ш' => 'sh', 'щ' => 'shch', 'ь' => '', 'ъ' => '', 'ю' => 'yu', 'я' => 'ya', 'Ё' => 'Yo', 'Х' => 'H', 'Ц' => 'Ts', 'Ч' => 'Ch', 'Ш' => 'Sh', 'Щ' => 'Shch', 'Ь' => '', 'Ъ' => '', 'Ю' => 'Yu', 'Я' => 'Ya']);
     $st = empty($lo) ? $st : mb_strtolower($st);
     $st = preg_replace('#[^a-zA-Z0-9]#', '', $st);
     $st = trim($st);
@@ -3626,16 +3626,16 @@ function getSeoUrl(array $params): string {
 function filterSlug(string $text, string $sep = '-'): string {
     $text = trim($text);
     static $rus = [
-        'ÃÂ' => 'A',  'Ãâ€˜' => 'B',  'Ãâ€™' => 'V',  'Ãâ€œ' => 'G',  'Ãâ€' => 'D',  'Ãâ€¢' => 'E',  'ÃÂ' => 'E',  'Ãâ€“' => 'Zh',
-        'Ãâ€”' => 'Z',  'ÃËœ' => 'I',  'Ãâ„¢' => 'I',  'ÃÅ¡' => 'K',  'Ãâ€º' => 'L',  'ÃÅ“' => 'M',  'ÃÂ' => 'N',  'ÃÅ¾' => 'O',
-        'ÃÅ¸' => 'P',  'ÃÂ ' => 'R',  'ÃÂ¡' => 'S',  'ÃÂ¢' => 'T',  'ÃÂ£' => 'U',  'ÃÂ¤' => 'F',  'ÃÂ¥' => 'Kh', 'ÃÂ¦' => 'Ts',
-        'ÃÂ§' => 'Ch', 'ÃÂ¨' => 'Sh', 'ÃÂ©' => 'Shch', 'ÃÂ«' => 'Y', 'ÃÂ­' => 'E', 'ÃÂ®' => 'Yu', 'ÃÂ¯' => 'Ya',
-        'ÃÂª' => '',   'ÃÂ¬' => '',
-        'ÃÂ°' => 'a',  'ÃÂ±' => 'b',  'ÃÂ²' => 'v',  'ÃÂ³' => 'g',  'ÃÂ´' => 'd',  'ÃÂµ' => 'e',  'Ã‘â€˜' => 'e',  'ÃÂ¶' => 'zh',
-        'ÃÂ·' => 'z',  'ÃÂ¸' => 'i',  'ÃÂ¹' => 'i',  'ÃÂº' => 'k',  'ÃÂ»' => 'l',  'ÃÂ¼' => 'm',  'ÃÂ½' => 'n',  'ÃÂ¾' => 'o',
-        'ÃÂ¿' => 'p',  'Ã‘â‚¬' => 'r',  'Ã‘Â' => 's',  'Ã‘â€š' => 't',  'Ã‘Æ’' => 'u',  'Ã‘â€ž' => 'f',  'Ã‘â€¦' => 'kh', 'Ã‘â€ ' => 'ts',
-        'Ã‘â€¡' => 'ch', 'Ã‘Ë†' => 'sh', 'Ã‘â€°' => 'shch', 'Ã‘â€¹' => 'y', 'Ã‘Â' => 'e', 'Ã‘Å½' => 'yu', 'Ã‘Â' => 'ya',
-        'Ã‘Å ' => '',   'Ã‘Å’' => '',
+        'А' => 'A',  'Б' => 'B',  'В' => 'V',  'Г' => 'G',  'Д' => 'D',  'Е' => 'E',  'Ё' => 'E',  'Ж' => 'Zh',
+        'З' => 'Z',  'И' => 'I',  'Й' => 'I',  'К' => 'K',  'Л' => 'L',  'М' => 'M',  'Н' => 'N',  'О' => 'O',
+        'П' => 'P',  'Р' => 'R',  'С' => 'S',  'Т' => 'T',  'У' => 'U',  'Ф' => 'F',  'Х' => 'Kh', 'Ц' => 'Ts',
+        'Ч' => 'Ch', 'Ш' => 'Sh', 'Щ' => 'Shch', 'Ы' => 'Y', 'Э' => 'E', 'Ю' => 'Yu', 'Я' => 'Ya',
+        'Ъ' => '',   'Ь' => '',
+        'а' => 'a',  'б' => 'b',  'в' => 'v',  'г' => 'g',  'д' => 'd',  'е' => 'e',  'ё' => 'e',  'ж' => 'zh',
+        'з' => 'z',  'и' => 'i',  'й' => 'i',  'к' => 'k',  'л' => 'l',  'м' => 'm',  'н' => 'n',  'о' => 'o',
+        'п' => 'p',  'р' => 'r',  'с' => 's',  'т' => 't',  'у' => 'u',  'ф' => 'f',  'х' => 'kh', 'ц' => 'ts',
+        'ч' => 'ch', 'ш' => 'sh', 'щ' => 'shch', 'ы' => 'y', 'э' => 'e', 'ю' => 'yu', 'я' => 'ya',
+        'ъ' => '',   'ь' => '',
     ];
     $text = strtr($text, $rus);
     $text = preg_replace('~[^a-zA-Z0-9]+~', $sep, $text);
@@ -3782,26 +3782,17 @@ function checkPassHash(string $pass, string $hash): bool {
 
 # Format Time
 function datetime(int $id, string $name, string $time, int $max, string $class): string {
-    static $jscript;
     $time = ($time) ? substr($time, 0, $max) : (($id == 1) ? date('Y-m-d H:i') : date('Y-m-d'));
     $class = ($class) ? 'sl_field '.$class : 'sl_field';
-    if ($id == 1) {
-        $format = "dateFormat: 'yy-mm-dd', timeFormat: 'HH:mm'";
-        $typ = 'datetimepicker';
-    } else {
-        $format = "dateFormat: 'yy-mm-dd', yearRange: '".(date('Y') - 100).':'.date('Y')."'";
-        $typ = 'datepicker';
-    }
-    if (!isset($jscript)) {
-        $cont = getHtmlScriptSrc('plugins/jquery/ui/jquery-ui-timepicker.js')
-        .getHtmlScriptSrc('plugins/jquery/ui/langs/'.substr(_LOCALE, 0, 2).'.js');
-        $jscript = 1;
-    } else {
-        $cont = '';
-    }
-    $cont .= getHtmlScriptInline("$(function() { $('#".$name."').".$typ.'({ changeMonth: true, changeYear: true, '.$format."}, $.timepicker.regional['".substr(_LOCALE, 0, 2)."']); });")
-    .getAdminTextInput($name, $time, $class, 'id="'.$name.'" maxlength="'.$max.'"');
-    return $cont;
+    static $fieldId = 0;
+    $fieldId++;
+    $type = ($id == 1) ? 'datetime-local' : 'date';
+    $pickerValue = ($id == 1) ? str_replace(' ', 'T', substr($time, 0, 16)) : substr($time, 0, 10);
+    $hiddenId = 'sl_datetime_hidden_'.$fieldId;
+    $pickerId = 'sl_datetime_picker_'.$fieldId;
+    $placeholder = ($id == 1) ? 'YYYY-MM-DD HH:MM' : 'YYYY-MM-DD';
+    return '<input type="hidden" name="'.$name.'" value="'.$time.'" id="'.$hiddenId.'">'
+        .'<input type="'.$type.'" name="'.$pickerId.'" value="'.$pickerValue.'" class="'.$class.'" id="'.$pickerId.'" data-sl-datetime-target="'.$hiddenId.'" data-sl-datetime-kind="'.$type.'" maxlength="'.$max.'" placeholder="'.$placeholder.'">';
 }
 
 # Format Time filter
@@ -4528,8 +4519,11 @@ function alphaNavText(string $label): string {
 }
 
 function naviTabsLink(string $href, string $label): string {
+    $labelHtml = preg_match('/<[^>]+>/', $label)
+        ? $label
+        : htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     return '<li><a href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">'
-        .htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
+        .$labelHtml
         .'</a></li>';
 }
 
@@ -5038,8 +5032,8 @@ function ad_save(string $name = '', string $val = '', string $op = '', string $n
     if (!$noPreview) $cont .= '<option value="preview">'._PREVIEW.'</option>';
     $cont .= '<option value="save">'._SEND.'</option>';
     $cont .= ($val) ? '<option value="delete">'._DELETE.'</option></select>' : '</select>';
-    $cont .= ($name && $val) ? getAdminHidden($name, $val) : '';
-    $cont .= getAdminHidden('op', $op)
+    $cont .= ($name && $val) ? getTplHiddenInput($name, $val) : '';
+    $cont .= getTplHiddenInput('op', $op)
     .' <input type="submit" value="'._OK.'" class="sl_but_blue">';
     return $cont;
 }
@@ -5201,7 +5195,7 @@ function fields_in(mixed $fieldb, string $mod): string {
                 $requir = ($out[4] == 1) ? ' required' : '';
                 if ($out[3] == 1) {
                     $dvalue = ($fieldin) ? getConst($fieldin) : '';
-                    $field = getAdminTextInput('field[]', $dvalue, $style, 'placeholder="'.$dvalue.'"'.$requir);
+                    $field = getTplTextInput('field[]', $dvalue, $style, 'placeholder="'.$dvalue.'"'.$requir);
                 } elseif ($out[3] == 2) {
                     $field = '<textarea name="field[]" cols="15" rows="5" class="'.$style.'"'.$requir.'>'.$fieldin.'</textarea>';
                 } elseif ($out[3] == 3) {
@@ -5397,11 +5391,12 @@ function is_moder(string $modul = ''): int {
 function getUserList(): void {
  global $db;
     $let = analyze_name(getVar('get', 'term', 'text', ''));
+    $name = [];
     if ($let) {
         $result = $db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name LIKE :name ORDER BY name ASC', ['name' => $let.'%']);
         while(list($user_name) = $db->getSqlRow($result)) $name[]= '"'.$user_name.'"';
-        echo '['.implode(', ', $name).']';
     }
+    echo '['.implode(', ', $name).']';
 }
 
 # Autocomplete user name
@@ -5409,9 +5404,8 @@ function getUserSearch(string $id, string $val, int $maxlength, string $extraCla
  global $conf;
     $class = $extraClass ? 'sl_field '.$extraClass : 'sl_field';
     $req   = $required ? ' required' : '';
-    $cont = getHtmlScriptInline("$(function() { $(\"#".$id."\").autocomplete({ source: \"index.php?go=1&op=getUserList\", minLength: ".$conf['search']['slet']." }); });")
-    .getAdminTextInput($id, $val, $class, 'id="'.$id.'" maxlength="'.$maxlength.'" placeholder="'._NICKNAME.'"'.$req);
-    return $cont;
+    $listId = $id.'_list';
+    return '<input type="text" name="'.$id.'" value="'.htmlspecialchars($val, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" class="'.$class.'" id="'.$id.'" maxlength="'.$maxlength.'" placeholder="'._NICKNAME.'" autocomplete="off" data-sl-user-search="index.php?go=1&amp;op=getUserList" data-sl-user-token="'.htmlspecialchars(getSiteToken(), ENT_QUOTES, 'UTF-8').'" data-sl-user-minlength="'.(int)$conf['search']['slet'].'" list="'.$listId.'"'.$req.'><datalist id="'.$listId.'"></datalist>';
 }
 
 # Analyze name
@@ -6217,20 +6211,20 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
     } elseif ((defined('ADMIN_FILE') && $editor == 3) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 3)) {
         if (defined('ADMIN_FILE') && $editor == 3) {
             if (!isset($jscript)) {
-                $code = getHtmlScriptSrc('plugins/ckeditor/ckeditor.js').getHtmlScriptSrc('plugins/ckeditor/adapters/jquery.js');
+                $code = getHtmlScriptSrc('plugins/ckeditor/ckeditor.js');
                 $jscript = 1;
             } else {
                 $code = '';
             }
-            $code .= getHtmlScriptInline("$(document).ready(function() { $('textarea#".$id."').ckeditor({ language: '".$stloc."', filebrowserBrowseUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=', filebrowserUploadUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=', filebrowserImageBrowseUrl: '../plugins/filemanager/dialog.php?type=1&editor=ckeditor&fldr=' }); });");
+            $code .= getHtmlScriptInline("CKEDITOR.domReady(function() { if (document.getElementById('".$id."')) { CKEDITOR.replace('".$id."', { language: '".$stloc."', filebrowserBrowseUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=', filebrowserUploadUrl: '../plugins/filemanager/dialog.php?type=2&editor=ckeditor&fldr=', filebrowserImageBrowseUrl: '../plugins/filemanager/dialog.php?type=1&editor=ckeditor&fldr=' }); } });");
         } elseif (!defined('ADMIN_FILE') && $conf['redaktor'] == 3) {
             if (!isset($jscript)) {
-                $code = getHtmlScriptSrc('plugins/ckeditor/ckeditor.js').getHtmlScriptSrc('plugins/ckeditor/adapters/jquery.js');
+                $code = getHtmlScriptSrc('plugins/ckeditor/ckeditor.js');
                 $jscript = 1;
             } else {
                 $code = '';
             }
-            $code .= getHtmlScriptInline("$(document).ready(function() { $('textarea#".$id."').ckeditor({ language: '".$stloc."' }); });");
+            $code .= getHtmlScriptInline("CKEDITOR.domReady(function() { if (document.getElementById('".$id."')) { CKEDITOR.replace('".$id."', { language: '".$stloc."' }); } });");
         }
         $code .= '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows.'" class="'.$style.'"'.$placeholder.'>'.$desc.'</textarea>';
     } elseif (defined('ADMIN_FILE') && $editor == 4) {
@@ -6748,7 +6742,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $pag = (getVar('get', 'status', 'num', 0) == 1) ? 'op=comm_show&amp;status=1' : 'op=comm_show';
             $numpt = setPageNumbers('pagenum', $com_modul, $numstories, $numpages, $ccnum, $pag.'&amp;', $plnum, 0, '', 'com');
             $cont .= $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]);
-            $out = getAdminBox($cont);
+            $out = getTplBox($cont);
         } else {
             $num = getVar('get', 'num', 'num');
             $pag = empty($num) ? 'op=view&id='.$cid : 'op=view&id='.$cid.'&num='.$num;

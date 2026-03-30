@@ -137,6 +137,76 @@ table.table, table.hover { border-collapse: collapse !important; margin-bottom: 
 .table > thead > tr > th { vertical-align: bottom; border-bottom: 2px solid #ebebee; }
 .table-acc-info { width: 100%; border-spacing: 5px; }
 
+/* Theme tabs */
+div[id^="sl_tabs_"] {
+	margin: 18px 0 26px;
+	border: 1px solid #dbe3eb;
+	border-radius: 6px;
+	background: #fff;
+	overflow-x: auto;
+	overflow-y: visible;
+	scrollbar-width: thin;
+	-webkit-overflow-scrolling: touch;
+}
+div[id^="sl_tabs_"] > ul {
+	display: flex;
+	flex-wrap: nowrap;
+	width: max-content;
+	min-width: 100%;
+	margin: 0;
+	padding: 8px 8px 0;
+	list-style: none;
+	background: #f7f9fc;
+	border-bottom: 1px solid #dbe3eb;
+	overflow: visible;
+}
+div[id^="sl_tabs_"] > ul > li {
+	display: block;
+	margin: 0 2px -1px 0;
+	padding: 0;
+	list-style: none;
+	flex: 0 0 auto;
+}
+div[id^="sl_tabs_"] > ul > li > a {
+	display: block;
+	padding: 6px;
+	border: 1px solid #dbe3eb;
+	border-bottom: 0;
+	border-radius: 6px 6px 0 0;
+	background: #f7f9fc;
+	color: #52667d;
+	font-size: 13px;
+	font-weight: bold;
+	line-height: 1.15;
+	white-space: nowrap;
+	text-decoration: none;
+	text-shadow: none;
+	transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+div[id^="sl_tabs_"] > ul > li > a:hover {
+	color: #2f5f93;
+	background: #fbfcfe;
+	border-color: #cfd9e3;
+	text-decoration: none;
+}
+div[id^="sl_tabs_"] > ul > li.sl-tabs-active > a,
+div[id^="sl_tabs_"] > ul > li > a.selected,
+div[id^="sl_tabs_"] > ul > li > a[aria-selected="true"] {
+	background: #fff;
+	border-color: #d4e0eb;
+	border-bottom: 1px solid #fff;
+	color: #2f86da;
+	text-shadow: none;
+	padding-bottom: 6px;
+}
+div[id^="sl_tabs_"] > div,
+div[id^="sl_tabs_"] > .sl-tabs-panel {
+	margin: 0;
+	border-top: 0;
+	padding: 14px 16px 10px;
+	background: #fff;
+}
+
 /* Кнопки */
 button::-moz-focus-inner, input::-moz-focus-inner { border: 0; padding: 0 }
 button[disabled], input[disabled] { cursor: default; }
