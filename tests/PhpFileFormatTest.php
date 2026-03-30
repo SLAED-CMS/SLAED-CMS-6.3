@@ -9,6 +9,11 @@ class PhpFileFormatTest extends TestCase
 {
     private static string $basePath;
     private static array $phpFiles = [];
+    private const MOJIBAKE = [
+        "\xC3\x83\xC2\x90", "\xC3\x83\xE2\x80\x98", "\xC3\x82\xC2\xA9", "\xC3\x82\xC2\xA7",
+        "\xC3\x82\xC2\xAE", "\xC3\x82\xC2\xB7", "\xC3\x82\xC2\xB6", "\xC3\xA2\xE2\x82\xAC",
+        "\xC3\xA2\xE2\x80\x9E\xE2\x80\x93", "\xC3\x90", "\xC3\x91",
+    ];
 
     public static function setUpBeforeClass(): void
     {
@@ -61,16 +66,47 @@ class PhpFileFormatTest extends TestCase
         );
     }
 
-    /**
-     * Line endings check (CRLF -> LF, trailing newline).
-     * Skipped by default - requires project-wide normalization.
-     * Run manually: vendor/bin/phpunit --filter testPhpFilesLineEndings
-     */
+    public function testPhpFilesMojibake(): void
+    {
+        $errors = [];
+
+        foreach (self::$phpFiles as $file) {
+            $content = file_get_contents($file);
+            $relative = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
+
+            foreach (self::MOJIBAKE as $frag) {
+                if (!str_contains($content, $frag)) continue;
+                $errors[] = "$relative - содержит крякозябры: ".$frag;
+                break;
+            }
+        }
+
+        $this->assertEmpty(
+            $errors,
+            "Проблемы с крякозябрами:\n".implode("\n", $errors)
+        );
+    }
+
     public function testPhpFilesLineEndings(): void
     {
-        $this->markTestSkipped(
-            'Проверка окончаний строк отключена. '.
-            'Для нормализации используйте: git add --renormalize . && git commit'
+        $errors = [];
+
+        foreach (self::$phpFiles as $file) {
+            $content = file_get_contents($file);
+            $relative = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $file);
+
+            if (str_contains($content, "\r\n")) {
+                $errors[] = "$relative - содержит CRLF, нужен LF";
+            }
+
+            if ($content !== '' && !str_ends_with($content, "\n")) {
+                $errors[] = "$relative - отсутствует финальный LF";
+            }
+        }
+
+        $this->assertEmpty(
+            $errors,
+            "Проблемы с окончаниями строк:\n".implode("\n", $errors)
         );
     }
 }

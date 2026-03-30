@@ -5,7 +5,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 ![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
-![Migration](https://img.shields.io/badge/Migration-85%25%20Complete-purple.svg)
+![Migration](https://img.shields.io/badge/Migration-90%25%20Complete-purple.svg)
 
 **Modular PHP Content Management System**
 
@@ -122,7 +122,7 @@ composer quality
 - **Backend:** PHP 8.1+
 - **Database:** `Database` class in `core/classes/pdo.php` with prepared statements and `getSql*` methods
 - **Template Runtime:** `core/classes/template.php`
-- **Editors / JS Plugins:** CKEditor, TinyMCE, CodeMirror, jQuery, htmx, Bootstrap and other bundled plugin directories under `plugins/`
+- **Editors / JS Plugins:** CKEditor, TinyMCE, CodeMirror, htmx, Bootstrap and other bundled plugin directories under `plugins/`
 - **Content Parsing:** `filterMarkdown()` in `core/system.php`
 - **Security Helpers:** `getVar()`, `getSiteToken()`, `checkSiteToken()`, `getPassHash()`, `checkPassHash()`
 - **Languages:** 6 bundled locale files in `lang/`
@@ -160,7 +160,7 @@ Bundled themes currently present in the repository:
 - `templates/lite`
 - `templates/simple`
 
-`templates/simple` is the minimal modern theme structure used for current template runtime work.
+`templates/simple` is a bundled frontend theme that follows the same template tree structure as the other bundled frontend themes.
 
 ### Routing and Entry Flow
 

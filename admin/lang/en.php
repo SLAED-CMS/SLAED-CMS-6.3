@@ -206,6 +206,8 @@ define('_EINFO5','Here you can change or add a text file in the root directory o
 define('_EINFOPHP','Using the standard syntax of PHP, except for setting the opening <b>&lt;?php</b> and closing <b>?&gt;</b> tag, the system will do it myself. If you enter the wrong code, possible failure of the system, so use this feature is only recommended for advanced users.');
 define('_EROB','Firmware and parameter index for search engines');
 define('_ERON','Rules for robots');
+define('_EROBSTD','Standard');
+define('_ESAVED','Saved to file');
 define('_ERRORPERM','has no necessary sanctions for record on a server.<br>Establish necessary attributes');
 define('_ERROR_SUBCAT','Not found any category for the module: %1$s. For the further work of this Department should create at least one major category.');
 define('_EXECUTE','To execute action');

@@ -206,6 +206,8 @@ define('_EINFO5','Tutaj możesz zmienić lub dodać plik tekstowy w katalogu gł
 define('_EINFOPHP','Używając standardowej składni PHP, z wyjątkiem ustalania otwarcie <b>&lt;?php</b> i zamykanie <b>?&gt;</b> znacznik, system zrobi to sam. Jeżeli wpiszesz zły kod, ewentualnej awarii systemu, więc korzystać z tej funkcji jest zalecane tylko dla zaawansowanych użytkowników.');
 define('_EROB','Firmware i parametr wskaźnik dla wyszukiwarek');
 define('_ERON','Zasady robotów');
+define('_EROBSTD','Standard');
+define('_ESAVED','Zapisano do pliku');
 define('_ERRORPERM','nie ma odpowiednich uprawnień do zapisu na serwerze.<br>Zaznacz właściwe atrybuty');
 define('_ERROR_SUBCAT','Nie znaleziono ani jednej kategorii do modułu: %1$s. Do dalszej pracy tego wydziału, należy utworzyć przynajmniej jedną podstawową kategorię.');
 define('_EXECUTE','Wykonać operację');

@@ -206,6 +206,8 @@ define('_EINFO5','Hier können Sie eine Textdatei im Stammverzeichnis der Websit
 define('_EINFOPHP','Mit dem Standard-Syntax von PHP, bis auf die Einstellung der Öffnung <b>&lt;?php</b> und schließen <b>?&gt;</b> Tag, wird das System es selbst zu tun. Wenn Sie den falschen Code, möglichen Ausfall des Systems geben, so verwenden Sie diese Funktion ist nur für erfahrene Benutzer empfohlen.');
 define('_EROB','Firmware und Parameter-Index für Suchmaschinen');
 define('_ERON','Regeln für Roboter');
+define('_EROBSTD','Standard');
+define('_ESAVED','In Datei gespeichert');
 define('_ERRORPERM','hat die notwendigen Eigenschaften fur die Aufzeichnung auf dem Server nicht.<br>Stellen Sie die notwendige Attribute auf');
 define('_ERROR_SUBCAT','Nicht gefunden weder eine Kategorie für das Modul: %1$s. Für die weitere Arbeit in dieser Abteilung müssen Sie mindestens einen grundlegenden Kategorie.');
 define('_EXECUTE','Handlung erfüllen');

@@ -188,12 +188,12 @@
 
 ## admin-account-search-form
 
-- `select_html`: prepared `<select>` markup from `getAdminSelect()` with pre-selected option
+- `select_html`: prepared `<select>` markup from `getTplSelect()` with pre-selected option
 - `input_html`: prepared search input markup from `get_user_search()`
 
 ## admin-list-form
 
-- `table_html`: prepared table markup from `getAdminTable()` — bulk-action list wrapped in a named form
+- `table_html`: prepared table markup from `getTplAdminTable()` — bulk-action list wrapped in a named form
 - `bottom_html`: prepared pager+actions row from `list-bottom` fragment or equivalent
 - `hide_html`: prepared hidden field markup for route (name/op/refer) — empty string when hidden fields are already inside `bottom_html`
 
@@ -207,7 +207,7 @@
 
 ## admin-cat-form
 
-- `tabs_html`: prepared tab content assembled from getCatTab() + getAdminTabsSetup() + getCatSubmitRow() calls for the categories add/subadd/edit forms
+- `tabs_html`: prepared tab content assembled from `getTplCatTab()` + `getTplAdminTabsSetup()` + `getTplCatSubmitRow()` calls for the categories add/subadd/edit forms
 
 ## admin-search-drop-form
 
@@ -223,9 +223,9 @@
 
 ## admin-search-box
 
-- `sort_html`: prepared search sort `<select>` from `getAdminSelect()`
-- `order_html`: prepared search order `<select>` from `getAdminSelect()`
-- `modul_html`: prepared module filter `<select>` from `getAdminSelect()`
+- `sort_html`: prepared search sort `<select>` from `getTplSelect()`
+- `order_html`: prepared search order `<select>` from `getTplSelect()`
+- `modul_html`: prepared module filter `<select>` from `getTplSelect()`
 - `hidden_html`: prepared route hidden inputs for `name=search` and optional `op=toplist`
 
 ## admin-search-list-row
@@ -252,17 +252,17 @@
 
 ## admin-search-edit-rows
 
-- `modul_html`: prepared module select markup from `getAdminSelect()`
+- `modul_html`: prepared module select markup from `getTplSelect()`
 - `time_html`: raw output from `datetime()`
 
 ## admin-search-delete-rows
 
-- `mode_html`: prepared delete-mode select markup from `getAdminSelect()`
-- `modul_html`: prepared module select markup from `getAdminSelect()`
+- `mode_html`: prepared delete-mode select markup from `getTplSelect()`
+- `modul_html`: prepared module select markup from `getTplSelect()`
 
 ## admin-shop-search-box
 
-- `select_html`: prepared search-field select markup from `getAdminSelect()`
+- `select_html`: prepared search-field select markup from `getTplSelect()`
 - `input_html`: raw output from `get_user_search()`
 - `hidden_html`: prepared hidden route fields for `name=shop` and `op=clients`
 
@@ -392,12 +392,12 @@
 
 - `postname_html`: prepared user-search control from `get_user_search()`
 - `cat_html`: prepared category select markup from `getcat()`
-- `year_html`: prepared year select markup from `getAdminSelect()`
+- `year_html`: prepared year select markup from `getTplSelect()`
 - `description_html`: raw output from `textarea()`
-- `lang_html`: prepared language select markup from `getAdminSelect()`
+- `lang_html`: prepared language select markup from `getTplSelect()`
 - `note_html`: raw output from `textarea()`
-- `format_html`: prepared format select markup from `getAdminSelect()`
-- `quality_html`: prepared quality select markup from `getAdminSelect()`
+- `format_html`: prepared format select markup from `getTplSelect()`
+- `quality_html`: prepared quality select markup from `getTplSelect()`
 - `links_html`: prepared repeated link-row markup assembled from `admin-media-link-row`
 - `date_html`: raw output from `datetime()`
 - `acomm_html`: raw output from `com_access()`
@@ -410,7 +410,7 @@
 - `cat_html`: prepared category select markup from `getcat()`
 - `description_html`: raw output from `textarea()`
 - `bodytext_html`: raw output from `textarea()`
-- `path_html`: optional prepared directory select markup from `getAdminSelect()`
+- `path_html`: optional prepared directory select markup from `getTplSelect()`
 - `date_html`: raw output from `datetime()`
 - `acomm_html`: raw output from `com_access()`
 - `ihome_html`: raw output from `radio_form()`
@@ -459,18 +459,18 @@
 
 ## admin-money-add-rows
 
-- `intro_html`: prepared dynamic intro field rows assembled from `getAdminFormRow()`
+- `intro_html`: prepared dynamic intro field rows assembled from `getTplAdminFormRow()`
 - `time_html`: raw output from `datetime()`
 - `save_html`: prepared hidden/save action markup from `ad_save()`
 
 ## admin-statistic-search-form
 
-- `select_html`: prepared file select markup from `getAdminSelect()`
+- `select_html`: prepared file select markup from `getTplSelect()`
 
 ## admin-referers-search-form
 
-- `sort_html`: prepared sort select markup from `getAdminSelect()`
-- `order_html`: prepared order select markup from `getAdminSelect()`
+- `sort_html`: prepared sort select markup from `getTplSelect()`
+- `order_html`: prepared order select markup from `getTplSelect()`
 
 ## admin-referers-list-row
 
@@ -478,7 +478,7 @@
 
 ## admin-uploads-search-form
 
-- `select_html`: prepared directory select markup from `getAdminSelect()`
+- `select_html`: prepared directory select markup from `getTplSelect()`
 
 ## admin-uploads-tplconfig-block
 
@@ -486,7 +486,7 @@
 
 ## admin-uploads-config-general-tab
 
-- `dir_html`: prepared directory select markup from `getAdminSelect()`
+- `dir_html`: prepared directory select markup from `getTplSelect()`
 
 ## admin-uploads-config-module-block
 
@@ -522,10 +522,10 @@
 ## admin-messages-add-rows
 
 - `body_html`: raw output from `textarea()`
-- `lang_html`: prepared language select markup from `getAdminSelect()`
+- `lang_html`: prepared language select markup from `getTplSelect()`
 - `expire_label_html`: prepared label markup with helper note block
 - `expire_html`: prepared expiration control markup, either hidden+duration text or numeric input
-- `view_html`: prepared visibility select markup from `getAdminSelect()`
+- `view_html`: prepared visibility select markup from `getTplSelect()`
 - `active_html`: raw output from `radio_form()`
 
 - radio slots (`homcat_html`, `viewcat_html`, `catdesc_html`, `subcat_html`, `mailuser_html`, `date_html`, `read_html`, `rate_html`, `letter_html`, `assoc_html`, `mailsend_html`, `part_html`): raw output from `radio_form()`
@@ -592,7 +592,7 @@
 ## admin-content-add-rows
 
 - `refresh_label_html`: prepared label markup with helper hint
-- `refresh_html`: prepared refresh select markup from `getAdminSelect()`
+- `refresh_html`: prepared refresh select markup from `getTplSelect()`
 - `body_html`: raw output from `textarea()`
 - `fields_html`: raw output from `fields_in()`
 - `date_html`: raw output from `datetime()`
@@ -627,7 +627,7 @@
 
 ## admin-groups-add-rows
 
-- `rank_html`: prepared rank select markup from `getAdminSelect()`
+- `rank_html`: prepared rank select markup from `getTplSelect()`
 - `check_attr`: prepared checked attribute for legacy extra-group checkbox
 
 ## admin-groups-points-row
@@ -753,7 +753,7 @@
 
 ## admin-rss-source-block
 
-- `uses_html`: prepared source-target select markup from `getAdminSelect()`
+- `uses_html`: prepared source-target select markup from `getTplSelect()`
 
 ## admin-rss-config-form
 
@@ -763,7 +763,7 @@
 
 ## admin-template-search-form
 
-- `select_html`: prepared theme select markup from `getAdminSelect()`
+- `select_html`: prepared theme select markup from `getTplSelect()`
 
 ## admin-template-editor-block
 
@@ -794,7 +794,7 @@
 ## admin-replace-field-block
 
 - `display_attr`: prepared attribute string like ` class="sl_none"` for hidden rows
-- `hr_html`: prepared separator HTML, usually empty string or `getAdminHrLine()`
+- `hr_html`: prepared separator HTML, usually empty string or `getTplHrLine()`
 
 ## admin-replace-tab-content
 
@@ -803,7 +803,7 @@
 ## admin-fields-field-block
 
 - `display_attr`: prepared attribute string like ` class="sl_none"` for hidden rows
-- `hr_html`: prepared separator HTML, usually empty string or `getAdminHrLine()`
+- `hr_html`: prepared separator HTML, usually empty string or `getTplHrLine()`
 - `next_block_id`: target id for the collapsible legacy row
 - `field_label`: escaped expand-link label
 - `content_label`: escaped field-content label
@@ -812,8 +812,8 @@
 - `name_placeholder`: escaped placeholder text
 - `name_value`: prepared field-name value
 - `content_value`: prepared field-content value
-- `field_html`: prepared field-type select markup from `getAdminSelect()`
-- `field2_html`: prepared visibility select markup from `getAdminSelect()`
+- `field_html`: prepared field-type select markup from `getTplSelect()`
+- `field2_html`: prepared visibility select markup from `getTplSelect()`
 - `title_attr`: escaped `title` attribute for the legacy expand link
 - `xid`: escaped field group index suffix
 
@@ -844,8 +844,8 @@
 
 ## admin-security-config-form
 
-- `flood_html`: prepared flood select markup from `getAdminSelect()`
-- `error_html`: prepared error-view select markup from `getAdminSelect()`
+- `flood_html`: prepared flood select markup from `getTplSelect()`
+- `error_html`: prepared error-view select markup from `getTplSelect()`
 - `log_b_html`: raw output from `radio_form()`
 - `error_java_html`: raw output from `radio_form()`
 - `error_log_html`: raw output from `radio_form()`
@@ -870,8 +870,8 @@
 
 ## admin-auto-links-stats-search
 
-- `sort_html`: prepared sort select markup from `getAdminSelect()`
-- `order_html`: prepared order select markup from `getAdminSelect()`
+- `sort_html`: prepared sort select markup from `getTplSelect()`
+- `order_html`: prepared order select markup from `getTplSelect()`
 
 ## admin-auto-links-stats-row
 
@@ -885,7 +885,7 @@
 
 ## admin-auto-links-config-rows
 
-- `img_html`: prepared image select markup from `getAdminSelect()`
+- `img_html`: prepared image select markup from `getTplSelect()`
 - `preview_html`: prepared preview image markup
 - `addmail_html`: raw output from `radio_form()`
 
@@ -911,7 +911,7 @@
 
 - `title_value`: prepared title value from PHP caller
 - `body_html`: raw output from `textarea()`
-- `mails_html`: prepared select markup from `getAdminSelect()`
+- `mails_html`: prepared select markup from `getTplSelect()`
 - `text_label`: escaped label for newsletter body row
 
 ## admin-voting-list-row
@@ -930,13 +930,13 @@
 
 ## admin-voting-add-rows
 
-- `modul_html`: prepared module select markup from `getAdminSelect()`
+- `modul_html`: prepared module select markup from `getTplSelect()`
 - `answers_html`: prepared repeated answer-row markup assembled from `admin-voting-answer-row`
 - `date_html`: raw output from `datetime()`
 - `enddate_html`: raw output from `datetime()`
-- `status_html`: prepared status select markup from `getAdminSelect()`
-- `type_html`: prepared type select markup from `getAdminSelect()`
-- `lang_html`: prepared language select markup from `getAdminSelect()`
+- `status_html`: prepared status select markup from `getTplSelect()`
+- `type_html`: prepared type select markup from `getTplSelect()`
+- `lang_html`: prepared language select markup from `getTplSelect()`
 - `acomm_html`: raw output from `com_access()`
 - `multi_html`: raw output from `radio_form()`
 - `save_html`: prepared hidden/save action markup from `ad_save()`
@@ -995,7 +995,7 @@
 
 ## admin-modules-type-search
 
-- `select_html`: prepared type select markup from `getAdminSelect()`
+- `select_html`: prepared type select markup from `getTplSelect()`
 
 ## admin-modules-list-row
 
@@ -1076,7 +1076,7 @@
 ## admin-shop-preview-voting
 
 - `voting_html`: raw output from `getVoting()`
-- `hr_html`: prepared separator markup, usually from `getAdminHrLine()`
+- `hr_html`: prepared separator markup, usually from `getTplHrLine()`
 - `text_html`: prepared preview intro text
 
 ## Rules

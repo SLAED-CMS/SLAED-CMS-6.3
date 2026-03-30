@@ -1,6 +1,6 @@
 # Template Status
 
-## Final Runtime
+## Current Runtime
 - class: `Template`
 - file: `core/classes/template.php`
 - shared runtime object: `$tpl`
@@ -31,8 +31,8 @@ Confirmed from the runtime implementation:
 - block overrides inside inherited layouts
 - path validation for includes and components
 
-## Current New-Only Slices
-Already running through the final runtime:
+## Current Runtime Slices
+Already running through the current runtime:
 - admin login
 - admin registration
 - admin preview
@@ -51,7 +51,7 @@ Present theme directories:
 - `templates/lite`
 - `templates/simple`
 
-Reference minimal final theme:
+Reference bundled minimal frontend theme:
 - `templates/simple`
 
 Main active frontend theme:

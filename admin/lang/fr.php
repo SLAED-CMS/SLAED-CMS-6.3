@@ -206,6 +206,8 @@ define('_EINFO5',"Ici vous pouvez changer ou ajouter un fichier texte dans le r�
 define('_EINFOPHP',"Utilisation de la syntaxe standard de PHP, sauf pour le réglage de l'ouverture <b>&lt;?php</b> et de fermeture <b>?&gt;</b> tag, le système va le faire moi-même. Si vous entrez un code incorrect, l'échec possible du système, afin d'utiliser cette fonctionnalité ne est recommandée que pour les utilisateurs avancés.");
 define('_EROB','Indice de firmware et les paramètres pour les moteurs de recherche');
 define('_ERON','Règles les robots');
+define('_EROBSTD','Standard');
+define('_ESAVED','Enregistré dans le fichier');
 define('_ERRORPERM',"n'a pas les autorisations appropriées pour l'enregistrement sur le serveur.<br>, Téléchargez les attributs souhaités");
 define('_ERROR_SUBCAT','Soyez le premier à aucune catégorie pour le module: %1$s. Pour plus de travail de cette équipe, vous devez créer au moins une base de la catégorie.');
 define('_EXECUTE',"Exécuter l'action");

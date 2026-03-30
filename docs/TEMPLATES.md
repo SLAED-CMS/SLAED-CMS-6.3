@@ -35,12 +35,10 @@ Current theme directories:
 ## Theme Roles
 
 ### `templates/default`
-- current new target theme
-- current frontend theme directory with layouts, pages, partials, fragments, assets, and images
+- bundled frontend theme directory with layouts, pages, partials, fragments, assets, and images
 
 ### `templates/simple`
-- minimal clean reference theme
-- designed for the final runtime
+- bundled frontend theme with the same template tree structure as the other frontend themes
 - includes local Bootstrap 5 assets
 
 ### `templates/admin`
@@ -48,10 +46,10 @@ Current theme directories:
 - contains admin layouts, pages, partials, and fragments used by the admin runtime
 
 ### `templates/lite`
-- existing legacy frontend theme
+- bundled frontend theme
 
-## Final Theme Structure
-New themes should follow this structure:
+## Theme Structure
+Themes should follow this structure:
 
 ```text
 templates/<theme>/
@@ -65,11 +63,11 @@ templates/<theme>/
   fragments/
 ```
 
-`index.html` is not the main architectural entry for the final system.
+`index.html` is not the main architectural entry for the active template runtime.
 
 Common active layout files in bundled themes include `layouts/app.html` and `layouts/home.html`.
 
-## Final Runtime Syntax
+## Runtime Syntax
 The current `Template` runtime supports:
 - escaped output: `{{ var }}`
 - raw output: `{{{ var }}}`
@@ -110,8 +108,8 @@ Do not:
 - add placeholder mapping helpers for new slices
 - copy theme inventories from installations or snapshots that are not present in the current repository
 
-## Current New-Only Slices
-Already moved to the final runtime:
+## Current Runtime Slices
+Already moved to the current runtime:
 - admin login
 - admin registration
 - admin preview
@@ -134,8 +132,8 @@ Recommended pattern:
 Example already present:
 - `templates/simple/assets/vendor/bootstrap/`
 
-### Smart Asset Loading (Zero-Overhead)
-The final runtime automatically injects CSS and JS files for components and blocks. If a file named identically to the included partial exists (e.g., `partials/alerts.css` or `partials/alerts.js`), the engine detects it at compile-time and injects `<link>` and `<script defer>` tags into the compiled PHP output. This feature ensures assets are loaded exactly once per request, with absolutely no file I/O overhead at runtime.
+### Automatic Asset Loading
+The current runtime automatically injects CSS and JS files for components and blocks. If a file named identically to the included partial exists (for example `partials/alerts.css` or `partials/alerts.js`), the engine detects it at compile time and injects `<link>` and `<script defer>` tags into the compiled PHP output. This keeps asset registration close to the template file instead of spreading it across PHP callers.
 
 ## Head and SEO Integration
 
