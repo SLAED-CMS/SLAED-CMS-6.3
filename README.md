@@ -4,7 +4,7 @@
 [![MariaDB](https://img.shields.io/badge/MariaDB-10%2B-1F305F.svg)](https://mariadb.org/)
 [![MySQL](https://img.shields.io/badge/MySQL-8.0%2B-00758F.svg)](https://www.mysql.com/)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
-![Status](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
+![Status](https://img.shields.io/badge/Status-Active_Development-orange.svg)
 ![Migration](https://img.shields.io/badge/Migration-90%25_Complete-purple.svg)
 
 **Modular PHP Content Management System**
