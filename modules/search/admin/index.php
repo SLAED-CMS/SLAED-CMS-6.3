@@ -9,11 +9,11 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('search')) die('Illegal file acces
 function getSearchmods(string $cmod = ''): string {
     global $conf;
     $mods = explode(',', $conf['search']['mods']);
-    $opts = getAdminOption('', _ALL);
+    $opts = getTplOption('', _ALL);
     foreach ($mods as $mod) {
         $mod = trim($mod);
         if ($mod === '') continue;
-        $opts .= getAdminOption($mod, getModuleName($mod), $cmod === $mod);
+        $opts .= getTplOption($mod, getModuleName($mod), $cmod === $mod);
     }
     return $opts;
 }
@@ -149,7 +149,7 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
     ]);
     $rows = '';
     foreach ($list as $row) {
-        $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-search-audit-row', [
+        $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-search-audit-row', [
             'edit_text' => $row['edit'] ?: _NO,
             'fields_text' => $row['fields'] ?: _NO,
             'is_ready' => $view === 'ready',
@@ -161,7 +161,7 @@ function getSearchauditTable(array $list, string $view = 'enabled'): string {
             'type_text' => $row['type'],
         ]));
     }
-    return getAdminTable($head, $rows);
+    return getTplAdminTable($head, $rows);
 }
 
 function getSearchwhere(): array {
@@ -215,21 +215,21 @@ function getSearchbox(string $type = 'search'): string {
     $fmod = getVar('req', 'fmod', 'var', '');
     $sortOpts = '';
     foreach ([1 => _SWORD, 2 => _MODUL, 3 => _DATE, 4 => _HITS] as $key => $val) {
-        $sortOpts .= getAdminOption((string)$key, $val, $sort == $key);
+        $sortOpts .= getTplOption((string)$key, $val, $sort == $key);
     }
-    $orderOpts = getAdminOption('1', _ASC, $order == 1).getAdminOption('2', _DESC, $order == 2);
-    $ophide = ($type === 'toplist') ? getAdminHidden('op', 'toplist') : '';
-    return getAdminSearchBox($tpl->getHtmlFrag('admin-search-box', [
+    $orderOpts = getTplOption('1', _ASC, $order == 1).getTplOption('2', _DESC, $order == 2);
+    $ophide = ($type === 'toplist') ? getTplHiddenInput('op', 'toplist') : '';
+    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-search-box', [
         'action_url' => $afile.'.php',
         'find_placeholder' => _SWORD,
         'find_value' => $find,
-        'hidden_html' => getAdminHidden('name', 'search').$ophide,
-        'modul_html' => getAdminSelect('fmod', getSearchmods($fmod), '', 'style="width: 140px;"'),
+        'hidden_html' => getTplHiddenInput('name', 'search').$ophide,
+        'modul_html' => getTplSelect('fmod', getSearchmods($fmod), '', 'style="width: 140px;"'),
         'modul_label' => _MODUL,
         'ok_label' => _OK,
-        'order_html' => getAdminSelect('order', $orderOpts, '', 'style="width: 165px;"'),
+        'order_html' => getTplSelect('order', $orderOpts, '', 'style="width: 165px;"'),
         'search_label' => _SEARCH,
-        'sort_html' => getAdminSelect('sort', $sortOpts, '', 'style="width: 110px;"'),
+        'sort_html' => getTplSelect('sort', $sortOpts, '', 'style="width: 110px;"'),
         'sort_label' => _SORTE,
     ]));
 }
@@ -304,9 +304,9 @@ function search(): void {
             $hmod = filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find);
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $find, $fmod);
-            $drop = getSearchDropForm($id, $afile.'.php?name=search', $sort, $order, $num, $find, $fmod, $show);
+            $drop = getTplAdminSearchDrop($id, $afile.'.php?name=search', $sort, $order, $num, $find, $fmod, $show);
             $edit = adminLinkAction($afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, _FULLEDIT, _FULLEDIT);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-search-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-search-list-row', [
                 'actions_html' => adminMenuItems([$edit, $drop]),
                 'date_text' => format_time((string)$time, _TIMESTRING),
                 'hits_text' => (string)intval($hits),
@@ -314,11 +314,11 @@ function search(): void {
                 'word_html' => adminTitleTip(_MODUL.': '.htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8').'<br>'._DATE.': '.format_time((string)$time, _TIMESTRING)).$hword,
             ]));
         }
-        $html = getAdminTable($head, $rows);
+        $html = getTplAdminTable($head, $rows);
         $pages = ceil($all / $anum);
         $html .= setPageNumbers('pagenum', '', intval($all), intval($pages), $anum, 'name=search&amp;sort='.$sort
             .'&amp;order='.$order.$clink.'&amp;', $anump);
-        $cont .= getAdminBox($html);
+        $cont .= getTplBox($html);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -366,9 +366,9 @@ function toplist(): void {
             $hmod = filterTextHighlight(htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8'), $find);
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist');
-            $drop = getSearchDropForm($id, $afile.'.php?name=search', $sort, $order, $num, $find ?? '', $fmod ?? '', $show);
+            $drop = getTplAdminSearchDrop($id, $afile.'.php?name=search', $sort, $order, $num, $find ?? '', $fmod ?? '', $show);
             $edit = adminLinkAction($afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, _FULLEDIT, _FULLEDIT);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-search-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-search-list-row', [
                 'actions_html' => adminMenuItems([$edit, $drop]),
                 'date_text' => format_time((string)$time, _TIMESTRING),
                 'hits_text' => (string)intval($hits),
@@ -379,11 +379,11 @@ function toplist(): void {
                 ]),
             ]));
         }
-        $html = getAdminTable($head, $rows);
+        $html = getTplAdminTable($head, $rows);
         $pages = ceil($all / $anum);
         $html .= setPageNumbers('pagenum', '', intval($all), intval($pages), $anum, 'name=search&amp;op=toplist&amp;sort='
             .$sort.'&amp;order='.$order.$clink.'&amp;', $anump);
-        $cont .= getAdminBox($html);
+        $cont .= getTplBox($html);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -410,13 +410,13 @@ function config(): void {
         'anump' => (string)$anump,
         'asearch_label' => _ASEARCH,
         'modules_html' => modul('search', 'sl_conf', $conf['search']['mods'], 1, $allow),
-        'modules_label_html' => getAdminHintLabel(_SMODULE, _CTRLINFO),
+        'modules_label_html' => getTplAdminHintLabel(_SMODULE, _CTRLINFO),
         'radio_html' => radio_form($conf['search']['asearch'], 'asearch'),
         'savechanges_label' => _SAVECHANGES,
-        'searchletinfo_label_html' => getAdminHintLabel(_SEARCHLETMIN, _SEARCHLETINFO),
+        'searchletinfo_label_html' => getTplAdminHintLabel(_SEARCHLETMIN, _SEARCHLETINFO),
         'searchletmin_label' => _SEARCHLETMIN,
         'searchlimit_label' => _SEARCHLIMIT,
-        'searchlimitinfo_label_html' => getAdminHintLabel(_SEARCHLIMIT, _SEARCHLIMITINFO),
+        'searchlimitinfo_label_html' => getTplAdminHintLabel(_SEARCHLIMIT, _SEARCHLIMITINFO),
         'slimit' => (string)$conf['search']['slimit'],
         'slet' => (string)$conf['search']['slet'],
         'snum' => (string)$conf['search']['snum'],
@@ -426,18 +426,18 @@ function config(): void {
         'value_snum_label' => _SEARCHNUM,
         'value_snump_label' => _C_35,
     ]);
-    $cfghide = getAdminHidden('op', 'save').getAdminHidden('token', getSiteToken('search'));
-    $html = getAdminForm($afile.'.php?name=search', $cfgrows, $cfghide, 'sl_table_conf');
-    $html .= getAdminSectionHeading(_SEARCHENABLED).getSearchauditTable($elist, 'enabled');
+    $cfghide = getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken('search'));
+    $html = getTplAdminForm($afile.'.php?name=search', $cfgrows, $cfghide, 'sl_table_conf');
+    $html .= getTplAdminSection(_SEARCHENABLED).getSearchauditTable($elist, 'enabled');
     $rdyrows = $tpl->getHtmlFrag('admin-search-ready-rows', [
         'searchaddall_label' => _SEARCHADDALL,
         'searchaddsel_label' => _SEARCHADDSEL,
-        'searchauto_label_html' => getAdminHintLabel(_SEARCHAUTO, _SEARCHAUTOINFO),
+        'searchauto_label_html' => getTplAdminHintLabel(_SEARCHAUTO, _SEARCHAUTOINFO),
     ]);
-    $rdyhide = getAdminHidden('op', 'modadd').getAdminHidden('token', getSiteToken('search'));
-    $html .= getAdminSectionHeading(_SEARCHREADY).getSearchauditTable($rlist, 'ready').getAdminForm($afile.'.php?name=search', $rdyrows, $rdyhide, 'sl_table_conf');
-    $html .= getAdminSectionHeading(_SEARCHINVALID).getSearchauditTable($ilist, 'invalid');
-    $cont .= getAdminBox($html);
+    $rdyhide = getTplHiddenInput('op', 'modadd').getTplHiddenInput('token', getSiteToken('search'));
+    $html .= getTplAdminSection(_SEARCHREADY).getSearchauditTable($rlist, 'ready').getTplAdminForm($afile.'.php?name=search', $rdyrows, $rdyhide, 'sl_table_conf');
+    $html .= getTplAdminSection(_SEARCHINVALID).getSearchauditTable($ilist, 'invalid');
+    $cont .= getTplBox($html);
     echo $cont;
     setFoot();
 }
@@ -545,7 +545,7 @@ function edit(): void {
             'hits_label' => _HITS.':',
             'hits_placeholder' => _HITS,
             'hits_value' => (string)$hits,
-            'modul_html' => getAdminSelect('modul', getSearchmods((string)$mod), 'sl_form'),
+            'modul_html' => getTplSelect('modul', getSearchmods((string)$mod), 'sl_form'),
             'modul_label' => _MODUL.':',
             'savechanges_label' => _SAVECHANGES,
             'time_html' => datetime(1, 'time', (string)$time, 16, 'sl_form'),
@@ -553,8 +553,8 @@ function edit(): void {
             'word_placeholder' => _SWORD,
             'word_value' => (string)$word,
         ]);
-        $hide = getAdminHidden('op', 'editsave').getAdminHidden('id', (string)$id).getAdminHidden('sort', (string)$sort).getAdminHidden('order', (string)$order).getAdminHidden('num', (string)$num).getAdminHidden('find', $find).getAdminHidden('fmod', $fmod).getAdminHidden('token', getSiteToken('search'));
-        $cont .= getAdminForm($afile.'.php?name=search', $rows, $hide);
+        $hide = getTplHiddenInput('op', 'editsave').getTplHiddenInput('id', (string)$id).getTplHiddenInput('sort', (string)$sort).getTplHiddenInput('order', (string)$order).getTplHiddenInput('num', (string)$num).getTplHiddenInput('find', $find).getTplHiddenInput('fmod', $fmod).getTplHiddenInput('token', getSiteToken('search'));
+        $cont .= getTplAdminForm($afile.'.php?name=search', $rows, $hide);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -601,20 +601,20 @@ function delete(): void {
     setHead();
     $cont = getSearchnavi(getSearchbox('delete'), 3);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _SEARCHCLEARINFO]);
-    $modeOpts = getAdminOption('all', _SEARCHCLEAR)
-        .getAdminOption('mod', _SEARCHBYMOD)
-        .getAdminOption('days', _SEARCHBYDAY)
-        .getAdminOption('empty', _SEARCHEMPTY);
+    $modeOpts = getTplOption('all', _SEARCHCLEAR)
+        .getTplOption('mod', _SEARCHBYMOD)
+        .getTplOption('days', _SEARCHBYDAY)
+        .getTplOption('empty', _SEARCHEMPTY);
     $rows = $tpl->getHtmlFrag('admin-search-delete-rows', [
         'days_label' => _DAYS.':',
         'days_placeholder' => _DAYS,
         'delete_label' => _DELETE,
-        'mode_html' => getAdminSelect('mode', $modeOpts, 'sl_form'),
-        'modul_html' => getAdminSelect('cmod', getSearchmods(''), 'sl_form'),
+        'mode_html' => getTplSelect('mode', $modeOpts, 'sl_form'),
+        'modul_html' => getTplSelect('cmod', getSearchmods(''), 'sl_form'),
         'modul_label' => _MODUL.':',
     ]);
-    $hide = getAdminHidden('op', 'clear').getAdminHidden('token', getSiteToken('search'));
-    $cont .= getAdminForm($afile.'.php?name=search', $rows, $hide, 'sl_table_conf');
+    $hide = getTplHiddenInput('op', 'clear').getTplHiddenInput('token', getSiteToken('search'));
+    $cont .= getTplAdminForm($afile.'.php?name=search', $rows, $hide, 'sl_table_conf');
     echo $cont;
     setFoot();
 }

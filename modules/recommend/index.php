@@ -77,7 +77,7 @@ function send(): void {
         addMail($femail, $semail, $subject, $message, 0, 3);
         update_points(38);
         setHead(['title' => _RECOMMTITLE]);
-        $meta = getMetaRefresh('index.php?name='.$conf['name']);
+        $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
         echo $tpl->getHtmlFrag('title', ['title' => _RECOMMTITLE]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => $tpl->getHtmlFrag('recommend-success-text', ['freference' => _FREFERENCE, 'friend_name' => $fname, 'thanksrec' => _THANKSREC]), 'meta' => $meta]);
         setFoot();
     } else {

@@ -32,7 +32,7 @@ function clients(): void {
                 adminLinkAction($afile.'.php?name=clients&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=clients&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-clients-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-clients-list-row', [
                 'actions_html' => $acts,
                 'date_text' => $time,
                 'hits_text' => (string)$hits,
@@ -43,7 +43,7 @@ function clients(): void {
                 'version_text' => $num,
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -74,7 +74,7 @@ function add(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stopText]);
     }
     if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $hide = getAdminHidden('name', 'clients');
+    $hide = getTplHiddenInput('name', 'clients');
     $rows = $tpl->getHtmlFrag('admin-clients-add-rows', [
         'body_html' => textarea('1', 'body', $body, 'clients', '15', _TEXT, '1'),
         'body_label' => _TEXT.':',
@@ -92,7 +92,7 @@ function add(): void {
         'version_label' => _CVERSION.':',
         'version_value' => $num,
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }

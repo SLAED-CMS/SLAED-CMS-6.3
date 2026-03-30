@@ -45,7 +45,7 @@ function security(): void {
                 adminLinkAction($afile.'.php?name=security&amp;op=download&amp;file='.$name, _DOWN, _DOWN),
                 adminDeleteAction($afile.'.php?name=security&amp;op=delete&amp;file='.$name, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-security-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-security-list-row', [
                 'actions_html' => $acts,
                 'date_text' => date(_TIMESTRING, filemtime($path)),
                 'size_text' => filterSize($filesize),
@@ -53,7 +53,7 @@ function security(): void {
             ]));
         }
     }
-    $cont .= getAdminTable($head, $rows);
+    $cont .= getTplAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -78,7 +78,7 @@ function logview(): void {
             'code_html' => textarea_code('code', '', 'sl_form', 'message/http', $content),
             'title_text' => $title,
         ]);
-        $cont .= getAdminBox($logv);
+        $cont .= getTplBox($logv);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -107,7 +107,7 @@ function banlist(): void {
                 $tcidr = getIpCidr($binfo[0]);
                 if ($tcidr === false) continue;
                 [$tip, $tmask] = explode('/', $tcidr, 2);
-                $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-security-ban-ip-row', [
+                $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-security-ban-ip-row', [
                     'actions_html' => adminMenuItems([adminDeleteAction($afile.'.php?name=security&amp;op=bansave&amp;cidr='.urlencode($tcidr).'&amp;hash='.urlencode($binfo[1]).'&amp;time='.(int)$binfo[2].'&amp;id=1', _DELETE.' "'.$tcidr.'"?', _ONDELETE, _ONDELETE)]),
                     'cidr_text' => '/'.$tmask,
                     'date_text' => getTimeLeft((int)$binfo[2]),
@@ -116,7 +116,7 @@ function banlist(): void {
                 ]));
             }
         }
-        $tabone .= getAdminTable($tpl->getHtmlFrag('admin-security-ban-ip-head', [
+        $tabone .= getTplAdminTable($tpl->getHtmlFrag('admin-security-ban-ip-head', [
             'cidr_label' => _IP_CIDR,
             'date_label' => _DATE,
             'functions_label' => _FUNCTIONS,
@@ -147,7 +147,7 @@ function banlist(): void {
         foreach ($bip as $val) {
             if ($val != '') {
                 $binfo = explode('|', $val);
-                $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-security-ban-user-row', [
+                $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-security-ban-user-row', [
                     'actions_html' => adminMenuItems([adminDeleteAction($afile.'.php?name=security&amp;op=bansave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3', _DELETE.' "'.$binfo[0].'"?', _ONDELETE, _ONDELETE)]),
                     'date_text' => getTimeLeft($binfo[1]),
                     'info_text' => $binfo[2],
@@ -155,7 +155,7 @@ function banlist(): void {
                 ]));
             }
         }
-        $tabtwo .= getAdminTable($tpl->getHtmlFrag('admin-security-ban-user-head', [
+        $tabtwo .= getTplAdminTable($tpl->getHtmlFrag('admin-security-ban-user-head', [
             'date_label' => _DATE,
             'functions_label' => _FUNCTIONS,
             'info_label' => _BANN_REAS,
@@ -184,13 +184,13 @@ function banlist(): void {
         'time_value' => (string)$time,
     ]);
     $banv = $tpl->getHtmlFrag('admin-security-ban-tabs', [
-        'tab_one_id' => getAdminTabName('security', 0, true),
-        'tab_two_id' => getAdminTabName('security', 1, true),
+        'tab_one_id' => getTplAdminTabName('security', 0, true),
+        'tab_two_id' => getTplAdminTabName('security', 1, true),
         'tab_one_html' => $tabone,
         'tab_two_html' => $tabtwo,
     ]);
-    $banv .= getAdminTabsSetup('securitys');
-    echo $cont.getAdminBox($banv);
+    $banv .= getTplAdminTabsSetup('securitys');
+    echo $cont.getTplBox($banv);
     setFoot();
 }
 
@@ -269,7 +269,7 @@ function passwd(): void {
         'pass_row_html' => '',
         'save_label' => _SAVECHANGES,
     ]);
-    $cont .= getAdminForm($afile.'.php?name=security', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php?name=security', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -304,16 +304,16 @@ function config(): void {
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 3, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
-    $floodhtml = getAdminSelect('flood',
-        getAdminOption('0', _NO, $conf['security']['flood'] == 0)
-        .getAdminOption('1', _SFLOOD_1, $conf['security']['flood'] == 1)
-        .getAdminOption('2', _SFLOOD_2, $conf['security']['flood'] == 2)
-        .getAdminOption('3', _SFLOOD_3, $conf['security']['flood'] == 3),
+    $floodhtml = getTplSelect('flood',
+        getTplOption('0', _NO, $conf['security']['flood'] == 0)
+        .getTplOption('1', _SFLOOD_1, $conf['security']['flood'] == 1)
+        .getTplOption('2', _SFLOOD_2, $conf['security']['flood'] == 2)
+        .getTplOption('3', _SFLOOD_3, $conf['security']['flood'] == 3),
         'sl_conf');
-    $errorhtml = getAdminSelect('error',
-        getAdminOption('0', _NO, $conf['security']['error'] == 0)
-        .getAdminOption('1', _SEC_VIEW_1, $conf['security']['error'] == 1)
-        .getAdminOption('2', _SEC_VIEW_2, $conf['security']['error'] == 2),
+    $errorhtml = getTplSelect('error',
+        getTplOption('0', _NO, $conf['security']['error'] == 0)
+        .getTplOption('1', _SEC_VIEW_1, $conf['security']['error'] == 1)
+        .getTplOption('2', _SEC_VIEW_2, $conf['security']['error'] == 2),
         'sl_conf');
     $confv = $tpl->getHtmlFrag('admin-security-config-form', [
         'afile_hint' => $ainfo,
@@ -378,7 +378,7 @@ function config(): void {
         'write_w_html' => radio_form($conf['security']['write_w'], 'write_w'),
         'write_w_label' => _SEC_WARN_STAT,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

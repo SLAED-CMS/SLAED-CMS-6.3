@@ -12,13 +12,13 @@ function getUploadsSearch(): string {
     $opts = '';
     foreach (scandir('uploads') as $file) {
         if (!preg_match('/\./', $file)) {
-            $opts .= getAdminOption($file, 'uploads/'.$file, $dir == $file);
+            $opts .= getTplOption($file, 'uploads/'.$file, $dir == $file);
         }
     }
-    return getAdminSearchBox($tpl->getHtmlFrag('admin-uploads-search-form', [
+    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-uploads-search-form', [
         'dir_label' => _DIR.':',
         'route' => $afile,
-        'select_html' => getAdminSelect('dir', $opts, 'sl_form', 'OnChange="submit()"'),
+        'select_html' => getTplSelect('dir', $opts, 'sl_form', 'OnChange="submit()"'),
     ]));
 }
 
@@ -41,14 +41,14 @@ function uploads(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $tabone = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
-    $uphide = getAdminHidden('name', 'uploads').getAdminHidden('op', 'uploadsave').getAdminHidden('dir', $dir);
+    $uphide = getTplHiddenInput('name', 'uploads').getTplHiddenInput('op', 'uploadsave').getTplHiddenInput('dir', $dir);
     $uprows = $tpl->getHtmlFrag('admin-uploads-upload-rows', [
         'execute_label' => _EXECUTE,
         'filesite_label' => _FILE_SITE.':',
         'filesite_placeholder' => _FILE_SITE,
         'fileuser_label' => _FILE_USER.':',
     ]);
-    $tabone .= getAdminBox(getAdminForm($afile.'.php', $uprows, $uphide, 'sl_table_form', 'post', 'post', 'enctype="multipart/form-data"'));
+    $tabone .= getTplBox(getTplAdminForm($afile.'.php', $uprows, $uphide, 'sl_table_form', 'post', 'post', 'enctype="multipart/form-data"'));
     $fdir = 'uploads/'.$dir;
     $tabtwo = checkPerms(BASE_DIR.'/'.$fdir);
     if (is_dir($fdir)) {
@@ -65,7 +65,7 @@ function uploads(): void {
     } else {
         $tabtwo .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
-    $tabtwo .= getAdminPlaceholderBox('repf1');
+    $tabtwo .= getTplAdminPlaceholder('repf1');
     $tdir = 'uploads/'.$dir.'/thumb';
     $tabthr = checkPerms(BASE_DIR.'/'.$tdir);
     if (is_dir($tdir)) {
@@ -82,16 +82,16 @@ function uploads(): void {
     } else {
         $tabthr .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
-    $tabthr .= getAdminPlaceholderBox('repf2');
+    $tabthr .= getTplAdminPlaceholder('repf2');
     $uplv = $tpl->getHtmlFrag('admin-uploads-tabs-content', [
-        'tab_one_id' => getAdminTabName('uploads', 0, true),
-        'tab_two_id' => getAdminTabName('uploads', 1, true),
-        'tab_three_id' => getAdminTabName('uploads', 2, true),
+        'tab_one_id' => getTplAdminTabName('uploads', 0, true),
+        'tab_two_id' => getTplAdminTabName('uploads', 1, true),
+        'tab_three_id' => getTplAdminTabName('uploads', 2, true),
         'tab_one_html' => $tabone,
         'tab_two_html' => $tabtwo,
         'tab_three_html' => $tabthr,
     ]);
-    $uplv .= getAdminTabsSetup('uploadss');
+    $uplv .= getTplAdminTabsSetup('uploadss');
     echo $cont.$uplv;
     setFoot();
 }
@@ -123,8 +123,8 @@ function tplconfig(): void {
             'tpfor_label' => _TPFOR.':',
         ]);
     }
-    $tplv = getAdminConfSave($conts, 'uploads', 'tplsave');
-    echo $cont.getAdminBox($tplv);
+    $tplv = getTplAdminConfSave($conts, 'uploads', 'tplsave');
+    echo $cont.getTplBox($tplv);
     setFoot();
 }
 
@@ -146,11 +146,11 @@ function config(): void {
     $directory = '';
     foreach (scandir('uploads') as $file) {
         if (!preg_match('/\./', $file)) {
-            $directory .= getAdminOption($file, 'uploads/'.$file, $conf['uploads']['dir'] == $file);
+            $directory .= getTplOption($file, 'uploads/'.$file, $conf['uploads']['dir'] == $file);
         }
     }
     $tabone = $tpl->getHtmlFrag('admin-uploads-config-general-tab', [
-        'dir_html' => getAdminSelect('dir', $directory, 'sl_conf'),
+        'dir_html' => getTplSelect('dir', $directory, 'sl_conf'),
         'dir_label' => _DIRDEF.':',
         'theight_label' => _TPHEIGHT.':',
         'theight_value' => (string)$conf['uploads']['height'],
@@ -202,14 +202,14 @@ function config(): void {
         }
     }
     $conts = $tpl->getHtmlFrag('admin-uploads-config-tabs', [
-        'tab_one_id' => getAdminTabName('config', 0, true),
-        'tab_two_id' => getAdminTabName('config', 1, true),
+        'tab_one_id' => getTplAdminTabName('config', 0, true),
+        'tab_two_id' => getTplAdminTabName('config', 1, true),
         'tab_one_html' => $tabone,
         'tab_two_html' => $tabtwo,
     ]);
-    $conts .= getAdminTabsSetup('configs');
-    $confv = getAdminConfSave($conts, 'uploads', 'configsave');
-    echo $cont.getAdminBox($confv);
+    $conts .= getTplAdminTabsSetup('configs');
+    $confv = getTplAdminConfSave($conts, 'uploads', 'configsave');
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

@@ -29,7 +29,7 @@ function replace(): void {
                     'content_placeholder' => _CONTENT,
                     'content_value' => $out[2] ?? '',
                     'display_attr' => $display,
-                    'hr_html' => ($c === 0) ? '' : getAdminHrLine(),
+                    'hr_html' => ($c === 0) ? '' : getTplHrLine(),
                     'info_text' => _REPLACEIN,
                     'next_block_id' => 'fi'.$k.$b,
                     'title_attr' => _ADD,
@@ -42,14 +42,14 @@ function replace(): void {
             }
             $content .= $tpl->getHtmlFrag('admin-replace-tab-content', [
                 'items_html' => $items,
-                'tab_id' => getAdminTabName('replace', $k),
+                'tab_id' => getTplAdminTabName('replace', $k),
             ]);
             $k++;
         }
     }
-    $repv = getAdminConfSave($content, 'replace', 'save')
-        .getAdminTabsSetup('replace');
-    echo $cont.getAdminBox($repv);
+    $repv = getTplAdminConfSave($content, 'replace', 'save')
+        .getTplAdminTabsSetup('replace');
+    echo $cont.getTplBox($repv);
     setFoot();
 }
 

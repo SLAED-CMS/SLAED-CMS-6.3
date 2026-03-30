@@ -79,7 +79,7 @@ function files(): void {
             $hits = ($conf['files']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _FILEHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
-            $cont .= getContentCard([
+            $cont .= getTplContentCard([
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -385,7 +385,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['files']['addmail'], $conf['name'], $puname, _FILES);
             setHead(['title' => _ADD]);
-            $meta = getMetaRefresh('index.php?name='.$conf['name']);
+            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISH, 'meta' => $meta]);
             setFoot();
         } else {
@@ -402,7 +402,7 @@ function broken(): void {
     if ($conf['files']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB."_files SET status = '2' WHERE id = :id AND status != '0'", ['id' => $id]);
         setHead(['title' => _BROCFILE]);
-        $meta = getMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
+        $meta = getTplMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
         echo setModuleNavi(['title' => _BROCFILE, 'htitle' => _FILES]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTE, 'meta' => $meta]);
         setFoot();
     } else {

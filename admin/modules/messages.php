@@ -43,7 +43,7 @@ function messages(): void {
                 adminLinkAction($afile.'.php?name=messages&amp;op=add&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=messages&amp;op=delete&amp;id='.$mid, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-messages-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-messages-list-row', [
                 'actions_html' => $acts,
                 'id_text' => (string)$mid,
                 'lang_text' => getLangName($lang),
@@ -54,7 +54,7 @@ function messages(): void {
                 'view_text' => $mview,
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -82,23 +82,23 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
-    $hide = getAdminHidden('mid', (string)$mid).getAdminHidden('name', 'messages').getAdminHidden('op', 'save').getAdminHidden('posttype', 'save');
+    $hide = getTplHiddenInput('mid', (string)$mid).getTplHiddenInput('name', 'messages').getTplHiddenInput('op', 'save').getTplHiddenInput('posttype', 'save');
     $langsel = '';
-    if ($conf['multilingual'] == 1) $langsel = getAdminSelect('lang', language($lang), 'sl_form');
+    if ($conf['multilingual'] == 1) $langsel = getTplSelect('lang', language($lang), 'sl_form');
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = getAdminHidden('expire', (string)$oldexpire)._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = getTplHiddenInput('expire', (string)$oldexpire)._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = getAdminNumberInput(0, 'expire', 'sl_form', 'placeholder="'._EXPIRATION.'" required');
+        $expire_text = getTplNumberInput(0, 'expire', 'sl_form', 'placeholder="'._EXPIRATION.'" required');
     }
     $privs = [_MVALL, _MVANON, _MVUSERS, _MVADMIN];
     $privopts = '';
     foreach ($privs as $key => $value) {
-        $privopts .= getAdminOption((string)($key + 1), $value, $view == ($key + 1));
+        $privopts .= getTplOption((string)($key + 1), $value, $view == ($key + 1));
     }
     $rows = $tpl->getHtmlFrag('admin-messages-add-rows', [
         'active_html' => radio_form($active, 'status'),
@@ -106,17 +106,17 @@ function add(): void {
         'body_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'),
         'body_label' => _TEXT.':',
         'expire_html' => $expire_text,
-        'expire_label_html' => getAdminHintLabel(_EXPIRATION, _CONFINES),
+        'expire_label_html' => getTplAdminHintLabel(_EXPIRATION, _CONFINES),
         'lang_html' => $langsel,
         'lang_label' => _LANGUAGE.':',
         'newexpire_value' => (string)$newexpire,
         'save_label' => _SAVE,
         'title_label' => _TITLE.':',
         'title_value' => $title,
-        'view_html' => getAdminSelect('view', $privopts, 'sl_form'),
+        'view_html' => getTplSelect('view', $privopts, 'sl_form'),
         'view_label' => _VIEWPRIV,
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }

@@ -107,8 +107,8 @@ function config(): void {
 
     $source = chlogSource((string) ($conf['changelog']['source'] ?? 'local'));
     $ghdisplay = $source === 'github' ? '' : ' style="display: none;"';
-    $hide = getAdminHidden('name', 'changelog').getAdminHidden('op', 'configsave').getAdminHidden('token', getSiteToken('changelog'));
-    $cont .= getAdminBox(getAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-chlog-config-rows', [
+    $hide = getTplHiddenInput('name', 'changelog').getTplHiddenInput('op', 'configsave').getTplHiddenInput('token', getSiteToken('changelog'));
+    $cont .= getTplBox(getTplAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-chlog-config-rows', [
         'cachettl_label' => _CHLOG_CACHE_TTL.':',
         'cachettl_value' => (string)($conf['changelog']['cachettl'] ?? 900),
         'exporten_html' => radio_form($conf['changelog']['exporten'] ?? 0, 'exporten'),

@@ -51,7 +51,7 @@ function jokes(): void {
                 adminLinkAction($afile.'.php?name=jokes&amp;op=add&amp;id='.$jokeid, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=jokes&amp;op=delete&amp;id='.$jokeid.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
                 'actions_html' => $acts,
                 'checkbox_html' => '',
                 'id_text' => (string)$jokeid,
@@ -60,7 +60,7 @@ function jokes(): void {
                 'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_jokes', '', 'status = \''.$status.'\'', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -89,7 +89,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if (!empty($joke)) $cont .= preview($title, $joke, '', '', 'all');
-    $hide = getAdminHidden('name', 'jokes');
+    $hide = getTplHiddenInput('name', 'jokes');
     $rows = $tpl->getHtmlFrag('admin-jokes-add-rows', [
         'cat_html' => getcat('jokes', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
         'cat_label' => _CATEGORY.':',
@@ -103,7 +103,7 @@ function add(): void {
         'title_label' => _TITLE.':',
         'title_value' => $title,
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -154,7 +154,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/jokes.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'jokes',
         'op' => 'configsave',

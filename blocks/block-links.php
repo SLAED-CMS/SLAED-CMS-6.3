@@ -11,7 +11,7 @@ if (!defined('BLOCK_FILE')) {
 
 global $db;
 $strip = 40;
-$content = '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th style="width: 50%;">ÐÐ¾Ð²Ñ‹Ðµ ÑÐ°Ð¹Ñ‚Ñ‹</th><th>Ð›ÑƒÑ‡ÑˆÐ¸Ðµ ÑÐ°Ð¹Ñ‚Ñ‹</th></tr></thead><tbody class="sl_table_list_body">';
+$content = '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th style="width: 50%;">Новые сайты</th><th>Лучшие сайты</th></tr></thead><tbody class="sl_table_list_body">';
 
 // Last added links
 $content .='<tr><td>';

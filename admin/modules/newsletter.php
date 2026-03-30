@@ -28,7 +28,7 @@ function newsletter(): void {
                 adminLinkAction($afile.'.php?name=newsletter&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id, _DELETE.' &quot;'.$title.'&quot;?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-newsletter-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-newsletter-list-row', [
                 'actions_html' => $acts,
                 'id_text' => (string)$id,
                 'send_text' => $sended.' '._NLUSER,
@@ -36,7 +36,7 @@ function newsletter(): void {
                 'title_html' => adminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.getDuration($sendtime)).$title,
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -61,9 +61,9 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
-    $option = getAdminOption('1', _MASSMAIL.' - '.$num, $mails == 1);
+    $option = getTplOption('1', _MASSMAIL.' - '.$num, $mails == 1);
     [$num2] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users WHERE newslet = 1'));
-    $option .= getAdminOption('2', _ANEWSLETTER.' - '.$num2, $mails == 2);
+    $option .= getTplOption('2', _ANEWSLETTER.' - '.$num2, $mails == 2);
     $result3 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra = 1 ORDER BY id');
     if ($db->getSqlRowCount($result3) > 0) {
         while ([$grid, $grname, $points] = $db->getSqlRow($result3)) {
@@ -74,7 +74,7 @@ function add(): void {
                 $email3 .= $user_email.',';
                 $num3++;
             }
-            $option .= getAdminOption($email3, _SPEC_GROUP.' "'.$grname.'" - '.$num3, $email3 == $mails);
+            $option .= getTplOption($email3, _SPEC_GROUP.' "'.$grname.'" - '.$num3, $email3 == $mails);
         }
     }
     $result5 = $db->getSqlQuery('SELECT id, name, points FROM '.PREFIX_DB.'_groups WHERE extra != 1 ORDER BY id');
@@ -87,7 +87,7 @@ function add(): void {
                 $email4 .= $user_email.',';
                 $num4++;
             }
-            $option .= getAdminOption($email4, _GROUP.' "'.$grname.'" - '.$num4, $email4 == $mails);
+            $option .= getTplOption($email4, _GROUP.' "'.$grname.'" - '.$num4, $email4 == $mails);
         }
     }
     if (is_active('money')) {
@@ -104,7 +104,7 @@ function add(): void {
                     $num5++;
                 }
             }
-            $option .= getAdminOption($email5, _CLIENTSM.' "'._MONEY.'" - '.$num5, $email5 == $mails);
+            $option .= getTplOption($email5, _CLIENTSM.' "'._MONEY.'" - '.$num5, $email5 == $mails);
         }
     }
     if (is_active('order')) {
@@ -121,7 +121,7 @@ function add(): void {
                     $num6++;
                 }
             }
-            $option .= getAdminOption($email6, _CLIENTSM.' "'._ORDER.'" - '.$num6, $email6 == $mails);
+            $option .= getTplOption($email6, _CLIENTSM.' "'._ORDER.'" - '.$num6, $email6 == $mails);
         }
     }
     if (is_active('shop')) {
@@ -138,7 +138,7 @@ function add(): void {
                     $num7++;
                 }
             }
-            $option .= getAdminOption($email7, _CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7, $email7 == $mails);
+            $option .= getTplOption($email7, _CLIENTSM.' "'._SHOP.'" ('._ALL.') - '.$num7, $email7 == $mails);
         }
         $result10 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE status = 1');
         if ($db->getSqlRowCount($result10) > 0) {
@@ -153,7 +153,7 @@ function add(): void {
                     $num8++;
                 }
             }
-            $option .= getAdminOption($email8, _CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8, $email8 == $mails);
+            $option .= getTplOption($email8, _CLIENTSM.' "'._SHOP.'" ('._AKTIVE.') - '.$num8, $email8 == $mails);
         }
         $result11 = $db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_clients WHERE status = 0');
         if ($db->getSqlRowCount($result11) > 0) {
@@ -168,20 +168,20 @@ function add(): void {
                     $num9++;
                 }
             }
-            $option .= getAdminOption($email9, _CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9, $email9 == $mails);
+            $option .= getTplOption($email9, _CLIENTSM.' "'._SHOP.'" ('._DEAKTIVE.') - '.$num9, $email9 == $mails);
         }
     }
-    $hide = getAdminHidden('nid', (string)$nid).getAdminHidden('name', 'newsletter').getAdminHidden('op', 'save').getAdminHidden('posttype', 'save');
+    $hide = getTplHiddenInput('nid', (string)$nid).getTplHiddenInput('name', 'newsletter').getTplHiddenInput('op', 'save').getTplHiddenInput('posttype', 'save');
     $rows = $tpl->getHtmlFrag('admin-newsletter-add-rows', [
         'body_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'),
-        'mails_html' => getAdminSelect('mails', $option, 'sl_form'),
+        'mails_html' => getTplSelect('mails', $option, 'sl_form'),
         'mails_label' => _NLWHERE.':',
         'save_label' => _SAVE,
         'text_label' => _TEXT.':',
         'title_label' => _TITLE.':',
         'title_value' => $title,
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -247,7 +247,7 @@ function config(): void {
         'count' => $conf['newsletter']['count'],
         'newsletter' => true,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

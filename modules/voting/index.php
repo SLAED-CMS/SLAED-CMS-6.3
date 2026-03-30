@@ -25,9 +25,9 @@ function voting(): void {
 			$vote = array_sum(explode('|', $answer));
 			$type = ($typ == '1') ? _VOPEN : _VCLOSE;
 			$report = _CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type;
-			$admin = (is_moder($conf['name'])) ? getMenuItems([
-				getLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-				getDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$stitle.'"?', _ONDELETE, _ONDELETE),
+			$admin = (is_moder($conf['name'])) ? getTplMenuItems([
+				getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+				getTplDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$stitle.'"?', _ONDELETE, _ONDELETE),
 			]) : '';
 			$cont .= $tpl->getHtmlFrag('voting-home', [
 				'id' => $id,
@@ -68,7 +68,7 @@ function view(): void {
 		if ($acomm) $cont .= setComShow($id, $acomm);
 	} else {
 		setHead(['title' => _VOTING]);
-		$meta = getMetaRefresh('index.php?name='.$conf['name'], 3);
+		$meta = getTplMetaRefresh('index.php?name='.$conf['name'], 3);
 		$cont = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO, 'meta' => $meta]);
 	}
 	echo $cont;

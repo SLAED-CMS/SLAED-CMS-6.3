@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -36,7 +36,7 @@ function lang(): void {
     $rows = '';
     $sys_admin = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', _FULLEDIT, _ADMIN);
     $sys_modul = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit', _FULLEDIT, _MODUL);
-    $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
+    $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
         'actions_html' => adminMenuItems([$sys_admin, $sys_modul]),
         'id_value' => '1',
         'module_label' => _SYSTEM,
@@ -59,7 +59,7 @@ function lang(): void {
         $acts = [];
         if (is_dir($mod_path.'/admin/lang')) $acts[] = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', _FULLEDIT, _ADMIN);
         if (is_dir($mod_path.'/lang')) $acts[] = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], _FULLEDIT, _MODUL);
-        $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
+        $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
             'actions_html' => adminMenuItems($acts),
             'id_value' => (string)$a,
             'module_label' => getModuleName($mod[$i]),
@@ -68,7 +68,7 @@ function lang(): void {
             'view_label' => $view,
         ]));
     }
-    $cont .= getAdminTable($head, $rows);
+    $cont .= getTplAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -123,16 +123,16 @@ function fileedit(): void {
     $offset = ($page - 1) * $per_page;
     $hide = '';
     $cj = count($lng_cn);
-    for ($j = 0; $j < $cj; $j++) $hide .= getAdminHidden('lcn[]', $lng_cn[$j]);
-    $hide .= getAdminHidden('typ', $typ).getAdminHidden('mod', $mod).getAdminHidden('page', (string)$page).getAdminHidden('name', 'lang').getAdminHidden('op', 'save').getAdminHidden('refer', '1');
+    for ($j = 0; $j < $cj; $j++) $hide .= getTplHiddenInput('lcn[]', $lng_cn[$j]);
+    $hide .= getTplHiddenInput('typ', $typ).getTplHiddenInput('mod', $mod).getTplHiddenInput('page', (string)$page).getTplHiddenInput('name', 'lang').getTplHiddenInput('op', 'save').getTplHiddenInput('refer', '1');
     $rows = '';
     $ci = min($per_page, $total - $offset);
     for ($i = 0; $i < $ci; $i++) {
         $idx = $offset + $i;
         $n = $idx + 1;
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
-        if ($i !== 0) $rows .= getAdminFormWide(getAdminHrLine());
-        $rows .= getAdminFormRow(_CONST.':', getAdminTextInput('cnst[]', $valc, 'sl_form', 'placeholder="'._CONST.'"').' <a href="#'.$n.'" title="'._ID.': '.$n.'" class="sl_pnum">'.$n.'</a>', 'id="'.$n.'"');
+        if ($i !== 0) $rows .= getTplAdminFormWide(getTplHrLine());
+        $rows .= getTplAdminFormRow(_CONST.':', getTplTextInput('cnst[]', $valc, 'sl_form', 'placeholder="'._CONST.'"').' <a href="#'.$n.'" title="'._ID.': '.$n.'" class="sl_pnum">'.$n.'</a>', 'id="'.$n.'"');
         $cj = count($lng_cn);
         for ($j = 0; $j < $cj; $j++) {
             $val = ($valc) ? trim(str_replace('\"', '&quot;', $lng_arr[$lng_cn[$j]][$cnst_arr[$idx]])) : '';
@@ -153,14 +153,14 @@ function fileedit(): void {
                     'to_class' => 'to_'.$i.'-'.$j,
                 ]);
             }
-            $rows .= getAdminFormRow(getLangName($lng_cn[$j]).':', getAdminTextInput('lng['.$lng_cn[$j].'][]', $val, 'sl_form '.$class, 'placeholder="'.getLangName($lng_cn[$j]).'"').$btn);
+            $rows .= getTplAdminFormRow(getLangName($lng_cn[$j]).':', getTplTextInput('lng['.$lng_cn[$j].'][]', $val, 'sl_form '.$class, 'placeholder="'.getLangName($lng_cn[$j]).'"').$btn);
         }
     }
-    $rows .= getAdminFormWide(getAdminSubmitButton(_SAVECHANGES), '', 'sl_center');
-    $box = getAdminForm($afile.'.php', $rows, $hide);
+    $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_SAVECHANGES), '', 'sl_center');
+    $box = getTplAdminForm($afile.'.php', $rows, $hide);
     $url = 'name=lang&op=fileedit&mod='.urlencode($mod).'&typ='.urlencode($typ).'&';
     $box .= setPageNumbers('pagenum', 'lang', $total, $total_pages, $per_page, $url, 10, $page, '', 'page');
-    echo $cont.getAdminBox($box);
+    echo $cont.getTplBox($box);
     setFoot();
 }
 
@@ -215,7 +215,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
-    $s_lang = getAdminSelect('lang', language($conf['lang']['lang'], 1), 'sl_conf');
+    $s_lang = getTplSelect('lang', language($conf['lang']['lang'], 1), 'sl_conf');
     $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'lang',
@@ -231,7 +231,7 @@ function config(): void {
         'per_page' => $conf['lang']['per_page'] ?? 100,
         'lang' => true,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

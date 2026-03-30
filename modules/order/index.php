@@ -24,15 +24,15 @@ function order(): void {
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-        $rows = getFormAddRow(_OR_2.':', '<input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._OR_2.'" required>');
+        $rows = getTplFormAddRow(_OR_2.':', '<input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._OR_2.'" required>');
         $rows .= fields_in($field, $conf['name']);
-        $rows .= getFormAddRow(_OR_3.':', textarea('1', 'note', $note, $conf['name'], 5, _OR_3));
+        $rows .= getTplFormAddRow(_OR_3.':', textarea('1', 'note', $note, $conf['name'], 5, _OR_3));
         $cont .= '<h2>'._OR_1.'</h2>'.$tpl->getHtmlFrag('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
             'style' => $conf['style'],
-            'submit' => getFormSubmit('send', _OR_4),
+            'submit' => getTplFormSubmit('send', _OR_4),
             'token' => '',
         ]);
     } else {
@@ -70,7 +70,7 @@ function send(): void {
             }
             update_points(34);
             setHead(['title' => _ORDER]);
-            $meta = getMetaRefresh('index.php?name='.$conf['name'], 30);
+            $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 30);
             echo $tpl->getHtmlFrag('title', ['title' => _ORDER]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['order']['info'], 'all', false), 'all'), 'meta' => $meta]);
             setFoot();
         } else {

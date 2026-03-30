@@ -12,12 +12,12 @@ function modules(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = getAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
+    $search = getTplAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
         'action_url' => $afile.'.php',
-        'select_html' => getAdminSelect('type',
-            getAdminOption('2', _ALL, $mtype === 2)
-            .getAdminOption('1', _USERS, $mtype === 1)
-            .getAdminOption('0', _ADMINS, $mtype === 0),
+        'select_html' => getTplSelect('type',
+            getTplOption('2', _ALL, $mtype === 2)
+            .getTplOption('1', _USERS, $mtype === 1)
+            .getTplOption('0', _ADMINS, $mtype === 0),
             '',
             'OnChange="submit()"'
         ),
@@ -192,11 +192,11 @@ function modules(): void {
             'title_html' => $titlel,
             'view_label' => $who_view,
         ]);
-        $rows .= getAdminTableRow($cols);
+        $rows .= getTplAdminTableRow($cols);
         $a++;
     }
 
-    $cont .= getAdminTable($head, $rows);
+    $cont .= getTplAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -216,12 +216,12 @@ function edit(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = getAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
+    $search = getTplAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
         'action_url' => $afile.'.php',
-        'select_html' => getAdminSelect('type',
-            getAdminOption('2', _ALL, $mtype === 2)
-            .getAdminOption('1', _USERS, $mtype === 1)
-            .getAdminOption('0', _ADMINS, $mtype === 0),
+        'select_html' => getTplSelect('type',
+            getTplOption('2', _ALL, $mtype === 2)
+            .getTplOption('1', _USERS, $mtype === 1)
+            .getTplOption('0', _ADMINS, $mtype === 0),
             '',
             'OnChange="submit()"'
         ),
@@ -229,25 +229,25 @@ function edit(): void {
     ]));
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
-    $hide = getAdminHidden('mod', $mod).getAdminHidden('name', 'modules').getAdminHidden('op', 'save');
+    $hide = getTplHiddenInput('mod', $mod).getTplHiddenInput('name', 'modules').getTplHiddenInput('op', 'save');
     $rows = '';
-    $rows .= getAdminFormRow(_LANGUAGE.':', getAdminTextInput('lang', $lang, 'sl_conf', 'maxlength="50" placeholder="'._LANGUAGE.'"'));
+    $rows .= getTplAdminFormRow(_LANGUAGE.':', getTplTextInput('lang', $lang, 'sl_conf', 'maxlength="50" placeholder="'._LANGUAGE.'"'));
     $path = 'templates/admin/images/admin/';
     $entries = is_dir($path) ? scandir($path) : [];
     $pickopts = '';
     foreach ($entries as $entry) {
         if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg|\.svg)$/is', $entry) && $entry !== '.' && $entry !== '..') {
-            $pickopts .= getAdminOption($path.$entry, $entry, $img == $entry);
+            $pickopts .= getTplOption($path.$entry, $entry, $img == $entry);
         }
     }
-    $rows .= getAdminFormRow(_LOGO.':', getAdminSelect('img', $pickopts, 'sl_conf', 'id="img_replace"'));
-    $rows .= getAdminFormRow(_PREVIEW.':', getAdminImagePreview($path.$img, _LOGO));
-    $rows .= getAdminFormRow(_STATUS.':', radio_form($active, 'active'));
+    $rows .= getTplAdminFormRow(_LOGO.':', getTplSelect('img', $pickopts, 'sl_conf', 'id="img_replace"'));
+    $rows .= getTplAdminFormRow(_PREVIEW.':', getTplImagePreview($path.$img, _LOGO));
+    $rows .= getTplAdminFormRow(_STATUS.':', radio_form($active, 'active'));
     $privopts = '';
     foreach ([_MVALL, _MVUSERS, _MVADMIN] as $key => $value) {
-        $privopts .= getAdminOption((string)$key, $value, $view == $key);
+        $privopts .= getTplOption((string)$key, $value, $view == $key);
     }
-    $rows .= getAdminFormRow(_VIEWPRIV, getAdminSelect('view', $privopts, 'sl_conf'));
+    $rows .= getTplAdminFormRow(_VIEWPRIV, getTplSelect('view', $privopts, 'sl_conf'));
     $numrow = $db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_groups'));
     if ($numrow > 0) {
         $grpopts = '';
@@ -255,28 +255,28 @@ function edit(): void {
         $first = true;
         while ([$gid, $gname] = $db->getSqlRow($result2)) {
             if ($first) {
-                $grpopts .= getAdminOption('0', _NONE, $group == 0);
+                $grpopts .= getTplOption('0', _NONE, $group == 0);
                 $first = false;
             }
-            $grpopts .= getAdminOption((string)$gid, $gname, $gid == $group);
+            $grpopts .= getTplOption((string)$gid, $gname, $gid == $group);
         }
-        $rows .= getAdminFormRow(_UGROUP.':', getAdminSelect('group', $grpopts, 'sl_conf'));
+        $rows .= getTplAdminFormRow(_UGROUP.':', getTplSelect('group', $grpopts, 'sl_conf'));
     } else {
-        $hide .= getAdminHidden('group', '0');
+        $hide .= getTplHiddenInput('group', '0');
     }
     $sideopts = '';
     foreach ([_BLOCKS_MOD0, _BLOCKS_MOD1, _BLOCKS_MOD2, _BLOCKS_MOD3] as $key => $value) {
-        $sideopts .= getAdminOption((string)$key, $value, $side == $key);
+        $sideopts .= getTplOption((string)$key, $value, $side == $key);
     }
-    $rows .= getAdminFormRow(_BLOCKS_MOD.':', getAdminSelect('side', $sideopts, 'sl_conf'));
+    $rows .= getTplAdminFormRow(_BLOCKS_MOD.':', getTplSelect('side', $sideopts, 'sl_conf'));
     $topopts = '';
     foreach ([_BLOCKS_MODC0, _BLOCKS_MODC1, _BLOCKS_MODC2, _BLOCKS_MODC3] as $key => $value) {
-        $topopts .= getAdminOption((string)$key, $value, $top == $key);
+        $topopts .= getTplOption((string)$key, $value, $top == $key);
     }
-    $rows .= getAdminFormRow(_BLOCKS_MOD.':', getAdminSelect('top', $topopts, 'sl_conf'));
-    $rows .= getAdminFormRow(_SHOWINMENU, radio_form($menu, 'menu'));
-    $rows .= getAdminFormWide(getAdminSubmitButton(_SAVECHANGES), '', 'sl_center');
-    $cont .= getAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
+    $rows .= getTplAdminFormRow(_BLOCKS_MOD.':', getTplSelect('top', $topopts, 'sl_conf'));
+    $rows .= getTplAdminFormRow(_SHOWINMENU, radio_form($menu, 'menu'));
+    $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_SAVECHANGES), '', 'sl_center');
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
     echo $cont;
     setFoot();
 }

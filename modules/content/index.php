@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -24,12 +24,12 @@ function content(): void {
         $cont .= $tpl->getHtmlFrag('content-list-open', ['id' => _ID, 'title' => _TITLE, 'functions' => _FUNCTIONS]);
         while ([$id, $title, $body, $time, $counter]= $db->getSqlRow($result)) {
             $href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title]);
-            $citems = [getLinkAction('index.php?name=content&amp;op=view&amp;id='.$id, _SHOW, _SHOW)];
+            $citems = [getTplLinkAction('index.php?name=content&amp;op=view&amp;id='.$id, _SHOW, _SHOW)];
             if (is_moder($conf['name'])) array_unshift($citems,
-                getLinkAction($afile.'.php?op=content_add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getDeleteAction($afile.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE)
+                getTplLinkAction($afile.'.php?op=content_add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplDeleteAction($afile.'.php?op=content_delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE)
             );
-            $actions = getMenuItems($citems);
+            $actions = getTplMenuItems($citems);
             $cont .= $tpl->getHtmlFrag('content-list-basic', [
                 'id' => $id,
                 'tip' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._READS.': '.$counter),

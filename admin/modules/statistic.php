@@ -12,14 +12,14 @@ function getStatisticSearch(): string {
     $files = [];
     foreach (scandir(COUNTER_DIR.'/statistic/') as $filev) $files[] = $filev;
     rsort($files);
-    $sopts = getAdminOption('', _NO_INFO, !$file);
+    $sopts = getTplOption('', _NO_INFO, !$file);
     foreach ($files as $val) {
         if ($val != '' && preg_match('/^statistic\_(.+)\.log/', $val, $matches)) {
-            $sopts .= getAdminOption($val, $matches[1], $file === $val);
+            $sopts .= getTplOption($val, $matches[1], $file === $val);
         }
     }
-    $sel = getAdminSelect('file', $sopts);
-    return getAdminSearchBox($tpl->getHtmlFrag('admin-statistic-search-form', [
+    $sel = getTplSelect('file', $sopts);
+    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-statistic-search-form', [
         'from_label' => _STATFROM.':',
         'ok_label' => _OK,
         'route' => $afile,
@@ -48,7 +48,7 @@ function statistic(): void {
         } else {
             $out = date('d');
         }
-        $statv .= getAdminHrLine();
+        $statv .= getTplHrLine();
         $statv .= $tpl->getHtmlFrag('admin-statistic-image', [
             'alt_text' => _STATGR,
             'image_url' => $afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out,
@@ -115,8 +115,8 @@ function statistic(): void {
         'unique_text' => (string)$unique,
         'users_text' => (string)$regusers,
     ]);
-    $statv .= getAdminHrLine().getAdminTable($head, $rows, 'sl_table_list_sort');
-    echo $cont.getAdminBox($statv);
+    $statv .= getTplHrLine().getTplAdminTable($head, $rows, 'sl_table_list_sort');
+    echo $cont.getTplBox($statv);
     setFoot();
 }
 
@@ -143,7 +143,7 @@ function config(): void {
         'r_stat' => radio_form($conf['statistic']['stat'], 'stat'),
         'statistic' => true,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

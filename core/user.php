@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -18,9 +18,9 @@ function setComShow(int $id = 0, int $cid = 0): string {
         $cont .= '<form name="post" id="formcsave" method="post">'
         .'<table class="sl_table_form">';
         if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).getAdminHidden('name', '').'</td></tr>';
+            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).getTplHiddenInput('name', '').'</td></tr>';
         } else {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.getAdminTextInput('name', _ANONYM, 'sl_field '.$conf['style'], 'maxlength="25"').'</td></tr>';
+            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.getTplTextInput('name', _ANONYM, 'sl_field '.$conf['style'], 'maxlength="25"').'</td></tr>';
         }
         $cont .= '<tr><td>'._COMMENT.':</td><td>'.textarea(1, 'text', '', $conf['name'], '5').'</td></tr>'
         .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" hx-post="index.php?go=1&amp;op=addComment&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'" hx-include="#formcsave" hx-target="#repcsave" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }" hx-on:htmx:after-request="document.getElementById(\'formcsave\').reset()" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';
@@ -812,7 +812,7 @@ function getOpenXsl(): string {
     global $conf;
     if (file_exists('config/sitemap/sitemap.xsl')) {
         $file = file_get_contents('config/sitemap/sitemap.xsl');
-        $licens = str_replace('&copy;', 'Â©', base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']));
+        $licens = str_replace('&copy;', '©', base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']));
         $title = $conf['sitename'].' - '._SITEMAP;
         $langs = ['$lan[0]' => $title, '$lan[1]' => $licens, '$lan[2]' => _SITEMAP_XML, '$lan[3]' => _URL, '$lan[4]' => _PRIORITY, '$lan[5]' => _CHANGEFREQ, '$lan[6]' => _LASTMOD];
         $cont = strtr($file, $langs);

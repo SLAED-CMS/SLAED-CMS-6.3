@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function privat(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.getAdminPlaceholderBox('repadminPrivateList', getAdminPrivateList(1));
+    echo $cont.getTplAdminPlaceholder('repadminPrivateList', getAdminPrivateList(1));
     setFoot();
 }
 
@@ -53,7 +53,7 @@ function config(): void {
         'r_act' => radio_form($conf['privat']['act'], 'act'),
         'privat' => true,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

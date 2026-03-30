@@ -36,9 +36,9 @@ function forum(): void {
         $detail = ($intro) ? $intro : _NO;
         $link = adminTitleTip(_DESCRIPTION.': '.$detail).'<a href="index.php?name=forum&amp;cat='.$id.'" target="_blank" title="'.$title.'" class="sl_note">'.cutstr($title, 60).'</a>';
         $cols = '<td>'.$id.'</td><td>'.$link.'</td><td>'.$topics.'</td><td>'.$posts.'</td><td>'.ad_status('', $state).'</td>';
-        $rows .= getAdminTableRow($cols);
+        $rows .= getTplAdminTableRow($cols);
     }
-    $cont .= getAdminTable($head, $rows);
+    $cont .= getTplAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -49,15 +49,15 @@ function config(): void {
     $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
-    $sort_sel = getAdminSelect('sort',
-        getAdminOption('1', _ASC, ($conf['forum']['sort'] ?? null) == '1').
-        getAdminOption('0', _DESC, ($conf['forum']['sort'] ?? null) == '0'),
+    $sort_sel = getTplSelect('sort',
+        getTplOption('1', _ASC, ($conf['forum']['sort'] ?? null) == '1').
+        getTplOption('0', _DESC, ($conf['forum']['sort'] ?? null) == '0'),
         'sl_conf');
-    $anon_sel = getAdminSelect('anonpost',
-        getAdminOption('0', _APOSTMOD, ($conf['forum']['anonpost'] ?? null) == '0').
-        getAdminOption('1', _APOSTNOMOD, ($conf['forum']['anonpost'] ?? null) == '1'),
+    $anon_sel = getTplSelect('anonpost',
+        getTplOption('0', _APOSTMOD, ($conf['forum']['anonpost'] ?? null) == '0').
+        getTplOption('1', _APOSTNOMOD, ($conf['forum']['anonpost'] ?? null) == '1'),
         'sl_conf');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'forum',
         'op' => 'configsave',

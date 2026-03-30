@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function favorites(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.getAdminPlaceholderBox('repadminFavoriteList', getAdminFavoriteList(1));
+    echo $cont.getTplAdminPlaceholder('repadminFavoriteList', getAdminFavoriteList(1));
     setFoot();
 }
 
@@ -39,7 +39,7 @@ function config(): void {
         'r_favact' => radio_form($conf['favorites']['favact'], 'favact'),
         'favorites' => true,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

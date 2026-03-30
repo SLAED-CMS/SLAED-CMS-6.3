@@ -60,7 +60,7 @@ function media(): void {
                 adminLinkAction($afile.'.php?name=media&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=media&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
                 'actions_html' => $acts,
                 'checkbox_html' => '',
                 'id_text' => (string)$id,
@@ -69,7 +69,7 @@ function media(): void {
                 'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_media', '', 'status = \''.$status.'\'', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -117,32 +117,32 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($description) $cont .= preview($mtitle, $description, '', '', 'media');
-    $hide = getAdminHidden('name', 'media');
+    $hide = getTplHiddenInput('name', 'media');
     $years = '';
     $xyear = $date['year'] - 100;
     while ($xyear <= ($date['year'] + 1)) {
-        $years .= getAdminOption((string)$xyear, (string)$xyear, $xyear == $year);
+        $years .= getTplOption((string)$xyear, (string)$xyear, $xyear == $year);
         $xyear++;
     }
-    $years = getAdminSelect('year', $years, 'sl_form');
+    $years = getTplSelect('year', $years, 'sl_form');
     $langsel = '';
     $langs = explode(',', $conf['media']['lang'] ?? '');
     foreach ($langs as $val) {
-        $langsel .= getAdminOption($val, $val, $val == $lang && $val != '');
+        $langsel .= getTplOption($val, $val, $val == $lang && $val != '');
     }
-    $langsel = getAdminSelect('lang', $langsel, 'sl_form');
-    $formatc = getAdminOption('', _NO_INFO);
+    $langsel = getTplSelect('lang', $langsel, 'sl_form');
+    $formatc = getTplOption('', _NO_INFO);
     $formats = explode(',', $conf['media']['format'] ?? '');
     foreach ($formats as $val) {
-        $formatc .= getAdminOption($val, $val, $val == $format && $val != '');
+        $formatc .= getTplOption($val, $val, $val == $format && $val != '');
     }
-    $formatc = getAdminSelect('format', $formatc, 'sl_form');
-    $qualityc = getAdminOption('', _NO_INFO);
+    $formatc = getTplSelect('format', $formatc, 'sl_form');
+    $qualityc = getTplOption('', _NO_INFO);
     $qualities = explode(',', $conf['media']['quality'] ?? '');
     foreach ($qualities as $val) {
-        $qualityc .= getAdminOption($val, $val, $val == $quality && $val != '');
+        $qualityc .= getTplOption($val, $val, $val == $quality && $val != '');
     }
-    $qualityc = getAdminSelect('quality', $qualityc, 'sl_form');
+    $qualityc = getTplSelect('quality', $qualityc, 'sl_form');
     $linkc = '';
     $i = 0;
     $lnum = (int)($conf['media']['links'] ?? 0);
@@ -202,7 +202,7 @@ function add(): void {
         'cat_label' => _CATEGORY.':',
         'createdby_label' => _MCREATEDBY.':',
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -277,7 +277,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=media', 'name=media&amp;op=add', 'name=media&amp;status=1', 'name=media&amp;status=2', 'name=media&amp;op=config', 'name=media&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCMFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/media.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'media',
         'op' => 'configsave',

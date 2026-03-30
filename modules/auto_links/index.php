@@ -45,7 +45,7 @@ function autolink(): void {
             $date = format_time($time);
             $hits = $tpl->getHtmlFrag('hit-badge', ['title' => _HITS, 'text' => $hits, 'cls' => 'sl_hits']);
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$sitename.'&quot;?');
-            $cont .= getContentCard([
+            $cont .= getTplContentCard([
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $sitename,

@@ -109,9 +109,9 @@ function admins(): void {
             'rank_text' => (string)$title,
             'super_text' => ((int)$super === 1) ? _YES : _NO,
         ]);
-        $rows .= getAdminTableRow($cells);
+        $rows .= getTplAdminTableRow($cells);
     }
-    $cont .= getAdminTable($head, $rows);
+    $cont .= getTplAdminTable($head, $rows);
     echo $cont;
     setFoot();
 }
@@ -232,7 +232,7 @@ function add(): void {
         'url_value' => htmlspecialchars((string)$url, ENT_QUOTES, 'UTF-8'),
         'url_label' => _URL,
     ]);
-    $cont .= getAdminForm($afile.'.php?name=admins&amp;op=save', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php?name=admins&amp;op=save', $rows, $hide);
     echo $cont;
     setFoot();
 }

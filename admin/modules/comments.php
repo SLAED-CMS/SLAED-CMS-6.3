@@ -22,12 +22,12 @@ function edit(): void {
     $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, modul, body FROM '.PREFIX_DB.'_comment WHERE id = :id', ['id' => $id]);
     [$id, $modul, $com_text] = $db->getSqlRow($result);
-    $hide = getAdminHidden('id', (string)$id).getAdminHidden('name', 'comments').getAdminHidden('op', 'editsave');
+    $hide = getTplHiddenInput('id', (string)$id).getTplHiddenInput('name', 'comments').getTplHiddenInput('op', 'editsave');
     $rows = $tpl->getHtmlFrag('admin-comments-edit-rows', [
         'comment_html' => textarea('1', 'comment', $com_text, $modul, '10', _COMMENT, '1'),
         'save_label' => _SAVECHANGES,
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -46,14 +46,14 @@ function config(): void {
     $cont = setAdminNavi(['ops' => ['name=comments', 'name=comments&amp;status=1', 'name=comments&amp;op=config', 'name=comments&amp;op=info'], 'tabs' => [_HOME, _WAITINGCONT, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/comments.php');
     $sval = (string)($conf['comments']['sort'] ?? '1');
-    $sort_sel = getAdminSelect('sort',
-        getAdminOption('1', _ASC, $sval === '1').getAdminOption('0', _DESC, $sval === '0'), 'sl_conf');
+    $sort_sel = getTplSelect('sort',
+        getTplOption('1', _ASC, $sval === '1').getTplOption('0', _DESC, $sval === '0'), 'sl_conf');
     $lval = (string)($conf['comments']['link'] ?? '0');
-    $link_sel = getAdminSelect('link',
-        getAdminOption('0', _NO, $lval === '0').getAdminOption('1', _ANONIMP, $lval === '1').getAdminOption('2', _ALLUSER, $lval === '2'), 'sl_conf');
+    $link_sel = getTplSelect('link',
+        getTplOption('0', _NO, $lval === '0').getTplOption('1', _ANONIMP, $lval === '1').getTplOption('2', _ALLUSER, $lval === '2'), 'sl_conf');
     $alval = (string)($conf['comments']['alink'] ?? '0');
-    $alink_sel = getAdminSelect('alink',
-        getAdminOption('0', _NO, $alval === '0').getAdminOption('1', _ANONIMP, $alval === '1').getAdminOption('2', _ALLUSER, $alval === '2'), 'sl_conf');
+    $alink_sel = getTplSelect('alink',
+        getTplOption('0', _NO, $alval === '0').getTplOption('1', _ANONIMP, $alval === '1').getTplOption('2', _ALLUSER, $alval === '2'), 'sl_conf');
     $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'comments',
@@ -93,7 +93,7 @@ function config(): void {
         'r_web' => radio_form($conf['comments']['web'], 'web'),
         'comments' => true,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

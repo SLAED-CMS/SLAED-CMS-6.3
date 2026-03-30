@@ -1376,7 +1376,7 @@ function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot
     $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
     $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
     $navi = setAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO]]);
-    echo $navi.getAdminBox($tpl->getHtmlFrag('basic-monitor', $vars));
+    echo $navi.getTplBox($tpl->getHtmlFrag('basic-monitor', $vars));
 }
 
 # Renders the main monitor page including navigation, panels, and full dashboard layout

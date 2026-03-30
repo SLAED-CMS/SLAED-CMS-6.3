@@ -22,15 +22,15 @@ function fields(): void {
             $fieldname = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
             $fopts = '';
             foreach ($fieldname as $key => $val2) {
-                $fopts .= getAdminOption((string)($key + 1), $val2, $out[3] == ($key + 1));
+                $fopts .= getTplOption((string)($key + 1), $val2, $out[3] == ($key + 1));
             }
-            $field = getAdminSelect('field3'.$k.'[]', $fopts, 'sl_conf');
+            $field = getTplSelect('field3'.$k.'[]', $fopts, 'sl_conf');
             $fieldname2 = [_FIELDIN, _FIELDOUT];
             $fopts2 = '';
             foreach ($fieldname2 as $key => $val3) {
-                $fopts2 .= getAdminOption((string)($key + 1), $val3, $out[4] == ($key + 1));
+                $fopts2 .= getTplOption((string)($key + 1), $val3, $out[4] == ($key + 1));
             }
-            $field2 = getAdminSelect('field4'.$k.'[]', $fopts2, 'sl_conf');
+            $field2 = getTplSelect('field4'.$k.'[]', $fopts2, 'sl_conf');
             $b = $c + 1;
             $tabcontent .= $tpl->getHtmlFrag('admin-fields-field-block', [
                 'block_id' => 'fi'.$k.$c,
@@ -38,7 +38,7 @@ function fields(): void {
                 'display_attr' => (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '',
                 'field_html' => $field,
                 'field2_html' => $field2,
-                'hr_html' => ($c == '0') ? '' : getAdminHrLine(),
+                'hr_html' => ($c == '0') ? '' : getTplHrLine(),
                 'next_block_id' => 'fi'.$k.$b,
                 'content_placeholder' => _CONTENT,
                 'content_label' => _CONTENT.':',
@@ -54,14 +54,14 @@ function fields(): void {
         }
         $content .= $tpl->getHtmlFrag('admin-fields-tab-content', [
             'items_html' => $tabcontent,
-            'tab_id' => getAdminTabName('fields', $k),
+            'tab_id' => getTplAdminTabName('fields', $k),
         ]);
         $k++;
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _FIELDINFO]);
-    $fieldv = getAdminConfSave($content, 'fields', 'save')
-       .getAdminTabsSetup('fields');
-    echo $cont.getAdminBox($fieldv);
+    $fieldv = getTplAdminConfSave($content, 'fields', 'save')
+       .getTplAdminTabsSetup('fields');
+    echo $cont.getTplBox($fieldv);
     setFoot();
 }
 

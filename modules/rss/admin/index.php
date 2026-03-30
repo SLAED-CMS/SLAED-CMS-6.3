@@ -18,9 +18,9 @@ function rss(): void {
         $field = '';
         for ($i = 0; $i < 2; $i++) {
             $fieldname = ($i == 0) ? _RSSSITE : _RSSHOME;
-            $field .= getAdminOption((string)$i, $fieldname, isset($out[3]) && $out[3] == $i);
+            $field .= getTplOption((string)$i, $fieldname, isset($out[3]) && $out[3] == $i);
         }
-        $field = getAdminSelect('field3[]', $field, 'sl_conf');
+        $field = getTplSelect('field3[]', $field, 'sl_conf');
         $b = $c + 1;
         $out1 = $out[1] ?? '';
         $out2 = $out[2] ?? '';
@@ -50,8 +50,8 @@ function rss(): void {
         'min_value' => (string)$conf['rss']['min'],
         'route' => $afile,
         'rss_sources_html' => $content,
-        'tab_one_id' => getAdminTabName('rss', 0),
-        'tab_two_id' => getAdminTabName('rss', 1),
+        'tab_one_id' => getTplAdminTabName('rss', 0),
+        'tab_two_id' => getTplAdminTabName('rss', 1),
         'save_label' => _SAVECHANGES,
         'temp_hint' => _RSSTEMPINFO,
         'temp_label' => _RSSTEMP.':',
@@ -60,7 +60,7 @@ function rss(): void {
         'use_html' => radio_form($conf['rss']['use'], 'use'),
         'use_label' => _RSSUSE,
     ]);
-    echo getAdminBox($cont);
+    echo getTplBox($cont);
     setFoot();
 }
 

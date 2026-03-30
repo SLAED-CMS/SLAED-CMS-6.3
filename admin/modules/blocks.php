@@ -11,7 +11,7 @@ function blocks(): void {
     global $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO]]);
-    echo $cont.getAdminPlaceholderBox('repajax_block', getAdminBlockList());
+    echo $cont.getTplAdminPlaceholder('repajax_block', getAdminBlockList());
     setFoot();
 }
 
@@ -19,41 +19,41 @@ function add(): void {
     global $db, $conf, $afile, $tpl;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-    $rows = getAdminFormRow(getAdminHintLabel(_TITLE, _ADDCONST), getAdminTextInput('title', '', 'sl_form', 'maxlength="60" placeholder="'._TITLE.'" required'));
-    $rows .= getAdminFormRow(_RSSFILE.':', getAdminTextInput('url', '', 'sl_form', 'placeholder="'._RSSFILE.'"'));
-    $rows .= getAdminFormRow('<div class="sl_small">'._RSSLINESINFO.' '._RSSINFO.'</div>', getAdminSelect('headline', getAdminOption('0', _CUSTOM, true).rss_select(), 'sl_form'));
-    $rows .= getAdminFormRow(getAdminHintLabel(_REFRESHTIME, _REFINFO), getBlockRefreshSelect());
-    $bfopts = getAdminOption('', _NONE, true);
+    $rows = getTplAdminFormRow(getTplAdminHintLabel(_TITLE, _ADDCONST), getTplTextInput('title', '', 'sl_form', 'maxlength="60" placeholder="'._TITLE.'" required'));
+    $rows .= getTplAdminFormRow(_RSSFILE.':', getTplTextInput('url', '', 'sl_form', 'placeholder="'._RSSFILE.'"'));
+    $rows .= getTplAdminFormRow('<div class="sl_small">'._RSSLINESINFO.' '._RSSINFO.'</div>', getTplSelect('headline', getTplOption('0', _CUSTOM, true).rss_select(), 'sl_form'));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_REFRESHTIME, _REFINFO), getTplBlockRefresh());
+    $bfopts = getTplOption('', _NONE, true);
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
-                $bfopts .= getAdminOption($file, $matches[0]);
+                $bfopts .= getTplOption($file, $matches[0]);
             }
         }
     }
     $rows .= $tpl->getHtmlFrag('admin-blocks-add-rows', [
-        'action_html' => getBlockActionSelect(),
+        'action_html' => getTplBlockAction(),
         'afterexpiration_label' => _AFTEREXPIRATION.':',
         'activate_html' => radio_form(1, 'status'),
         'activate_label' => _ACTIVATE2,
-        'bfile_html' => getAdminSelect('bfile', $bfopts, 'sl_form'),
-        'bfile_label_html' => getAdminHintLabel(_FILENAME, _FILENAMEIN),
-        'blockview_html' => getBlockViewGrid(),
+        'bfile_html' => getTplSelect('bfile', $bfopts, 'sl_form'),
+        'bfile_label_html' => getTplAdminHintLabel(_FILENAME, _FILENAMEIN),
+        'blockview_html' => getTplAdminBlockGrid(),
         'blockview_label' => _BLOCK_VIEW.':',
         'content_html' => textarea('1', 'content', '', 'all', '15', _CONTENT, ''),
         'content_label' => _CONTENT.':',
-        'expiration_label_html' => getAdminHintLabel(_EXPIRATION, _CONFINES),
+        'expiration_label_html' => getTplAdminHintLabel(_EXPIRATION, _CONFINES),
         'expiration_placeholder' => _EXPIRATION,
-        'language_html' => $conf['multilingual'] == 1 ? getAdminFormRow(_LANGUAGE.':', getAdminSelect('lang', language(), 'sl_form')) : '',
-        'position_html' => getBlockPositionSelect(),
+        'language_html' => $conf['multilingual'] == 1 ? getTplAdminFormRow(_LANGUAGE.':', getTplSelect('lang', language(), 'sl_form')) : '',
+        'position_html' => getTplBlockPosition(),
         'position_label' => _POSITION.':',
         'submit_label' => _CREATEBLOCK,
-        'viewpriv_html' => getBlockViewSelect(),
+        'viewpriv_html' => getTplBlockView(),
         'viewpriv_label' => _VIEWPRIV,
     ]);
-    $hide = getAdminHidden('name', 'blocks').getAdminHidden('op', 'addsave');
-    echo $cont.getAdminForm($afile.'.php', $rows, $hide);
+    $hide = getTplHiddenInput('name', 'blocks').getTplHiddenInput('op', 'addsave');
+    echo $cont.getTplAdminForm($afile.'.php', $rows, $hide);
     setFoot();
 }
 
@@ -62,14 +62,14 @@ function fileadd(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 2]);
     $cont .= checkPerms(BASE_DIR.'/blocks/');
-    $hide = getAdminHidden('name', 'blocks').getAdminHidden('op', 'filecode');
+    $hide = getTplHiddenInput('name', 'blocks').getTplHiddenInput('op', 'filecode');
     $rows = $tpl->getHtmlFrag('admin-blocks-fileadd-rows', [
         'createblock_label' => _CREATEBLOCK,
         'filename_label' => _FILENAME.':',
         'filename_placeholder' => _FILENAME,
         'type_label' => _TYPE.':',
     ]);
-    echo $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide));
+    echo $cont.getTplBox(getTplAdminForm($afile.'.php', $rows, $hide));
     setFoot();
 }
 
@@ -81,16 +81,16 @@ function fileedit(): void {
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $opts .= getAdminOption($file, $matches[0]);
+            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $opts .= getTplOption($file, $matches[0]);
         }
     }
-    $hide = getAdminHidden('name', 'blocks').getAdminHidden('op', 'filecode');
+    $hide = getTplHiddenInput('name', 'blocks').getTplHiddenInput('op', 'filecode');
     $rows = $tpl->getHtmlFrag('admin-blocks-fileedit-rows', [
-        'bf_html' => getAdminSelect('bf', $opts, 'sl_form'),
+        'bf_html' => getTplSelect('bf', $opts, 'sl_form'),
         'editblock_label' => _EDITBLOCK,
         'filename_label' => _FILENAME.':',
     ]);
-    echo $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide));
+    echo $cont.getTplBox(getTplAdminForm($afile.'.php', $rows, $hide));
     setFoot();
 }
 
@@ -139,7 +139,7 @@ function addsave(): void {
     if (($content == '') && ($bfile == '')) {
         setHead();
         $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _RSSFAIL]).getAdminBox($tpl->getHtmlFrag('admin-blocks-back-box', [
+        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _RSSFAIL]).getTplBox($tpl->getHtmlFrag('admin-blocks-back-box', [
             'goback_label' => _GOBACK,
         ]));
         setFoot();
@@ -192,16 +192,16 @@ function filecode(): void {
             $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _B_FEDIT]);
         }
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _EINFOPHP]);
-        $hide = getAdminHidden('bf', $bf)
-        .getAdminHidden('flag', $flaged)
-        .getAdminHidden('name', 'blocks')
-        .getAdminHidden('op', 'filecodesave');
+        $hide = getTplHiddenInput('bf', $bf)
+        .getTplHiddenInput('flag', $flaged)
+        .getTplHiddenInput('name', 'blocks')
+        .getTplHiddenInput('op', 'filecodesave');
         $rows = $tpl->getHtmlFrag('admin-blocks-filecode-rows', [
             'code_html' => textarea_code('code', 'blocktext', 'sl_form', 'text/x-php', trim($out[1])),
             'goback_label' => _GOBACK,
             'save_label' => _SAVE,
         ]);
-        echo $cont.getAdminBox(getAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
+        echo $cont.getTplBox(getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
         setFoot();
     } else {
         setRedirect($afile.'.php?name=blocks&op=logview');
@@ -242,54 +242,54 @@ function edit(): void {
         $type = '('._BLOCKHTML.')';
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _BLOCK.': '.$title.' '.$type]);
-    $rows = getAdminFormRow(getAdminHintLabel(_TITLE, _ADDCONST), getAdminTextInput('title', $title, 'sl_form', 'maxlength="50" placeholder="'._TITLE.'" required'));
+    $rows = getTplAdminFormRow(getTplAdminHintLabel(_TITLE, _ADDCONST), getTplTextInput('title', $title, 'sl_form', 'maxlength="50" placeholder="'._TITLE.'" required'));
     if ($bfile != '') {
         $bfopts = '';
         $files = scandir('blocks');
         foreach ($files as $file) {
             if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-                $bfopts .= getAdminOption($file, $matches[0], $bfile == $file);
+                $bfopts .= getTplOption($file, $matches[0], $bfile == $file);
             }
         }
-        $rows .= getAdminFormRow(_FILENAME.':', getAdminSelect('bfile', $bfopts, 'sl_form'));
+        $rows .= getTplAdminFormRow(_FILENAME.':', getTplSelect('bfile', $bfopts, 'sl_form'));
     } elseif ($url != '') {
-        $rows .= getAdminFormRow(_RSSFILE.':', getAdminTextInput('url', $url, 'sl_form', 'maxlength="200" placeholder="'._RSSFILE.'"'));
-        $rows .= getAdminFormRow(_REFRESHTIME.':', getBlockRefreshSelect((string)$refresh));
+        $rows .= getTplAdminFormRow(_RSSFILE.':', getTplTextInput('url', $url, 'sl_form', 'maxlength="200" placeholder="'._RSSFILE.'"'));
+        $rows .= getTplAdminFormRow(_REFRESHTIME.':', getTplBlockRefresh((string)$refresh));
     } else {
-        $rows .= getAdminFormRow(_CONTENT.':', textarea('1', 'content', $content, 'all', '15', _CONTENT, ''));
+        $rows .= getTplAdminFormRow(_CONTENT.':', textarea('1', 'content', $content, 'all', '15', _CONTENT, ''));
     }
-    $rows .= getAdminFormRow(_POSITION.':', getBlockPositionSelect((string)$bpos));
-    $rows .= getAdminFormRow(_BLOCK_VIEW.':', getBlockViewGrid(explode(',', $which ?? '')));
-    if ($conf['multilingual'] == 1) $rows .= getAdminFormRow(_LANGUAGE.':', getAdminSelect('lang', language($lang), 'sl_form'));
+    $rows .= getTplAdminFormRow(_POSITION.':', getTplBlockPosition((string)$bpos));
+    $rows .= getTplAdminFormRow(_BLOCK_VIEW.':', getTplAdminBlockGrid(explode(',', $which ?? '')));
+    if ($conf['multilingual'] == 1) $rows .= getTplAdminFormRow(_LANGUAGE.':', getTplSelect('lang', language($lang), 'sl_form'));
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = getAdminHidden('expire', (string)$oldexpire)._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expire_text = getTplHiddenInput('expire', (string)$oldexpire)._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = getAdminNumberInput(0, 'expire', 'sl_form', 'placeholder="'._EXPIRATION.'" required');
+        $expire_text = getTplNumberInput(0, 'expire', 'sl_form', 'placeholder="'._EXPIRATION.'" required');
     }
     $rows .= $tpl->getHtmlFrag('admin-blocks-edit-rows', [
-        'action_html' => getBlockActionSelect((string)$action),
+        'action_html' => getTplBlockAction((string)$action),
         'afterexpiration_label' => _AFTEREXPIRATION.':',
         'activate_html' => radio_form($active, 'status'),
         'activate_label' => _ACTIVATE2,
         'expiration_html' => $expire_text,
-        'expiration_label_html' => getAdminHintLabel(_EXPIRATION, _CONFINES),
-        'viewpriv_html' => getBlockViewSelect((int)$view),
+        'expiration_label_html' => getTplAdminHintLabel(_EXPIRATION, _CONFINES),
+        'viewpriv_html' => getTplBlockView((int)$view),
         'viewpriv_label' => _VIEWPRIV,
     ]);
-    $hide = getAdminHidden('oldposition', $bpos)
-        .getAdminHidden('bid', (string)$bid)
-        .getAdminHidden('newexpire', (string)$newexpire)
-        .getAdminHidden('bkey', $bkey)
-        .getAdminHidden('weight', (string)$weight)
-        .getAdminHidden('name', 'blocks')
-        .getAdminHidden('op', 'editsave');
-    $rows .= getAdminFormWide(getAdminSubmitButton(_SAVE), '', 'sl_center');
-    echo $cont.getAdminForm($afile.'.php', $rows, $hide);
+    $hide = getTplHiddenInput('oldposition', $bpos)
+        .getTplHiddenInput('bid', (string)$bid)
+        .getTplHiddenInput('newexpire', (string)$newexpire)
+        .getTplHiddenInput('bkey', $bkey)
+        .getTplHiddenInput('weight', (string)$weight)
+        .getTplHiddenInput('name', 'blocks')
+        .getTplHiddenInput('op', 'editsave');
+    $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_SAVE), '', 'sl_center');
+    echo $cont.getTplAdminForm($afile.'.php', $rows, $hide);
     setFoot();
 }
 

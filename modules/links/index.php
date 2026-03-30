@@ -79,7 +79,7 @@ function links(): void {
             $hits = ($conf['links']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _LINKHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
-            $cont .= getContentCard([
+            $cont .= getTplContentCard([
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -343,7 +343,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['links']['addmail'], $conf['name'], $puname, _LINKS);
             setHead(['title' => _ADD]);
-            $meta = getMetaRefresh('index.php?name='.$conf['name']);
+            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHL, 'meta' => $meta]);
             setFoot();
         } else {
@@ -360,7 +360,7 @@ function broken(): void {
     if ($conf['links']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_links SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCLINK]);
-        $meta = getMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
+        $meta = getTplMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
         echo setModuleNavi(['title' => _BROCLINK, 'htitle' => _LINKS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEL, 'meta' => $meta]);
         setFoot();
     } else {

@@ -59,7 +59,7 @@ function files(): void {
                 adminLinkAction($afile.'.php?name=files&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=files&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
                 'actions_html' => $acts,
                 'checkbox_html' => '',
                 'id_text' => (string)$id,
@@ -68,7 +68,7 @@ function files(): void {
                 'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_files', '', 'status = \''.$st.'\'', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -115,14 +115,14 @@ function add(): void {
         foreach ($entries as $entry) {
             if ($entry === '.' || $entry === '..') continue;
             if (!preg_match('/\./', $entry)) {
-                $directory .= getAdminOption($path.'/'.$entry, $path.'/'.$entry);
+                $directory .= getTplOption($path.'/'.$entry, $path.'/'.$entry);
             }
         }
     }
-    $hide = getAdminHidden('name', 'files');
+    $hide = getTplHiddenInput('name', 'files');
     $path_html = '';
     if (file_exists($url)) {
-        $path_html = getAdminSelect('path', getAdminOption('', _NO).getAdminOption($path, $path, true).$directory, 'sl_form');
+        $path_html = getTplSelect('path', getTplOption('', _NO).getTplOption($path, $path, true).$directory, 'sl_form');
     }
     $rows = $tpl->getHtmlFrag('admin-files-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
@@ -159,7 +159,7 @@ function add(): void {
         'website_label' => _SITE.':',
         'website_value' => $website,
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide, 'sl_table_form', 'post', 'post', 'enctype="multipart/form-data"');
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_form', 'post', 'post', 'enctype="multipart/form-data"');
     echo $cont;
     setFoot();
 }
@@ -246,12 +246,12 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/files.php');
-    $stream_sel = getAdminSelect('stream',
-        getAdminOption('0', _STREAM_NO, ($conf['files']['stream'] ?? null) == '0')
-        .getAdminOption('1', _STREAM_1, ($conf['files']['stream'] ?? null) == '1')
-        .getAdminOption('2', _STREAM_2, ($conf['files']['stream'] ?? null) == '2'),
+    $stream_sel = getTplSelect('stream',
+        getTplOption('0', _STREAM_NO, ($conf['files']['stream'] ?? null) == '0')
+        .getTplOption('1', _STREAM_1, ($conf['files']['stream'] ?? null) == '1')
+        .getTplOption('2', _STREAM_2, ($conf['files']['stream'] ?? null) == '2'),
     'sl_conf');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'files',
         'op' => 'configsave',

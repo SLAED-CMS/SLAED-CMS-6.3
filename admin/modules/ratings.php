@@ -35,7 +35,7 @@ function ratings(): void {
         'save' => _SAVECHANGES,
         'fields' => $content,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

@@ -14,6 +14,8 @@ class Template {
     protected array $slots = [];
     protected array $stack = [];
     protected array $assets = ['css' => [], 'js' => []];
+    protected static array $templateErrors = [];
+    protected static ?bool $devMode = null;
 
     # Set base template and cache paths for the selected theme
     public function __construct(string $theme = 'default') {
@@ -26,13 +28,23 @@ class Template {
 
     # Return compiled page markup after validation and cache resolution
     public function getHtmlPage(string $name, array $data = [], string $layout = 'app'): string {
-        if (!$this->checkName($name) || !$this->checkName($layout)) return '';
+        if (!$this->checkName($name)) {
+            $this->reportTemplateError('pages', $name, 'Invalid page name');
+            return $this->getTemplateDebugComment('pages', $name, 'invalid page name');
+        }
+        if (!$this->checkName($layout)) {
+            $this->reportTemplateError('layouts', $layout, 'Invalid layout name');
+            return $this->getTemplateDebugComment('layouts', $layout, 'invalid layout name');
+        }
         return $this->getPageHtml($name, $data, $layout);
     }
 
     # Return compiled partial markup after validation and cache resolution
     public function getHtmlPart(string $name, array $data = []): string {
-        if (!$this->checkName($name)) return '';
+        if (!$this->checkName($name)) {
+            $this->reportTemplateError('partials', $name, 'Invalid partial name');
+            return $this->getTemplateDebugComment('partials', $name, 'invalid partial name');
+        }
         $this->assets = ['css' => [], 'js' => []];
         $html = $this->getHtml('partials', $name, $data);
         return $this->getAssetMarkup().$html;
@@ -40,7 +52,10 @@ class Template {
 
     # Return compiled fragment markup after validation and cache resolution
     public function getHtmlFrag(string $name, array $data = []): string {
-        if (!$this->checkName($name)) return '';
+        if (!$this->checkName($name)) {
+            $this->reportTemplateError('fragments', $name, 'Invalid fragment name');
+            return $this->getTemplateDebugComment('fragments', $name, 'invalid fragment name');
+        }
         $this->assets = ['css' => [], 'js' => []];
         $html = $this->getHtml('fragments', $name, $data);
         return $this->getAssetMarkup().$html;
@@ -65,12 +80,19 @@ class Template {
                     $this->blocks = $this->getBlocks($code, $data);
                     return $this->getHtml($part[0], substr($part[1], 0, -5), $this->mergePageAssets($data));
                 }
+                $this->reportTemplateError($part[0] ?? 'layouts', $part[1] ?? $path, 'Missing parent layout');
+                return $this->getTemplateDebugComment($part[0] ?? 'layouts', $part[1] ?? $path, 'missing parent layout');
             }
             $file = $this->getFile('layouts', $layout);
             if ($file && $this->checkFile($file)) {
                 $body = $this->getHtml('pages', $name, $data);
                 $this->blocks = ['content' => $body];
                 return $this->getHtml('layouts', $layout, $this->mergePageAssets($data));
+            }
+            $this->reportTemplateError('layouts', $layout, 'Missing fallback layout');
+            if ($this->isDevMode()) {
+                $body = $this->getHtml('pages', $name, $data);
+                return $this->getTemplateDebugComment('layouts', $layout, 'missing fallback layout').$this->getAssetMarkup().$body;
             }
             $html = $this->getHtml('pages', $name, $data);
             return $this->getAssetMarkup().$html;
@@ -84,7 +106,10 @@ class Template {
     protected function getHtml(string $type, string $name, array $data = []): string {
         $data = $this->setData($data);
         $file = $this->getFile($type, $name);
-        if (!$file || !$this->checkFile($file)) return '';
+        if (!$file || !$this->checkFile($file)) {
+            $this->reportTemplateError($type, $name, 'Template file not found');
+            return $this->getTemplateDebugComment($type, $name, 'template file not found');
+        }
         $code = $this->getCode($type, $name);
         if ($code === '') return '';
         $cache = $this->getCache($file);
@@ -126,8 +151,8 @@ class Template {
             $html = ob_get_clean();
             return ($html !== false) ? $html : '';
         } catch (Throwable $err) {
-            unset($err);
-            return '';
+            $this->reportTemplateError('view', $real, 'Template render failed: '.$err->getMessage());
+            return $this->getTemplateDebugComment('view', basename($real), 'render failed: '.$err->getMessage());
         } finally {
             while (ob_get_level() > $lev) ob_end_clean();
             if (!$iscode && $this->stack !== []) array_pop($this->stack);
@@ -136,12 +161,18 @@ class Template {
 
     # Resolve and render an include path through the existing template pipeline
     protected function getIncl(string $path, array $data = []): string {
-        if (!$this->checkIncl($path)) return '';
+        if (!$this->checkIncl($path)) {
+            $this->reportTemplateError('include', $path, 'Invalid include path');
+            return $this->getTemplateDebugComment('include', $path, 'invalid include path');
+        }
         $part = explode('/', $path, 2);
         if (count($part) !== 2) return '';
         $type = $part[0];
         $name = substr($part[1], 0, -5);
-        if (!$this->checkType($type) || !$this->checkName($name)) return '';
+        if (!$this->checkType($type) || !$this->checkName($name)) {
+            $this->reportTemplateError($type, $name, 'Invalid include target');
+            return $this->getTemplateDebugComment($type, $name, 'invalid include target');
+        }
         return $this->getHtml($type, $name, $data);
     }
 
@@ -186,9 +217,80 @@ class Template {
     # Load the raw template code when the resolved file is valid
     protected function getCode(string $type, string $name): string {
         $file = $this->getFile($type, $name);
-        if (!$file || !$this->checkFile($file)) return '';
+        if (!$file || !$this->checkFile($file)) {
+            $this->reportTemplateError($type, $name, 'Template source not found');
+            return '';
+        }
         $code = file_get_contents($file);
-        return ($code !== false) ? $code : '';
+        if ($code === false) {
+            $this->reportTemplateError($type, $name, 'Template source read failed');
+            return '';
+        }
+        return $code;
+    }
+
+    # Log one template problem per request so missing files do not fail silently
+    protected function reportTemplateError(string $type, string $name, string $reason): void {
+        $type = ($type !== '') ? $type : 'unknown';
+        $name = ($name !== '') ? $name : '[empty]';
+        $key = $this->theme.'|'.$type.'|'.$name.'|'.$reason;
+        if (isset(self::$templateErrors[$key])) return;
+        self::$templateErrors[$key] = true;
+        $msg = sprintf('[Template] %s: theme=%s type=%s name=%s', $reason, $this->theme, $type, $name);
+        if (!defined('LOGS_DIR')) {
+            error_log($msg);
+            return;
+        }
+        $log = rtrim(LOGS_DIR, '\\/').'/error_php.log';
+        $norm = preg_replace(['/\d+/', '/\s+/'], ['#', ' '], substr($msg, 0, 200));
+        $fingerprint = substr(sha1('template|'.$type.'|'.$name.'|'.$norm), 0, 8);
+        $row = [
+            'ts' => date('c'),
+            'level' => 'warning',
+            'type' => 'php',
+            'msg' => $msg,
+            'php_errno' => 512,
+            'php_err' => 'USER_WARNING',
+            'fingerprint' => $fingerprint,
+            'ex_class' => null,
+            'theme' => $this->theme,
+            'template_type' => $type,
+            'template_name' => $name,
+            'template_reason' => $reason,
+            'file' => null,
+            'line' => null,
+            'req_id' => $_SERVER['HTTP_X_REQUEST_ID'] ?? $_SERVER['UNIQUE_ID'] ?? null,
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
+            'url' => $_SERVER['REQUEST_URI'] ?? null,
+            'referer' => $_SERVER['HTTP_REFERER'] ?? null,
+            'ua' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+            'mem_mb' => round(memory_get_usage(true) / 1048576, 2),
+            'mem_peak_mb' => round(memory_get_peak_usage(true) / 1048576, 2),
+        ];
+        $line = json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($line === false || file_put_contents($log, $line.PHP_EOL, FILE_APPEND | LOCK_EX) === false) {
+            error_log($msg);
+        }
+    }
+
+    # Return a compact HTML comment for missing templates in dev mode only
+    protected function getTemplateDebugComment(string $type, string $name, string $reason): string {
+        if (!$this->isDevMode()) return '';
+        $type = htmlspecialchars(($type !== '') ? $type : 'unknown', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $name = htmlspecialchars(($name !== '') ? $name : '[empty]', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        $reason = htmlspecialchars($reason, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+        return sprintf('<!-- template-error: theme=%s type=%s name=%s reason=%s -->', $this->theme, $type, $name, $reason);
+    }
+
+    # Cache dev_mode so template diagnostics stay cheap
+    protected function isDevMode(): bool {
+        if (self::$devMode !== null) return self::$devMode;
+        self::$devMode = false;
+        if (!function_exists('getConfig')) return self::$devMode;
+        $conf = getConfig();
+        self::$devMode = !empty($conf['dev_mode']);
+        return self::$devMode;
     }
 
     # Build a deterministic compiled cache file path for future steps
@@ -244,17 +346,36 @@ class Template {
     protected function filterIf(string $code): string {
         if ($code === '' || !str_contains($code, '{%')) return $code;
         return (string)preg_replace_callback(
-            '/\{%\s*(if|elseif)\s+(!?)([_a-z][_a-z0-9]*)\s*%\}|\{%\s*(else|endif)\s*%\}/',
+            '/\{%\s*(if|elseif)\s+(.+?)\s*%\}|\{%\s*(else|endif)\s*%\}/',
             function(array $data): string {
-                if (!empty($data[4])) {
-                    return ($data[4] === 'else') ? '<?php else: ?>' : '<?php endif; ?>';
+                if (!empty($data[3])) {
+                    return ($data[3] === 'else') ? '<?php else: ?>' : '<?php endif; ?>';
                 }
-                $name = '$'.$data[3];
-                $cond = ($data[2] === '!') ? 'empty('.$name.')' : '!empty('.$name.')';
+                $cond = $this->parseIfCondition(trim($data[2] ?? ''));
+                if ($cond === '') return $data[0];
                 return ($data[1] === 'if') ? '<?php if ('.$cond.'): ?>' : '<?php elseif ('.$cond.'): ?>';
             },
             $code
         );
+    }
+
+    # Parse a small safe template condition grammar: !var, var, joined by and/or
+    protected function parseIfCondition(string $expr): string {
+        if ($expr === '') return '';
+        if (!preg_match('/^!?[_a-z][_a-z0-9]*(?:\s+(?:and|or)\s+!?[_a-z][_a-z0-9]*)*$/', $expr)) return '';
+        $parts = preg_split('/\s+(and|or)\s+/', $expr, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false || $parts === []) return '';
+        $compiled = [];
+        foreach ($parts as $idx => $part) {
+            if ($idx % 2 === 1) {
+                $compiled[] = ($part === 'and') ? '&&' : '||';
+                continue;
+            }
+            $neg = str_starts_with($part, '!');
+            $name = '$'.ltrim($part, '!');
+            $compiled[] = $neg ? 'empty('.$name.')' : '!empty('.$name.')';
+        }
+        return implode(' ', $compiled);
     }
 
     # Compile simple foreach loops with safe iterable fallback

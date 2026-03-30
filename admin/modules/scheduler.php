@@ -61,7 +61,7 @@ function scheduler(): void {
             $aforms .= $tpl->getHtmlFrag('admin-scheduler-action-form', [
                 'action_url' => $afile.'.php',
                 'form_id' => $aid,
-                'hidden_html' => getAdminHidden('name', 'scheduler').getAdminHidden('op', $aop).getAdminHidden('job', $name).getAdminHidden('token', getSiteToken('scheduler')),
+                'hidden_html' => getTplHiddenInput('name', 'scheduler').getTplHiddenInput('op', $aop).getTplHiddenInput('job', $name).getTplHiddenInput('token', getSiteToken('scheduler')),
             ]);
             $acts[] = $tpl->getHtmlFrag('admin-scheduler-action-link', [
                 'form_id' => $aid,
@@ -78,9 +78,9 @@ function scheduler(): void {
             'status_html' => ad_status('', (int)$isactive),
             'title_html' => adminTitleTipLabel($tip, $title, cutstr($title, 22)),
         ]);
-        $rows .= getAdminTableRow($cols);
+        $rows .= getTplAdminTableRow($cols);
     }
-    $cont .= getAdminTable($head, $rows);
+    $cont .= getTplAdminTable($head, $rows);
     setHead();
     echo $navi.$cont;
     setFoot();
@@ -106,23 +106,23 @@ function add(string $name = ''): void {
     $readonly = $isnew ? '' : ' readonly';
     $cont = checkPerms(CONFIG_DIR.'/scheduler.php');
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
-    $hide = getAdminHidden('name', 'scheduler').getAdminHidden('op', 'save').getAdminHidden('token', getSiteToken('scheduler'));
+    $hide = getTplHiddenInput('name', 'scheduler').getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken('scheduler'));
     $rows = '';
-    $rows .= getAdminFormRow(_SCHEDULER_JOBKEY.':', getAdminTextInput('job', $key, 'sl_form', 'maxlength="32"'.$readonly.' required'));
-    $rows .= getAdminFormRow(_TITLE.':', getAdminTextInput('title', (string)$job['title'], 'sl_form', 'maxlength="100" required'));
-    $rows .= getAdminFormRow(_TYPE.':', getAdminTextInput('', (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM, 'sl_form', 'disabled').getAdminHidden('type', (string)$job['type']));
+    $rows .= getTplAdminFormRow(_SCHEDULER_JOBKEY.':', getTplTextInput('job', $key, 'sl_form', 'maxlength="32"'.$readonly.' required'));
+    $rows .= getTplAdminFormRow(_TITLE.':', getTplTextInput('title', (string)$job['title'], 'sl_form', 'maxlength="100" required'));
+    $rows .= getTplAdminFormRow(_TYPE.':', getTplTextInput('', (($job['type'] ?? '') === 'custom') ? _SCHEDULER_CUSTOM : _SCHEDULER_SYSTEM, 'sl_form', 'disabled').getTplHiddenInput('type', (string)$job['type']));
     if ($iscustom) {
-        $rows .= getAdminFormRow(_SCHEDULER_URL.':', getAdminUrlInput('url', $url, 'sl_form', 'maxlength="255" placeholder="https://example.com/task" required'));
+        $rows .= getTplAdminFormRow(_SCHEDULER_URL.':', getTplUrlInput('url', $url, 'sl_form', 'maxlength="255" placeholder="https://example.com/task" required'));
     } else {
-        $rows .= getAdminFormRow(_SCHEDULER_SYSTEM.':', getAdminTextInput('', (string)($job['system'] ?? ''), 'sl_form', 'disabled'));
+        $rows .= getTplAdminFormRow(_SCHEDULER_SYSTEM.':', getTplTextInput('', (string)($job['system'] ?? ''), 'sl_form', 'disabled'));
     }
-    $rows .= getAdminFormRow(getAdminHintLabel(_SCHEDULER_SCHED, _SCHEDULER_CRONFMT), getAdminTextInput('schedule', $schedule, 'sl_form', 'maxlength="100" placeholder="0 2 * * *" required'));
-    $rows .= getAdminFormRow(getAdminHintLabel(_SCHEDULER_PRIO, _SCHEDULER_PRIOTIP), getAdminNumberInput('priority', (string)$job['priority'], 'sl_form', 'min="1" max="999" required'));
-    $rows .= getAdminFormRow(_SCHEDULER_LOCK.':', getAdminNumberInput('lock_timeout', (string)$job['lock_timeout'], 'sl_form', 'min="60" required'));
-    $rows .= getAdminFormRow(_ACTIVATE2, radio_form((int)$job['active'], 'active'));
-    $rows .= getAdminFormRow(_SCHEDULER_MANUAL.':', radio_form((int)$job['manual'], 'manual'));
-    $rows .= getAdminFormWide(getAdminSubmitButton(_SAVE), '', 'sl_center');
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_SCHEDULER_SCHED, _SCHEDULER_CRONFMT), getTplTextInput('schedule', $schedule, 'sl_form', 'maxlength="100" placeholder="0 2 * * *" required'));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_SCHEDULER_PRIO, _SCHEDULER_PRIOTIP), getTplNumberInput('priority', (string)$job['priority'], 'sl_form', 'min="1" max="999" required'));
+    $rows .= getTplAdminFormRow(_SCHEDULER_LOCK.':', getTplNumberInput('lock_timeout', (string)$job['lock_timeout'], 'sl_form', 'min="60" required'));
+    $rows .= getTplAdminFormRow(_ACTIVATE2, radio_form((int)$job['active'], 'active'));
+    $rows .= getTplAdminFormRow(_SCHEDULER_MANUAL.':', radio_form((int)$job['manual'], 'manual'));
+    $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_SAVE), '', 'sl_center');
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     setHead();
     $navi = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     echo $navi.$cont;

@@ -80,7 +80,7 @@ function media(): void {
             $links = (url_types($links)) ? $tpl->getHtmlFrag('hit-badge', ['title' => _MDOWN.': '.url_types($links), 'text' => url_types($links), 'cls' => 'sl_down']) : '';
             $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$mtitle.'&quot;?');
-            $cont .= getContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $mtitle, 'title_text' => $mtitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['media']['read']) ? $hits : '', 'reads_label' => _READS, 'hits' => $links, 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
+            $cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $mtitle, 'title_text' => $mtitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['media']['read']) ? $hits : '', 'reads_label' => _READS, 'hits' => $links, 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_media', 'cid', $onum, $conf['media']['nump']);
     } else {
@@ -383,7 +383,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['media']['addmail'], $conf['name'], $puname, _MEDIA);
             setHead(['title' => _MEDIA.' '._ADD, 'desc' => _UPLOADFINISHM]);
-            $meta = getMetaRefresh('index.php?name='.$conf['name']);
+            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _UPLOADFINISHM, 'meta' => $meta]);
             setFoot();
         } else {
@@ -400,7 +400,7 @@ function broken(): void {
     if ($conf['media']['broc'] == '1' && $id) {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_media SET status = \'2\' WHERE id = :id AND status != \'0\'', ['id' => $id]);
         setHead(['title' => _BROCMEDIA]);
-        $meta = getMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
+        $meta = getTplMetaRefresh('index.php?name='.$conf['name'].'&amp;op=view&amp;id='.$id, 5);
         echo setModuleNavi(['title' => _BROCMEDIA, 'htitle' => _MEDIA]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _BROCNOTEM, 'meta' => $meta]);
         setFoot();
     } else {

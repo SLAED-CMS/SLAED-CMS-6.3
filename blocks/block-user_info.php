@@ -21,11 +21,17 @@ if (is_user()) {
 		list($prout) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_privat WHERE uidout='".$user_id."' AND status = '0'"));
 		if ($prin > 0) {
 			$content .= '<audio src="sound/privat-'.$locale.'.mp3" autoplay="autoplay" preload="auto"></audio>
-			<script src="plugins/jquery/tinycon.js"></script>
 			<script>
-			$(document).ready(function() {
-				setInterval(function() { Tinycon.setBubble('.$prin.'); }, 1000);
-				setInterval(function() { Tinycon.setBubble(false); }, 2000);
+			document.addEventListener("DOMContentLoaded", function() {
+				var unreadCount = '.$prin.';
+				var title = document.title;
+				var prefixedTitle = "(" + unreadCount + ") " + title;
+				var showCounter = false;
+
+				setInterval(function() {
+					document.title = showCounter ? prefixedTitle : title;
+					showCounter = !showCounter;
+				}, 1000);
 			});
 			</script>';
 		}
@@ -51,9 +57,9 @@ if (is_user()) {
 	</table>
 	<hr>
 	<table class="sl_table_block">
-	<tr><td>'._NICKNAME.':</td><td>'.getAdminTextInput('user_name', '', 'sl_field sl_bl_field', 'maxlength="25" placeholder="'._NICKNAME.'" required').'</td></tr>
+	<tr><td>'._NICKNAME.':</td><td>'.getTplTextInput('user_name', '', 'sl_field sl_bl_field', 'maxlength="25" placeholder="'._NICKNAME.'" required').'</td></tr>
 	<tr><td>'._PASSWORD.':</td><td><input type="password" name="user_password" maxlength="25" class="sl_field sl_bl_field" placeholder="'._PASSWORD.'" required></td></tr>
-	<tr><td colspan="2" class="sl_center">'.$captcha.getAdminHidden('refer', '1').getAdminHidden('op', 'login').'<input type="submit" value="'._LOGIN.'" class="sl_but_blue"></td></tr>';
+	<tr><td colspan="2" class="sl_center">'.$captcha.getTplHiddenInput('refer', '1').getTplHiddenInput('op', 'login').'<input type="submit" value="'._LOGIN.'" class="sl_but_blue"></td></tr>';
 	$content .= ($conf['users']['network']) ? '<tr><td colspan="2" class="sl_center">'._LOGINNETWORK.'</td></tr><tr><td colspan="2" class="sl_center">'.getNetworks().'</td></tr>' : '';
 	$content .= '</table></form>';
 }

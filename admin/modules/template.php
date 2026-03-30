@@ -11,13 +11,13 @@ function getTemplateSearch(string $templ): string {
     $opts = '';
     foreach (scandir('templates') as $file) {
         if (!preg_match('/\./', $file)) {
-            $opts .= getAdminOption($file, $file, $file == $templ);
+            $opts .= getTplOption($file, $file, $file == $templ);
         }
     }
-    return getAdminSearchBox($tpl->getHtmlFrag('admin-template-search-form', [
+    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-template-search-form', [
         'ok_label' => _OK,
         'route' => $afile,
-        'select_html' => getAdminSelect('templ', $opts, 'sl_form'),
+        'select_html' => getTplSelect('templ', $opts, 'sl_form'),
         'theme_label' => _THEME.':',
     ]));
 }
@@ -60,7 +60,7 @@ function template(): void {
             }
             closedir($handle);
         }
-        $cont .= getAdminBox($conts);
+        $cont .= getTplBox($conts);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -105,7 +105,7 @@ function style(): void {
             }
             closedir($handle);
         }
-        $cont .= getAdminBox($conts);
+        $cont .= getTplBox($conts);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }

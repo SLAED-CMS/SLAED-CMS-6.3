@@ -71,14 +71,14 @@ function download(): void {
             $path = 'uploads/clients/'.$url;
             $code = base64_encode($uid.'-'.getip().'-'.getagent());
 
-            # Ð¨Ð¸Ñ„Ñ€ÑƒÐµÐ¼ Ñ„Ð°Ð¹Ð»Ñ‹
+            # Шифруем файлы
             $input = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S' ,'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '='];
-            $output = ['{', 'Â©', '"', 'Â§', '$', 'Ð¦', '&', '/', '(', '', 'â„–', 'ÐŽ', '<', '%', 'â€¹', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'Ðµ', 'B', 'Ñˆ', 'D', 'E', 'Ñ', 'G', 'Ð´', 'I', 'J', 'K', 'L', 'â€¡', 'Ð¨', 'O', 'Ð–', 'Q', 'Â·', 'Ð’' ,'!', 'U', 'â€ ', 'Â¶', 'X', 'Y', 'Z', 'Ñ—'];
+            $output = ['{', '©', '"', '§', '$', 'Ц', '&', '/', '(', '', '№', 'Ў', '<', '%', '‹', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'е', 'B', 'ш', 'D', 'E', 'я', 'G', 'д', 'I', 'J', 'K', 'L', '‡', 'Ш', 'O', 'Ж', 'Q', '·', 'В' ,'!', 'U', '†', '¶', 'X', 'Y', 'Z', 'ї'];
             $sourse = str_replace($input, $output, $code);
-            if (file_exists($path.'/html/templates/admin/images/admin/admins.png')) hidden($path.'/html/templates/admin/images/admin/admins.png', $ipath.'/admins.png', $sourse.'IENDÂ®B`â€š');
+            if (file_exists($path.'/html/templates/admin/images/admin/admins.png')) hidden($path.'/html/templates/admin/images/admin/admins.png', $ipath.'/admins.png', $sourse.'IEND®B`‚');
             if (file_exists($path.'/html/templates/admin/images/admin/forum.png')) hidden($path.'/html/templates/admin/images/admin/forum.png', $ipath.'/forum.png', $code);
             if (file_exists($path.'/html/templates/admin/images/lang/german.png')) hidden($path.'/html/templates/admin/images/lang/german.png', $ipath.'/german.png', $code);
-            if (file_exists($path.'/html/templates/admin/images/admin/menu.png')) hidden($path.'/html/templates/admin/images/admin/menu.png', $ipath.'/menu.png', $sourse.'IENDÂ®B`â€š'.$code);
+            if (file_exists($path.'/html/templates/admin/images/admin/menu.png')) hidden($path.'/html/templates/admin/images/admin/menu.png', $ipath.'/menu.png', $sourse.'IEND®B`‚'.$code);
 
             if (file_exists($path.'/html/config/license.txt')) generator($path.'/html/config');
             if (file_exists($path.'/setup/config/license.txt')) generator($path.'/setup/config');
@@ -110,7 +110,7 @@ function download(): void {
 }
 
 function hidden(string $path, string $ipath, string $code): void {
-    # Ð§Ð¸Ñ‚Ð°ÐµÐ¼ Ð¸ Ð¿ÐµÑ€ÐµÐ·Ð°Ð¿Ð¸ÑÑ‹Ð²Ð°ÐµÐ¼ Ñ„Ð°Ð¹Ð»
+    # Читаем и перезаписываем файл
     $content = file_get_contents($ipath);
     if ($content === false) return;
     $code = $content.$code;
@@ -118,7 +118,7 @@ function hidden(string $path, string $ipath, string $code): void {
     if ($fp === false) return;
     fwrite($fp, $code);
     fclose($fp);
-    # ÐœÐµÐ½ÑÐµÐ¼ Ð²Ñ€ÐµÐ¼Ñ Ñ„Ð°Ð¹Ð»Ð°
+    # Меняем время файла
     $atime = filemtime($ipath);
     if ($atime !== false) {
         touch($path, $atime, $atime);

@@ -49,7 +49,7 @@ function money(): void {
                 adminLinkAction($afile.'.php?name=money&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=money&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-money-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-money-list-row', [
                 'actions_html' => $acts,
                 'date_text' => format_time($time, _TIMESTRING),
                 'email_html' => adminTitleTip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
@@ -60,7 +60,7 @@ function money(): void {
             ]));
             $r--;
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=money&amp;', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -100,13 +100,13 @@ function add(): void {
         }
         $cont .= preview($email, $infos, _COMMENT.': '.$note, '', 'all');
     }
-    $hide = getAdminHidden('name', 'money');
+    $hide = getTplHiddenInput('name', 'money');
     $introhtml = '';
     $form = explode(',', $conf['money']['form'] ?? '');
     $i = 0;
     foreach ($form as $val) {
         if ($val != '') {
-            $introhtml .= getAdminFormRow($val.':', getAdminTextInput('intro[]', $intro[$i] ?? '', 'sl_form', 'maxlength="255" placeholder="'.$val.'"'));
+            $introhtml .= getTplAdminFormRow($val.':', getTplTextInput('intro[]', $intro[$i] ?? '', 'sl_form', 'maxlength="255" placeholder="'.$val.'"'));
             $i++;
         }
     }
@@ -123,7 +123,7 @@ function add(): void {
         'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
         'time_label' => _CHNGSTORY.':',
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -231,7 +231,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'money',
         'op' => 'configsave',

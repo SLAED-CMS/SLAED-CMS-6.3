@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -50,32 +50,32 @@ function money(): void {
     }
     </script>";
     $cont .= '<h2>'._MO_1.'</h2>'
-    .getMoneyCalcForm('Rechner', _MO_3.' Z:', 'USD')
-    .getMoneyCalcForm('Rechner1', _MO_3.' R:', 'RUB')
-    .getMoneyCalcForm('Rechner2', _MO_3.' E:', 'EUR');
+    .getTplMoneyCalcForm('Rechner', _MO_3.' Z:', 'USD')
+    .getTplMoneyCalcForm('Rechner1', _MO_3.' R:', 'RUB')
+    .getTplMoneyCalcForm('Rechner2', _MO_3.' E:', 'EUR');
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $intro = getVar('post', 'intro', 'array', []);
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         $rows = '';
-        $rows .= getFormAddRow(_MO_7.':', getAdminNumberInput('sum', $sum, 'sl_field '.$conf['style'], 'placeholder="'._MO_7.'" required'));
-        $rows .= getFormAddRow(_MO_8.':', '<input type="email" name="email" value="'.$email.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_8.'" required>');
+        $rows .= getTplFormAddRow(_MO_7.':', getTplNumberInput('sum', $sum, 'sl_field '.$conf['style'], 'placeholder="'._MO_7.'" required'));
+        $rows .= getTplFormAddRow(_MO_8.':', '<input type="email" name="email" value="'.$email.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_8.'" required>');
         $form = explode(',', $conf['money']['form']);
         $i = 0;
         foreach ($form as $val) {
             if ($val != '') {
-                $rows .= getFormAddRow($val.':', getAdminTextInput('intro[]', filterHtml($intro[$i] ?? '', 1), 'sl_field '.$conf['style'], 'maxlength="255" placeholder="'.$val.'" required'));
+                $rows .= getTplFormAddRow($val.':', getTplTextInput('intro[]', filterHtml($intro[$i] ?? '', 1), 'sl_field '.$conf['style'], 'maxlength="255" placeholder="'.$val.'" required'));
                 $i++;
             }
         }
-        $rows .= getFormAddRow(_MO_9.':', textarea('1', 'note', $note, $conf['name'], 5, _MO_9));
+        $rows .= getTplFormAddRow(_MO_9.':', textarea('1', 'note', $note, $conf['name'], 5, _MO_9));
         $cont .= '<h2>'._MO_6.'</h2>'.$tpl->getHtmlFrag('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
             'style' => $conf['style'],
-            'submit' => getFormSubmit('send', _MO_10),
+            'submit' => getTplFormSubmit('send', _MO_10),
             'token' => '',
         ]);
     }
@@ -142,7 +142,7 @@ function send(): void {
                 addMail($email, $amail, $subject, $msg, 0, 3);
             }
             setHead(['title' => _MONEY]);
-            $meta = getMetaRefresh('index.php?name='.$conf['name'], 30);
+            $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 30);
             echo $tpl->getHtmlFrag('title', ['title' => _MONEY]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['money']['info'], 'all', false), 'all'), 'meta' => $meta]);
             setFoot();
         } else {

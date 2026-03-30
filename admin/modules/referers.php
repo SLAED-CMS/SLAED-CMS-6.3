@@ -14,20 +14,20 @@ function getRefererSearch(): string {
     $sortOpts = '';
     foreach ($priv as $key => $value) {
         $idx = $key + 1;
-        $sortOpts .= getAdminOption((string) $idx, $value, $sort == $idx);
+        $sortOpts .= getTplOption((string) $idx, $value, $sort == $idx);
     }
     $orderOpts = '';
     $privs = [_ASC, _DESC];
     foreach ($privs as $key => $value) {
         $idx = $key + 1;
-        $orderOpts .= getAdminOption((string) $idx, $value, $order == $idx);
+        $orderOpts .= getTplOption((string) $idx, $value, $order == $idx);
     }
-    return getAdminSearchBox($tpl->getHtmlFrag('admin-referers-search-form', [
+    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-referers-search-form', [
         'ok_label' => _OK,
         'route' => $afile,
-        'sort_html' => getAdminSelect('sort', $sortOpts, 'sl_form'),
+        'sort_html' => getTplSelect('sort', $sortOpts, 'sl_form'),
         'sort_label' => _SORTE.':',
-        'order_html' => getAdminSelect('order', $orderOpts, 'sl_form'),
+        'order_html' => getTplSelect('order', $orderOpts, 'sl_form'),
     ]));
 }
 
@@ -70,7 +70,7 @@ function referers(): void {
             if (isset($massiv[$i]) && $massiv[$i] != '') {
                 $name = ($massiv[$i][1]) ? user_info($massiv[$i][2]) : $massiv[$i][2];
                 $words = engines_word($massiv[$i][4]) ?: _NO;
-                $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-referers-list-row', [
+                $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-referers-list-row', [
                     'hits_text' => (string)$massiv[$i][0],
                     'ip_html' => adminTitleTip(_NICKNAME.': '.$name.'<br>'._DATE.': '.format_time($massiv[$i][6], _TIMESTRING)).$massiv[$i][3],
                     'referer_text' => domain($massiv[$i][4], 30),
@@ -80,7 +80,7 @@ function referers(): void {
                 ]));
             }
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $numpages = ceil($a / $conf['referers']['anum']);
         $cont .= setPageNumbers('pagenum', '', $a, $numpages, $conf['referers']['anum'], 'name=referers&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['referers']['anump']);
     } else {
@@ -113,7 +113,7 @@ function config(): void {
         'r_referb' => radio_form($conf['referers']['referb'], 'referb'),
         'referers' => true,
     ]);
-    echo $cont.getAdminBox($confv);
+    echo $cont.getTplBox($confv);
     setFoot();
 }
 

@@ -86,7 +86,7 @@ function help(): void {
             $cdesc = $cdesc ?: $ctitle;
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
             $date = ($conf['help']['date']) ? format_time($time) : '';
-            $cont .= getContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => '', 'post_label' => '', 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['help']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => $thref.'#'.$id, 'comm_text' => $comm, 'comm_label' => _MESSAGES, 'rating' => '', 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => '', 'back_text' => '']);
+            $cont .= getTplContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => '', 'post_label' => '', 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['help']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => $thref.'#'.$id, 'comm_text' => $comm, 'comm_label' => _MESSAGES, 'rating' => '', 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => '', 'edit_text' => '', 'delete_href' => '', 'delete_text' => '', 'delete_ask' => '', 'back_title' => '', 'back_text' => '']);
         }
         $cont .= setArticleNumbers('pagenum', $conf['name'], $unum, $field, 'id', '_help', 'cid', $onum, $conf['help']['nump']);
     } else {
@@ -183,7 +183,7 @@ function view(): void {
                 $cdesc = $cdesc ?: $ctitle;
                 $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
                 $favorites = getFavoriteButton($hid, $conf['name']);
-                $cont .= getContentView([
+                $cont .= getTplContentView([
                     'id' => $hid,
                     'favorites' => $favorites,
                     'title_text' => $ttext,
@@ -219,7 +219,7 @@ function view(): void {
                 $cimg = '';
                 $favorites = '';
                 $cdesc = '';
-                $cont .= getContentCard([
+                $cont .= getTplContentCard([
                     'id' => $hid,
                     'title_href' => '#'.$hid,
                     'title_attr' => strip_tags($title),
@@ -270,15 +270,15 @@ function addview(int $id): string {
     if ((is_user() && $conf['help']['add'] == 1)) {
         $result = $db->getSqlQuery('SELECT cid, status FROM '.PREFIX_DB.'_help WHERE id = :id', ['id' => $id]);
         [$cid, $status] = $db->getSqlRow($result);
-        $rows = getFormAddRow(_HELPGLOS, radio_form($status, 'status'));
-        $hide = getAdminHidden('pid', (string)$id).getAdminHidden('catid', (string)$cid).getAdminHidden('posttype', 'save');
+        $rows = getTplFormAddRow(_HELPGLOS, radio_form($status, 'status'));
+        $hide = getTplHiddenInput('pid', (string)$id).getTplHiddenInput('catid', (string)$cid).getTplHiddenInput('posttype', 'save');
         return $tpl->getHtmlFrag('form-add', [
             'extrafields' => $rows,
             'hometext' => textarea('1', 'hometext', '', $conf['name'], 10, _TEXT, '1'),
             'lbl_text' => _TEXT,
             'name' => $conf['name'],
             'style' => $conf['style'],
-            'submit' => getFormSubmit('send', _SEND, $hide),
+            'submit' => getTplFormSubmit('send', _SEND, $hide),
             'token' => htmlspecialchars(getSiteToken('help'), ENT_QUOTES, 'UTF-8'),
         ]);
     }
@@ -338,7 +338,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : '';
             addAdminMail($conf['help']['addmail'], $conf['name'], $puname, _HELP);
             setHead(['title' => _ADD]);
-            $meta = getMetaRefresh('index.php?name='.$conf['name']);
+            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD] + HELP_NAVI).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _HSUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {

@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -140,15 +140,15 @@ function forum(): void {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
                             $view = 0;
                             if (!$status && is_moder($conf['name'])) {
-                                $timg = getForumIcon($thref, $title, 'sl_t_clos_m', _TOPICM);
+                                $timg = getTplForumIcon($thref, $title, 'sl_t_clos_m', _TOPICM);
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
+                                $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 1) {
                                 if (is_moder($conf['name'])) {
-                                    $timg = getForumIcon($thref, $title, 'sl_t_clos_a', _TOPICA);
+                                    $timg = getTplForumIcon($thref, $title, 'sl_t_clos_a', _TOPICA);
                                     $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                    $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
+                                    $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 } else {
                                     $timg = '<span title="'._TOPICA.'" class="sl_t_clos_a"></span>';
                                     $tlink = $title;
@@ -156,28 +156,28 @@ function forum(): void {
                                 }
                                 $view = 1;
                             } elseif ($status == 2) {
-                                $timg = getForumIcon($thref, $title, 'sl_t_clos_n', _TOPICN);
+                                $timg = getTplForumIcon($thref, $title, 'sl_t_clos_n', _TOPICN);
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
+                                $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 3 && $time <= date('Y-m-d H:i:s')) {
                                 if ($ltime > $ulast) {
-                                    $timg = ($comments > $conf['forum']['pop']) ? getForumIcon($thref, $title, 'sl_t_pop', _TPOPN) : getForumIcon($thref, $title, 'sl_t_new', _ISNEWPOST);
+                                    $timg = ($comments > $conf['forum']['pop']) ? getTplForumIcon($thref, $title, 'sl_t_pop', _TPOPN) : getTplForumIcon($thref, $title, 'sl_t_new', _ISNEWPOST);
                                 } else {
-                                    $timg = ($comments > $conf['forum']['pop']) ? getForumIcon($thref, $title, 'sl_t_pold', _TPOP) : getForumIcon($thref, $title, 'sl_t_old', _NONEWPOST);
+                                    $timg = ($comments > $conf['forum']['pop']) ? getTplForumIcon($thref, $title, 'sl_t_pold', _TPOP) : getTplForumIcon($thref, $title, 'sl_t_old', _NONEWPOST);
                                 }
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
+                                $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 3 && $time > date('Y-m-d H:i:s') && is_moder($conf['name'])) {
-                                $timg = getForumIcon($thref, $title, 'sl_t_clos_p', _TOPICP);
+                                $timg = getTplForumIcon($thref, $title, 'sl_t_clos_p', _TOPICP);
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
+                                $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 4 || $status == 5) {
-                                $timg = ($status == 4) ? getForumIcon($thref, $title, 'sl_t_hot', _THOT) : getForumIcon($thref, $title, 'sl_t_announ', _TANNOUN);
+                                $timg = ($status == 4) ? getTplForumIcon($thref, $title, 'sl_t_hot', _THOT) : getTplForumIcon($thref, $title, 'sl_t_announ', _TANNOUN);
                                 $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
-                                $lpost = getForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
+                                $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             }
                             $ldata = _DATE.': '.format_time($ltime, _TIMESTRING);
@@ -193,7 +193,7 @@ function forum(): void {
                         }
                         $cont .= $tpl->getHtmlFrag('forum-list-basic-wrap', []);
                         if ($ismod) {
-                            $selmm = tmoder(1).getAdminHidden('op', 'move').getAdminHidden('cat', (string)$cat).' <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+                            $selmm = tmoder(1).getTplHiddenInput('op', 'move').getTplHiddenInput('cat', (string)$cat).' <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
                             $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => $selmm]);
                         }
                     } else {
@@ -211,7 +211,7 @@ function forum(): void {
                     $infom = ($ismod) ? sprintf(_ACINFOM, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOM, '<b>'._NOTCAN.'</b>');
                     $cont .= $tpl->getHtmlFrag('forum-list-info', ['new' => '<span title="'._ISNEWPOST.'" class="sl_t_new">'._ISNEWPOST.'</span>', 'old' => '<span title="'._NONEWPOST.'" class="sl_t_old">'._NONEWPOST.'</span>', 'popular_new' => '<span title="'._TPOPN.'" class="sl_t_pop">'._TPOPN.'</span>', 'popular' => '<span title="'._TPOP.'" class="sl_t_pold">'._TPOP.'</span>', 'announce' => '<span title="'._TANNOUN.'" class="sl_t_announ">'._TANNOUN.'</span>', 'hot' => '<span title="'._THOT.'" class="sl_t_hot">'._THOT.'</span>', 'mod' => '<span title="'._TOPICM.'" class="sl_t_clos_m">'._TOPICM.'</span>', 'admin' => '<span title="'._TOPICA.'" class="sl_t_clos_a">'._TOPICA.'</span>', 'closed' => '<span title="'._TOPICN.'" class="sl_t_clos_n">'._TOPICN.'</span>', 'pinned' => '<span title="'._TOPICP.'" class="sl_t_clos_p">'._TOPICP.'</span>', 'perm_view' => $infov, 'perm_read' => $infor, 'perm_topic' => $infot, 'perm_reply' => $infop, 'perm_edit' => $infoe, 'perm_delete' => $infod, 'perm_mod' => $infom]);
                 } else {
-                    $meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
+                    $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 5);
                     $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
                 }
                 $show = false;
@@ -225,7 +225,7 @@ function forum(): void {
         echo $cont;
     } else {
         setHead(['title' => _FORUM]);
-        $meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
+        $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 5);
         echo $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NO_INFO, 'meta' => $meta]);
     }
     setFoot();
@@ -392,7 +392,7 @@ function view(): void {
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
         } else {
-            $meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
+            $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 5);
             $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
         }
         echo $cont;
@@ -407,12 +407,12 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
     $id = (int)$id;
     $catid = (int)$catid;
     if ($conf['forum']['qreply'] == 1 && $id > 0 && $catid > 0) {
-        $rows = (!is_user()) ? getFormAddRow(_YOURNAME, getAdminTextInput('postname', _ANONYM, 'sl_field '.$conf['style'], 'placeholder="'._YOURNAME.'" required')) : '';
-        $rows .= getFormAddRow(_TEXT, textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1'));
+        $rows = (!is_user()) ? getTplFormAddRow(_YOURNAME, getTplTextInput('postname', _ANONYM, 'sl_field '.$conf['style'], 'placeholder="'._YOURNAME.'" required')) : '';
+        $rows .= getTplFormAddRow(_TEXT, textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1'));
         $rows .= fields_in(isset($field), $conf['name']);
-        $hide = getAdminHidden('subject', $subject).getAdminHidden('pid', (string)$id).getAdminHidden('cat', (string)$catid).getAdminHidden('posttype', 'save');
-        $rows .= '<tr><td colspan="2" class="sl_center">'.getFormSubmit('send', _SEND, $hide).'</td></tr>';
-        $cont = getForumReplyForm($conf['name'], $rows);
+        $hide = getTplHiddenInput('subject', $subject).getTplHiddenInput('pid', (string)$id).getTplHiddenInput('cat', (string)$catid).getTplHiddenInput('posttype', 'save');
+        $rows .= '<tr><td colspan="2" class="sl_center">'.getTplFormSubmit('send', _SEND, $hide).'</td></tr>';
+        $cont = getTplForumReplyForm($conf['name'], $rows);
         return $tpl->getHtmlFrag('forum-all-open', ['title' => _QUICKREPLY]).$cont;
     }
     return '';
@@ -536,20 +536,20 @@ function add(): void {
         $userinfo = getUserInfo();
         if ($userinfo['access'] || (!is_user() && !$conf['forum']['anonpost'])) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _POSTNOTE]);
         $cont .= $tpl->getHtmlFrag('forum-all-open', ['title' => $info]);
-        $rows = (!is_user()) ? getFormAddRow(_YOURNAME, getAdminTextInput('postname', _ANONYM, 'sl_field '.$conf['style'], 'placeholder="'._YOURNAME.'" required')) : '';
-        $rows .= ($subh) ? getAdminHidden('subject', $subject) : getFormAddRow(_TITLE, getAdminTextInput('subject', $subject, 'sl_field '.$conf['style'], 'maxlength="100" placeholder="'._TITLE.'" required'));
-        $rows .= getFormAddRow(_TEXT, textarea('1', 'hometext', $hometext, $conf['name'], '15', _TEXT, '1'));
+        $rows = (!is_user()) ? getTplFormAddRow(_YOURNAME, getTplTextInput('postname', _ANONYM, 'sl_field '.$conf['style'], 'placeholder="'._YOURNAME.'" required')) : '';
+        $rows .= ($subh) ? getTplHiddenInput('subject', $subject) : getTplFormAddRow(_TITLE, getTplTextInput('subject', $subject, 'sl_field '.$conf['style'], 'maxlength="100" placeholder="'._TITLE.'" required'));
+        $rows .= getTplFormAddRow(_TEXT, textarea('1', 'hometext', $hometext, $conf['name'], '15', _TEXT, '1'));
         $rows .= fields_in($field, $conf['name']);
-        $rows .= ($ismod) ? getFormAddRow(_OPMOD, pmoder($status, $subh)).getFormAddRow(_CHNGSTORY, datetime(1, 'time', $time, 16, $conf['style'])) : '';
-        $hide = getAdminHidden('id', (string)$id).getAdminHidden('fid', (string)$fid).getAdminHidden('pid', (string)$pid).getAdminHidden('cat', (string)$catid);
+        $rows .= ($ismod) ? getTplFormAddRow(_OPMOD, pmoder($status, $subh)).getTplFormAddRow(_CHNGSTORY, datetime(1, 'time', $time, 16, $conf['style'])) : '';
+        $hide = getTplHiddenInput('id', (string)$id).getTplHiddenInput('fid', (string)$fid).getTplHiddenInput('pid', (string)$pid).getTplHiddenInput('cat', (string)$catid);
         $rows .= '<tr><td colspan="2" class="sl_center">'.$hide.ad_save('', '', 'send').'</td></tr>';
-        $cont .= getForumReplyForm($conf['name'], $rows);
+        $cont .= getTplForumReplyForm($conf['name'], $rows);
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
         $head = _FORUM.' '.$ctitle.' '.$ctitle;
         setHead(['title' => $head]);
         $cont = $tpl->getHtmlFrag('forum-all-open', ['title' => $ctitle]);
-        $meta = getMetaRefresh('index.php?name='.$conf['name'], 5);
+        $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 5);
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $info, 'meta' => $meta]);
     }
     echo $cont;
@@ -563,7 +563,7 @@ function tmoder(int $typ): string {
     $opts = '<optgroup label="'._OPMOD.'" class="sl_label">';
     foreach ($mass as $vn => $vv) $opts .= '<option value="'.$vv.'">'.$vn.'</option>';
     $opts .= '</optgroup><optgroup label="'._MOVETO.'" class="sl_label">'.getcat($conf['name'], 0, '', '', '', '1').'</optgroup>';
-    return getFormSelect('tmove', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
+    return getTplFormSelect('tmove', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
 }
 
 function pmoder(int|string $status, int $subh): string {
@@ -574,7 +574,7 @@ function pmoder(int|string $status, int $subh): string {
         $sel = ($status == $vv) ? ' selected' : '';
         $opts .= '<option value="'.$vv.'"'.$sel.'>'.$vn.'</option>';
     }
-    return getFormSelect('status', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
+    return getTplFormSelect('status', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
 }
 
 function send(): void {

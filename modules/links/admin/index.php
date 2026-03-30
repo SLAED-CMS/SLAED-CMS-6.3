@@ -59,7 +59,7 @@ function links(): void {
                 adminLinkAction($afile.'.php?name=links&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=links&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-links-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-links-list-row', [
                 'actions_html' => $acts,
                 'id_text' => (string)$id,
                 'postedby_html' => $post,
@@ -68,7 +68,7 @@ function links(): void {
                 'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 50)),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_links', '', 'status = \''.$status.'\'', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -127,8 +127,8 @@ function add(): void {
         'title_label' => _TITLE.':',
         'title_value' => $title,
     ]);
-    $hide = getAdminHidden('name', 'links');
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $hide = getTplHiddenInput('name', 'links');
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -194,7 +194,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 4]);
     $cont .= checkPerms(CONFIG_DIR.'/links.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'links',
         'op' => 'configsave',

@@ -17,7 +17,7 @@ function account(): void {
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getAccountSearchBox($_search, $_chng),
+        'sub'  => getTplAdminAccountSearch($_search, $_chng),
     ]);
     if (getVar('get','send','num')) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MAIL_SEND]);
     $where = '1 = 1';
@@ -86,7 +86,7 @@ function account(): void {
                 adminDeleteAction($afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip, _BANIPSENDER.' "'.$ip.'"?', _BANIPSENDER, _BANIPSENDER),
                 adminDeleteAction($afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-account-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-account-list-row', [
                 'actions_html' => $acts,
                 'email_html' => filterTextHighlight($mail, $chng),
                 'id_html' => filterTextHighlight($uid, $chng),
@@ -95,7 +95,7 @@ function account(): void {
                 'reg_text' => format_time($reg, _TIMESTRING),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $lsear = $search ? '&amp;search='.$search : '';
         $lchg = $chng ? '&amp;chng='.$chng : '';
         $cont .= setArticleNumbers('pagenum', '', $conf['users']['anum'], 'name=account'.$lsear.$lchg.'&amp;', 'id', '_users', '', $wcnt, $conf['users']['anump'], $pars);
@@ -165,14 +165,14 @@ function add(): void {
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getAccountSearchBox($_search, $_chng),
+        'sub'  => getTplAdminAccountSearch($_search, $_chng),
         'tab'  => 1,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $rows = $tpl->getHtmlFrag('admin-account-add-basic-rows', [
         'allowusers_html' => radio_form($view, 'view'),
         'allowusers_label' => _ALLOWUSERS,
-        'avatar_html' => $avatar ? getAdminFormRow(_AVATAR.':', getAdminTextInput('avatar', $avatar, 'sl_form', 'maxlength="255" placeholder="'._AVATAR.'"')) : '',
+        'avatar_html' => $avatar ? getTplAdminFormRow(_AVATAR.':', getTplTextInput('avatar', $avatar, 'sl_form', 'maxlength="255" placeholder="'._AVATAR.'"')) : '',
         'email_label' => _EMAIL.':',
         'email_value' => $email,
         'interests_label' => _INTERESTS.':',
@@ -188,31 +188,31 @@ function add(): void {
         'reg_html' => datetime(1, 'reg', $reg ?? '', 16, 'sl_form'),
         'reg_label' => _REG.':',
         'signature_html' => textarea('1', 'sig', $sig, 'account', '5', _SIGNATURE, ''),
-        'signature_label_html' => getAdminHintLabel(_SIGNATURE, _SIGNATURE_TEXT),
+        'signature_label_html' => getTplAdminHintLabel(_SIGNATURE, _SIGNATURE_TEXT),
         'siteurl_label' => _SITEURL.':',
         'siteurl_value' => $site,
     ]);
     if ($conf['users']['news'] == 1) {
         $storyopts = '';
         for ($n = 3; $n <= 20; $n++) {
-            $storyopts .= getAdminOption((string)$n, (string)$n, $n == $story);
+            $storyopts .= getTplOption((string)$n, (string)$n, $n == $story);
         }
-        $rows .= getAdminFormRow(_C_12.':', getAdminSelect('story', $storyopts, 'sl_form'));
+        $rows .= getTplAdminFormRow(_C_12.':', getTplSelect('story', $storyopts, 'sl_form'));
     } else {
-        $rows .= getAdminHidden('story', (string)$conf['news']['num']);
+        $rows .= getTplHiddenInput('story', (string)$conf['news']['num']);
     }
     $rows .= $tpl->getHtmlFrag('admin-account-add-menu-rows', [
         'activatepersonal_html' => radio_form($blockon, 'blockon'),
         'activatepersonal_label' => _ACTIVATEPERSONAL,
         'menuconf_html' => textarea('2', 'block', $block, 'account', '5', _MENUCONF, ''),
-        'menuconf_label_html' => getAdminHintLabel(_MENUCONF, _MENUINFO),
+        'menuconf_label_html' => getTplAdminHintLabel(_MENUCONF, _MENUINFO),
     ]);
     if ($conf['users']['theme']) {
         $tcategory = '';
         $tcount = 0;
         foreach (scandir('templates') as $file) {
             if (!preg_match('/\./', $file) && $file != 'admin') {
-                $tcategory .= getAdminOption($file, $file, $file == $theme);
+                $tcategory .= getTplOption($file, $file, $file == $theme);
                 $tcount++;
             }
         }
@@ -223,14 +223,14 @@ function add(): void {
             ]);
         }
     }
-    $rows .= getAdminFormRow(_RNEWSLETTER.':', radio_form($news, 'news'));
+    $rows .= getTplAdminFormRow(_RNEWSLETTER.':', radio_form($news, 'news'));
     if ($conf['multilingual'] == 1) {
         $rows .= $tpl->getHtmlFrag('admin-account-lang-row', [
             'lang_html' => language($lang),
             'language_label' => _LANGUAGE.':',
         ]);
     }
-    $rows .= getAdminFormRow(_POINTS.':', getAdminNumberInput($point, 'point', 'sl_form', 'placeholder="'._POINTS.'"'));
+    $rows .= getTplAdminFormRow(_POINTS.':', getTplNumberInput($point, 'point', 'sl_form', 'placeholder="'._POINTS.'"'));
     $warnhtml = '';
     $i = 0;
     while ($i < 5) {
@@ -247,19 +247,19 @@ function add(): void {
         ]);
         $i++;
     }
-    $rows .= getAdminFormWide($warnhtml)
-        .getAdminFormRow(_UACESS, radio_form($access, 'access'));
-    $grpopts = getAdminOption('0', _NO);
+    $rows .= getTplAdminFormWide($warnhtml)
+        .getTplAdminFormRow(_UACESS, radio_form($access, 'access'));
+    $grpopts = getTplOption('0', _NO);
     $result = $db->getSqlQuery('SELECT id, name FROM '.PREFIX_DB.'_groups WHERE extra = :extra', ['extra' => '1']);
     while ([$grid, $grname] = $db->getSqlRow($result)) {
-        $grpopts .= getAdminOption((string)$grid, $grname, $grid == $group);
+        $grpopts .= getTplOption((string)$grid, $grname, $grid == $group);
     }
     $gender = intval($gender ?? 0);
-    $rows .= getAdminFormRow(_SPEC_GROUP.':', getAdminSelect('group', $grpopts, 'sl_form'))
-        .getAdminFormRow(_BIRTHDAY.':', datetime(2, 'birth', $birth, 10, 'sl_form'))
-        .getAdminFormRow(_GENDER.':', get_gender('gender', $gender, 'sl_form'));
+    $rows .= getTplAdminFormRow(_SPEC_GROUP.':', getTplSelect('group', $grpopts, 'sl_form'))
+        .getTplAdminFormRow(_BIRTHDAY.':', datetime(2, 'birth', $birth, 10, 'sl_form'))
+        .getTplAdminFormRow(_GENDER.':', get_gender('gender', $gender, 'sl_form'));
     $check = (getVar('cookie', 'sl_close_9', 'num') == 0) ? '' : ' checked';
-    $mailblock = '<div id="sl_close_9">'.getAdminForm('', getAdminFormRow(getAdminHintLabel(_MAIL_TEXT, _MAIL_PASS_INFO), textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''), 'sl_form')).'</div>';
+    $mailblock = '<div id="sl_close_9">'.getTplAdminForm('', getTplAdminFormRow(getTplAdminHintLabel(_MAIL_TEXT, _MAIL_PASS_INFO), textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''), 'sl_form')).'</div>';
     $rows .= $tpl->getHtmlFrag('admin-account-add-tail-rows', [
         'check_attr' => $check,
         'fields_html' => fields_in($field, 'account'),
@@ -267,9 +267,9 @@ function add(): void {
         'mailblock_html' => $mailblock,
         'password_label' => _PASSWORD.':',
         'retypepassword_label' => _RETYPEPASSWORD.':',
-        'save_html' => getAdminHidden('uid', (string)$uid).getAdminHidden('name', 'account').getAdminHidden('op', 'addsave').getAdminSubmitButton(_SAVE),
+        'save_html' => getTplHiddenInput('uid', (string)$uid).getTplHiddenInput('name', 'account').getTplHiddenInput('op', 'addsave').getTplAdminSubmitButton(_SAVE),
     ]);
-    $cont .= getAdminBox(getAdminForm($afile.'.php', $rows, '', 'sl_table_form', 'post', 'post'));
+    $cont .= getTplBox(getTplAdminForm($afile.'.php', $rows, '', 'sl_table_form', 'post', 'post'));
     echo $cont;
     setFoot();
 }
@@ -360,7 +360,7 @@ function newuser(): void {
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getAccountSearchBox($_search, $_chng),
+        'sub'  => getTplAdminAccountSearch($_search, $_chng),
         'tab'  => 2,
     ]);
     $num = getVar('get', 'num', 'num', '1');
@@ -381,7 +381,7 @@ function newuser(): void {
                 ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check, 0),
                 adminDeleteAction($afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-account-newuser-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-account-newuser-row', [
                 'actions_html' => $acts,
                 'email_text' => $mail,
                 'id_text' => (string)$uid,
@@ -390,7 +390,7 @@ function newuser(): void {
                 'reg_text' => $reg,
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', (int)$conf['users']['anum'], 'name=account&amp;op=newuser&amp;', 'id', '_users_temp', '', '', (int)$conf['users']['anump'], []);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -407,7 +407,7 @@ function pointreset(): void {
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getAccountSearchBox($_search, $_chng),
+        'sub'  => getTplAdminAccountSearch($_search, $_chng),
         'tab'  => 3,
     ]);
     $rows = $tpl->getHtmlFrag('admin-account-pointreset-rows', [
@@ -421,8 +421,8 @@ function pointreset(): void {
         'uwarns_html' => radio_form(0, 'warnings'),
         'uwarns_label' => _UWARNS.':',
     ]);
-    $hide = getAdminHidden('name', 'account').getAdminHidden('op', 'resave');
-    $cont .= getAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
+    $hide = getTplHiddenInput('name', 'account').getTplHiddenInput('op', 'resave');
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
     echo $cont;
     setFoot();
 }
@@ -448,21 +448,21 @@ function config(): void {
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getAccountSearchBox($_search, $_chng),
+        'sub'  => getTplAdminAccountSearch($_search, $_chng),
         'tab'  => 4,
     ]);
     $cont .= checkPerms(CONFIG_DIR.'/users.php');
     $minpass_opts = '';
     for ($n = 3; $n <= 10; $n++) {
-        $minpass_opts .= getAdminOption((string)$n, (string)$n, $n == $conf['users']['minpass']);
+        $minpass_opts .= getTplOption((string)$n, (string)$n, $n == $conf['users']['minpass']);
     }
-    $minpass_sel = getAdminSelect('minpass', $minpass_opts, 'sl_conf');
-    $enter_sel = getAdminSelect('enter',
-        getAdminOption('0', _LOGINL, $conf['users']['enter'] == '0')
-        .getAdminOption('1', _LOGINF, $conf['users']['enter'] == '1'),
+    $minpass_sel = getTplSelect('minpass', $minpass_opts, 'sl_conf');
+    $enter_sel = getTplSelect('enter',
+        getTplOption('0', _LOGINL, $conf['users']['enter'] == '0')
+        .getTplOption('1', _LOGINF, $conf['users']['enter'] == '1'),
         'sl_conf'
     );
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'account',
         'op' => 'save',
@@ -582,7 +582,7 @@ function info(): void {
     $cont = setAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
-        'sub'  => getAccountSearchBox($_search, $_chng),
+        'sub'  => getTplAdminAccountSearch($_search, $_chng),
         'tab'  => 5,
     ]);
     setAdminInfoPage($cont);

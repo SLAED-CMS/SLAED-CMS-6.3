@@ -49,7 +49,7 @@ function whois(): void {
                 adminLinkAction($afile.'.php?name=whois&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$domain.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-whois-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-whois-list-row', [
                 'actions_html' => $acts,
                 'dc_html' => $dc,
                 'dc_status_html' => ad_status('', $statusDc),
@@ -61,7 +61,7 @@ function whois(): void {
                 'postedby_html' => adminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ipSender.'<br>'._COMMENT.': '.$hometext).$post,
             ]));
         }
-        $cont .= getAdminTable($head, $rows, 'sl_table_list');
+        $cont .= getTplAdminTable($head, $rows, 'sl_table_list');
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_whois', '', "status = '".$status."'", $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -114,9 +114,9 @@ function add(): void {
         'domain_value' => $domain,
         'host_value' => $host,
         'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
-        'save_html' => getAdminHidden('name', 'whois').ad_save('wid', $wid, 'save', 1),
+        'save_html' => getTplHiddenInput('name', 'whois').ad_save('wid', $wid, 'save', 1),
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows);
+    $cont .= getTplAdminForm($afile.'.php', $rows);
     echo $cont;
     setFoot();
 }
@@ -164,7 +164,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'whois',
         'op' => 'configsave',

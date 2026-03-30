@@ -165,7 +165,7 @@ function getSqltable(array $items): string {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
         $status = adminFlagBox((bool)$row['ok'], _OK, _ERROR.' - '.$row['error']);
-        $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-database-sql-row', [
+        $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-database-sql-row', [
             'db_sql_text' => $sql,
             'id_value' => (string)(int)$row['num'],
             'status_html' => $status,
@@ -173,7 +173,7 @@ function getSqltable(array $items): string {
             'type_label' => htmlspecialchars($row['type']),
         ]));
     }
-    return getAdminTable($head, $rows);
+    return getTplAdminTable($head, $rows);
 }
 
 function getSqlsum(array $items, string $mode, string $name): string {
@@ -304,7 +304,7 @@ function database(): void {
 
         $item++;
 
-        $dbrows .= getAdminTableRow($tpl->getHtmlFrag('admin-database-list-row', [
+        $dbrows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-database-list-row', [
             'collation_name' => $tabloc,
             'created_text' => format_time($crtime, _TIMESTRING),
             'free_html' => $freetag,
@@ -317,13 +317,13 @@ function database(): void {
         ]));
     }
 
-    $dbrows .= getAdminTableRow($tpl->getHtmlFrag('admin-database-total-row', [
+    $dbrows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-database-total-row', [
         'free_text' => filterSize($sumfree),
         'id_value' => (string)$item,
         'rows_count' => (string)$allrows,
         'size_text' => filterSize($total),
     ]), '', 'data-sort-method="none"');
-    $content = getAdminTable($dbhead, $dbrows);
+    $content = getTplAdminTable($dbhead, $dbrows);
 
     // After OPTIMIZE: Totals to recalculate info box
     if ($type === 'optimize') {
@@ -368,7 +368,7 @@ function database(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
     }
 
-    echo $cont.getAdminBox($content);
+    echo $cont.getTplBox($content);
 
     setFoot();
 }
@@ -423,19 +423,19 @@ function dump(): void {
                 }
             }
             $cont .= getSqlsum($reslist, $action, $conf['db']['name']);
-            $cont .= getAdminBox(getSqltable($reslist));
+            $cont .= getTplBox(getSqltable($reslist));
         }
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DBINFO]);
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DBWARN]);
     }
-    $fhide = getAdminHidden('name', 'database').getAdminHidden('op', 'dump').getAdminHidden('type', 'dump').getAdminHidden('token', getSiteToken('db'));
-    $frows = getAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
-    $frows .= getAdminFormWide($tpl->getHtmlFrag('admin-database-dump-actions', [
+    $fhide = getTplHiddenInput('name', 'database').getTplHiddenInput('op', 'dump').getTplHiddenInput('type', 'dump').getTplHiddenInput('token', getSiteToken('db'));
+    $frows = getTplAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
+    $frows .= getTplAdminFormWide($tpl->getHtmlFrag('admin-database-dump-actions', [
         'execute_label' => _EXECUTE,
         'parse_label' => _DB_PARSE,
     ]), '', 'sl_center');
-    echo $cont.getAdminBox(getAdminForm($afile.'.php', $frows, $fhide, 'sl_table_edit'));
+    echo $cont.getTplBox(getTplAdminForm($afile.'.php', $frows, $fhide, 'sl_table_edit'));
     setFoot();
 }
 

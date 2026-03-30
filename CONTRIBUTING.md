@@ -136,6 +136,11 @@ Additional enforced constraints from `.rules/global.md`:
 - function names must be 6-24 characters long
 - function names must follow verb + noun
 
+Template helper functions in `core/helpers.php` follow the current project naming split:
+
+- shared template helpers: `getTpl...()`
+- admin-scoped template helpers: `getTplAdmin...()`
+
 ### Variable Naming
 
 - Prefer short variable names.

@@ -38,7 +38,7 @@ function groups(): void {
                 adminLinkAction($afile.'.php?name=groups&amp;op=add&amp;id='.$grid, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=groups&amp;op=delete&amp;id='.$grid, _DELETE.' "'.$grname.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-groups-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-groups-list-row', [
                 'actions_html' => $acts,
                 'extra_text' => $extra,
                 'group_html' => adminTitleTip(_DESCRIPTION.': '.$description).adminColorLabel($color, $grname),
@@ -49,7 +49,7 @@ function groups(): void {
                 'users_text' => (string)$users_num,
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -80,15 +80,15 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _GROUPSI]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
-    $hide = getAdminHidden('gid', (string)$gid).getAdminHidden('name', 'groups').getAdminHidden('op', 'save');
+    $hide = getTplHiddenInput('gid', (string)$gid).getTplHiddenInput('name', 'groups').getTplHiddenInput('op', 'save');
     $rows = '';
-    $rows .= getAdminFormRow(_NAME.':', getAdminTextInput('grname', $grname, 'sl_form', 'maxlength="255" placeholder="'._NAME.'" required'));
-    $rows .= getAdminFormRow(_DESCRIPTION.':', getAdminTextarea('description', $description, 'sl_form', 'placeholder="'._DESCRIPTION.'"'));
+    $rows .= getTplAdminFormRow(_NAME.':', getTplTextInput('grname', $grname, 'sl_form', 'maxlength="255" placeholder="'._NAME.'" required'));
+    $rows .= getTplAdminFormRow(_DESCRIPTION.':', getTplTextarea('description', $description, 'sl_form', 'placeholder="'._DESCRIPTION.'"'));
     $path = 'templates/'.$conf['theme'].'/images/ranks/';
     $pickopts = '';
     foreach (scandir($path) as $entry) {
         if (preg_match('#(\.gif|\.png|\.jpg|\.jpeg)$#is', $entry)) {
-            $pickopts .= getAdminOption($path.$entry, $entry, $rank == $entry);
+            $pickopts .= getTplOption($path.$entry, $entry, $rank == $entry);
         }
     }
     $rows .= $tpl->getHtmlFrag('admin-groups-add-rows', [
@@ -97,10 +97,10 @@ function add(): void {
         'picture_alt' => _RANK,
         'picture_src' => $path.$rank,
         'points_value' => (string)$points,
-        'rank_html' => getAdminSelect('rank', $pickopts, 'sl_form', 'id="img_replace"'),
+        'rank_html' => getTplSelect('rank', $pickopts, 'sl_form', 'id="img_replace"'),
         'save_label' => _SAVE,
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -146,7 +146,7 @@ function points(): void {
     $prows = '';
     $count = count($p);
     for ($i = 0; $i < $count; $i++) {
-        $prows .= getAdminTableRow($tpl->getHtmlFrag('admin-groups-points-row', [
+        $prows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-groups-points-row', [
             'description_text' => $d[$i],
             'id_text' => (string)($i + 1),
             'name_text' => $p[$i],
@@ -154,8 +154,8 @@ function points(): void {
             'points_value' => (string)$pts[$i],
         ]));
     }
-    $pointv = getAdminConfSave(getAdminTable($phead, $prows), 'groups', 'pointssave', _SAVE);
-    echo $cont.getAdminBox($pointv);
+    $pointv = getTplAdminConfSave(getTplAdminTable($phead, $prows), 'groups', 'pointssave', _SAVE);
+    echo $cont.getTplBox($pointv);
     setFoot();
 }
 

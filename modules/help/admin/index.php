@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright Â© 2005 - 2026 SLAED
+# Copyright © 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -44,7 +44,7 @@ function help(): void {
                 adminLinkAction($afile.'.php?name=help&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW),
                 adminDeleteAction($afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-help-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-help-list-row', [
                 'actions_html' => $acts,
                 'comments_text' => (string)$comments,
                 'id_text' => (string)$id,
@@ -53,7 +53,7 @@ function help(): void {
                 'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_help', '', 'pid = \'0\' AND status = \''.$status.'\'', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -95,7 +95,7 @@ function view(): void {
         $html .= $tpl->getHtmlFrag('basic', ['ctitle' => $ctitle, 'id' => $id, 'title' => $title, 'text' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), 'post' => $post, 'date' => $date, 'reads' => $reads, 'comm' => $comm, 'rating' => $rating, 'admin' => $admin]);
         $a++;
     }
-    $cont .= getAdminBox($html);
+    $cont .= getTplBox($html);
     $cont .= addview($vid);
     echo $cont;
     setFoot();
@@ -116,8 +116,8 @@ function addview(int $id): string {
         'umail_html' => radio_form('1', 'umail'),
         'umail_label' => _MAIL_SENDE,
     ]);
-    $hide = getAdminHidden('name', 'help').getAdminHidden('refer', '1').getAdminHidden('pid', (string)$id).getAdminHidden('cat', (string)$cid).getAdminHidden('uid', (string)$uid).getAdminHidden('posttype', 'save').getAdminHidden('op', 'save');
-    return getAdminForm($afile.'.php', $rows, $hide);
+    $hide = getTplHiddenInput('name', 'help').getTplHiddenInput('refer', '1').getTplHiddenInput('pid', (string)$id).getTplHiddenInput('cat', (string)$cid).getTplHiddenInput('uid', (string)$uid).getTplHiddenInput('posttype', 'save').getTplHiddenInput('op', 'save');
+    return getTplAdminForm($afile.'.php', $rows, $hide);
 }
 
 function add(): void {
@@ -157,8 +157,8 @@ function add(): void {
         'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
         'time_label' => _CHNGSTORY.':',
     ]);
-    $hide = getAdminHidden('name', 'help').getAdminHidden('pid', (string)$pid);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $hide = getTplHiddenInput('name', 'help').getTplHiddenInput('pid', (string)$pid);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -226,7 +226,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'help',
         'op' => 'configsave',

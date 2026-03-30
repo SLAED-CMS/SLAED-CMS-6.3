@@ -15,15 +15,15 @@ function buildShopSearchBox(): string {
     $opts = '';
     foreach ([_ID, _NICKNAME, _CLIENTNAME, _EMAIL, _SITE] as $k => $v) {
         $sort = $k + 1;
-        $opts .= getAdminOption((string)$sort, $v, $sel == $sort || (!$sel && $sort == 2));
+        $opts .= getTplOption((string)$sort, $v, $sel == $sort || (!$sel && $sort == 2));
     }
-    return getAdminSearchBox($tpl->getHtmlFrag('admin-shop-search-box', [
+    return getTplAdminSearchBox($tpl->getHtmlFrag('admin-shop-search-box', [
         'action_url' => $afile.'.php',
-        'hidden_html' => getAdminHidden('name', 'shop').getAdminHidden('op', 'clients'),
+        'hidden_html' => getTplHiddenInput('name', 'shop').getTplHiddenInput('op', 'clients'),
         'input_html' => getUserSearch('csearch', $txt, '30'),
         'ok_label' => _OK,
         'search_label' => _SEARCH,
-        'select_html' => getAdminSelect('search', $opts),
+        'select_html' => getTplSelect('search', $opts),
     ]));
 }
 
@@ -134,7 +134,7 @@ function clients(): void {
                 $name = _ANONYM;
                 $nick = _ANONYM;
             }
-            $trows .= getAdminTableRow($tpl->getHtmlFrag('admin-shop-clients-row', [
+            $trows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-clients-row', [
                 'actions_html' => adminMenuItems([
                     ad_status($afile.'.php?name=shop&op=clientset&amp;id='.$cid.$refer, $cactive),
                     adminLinkAction($afile.'.php?name=shop&op=clientadd&amp;cid='.$cid, _FULLEDIT, _FULLEDIT),
@@ -149,9 +149,9 @@ function clients(): void {
             ]));
             $a++;
         }
-        $html = getAdminTable($head, $trows);
+        $html = getTplAdminTable($head, $trows);
         $html .= setPageNumbers('pagenum', '', $numstories, $numpages, $conf['shop']['anum'], $field, $conf['shop']['anump']);
-        $cont .= getAdminBox($html);
+        $cont .= getTplBox($html);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -233,11 +233,11 @@ function clientadd(): void {
             'percent_text' => $proz.' %',
         ]);
     }
-    $frows .= getAdminFormRow(_USER_ID.':', getAdminNumberInput($uid, 'uid', 'sl_form', 'placeholder="'._USER_ID.'"'));
+    $frows .= getTplAdminFormRow(_USER_ID.':', getTplNumberInput($uid, 'uid', 'sl_form', 'placeholder="'._USER_ID.'"'));
     $productslist = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_products ORDER BY title');
     $prodopts = '';
     while([$pid, $ptitle] = $db->getSqlRow($productslist)) {
-        $prodopts .= getAdminOption((string)$pid, $ptitle, $product == $pid);
+        $prodopts .= getTplOption((string)$pid, $ptitle, $product == $pid);
     }
     $frows .= $tpl->getHtmlFrag('admin-shop-clientadd-rows', [
         'activate_html' => radio_form($cactive, 'cactive'),
@@ -257,14 +257,14 @@ function clientadd(): void {
         'cwebsite' => $cwebsite,
         'email_label' => _EMAIL.':',
         'note_label' => _NOTE.':',
-        'product_html' => getAdminSelect('product', $prodopts, 'sl_form'),
+        'product_html' => getTplSelect('product', $prodopts, 'sl_form'),
         'product_label' => _PRODUCT.':',
-        'save_html' => getAdminHidden('cppi', (string)$cppi).ad_save('cid', $cid, 'clientsave', 1),
+        'save_html' => getTplHiddenInput('cppi', (string)$cppi).ad_save('cid', $cid, 'clientsave', 1),
         'site_label' => _SITE.':',
         'userid_label' => _USER_ID.':',
         'uid' => (string)$uid,
     ]);
-    $cont .= getAdminBox(getAdminForm($afile.'.php', $frows));
+    $cont .= getTplBox(getTplAdminForm($afile.'.php', $frows));
     echo $cont;
     setFoot();
 }
@@ -393,7 +393,7 @@ function products(): void {
             }
             $vote = ($pvote) ? adminLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$pvote, _EDITVOTE, _EDITVOTE) : '';
             $typ = ($pactive) ? '0' : '1';
-            $prows .= getAdminTableRow($tpl->getHtmlFrag('admin-shop-products-row', [
+            $prows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-products-row', [
                 'actions_html' => adminMenuItems([
                     $view,
                     $vote,
@@ -409,10 +409,10 @@ function products(): void {
                 'value_attr' => (string)$pid,
             ]));
         }
-        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' '.getAdminHidden('name', 'shop').getAdminHidden('op', 'productops').getAdminHidden('refer', '1').' '.getAdminSubmitButton(_OK);
+        $selms = _CHECKOP.': '.edit_list('shop', 'typ', '').' '.getTplHiddenInput('name', 'shop').getTplHiddenInput('op', 'productops').getTplHiddenInput('refer', '1').' '.getTplAdminSubmitButton(_OK);
         $numpt = setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_products', '', $sqlstatus, $conf['shop']['anump']);
-        $html = getAdminListForm(getAdminTable($phead, $prows), $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]), '');
-        $cont .= getAdminBox($html);
+        $html = getTplAdminListForm(getTplAdminTable($phead, $prows), $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]), '');
+        $cont .= getTplBox($html);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -458,11 +458,11 @@ function productadd(): void {
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     $ptextpre = ($vote)
-        ? $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($vote, 'shop')]).getAdminHrLine().$ptext
+        ? $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($vote, 'shop')]).getTplHrLine().$ptext
         : $ptext;
     if ($ptextpre) $cont .= preview($ptitle, $ptextpre, $pbodytext, '', 'shop');
-    $parows = getAdminFormRow(_TITLE.' / '._PRODUCT.':', getAdminTextInput('ptitle', $ptitle, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'))
-        .getAdminFormRow(_CATEGORY.':', getcat('shop', $pcid, 'pcid', 'sl_form', getAdminOption('', _HOMECAT)));
+    $parows = getTplAdminFormRow(_TITLE.' / '._PRODUCT.':', getTplTextInput('ptitle', $ptitle, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'))
+        .getTplAdminFormRow(_CATEGORY.':', getcat('shop', $pcid, 'pcid', 'sl_form', getTplOption('', _HOMECAT)));
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
     if ($db->getSqlRowCount($result2) > 0) {
         $assocrows = '';
@@ -482,19 +482,19 @@ function productadd(): void {
         }
         $assocrows = $tpl->getHtmlFrag('admin-blocks-view-row-open', []).$assocrows.$tpl->getHtmlFrag('admin-blocks-view-row-close', []);
         $associnner = $tpl->getHtmlFrag('admin-shop-assoc-table', ['rows_html' => $assocrows]);
-        $parows .= getAdminFormRow(getAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI), $associnner);
+        $parows .= getTplAdminFormRow(getTplAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI), $associnner);
     }
-    $parows .= getAdminFormRow(_TEXT.':', textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'))
-        .getAdminFormRow(_ENDTEXT.':', textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0'))
-        .getAdminFormRow(_PREIS.':', getAdminTextInput('pprice', $pprice, 'sl_form', 'maxlength="10" placeholder="'._PREIS.'" required'))
-        .getAdminFormRow(_CHNGSTORY.':', datetime(1, 'ptime', $ptime, 16, 'sl_form'))
-        .getAdminFormRow(_VOTING.':', add_voting('shop', 'vote', $vote, 'sl_form'))
-        .getAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'))
-        .getAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'))
-        .getAdminFormRow(_FIXED.'?', radio_form($fix, 'fix'))
-        .getAdminFormRow(_ACTIVATEP, radio_form($pactive, 'pactive'))
-        .getAdminFormWide(ad_save('pid', $pid, 'productsave'), '', 'sl_center');
-    $cont .= getAdminBox(getAdminForm($afile.'.php', $parows, '', 'sl_table_form', 'post', 'post'));
+    $parows .= getTplAdminFormRow(_TEXT.':', textarea('1', 'ptext', $ptext, 'shop', '5', _TEXT, '1'))
+        .getTplAdminFormRow(_ENDTEXT.':', textarea('2', 'pbodytext', $pbodytext, 'shop', '15', _ENDTEXT, '0'))
+        .getTplAdminFormRow(_PREIS.':', getTplTextInput('pprice', $pprice, 'sl_form', 'maxlength="10" placeholder="'._PREIS.'" required'))
+        .getTplAdminFormRow(_CHNGSTORY.':', datetime(1, 'ptime', $ptime, 16, 'sl_form'))
+        .getTplAdminFormRow(_VOTING.':', add_voting('shop', 'vote', $vote, 'sl_form'))
+        .getTplAdminFormRow(_COMMENTS.':', com_access('acomm', $acomm, 'sl_form'))
+        .getTplAdminFormRow(_PUBHOME, radio_form($ihome, 'ihome'))
+        .getTplAdminFormRow(_FIXED.'?', radio_form($fix, 'fix'))
+        .getTplAdminFormRow(_ACTIVATEP, radio_form($pactive, 'pactive'))
+        .getTplAdminFormWide(ad_save('pid', $pid, 'productsave'), '', 'sl_center');
+    $cont .= getTplBox(getTplAdminForm($afile.'.php', $parows, '', 'sl_table_form', 'post', 'post'));
     echo $cont;
     setFoot();
 }
@@ -642,7 +642,7 @@ function partners(): void {
                 $name = _ANONYM;
                 $nick = _ANONYM;
             }
-            $parows .= getAdminTableRow($tpl->getHtmlFrag('admin-shop-partners-row', [
+            $parows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-partners-row', [
                 'actions_html' => adminMenuItems([
                     ad_status($afile.'.php?name=shop&op=partnerset&amp;id='.$paid.$refer, $paactive),
                     adminLinkAction($afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid, _MVIEW, _MVIEW),
@@ -657,9 +657,9 @@ function partners(): void {
                 'site_text' => domain($pawebsite),
             ]));
         }
-        $html = getAdminTable($pahead, $parows);
+        $html = getTplAdminTable($pahead, $parows);
         $html .= setArticleNumbers('pagenum', '', $conf['shop']['anum'], $field, 'id', '_partners', '', $sqlstatus, $conf['shop']['anump']);
-        $cont .= getAdminBox($html);
+        $cont .= getTplBox($html);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -716,9 +716,9 @@ function partneradd(): void {
     $parrows = '';
     if ($paid) {
         $nick = ($nick) ? user_info($nick) : _ANONYM;
-        $parrows .= getAdminFormRow(_NICKNAME.':', $nick);
+        $parrows .= getTplAdminFormRow(_NICKNAME.':', $nick);
     }
-    $uidfield = ($uid == 0) ? getAdminNumberInput($uid, 'uid', 'sl_form', 'placeholder="'._USER_ID.'" required') : getAdminHidden('uid', (string)$uid).$uid;
+    $uidfield = ($uid == 0) ? getTplNumberInput($uid, 'uid', 'sl_form', 'placeholder="'._USER_ID.'" required') : getTplHiddenInput('uid', (string)$uid).$uid;
     $parrows .= $tpl->getHtmlFrag('admin-shop-partneradd-main-rows', [
         'clientadres_label' => _CLIENTADRES.':',
         'clientname_label' => _CLIENTNAME.':',
@@ -752,7 +752,7 @@ function partneradd(): void {
         'activate_label' => _ACTIVATE2,
         'save_html' => ad_save('paid', $paid, 'partnersave', 1),
     ]);
-    $cont .= getAdminBox(getAdminForm($afile.'.php', $parrows));
+    $cont .= getTplBox(getTplAdminForm($afile.'.php', $parrows));
     echo $cont;
     setFoot();
 }
@@ -835,7 +835,7 @@ function partnerinfo(): void {
         while([$cid, $uid, $product, $partner, $proz, $cname, $caddr, $cphone, $cemail, $cwebsite, $cregdate, $cenddate, $cinfo, $cactive, $uid, $nick, $pid, $ptitle, $pprice] = $db->getSqlRow($result)) {
             $partsum = $pprice / 100 * $proz;
             $partsumges += $partsum;
-            $pirows .= getAdminTableRow($tpl->getHtmlFrag('admin-shop-partnerinfo-row', [
+            $pirows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-partnerinfo-row', [
                 'date_text' => date(_TIMESTRING, $cregdate),
                 'id_text' => (string)$cid,
                 'nickname_html' => user_info($nick),
@@ -846,7 +846,7 @@ function partnerinfo(): void {
             ]));
             $a++;
         }
-        $cont .= getAdminBox(getAdminTable($pihead, $pirows));
+        $cont .= getTplBox(getTplAdminTable($pihead, $pirows));
     }
     $shead = $tpl->getHtmlFrag('admin-shop-partnersum-head', [
         'clients_label' => _CLIENTEN,
@@ -856,7 +856,7 @@ function partnerinfo(): void {
         'paypal_label' => _PAYPAL,
         'webmoney_label' => _WEBMONEY,
     ]);
-    $srow = getAdminTableRow($tpl->getHtmlFrag('admin-shop-partnersum-row', [
+    $srow = getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-partnersum-row', [
         'clients_text' => (string)$a,
         'partnerbek_text' => $pabek.' '.$conf['shop']['valute'],
         'partnerges_text' => $partsumges.' '.$conf['shop']['valute'],
@@ -864,7 +864,7 @@ function partnerinfo(): void {
         'paypal_text' => $papaypal,
         'webmoney_text' => $pawebmoney,
     ]));
-    $cont .= getAdminBox(getAdminTable($shead, $srow));
+    $cont .= getTplBox(getTplAdminTable($shead, $srow));
     echo $cont;
     setFoot();
 }
@@ -955,13 +955,13 @@ function export(): void {
         [$pa] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_partners'));
         $export = '';
         if ($pr || $cl || $pa) {
-            $bdopts = ($pr ? getAdminOption('products', _PRODUCTS) : '')
-                .($cl ? getAdminOption('clients', _CLIENTS) : '')
-                .($pa ? getAdminOption('partners', _PARTNERS) : '');
-            $export = getAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-export-rows', [
-                'database_html' => getAdminSelect('bd', $bdopts, 'sl_form'),
+            $bdopts = ($pr ? getTplOption('products', _PRODUCTS) : '')
+                .($cl ? getTplOption('clients', _CLIENTS) : '')
+                .($pa ? getTplOption('partners', _PARTNERS) : '');
+            $export = getTplAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-export-rows', [
+                'database_html' => getTplSelect('bd', $bdopts, 'sl_form'),
                 'database_label' => _DATABASE.':',
-                'hidden_html' => getAdminHidden('name', 'shop').getAdminHidden('id', '1').getAdminHidden('op', 'export'),
+                'hidden_html' => getTplHiddenInput('name', 'shop').getTplHiddenInput('id', '1').getTplHiddenInput('op', 'export'),
                 'submit_label' => _SAVE,
             ]));
         } else {
@@ -975,28 +975,28 @@ function export(): void {
                     $in = ['#(.*?)products\\.csv#', '#(.*?)clients\\.csv#', '#(.*?)partners\\.csv#'];
                     $out = [_PRODUCTS, _CLIENTS, _PARTNERS];
                     $name = preg_replace($in, $out, $entry);
-                    $ocont .= getAdminOption($entry, $name.' - '.$entry);
+                    $ocont .= getTplOption($entry, $name.' - '.$entry);
                 }
             }
         }
         $import = '';
         if ($ocont) {
-            $import = getAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-import-rows', [
-                'file_html' => getAdminSelect('bd', $ocont, 'sl_form'),
+            $import = getTplAdminForm($afile.'.php', $tpl->getHtmlFrag('admin-shop-import-rows', [
+                'file_html' => getTplSelect('bd', $ocont, 'sl_form'),
                 'file_label' => _FILE.':',
-                'hidden_html' => getAdminHidden('name', 'shop').getAdminHidden('id', '2').getAdminHidden('op', 'export'),
+                'hidden_html' => getTplHiddenInput('name', 'shop').getTplHiddenInput('id', '2').getTplHiddenInput('op', 'export'),
                 'submit_label' => _SEND,
             ]));
         } else {
             $import = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
         $content = $tpl->getHtmlFrag('admin-shop-export-tabs', [
-            'export_id' => getAdminTabName('exports', 0, true),
-            'import_id' => getAdminTabName('exports', 1, true),
+            'export_id' => getTplAdminTabName('exports', 0, true),
+            'import_id' => getTplAdminTabName('exports', 1, true),
             'export_html' => $export,
             'import_html' => $import,
         ]).$tpl->getHtmlFrag('admin-shop-export-script', []);
-        $cont .= getAdminBox($content);
+        $cont .= getTplBox($content);
         echo $cont;
         setFoot();
     }
@@ -1064,7 +1064,7 @@ function config(): void {
         'partinfo_label' => _C_29.':',
         'partinfoextra_html' => textarea('4', 'partinfo2', $conf['shop']['partinfo2'], 'shop', '5', _C_30, '1'),
         'partinfoextra_label' => _C_30.':',
-        'partlink_label_html' => getAdminHintLabel(_C_26, _PART_ID),
+        'partlink_label_html' => getTplAdminHintLabel(_C_26, _PART_ID),
         'partlink_value' => (string)$conf['shop']['partlink'],
         'proz_label' => _C_1.':',
         'proz_value' => (string)$conf['shop']['proz'],
@@ -1092,7 +1092,7 @@ function config(): void {
         'viewcat_html' => radio_form($conf['shop']['viewcat'], 'viewcat'),
         'viewcat_label' => _VIEWCAT,
     ]);
-    $cont .= getAdminBox(getAdminForm($afile.'.php', $cfgrows, '', 'sl_table_conf', 'post', 'post'));
+    $cont .= getTplBox(getTplAdminForm($afile.'.php', $cfgrows, '', 'sl_table_conf', 'post', 'post'));
     echo $cont;
     setFoot();
 }

@@ -34,7 +34,7 @@ function auto_links(): void {
                 adminLinkAction($afile.'.php?name=auto_links&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=auto_links&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-auto-links-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-auto-links-list-row', [
                 'actions_html' => $acts,
                 'hits_text' => (string)$hits,
                 'id_text' => (string)$id,
@@ -43,7 +43,7 @@ function auto_links(): void {
                 'siteurl_text' => domain($url),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $conf['auto_links']['anum'], 'name=auto_links&amp;', 'id', '_auto_links', '', '', $conf['auto_links']['anump']);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -79,16 +79,16 @@ function stats(): void {
         $opts = '';
         foreach ([_REF_ID, _REF_URL, _IN_ID, _IN_URL, _NAME_ID, _NAME_REF, _IP_ID, _IP_REF, _TIME_ID, _TIME_REF] as $_k => $_v) {
             $_sort = $_k + 1;
-            $opts .= getAdminOption((string)$_sort, $_v, getVar('post', 'sort', 'num') == $_sort);
+            $opts .= getTplOption((string)$_sort, $_v, getVar('post', 'sort', 'num') == $_sort);
         }
-        $sortSelect = getAdminSelect('sort', $opts);
+        $sortSelect = getTplSelect('sort', $opts);
         $opts = '';
         foreach ([_ASC, _DESC] as $_k => $_v) {
             $_sort = $_k + 1;
-            $opts .= getAdminOption((string)$_sort, $_v, getVar('post', 'order', 'num') == $_sort);
+            $opts .= getTplOption((string)$_sort, $_v, getVar('post', 'order', 'num') == $_sort);
         }
-        $orderSelect = getAdminSelect('order', $opts);
-        $box = getAdminSearchBox($tpl->getHtmlFrag('admin-auto-links-stats-search', [
+        $orderSelect = getTplSelect('order', $opts);
+        $box = getTplAdminSearchBox($tpl->getHtmlFrag('admin-auto-links-stats-search', [
             'id_value' => (string)$_id,
             'ok_label' => _OK,
             'order_html' => $orderSelect,
@@ -121,7 +121,7 @@ function stats(): void {
         for ($i = $offset; $i < $tnum; $i++) {
             if (isset($list[$i])) {
                 $name = ($list[$i][1]) ? user_info($list[$i][2]) : $list[$i][2];
-                $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-auto-links-stats-row', [
+                $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-auto-links-stats-row', [
                     'hits_text' => (string)$list[$i][0],
                     'in_url_text' => domain($list[$i][5], 15),
                     'ip_html' => user_geo_ip($list[$i][3], 4),
@@ -130,7 +130,7 @@ function stats(): void {
                 ]));
             }
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $pages = ceil($a / $conf['auto_links']['anum']);
         $cont .= setPageNumbers('pagenum', '', $a, $pages, $conf['auto_links']['anum'], 'name=auto_links&amp;op=stats&amp;id='.$id.'&amp;sort='.$sort.'&amp;order='.$order.'&amp;', $conf['auto_links']['anump']);
     } else {
@@ -179,7 +179,7 @@ function add(): void {
         'site_label' => _A_LINKS_L.':',
         'site_value' => $site,
     ]);
-    $cont .= getAdminForm($afile.'.php?name=auto_links', $rows);
+    $cont .= getTplAdminForm($afile.'.php?name=auto_links', $rows);
     echo $cont;
     setFoot();
 }
@@ -249,10 +249,10 @@ function config(): void {
     $opts = '';
     foreach (scandir($path) as $entry) {
         if (preg_match('/(\.gif|\.png|\.jpg|\.jpeg)$/is', $entry)) {
-            $opts .= getAdminOption($path.$entry, $entry, $conf['auto_links']['img'] == $entry);
+            $opts .= getTplOption($path.$entry, $entry, $conf['auto_links']['img'] == $entry);
         }
     }
-    $hide = getAdminHidden('op', 'configsave');
+    $hide = getTplHiddenInput('op', 'configsave');
     $rows = $tpl->getHtmlFrag('admin-auto-links-config-rows', [
         'addmail_html' => radio_form($conf['auto_links']['addmail'], 'addmail'),
         'addmail_label' => _ADDAMAIL,
@@ -260,7 +260,7 @@ function config(): void {
         'anum_value' => (string)$conf['auto_links']['anum'],
         'anump_label' => _C_36.':',
         'anump_value' => (string)$conf['auto_links']['anump'],
-        'img_html' => getAdminSelect('img', $opts, 'sl_conf', 'id="img_replace"'),
+        'img_html' => getTplSelect('img', $opts, 'sl_conf', 'id="img_replace"'),
         'img_label' => _A_1.':',
         'limit_label' => _A_5.':',
         'limit_value' => (string)$conf['auto_links']['limit'],
@@ -274,8 +274,8 @@ function config(): void {
         'strip_label' => _A_4.':',
         'strip_value' => (string)$conf['auto_links']['strip'],
     ]);
-    $cont .= getAdminForm($afile.'.php?name=auto_links', $rows, $hide, 'sl_table_conf', 'post', 'post');
-    echo getAdminBox($cont);
+    $cont .= getTplAdminForm($afile.'.php?name=auto_links', $rows, $hide, 'sl_table_conf', 'post', 'post');
+    echo getTplBox($cont);
     setFoot();
 }
 

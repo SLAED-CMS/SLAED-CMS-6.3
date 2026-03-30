@@ -42,7 +42,7 @@ function voting(): void {
             $langtext = '';
             if ($conf['multilingual'] == 1) $langtext = getLangName((!$lang) ? _ALL : $lang);
             $mod = ($modul) ? getModuleName($modul) : _NONE;
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-voting-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-voting-list-row', [
                 'actions_html' => $acts,
                 'id_text' => (string)$id,
                 'lang_text' => $langtext,
@@ -52,7 +52,7 @@ function voting(): void {
                 'title_html' => adminTitleTipLabel(_CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type, $title, cutstr($title, 60)),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $conf['voting']['anum'], 'name=voting&amp;', 'id', '_voting', '', '', $conf['voting']['anump']);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -87,12 +87,12 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($id) $cont .= $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($id, 'voting')]);
-    $hide = getAdminHidden('name', 'voting');
+    $hide = getTplHiddenInput('name', 'voting');
     $mname = ['news', 'shop'];
-    $content = getAdminOption('', _NO);
+    $content = getTplOption('', _NO);
     foreach ($mname as $val) {
         if ($val != '') {
-            $content .= getAdminOption($val, getModuleName($val), $modul == $val);
+            $content .= getTplOption($val, getModuleName($val), $modul == $val);
         }
     }
     $quest = '';
@@ -115,12 +115,12 @@ function add(): void {
         ]);
         $i++;
     }
-    $stat = getAdminSelect('status',
-        getAdminOption('1', _VCLOSED, $status == '1') .
-        getAdminOption('0', _VDEACT, $status == '0'));
-    $type = getAdminSelect('typ',
-        getAdminOption('1', _VOPEN, $typ == '1') .
-        getAdminOption('0', _VCLOSE, $typ == '0'));
+    $stat = getTplSelect('status',
+        getTplOption('1', _VCLOSED, $status == '1') .
+        getTplOption('0', _VDEACT, $status == '0'));
+    $type = getTplSelect('typ',
+        getTplOption('1', _VOPEN, $typ == '1') .
+        getTplOption('0', _VCLOSE, $typ == '0'));
     $rows = $tpl->getHtmlFrag('admin-voting-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
         'acomm_label' => _COMMENTS.':',
@@ -129,9 +129,9 @@ function add(): void {
         'date_label' => _CHNGSTORY.':',
         'enddate_html' => datetime(1, 'enddate', $enddate, 16, 'sl_form'),
         'enddate_label' => _ENDDATE.':',
-        'lang_html' => $conf['multilingual'] == 1 ? getAdminSelect('lang', language($lang), 'sl_form') : '',
+        'lang_html' => $conf['multilingual'] == 1 ? getTplSelect('lang', language($lang), 'sl_form') : '',
         'lang_label' => _LANGUAGE.':',
-        'modul_html' => getAdminSelect('modul', $content, 'sl_form'),
+        'modul_html' => getTplSelect('modul', $content, 'sl_form'),
         'modul_label' => _MODUL.':',
         'multi_html' => radio_form($multi, 'multi'),
         'multi_label' => _MULTI,
@@ -144,7 +144,7 @@ function add(): void {
         'type_html' => $type,
         'type_label' => _TYPE.':',
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -207,13 +207,13 @@ function config(): void {
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $bval = (string)($conf['voting']['block'] ?? '0');
-    $block_sel = getAdminSelect('block',
-        getAdminOption('0', _VLASTACT, $bval === '0') .
-        getAdminOption('1', _VLASTCLO, $bval === '1') .
-        getAdminOption('2', _VRANACT, $bval === '2') .
-        getAdminOption('3', _VRANCLO, $bval === '3'),
+    $block_sel = getTplSelect('block',
+        getTplOption('0', _VLASTACT, $bval === '0') .
+        getTplOption('1', _VLASTCLO, $bval === '1') .
+        getTplOption('2', _VRANACT, $bval === '2') .
+        getTplOption('3', _VRANCLO, $bval === '3'),
         'sl_conf');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'voting',
         'op' => 'configsave',

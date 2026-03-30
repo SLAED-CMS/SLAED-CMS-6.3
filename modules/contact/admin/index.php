@@ -18,8 +18,8 @@ function contact(): void {
         'info_label' => _CONTACTINFO.':',
         'save_label' => _SAVECHANGES,
     ]);
-    $hide = getAdminHidden('name', 'contact').getAdminHidden('op', 'save');
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $hide = getTplHiddenInput('name', 'contact').getTplHiddenInput('op', 'save');
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }

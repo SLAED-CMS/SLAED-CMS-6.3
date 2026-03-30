@@ -38,7 +38,7 @@ function content(): void {
                 adminLinkAction($afile.'.php?name=content&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=content&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-content-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-content-list-row', [
                 'actions_html' => $acts,
                 'date_text' => format_time($time, _TIMESTRING),
                 'id_text' => (string)$id,
@@ -47,7 +47,7 @@ function content(): void {
                 'title_html' => adminTitleTipLabel(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.'<br>'._ORTYPEURL.': '.$conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id, $title, cutstr($title, 50)),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, 'name=content&amp;', 'id', '_content', '', '', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -77,24 +77,24 @@ function add(): void {
     $fields = ($field) ? '<br><br>'.fields_out($field, 'content') : '';
     if ($body) $cont .= preview($title, $body, '', $field, 'content');
     $rows = '';
-    $rows .= getAdminFormRow(_TITLE.':', getAdminTextInput('title', $title, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'));
-    $rows .= getAdminFormRow(getAdminHintLabel(_RSSFILE, _RSSINFO), getAdminTextInput('url', $url, 'sl_form', 'maxlength="200" placeholder="'._RSSFILE.'"'));
-    $opts = getAdminOption('1800', '30 '._MIN.'.', $refresh == '1800')
-        .getAdminOption('3600', '1 '._HOUR, $refresh == '3600' || !$refresh)
-        .getAdminOption('18000', '5 '._HOUR.'.', $refresh == '18000')
-        .getAdminOption('36000', '10 '._HOUR.'.', $refresh == '36000')
-        .getAdminOption('86400', '24 '._HOUR, $refresh == '86400');
-    $opts = getAdminSelect('refresh', $opts, 'sl_form');
+    $rows .= getTplAdminFormRow(_TITLE.':', getTplTextInput('title', $title, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_RSSFILE, _RSSINFO), getTplTextInput('url', $url, 'sl_form', 'maxlength="200" placeholder="'._RSSFILE.'"'));
+    $opts = getTplOption('1800', '30 '._MIN.'.', $refresh == '1800')
+        .getTplOption('3600', '1 '._HOUR, $refresh == '3600' || !$refresh)
+        .getTplOption('18000', '5 '._HOUR.'.', $refresh == '18000')
+        .getTplOption('36000', '10 '._HOUR.'.', $refresh == '36000')
+        .getTplOption('86400', '24 '._HOUR, $refresh == '86400');
+    $opts = getTplSelect('refresh', $opts, 'sl_form');
     $rows .= $tpl->getHtmlFrag('admin-content-add-rows', [
         'body_html' => textarea('1', 'body', $body.$fields, 'content', '25', _TEXT, '0'),
         'date_html' => datetime(1, 'time', $time, 16, 'sl_form'),
         'fields_html' => fields_in($field, 'content'),
         'refresh_html' => $opts,
-        'refresh_label_html' => getAdminHintLabel(_REFRESHTIME, _REFINFO),
+        'refresh_label_html' => getTplAdminHintLabel(_REFRESHTIME, _REFINFO),
         'save_html' => ad_save('cid', $cid, 'save'),
     ]);
-    $hide = getAdminHidden('name', 'content');
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $hide = getTplHiddenInput('name', 'content');
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -139,7 +139,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'content',
         'op' => 'configsave',

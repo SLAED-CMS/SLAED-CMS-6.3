@@ -38,7 +38,7 @@ function order(): void {
                 adminLinkAction($afile.'.php?name=order&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=order&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-order-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-order-list-row', [
                 'actions_html' => $acts,
                 'date_text' => format_time($date, _TIMESTRING),
                 'email_html' => adminTitleTip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
@@ -48,7 +48,7 @@ function order(): void {
             ]));
             $r--;
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setPageNumbers('pagenum', '', $numstories, $numpages, $anum, 'name=order&amp;', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -76,7 +76,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
     if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
-    $hide = getAdminHidden('name', 'order');
+    $hide = getTplHiddenInput('name', 'order');
     $rows = $tpl->getHtmlFrag('admin-order-add-rows', [
         'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
         'date_label' => _CHNGSTORY.':',
@@ -88,7 +88,7 @@ function add(): void {
         'note_value' => $note,
         'save_html' => ad_save('mid', $mid, 'save'),
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -147,7 +147,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'order',
         'op' => 'configsave',

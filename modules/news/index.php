@@ -113,7 +113,7 @@ function news(): void {
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             if (($i - 1) % $conf['news']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
             $cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
-            $cont .= getContentCard([
+            $cont .= getTplContentCard([
                 'id' => $id,
                 'title_href' => $thref,
                 'title_attr' => $stitle,
@@ -297,7 +297,7 @@ function view(): void {
         $favorites = getFavoriteButton($id, $conf['name']);
         $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVotingView($vote, $conf['name']).'</div><hr>' : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
-        $cont .= getContentView([
+        $cont .= getTplContentView([
             'is_moder' => is_moder($conf['name']),
             'id' => $id,
             'title_href' => getSeoUrl([
@@ -471,7 +471,7 @@ function send(): void {
             $puname = (is_user()) ? $user[1] : $postname;
             addAdminMail($conf['news']['addmail'], $conf['name'], $puname, _NEWS);
             setHead(['title' => _ADD]);
-            $meta = getMetaRefresh('index.php?name='.$conf['name']);
+            $meta = getTplMetaRefresh('index.php?name='.$conf['name']);
             echo setModuleNavi(['title' => _ADD, 'htitle' => _NEWS]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SUBTEXT, 'meta' => $meta]);
             setFoot();
         } else {

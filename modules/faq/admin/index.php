@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('faq')) die('Illegal file access')
 
 function faq(): void {
     global $db, $afile, $conf, $tpl;
-        setHead();
+    setHead();
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['faq']['anum'] ?? 25;
     $anump = $conf['faq']['anump'] ?? 10;
@@ -51,7 +51,7 @@ function faq(): void {
                 adminLinkAction($afile.'.php?name=faq&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=faq&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
                 'actions_html' => $acts,
                 'checkbox_html' => '',
                 'id_text' => (string)$id,
@@ -60,7 +60,7 @@ function faq(): void {
                 'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
             ]));
         }
-        $cont .= getAdminTable($head, $rows);
+        $cont .= getTplAdminTable($head, $rows);
         $cont .= setArticleNumbers('pagenum', '', $anum, $field, 'id', '_faq', '', 'status = \''.$status.'\'', $anump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -92,7 +92,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     if ($hometext) $cont .= preview($subject, $hometext, '', '', 'faq');
-    $hide = getAdminHidden('name', 'faq');
+    $hide = getTplHiddenInput('name', 'faq');
     $rows = $tpl->getHtmlFrag('admin-faq-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
         'acomm_label' => _COMMENTS.':',
@@ -110,7 +110,7 @@ function add(): void {
         'time_html' => datetime(1, 'time', $time, 16, 'sl_form'),
         'time_label' => _CHNGSTORY.':',
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -164,7 +164,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=faq', 'name=faq&amp;op=add', 'name=faq&amp;status=1', 'name=faq&amp;op=config', 'name=faq&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/faq.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'faq',
         'op' => 'configsave',

@@ -26,7 +26,7 @@ function news(): void {
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $hide = getAdminHidden('name', 'news').getAdminHidden('op', 'actions').getAdminHidden('refer', '1');
+        $hide = getTplHiddenInput('name', 'news').getTplHiddenInput('op', 'actions').getTplHiddenInput('refer', '1');
         $head = $tpl->getHtmlFrag('admin-article-list-head', [
             'checkall_html' => '<th data-sort-method="none"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th>',
             'functions_label' => _FUNCTIONS,
@@ -54,7 +54,7 @@ function news(): void {
                 adminLinkAction($afile.'.php?name=news&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 adminDeleteAction($afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
+            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
                 'actions_html' => $acts,
                 'checkbox_html' => '<td><input type="checkbox" name="id[]" class="sl_check" value="'.$id.'"></td>',
                 'id_text' => (string)$id,
@@ -66,7 +66,7 @@ function news(): void {
         $selms = _CHECKOP.': '.edit_list('news', 'typ', '').' <input type="submit" value="'._OK.'" class="sl_but_blue">';
         $numpt = setArticleNumbers('pagenum', '', $anum, $field, 'id', '_news', '', 'status = \''.$status.'\'', $anump);
         $bottom = $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]);
-        $cont .= getAdminListForm(getAdminTable($head, $rows), $bottom, $hide);
+        $cont .= getTplAdminListForm(getTplAdminTable($head, $rows), $bottom, $hide);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }
@@ -115,7 +115,7 @@ function add(): void {
     $homepre = ($vote) ? '<div id="repnews">'.getVotingView($vote, 'news').'</div><hr>'.$hometext : $hometext;
     if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
-    $hide = getAdminHidden('name', 'news');
+    $hide = getTplHiddenInput('name', 'news');
     $rows = '';
     $asso = '';
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parent, title');
@@ -142,7 +142,7 @@ function add(): void {
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
         'acomm_label' => _COMMENTS.':',
         'associated_html' => $asso,
-        'associated_label_html' => getAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI),
+        'associated_label_html' => getTplAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI),
         'body_html' => textarea('2', 'bodytext', $bodytext, 'news', '15', _ENDTEXT, '0'),
         'body_label' => _ENDTEXT.':',
         'cat_html' => getcat('news', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
@@ -164,7 +164,7 @@ function add(): void {
         'vote_html' => add_voting('news', 'vote', $vote, 'sl_form'),
         'vote_label' => _VOTING.':',
     ]);
-    $cont .= getAdminForm($afile.'.php', $rows, $hide);
+    $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();
 }
@@ -255,7 +255,7 @@ function config(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
-    $cont .= getAdminBox($tpl->getHtmlFrag('form-conf', [
+    $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
         'module' => 'news',
         'op' => 'configsave',
