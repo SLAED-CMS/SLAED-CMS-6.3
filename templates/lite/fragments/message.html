@@ -1,0 +1,9 @@
+{% if text %}
+{% if is_error %}
+<div class="view-alert view-frag-message alert alert-danger">{{ text }}</div>
+{% elseif is_warn %}
+<div class="view-alert view-frag-message alert alert-warning">{{ text }}</div>
+{% else %}
+<div class="view-alert view-frag-message alert alert-info">{{ text }}</div>
+{% endif %}
+{% endif %}
