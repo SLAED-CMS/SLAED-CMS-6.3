@@ -78,7 +78,7 @@ function media(): void {
             $post = ($conf['media']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['media']['date']) ? format_time($time) : '';
             $links = (url_types($links)) ? $tpl->getHtmlFrag('hit-badge', ['title' => _MDOWN.': '.url_types($links), 'text' => url_types($links), 'cls' => 'sl_down']) : '';
-            $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
+            $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$mtitle.'&quot;?');
             $cont .= getContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $mtitle, 'title_text' => $mtitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => cutstr(filterReplaceText(filterMarkdown($description, $conf['name'], false), $conf['name']), 800), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['media']['read']) ? $hits : '', 'reads_label' => _READS, 'hits' => $links, 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
         }
@@ -166,9 +166,9 @@ function view(): void {
         $post = ($post) ? $tpl->getHtmlFrag('media-post-badge', ['title' => _POSTEDBY, 'text' => $post]) : '';
         $date = ($conf['media']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($date)), 'title' => _CHNGSTORY, 'text' => format_time($date)]) : '';
         $reads = ($conf['media']['read']) ? $tpl->getHtmlFrag('reads-badge', ['title' => _READS, 'text' => $hits]) : '';
-        $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
+        $rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
         $admin = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('admin-menu', ['editor_text' => _EDITOR, 'edit_href' => $afile.'.php?op=media_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=media_delete&amp;id='.$id, 'delete_ask' => _DELETE.' &quot;'.$ptitle.'&quot;?', 'delete_text' => _ONDELETE]) : '';
-        $favorites = getFavorBtn($id, $conf['name']);
+        $favorites = getFavoriteButton($id, $conf['name']);
         $goback = $tpl->getHtmlFrag('back-button', ['title' => _BACK, 'label' => _BACK]);
         $broc = ($conf['media']['broc'] == 1 && $status != '2') ? $tpl->getHtmlFrag('action-link', ['href' => getSeoUrl(['name' => $conf['name'], 'op' => 'broken', 'id' => $id]), 'title' => _BROCMEDIA, 'label' => _COMPLAINT, 'class' => 'sl_but_blue']) : '';
         

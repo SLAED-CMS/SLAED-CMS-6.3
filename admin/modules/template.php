@@ -142,12 +142,10 @@ function stylesave(): void {
 }
 
 function info(): void {
-    setHead();
     global $conf;
     $templ = getVar('get', 'templ', 'var', $conf['theme']);
     $cont = setAdminNavi(['ops' => ['name=template&amp;templ='.$templ, 'name=template&amp;op=style&amp;templ='.$templ, 'name=template&amp;op=info'], 'tabs' => [_TEMPLATES, _STYLES, _INFO], 'tab' => 2, 'sub' => getTemplateSearch($templ)]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -157,4 +155,3 @@ switch ($op) {
     case 'stylesave': stylesave(); break;
     case 'info': info(); break;
 }
-

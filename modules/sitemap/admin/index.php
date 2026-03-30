@@ -189,10 +189,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

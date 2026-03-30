@@ -60,10 +60,8 @@ function robots(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => 4]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 function save(): void {
@@ -85,4 +83,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-

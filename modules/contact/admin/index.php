@@ -35,10 +35,8 @@ function save(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO], 'tab' => 1]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -46,4 +44,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-

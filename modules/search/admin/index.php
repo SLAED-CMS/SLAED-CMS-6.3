@@ -656,10 +656,8 @@ function drop(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = getSearchnavi('', 4);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function privat(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.getAdminPlaceholderBox('repajax_privat', ajax_privat(1));
+    echo $cont.getAdminPlaceholderBox('repadminPrivateList', getAdminPrivateList(1));
     setFoot();
 }
 
@@ -79,10 +79,8 @@ function save(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -91,4 +89,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-

@@ -118,7 +118,7 @@ function add(): void {
         'email_value' => $email,
         'ihome_html' => radio_form($ihome, 'ihome'),
         'ihome_label' => _PUBHOME,
-        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
         'postname_label' => _POSTEDBY.':',
         'save_html' => ad_save('fid', $fid, 'save'),
         'site_label_html' => $link.':',
@@ -284,10 +284,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 5]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -300,7 +298,4 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-
-
 

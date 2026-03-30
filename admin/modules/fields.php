@@ -38,7 +38,7 @@ function fields(): void {
                 'display_attr' => (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '',
                 'field_html' => $field,
                 'field2_html' => $field2,
-                'hr_html' => ($c == '0') ? '' : '<hr>',
+                'hr_html' => ($c == '0') ? '' : getAdminHrLine(),
                 'next_block_id' => 'fi'.$k.$b,
                 'content_placeholder' => _CONTENT,
                 'content_label' => _CONTENT.':',
@@ -54,13 +54,13 @@ function fields(): void {
         }
         $content .= $tpl->getHtmlFrag('admin-fields-tab-content', [
             'items_html' => $tabcontent,
-            'tab_id' => 'tabc'.$k,
+            'tab_id' => getAdminTabName('fields', $k),
         ]);
         $k++;
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _FIELDINFO]);
     $fieldv = getAdminConfSave($content, 'fields', 'save')
-       .$tpl->getHtmlFrag('admin-fields-tabs-script', ['group_id' => 'fields']);
+       .getAdminTabsSetup('fields');
     echo $cont.getAdminBox($fieldv);
     setFoot();
 }
@@ -88,10 +88,8 @@ function save(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'tab' => 6]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

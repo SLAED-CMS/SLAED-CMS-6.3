@@ -28,7 +28,7 @@ function news(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $hide = getAdminHidden('name', 'news').getAdminHidden('op', 'actions').getAdminHidden('refer', '1');
         $head = $tpl->getHtmlFrag('admin-article-list-head', [
-            'checkall_html' => '<th class="{sorter: false}"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th>',
+            'checkall_html' => '<th data-sort-method="none"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th>',
             'functions_label' => _FUNCTIONS,
             'id_label' => _ID,
             'postedby_label' => _POSTEDBY,
@@ -112,7 +112,7 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
-    $homepre = ($vote) ? '<div id="repnews">'.getVoting($vote, 'news').'</div><hr>'.$hometext : $hometext;
+    $homepre = ($vote) ? '<div id="repnews">'.getVotingView($vote, 'news').'</div><hr>'.$hometext : $hometext;
     if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     $hide = getAdminHidden('name', 'news');
@@ -154,7 +154,7 @@ function add(): void {
         'hometext_label' => _TEXT.':',
         'ihome_html' => radio_form($ihome, 'ihome'),
         'ihome_label' => _PUBHOME,
-        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
         'postname_label' => _POSTEDBY.':',
         'save_html' => ad_save('id', $id, 'save'),
         'subject_label' => _TITLE.':',
@@ -360,10 +360,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -375,4 +373,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-

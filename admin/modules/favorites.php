@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function favorites(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    echo $cont.getAdminPlaceholderBox('repfav_aliste', fav_aliste(1));
+    echo $cont.getAdminPlaceholderBox('repadminFavoriteList', getAdminFavoriteList(1));
     setFoot();
 }
 
@@ -58,10 +58,8 @@ function save(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -70,4 +68,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-

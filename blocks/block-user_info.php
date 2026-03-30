@@ -57,4 +57,4 @@ if (is_user()) {
 	$content .= ($conf['users']['network']) ? '<tr><td colspan="2" class="sl_center">'._LOGINNETWORK.'</td></tr><tr><td colspan="2" class="sl_center">'.getNetworks().'</td></tr>' : '';
 	$content .= '</table></form>';
 }
-if ($conf['session']) $content .= '<div id="repsinfo">'.user_sinfo(1).'</div>';
+if ($conf['session']) $content .= '<div id="repsinfo">'.getUserSessionInfo(1).'</div>';

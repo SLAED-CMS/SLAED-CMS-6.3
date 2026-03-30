@@ -73,7 +73,7 @@ function shop(): void {
 	$offset = intval($offset);
 	$result = $db->getSqlQuery('SELECT p.id, p.cid, p.time, p.title, p.intro, p.body, p.price, p.acomm, p.comments, p.counter, p.votes, p.tvotes, c.title, c.intro, c.img FROM '.PREFIX_DB.'_products AS p LEFT JOIN '.PREFIX_DB.'_categories AS c ON (p.cid = c.id) '.$order.' LIMIT '.$offset.', '.$unum, $params);
 	if ($db->getSqlRowCount($result) > 0) {
-		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => show_kasse()]);
+		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => getCartSummary()]);
 		$width = 100 / $conf['shop']['bascol'];
 		$i = 1;
 		$cont .= $tpl->getHtmlFrag('grid-table', ['open' => true]);
@@ -84,7 +84,7 @@ function shop(): void {
 			$cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
 			$post = '';
 			$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
-			$rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
+			$rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
 			$prtitle = _PREIS;
 			$price = $tpl->getHtmlFrag('shop-price-badge', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute']]);
 			$opreis = '';
@@ -183,15 +183,15 @@ function view(): void {
 		$defis = $conf['shop']['defis'] ?? ($conf['defis'] ?? '-');
 		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $defis, _SHOP)]);
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
-		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => show_kasse()]);
+		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => getCartSummary()]);
 		$text = ($bodytext) ? $text.'<br><br>'.$bodytext : $text;
 		$cdesc = $cdesc ?: $ctitle;
 		$cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
 		$post = '';
 		$date = ($conf['shop']['date']) ? $tpl->getHtmlFrag('date-badge', ['iso' => date('c', strtotime($time)), 'title' => _CHNGSTORY, 'text' => format_time($time)]) : '';
-		$rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
-		$favorites = getFavorBtn($id, $conf['name']);
-		$voting = ($vote) ? $tpl->getHtmlFrag('shop-voting-box', ['id' => 'rep'.$conf['name'], 'content' => getVoting($vote, $conf['name'])]) : '';
+		$rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
+		$favorites = getFavoriteButton($id, $conf['name']);
+		$voting = ($vote) ? $tpl->getHtmlFrag('shop-voting-box', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($vote, $conf['name'])]) : '';
 		$prtitle = _PREIS;
 		$price = $tpl->getHtmlFrag('shop-price-badge', ['title' => $prtitle, 'text' => $prtitle.': '.$pprice.' '.$conf['shop']['valute']]);
 		$opreis = '';
@@ -256,7 +256,7 @@ function kasse(): void {
 	setHead(['title' => _C_TITLE]);
 	$cont = setModuleNavi(['title' => _C_TITLE] + SHOP_NAVI);
 	if (!$opi && $cookies) {
-		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => show_kasse()]);
+		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => getCartSummary()]);
 		$cont .= $tpl->getHtmlFrag('title', ['title' => _C_TITLE]).$form;
 	} elseif ($opi && $cookies) {
 		$stop = [];
@@ -324,7 +324,7 @@ function kasse(): void {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => filterReplaceText(filterMarkdown($conf['shop']['sende'], $conf['name'], false), $conf['name'])]);
 		} else {
 			$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-			$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => show_kasse()]);
+			$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => false, 'content' => getCartSummary()]);
 			$cont .= $form;
 		}
 	} else {

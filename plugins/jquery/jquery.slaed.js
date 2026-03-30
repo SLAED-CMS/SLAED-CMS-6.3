@@ -4,7 +4,89 @@ $(document).ready(function() {
     $('.screens').fancybox();
     $('.site-link').fancybox();
     /* Table sorter */
-    $('.sl_table_list_sort').tablesorter();
+    setTableSort(document);
+});
+
+if (typeof Tablesort !== 'undefined' && typeof Tablesort.extend === 'function') {
+    Tablesort.extend('slaedNumber', function(item) {
+        return /^[-+]?[\d\s.,]+(?:\s*[%A-Za-zА-Яа-я]+)?$/.test(item.trim()) && /\d/.test(item);
+    }, function(a, b) {
+        return getTableNumber(b) - getTableNumber(a);
+    });
+
+    Tablesort.extend('slaedDate', function(item) {
+        return /^\d{2}\.\d{2}\.\d{4}(?:\s+\d{2}:\d{2}(?::\d{2})?)?$/.test(item.trim());
+    }, function(a, b) {
+        return getTableDate(b) - getTableDate(a);
+    });
+}
+
+function getTableNumber(text) {
+    var item = (text || '').replace(/<[^>]*>/g, '').replace(/\s+/g, '').replace(/,/g, '.');
+    var val = item.match(/[-+]?\d+(?:\.\d+)?/);
+    return val ? parseFloat(val[0]) : 0;
+}
+
+function getTableDate(text) {
+    var item = (text || '').trim();
+    var val = item.match(/^(\d{2})\.(\d{2})\.(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (!val) return 0;
+    var sec = val[6] ? parseInt(val[6], 10) : 0;
+    return new Date(
+        parseInt(val[3], 10),
+        parseInt(val[2], 10) - 1,
+        parseInt(val[1], 10),
+        parseInt(val[4] || '0', 10),
+        parseInt(val[5] || '0', 10),
+        sec
+    ).getTime();
+}
+
+function setTableSort(node) {
+    var list = [];
+    var root = (node && node.nodeType) ? node : document;
+    var tabs = root.querySelectorAll ? root.querySelectorAll('.sl_table_list_sort') : [];
+    if (root.nodeType == 1 && root.className && root.className.indexOf('sl_table_list_sort') != -1) {
+        list.push(root);
+    }
+    for (var i = 0; i < tabs.length; i++) {
+        list.push(tabs[i]);
+    }
+    for (var i = 0; i < list.length; i++) {
+        var tabl = list[i];
+        if (!tabl.tHead || !tabl.tBodies.length) continue;
+        if (tabl.getAttribute('data-sort-ready') != '1') {
+            new Tablesort(tabl);
+            tabl.addEventListener('afterSort', function(event) {
+                setTableSortState(event.currentTarget);
+            });
+            tabl.setAttribute('data-sort-ready', '1');
+        }
+        setTableSortState(tabl);
+    }
+}
+
+function setTableSortState(tabl) {
+    var head = tabl.tHead ? tabl.tHead.rows : [];
+    for (var i = 0; i < head.length; i++) {
+        for (var j = 0; j < head[i].cells.length; j++) {
+            var cell = head[i].cells[j];
+            cell.classList.remove('sl_sort', 'sl_sort_asc', 'sl_sort_desc');
+            if (cell.getAttribute('data-sort-method') == 'none') continue;
+            cell.classList.add('sl_sort');
+            if (cell.getAttribute('aria-sort') == 'ascending') {
+                cell.classList.remove('sl_sort');
+                cell.classList.add('sl_sort_asc');
+            } else if (cell.getAttribute('aria-sort') == 'descending') {
+                cell.classList.remove('sl_sort');
+                cell.classList.add('sl_sort_desc');
+            }
+        }
+    }
+}
+
+document.addEventListener('htmx:afterSwap', function(event) {
+    setTableSort(event.target);
 });
 
 /* jQuery image replace */
@@ -126,55 +208,6 @@ function CheckBox(id, clas) {
         $(clas).prop('checked', true);
     } else {
         $(clas).prop('checked', false);
-    }
-}
-
-/* jQuery AJAX loading */
-function AjaxLoad(typ, ld, obj, adata, acheck) {
-    if (typ == 'POST') {
-        var form = $('#form' + obj)[0];
-        var fdata = $(form).serialize();
-        if (acheck != '') {
-            var info = '';
-            var nfound = 0;
-            var elements = fdata.split('&');
-            for (i = 0; i < elements.length; i++) {
-                var svars = elements[i].split('=');
-                for (var x in acheck) {
-                    if (svars[0] == x && svars[1] != '') {
-                        info = '';
-                        nfound = 1;
-                        break;
-                    } else {
-                        info = acheck[x];
-                    }
-                }
-            }
-            if (info != '' && nfound != 1) {
-                alert (info);
-                return;
-            }
-        }
-        var adata = (adata) ? adata + '&' + fdata : fdata;
-    } else if (typ == 'GET') {
-        var adata = adata;
-    }
-    if (ld == '1') {
-        $('#rep' + obj).html('<span class="sl_loading"></span>');
-    }
-    if (typ == 'POST' || typ == 'GET') {
-        $.ajax({
-            type: typ,
-            url: 'index.php',
-            data: adata,
-            cache: false,
-            success: function(data) {
-                $('#rep' + obj).fadeOut(250, function() {
-                    $(this).html(data);
-                    $(this).fadeIn(250);
-                });
-            }
-        });
     }
 }
 

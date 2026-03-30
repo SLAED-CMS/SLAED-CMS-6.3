@@ -13,7 +13,7 @@ function categories(): void {
     $modlink = '&amp;modul='.$modul;
     setHead();
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'sub' => getCategoriesSearch($modul)]);
-    echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _INFOCATDEL]).getAdminPlaceholderBox('repajax_cat', ajax_cat($modul, 1));
+    echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _INFOCATDEL]).getAdminPlaceholderBox('repajax_cat', getAdminCategoryList($modul, 1));
     setFoot();
 }
 
@@ -62,10 +62,10 @@ function add(): void {
     $rows2 .= getCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', '', 2));
     $hide = getAdminHidden('name', 'categories').getAdminHidden('op', 'addsave');
     $formv = getCatForm('post',
-        getCatTab('tabcs0', $rows0)
-        .getCatTab('tabcs1', $rows1)
-        .getCatTab('tabcs2', $rows2)
-        .getCatTabScript('adds')
+        getCatTab(getAdminTabName('adds', 0, true), $rows0)
+        .getCatTab(getAdminTabName('adds', 1, true), $rows1)
+        .getCatTab(getAdminTabName('adds', 2, true), $rows2)
+        .getAdminTabsSetup('adds')
         .getCatSubmitRow($hide, _ADD)
     );
     echo $cont.getAdminBox($formv);
@@ -108,10 +108,10 @@ function subadd(): void {
         $rows2 .= getCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', '', 2));
         $hide = getAdminHidden('name', 'categories').getAdminHidden('op', 'addsave');
         $formv = getCatForm('post2',
-            getCatTab('tabcs0', $rows0)
-            .getCatTab('tabcs1', $rows1)
-            .getCatTab('tabcs2', $rows2)
-            .getCatTabScript('subadds')
+            getCatTab(getAdminTabName('subadds', 0, true), $rows0)
+            .getCatTab(getAdminTabName('subadds', 1, true), $rows1)
+            .getCatTab(getAdminTabName('subadds', 2, true), $rows2)
+            .getAdminTabsSetup('subadds')
             .getCatSubmitRow($hide, _ADD)
         );
         $cont .= getAdminBox($formv);
@@ -184,10 +184,10 @@ function edit(): void {
     $rows2 .= getCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', $pmod, 2));
     $hide = getAdminHidden('id', (string)$cid).getAdminHidden('name', 'categories').getAdminHidden('op', 'save');
     $formv = getCatForm('post',
-        getCatTab('tabcs0', $rows0)
-        .getCatTab('tabcs1', $rows1)
-        .getCatTab('tabcs2', $rows2)
-        .getCatTabScript('edits')
+        getCatTab(getAdminTabName('edits', 0, true), $rows0)
+        .getCatTab(getAdminTabName('edits', 1, true), $rows1)
+        .getCatTab(getAdminTabName('edits', 2, true), $rows2)
+        .getAdminTabsSetup('edits')
         .getCatSubmitRow($hide, _SAVECHANGES)
     );
     echo $cont.getAdminBox($formv);
@@ -270,10 +270,8 @@ function delete(): void {
 function info(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 5, 'sub' => getCategoriesSearch($modul)]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -288,4 +286,3 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-

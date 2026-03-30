@@ -76,7 +76,7 @@ function pages(): void {
 			$cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
 			$post = ($conf['pages']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
 			$date = ($conf['pages']['date']) ? format_time($time) : '';
-			$rating = ajax_rating(0, $id, $conf['name'], $ratings, $score, '');
+			$rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
 			$ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
 			$cont .= getContentCard(['id' => $id, 'title_href' => $thref, 'title_attr' => $stitle, 'title_text' => $stitle, 'title_new' => new_graphic($time), 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']), 'read_href' => $thref, 'read_text' => _READMORE, 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['pages']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => ($acomm) ? $thref.'#comm' : '', 'comm_text' => ($acomm) ? $comm : '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => '', 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=page_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=page_delete&amp;id='.$id.'&amp;refer=1', 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => '', 'back_text' => '', 'is_moder' => is_moder($conf['name'])]);
 		}
@@ -169,8 +169,8 @@ function view(): void {
 		$cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
 		$post = ($conf['pages']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
 		$date = ($conf['pages']['date']) ? format_time($time) : '';
-		$rating = ajax_rating(1, $id, $conf['name'], $ratings, $score, '');
-		$favorites = getFavorBtn($id, $conf['name']);
+		$rating = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
+		$favorites = getFavoriteButton($id, $conf['name']);
 		$ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
 		$cont .= getContentView(['is_moder' => is_moder($conf['name']), 'id' => $id, 'title_href' => '', 'title_attr' => $title, 'title_text' => filterTextHighlight($title, $word), 'title_new' => '', 'category_href' => $ctitle ? $chref : '', 'category_attr' => $cdesc, 'category_text' => ($ctitle) ? cutstr($ctitle, 15) : '', 'category_img' => $cimg, 'text' => filterTextHighlight(filterReplaceText(filterMarkdown($conpag[$arrayelement], $conf['name'], false), $conf['name']), $word), 'read_href' => '', 'read_text' => '', 'post_text' => $post, 'post_label' => _POSTEDBY, 'date_text' => $date, 'date_iso' => ($date) ? date('c', strtotime($time)) : '', 'date_label' => _CHNGSTORY, 'reads_text' => ($conf['pages']['read']) ? $counter : '', 'reads_label' => _READS, 'hits' => '', 'comm_href' => '', 'comm_text' => '', 'comm_label' => _COMMENTS, 'rating' => $rating, 'favorites' => $favorites, 'voting' => '', 'editor' => _EDITOR, 'edit_href' => $afile.'.php?op=page_add&amp;id='.$id, 'edit_text' => _FULLEDIT, 'delete_href' => $afile.'.php?op=page_delete&amp;id='.$id, 'delete_text' => _ONDELETE, 'delete_ask' => $ask, 'back_title' => _BACK, 'back_text' => _BACK]);
 		$cont .= setPageNumbers('pagenum', $conf['name'], 1, $pageno, 1, 'op=view&id='.$id.'&', $conf['pages']['nump'], (int)$pag, '#'.$id);

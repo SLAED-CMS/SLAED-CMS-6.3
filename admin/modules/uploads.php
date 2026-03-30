@@ -26,12 +26,18 @@ function uploads(): void {
     global $afile, $conf, $stop, $tpl;
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
+    $token = getSiteToken();
+    $sattrs = [
+        ' hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=1&amp;dir='.$dir.'&amp;token='.$token.'" hx-target="#repf1" hx-swap="innerHTML" hx-push-url="false"',
+        ' hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=2&amp;dir='.$dir.'&amp;token='.$token.'" hx-target="#repf2" hx-swap="innerHTML" hx-push-url="false"',
+        '',
+    ];
     setHead();
     $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [
         _EUPLOAD,
-        $tpl->getHtmlFrag('admin-uploads-ajax-tab', ['dir' => $dir, 'label' => _DGEN, 'target_id' => 'f1', 'tab_id' => '1']),
-        $tpl->getHtmlFrag('admin-uploads-ajax-tab', ['dir' => $dir, 'label' => _DTHUMB, 'target_id' => 'f2', 'tab_id' => '2']),
-    ], 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
+        _DGEN,
+        _DTHUMB,
+    ], 'sattrs' => $sattrs, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
     $tabone = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
@@ -78,11 +84,14 @@ function uploads(): void {
     }
     $tabthr .= getAdminPlaceholderBox('repf2');
     $uplv = $tpl->getHtmlFrag('admin-uploads-tabs-content', [
+        'tab_one_id' => getAdminTabName('uploads', 0, true),
+        'tab_two_id' => getAdminTabName('uploads', 1, true),
+        'tab_three_id' => getAdminTabName('uploads', 2, true),
         'tab_one_html' => $tabone,
         'tab_two_html' => $tabtwo,
         'tab_three_html' => $tabthr,
     ]);
-    $uplv .= $tpl->getHtmlFrag('admin-uploads-tabs-script', ['group_id' => 'uploadss']);
+    $uplv .= getAdminTabsSetup('uploadss');
     echo $cont.$uplv;
     setFoot();
 }
@@ -109,7 +118,7 @@ function tplconfig(): void {
     for ($i = 0; $i < count($typm); $i++) {
         $conts .= $tpl->getHtmlFrag('admin-uploads-tplconfig-block', [
             'editor_html' => textarea_code('code_'.$i.'', 'tmp[]', 'sl_form', 'text/html', $conf['filetype'][$typm[$i]] ?? ''),
-            'is_first' => $i == 0,
+            'show_hr' => $i > 0,
             'module_text' => $typm[$i],
             'tpfor_label' => _TPFOR.':',
         ]);
@@ -169,7 +178,7 @@ function config(): void {
                 'gdwidth_value' => $con[6],
                 'height_label' => _AHEIGHT._AIN.':',
                 'height_value' => $con[4],
-                'is_first' => $i == 0,
+                'show_hr' => $i > 0,
                 'module_label' => _MODUL.':',
                 'module_text' => getModuleName($val),
                 'num_value' => $con[7],
@@ -193,10 +202,12 @@ function config(): void {
         }
     }
     $conts = $tpl->getHtmlFrag('admin-uploads-config-tabs', [
+        'tab_one_id' => getAdminTabName('config', 0, true),
+        'tab_two_id' => getAdminTabName('config', 1, true),
         'tab_one_html' => $tabone,
         'tab_two_html' => $tabtwo,
     ]);
-    $conts .= $tpl->getHtmlFrag('admin-uploads-tabs-script', ['group_id' => 'confs']);
+    $conts .= getAdminTabsSetup('configs');
     $confv = getAdminConfSave($conts, 'uploads', 'configsave');
     echo $cont.getAdminBox($confv);
     setFoot();
@@ -252,10 +263,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=uploads', 'name=uploads&amp;op=tplconfig', 'name=uploads&amp;op=config', 'name=uploads&amp;op=info'], 'tabs' => [_FILES, _TEMPLATES, _PREFERENCES, _INFO], 'sops' => ['', '', ''], 'stabs' => [_EUPLOAD, _DGEN, _DTHUMB], 'tab' => 3, 'sub' => getUploadsSearch()]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

@@ -35,7 +35,11 @@ function statistic(): void {
     $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
-    $statv = '<img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15" alt="'._STATGR.'" title="'._STATGR.'">';
+    $statv = $tpl->getHtmlFrag('admin-statistic-image', [
+        'alt_text' => _STATGR,
+        'image_url' => $afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day=15',
+        'title_text' => _STATGR,
+    ]);
     if ($file || date('d') > 15) {
         if ($file) {
             $path = COUNTER_DIR.'/statistic/'.$file;
@@ -44,7 +48,12 @@ function statistic(): void {
         } else {
             $out = date('d');
         }
-        $statv .= '<hr><img src="'.$afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out.'" alt="'._STATGR.'" title="'._STATGR.'">';
+        $statv .= getAdminHrLine();
+        $statv .= $tpl->getHtmlFrag('admin-statistic-image', [
+            'alt_text' => _STATGR,
+            'image_url' => $afile.'.php?name=statistic&amp;op=add'.$pfile.'&amp;day='.$out,
+            'title_text' => _STATGR,
+        ]);
     }
     $head = $tpl->getHtmlFrag('admin-statistic-table-head', [
         'audience_label' => _AUDIENCE,
@@ -106,7 +115,7 @@ function statistic(): void {
         'unique_text' => (string)$unique,
         'users_text' => (string)$regusers,
     ]);
-    $statv .= '<hr>'.getAdminTable($head, $rows, 'sl_table_list_sort');
+    $statv .= getAdminHrLine().getAdminTable($head, $rows, 'sl_table_list_sort');
     echo $cont.getAdminBox($statv);
     setFoot();
 }
@@ -150,10 +159,8 @@ function save(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2, 'sub' => getStatisticSearch()]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -163,4 +170,3 @@ switch ($op) {
     case 'save': save(); break;
     case 'info': info(); break;
 }
-

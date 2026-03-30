@@ -2732,6 +2732,7 @@ function setPageNumbers(string $frag, string $mod, int $count, int $pages, int $
     global $afile, $tpl;
     $num  = $num ?: getVar('get', $n, 'num', 1);
     $nnum = $maxpg + 1;
+    $url = html_entity_decode($url, ENT_QUOTES, 'UTF-8');
     if ($pages > 1) {
         $cont = '';
         if ($num > 1) {
@@ -3358,7 +3359,7 @@ function getCompressHtml(string $html): string {
 }
 
 # Voting view
-function getVoting(int $id = 0, string $votid = ''): string {
+function getVotingView(int $id = 0, string $votid = ''): string {
  global $db, $afile, $user, $locale, $conf, $tpl;
     if ($conf['multilingual'] == 1) {
         $querylang = "(lang = :locale OR lang = '') AND time <= NOW() AND (enddate >= NOW() AND status = '0' OR status = '1')";
@@ -3409,7 +3410,7 @@ function getVoting(int $id = 0, string $votid = ''): string {
                 votingActionLink($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 votingActionDelete($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]) : '';
-            $post = (!$rate) ? votingActionAjax($votid, 'go=1&amp;op=avoting_save&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl_but_blue', _SEROR1) : '';
+            $post = (!$rate) ? getVotingAsyncAction($votid, 'go=1&amp;op=updateVotingResult&amp;id='.$id.'&amp;votid='.$votid, _VOTE, _VOTE, 'sl_but_blue', _SEROR1) : '';
             $polls = ($vnum > 1) ? votingActionLink('index.php?name=voting', _POLLS, _POLLS, 'sl_but') : '';
             $votes = (!$modul && $votid != 'voting') ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id, _VOTES, _VOTES.': '.$vote, 'sl_votes') : '<span class="sl_votes">'.htmlspecialchars(_VOTES.': '.$vote, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</span>';
             $comm = (!$modul && $acomm) ? votingActionLink('index.php?name=voting&amp;op=view&amp;id='.$id.'#'.$id, _COMMENTS, _COMMENTS.': '.$comments, 'sl_coms') : '';
@@ -3899,7 +3900,7 @@ function user_geo_ip(string $ip, int $id = 4): string {
 }
 
 # User information for user
-function user_sinfo(string $id = ''): string {
+function getUserSessionInfo(string $id = ''): string {
  global $db, $conf, $tpl;
     if ($conf['session']) {
         $who_online = ''; $m = 0; $b = 0; $u = 0; $i = 0;
@@ -3953,7 +3954,7 @@ function user_sinfo(string $id = ''): string {
             'has_rows' => $who_online !== '',
             'toggle_id' => 'u-block',
             'update_target' => 'sinfo',
-            'update_query' => 'go=1&amp;op=user_sinfo',
+            'update_query' => 'go=1&amp;op=getUserSessionInfo&amp;token='.getSiteToken(),
         ]);
         if ($id) { return $content; } else { echo $content; }
     }
@@ -3961,7 +3962,7 @@ function user_sinfo(string $id = ''): string {
 }
 
 # User information for admin
-function user_sainfo(string $id = ''): string {
+function getUserSessionAdminInfo(string $id = ''): string {
  global $db, $conf, $tpl;
     if ($conf['session'] && isAdmin()) {
         $a = $b = $m = $u = $i = 0;
@@ -4074,7 +4075,7 @@ function user_sainfo(string $id = ''): string {
             'update_title' => _UPDATE,
             'update_label' => _UPDATE,
             'update_target' => 'sainfo',
-            'update_query' => 'go=1&amp;op=user_sainfo',
+            'update_query' => 'go=1&amp;op=getUserSessionAdminInfo&amp;token='.getSiteToken(),
         ]);
         if ($id) { return $content_who; } else { echo $content_who; }
     }
@@ -4098,7 +4099,7 @@ function adminblock(): string {
         }
         $a_title = ($title) ? $title : _ADMINS;
         return $tpl->getHtmlFrag('block-left', ['title' => $a_title, 'content' => $cont, 'id' => '7', 'close' => $cltit])
-            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => '<div id="repsainfo">'.user_sainfo(1).'</div>', 'id' => '8', 'close' => $cltit]);
+            .$tpl->getHtmlFrag('block-left', ['title' => _WHO, 'content' => '<div id="repsainfo">'.getUserSessionAdminInfo(1).'</div>', 'id' => '8', 'close' => $cltit]);
     }
     return '';
 }
@@ -4114,8 +4115,8 @@ function user_info(string $name): string {
     return $link;
 }
 
-# Show kasse
-function show_kasse(string $info = ''): string {
+# Show cart
+function getCartSummary(string $info = ''): string {
  global $db, $conf, $tpl;
     $shop = (isset($_COOKIE['shop'])) ? base64_decode($_COOKIE['shop']) : '';
     $info = (empty($info)) ? $shop : base64_decode($info);
@@ -4151,9 +4152,9 @@ function show_kasse(string $info = ''): string {
                 'qty' => $i,
                 'price_text' => $price.' '.$conf['shop']['valute'],
                 'plus_title' => _PPLUS,
-                'plus_query' => 'go=2&amp;op=add_kasse&amp;id='.$id,
+                'plus_query' => 'go=2&amp;op=addCartItem&amp;id='.$id,
                 'minus_title' => ($i > 1) ? _PMINUS : _DELETE,
-                'minus_query' => 'go=2&amp;op=del_kasse&amp;id='.$id,
+                'minus_query' => 'go=2&amp;op=deleteCartItem&amp;id='.$id,
             ]);
         }
         return $tpl->getHtmlFrag('kasse-wrap', [
@@ -4175,8 +4176,8 @@ function show_kasse(string $info = ''): string {
     return '';
 }
 
-# Add kasse
-function add_kasse(): void {
+# Add cart item
+function addCartItem(): void {
     global $conf;
     $id = getVar('get', 'id', 'num', 0);
     $cookies = (preg_match('#[^0-9,]#', base64_decode($_COOKIE['shop']))) ? '' : base64_decode($_COOKIE['shop']);
@@ -4190,11 +4191,11 @@ function add_kasse(): void {
             setcookie('shop', $info, time() + $conf['shop']['shop_t']);
         }
     }
-    echo show_kasse($info);
+    echo getCartSummary($info);
 }
 
-# Delete kasse
-function del_kasse(): void {
+# Delete cart item
+function deleteCartItem(): void {
     global $conf;
     $id = getVar('get', 'id', 'num', 0);
     $cookies = (preg_match('#[^0-9,]#', base64_decode($_COOKIE['shop']))) ? '' : base64_decode($_COOKIE['shop']);
@@ -4221,7 +4222,7 @@ function del_kasse(): void {
         $info = base64_encode($info);
         setcookie('shop', $info, time() + $conf['shop']['shop_t']);
     }
-    echo show_kasse($info);
+    echo getCartSummary($info);
 }
 
 # Format user warnings
@@ -4238,7 +4239,7 @@ function warnings(string $warnings): string {
 }
 
 # Format ajax rating
-function ajax_rating(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
+function getRatingAsync(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor, string $obj = '', string $stl = ''): string {
     global $conf;
     if (intval($rat)) {
         $votnum = $rat;
@@ -4258,11 +4259,11 @@ function ajax_rating(mixed $typ, mixed $id, mixed $mod, mixed $rat, mixed $scor,
     }
     if ($stl == 1) {
         $img = ratingLike($result, $title, $nrate);
-        $imgr = ratingLikeHover($result, $title, $nrate, $id.$obj, 'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1');
+        $imgr = ratingLikeHover($result, $title, $nrate, $id.$obj, 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod.'&amp;stl=1');
         $crate = 'sl_rate-like';
     } else {
         $img = ratingBar($result, $title, $nrate, (string) $width, $votnum);
-        $imgr = ratingBarHover($result, $title, $nrate, (string) $width, $votnum, $id.$obj, 'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod);
+        $imgr = ratingBarHover($result, $title, $nrate, (string) $width, $votnum, $id.$obj, 'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$obj.'&amp;mod='.$mod);
         $crate = 'sl_rate';
     }
     if ($typ == 2) {
@@ -4302,7 +4303,7 @@ function editorInsertAction(string $command, string $value, string $id, string $
     ]);
 }
 
-function editorAjaxAction(string $target, string $query, string $title, string $label): string {
+function getEditorAsyncAction(string $target, string $query, string $title, string $label): string {
  global $tpl;
     return $tpl->getHtmlFrag('comment-action-ajax', [
         'load_id' => '0',
@@ -4453,7 +4454,7 @@ function commentActionJs(string $href, string $title, string $label, string $cla
     ]);
 }
 
-function commentActionAjax(string $target, string $query, string $title, string $label, string $class = ''): string {
+function getCommentAsyncAction(string $target, string $query, string $title, string $label, string $class = ''): string {
  global $tpl;
     return $tpl->getHtmlFrag('comment-action-ajax', [
         'load_id' => '1',
@@ -4575,13 +4576,15 @@ function pagerDots(): string {
     return '<span class="sl_num_exit" title="&hellip;">&hellip;</span>';
 }
 
-function pagerAjaxLink(string $loadId, string $targetId, string $query, string $title, string $label, string $class = ''): string {
+function getAsyncPagerLink(string $loadId, string $targetId, string $query, string $title, string $label, string $class = ''): string {
  global $tpl;
+    $route = $query;
+    if (str_contains($route, 'go=5') && !str_contains($route, 'token=')) $route .= '&amp;token='.getSiteToken();
     return $tpl->getHtmlFrag('pager-link', [
         'href' => '',
         'load_id' => $loadId,
         'target_id' => $targetId,
-        'query' => $query,
+        'query' => $route,
         'title' => $title,
         'label' => $label,
         'class' => $class,
@@ -4701,7 +4704,7 @@ function votingActionLink(string $href, string $title, string $label, string $cl
     ]);
 }
 
-function votingActionAjax(string $target, string $query, string $title, string $label, string $class = '', string $errorText = ''): string {
+function getVotingAsyncAction(string $target, string $query, string $title, string $label, string $class = '', string $errorText = ''): string {
  global $tpl;
     return $tpl->getHtmlFrag('comment-action-ajax', [
         'load_id' => '1',
@@ -4827,7 +4830,7 @@ function ratingStarsLive(string $width, string $targetId, string $baseQuery, str
 }
 
 # Show editor files
-function show_files(): void {
+function getEditorFiles(): void {
     global $conf, $user;
     $id   = filterVar(getVar('get', 'id',   'text', '')) ?: 0;
     $dir  = strtolower(getVar('get', 'dir',  'text', ''));
@@ -4877,9 +4880,9 @@ function show_files(): void {
                 }
                 if (is_moder($dir)) {
                     if (in_array(true, checkCompress(), true)) {
-                        $show[] = editorAjaxAction('f'.$id, 'go=1&amp;op=show_files&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], _ZIP, _ZIP);
+                        $show[] = getEditorAsyncAction('f'.$id, 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], _ZIP, _ZIP);
                     }
-                    $show[] = editorAjaxAction('f'.$id, 'go=1&amp;op=show_files&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], _ONDELETE, _ONDELETE);
+                    $show[] = getEditorAsyncAction('f'.$id, 'go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], _ONDELETE, _ONDELETE);
                 }
                 $contents[] = editorFilesRow([
                     'preview_html' => $img,
@@ -4899,7 +4902,7 @@ function show_files(): void {
     for ($i = $offset; $i < $tnum; $i++) {
         if (!empty($contents[$i])) $cont .= $contents[$i];
     }
-    $contnum = ($a > $connum) ? num_ajax('pagenum', $a, $numpages, $connum, 8, $num, '0', 1, 'show_files', 'f'.$id, $id, '', $dir) : '';
+    $contnum = ($a > $connum) ? getAsyncPager('pagenum', $a, $numpages, $connum, 8, $num, '0', 1, 'getEditorFiles', 'f'.$id, $id, '', $dir) : '';
     $content = ($cont) ? editorFilesTable($cont).$contnum : '';
     echo $content;
 }
@@ -5391,7 +5394,7 @@ function is_moder(string $modul = ''): int {
 }
 
 # Search user name
-function get_user(): void {
+function getUserList(): void {
  global $db;
     $let = analyze_name(getVar('get', 'term', 'text', ''));
     if ($let) {
@@ -5402,11 +5405,11 @@ function get_user(): void {
 }
 
 # Autocomplete user name
-function get_user_search(string $id, string $val, int $maxlength, string $extraClass = '', string $required = ''): string {
+function getUserSearch(string $id, string $val, int $maxlength, string $extraClass = '', string $required = ''): string {
  global $conf;
     $class = $extraClass ? 'sl_field '.$extraClass : 'sl_field';
     $req   = $required ? ' required' : '';
-    $cont = getHtmlScriptInline("$(function() { $(\"#".$id."\").autocomplete({ source: \"index.php?go=1&op=get_user\", minLength: ".$conf['search']['slet']." }); });")
+    $cont = getHtmlScriptInline("$(function() { $(\"#".$id."\").autocomplete({ source: \"index.php?go=1&op=getUserList\", minLength: ".$conf['search']['slet']." }); });")
     .getAdminTextInput($id, $val, $class, 'id="'.$id.'" maxlength="'.$maxlength.'" placeholder="'._NICKNAME.'"'.$req);
     return $cont;
 }
@@ -5929,7 +5932,7 @@ function render_blocks(string $side, string $bfile, string $blocktitle, string $
 }
 
 # Format rating
-function rating(): void {
+function getRatingView(): void {
  global $db, $conf, $user;
     $id   = getVar('get', 'id',   'num',  0);
     $typ  = filterVar(getVar('get', 'typ',  'text', ''));
@@ -5974,7 +5977,7 @@ function rating(): void {
         list($num) = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB."_rating WHERE (mid = :id AND modul = :mod AND ip = :ip) OR (mid = :id2 AND modul = :mod2 AND uid = :uid AND uid != '0')", ['id' => $id, 'mod' => $mod, 'ip' => $ip, 'id2' => $id, 'mod2' => $mod, 'uid' => $uid]));
         if ($cookies == $id || $num > 0) {
             list($votes, $totalvotes) = $db->getSqlRow($db->getSqlQuery($query, ['id' => $id]));
-            echo ajax_rating(2, '', '', $votes, $totalvotes, '', $stl);
+            echo getRatingAsync(2, '', '', $votes, $totalvotes, '', $stl);
         } elseif (!$cookies && !$num && !$rate) {
             list($votes, $totalvotes) = $db->getSqlRow($db->getSqlQuery($query, ['id' => $id]));
             if (intval($votes)) {
@@ -5999,14 +6002,14 @@ function rating(): void {
                     $title,
                     $nrate,
                     $id.$typ,
-                    'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=1&amp;stl=1',
-                    'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=5&amp;stl=1'
+                    'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=1&amp;stl=1',
+                    'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod.'&amp;rate=5&amp;stl=1'
                 );
             } else {
                 echo ratingStarsLive(
                     (string) $width,
                     $id.$typ,
-                    'go=1&amp;op=rating&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod,
+                    'go=1&amp;op=getRatingView&amp;id='.$id.'&amp;typ='.$typ.'&amp;mod='.$mod,
                     $nrate,
                     $votnum
                 );
@@ -6057,7 +6060,7 @@ function rating(): void {
                 }
             }
             list($votes, $totalvotes) = $db->getSqlRow($db->getSqlQuery($query, ['id' => $id]));
-            echo ajax_rating(2, '', '', $votes, $totalvotes, '', $stl);
+            echo getRatingAsync(2, '', '', $votes, $totalvotes, '', $stl);
         }
     }
 }
@@ -6103,7 +6106,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
             )
             .'</div>';
             if ((defined('ADMIN_FILE') && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) {
-                $bottomHtml .= editorToolbarButton("HideShow('af-form-".$id."', 'slide', 'up', 500); AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;", 'sl_bb_file', _EUPLOAD);
+                $bottomHtml .= editorToolbarButton("HideShow('af-form-".$id."', 'slide', 'up', 500); htmx.ajax('GET', 'index.php?go=1&op=getEditorFiles&id=".$id.'&dir='.$mod."', {target:'#repf".$id."', swap:'innerHTML'}); return false;", 'sl_bb_file', _EUPLOAD);
             }
             $smilies = '';
                 $i = 1;
@@ -6177,45 +6180,15 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
             $uploadInner = '';
             if ($id == 1) {
                 $uinfo = '<div class="ico sl_info sl_left"><b>'._UPLOADINFO.'</b><br>'._FTYPE.': '.str_replace(',', ', ', $con[0]).'<br>'._FSIZEALL.': '.filterSize($con[1]).'<br>'._FSIZE.': '.filterSize($con[2]).'<br>'._AWIDTH.': '.$con[3].' px<br>'._AHEIGHT.': '.$con[4].' px<br>'._FILEUP.': '.$con[5].'<br>'.'</div>';
-                $uploadInner .= getHtmlScriptInline("$(document).ready(function(e) {
-                    \$('#msg').html('".$uinfo."');
-                    \$('#file_upload').on('change', function () {
-                        var form_data = new FormData();
-                        var ins = document.getElementById('file_upload').files.length;
-                        for (var x = 0; x < ins; x++) {
-                            form_data.append('file[]', document.getElementById('file_upload').files[x]);
-                        }
-                        form_data.append('token', '".getSiteToken('upload')."');
-                        \$.ajax({
-                            url: 'index.php?go=4&mod=".$mod.'&userid='.intval($user[0] ?? 0)."',
-                            type: 'POST',
-                            dataType: 'text',
-                            data: form_data,
-                            cache: false,
-                            contentType: false,
-                            processData: false,
-                            beforeSend: function() {
-                                \$('#msg').html('<div class=\"sl_loading\"></div><br>');
-                            },
-                            success: function (response) {
-                                console.log('Success: ', response);
-                                \$('#msg').html(response);
-                                AjaxLoad('GET', '1', 'f".$id."', 'go=1&op=show_files&id=".$id.'&dir='.$mod."', '');
-                            },
-                            error: function (response) {
-                                console.log('Error: ', response);
-                                \$('#msg').html(response);
-                                alert('File upload error!');
-                            }
-                        });
-                    });
-                });")
-                ."<div id=\"msg\"></div>
-                <div class=\"sl_pos_center\">
-                <input type=\"file\" id=\"file_upload\" name=\"file[]\" multiple=\"multiple\" class=\"sl_field\">
-                <input type=\"button\" value=\""._UPDATE."\" OnClick=\"AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_but_green\"></div>";
+                $uploadInner .= '<div id="msg">'.$uinfo.'</div>
+                <div class="sl_pos_center">
+                <form id="formfile'.$id.'" hx-post="index.php?go=4&amp;mod='.$mod.'&amp;userid='.intval($user[0] ?? 0).'" hx-encoding="multipart/form-data" hx-target="#msg" hx-swap="innerHTML" hx-trigger="change from:#file_upload" hx-on:htmx:before-request="document.getElementById(&quot;msg&quot;).innerHTML=&quot;&lt;div class=\&quot;sl_loading\&quot;&gt;&lt;/div&gt;&lt;br&gt;&quot;" hx-on:htmx:after-request="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$mod.'&quot;, {target:&quot;#repf'.$id.'&quot;, swap:&quot;innerHTML&quot;});">
+                <input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('upload'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">
+                <input type="file" id="file_upload" name="file[]" multiple="multiple" class="sl_field">
+                </form>
+                <input type="button" value="'._UPDATE.'" OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$id.'&dir='.$mod.'&quot;, {target:&quot;#repf'.$id.'&quot;, swap:&quot;innerHTML&quot;}); return false;" class="sl_but_green"></div>';
             } else {
-                $uploadInner .= '<div class="sl_pos_center"><input type="button" value="'._UPDATE."\" OnClick=\"AjaxLoad('GET', '1', 'f".$id."', 'go=1&amp;op=show_files&amp;id=".$id.'&amp;dir='.$mod."', ''); return false;\" class=\"sl_but_green\"></div>";
+                $uploadInner .= '<div class="sl_pos_center"><input type="button" value="'._UPDATE.'" OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$id.'&dir='.$mod.'&quot;, {target:&quot;#repf'.$id.'&quot;, swap:&quot;innerHTML&quot;}); return false;" class="sl_but_green"></div>';
             }
             $uploadInner .= '<div id="repf'.$id.'" style="margin: 5px;"></div>';
             $uploadHtml = editorUploadPanel('af-form-'.$id, $uploadInner, 'repf'.$id);
@@ -6284,14 +6257,14 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
 }
 
 # Format ajax edit
-function textareae(mixed $obj, mixed $go, mixed $op, mixed $id, mixed $cid, mixed $typ, mixed $mod, mixed $text, int $rows): string {
+function getAjaxTextarea(mixed $obj, mixed $go, mixed $op, mixed $id, mixed $cid, mixed $typ, mixed $mod, mixed $text, int $rows): string {
  global $conf, $admin;
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     $desc = ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) ? replace_break($text) : $text;
     $code = '<form name="textareae" id="form'.$obj.'" method="post">
     <textarea id="text" name="text" cols="65" rows="'.$rows.'" class="sl_earea">'.$desc."</textarea>
-    <input type=\"submit\" OnClick=\"AjaxLoad('POST', '1', '".$obj."', 'go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."', { 'text':'"._CERROR1."' }); return false;\" value=\""._SAVE.'" title="'._SAVE."\" class=\"sl_but_green\">
-    <input type=\"submit\" OnClick=\"AjaxLoad('GET', '1', '".$obj."', 'go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."', ''); return false;\" value=\""._BACK.'" title="'._BACK.'" class="sl_but_blue">
+    <input type=\"submit\" hx-post=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-include=\"#form".$obj."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" hx-on:click=\"if (!document.getElementById('form".$obj."').querySelector('[name=&quot;text&quot;]').value.trim()) { alert('"._CERROR1."'); event.preventDefault(); }\" value=\""._SAVE.'" title="'._SAVE."\" class=\"sl_but_green\">
+    <input type=\"submit\" hx-get=\"index.php?go=".$go.'&amp;op='.$op.'&amp;id='.$id.'&amp;cid='.$cid.'&amp;typ='.$typ.'&amp;mod='.$mod."\" hx-target=\"#rep".$obj."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" value=\""._BACK.'" title="'._BACK.'" class="sl_but_blue">
     </form>';
     return $code;
 }
@@ -6326,14 +6299,14 @@ function textarea_code(string $id, string $name, string $style, string $mode, st
 }
 
 # Format nummer page for Ajax
-function num_ajax(string $frag, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', string $id = '', int $cid = 0, string $typ = '', string $mod = ''): string {
+function getAsyncPager(string $frag, int $count, int $pages, int $page, int $mnum = 8, int $num = 1, string $ld = '', int $go = 0, string $op = '', string $id = '', int $cid = 0, string $typ = '', string $mod = ''): string {
     global $tpl;
     $nnum = $mnum + 1;
     if ($pages > 1) {
         $cont = '';
         if ($num > 1) {
             $prev = $num - 1;
-            $cprev = pagerAjaxLink($ld, $id, 'go='.$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$prev.'&amp;typ='.$typ.'&amp;dir='.$mod, _BACK, _BACK, 'sl_num');
+            $cprev = getAsyncPagerLink($ld, $id, getAjaxQuery(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $prev, 'typ' => $typ, 'dir' => $mod]), _BACK, _BACK, 'sl_num');
         } else {
             $cprev = pagerCurrent(_BACK, _BACK, 'sl_num');
         }
@@ -6341,7 +6314,7 @@ function num_ajax(string $frag, int $count, int $pages, int $page, int $mnum = 8
             if ($i == $num) {
                 $cont .= pagerCurrent((string)$i, (string)$i);
             } else {
-                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $pages) || ($i == 1)) $cont .= pagerAjaxLink($ld, $id, 'go='.$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$i.'&amp;typ='.$typ.'&amp;dir='.$mod, (string)$i, (string)$i);
+                if ((($i > ($num - $mnum)) && ($i < ($num + $mnum))) || ($i == $pages) || ($i == 1)) $cont .= getAsyncPagerLink($ld, $id, getAjaxQuery(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $i, 'typ' => $typ, 'dir' => $mod]), (string)$i, (string)$i);
             }
             if ($i < $pages) {
                 if (($i > ($num - $nnum)) && ($i < ($num + $mnum))) $cont .= ' ';
@@ -6351,7 +6324,7 @@ function num_ajax(string $frag, int $count, int $pages, int $page, int $mnum = 8
         }
         if ($num < $pages) {
             $next = $num + 1;
-            $cnext = pagerAjaxLink($ld, $id, 'go='.$go.'&amp;op='.$op.'&amp;id='.$cid.'&amp;cid='.$next.'&amp;typ='.$typ.'&amp;dir='.$mod, _NEXT, _NEXT, 'sl_num');
+            $cnext = getAsyncPagerLink($ld, $id, getAjaxQuery(['go' => $go, 'op' => $op, 'id' => $cid, 'cid' => $next, 'typ' => $typ, 'dir' => $mod]), _NEXT, _NEXT, 'sl_num');
         } else {
             $cnext = pagerCurrent(_NEXT, _NEXT, 'sl_num');
         }
@@ -6711,7 +6684,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
             $rank = (!empty($user_rank)) ? $user_rank : '';
             $trank = (!empty($user_gname)) ? _GROUP.': '.$user_gname : _RANK;
             $rlink = (!empty($user_grank) && file_exists(img_find('ranks/'.$user_grank))) ? commentRankImage(img_find('ranks/'.$user_grank), $trank) : '';
-            $rate = (!empty($user_id)) ? ajax_rating(0, $user_id, 'account', $user_votes, $user_totalvotes, $com_id, 1) : '';
+            $rate = (!empty($user_id)) ? getRatingAsync(0, $user_id, 'account', $user_votes, $user_totalvotes, $com_id, 1) : '';
             $rwarn = (!empty($user_warnings)) ? commentMetaText(_UWARNS, warnings($user_warnings)) : '';
             $group = (!empty($user_gname)) ? commentMetaColor(_GROUP, $user_gname, $user_gcolor) : '';
             $point = ($conf['users']['point'] && !empty($user_points)) ? commentMetaText(_POINTS, (string) $user_points) : '';
@@ -6740,15 +6713,15 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
                     ]);
                 } else {
                     $edit = commentActionMenu([
-                        commentActionAjax('com'.$com_id, 'go=1&amp;op=editcom&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ONEDIT, _ONEDIT),
-                        commentActionAjax('com'.$com_id, 'go=1&amp;op=closecom&amp;id='.$com_id.'&amp;typ=0&amp;mod='.$com_modul, _FMODC, _FMODC),
-                        commentActionAjax('com'.$com_id, 'go=1&amp;op=closecom&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ACTIVATE, _ACTIVATE),
+                        getCommentAsyncAction('com'.$com_id, 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ONEDIT, _ONEDIT),
+                        getCommentAsyncAction('com'.$com_id, 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=0&amp;mod='.$com_modul, _FMODC, _FMODC),
+                        getCommentAsyncAction('com'.$com_id, 'go=1&amp;op=updateCommentStatus&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ACTIVATE, _ACTIVATE),
                     ]);
                 }
             } else {
                 $stime = strtotime($com_date) + $conf['comments']['edit'];
                 $edit = (is_user() && isset($user_id) == intval($user[0]) && time() < $stime) ? commentActionMenu([
-                    commentActionAjax('com'.$com_id, 'go=1&amp;op=editcom&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ONEDIT, _ONEDIT),
+                    getCommentAsyncAction('com'.$com_id, 'go=1&amp;op=updateComment&amp;id='.$com_id.'&amp;typ=1&amp;mod='.$com_modul, _ONEDIT, _ONEDIT),
                 ]) : '';
             }
             $hclass = (!defined('ADMIN_FILE') && !$com_status) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
@@ -6790,7 +6763,7 @@ function ashowcom(int $cid = 0, string $mod = ''): string {
 }
 
 # Save edit comments
-function editcom(): string {
+function updateComment(): string {
  global $db, $conf, $user, $tpl;
     $id   = getVar('post', 'id',   'num',  0) ?: getVar('get', 'id',   'num',  0);
     $typ  = getVar('post', 'typ',  'num',  0) ?: getVar('get', 'typ',  'num',  0);
@@ -6800,7 +6773,7 @@ function editcom(): string {
     $stime = strtotime($date) + $conf['comments']['edit'];
     if (is_moder($mod) || (is_user() && $uid == intval($user[0]) && time() < $stime)) {
         if ($id && $mod && !$text) {
-            $content = ($typ) ? textareae('com'.$id, '1', 'editcom', $id, '0', '0', $mod, $comment, '10') : filterReplaceText(filterMarkdown($comment, $mod, false), $mod);
+            $content = ($typ) ? getAjaxTextarea('com'.$id, '1', 'updateComment', $id, '0', '0', $mod, $comment, '10') : filterReplaceText(filterMarkdown($comment, $mod, false), $mod);
             echo $content;
         } elseif ($id && $mod && $text) {
             $checks = str_replace(["\n", "\r", "\t"], ' ', $text);
@@ -6827,7 +6800,7 @@ function editcom(): string {
 }
 
 # Close comments
-function closecom(): void {
+function updateCommentStatus(): void {
  global $db, $tpl;
     $id  = getVar('post', 'id',  'num',  0) ?: getVar('get', 'id',  'num',  0);
     $typ = getVar('post', 'typ', 'num',  0) ?: getVar('get', 'typ', 'num',  0);
@@ -6888,7 +6861,7 @@ function numcom(int $id = 0, string $mod = '', bool $del = false, int $uid = 0):
 }
 
 # Voting result save
-function avoting_save(): void {
+function updateVotingResult(): void {
  global $db, $conf, $user, $locale, $tpl;
     $id = getVar('post', 'id', 'num', 0);
     $body = isset($_POST['body']) && is_array($_POST['body']) ? $_POST['body'] : [];
@@ -6939,7 +6912,7 @@ function avoting_save(): void {
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_voting SET answer = :answer WHERE id = :id', ['answer' => $answ, 'id' => $id]);
                     update_points(42);
                 }
-                $cont = getVoting($id);
+                $cont = getVotingView($id);
             }
         }
     } else {

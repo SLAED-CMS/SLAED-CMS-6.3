@@ -4,7 +4,7 @@
     <td class="fl-col-num">{{ qty }}</td>
     <td class="fl-col-stat">{{ price_text }}</td>
     <td class="fl-col-stat">
-        <a OnClick="AjaxLoad('GET', '0', 'kasse', '{{{ plus_query }}}', ''); return false;" title="{{ plus_title }}" class="sl_shop_plus"></a>
-        <a OnClick="AjaxLoad('GET', '0', 'kasse', '{{{ minus_query }}}', ''); return false;" title="{{ minus_title }}" class="sl_shop_minus"></a>
+        <a href="index.php?{{{ plus_query }}}" hx-get="index.php?{{{ plus_query }}}" hx-target="#repkasse" hx-swap="innerHTML" hx-push-url="false" title="{{ plus_title }}" class="sl_shop_plus"></a>
+        <a href="index.php?{{{ minus_query }}}" hx-get="index.php?{{{ minus_query }}}" hx-target="#repkasse" hx-swap="innerHTML" hx-push-url="false" title="{{ minus_title }}" class="sl_shop_minus"></a>
     </td>
 </tr>

@@ -86,7 +86,7 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    if ($id) $cont .= $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVoting($id, 'voting')]);
+    if ($id) $cont .= $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($id, 'voting')]);
     $hide = getAdminHidden('name', 'voting');
     $mname = ['news', 'shop'];
     $content = getAdminOption('', _NO);
@@ -255,10 +255,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -270,5 +268,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-

@@ -1,1 +1,1 @@
-<span OnClick="AjaxLoad('GET', '1', '{{ target_id }}', 'go=5&amp;op=ashow_files&amp;id={{ tab_id }}&amp;dir={{ dir }}', ''); return false;">{{ label }}</span>
+<a href="index.php?go=5&amp;op=getAdminUploadFiles&amp;id={{ tab_id }}&amp;dir={{ dir }}&amp;token={{ token }}" hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id={{ tab_id }}&amp;dir={{ dir }}&amp;token={{ token }}" hx-target="#rep{{ target_id }}" hx-swap="innerHTML" hx-push-url="false">{{ label }}</a>

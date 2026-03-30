@@ -1,6 +1,6 @@
 <?php
 # Author: Eduard Laas
-# Copyright © 2005 - 2026 SLAED
+# Copyright Â© 2005 - 2026 SLAED
 # License: GNU GPL 3
 # Website: slaed.net
 
@@ -32,11 +32,18 @@ function lang(): void {
 
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+    $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th data-sort-method="none">'._STATUS.'</th><th data-sort-method="none">'._FUNCTIONS.'</th>';
     $rows = '';
     $sys_admin = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', _FULLEDIT, _ADMIN);
     $sys_modul = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit', _FULLEDIT, _MODUL);
-    $rows .= getAdminTableRow('<td>1</td><td>'._SYSTEM.'</td><td>'._ALL.'</td><td>'._MVALL.'</td><td>'.ad_status('', 1).'</td><td>'.adminMenuItems([$sys_admin, $sys_modul]).'</td>');
+    $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
+        'actions_html' => adminMenuItems([$sys_admin, $sys_modul]),
+        'id_value' => '1',
+        'module_label' => _SYSTEM,
+        'module_name' => _ALL,
+        'status_html' => ad_status('', 1),
+        'view_label' => _MVALL,
+    ]));
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
     foreach ($files as $file) {
@@ -52,7 +59,14 @@ function lang(): void {
         $acts = [];
         if (is_dir($mod_path.'/admin/lang')) $acts[] = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', _FULLEDIT, _ADMIN);
         if (is_dir($mod_path.'/lang')) $acts[] = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], _FULLEDIT, _MODUL);
-        $rows .= getAdminTableRow('<td>'.$a.'</td><td>'.getModuleName($mod[$i]).'</td><td>'.$mod[$i].'</td><td>'.$view.'</td><td>'.ad_status('', $act).'</td><td>'.adminMenuItems($acts).'</td>');
+        $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
+            'actions_html' => adminMenuItems($acts),
+            'id_value' => (string)$a,
+            'module_label' => getModuleName($mod[$i]),
+            'module_name' => $mod[$i],
+            'status_html' => ad_status('', $act),
+            'view_label' => $view,
+        ]));
     }
     $cont .= getAdminTable($head, $rows);
     echo $cont;
@@ -117,7 +131,7 @@ function fileedit(): void {
         $idx = $offset + $i;
         $n = $idx + 1;
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
-        if ($i !== 0) $rows .= getAdminFormWide('<hr>');
+        if ($i !== 0) $rows .= getAdminFormWide(getAdminHrLine());
         $rows .= getAdminFormRow(_CONST.':', getAdminTextInput('cnst[]', $valc, 'sl_form', 'placeholder="'._CONST.'"').' <a href="#'.$n.'" title="'._ID.': '.$n.'" class="sl_pnum">'.$n.'</a>', 'id="'.$n.'"');
         $cj = count($lng_cn);
         for ($j = 0; $j < $cj; $j++) {
@@ -129,7 +143,15 @@ function fileedit(): void {
                 $class = 'to_'.$i.'-'.$j;
                 $floc = substr($conf['lang']['lang'], 0, 2);
                 $tloc = substr($lng_cn[$j], 0, 2);
-                $btn = '<input type="button" OnClick="TranslateLang(\'from_'.$i.'\', \'to_'.$i.'-'.$j.'\', \''.$floc.'-'.$tloc.'\', \''._ERRORTR.'\', \''.$conf['lang']['key'].'\');" value="'._OK.'" title="'._EAUTOTR.'" class="sl_but_blue">';
+                $btn = $tpl->getHtmlFrag('admin-lang-translate-button', [
+                    'api_key' => $conf['lang']['key'],
+                    'error_text' => _ERRORTR,
+                    'from_class' => 'from_'.$i,
+                    'label' => _OK,
+                    'locale_pair' => $floc.'-'.$tloc,
+                    'title' => _EAUTOTR,
+                    'to_class' => 'to_'.$i.'-'.$j,
+                ]);
             }
             $rows .= getAdminFormRow(getLangName($lng_cn[$j]).':', getAdminTextInput('lng['.$lng_cn[$j].'][]', $val, 'sl_form '.$class, 'placeholder="'.getLangName($lng_cn[$j]).'"').$btn);
         }
@@ -226,10 +248,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -240,4 +260,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-

@@ -1,1 +1,1 @@
-<a onclick="AjaxLoad('GET', '0', 'kasse', 'go=2&amp;op=add_kasse&amp;id={{ id }}', ''); AddBasket('{{ id }}'); return false;" title="{{ title }}" class="sl_shop_add">{{ label }}</a>
+<a href="index.php?go=2&amp;op=addCartItem&amp;id={{ id }}" hx-get="index.php?go=2&amp;op=addCartItem&amp;id={{ id }}" hx-target="#repkasse" hx-swap="innerHTML" hx-push-url="false" onclick="AddBasket('{{ id }}');" title="{{ title }}" class="sl_shop_add">{{ label }}</a>

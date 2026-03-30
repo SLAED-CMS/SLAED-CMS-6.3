@@ -123,7 +123,7 @@ function banlist(): void {
             'hash_label' => _HASH,
             'ip_label' => _IP,
         ]), $rows, 'sl_table_list_sort');
-        $tabone .= '<hr>';
+        $tabone .= $tpl->getHtmlFrag('admin-security-tab-divider', []);
     }
     $tabone .= $tpl->getHtmlFrag('admin-security-ban-ip-form', [
         'add_label' => _ADD,
@@ -161,7 +161,7 @@ function banlist(): void {
             'info_label' => _BANN_REAS,
             'name_label' => _NICKNAME,
         ]), $rows, 'sl_table_list_sort');
-        $tabtwo .= '<hr>';
+        $tabtwo .= $tpl->getHtmlFrag('admin-security-tab-divider', []);
     }
     $name = getVar('get', 'name', 'name');
     $cookie = $conf['user_c'].'-close-security';
@@ -184,10 +184,12 @@ function banlist(): void {
         'time_value' => (string)$time,
     ]);
     $banv = $tpl->getHtmlFrag('admin-security-ban-tabs', [
+        'tab_one_id' => getAdminTabName('security', 0, true),
+        'tab_two_id' => getAdminTabName('security', 1, true),
         'tab_one_html' => $tabone,
         'tab_two_html' => $tabtwo,
     ]);
-    $banv .= $tpl->getHtmlFrag('admin-uploads-tabs-script', ['group_id' => 'securitys']);
+    $banv .= getAdminTabsSetup('securitys');
     echo $cont.getAdminBox($banv);
     setFoot();
 }
@@ -441,10 +443,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 4, 'id' => 'security']);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 function download(): void {

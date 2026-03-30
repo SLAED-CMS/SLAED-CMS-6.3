@@ -297,7 +297,7 @@ function view(): void {
             $atopic = (is_moder($conf['name']) || $istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
             $areply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'&amp;pid='.$topic.'" title="'._TOPICREPLY.'" class="sl_but">'._REPLY.'</a>' : '<span title="'.sprintf(_ACINFOP, _NOTCAN).'" class="sl_but sl_hidden">'._REPLY.'</span>';
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
-            $favor = getFavorBtn($topic, $conf['name']);
+            $favor = getFavoriteButton($topic, $conf['name']);
             $cont = $tpl->getHtmlFrag('forum-view-wrap', ['open' => true, 'atopic' => $atopic, 'areply' => $areply, 'title' => filterTextHighlight($rows[0][5], $word), 'favor' => $favor]);
             foreach ($rows as $val) {
                 $fid = $val[0];
@@ -350,13 +350,13 @@ function view(): void {
                 $avname = (!empty($nick)) ? $nick : $val[4].' ('._ANONYM.')';
                 $avatar = (!empty($nick)) ? (($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
                 $date = (($ismod || $conf['forum']['ledit']) && $val[16]) ? '<span title="'._PADD.'" class="sl_t_post">'.format_time($val[6], _TIMESTRING).'</span><span title="'._PEDIT.'" class="sl_t_edit">'.format_time($val[16], _TIMESTRING).'</span>' : '<span title="'._PADD.'" class="sl_t_post">'.format_time($val[6], _TIMESTRING).'</span>';
-                $rating = ($pos == 1) ? ajax_rating(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
+                $rating = ($pos == 1) ? getRatingAsync(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
                 $ip = ($ismod && $val[13]) ? user_geo_ip($val[13], 4) : '';
                 $amess = '<a href="#'.$fid.'" title="'._MESSAGE.': '.$pos.'" class="sl_pnum">'.$pos.'</a>';
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
                 $rlink = (!empty($grank) && file_exists(img_find('ranks/'.$grank))) ? '<img src="'.img_find('ranks/'.$grank).'" alt="'.$trank.'" title="'.$trank.'">' : '';
-                $rate = (!empty($uid)) ? ajax_rating(0, $uid, 'account', $votes, $total, $fid, 1) : '';
+                $rate = (!empty($uid)) ? getRatingAsync(0, $uid, 'account', $votes, $total, $fid, 1) : '';
                 $rwarn = (!empty($warn)) ? _UWARNS.': '.warnings($warn) : '';
                 $group = (!empty($gname)) ? _GROUP.': <span style="color: '.$gcolor.'">'.$gname.'</span>' : '';
                 $point = ($conf['users']['point'] && !empty($point)) ? _POINTS.': '.$point : '';
@@ -376,7 +376,7 @@ function view(): void {
                 $thank = '';
                 
                 $qreply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$topic.'&amp;qid='.$fid.'" title="'._QREPLY.'" class="sl_but_blue">'._REPLY.'</a>' : '';
-                $edit = ($ismod || ($isedit && $val[3] == intval($user[0]) && $tstatus)) ? "<a href=\"#\" OnClick=\"AjaxLoad('GET', '1', 'for".$fid."', 'go=1&amp;op=editpost&amp;id=".$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name']."', ''); return false;\" title=\""._ONEDIT.'">'._ONEDIT.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;id='.$fid.'&amp;pid='.$topic.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
+                $edit = ($ismod || ($isedit && $val[3] == intval($user[0]) && $tstatus)) ? '<a href="index.php?go=1&amp;op=updatePost&amp;id='.$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name'].'" hx-get="index.php?go=1&amp;op=updatePost&amp;id='.$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name'].'" hx-target="#repfor'.$fid.'" hx-swap="innerHTML" hx-push-url="false" title="'._ONEDIT.'">'._ONEDIT.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;id='.$fid.'&amp;pid='.$topic.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
                 $edit .= ($ismod || ($isdelete && $val[3] == intval($user[0]))) ? '<a href="index.php?name='.$conf['name'].'&amp;op=delete&amp;cat='.$fcat.'&amp;id='.$fid."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$val[5]."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>' : '';
                 $edit = ($edit) ? add_menu($edit) : '';
                 $hclass = (!$val[17]) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';

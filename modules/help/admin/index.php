@@ -79,7 +79,7 @@ function view(): void {
         $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
         $date = '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time, _TIMESTRING).'</span>';
         $comm = ($a) ? '<a href="#'.$id.'" title="'._MESSAGE.': '.$a.'" class="sl_pnum">'.$a.'</a>' : '';
-        $rating = ($haid && $huid != $haid) ? ajax_rating(0, $id, 'help', $ratings, $score, '') : '';
+        $rating = ($haid && $huid != $haid) ? getRatingAsync(0, $id, 'help', $ratings, $score, '') : '';
         if (!$pid) {
             $cdesc = ($cdesc) ? $cdesc : $ctitle;
             $ctitle = ($ctitle) ? '<span title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</span>' : '';
@@ -108,7 +108,7 @@ function addview(int $id): string {
     $rows = $tpl->getHtmlFrag('admin-help-addview-rows', [
         'hometext_html' => textarea('1', 'hometext', '', 'help', '10', _TEXT, '1'),
         'hometext_label' => _TEXT.':',
-        'postname_html' => get_user_search('postname', $admin[1] ?? '', '25', 'sl_form', '1'),
+        'postname_html' => getUserSearch('postname', $admin[1] ?? '', '25', 'sl_form', '1'),
         'postname_label' => _POSTEDBY.':',
         'save_label' => _SEND,
         'status_html' => radio_form($status, 'status'),
@@ -149,7 +149,7 @@ function add(): void {
         'hometext_html' => textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1'),
         'hometext_label' => _TEXT.':',
         'is_reply' => (bool)$pid,
-        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
         'postname_label' => _POSTEDBY.':',
         'save_html' => ad_save('id', $id, 'save'),
         'subject_label' => _TITLE.':',
@@ -286,10 +286,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 3]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

@@ -97,7 +97,7 @@ function add(): void {
         'date_label' => _CHNGSTORY.':',
         'joke_html' => textarea('1', 'joke', $joke, 'jokes', '10', _JOKE, '1'),
         'joke_label' => _JOKE.':',
-        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
         'postname_label' => _POSTEDBY.':',
         'save_html' => ad_save('jokeid', $jokeid, 'save'),
         'title_label' => _TITLE.':',
@@ -214,10 +214,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=jokes', 'name=jokes&amp;op=add', 'name=jokes&amp;status=1', 'name=jokes&amp;op=config', 'name=jokes&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -229,5 +227,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-

@@ -1,1 +1,1 @@
-<span OnClick="AjaxLoad('GET', '0', '{{ id }}', '{{{ request }}}', ''); return false;">{{ label }}</span>
+<span hx-get="index.php?{{{ request }}}" hx-trigger="click" hx-target="#rep{{ id }}" hx-swap="innerHTML" hx-push-url="false">{{ label }}</span>

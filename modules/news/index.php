@@ -109,7 +109,7 @@ function news(): void {
             $post = ($conf['news']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['news']['date']) ? format_time($time) : '';
             $iso = ($conf['news']['date']) ? date('c', strtotime($time)) : '';
-            $rating = ajax_rating(0, $id, $conf['name'], $ratings, $score, '');
+            $rating = getRatingAsync(0, $id, $conf['name'], $ratings, $score, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             if (($i - 1) % $conf['news']['bascol'] == 0) $cont .= $tpl->getHtmlFrag('grid-table-row', ['open' => true]);
             $cont .= $tpl->getHtmlFrag('grid-table-cell', ['open' => true, 'width' => $width]);
@@ -293,9 +293,9 @@ function view(): void {
         $post = ($conf['news']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['news']['date']) ? format_time($time) : '';
         $iso = ($conf['news']['date']) ? date('c', strtotime($time)) : '';
-        $rating = ajax_rating(1, $id, $conf['name'], $ratings, $score, '');
-        $favorites = getFavorBtn($id, $conf['name']);
-        $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVoting($vote, $conf['name']).'</div><hr>' : '';
+        $rating = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
+        $favorites = getFavoriteButton($id, $conf['name']);
+        $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVotingView($vote, $conf['name']).'</div><hr>' : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         $cont .= getContentView([
             'is_moder' => is_moder($conf['name']),

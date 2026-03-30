@@ -147,7 +147,7 @@ function add(): void {
         'link_label' => $link.':',
         'path_html' => $path_html,
         'path_label' => _FILE_DIR.':',
-        'postname_html' => get_user_search('postname', $postname, '25', 'sl_form', '1'),
+        'postname_html' => getUserSearch('postname', $postname, '25', 'sl_form', '1'),
         'postname_label' => _POSTEDBY.':',
         'save_html' => ad_save('fid', $fid, 'save'),
         'title_label' => _TITLE.':',
@@ -362,10 +362,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 5]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -378,5 +376,3 @@ switch ($op) {
     case 'configsave': configsave(); break;
     case 'info': info(); break;
 }
-
-

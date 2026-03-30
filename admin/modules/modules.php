@@ -12,7 +12,17 @@ function modules(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = getAdminSearchBox('<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>');
+    $search = getAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
+        'action_url' => $afile.'.php',
+        'select_html' => getAdminSelect('type',
+            getAdminOption('2', _ALL, $mtype === 2)
+            .getAdminOption('1', _USERS, $mtype === 1)
+            .getAdminOption('0', _ADMINS, $mtype === 0),
+            '',
+            'OnChange="submit()"'
+        ),
+        'type_label' => _TYPE,
+    ]));
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
     if (isset($infos)) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $infos]);
@@ -96,7 +106,7 @@ function modules(): void {
         if ($ta === $tb) return strnatcasecmp($a, $b);
         return $ta <=> $tb;
     });
-    $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th class="{sorter: false}">'._STATUS.'</th><th class="{sorter: false}">'._FUNCTIONS.'</th>';
+    $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th data-sort-method="none">'._STATUS.'</th><th data-sort-method="none">'._FUNCTIONS.'</th>';
     $rows = '';
     $a = 1;
     foreach ($mods as $title => $mod) {
@@ -135,10 +145,20 @@ function modules(): void {
             }
             if ($install) {
                 $dbc = '<i class="bi bi-database-fill-dash"></i> ';
-                $sqlimg = '||<a href="'.$afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1" OnClick="return DelCheck(this, \''._DB_DELETE.' &quot;'.$title.'&quot;?\');" title="'._DB_DELETE.'">'._DB_DELETE.'</a>';
+                $sqlimg = $tpl->getHtmlFrag('admin-modules-db-action', [
+                    'confirm_text' => _DB_DELETE.' "'.$title.'"?',
+                    'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1',
+                    'label' => _DB_DELETE,
+                    'title' => _DB_DELETE,
+                ]);
             } else {
                 $dbc = '<i class="bi bi-database-fill-add"></i> ';
-                $sqlimg = '||<a href="'.$afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2" OnClick="return DelCheck(this, \''._DB_INSTALL.' &quot;'.$title.'&quot;?\');" title="'._DB_INSTALL.'">'._DB_INSTALL.'</a>';
+                $sqlimg = $tpl->getHtmlFrag('admin-modules-db-action', [
+                    'confirm_text' => _DB_INSTALL.' "'.$title.'"?',
+                    'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2',
+                    'label' => _DB_INSTALL,
+                    'title' => _DB_INSTALL,
+                ]);
             }
         } else {
             $dbc = '';
@@ -146,7 +166,12 @@ function modules(): void {
         }
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
             $dbu = '<i class="bi bi-database-fill-gear bi-green" title="'._DB_UPDATE.'"></i> ';
-            $sqluimg = '||<a href="'.$afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3" OnClick="return DelCheck(this, \''._DB_UPDATE.' &quot;'.$title.'&quot;?\');" title="'._DB_UPDATE.'">'._DB_UPDATE.'</a>';
+            $sqluimg = $tpl->getHtmlFrag('admin-modules-db-action', [
+                'confirm_text' => _DB_UPDATE.' "'.$title.'"?',
+                'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3',
+                'label' => _DB_UPDATE,
+                'title' => _DB_UPDATE,
+            ]);
         } else {
             $dbu = '';
             $sqluimg = '';
@@ -154,10 +179,19 @@ function modules(): void {
         $acts = adminMenuItems([
             ad_status($afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active),
             adminLinkAction($afile.'.php?name=modules&amp;op=edit&amp;mod='.$title, _FULLEDIT, _FULLEDIT),
-            ltrim($sqlimg, '|'),
-            ltrim($sqluimg, '|'),
+            $sqlimg,
+            $sqluimg,
         ]);
-        $cols = '<td>'.$a.'</td><td><i class="bi bi-'.$typel.'"></i> '.$titlel.'</td><td>'.$title.'</td><td>'.$who_view.'</td><td>'.$group_name.'</td><td>'.$dbc.$dbu.'</td><td>'.$acts.'</td>';
+        $cols = $tpl->getHtmlFrag('admin-modules-list-row', [
+            'actions_html' => $acts,
+            'db_html' => $dbc.$dbu,
+            'group_label' => $group_name,
+            'icon_name' => $typel,
+            'id_value' => (string)$a,
+            'module_name' => $title,
+            'title_html' => $titlel,
+            'view_label' => $who_view,
+        ]);
         $rows .= getAdminTableRow($cols);
         $a++;
     }
@@ -182,7 +216,17 @@ function edit(): void {
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
-    $search = getAdminSearchBox('<form method="post" action="'.$afile.'.php"><input type="hidden" name="name" value="modules">'._TYPE.': <select name="type" OnChange="submit()"><option value="2"'.(($mtype === 2) ? ' selected' : '').'>'._ALL.'</option><option value="1"'.(($mtype === 1) ? ' selected' : '').'>'._USERS.'</option><option value="0"'.(($mtype === 0) ? ' selected' : '').'>'._ADMINS.'</option></select></form>');
+    $search = getAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
+        'action_url' => $afile.'.php',
+        'select_html' => getAdminSelect('type',
+            getAdminOption('2', _ALL, $mtype === 2)
+            .getAdminOption('1', _USERS, $mtype === 1)
+            .getAdminOption('0', _ADMINS, $mtype === 0),
+            '',
+            'OnChange="submit()"'
+        ),
+        'type_label' => _TYPE,
+    ]));
     setHead();
     $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
     $hide = getAdminHidden('mod', $mod).getAdminHidden('name', 'modules').getAdminHidden('op', 'save');
@@ -197,7 +241,7 @@ function edit(): void {
         }
     }
     $rows .= getAdminFormRow(_LOGO.':', getAdminSelect('img', $pickopts, 'sl_conf', 'id="img_replace"'));
-    $rows .= getAdminFormRow(_PREVIEW.':', '<img src="'.$path.$img.'" id="picture" alt="'._LOGO.'">');
+    $rows .= getAdminFormRow(_PREVIEW.':', getAdminImagePreview($path.$img, _LOGO));
     $rows .= getAdminFormRow(_STATUS.':', radio_form($active, 'active'));
     $privopts = '';
     foreach ([_MVALL, _MVUSERS, _MVADMIN] as $key => $value) {
@@ -231,7 +275,7 @@ function edit(): void {
     }
     $rows .= getAdminFormRow(_BLOCKS_MOD.':', getAdminSelect('top', $topopts, 'sl_conf'));
     $rows .= getAdminFormRow(_SHOWINMENU, radio_form($menu, 'menu'));
-    $rows .= getAdminFormWide('<input type="submit" value="'._SAVECHANGES.'" class="sl_but_blue">', '', 'sl_center');
+    $rows .= getAdminFormWide(getAdminSubmitButton(_SAVECHANGES), '', 'sl_center');
     $cont .= getAdminForm($afile.'.php', $rows, $hide, 'sl_table_conf');
     echo $cont;
     setFoot();
@@ -299,10 +343,8 @@ function add(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=modules', 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -313,5 +355,3 @@ switch ($op) {
     case 'add': add(); break;
     case 'info': info(); break;
 }
-
-

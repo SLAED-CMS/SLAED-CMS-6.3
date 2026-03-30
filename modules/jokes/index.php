@@ -77,7 +77,7 @@ function jokes(): void {
             $cdesc = $cdesc ?: $ctitle;
             $chref = 'index.php?name='.$conf['name'].'&amp;cat='.$cid;
             $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
-            $rating = ajax_rating(1, $id, $conf['name'], $ratingtot, $rating, '');
+            $rating = getRatingAsync(1, $id, $conf['name'], $ratingtot, $rating, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$jtitle.'&quot;?');
             $cont .= getContentCard([
                 'id' => $id,

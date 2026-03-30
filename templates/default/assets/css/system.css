@@ -441,10 +441,34 @@ select.sl_mod_search { width: 504px; }
 .sl_bb_trans td:first-child { border-left: 0; }
 .sl_bb_trans td { padding: 4px; text-align: center; border-left: 1px solid #e7e7eb; }
 
-/* Tablesorter - Сортировка таблиц списка */
-thead tr .sl_sort { background-image: url(../../images/misc/bg.gif); background-repeat: no-repeat; background-position: center right; cursor: pointer; }
-thead tr .sl_sort_asc { background-image: url(../../images/misc/asc.gif); opacity: 0.5; }
-thead tr .sl_sort_desc { background-image: url(../../images/misc/desc.gif); opacity: 0.5; }
+/* Tablesort - Сортировка таблиц списка */
+thead tr .sl_sort,
+thead tr .sl_sort_asc,
+thead tr .sl_sort_desc {
+    position: relative;
+    cursor: pointer;
+    background-image: none;
+    padding-right: 18px;
+}
+thead tr .sl_sort::after,
+thead tr .sl_sort_asc::after,
+thead tr .sl_sort_desc::after {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    line-height: 1;
+    opacity: 0.55;
+}
+thead tr .sl_sort::after { content: '↕'; }
+thead tr .sl_sort_asc::after { content: '▲'; }
+thead tr .sl_sort_desc::after { content: '▼'; }
+thead tr th[data-sort-method="none"] {
+    cursor: default;
+    padding-right: 8px;
+}
+thead tr th[data-sort-method="none"]::after { content: none; }
 
 /* Таблицы списка */
 .sl_table_list, .sl_table_list_sort { width: 100%; margin-bottom: 40px; border-collapse: collapse; border-spacing: 0; }

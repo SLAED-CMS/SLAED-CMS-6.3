@@ -1,1 +1,1 @@
-<li><a href="{{{ href }}}"{% if rel %} rel="{{ rel }}"{% endif %}{% if is_selected %} class="selected"{% endif %}><b>{{ label }}</b></a></li>
+<li><a href="{{{ href }}}"{% if rel %} rel="{{ rel }}"{% endif %}{% if attrs %} {{{ attrs }}}{% endif %}{% if is_selected %} class="selected"{% endif %}><b>{{ label }}</b></a></li>

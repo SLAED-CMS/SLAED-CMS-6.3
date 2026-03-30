@@ -118,32 +118,32 @@ if (empty($go)) {
     if ($go == 1) {
         setCache('0');
         switch($op) {
-            case 'rating': rating(); break;
-            case 'show_files': show_files(); break;
-            case 'user_sainfo': user_sainfo(); break;
-            case 'user_sinfo': user_sinfo(); break;
-            case 'get_user': get_user(); break;
-            case 'editcom': editcom(); break;
-            case 'savecom': addComment(); break;
-            case 'closecom': closecom(); break;
-            case 'editpost': updatePost(); break;
-            case 'prmess': getPmView(); break;
-            case 'prmesssend': addPmMsg(); break;
-            case 'prmesssave': setPmSaved(); break;
-            case 'prmessdel': deletePmMsg(); break;
-            case 'favoradd': addFavor(); break;
-            case 'favorliste': getFavorList(); break;
-            case 'favordel': deleteFavor(); break;
-            case 'avoting_view': getVoting(); break;
-            case 'avoting_save': avoting_save(); break;
+            case 'getRatingView': getRatingView(); break;
+            case 'getEditorFiles': getEditorFiles(); break;
+            case 'getUserSessionAdminInfo': getUserSessionAdminInfo(); break;
+            case 'getUserSessionInfo': getUserSessionInfo(); break;
+            case 'getUserList': getUserList(); break;
+            case 'updateComment': updateComment(); break;
+            case 'addComment': addComment(); break;
+            case 'updateCommentStatus': updateCommentStatus(); break;
+            case 'updatePost': updatePost(); break;
+            case 'getPrivateMessageView': getPrivateMessageView(); break;
+            case 'addPrivateMessage': addPrivateMessage(); break;
+            case 'setPrivateMessageSaved': setPrivateMessageSaved(); break;
+            case 'deletePrivateMessage': deletePrivateMessage(); break;
+            case 'addFavorite': addFavorite(); break;
+            case 'getFavoriteList': getFavoriteList(); break;
+            case 'deleteFavorite': deleteFavorite(); break;
+            case 'getVotingView': getVotingView(); break;
+            case 'updateVotingResult': updateVotingResult(); break;
         }
     } elseif ($go == 2) {
         getLang('shop');
         setCache('0');
         switch($op) {
-            default: show_kasse(); break;
-            case 'add_kasse': add_kasse(); break;
-            case 'del_kasse': del_kasse(); break;
+            default: getCartSummary(); break;
+            case 'addCartItem': addCartItem(); break;
+            case 'deleteCartItem': deleteCartItem(); break;
         }
     } elseif ($go == 3) {
         setCache('0');
@@ -180,17 +180,18 @@ if (empty($go)) {
             getLang('admin');
             setCache('0');
             require_once BASE_DIR.'/core/admin.php';
+            $tpl = new Template('admin');
             switch($op) {
-                case 'ajax_cat': ajax_cat(); break;
-                case 'cat_order': cat_order(); break;
-                case 'ajax_block': ajax_block(); break;
-                case 'blocks_order': blocks_order(); break;
-                case 'fav_aliste': fav_aliste(); break;
-                case 'fav_adel': fav_adel(); break;
-                case 'ajax_privat': ajax_privat(); break;
-                case 'ajax_privat_del': ajax_privat_del(); break;
-                case 'ashow_files': ashow_files(); break;
-                case 'adm_info': echo getAdminInfo(); break;
+                case 'getAdminCategoryList': getAdminCategoryList(); break;
+                case 'updateAdminCategoryOrder': updateAdminCategoryOrder(); break;
+                case 'getAdminBlockList': getAdminBlockList(); break;
+                case 'updateAdminBlockOrder': updateAdminBlockOrder(); break;
+                case 'getAdminFavoriteList': getAdminFavoriteList(); break;
+                case 'deleteAdminFavorite': deleteAdminFavorite(); break;
+                case 'getAdminPrivateList': getAdminPrivateList(); break;
+                case 'deleteAdminPrivate': deleteAdminPrivate(); break;
+                case 'getAdminUploadFiles': getAdminUploadFiles(); break;
+                case 'getAdminInfo': echo getAdminInfo(); break;
             }
         } else {
             die('Illegal file access');

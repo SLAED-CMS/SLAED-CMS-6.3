@@ -64,7 +64,7 @@ function view(): void {
 			'time' => $date,
 			'author' => $conf['sitename'],
 		]);
-		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('voting-basic', ['content' => '<div id="rep'.$conf['name'].'">'.getVoting($id, $conf['name']).'</div>']);
+		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('voting-basic', ['content' => '<div id="rep'.$conf['name'].'">'.getVotingView($id, $conf['name']).'</div>']);
 		if ($acomm) $cont .= setComShow($id, $acomm);
 	} else {
 		setHead(['title' => _VOTING]);

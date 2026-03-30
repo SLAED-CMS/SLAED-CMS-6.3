@@ -29,7 +29,7 @@ function replace(): void {
                     'content_placeholder' => _CONTENT,
                     'content_value' => $out[2] ?? '',
                     'display_attr' => $display,
-                    'hr_html' => ($c === 0) ? '' : '<hr>',
+                    'hr_html' => ($c === 0) ? '' : getAdminHrLine(),
                     'info_text' => _REPLACEIN,
                     'next_block_id' => 'fi'.$k.$b,
                     'title_attr' => _ADD,
@@ -42,13 +42,13 @@ function replace(): void {
             }
             $content .= $tpl->getHtmlFrag('admin-replace-tab-content', [
                 'items_html' => $items,
-                'tab_id' => 'tabc'.$k,
+                'tab_id' => getAdminTabName('replace', $k),
             ]);
             $k++;
         }
     }
     $repv = getAdminConfSave($content, 'replace', 'save')
-        .$tpl->getHtmlFrag('admin-uploads-tabs-script', ['group_id' => 'replace']);
+        .getAdminTabsSetup('replace');
     echo $cont.getAdminBox($repv);
     setFoot();
 }
@@ -74,10 +74,8 @@ function save(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=replace', 'name=replace', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'tab' => 2]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

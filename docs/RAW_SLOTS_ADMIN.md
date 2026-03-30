@@ -24,6 +24,10 @@
 
 - `content_html`: prepared full-width row content for collapsible panels, grouped controls, or submit areas
 
+## admin-rows-table
+
+- `rows_html`: prepared `<tr>` markup for rows-only admin tables without a dedicated header block
+
 ## admin-box
 
 - `content_html`: prepared inner admin panel markup for legacy config and info screens that now share one stable wrapper without `open` and `close`
@@ -103,6 +107,11 @@
 - `title_attr`: plain-text tooltip value for the HTML `title` attribute
 - `label_text`: visible abbreviated text, typically a cutstr result
 
+## admin-color-label
+
+- `color_val`: escaped CSS color value for inline text color styling
+- `label_text`: visible escaped label text
+
 ## admin-title-tip
 
 - `content_html`: raw HTML for the hover tooltip popup — may contain `<br>` and markup assembled from other helpers
@@ -118,6 +127,36 @@
 - `down_query`: pre-assembled query string for the move-down action — output raw, already contains `&amp;` entities
 - `up_title`: label for the up-arrow title attribute
 - `down_title`: label for the down-arrow title attribute
+
+## comment-action-ajax
+
+- `load_id`: legacy loader mode field kept only for backward fragment payload compatibility
+- `target`: ajax target container id
+- `query`: pre-assembled query string — output raw, already contains `&amp;` entities
+- `title`: link title attribute text
+- `label`: visible link text
+- `class`: optional CSS class string
+- `error_text`: optional POST error text payload; keep empty for default GET action helper
+
+## admin-action-ajax
+
+- `target`: HTMX target container id without `#`
+- `query`: pre-assembled admin query string — output raw, already contains `&amp;` entities
+- `title`: link title attribute text
+- `label`: visible link text
+- `class`: optional CSS class string
+
+## action-delete
+
+- `href`: escaped action URL
+- `confirm_text`: escaped confirm message string passed into `DelCheck()`
+- `title`: link title attribute text
+- `label`: visible link text
+
+## action-menu
+
+- `editor_label`: visible trigger label for the action dropdown
+- `items_html`: prepared `<li>` item markup assembled from `action-menu-item`
 
 ## admin-panel-grid-item
 
@@ -141,8 +180,9 @@
 
 ## admin-info-form
 
+- `action_url`: route used by the HTMX form submit and plain form fallback
+- `hidden_html`: prepared hidden inputs for `id`, `type`, `name`, and CSRF token
 - `textarea_html`: raw HTML from the `textarea()` helper — output raw
-- `submit_onclick`: JS onclick handler string — HTML-escaped by template (same behavior as previous explicit htmlspecialchars)
 - `submit_label`: submit button value text
 - `submit_title`: submit button title attribute text
 
@@ -159,11 +199,15 @@
 
 ## admin-conf-save
 
-- `content_html`: prepared tab content assembled in PHP (div.tabcont blocks with tables, textareas and other controls) for ddtabcontent conf-save forms that share one stable form+submit shell
+- `content_html`: prepared tab content assembled in PHP (div.tabcont blocks with tables, textareas and other controls) for shared admin tab forms that use one stable form+submit shell
+
+## admin-tabs-setup
+
+- `group_id`: escaped tab-group id passed into `setAdminTabs()`
 
 ## admin-cat-form
 
-- `tabs_html`: prepared tab content assembled from getCatTab() + getCatTabScript() + getCatSubmitRow() calls for the categories add/subadd/edit forms
+- `tabs_html`: prepared tab content assembled from getCatTab() + getAdminTabsSetup() + getCatSubmitRow() calls for the categories add/subadd/edit forms
 
 ## admin-search-drop-form
 
@@ -750,7 +794,7 @@
 ## admin-replace-field-block
 
 - `display_attr`: prepared attribute string like ` class="sl_none"` for hidden rows
-- `hr_html`: prepared separator HTML, empty string or `<hr>`
+- `hr_html`: prepared separator HTML, usually empty string or `getAdminHrLine()`
 
 ## admin-replace-tab-content
 
@@ -759,7 +803,7 @@
 ## admin-fields-field-block
 
 - `display_attr`: prepared attribute string like ` class="sl_none"` for hidden rows
-- `hr_html`: prepared separator HTML, empty string or `<hr>`
+- `hr_html`: prepared separator HTML, usually empty string or `getAdminHrLine()`
 - `next_block_id`: target id for the collapsible legacy row
 - `field_label`: escaped expand-link label
 - `content_label`: escaped field-content label
@@ -776,10 +820,6 @@
 ## admin-fields-tab-content
 
 - `items_html`: prepared sequence of field blocks for one tab
-
-## admin-fields-tabs-script
-
-- `group_id`: escaped ddtabcontent group id
 
 ## admin-security-ban-ip-row
 
@@ -913,6 +953,30 @@
 
 - `input_attr`: prepared extra attribute string (e.g. `placeholder="..." required`) — output raw, trusted PHP-assembled literals only
 
+## admin-url-input
+
+- `input_attr`: prepared extra attribute string (e.g. `placeholder="https://..." required`) — output raw, trusted PHP-assembled literals only
+
+## admin-email-input
+
+- `input_attr`: prepared extra attribute string (e.g. `placeholder="mail@example.com" required`) — output raw, trusted PHP-assembled literals only
+
+## admin-textarea
+
+- `input_attr`: prepared extra attribute string (e.g. `placeholder="..." required`) — output raw, trusted PHP-assembled literals only
+
+## admin-image-preview
+
+- (no raw slots — all values are escaped by template)
+
+## admin-hr-line
+
+- (no raw slots — static `<hr>` fragment)
+
+## admin-tab-content
+
+- `items_html`: prepared inner tab markup, usually a rows table plus optional alerts
+
 ## admin-shop-assoc-table
 
 - `rows_html`: prepared associated-category checkbox rows assembled in PHP from `admin-blocks-view-row-open`, `admin-shop-assoc-cell`, and `admin-blocks-view-row-close` fragments
@@ -928,6 +992,92 @@
 ## admin-section-heading
 
 - (no raw slots — all values are escaped by template)
+
+## admin-modules-type-search
+
+- `select_html`: prepared type select markup from `getAdminSelect()`
+
+## admin-modules-list-row
+
+- `title_html`: prepared module label markup, may include title-tip helper output
+- `db_html`: prepared DB state icon/action markup
+- `actions_html`: prepared action menu markup
+
+## admin-modules-db-action
+
+- (no raw slots — all values are escaped by template except `href`, which is escaped as an attribute-safe value)
+
+## admin-scheduler-action-form
+
+- `hidden_html`: prepared hidden input markup for post-only scheduler actions
+
+## admin-scheduler-action-link
+
+- (no raw slots — all values are escaped by template)
+
+## admin-scheduler-list-row
+
+- `title_html`: prepared title-tip label markup
+- `status_html`: prepared status toggle markup
+- `forms_html`: prepared hidden post-form markup
+- `actions_html`: prepared action menu markup
+
+## admin-lang-list-row
+
+- `status_html`: prepared status badge markup
+- `actions_html`: prepared action menu markup
+
+## admin-lang-translate-button
+
+- (no raw slots — all values are escaped by template)
+
+## admin-statistic-image
+
+- (no raw slots — all values are escaped by template)
+
+## admin-security-tab-divider
+
+- (no raw slots — static `<hr>` fragment)
+
+## admin-database-dump-actions
+
+- (no raw slots — static submit button names and values)
+
+## admin-database-sql-head
+
+- (no raw slots — all values are escaped by template)
+
+## admin-database-sql-row
+
+- `status_html`: prepared status badge markup
+
+## admin-database-list-row
+
+- `free_html`: prepared free-space markup with DB-engine specific coloring
+- `status_html`: prepared action/status markup
+
+## admin-database-table-head
+
+- (no raw slots — all values are escaped by template)
+
+## admin-database-total-row
+
+- (no raw slots — all values are escaped by template)
+
+## admin-database-status-tag
+
+- (no raw slots — all values are escaped by template)
+
+## admin-database-summary
+
+- `status_html`: prepared status badge markup
+- `stop_html`: optional prepared stop-line markup
+
+## admin-shop-preview-voting
+
+- `voting_html`: raw output from `getVoting()`
+- `hr_html`: prepared separator markup, usually from `getAdminHrLine()`
+- `text_html`: prepared preview intro text
 
 ## Rules
 

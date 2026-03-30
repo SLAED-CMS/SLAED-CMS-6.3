@@ -20,7 +20,7 @@ function buildShopSearchBox(): string {
     return getAdminSearchBox($tpl->getHtmlFrag('admin-shop-search-box', [
         'action_url' => $afile.'.php',
         'hidden_html' => getAdminHidden('name', 'shop').getAdminHidden('op', 'clients'),
-        'input_html' => get_user_search('csearch', $txt, '30'),
+        'input_html' => getUserSearch('csearch', $txt, '30'),
         'ok_label' => _OK,
         'search_label' => _SEARCH,
         'select_html' => getAdminSelect('search', $opts),
@@ -457,10 +457,12 @@ function productadd(): void {
         'legacy' => 2,
     ]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
-    $ptextpre = ($vote) ? '<div id="repshop">'.getVoting($vote, 'shop').'</div><hr>'.$ptext : $ptext;
+    $ptextpre = ($vote)
+        ? $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($vote, 'shop')]).getAdminHrLine().$ptext
+        : $ptext;
     if ($ptextpre) $cont .= preview($ptitle, $ptextpre, $pbodytext, '', 'shop');
     $parows = getAdminFormRow(_TITLE.' / '._PRODUCT.':', getAdminTextInput('ptitle', $ptitle, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'))
-        .getAdminFormRow(_CATEGORY.':', getcat('shop', $pcid, 'pcid', 'sl_form', '<option value="">'._HOMECAT.'</option>'));
+        .getAdminFormRow(_CATEGORY.':', getcat('shop', $pcid, 'pcid', 'sl_form', getAdminOption('', _HOMECAT)));
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY parent, title', ['modul' => 'shop']);
     if ($db->getSqlRowCount($result2) > 0) {
         $assocrows = '';
@@ -989,6 +991,8 @@ function export(): void {
             $import = $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
         }
         $content = $tpl->getHtmlFrag('admin-shop-export-tabs', [
+            'export_id' => getAdminTabName('exports', 0, true),
+            'import_id' => getAdminTabName('exports', 1, true),
             'export_html' => $export,
             'import_html' => $import,
         ]).$tpl->getHtmlFrag('admin-shop-export-script', []);
@@ -1152,7 +1156,6 @@ function save(): void {
 
 function info(): void {
     global $afile, $tpl;
-    setHead();
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $box = buildShopSearchBox();
@@ -1164,8 +1167,7 @@ function info(): void {
         'stabs' => [_NEW, _AKTIVE, _DEAKTIVE, _ADD],
         'tab'  => 5,
     ]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch($op) {

@@ -10,4 +10,4 @@
 <table id="{{ visitors_toggle_id }}" class="sl_table_block sl_none">{{{ visitors_rows_html }}}</table>
 <table class="sl_table_block"><tr><td>{{ overall_label }}:</td><td class="sl_right">{{ overall_count }}</td></tr></table>
 <hr>
-<table class="sl_table_block"><tr><td class="sl_center"><a OnClick="AjaxLoad('GET', '0', '{{ update_target }}', '{{{ update_query }}}', ''); return false;" title="{{ update_title }}" class="sl_but_green">{{ update_label }}</a></td></tr></table>
+<table class="sl_table_block"><tr><td class="sl_center"><a href="index.php?{{{ update_query }}}" hx-get="index.php?{{{ update_query }}}" hx-target="#rep{{ update_target }}" hx-swap="innerHTML" hx-push-url="false" title="{{ update_title }}" class="sl_but_green">{{ update_label }}</a></td></tr></table>

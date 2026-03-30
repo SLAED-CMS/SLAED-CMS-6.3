@@ -50,6 +50,8 @@ function rss(): void {
         'min_value' => (string)$conf['rss']['min'],
         'route' => $afile,
         'rss_sources_html' => $content,
+        'tab_one_id' => getAdminTabName('rss', 0),
+        'tab_two_id' => getAdminTabName('rss', 1),
         'save_label' => _SAVECHANGES,
         'temp_hint' => _RSSTEMPINFO,
         'temp_label' => _RSSTEMP.':',
@@ -84,10 +86,8 @@ function save(): void {
     setRedirect($afile.'.php?name=rss');
 }
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=rss', 'name=rss', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'tab' => 2]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

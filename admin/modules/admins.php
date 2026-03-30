@@ -338,12 +338,8 @@ function delete(): void {
 
 function info(): void {
     global $tpl;
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
-    echo $cont.$tpl->getHtmlFrag('admin-info-box', [
-        'info_html' => getAdminInfo(),
-    ]);
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

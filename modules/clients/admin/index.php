@@ -141,10 +141,8 @@ function status(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
@@ -155,4 +153,3 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-

@@ -18,6 +18,7 @@ if (!empty($_SERVER['PATH_INFO']) || strpos($uri, '/index.php/') !== false) {
 
 # Load unified config - merges all /config/*.php into $conf, applies local.php overrides
 $conf = getConfig();
+if (defined('ADMIN_FILE')) $conf['theme'] = 'admin';
 
 # Set the default timezone
 date_default_timezone_set($conf['gtime']);

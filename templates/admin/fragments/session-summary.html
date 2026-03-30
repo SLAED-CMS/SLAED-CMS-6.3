@@ -9,7 +9,7 @@
 <table class="sl_table_block">
     <tr>
         <td class="sl_center">
-            <a OnClick="AjaxLoad('GET', '0', '{{ update_target }}', '{{{ update_query }}}', ''); return false;" title="{{ update_title }}" class="sl_but_green">{{ update_label }}</a>
+            <a href="index.php?{{{ update_query }}}" hx-get="index.php?{{{ update_query }}}" hx-target="#rep{{ update_target }}" hx-swap="innerHTML" hx-push-url="false" title="{{ update_title }}" class="sl_but_green">{{ update_label }}</a>
             {% if has_rows %}
             <a OnClick="HideShow('{{ toggle_id }}', 'slide', 'up', 500);" title="{{ toggle_title }}" class="sl_but_blue">{{ toggle_label }}</a>
             {% endif %}

@@ -83,7 +83,7 @@ function add(): void {
     $hide = getAdminHidden('gid', (string)$gid).getAdminHidden('name', 'groups').getAdminHidden('op', 'save');
     $rows = '';
     $rows .= getAdminFormRow(_NAME.':', getAdminTextInput('grname', $grname, 'sl_form', 'maxlength="255" placeholder="'._NAME.'" required'));
-    $rows .= getAdminFormRow(_DESCRIPTION.':', '<textarea name="description" cols="65" rows="5" class="sl_form" placeholder="'._DESCRIPTION.'">'.$description.'</textarea>');
+    $rows .= getAdminFormRow(_DESCRIPTION.':', getAdminTextarea('description', $description, 'sl_form', 'placeholder="'._DESCRIPTION.'"'));
     $path = 'templates/'.$conf['theme'].'/images/ranks/';
     $pickopts = '';
     foreach (scandir($path) as $entry) {
@@ -188,10 +188,8 @@ function delete(): void {
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO], 'tab' => 3]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {

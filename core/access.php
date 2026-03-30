@@ -8,8 +8,9 @@ if (!defined('ADMIN_FILE')) die('Illegal file access');
 
 global $path;
 
-require_once $path.'config/global.php';
-require_once $path.'config/security.php';
+$conf = require $path.'config/global.php';
+$conf = array_replace_recursive($conf, require $path.'config/security.php');
+if (defined('ADMIN_FILE')) $conf['theme'] = 'admin';
 require_once $path.'lang/'.$conf['language'].'.php';
 
 # Denial of Authenticate

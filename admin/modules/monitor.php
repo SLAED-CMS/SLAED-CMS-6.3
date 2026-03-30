@@ -1389,10 +1389,8 @@ function monitor(): void {
 
 # Renders monitor information page with standard admin info block and navigation tabs
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 # Sets snapshot-backed monitor partial output for HTMX refresh endpoints
@@ -1422,4 +1420,3 @@ switch ($op) {
     case 'status': status(); break;
     case 'sync': sync(); break;
 }
-

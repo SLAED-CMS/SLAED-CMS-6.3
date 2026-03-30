@@ -344,7 +344,7 @@ function view(): void {
                 $birth = [_BIRTHDAY, _NO_INFO];
             }
             $gender = [_GENDER, gender($gender)];
-            $rating = [_RATING, ajax_rating(1, $uid, $conf['name'], $votes, $total, '', 1)];
+            $rating = [_RATING, getRatingAsync(1, $uid, $conf['name'], $votes, $total, '', 1)];
             $field = ($field) ? fields_out($field, $conf['name']) : '';
             $sgroup = ($gname) ? [_SPEC_GROUP, $gname] : [_SPEC_GROUP, _NO];
             $rgroup = [];
@@ -675,16 +675,16 @@ function privat(): void {
             'title' => _PRIVAT,
         ]);
         $title = [
-            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmessin', 'request' => 'go=1&amp;op=prmess&amp;typ=1', 'label' => _PRIN]),
-            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmessou', 'request' => 'go=1&amp;op=prmess&amp;typ=2', 'label' => _PROUT]),
-            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmesssa', 'request' => 'go=1&amp;op=prmess&amp;typ=3', 'label' => _PRSAVE]),
+            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmessin', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=1', 'label' => _PRIN]),
+            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmessou', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=2', 'label' => _PROUT]),
+            $tpl->getHtmlFrag('account-privat-tab-title', ['id' => 'prmesssa', 'request' => 'go=1&amp;op=getPrivateMessageView&amp;typ=3', 'label' => _PRSAVE]),
             _SEND
         ];
         $text = [
-            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessin', 'content' => getPmView(1, 0, 0, 1)]),
-            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessou', 'content' => getPmView(1, 0, 0, 2)]),
-            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmesssa', 'content' => getPmView(1, 0, 0, 3)]),
-            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessfo', 'content' => getPmView(1, 0, 0, 4)])
+            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessin', 'content' => getPrivateMessageView(1, 0, 0, 1)]),
+            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessou', 'content' => getPrivateMessageView(1, 0, 0, 2)]),
+            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmesssa', 'content' => getPrivateMessageView(1, 0, 0, 3)]),
+            $tpl->getHtmlFrag('account-privat-tab-pane', ['id' => 'repprmessfo', 'content' => getPrivateMessageView(1, 0, 0, 4)])
         ];
         $cont = $tpl->getHtmlFrag('title', ['title' => _PRIVAT]).getUserNav().getNaviTabs(0, 'tab', $title, $text);
         echo $cont;
@@ -700,7 +700,7 @@ function favorites(): void {
         setHead([
             'title' => _FAVORITES,
         ]);
-        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().$tpl->getHtmlFrag('account-favorites-list', ['content' => getFavorList(1)]);
+        echo $tpl->getHtmlFrag('title', ['title' => _FAVORITES]).getUserNav().$tpl->getHtmlFrag('account-favorites-list', ['content' => getFavoriteList(1)]);
         setFoot();
     } else {
         account();

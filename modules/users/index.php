@@ -27,7 +27,7 @@ function users(): void {
         while ([$id, $name, $site, $reg, $from, $last, $point, $ip, $gender, $votes, $total] = $db->getSqlRow($result)) {
             $site = ($site) ? '<br>'._SITE.': '.$site : '';
                 $info = (is_moder($conf['name'])) ? user_geo_ip($ip, 4) : format_time($reg);
-                $rating = $rate ? '<div class="min-rate"><div class="rate-like-box">'.ajax_rating(1, $id, 'account', $votes, $total, '', 1).'</div></div>' : cutstr((string)$from, 30);
+                $rating = $rate ? '<div class="min-rate"><div class="rate-like-box">'.getRatingAsync(1, $id, 'account', $votes, $total, '', 1).'</div></div>' : cutstr((string)$from, 30);
             $cont .= $tpl->getHtmlFrag('users-top-basic', [
                 'row_id' => $count,
                 'tip' => title_tip(_REG.': '.format_time($reg, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time($last, _TIMESTRING).$site),

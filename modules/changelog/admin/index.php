@@ -199,7 +199,6 @@ function export(): void {
 
 function info(): void {
     global $conf;
-    setHead();
     $_exporten = $conf['changelog']['exporten'] ?? true;
     $cont = setAdminNavi($_exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
@@ -210,8 +209,7 @@ function info(): void {
         'tabs' => [_HOME, _PREFERENCES, _INFO],
         'tab'  => 4,
     ]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 

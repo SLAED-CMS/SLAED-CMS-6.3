@@ -27,4 +27,4 @@ if ($conf['voting']['block'] <= 1) {
 		$bid = '';
 	}
 }
-$content = ($bid) ? '<div id="repblockvoting">'.getVoting($bid, 'blockvoting').'</div>' : '';
+$content = ($bid) ? '<div id="repblockvoting">'.getVotingView($bid, 'blockvoting').'</div>' : '';

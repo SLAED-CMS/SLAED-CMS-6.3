@@ -177,12 +177,12 @@ function view(): void {
             $text = $hometext.$fields;
             $post = ($nick) ? user_info($nick) : _ANONYM;
             $date = ($conf['help']['date']) ? format_time($time) : '';
-            $rating = ($haid && $huid != $haid) ? ajax_rating(1, $hid, $conf['name'], $ratings, $score, '') : '';
+            $rating = ($haid && $huid != $haid) ? getRatingAsync(1, $hid, $conf['name'], $ratings, $score, '') : '';
             if (!$pid) {
                 $reads = $counter;
                 $cdesc = $cdesc ?: $ctitle;
                 $cimg = ($cimg) ? img_find('categories/'.$cimg) : '';
-                $favorites = getFavorBtn($hid, $conf['name']);
+                $favorites = getFavoriteButton($hid, $conf['name']);
                 $cont .= getContentView([
                     'id' => $hid,
                     'favorites' => $favorites,

@@ -77,7 +77,7 @@ function links(): void {
             $post = ($conf['links']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
             $date = ($conf['links']['date']) ? format_time($time) : '';
             $hits = ($conf['links']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _LINKHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
-            $rating = ajax_rating(0, $id, $conf['name'], $votes, $totalvotes, '');
+            $rating = getRatingAsync(0, $id, $conf['name'], $votes, $totalvotes, '');
             $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$stitle.'&quot;?');
             $cont .= getContentCard([
                 'id' => $id,
@@ -201,8 +201,8 @@ function view(): void {
         $post = ($conf['links']['autor']) ? (($nick) ? user_info($nick) : (($uname) ? $uname : _ANONYM)) : '';
         $date = ($conf['links']['date']) ? format_time($date) : '';
         $hits = ($conf['links']['hits']) ? $tpl->getHtmlFrag('hit-badge', ['title' => _LINKHITS, 'text' => $hits, 'cls' => 'sl_down']) : '';
-        $rating = ajax_rating(1, $id, $conf['name'], $votes, $totalvotes, '');
-        $favorites = getFavorBtn($id, $conf['name']);
+        $rating = getRatingAsync(1, $id, $conf['name'], $votes, $totalvotes, '');
+        $favorites = getFavoriteButton($id, $conf['name']);
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         if (is_user() || $conf['links']['links'] == '1') {
             $onclick = ' OnClick="javascript:window.open(\''.str_replace(["\\", "'"], ["\\\\", "\\'"], $authorurl).'\')"';

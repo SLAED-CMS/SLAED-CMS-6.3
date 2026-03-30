@@ -151,15 +151,27 @@ function deleteDblock(): void {
 }
 
 function getSqltable(array $items): string {
+    global $tpl;
     if (!$items) return '';
-    $head = '<th>'._ID.'</th><th>'._TYPE.'</th><th>'._TABLE.'</th><th class="{sorter: false}">'._DB_SQL.'</th><th class="{sorter: false}">'._STATUS.'</th>';
+    $head = $tpl->getHtmlFrag('admin-database-sql-head', [
+        'db_sql_label' => _DB_SQL,
+        'id_label' => _ID,
+        'status_label' => _STATUS,
+        'table_label' => _TABLE,
+        'type_label' => _TYPE,
+    ]);
     $rows = '';
     foreach ($items as $row) {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
         $status = adminFlagBox((bool)$row['ok'], _OK, _ERROR.' - '.$row['error']);
-        $cells = '<td>'.(int)$row['num'].'</td><td>'.htmlspecialchars($row['type']).'</td><td>'.$tab.'</td><td>'.$sql.'</td><td>'.$status.'</td>';
-        $rows .= getAdminTableRow($cells);
+        $rows .= getAdminTableRow($tpl->getHtmlFrag('admin-database-sql-row', [
+            'db_sql_text' => $sql,
+            'id_value' => (string)(int)$row['num'],
+            'status_html' => $status,
+            'table_label' => $tab,
+            'type_label' => htmlspecialchars($row['type']),
+        ]));
     }
     return getAdminTable($head, $rows);
 }
@@ -180,13 +192,20 @@ function getSqlsum(array $items, string $mode, string $name): string {
     }
     $stat = adminFlagBox($bad === 0, _OK, _ERROR);
     $mval = ($mode === 'dump') ? _DB_RUNMODE : _DB_PARSEMODE;
-    $text = _INQUIRY.': '.$name
-        .'<br>'._DB_MODE.': '.$mval
-        .'<br>'._DB_BLOCKS.': '.$all
-        .'<br>OK: '.$good
-        .'<br>'._DB_ERRORS.': '.$bad
-        .'<br>'._STATUS.': '.$stat;
-    if ($stop) $text .= '<br>'._DB_STOP.': '.$stop;
+    $text = $tpl->getHtmlFrag('admin-database-summary', [
+        'blocks_label' => _DB_BLOCKS,
+        'blocks_value' => (string)$all,
+        'errors_label' => _DB_ERRORS,
+        'errors_value' => (string)$bad,
+        'inquiry_label' => _INQUIRY,
+        'mode_label' => _DB_MODE,
+        'mode_text' => $mval,
+        'name_text' => $name,
+        'ok_value' => (string)$good,
+        'status_html' => $stat,
+        'status_label' => _STATUS,
+        'stop_html' => $stop ? _DB_STOP.': '.$stop : '',
+    ]);
     return $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $text]);
 }
 
@@ -214,15 +233,17 @@ function database(): void {
     $allrows = 0;
     $item = 0;
 
-    $dbhead = '<th>'._ID.'</th>'
-            .'<th>'._TABLE.'</th>'
-            .'<th>'._TYPE.'</th>'
-            .'<th>'._DBCOLL.'</th>'
-            .'<th>'._ROWS.'</th>'
-            .'<th>'._DATE.'</th>'
-            .'<th>'._SIZE.'</th>'
-            .'<th>'._DBFREE.'</th>'
-            .'<th class="{sorter: false}">'.$headtag.'</th>';
+    $dbhead = $tpl->getHtmlFrag('admin-database-table-head', [
+        'actions_label' => $headtag,
+        'collation_label' => _DBCOLL,
+        'date_label' => _DATE,
+        'dbfree_label' => _DBFREE,
+        'id_label' => _ID,
+        'rows_label' => _ROWS,
+        'size_label' => _SIZE,
+        'table_label' => _TABLE,
+        'type_label' => _TYPE,
+    ]);
     $dbrows = '';
 
     foreach ($tables as $info) {
@@ -243,13 +264,9 @@ function database(): void {
         $sumfree += $tabfree;
 
         // Free space display
-        if ($tabeng === 'InnoDB') {
-            $freetag = '<div class="sl_hidden">'.filterSize($tabfree).'</div>';
-        } else {
-            $freetag = $tabfree
-                ? '<div class="sl_red">'.filterSize($tabfree).'</div>'
-                : '<div class="sl_green">'.filterSize($tabfree).'</div>';
-        }
+        $freetag = $tabeng === 'InnoDB'
+            ? $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_hidden', 'label_text' => filterSize($tabfree)])
+            : $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => $tabfree ? 'sl_red' : 'sl_green', 'label_text' => filterSize($tabfree)]);
 
         // --- Status / actions depending on mode ---
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
@@ -260,23 +277,21 @@ function database(): void {
             $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
 
             if (!$oresult) {
-                $stattag = '<div class="sl_red">'._ERROR.'</div>';
+                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_red', 'label_text' => _ERROR]);
             } elseif ($tabeng === 'InnoDB') {
-                $stattag = '<div class="sl_green">'._OPTIMIZED.'</div>';
+                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_green', 'label_text' => _OPTIMIZED]);
             } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
-                $stattag = '<div class="sl_red">'._ALREADYOPTIMIZED.'</div>';
+                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_red', 'label_text' => _ALREADYOPTIMIZED]);
             } else {
-                $stattag = '<div class="sl_green">'._OPTIMIZED.'</div>';
+                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_green', 'label_text' => _OPTIMIZED]);
             }
 
         } elseif ($type === 'repair') {
             if ($tabeng === 'InnoDB') {
-                $stattag = '<div class="sl_hidden">'._NO.'</div>';
+                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_hidden', 'label_text' => _NO]);
             } else {
                 $rresult = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
-                $stattag = $rresult
-                    ? '<div class="sl_green">'._OK.'</div>'
-                    : '<div class="sl_red">'._ERROR.'</div>';
+                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => $rresult ? 'sl_green' : 'sl_red', 'label_text' => $rresult ? _OK : _ERROR]);
             }
 
         } else {
@@ -289,28 +304,25 @@ function database(): void {
 
         $item++;
 
-        $cells = '<td>'.$item.'</td>'
-               .'<td>'.$name.'</td>'
-               .'<td>'.$tabeng.'</td>'
-               .'<td>'.$tabloc.'</td>'
-               .'<td>'.$rows.'</td>'
-               .'<td>'.format_time($crtime, _TIMESTRING).'</td>'
-               .'<td>'.filterSize($tabsize).'</td>'
-               .'<td>'.$freetag.'</td>'
-               .'<td>'.$stattag.'</td>';
-        $dbrows .= getAdminTableRow($cells);
+        $dbrows .= getAdminTableRow($tpl->getHtmlFrag('admin-database-list-row', [
+            'collation_name' => $tabloc,
+            'created_text' => format_time($crtime, _TIMESTRING),
+            'free_html' => $freetag,
+            'id_value' => (string)$item,
+            'rows_count' => (string)$rows,
+            'size_text' => filterSize($tabsize),
+            'status_html' => $stattag,
+            'table_name' => $name,
+            'type_name' => $tabeng,
+        ]));
     }
 
-    $totalcells = '<td><strong>'.$item.'</strong></td>'
-                .'<td>&nbsp;</td>'
-                .'<td>&nbsp;</td>'
-                .'<td>&nbsp;</td>'
-                .'<td><strong>'.$allrows.'</strong></td>'
-                .'<td>&nbsp;</td>'
-                .'<td><strong>'.filterSize($total).'</strong></td>'
-                .'<td><strong>'.filterSize($sumfree).'</strong></td>'
-                .'<td>&nbsp;</td>';
-    $dbrows .= getAdminTableRow($totalcells);
+    $dbrows .= getAdminTableRow($tpl->getHtmlFrag('admin-database-total-row', [
+        'free_text' => filterSize($sumfree),
+        'id_value' => (string)$item,
+        'rows_count' => (string)$allrows,
+        'size_text' => filterSize($total),
+    ]), '', 'data-sort-method="none"');
     $content = getAdminTable($dbhead, $dbrows);
 
     // After OPTIMIZE: Totals to recalculate info box
@@ -419,20 +431,17 @@ function dump(): void {
     }
     $fhide = getAdminHidden('name', 'database').getAdminHidden('op', 'dump').getAdminHidden('type', 'dump').getAdminHidden('token', getSiteToken('db'));
     $frows = getAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
-    $frows .= getAdminFormWide(
-        '<button type="submit" name="action" value="parse" class="sl_but_blue">'._DB_PARSE.'</button>'
-        .' <button type="submit" name="action" value="dump" class="sl_but_blue">'._EXECUTE.'</button>',
-        '', 'sl_center'
-    );
+    $frows .= getAdminFormWide($tpl->getHtmlFrag('admin-database-dump-actions', [
+        'execute_label' => _EXECUTE,
+        'parse_label' => _DB_PARSE,
+    ]), '', 'sl_center');
     echo $cont.getAdminBox(getAdminForm($afile.'.php', $frows, $fhide, 'sl_table_edit'));
     setFoot();
 }
 
 function info(): void {
-    setHead();
     $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 4]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 function delete(): void {
@@ -454,4 +463,3 @@ switch ($op) {
     case 'delete': delete(); break;
     case 'info': info(); break;
 }
-

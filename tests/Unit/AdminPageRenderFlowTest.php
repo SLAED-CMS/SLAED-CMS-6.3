@@ -61,8 +61,6 @@ namespace Tests\Unit {
             $this->assertStringContainsString('<li>Menu</li>', $html);
             $this->assertStringContainsString('Debug', $html);
             $this->assertStringContainsString('0.001 sec', $html);
-            $this->assertStringContainsString('tabs.js', $html);
-            $this->assertStringContainsString('jquery.metadata.js', $html);
         }
 
         #[Test]

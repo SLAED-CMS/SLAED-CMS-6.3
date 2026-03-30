@@ -215,6 +215,7 @@ function setAdminNavi(array $p): string {
     $ops    = $p['ops']    ?? [];
     $tabs   = $p['tabs']   ?? [];
     $sops   = $p['sops']   ?? [];
+    $sattrs = $p['sattrs'] ?? [];
     $stabs  = $p['stabs']  ?? [];
     $sub    = $p['sub']    ?? '';
     $act    = $p['tab']    ?? 0;
@@ -232,14 +233,15 @@ function setAdminNavi(array $p): string {
             foreach ($stabs as $stab) {
                 if ($stab === '') { $l++; continue; }
                 $hrefsub = !empty($sops[$l]) ? $afile.'.php?'.$sops[$l] : '#';
-                $relsub = !empty($sops[$l]) ? '' : 'tabcs'.$l;
-                $scnt .= adminTabLink($hrefsub, $stab, $l === $actsub, $relsub);
+                $relsub = !empty($sops[$l]) ? '' : getAdminTabName($mtab, $l, true);
+                $attrsub = $sattrs[$l] ?? '';
+                $scnt .= adminTabLink($hrefsub, $stab, $l === $actsub, $relsub, $attrsub);
                 $l++;
             }
             $scnt .= adminTabListClose();
         }
         $href = !empty($ops[$k]) ? $afile.'.php?'.$ops[$k] : '#';
-        $rel = !empty($ops[$k]) ? '' : 'tabc'.$k;
+        $rel = !empty($ops[$k]) ? '' : getAdminTabName($mtab, $k);
         $cnt .= adminTabLink($href, $tab, $k === $act, $rel);
         $k++;
     }
@@ -261,9 +263,10 @@ function adminTabListClose(): string {
     return $tpl->getHtmlFrag('admin-tab-list-close', []);
 }
 
-function adminTabLink(string $href, string $label, bool $selected = false, string $rel = ''): string {
+function adminTabLink(string $href, string $label, bool $selected = false, string $rel = '', string $attrs = ''): string {
     global $tpl;
     return $tpl->getHtmlFrag('admin-tab-link', [
+        'attrs' => $attrs,
         'href' => $href,
         'is_selected' => $selected,
         'label' => $label,
@@ -484,38 +487,24 @@ function adminFilesRow(array $row): string {
 function adminInfoForm(array $data): string {
  global $tpl;
     return $tpl->getHtmlFrag('admin-info-form', [
+        'action_url' => (string)($data['action_url'] ?? ''),
+        'hidden_html' => (string)($data['hidden_html'] ?? ''),
         'submit_label' => (string)($data['submit_label'] ?? ''),
-        'submit_onclick' => (string)($data['submit_onclick'] ?? ''),
         'submit_title' => (string)($data['submit_title'] ?? ''),
         'textarea_html' => (string)($data['textarea_html'] ?? ''),
     ]);
 }
 
 function adminFlagBox(bool $state, string $yesLabel, string $noLabel): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-flag-box', [
-        'css_class' => $state ? 'sl_green' : 'sl_red',
-        'label_text' => $state ? $yesLabel : $noLabel,
-    ]);
+    return getAdminFlagBox($state, $yesLabel, $noLabel);
 }
 
 function adminNoteLabel(string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-note-label', [
-        'label_text' => $label,
-        'title_attr' => $title,
-    ]);
+    return getAdminNoteLabel($title, $label);
 }
 
 function adminMoveControls(string $target, string $upQuery = '', string $downQuery = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-move-controls', [
-        'down_query' => $downQuery,
-        'down_title' => _BLOCKDOWN,
-        'target' => $target,
-        'up_query' => $upQuery,
-        'up_title' => _BLOCKUP,
-    ]);
+    return getAdminMoveControls($target, $upQuery, $downQuery);
 }
 
 function adminFilePreview(int $index, string $path, bool $hasImage): string {
@@ -532,17 +521,11 @@ function adminFilePreview(int $index, string $path, bool $hasImage): string {
 }
 
 function adminDangerText(string $text): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-danger-text', [
-        'text' => $text,
-    ]);
+    return getAdminDangerText($text);
 }
 
 function adminTitleTip(string $data): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-title-tip', [
-        'content_html' => $data,
-    ]);
+    return getAdminTitleTip($data);
 }
 
 function adminTitleTipLabel(string $tip, string $title, string $label): string {
@@ -550,59 +533,26 @@ function adminTitleTipLabel(string $tip, string $title, string $label): string {
 }
 
 function adminColorLabel(string $color, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('admin-color-label', [
-        'color_val' => $color,
-        'label_text' => $label,
-    ]);
+    return getAdminColorLabel($color, $label);
 }
 
 function adminLinkAction(string $href, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-action-link', [
-        'href' => $href,
-        'title' => $title,
-        'label' => $label,
-        'class' => '',
-        'target' => '',
-    ]);
+    return getLinkAction($href, $title, $label);
 }
 
 function adminAjaxAction(string $target, string $query, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-action-ajax', [
-        'load_id' => '0',
-        'target' => $target,
-        'query' => $query,
-        'title' => $title,
-        'label' => $label,
-        'class' => '',
-    ]);
+    return getAdminAjaxAction($target, $query, $title, $label);
 }
 
 function adminDeleteAction(string $href, string $confirmText, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('action-delete', [
-        'href' => $href,
-        'confirm_text' => $confirmText,
-        'title' => $title,
-        'label' => $label,
-    ]);
+    return getAdminDeleteAction($href, $confirmText, $title, $label);
 }
 
 function adminMenuItems(array $items): string {
- global $tpl;
-    $items = array_values(array_filter($items, static fn($item) => $item !== ''));
-    if (!$items) {
-        return '';
-    }
-    return $tpl->getHtmlFrag('action-menu', [
-        'editor_label' => _EDITOR,
-        'items_html' => implode('', array_map(static fn($item) => getMenuItem($item), $items)),
-    ]);
+    return getAdminActionMenu($items);
 }
 
-function ajax_cat(string $modul = '', int $obj = 0): string {
+function getAdminCategoryList(string $modul = '', int $obj = 0): string {
  global $db, $afile, $conf, $tpl;
     $modul   = filterVar($modul);
     $where   = ($modul) ? 'WHERE a.modul = :modul' : '';
@@ -673,8 +623,8 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
                     _ONDELETE
                 )
                 : '';
-            $moveUp = ($con1) ? 'go=5&amp;op=cat_order&amp;id='.$id.'&amp;cid='.$con1.'&amp;typ='.$ordernm.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
-            $moveDown = ($con2) ? 'go=5&amp;op=cat_order&amp;id='.$id.'&amp;cid='.$con2.'&amp;typ='.$ordernp.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
+            $moveUp = ($con1) ? 'go=5&amp;op=updateAdminCategoryOrder&amp;id='.$id.'&amp;cid='.$con1.'&amp;typ='.$ordernm.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
+            $moveDown = ($con2) ? 'go=5&amp;op=updateAdminCategoryOrder&amp;id='.$id.'&amp;cid='.$con2.'&amp;typ='.$ordernp.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
             $rows[] = adminCategoryRow([
                 'id' => (string) $id,
                 'title_html' => adminTitleTipLabel(_DESCRIPTION.': '.$descript.'<br>'._CATEGORIES.': '.$subcat.$clang, $title, cutstr($title, 50)),
@@ -699,7 +649,7 @@ function ajax_cat(string $modul = '', int $obj = 0): string {
     return '';
 }
 
-function cat_order(): void {
+function updateAdminCategoryOrder(): void {
  global $db;
     $modul = filterVar(getVar('get', 'mod', 'text', ''));
     if ($modul) {
@@ -710,7 +660,7 @@ function cat_order(): void {
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :typ    WHERE id = :id',  ['typ' => $typ,    'id' => $id]);
         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET ordern = :ordern WHERE id = :cid', ['ordern' => $ordern, 'cid' => $cid]);
     }
-    ajax_cat($modul, 0);
+    getAdminCategoryList($modul, 0);
 }
 
 function catacess(string $name, string $class, string $selected, int $limit): string {
@@ -764,7 +714,7 @@ function scatacess($auth) {
     return $acess.'|'.implode(',', $select);
 }
 
-function ajax_block(): string {
+function getAdminBlockList(): string {
  global $db, $conf, $afile;
     $rows = [];
     $result = $db->getSqlQuery('SELECT a.id, a.bkey, a.title, a.url, a.bpos, a.weight, a.status, a.lang, a.bfile, a.view, a.expire, a.action, b.id, b.bpos, b.weight, c.id, c.bpos, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bpos = a.bpos AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bpos = a.bpos AND c.weight = a.weight+1) ORDER BY a.bpos, a.weight');
@@ -810,8 +760,8 @@ function ajax_block(): string {
         } elseif ($view == 3) {
             $who_view = _MVANON;
         }
-        $moveUp = ($con1) ? 'go=5&amp;op=blocks_order&amp;id='.$bid.'&amp;cid='.$con1.'&amp;typ='.$weight_minus.'&amp;ordern='.$weight : '';
-        $moveDown = ($con2) ? 'go=5&amp;op=blocks_order&amp;id='.$bid.'&amp;cid='.$con2.'&amp;typ='.$weight_plus.'&amp;ordern='.$weight : '';
+        $moveUp = ($con1) ? 'go=5&amp;op=updateAdminBlockOrder&amp;id='.$bid.'&amp;cid='.$con1.'&amp;typ='.$weight_minus.'&amp;ordern='.$weight : '';
+        $moveDown = ($con2) ? 'go=5&amp;op=updateAdminBlockOrder&amp;id='.$bid.'&amp;cid='.$con2.'&amp;typ='.$weight_plus.'&amp;ordern='.$weight : '';
         $rows[] = adminBlockRow([
             'id' => (string) $bid,
             'title_html' => $titleHtml,
@@ -831,7 +781,7 @@ function ajax_block(): string {
     return adminBlockTable(implode('', $rows));
 }
 
-function blocks_order(): void {
+function updateAdminBlockOrder(): void {
  global $db;
     $typ    = getVar('get', 'typ',    'num', 0);
     $ordern = getVar('get', 'ordern', 'num', 0);
@@ -839,11 +789,11 @@ function blocks_order(): void {
     $cid    = getVar('get', 'cid',    'num', 0);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :typ    WHERE id = :id',  ['typ' => $typ,    'id' => $id]);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_blocks SET weight = :ordern WHERE id = :cid', ['ordern' => $ordern, 'cid' => $cid]);
-    echo ajax_block();
+    echo getAdminBlockList();
 }
 
 # Favorites list view
-function fav_aliste(int $obj = 0): string {
+function getAdminFavoriteList(int $obj = 0): string {
  global $db, $conf, $tpl;
     $newlistnum = intval($conf['favorites']['anum']);
     $cid = getVar('get', 'cid', 'num', 1);
@@ -915,13 +865,13 @@ function fav_aliste(int $obj = 0): string {
                     'posted_by_html' => $uname,
                     'functions_html' => adminMenuItems([
                         adminLinkAction('index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid, _MVIEW, _MVIEW),
-                        adminAjaxAction('fav_aliste', 'go=5&amp;op=fav_adel&amp;id='.$id, _ONDELETE, _ONDELETE),
+                        adminAjaxAction('adminFavoriteList', 'go=5&amp;op=deleteAdminFavorite&amp;id='.$id, _ONDELETE, _ONDELETE),
                     ]),
                 ]);
             }
             $cont = adminFavoritesTable(implode('', $rows));
             $numpages = ceil($fav_num / $newlistnum);
-            $cont .= num_ajax('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, '0', 5, 'fav_aliste', 'fav_aliste', 0, '', '');
+            $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, '0', 5, 'getAdminFavoriteList', 'adminFavoriteList', 0, '', '');
         } else {
             $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
@@ -934,15 +884,15 @@ function fav_aliste(int $obj = 0): string {
 }
 
 # Favorites delete
-function fav_adel(): void {
+function deleteAdminFavorite(): void {
  global $db;
     $id = getVar('get', 'id', 'num', 0);
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id', ['id' => $id]);
-    fav_aliste(0);
+    getAdminFavoriteList(0);
 }
 
 # Private messages list view
-function ajax_privat(int $obj = 0): string {
+function getAdminPrivateList(int $obj = 0): string {
     global $db, $conf, $tpl;
     $newlistnum = intval($conf['privat']['anum']);
     $cid    = getVar('get', 'cid', 'num', 1);
@@ -965,13 +915,13 @@ function ajax_privat(int $obj = 0): string {
                 'date_value' => $date,
                 'status_html' => ad_status('', $status, 1),
                 'functions_html' => adminMenuItems([
-                    adminAjaxAction('ajax_privat', 'go=5&amp;op=ajax_privat_del&amp;id='.$id, _ONDELETE, _ONDELETE),
+                    adminAjaxAction('adminPrivateList', 'go=5&amp;op=deleteAdminPrivate&amp;id='.$id, _ONDELETE, _ONDELETE),
                 ]),
             ]);
         }
         $cont = adminPrivateTable(implode('', $rows));
         $numpages = ceil($fav_num / $newlistnum);
-        $cont .= num_ajax('pagenum', $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, '0', 5, 'ajax_privat', 'ajax_privat', 0, '', '');
+        $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, '0', 5, 'getAdminPrivateList', 'adminPrivateList', 0, '', '');
     } else {
         $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
@@ -981,15 +931,15 @@ function ajax_privat(int $obj = 0): string {
 }
 
 # Private message delete
-function ajax_privat_del(): void {
+function deleteAdminPrivate(): void {
  global $db;
     $id = getVar('get', 'id', 'num', 0);
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE id = :id', ['id' => $id]);
-    ajax_privat(0);
+    getAdminPrivateList(0);
 }
 
 # Show uploads files for admin
-function ashow_files(): void {
+function getAdminUploadFiles(): void {
  global $user, $conf, $tpl;
     $conf['uploads'] = $conf['uploads'] ?? [];
     $id   = filterVar(getVar('get', 'id',   'text', ''));
@@ -1031,9 +981,9 @@ function ashow_files(): void {
                 }
                 $show = [];
                 if (in_array(true, checkCompress(), true)) {
-                    $show[] = adminAjaxAction('f'.$id, 'go=5&amp;op=ashow_files&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], _ZIP, _ZIP);
+                    $show[] = adminAjaxAction('f'.$id, 'go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=1&amp;file='.$entry[1], _ZIP, _ZIP);
                 }
-                $show[] = adminAjaxAction('f'.$id, 'go=5&amp;op=ashow_files&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], _ONDELETE, _ONDELETE);
+                $show[] = adminAjaxAction('f'.$id, 'go=5&amp;op=getAdminUploadFiles&amp;id='.$id.'&amp;dir='.$dir.'&amp;cid=0&amp;file='.$entry[1], _ONDELETE, _ONDELETE);
                 $contents[] = adminFilesRow([
                     'preview_html' => $img,
                     'file_html' => $dirfile,
@@ -1052,7 +1002,7 @@ function ashow_files(): void {
         for ($i = $offset; $i < $tnum; $i++) {
             if (!empty($contents[$i])) $cont .= $contents[$i];
         }
-        $contnum = ($a > $connum) ? num_ajax('pagenum', $a, $numpages, $connum, 8, $num, '0', 5, 'ashow_files', 'f'.$id, $id, '', $dir) : '';
+        $contnum = ($a > $connum) ? getAsyncPager('pagenum', $a, $numpages, $connum, 8, $num, '0', 5, 'getAdminUploadFiles', 'f'.$id, $id, '', $dir) : '';
         $content = ($cont) ? adminFilesTable($cont).$contnum : '';
     } else {
         $content = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
@@ -1119,7 +1069,7 @@ function edit_list(string $modul, string $name, string $extraClass = ''): string
 
 # Renders the info/help page for the current admin module
 function getAdminInfo(): string {
-    global $locale, $conf, $tpl;
+    global $afile, $locale, $conf, $tpl;
     $id   = getVar('post', 'id', 'num', 0);
     $cont = '';
     $fdoc = static function(string $base): string {
@@ -1128,7 +1078,7 @@ function getAdminInfo(): string {
         }
         return '';
     };
-    if ($conf['adminfo'] && $id) {
+    if ($conf['adminfo'] && $id && checkSiteToken(getVar('post', 'token', 'raw', ''), 'admininfo')) {
         $type    = getVar('post', 'type', 'num', 0);
         $name    = filterWord(getVar('post', 'name', 'text', ''));
         $content = filterHtml(trim(getVar('post', 'text', 'raw', '')));
@@ -1168,8 +1118,12 @@ function getAdminInfo(): string {
     $html = filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
     if ($conf['adminfo']) {
         $html .= adminInfoForm([
+            'action_url' => $afile.'.php?name='.$name.'&op=info',
+            'hidden_html' => getAdminHidden('id', '1')
+                .getAdminHidden('type', (string)$type)
+                .getAdminHidden('name', $name)
+                .getAdminHidden('token', getSiteToken('admininfo')),
             'textarea_html' => textarea('1', 'text', $thefile, 'info', '25'),
-            'submit_onclick' => "AjaxLoad('POST', '1', 'adm_info', 'go=5&amp;op=adm_info&amp;id=1&amp;type=".$type.'&amp;name='.$name."', { 'text':'"._CERROR1."' }); return false;",
             'submit_label' => _SAVECHANGES,
             'submit_title' => _SAVECHANGES,
         ]);

@@ -23,7 +23,7 @@ function setComShow(int $id = 0, int $cid = 0): string {
             $cont .= '<tr><td>'._YOURNAME.':</td><td>'.getAdminTextInput('name', _ANONYM, 'sl_field '.$conf['style'], 'maxlength="25"').'</td></tr>';
         }
         $cont .= '<tr><td>'._COMMENT.':</td><td>'.textarea(1, 'text', '', $conf['name'], '5').'</td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" OnClick="AjaxLoad(\'POST\', \'0\', \'csave\', \'go=1&amp;op=savecom&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'\', { \'text\':\''._CERROR1.'\' }); ClearForm(formcsave); return false;" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';
+        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" hx-post="index.php?go=1&amp;op=addComment&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'" hx-include="#formcsave" hx-target="#repcsave" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }" hx-on:htmx:after-request="document.getElementById(\'formcsave\').reset()" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';
     }
     return $cont;
 }
@@ -227,7 +227,7 @@ function updatePost() {
         }
         if ($ismod || ($isedit && $uid == intval($user[0]) && $fstatus > 2)) {
             if (!$text) {
-                $content = ($typ) ? textareae('for'.$id, '1', 'editpost', $id, $cid, '0', $mod, $hometext, '15') : filterReplaceText(filterMarkdown($hometext, $mod, false), $mod);
+                $content = ($typ) ? getAjaxTextarea('for'.$id, '1', 'updatePost', $id, $cid, '0', $mod, $hometext, '15') : filterReplaceText(filterMarkdown($hometext, $mod, false), $mod);
                 echo $content;
             } else {
                 $postid = (is_user()) ? intval($user[0]) : 0;
@@ -258,7 +258,7 @@ function updatePost() {
 }
 
 # Render the private-message inbox, outbox, saved or detail view
-function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ = 0): string {
+function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '', int $typ = 0): string {
     global $db, $user, $conf, $tpl;
     $typ = $typ ?: getVar('get', 'typ', 'num', 0);
     $uid = intval($user[0]);
@@ -300,10 +300,10 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
                     $ititle = _PRNEW;
                     $hidden = '';
                 }
-                $title = '<span title="'.$ititle.'" class="sl_m_in'.$hidden."\"></span><a OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=1&amp;typ=4&amp;mod=1', ''); return false;\" title=\"".$title.'">'.cutstr($title, 35).'</a>';
+                $title = '<span title="'.$ititle.'" class="sl_m_in'.$hidden.'"></span><a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'.$title.'">'.cutstr($title, 35).'</a>';
                 $post = ($user_name) ? user_info($user_name) : _ANONYM;
                 $date = format_time($date, _TIMESTRING);
-                $func = add_menu("<a OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=1&amp;typ=4&amp;mod=1', ''); return false;\" title=\""._SHOW.'">'._SHOW."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmesssave&amp;id=".$id."', ''); return false;\" title=\""._SAVE.'">'._SAVE."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'prmessin', 'go=1&amp;op=prmessdel&amp;id=".$id."&amp;typ=1', ''); return false;\" title=\""._DELETE.'">'._DELETE.'</a>');
+                $func = add_menu('<a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?go=1&amp;op=setPrivateMessageSaved&amp;id='.$id.'" hx-get="index.php?go=1&amp;op=setPrivateMessageSaved&amp;id='.$id.'" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._SAVE.'">'._SAVE.'</a>||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>');
                 $cont .= '<tr><td>'.$title.'</td><td>'.$post.'</td><td>'.$date.'</td><td>'.$func.'</td></tr>';
             }
             $cont .= '</tbody></table>';
@@ -311,7 +311,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'prmess', 'prmessin', 0, '1', '');
+        $cont .= getAsyncPager('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'getPrivateMessageView', 'prmessin', 0, '1', '');
     } elseif ($typ == 2) {
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.id) WHERE p.uidout = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
@@ -324,12 +324,12 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
                 } else {
                     $ititle = _PROUTNEW;
                     $hidden = '';
-                    $del = "||<a OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmessdel&amp;id=".$id."&amp;typ=2', ''); return false;\" title=\""._DELETE.'">'._DELETE.'</a>';
+                    $del = '||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2" hx-target="#repprmessou" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>';
                 }
-                $title = '<span title="'.$ititle.'" class="sl_m_out'.$hidden."\"></span><a OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=2&amp;typ=4&amp;mod=2', ''); return false;\" title=\"".$title.'">'.cutstr($title, 35).'</a>';
+                $title = '<span title="'.$ititle.'" class="sl_m_out'.$hidden.'"></span><a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2" hx-target="#repprmessou" hx-swap="innerHTML" hx-push-url="false" title="'.$title.'">'.cutstr($title, 35).'</a>';
                 $post = ($user_name) ? user_info($user_name) : _ANONYM;
                 $date = format_time($date, _TIMESTRING);
-                $func = add_menu("<a OnClick=\"AjaxLoad('GET', '0', 'prmessou', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=2&amp;typ=4&amp;mod=2', ''); return false;\" title=\""._SHOW.'">'._SHOW.'</a>'.$del);
+                $func = add_menu('<a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2" hx-target="#repprmessou" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>'.$del);
                 $cont .= '<tr><td>'.$title.'</td><td>'.$post.'</td><td>'.$date.'</td><td>'.$func.'</td></tr>';
             }
             $cont .= '</tbody></table>';
@@ -338,7 +338,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
         }
         [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidout = :uid AND status <= 1', ['uid' => $uid]));
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'prmess', 'prmessou', 0, '2', '');
+        $cont .= getAsyncPager('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'getPrivateMessageView', 'prmessou', 0, '2', '');
     } elseif ($typ == 3) {
         [$pr_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_privat WHERE uidin = :uid AND status = 2', ['uid' => $uid]));
         $fstatus = '';
@@ -355,10 +355,10 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
         if ($db->getSqlRowCount($result) > 0) {
             $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._TITLE.'</th><th>'._PRSE.'</th><th>'._DATE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
             while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
-            $title = '<span title="'._PRMOVE."\" class=\"sl_m_save\"></span><a OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=1&amp;typ=4&amp;mod=3', ''); return false;\" title=\"".$title.'">'.cutstr($title, 35).'</a>';
+            $title = '<span title="'._PRMOVE.'" class="sl_m_save"></span><a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3" hx-target="#repprmesssa" hx-swap="innerHTML" hx-push-url="false" title="'.$title.'">'.cutstr($title, 35).'</a>';
                 $post = ($user_name) ? user_info($user_name) : _ANONYM;
                 $date = format_time($date, _TIMESTRING);
-                $func = add_menu("<a OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmess&amp;id=".$id."&amp;cid=1&amp;typ=4&amp;mod=3', ''); return false;\" title=\""._SHOW.'">'._SHOW."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'prmesssa', 'go=1&amp;op=prmessdel&amp;id=".$id."&amp;typ=3', ''); return false;\" title=\""._DELETE.'">'._DELETE.'</a>');
+                $func = add_menu('<a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3" hx-target="#repprmesssa" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3" hx-target="#repprmesssa" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>');
                 $cont .= '<tr><td>'.$title.'</td><td>'.$post.'</td><td>'.$date.'</td><td>'.$func.'</td></tr>';
             }
             $cont .= '</tbody></table>';
@@ -366,7 +366,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
         $numpages = ceil($pr_num / $newlistnum);
-        $cont .= num_ajax('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'prmess', 'prmesssa', 0, '3', '');
+        $cont .= getAsyncPager('pagenum', $pr_num, $numpages, $newlistnum, $conf['privat']['nump'], $cid, '0', 1, 'getPrivateMessageView', 'prmesssa', 0, '3', '');
     } elseif ($typ == 4) {
         if ($stop) {
             $cont .= $tpl->getHtmlFrag('alert', ['text' => $stop, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
@@ -405,7 +405,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
                 $rank = ($user_rank) ? $user_rank : '';
                 $trank = ($user_gname) ? _GROUP.': '.$user_gname : _RANK;
                 $rlink = ($user_grank && file_exists(img_find('ranks/'.$user_grank))) ? '<img src="'.img_find('ranks/'.$user_grank).'" alt="'.$trank.'" title="'.$trank.'">' : '';
-                $rate = ajax_rating(0, $user_id, $conf['name'], $user_votes, $user_totalvotes, $com_id, 1);
+                $rate = getRatingAsync(0, $user_id, $conf['name'], $user_votes, $user_totalvotes, $com_id, 1);
                 $rwarn = ($user_warnings) ? _UWARNS.': '.warnings($user_warnings) : '';
                 $group = ($user_gname) ? _GROUP.': <span style="color: '.$user_gcolor.'">'.$user_gname.'</span>' : '';
                 $point = ($conf['users']['point'] && $user_points) ? _POINTS.': '.$user_points : '';
@@ -418,7 +418,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
                 
 
                 
-                $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? add_menu("<a OnClick=\"AjaxLoad('GET', '0', '".$prmid."', 'go=1&amp;op=prmessdel&amp;id=".$idp.'&amp;typ='.$mod."', ''); return false;\" title=\""._ONDELETE.'">'._ONDELETE.'</a>') : '';
+                $edit = (($uidin == $uid) || ($uidout == $uid && !$status)) ? add_menu('<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod.'" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$idp.'&amp;typ='.$mod.'" hx-target="#rep'.$prmid.'" hx-swap="innerHTML" hx-push-url="false" title="'._ONDELETE.'">'._ONDELETE.'</a>') : '';
                 $cont .= $tpl->getHtmlFrag('privat-message', ['username' => $avname, 'date' => $date, 'ip' => $ip, 'title' => cutstr($title, 35), 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => filterReplaceText(filterMarkdown($body, $conf['name'], false), $conf['name']), 'sig' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), 'btn_profile' => $profil, 'btn_web' => $web, 'btn_edit' => $edit]);
             }
         }
@@ -434,10 +434,10 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
             $idp = ($id) ? '2' : '1';
             $cont .= '<form name="post" id="form'.$prmid.'" method="post">'
             .'<table class="sl_table_form">'
-            .'<tr><td>'._PRRE.':</td><td>'.get_user_search('name', $rpost, '25', $conf['style'], '1').'</td></tr>'
+            .'<tr><td>'._PRRE.':</td><td>'.getUserSearch('name', $rpost, '25', $conf['style'], '1').'</td></tr>'
             .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$rtitle.'" maxlength="100" class="sl_field '.$conf['style'].'"></td></tr>'
             .'<tr><td>'._MESSAGE.':</td><td>'.textarea($idp, 'text', $rcontent, $conf['name'], '15').'</td></tr>'
-            ."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"submit\" OnClick=\"AjaxLoad('POST', '0', '".$prmid."', 'go=1&amp;op=prmesssend', { 'name':'"._CERROR6."' }); return false;\" value=\""._SEND.'" title="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
+            ."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"submit\" hx-post=\"index.php?go=1&amp;op=addPrivateMessage\" hx-include=\"#form".$prmid."\" hx-target=\"#rep".$prmid."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" hx-on:click=\"if (!document.getElementById('form".$prmid."').querySelector('[name=&quot;name&quot;]').value.trim()) { alert('"._CERROR6."'); event.preventDefault(); }\" value=\""._SEND.'" title="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
         }
     }
     if ($obj) { return $cont; }
@@ -446,7 +446,7 @@ function getPmView(int $obj = 0, string $stop = '', string $info = '', int $typ 
 }
 
 # Validate and send a new private message; returns the updated inbox view
-function addPmMsg() {
+function addPrivateMessage() {
     global $db, $user, $conf;
     $postname = filterText(substr(getVar('post', 'name',  'raw', ''), 0, 25));
     $title    = trim(getVar('post', 'title', 'raw', ''));
@@ -496,15 +496,15 @@ function addPmMsg() {
             }
         }
         $info = sprintf(_PRSENDED, $postname);
-        return getPmView(0, '', $info, 4);
+        return getPrivateMessageView(0, '', $info, 4);
     } else {
         $stop = ($stop) ? implode('<br>', (array)$stop) : _ERROR;
-        return getPmView(0, $stop, '', 4);
+        return getPrivateMessageView(0, $stop, '', 4);
     }
 }
 
 # Move a received private message to the user's saved folder
-function setPmSaved() {
+function setPrivateMessageSaved() {
     global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id = getVar('get', 'id', 'num', 0);
@@ -519,21 +519,21 @@ function setPmSaved() {
         $info = sprintf(_PRSAVEMAX, $conf['privat']['messsav'], $pr_numi, $acmess);
     }
     if (!$stop && $conf['privat']['act'] && $uid && $id) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_privat SET status = 2 WHERE id = :id AND uidin = :uid', ['id' => $id, 'uid' => $uid]);
-    return getPmView(0, $stop, $info, 1);
+    return getPrivateMessageView(0, $stop, $info, 1);
 }
 
 # Delete a private message from inbox or outbox and return the updated view
-function deletePmMsg() {
+function deletePrivateMessage() {
     global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id  = getVar('get', 'id',  'num', 0);
     $typ = getVar('get', 'typ', 'num', 1);
     if ($conf['privat']['act'] && $uid && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_privat WHERE (id = :id_in AND uidin = :uid_in) OR (id = :id_out AND uidout = :uid_out AND status = 0)', ['id_in' => $id, 'uid_in' => $uid, 'id_out' => $id, 'uid_out' => $uid]);
-    return getPmView(0, '', '', $typ);
+    return getPrivateMessageView(0, '', '', $typ);
 }
 
 # Render the favorites toggle button for an item (on/off/limit-reached state)
-function getFavorBtn(?int $fid, string $mod): string {
+function getFavoriteButton(?int $fid, string $mod): string {
     global $db, $conf, $user;
     $fid = (int)$fid;
     $uid = (is_user()) ? intval($user[0]) : 0;
@@ -547,7 +547,7 @@ function getFavorBtn(?int $fid, string $mod): string {
                 $fav_exit = sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']);
                 $content = '<span title="'.$fav_exit.'" class="sl_favor sl_favor_off"></span>';
             } else {
-                $content = '<span id="rep'.$fid.$mod."\"><span OnClick=\"AjaxLoad('GET', '0', '".$fid.$mod."', 'go=1&amp;op=favoradd&amp;id=".$fid.'&amp;mod='.$mod."', ''); return false;\" title=\""._FAVOR_ADD.'" class="sl_favor"></span></span>';
+                $content = '<span id="rep'.$fid.$mod.'"><a href="index.php?go=1&amp;op=addFavorite&amp;id='.$fid.'&amp;mod='.$mod.'" hx-get="index.php?go=1&amp;op=addFavorite&amp;id='.$fid.'&amp;mod='.$mod.'" hx-target="#rep'.$fid.$mod.'" hx-swap="outerHTML" hx-push-url="false" title="'._FAVOR_ADD.'" class="sl_favor"></a></span>';
             }
         }
     }
@@ -556,7 +556,7 @@ function getFavorBtn(?int $fid, string $mod): string {
 }
 
 # Add an item to the user's favorites list and echo the updated toggle button
-function addFavor() {
+function addFavorite() {
     global $db, $conf, $user;
     $id = getVar('get', 'id',  'num',  0);
     $mod = filterVar(getVar('get', 'mod', 'text', ''));
@@ -564,17 +564,17 @@ function addFavor() {
     if ($conf['favorites']['favact'] && $uid && $id && $mod) {
         [$fav] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]));
         if ($fav) {
-            echo getFavorBtn($id, $mod);
+            echo getFavoriteButton($id, $mod);
         } else {
             $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_favorites VALUES (NULL, :uid, :fid, :modul)', ['uid' => $uid, 'fid' => $id, 'modul' => $mod]);
             update_points(44);
         }
     }
-    echo getFavorBtn($id, $mod);
+    echo getFavoriteButton($id, $mod);
 }
 
 # Render the paginated favorites list for the logged-in user
-function getFavorList(int $obj = 0): string {
+function getFavoriteList(int $obj = 0): string {
     global $db, $conf, $user, $tpl;
     $uid = intval($user[0]);
     $newlistnum = intval($conf['favorites']['num']);
@@ -655,12 +655,12 @@ function getFavorList(int $obj = 0): string {
             $cont .= '<tr id="'.$a.'">'
             .'<td><a href="#'.$a.'" title="'.$a.'" class="sl_pnum">'.$a.'</a></td>'
             .'<td><a href="'.$surl.'" title="'.$title.'">'.cutstr($title, 100).'</a></td>'
-            .'<td>'.add_menu('<a href="index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'" rel="sidebar" title="'.$title.'">'._S_FAVORITEN."</a>||<a OnClick=\"AjaxLoad('GET', '0', 'favorliste', 'go=1&amp;op=favordel&amp;id=".$id."', ''); return false;\" title=\""._DELETE.'">'._DELETE.'</a>').'</td>';
+            .'<td>'.add_menu('<a href="index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'" rel="sidebar" title="'.$title.'">'._S_FAVORITEN.'</a>||<a href="index.php?go=1&amp;op=deleteFavorite&amp;id='.$id.'" hx-get="index.php?go=1&amp;op=deleteFavorite&amp;id='.$id.'" hx-target="#repfavorliste" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>').'</td>';
             $a++;
         }
         $cont .= '</tbody></table>';
         $numpages = ceil($fav_num / $newlistnum);
-        $cont .= num_ajax('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, '0', 1, 'favorliste', 'favorliste', 0, '', '');
+        $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, '0', 1, 'getFavoriteList', 'favorliste', 0, '', '');
     } else {
         $cont = $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
     }
@@ -670,12 +670,12 @@ function getFavorList(int $obj = 0): string {
 }
 
 # Delete a favorite entry and return the refreshed favorites list
-function deleteFavor(): string {
+function deleteFavorite(): string {
     global $db, $conf, $user;
     $uid = (is_user()) ? intval($user[0]) : 0;
     $id = getVar('get', 'id', 'num', 0);
     if ($conf['favorites']['favact'] && $uid && $id) $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_favorites WHERE id = :id AND uid = :uid', ['id' => $id, 'uid' => $uid]);
-    return getFavorList(0);
+    return getFavoriteList(0);
 }
 
 # Output the RSS 2.0 feed for the specified module and optional category

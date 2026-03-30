@@ -577,7 +577,6 @@ function delete(): void {
 
 function info(): void {
     global $afile, $tpl;
-    setHead();
     $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
     $cont = setAdminNavi([
@@ -586,8 +585,7 @@ function info(): void {
         'sub'  => getAccountSearchBox($_search, $_chng),
         'tab'  => 5,
     ]);
-    echo $cont.getAdminInfoBox(getAdminInfo());
-    setFoot();
+    setAdminInfoPage($cont);
 }
 
 switch ($op) {
