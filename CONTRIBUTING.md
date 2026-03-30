@@ -30,10 +30,13 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md) before contribu
 ### Prerequisites
 
 - **PHP:** 8.1+
-- **Database:** MySQL 8.0+ or MariaDB 10+
+- **Database:** PDO MySQL-compatible server required by the current runtime
 - **Web Server:** Apache, Nginx, or IIS
-- **Extensions:** PDO, GD, mbstring, JSON
+- **Extensions:** PDO and JSON are required by the current runtime; image-related flows use GD functions
 - **Tools:** Git, Composer
+
+> [!IMPORTANT]
+> `TODO:` Confirm the minimum supported MySQL and MariaDB server versions before documenting a version-specific requirement here.
 
 ### Fork and Clone
 
@@ -84,6 +87,14 @@ Run `setup.php` in the browser for a local installation if needed, then delete i
 
 Project rules live primarily in `.rules/`. When this document and `.rules/` overlap, follow `.rules/`.
 
+Primary rule files currently used by the repository:
+
+- `.rules/global.md`
+- `.rules/constants.md`
+- `.rules/architecture.md`
+- `.rules/git.md`
+- `.rules/report.md`
+
 ### Core Principles
 
 1. **Fast** - Avoid wasteful SQL, I/O, and repeated rendering work.
@@ -116,11 +127,27 @@ function checkSiteToken(string $name = 'token'): bool {}
 function filterText(string|array $text, int $save = 0): string|array {}
 ```
 
+Additional enforced constraints from `.rules/global.md`:
+
+- function names must use `camelCase`
+- function names must use letters only
+- function names must not contain `_`
+- function names must not contain digits
+- function names must be 6-24 characters long
+- function names must follow verb + noun
+
 ### Variable Naming
 
 - Prefer short variable names.
 - Use lowercase variable names in the existing project style.
 - Avoid unnecessary compound names.
+
+Current repository rules are stricter than the examples in this section:
+
+- variable names must be lowercase only
+- variable names must use letters only
+- variable names must not use digits
+- variable names must be 2-8 characters long
 
 ```php
 $id = 0;
@@ -228,10 +255,11 @@ Admin pages are handled by the admin runtime and do not use the frontend lifecyc
 
 ## Template Runtime Guidance
 
-SLAED currently contains two template layers:
+The active file-backed template runtime in the current repository is:
 
-- **Legacy layer:** `core/template.php`
-- **Modern runtime:** `core/classes/template.php`
+- `core/classes/template.php`
+
+Historical legacy rendering still exists in PHP-side output assembly, but the repository snapshot does not contain an active `core/template.php` runtime file.
 
 For new template work:
 
@@ -249,6 +277,24 @@ $tpl->getHtmlPage('error', $data);
 $tpl->getHtmlPart('login', $data);
 $tpl->getHtmlFrag('message', $data);
 ```
+
+### SEO Head Overrides
+
+The current frontend runtime also supports central SEO overrides through `setHead()`:
+
+```php
+setHead([
+    'title' => $title,
+    'canon' => 'index.php?name=news&op=view&id='.$id,
+    'robots' => 'noindex, follow',
+]);
+```
+
+Rules:
+
+- `canon` overrides the centrally generated canonical URL
+- `robots` overrides the default robots meta value
+- if `canon` is omitted, the runtime builds the canonical URL from normalized route parameters
 
 ---
 
@@ -325,6 +371,7 @@ Project configuration:
 - PHPUnit config: `phpunit.xml`
 - PHPStan config: `phpstan.neon`
 - Composer dev tools: `composer.json`
+- Composer scripts: `composer test`, `composer analyse`, `composer quality`
 
 ---
 

@@ -125,17 +125,15 @@ In PHP bleiben:
 
 ## Repo-Stand
 
-### Repo-Sync Stand 2026-03-26
+### Repo-Sync Stand 2026-03-30
 
 Ist-Stand Template-Verzeichnis:
 
-- unter `templates/admin/fragments/` existieren **63** Fragmente
+- unter `templates/admin/fragments/` existieren **276** Fragmente
 - darunter weiter technische Fragmente wie `alert.html`, `form-conf.html`, dazu produktive Shared-Cuts wie `admin-box`, `admin-form`, `admin-table`
-- unter `templates/admin/partials/` existieren **9** Dateien:
+- unter `templates/admin/partials/` existieren **7** Dateien:
 - `admin-config-base.html`
 - `admin-config-communication.html`
-- `blocks/add.html`
-- `blocks/edit.html`
 - `changelog.html`
 - `login.html`
 - `preview.html`
@@ -146,7 +144,6 @@ Ist-Stand Modulmigration:
 
 - produktiv verwendet wird vor allem `searchbox`
 - `admin-config-base` und `admin-config-communication` sind produktiv als `form-conf`-Teilbloecke verdrahtet
-- `blocks/add.html` und `blocks/edit.html` sind vorbereitet, aber nicht verdrahtet
 - ausser `searchbox` gibt es keine bestaetigte produktive Nutzung fachlicher Admin-Partials fuer Modul-Hauptstrukturen
 - Config-Module nutzen weiter `form-conf`
 - produktive PHP-Aufrufer von `open` und `close` sind entfernt; der Rest ist jetzt Shared-Helper-Layer plus fachliche Sonderlayouts
@@ -429,7 +426,7 @@ Sonderfaelle:
 - `account/add()` als schwerer Mixed-Editor
 - `shop` innere Shop-Layouts
 
-Repo-Stand 2026-03-26:
+Repo-Stand 2026-03-30:
 
 - `open`/`close` sind im aktiven PHP-Admin-Layer entfernt
 - `admin-box`, `admin-table`, `admin-table-row`, `admin-form`, `admin-form-row`, `admin-form-wide` sind produktiv verdrahtet

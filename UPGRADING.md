@@ -38,7 +38,10 @@ tar -czf slaed_backup_$(date +%Y%m%d).tar.gz /path/to/slaed/
 Confirmed current baseline:
 
 - **PHP:** 8.1+
-- **Database:** MySQL 8.0+ or MariaDB 10+
+- **Database:** PDO MySQL-compatible server required by the current runtime
+
+> [!IMPORTANT]
+> `TODO:` Confirm the minimum supported MySQL and MariaDB server versions before documenting a version-specific database baseline.
 
 ### Review Writable Directories
 
@@ -119,6 +122,12 @@ Check the active files in `config/` and verify:
 rm -rf storage/cache/*
 ```
 
+Additional runtime-generated locations present in the repository:
+
+- `storage/logs/`
+- `storage/sitemap/`
+- `storage/backup/`
+
 ### 6. Verify Entry Points
 
 Check at minimum:
@@ -173,13 +182,13 @@ Current helpers:
 
 ### Template Layer
 
-Two template layers currently coexist:
-
-- legacy `core/template.php`
-- modern runtime `core/classes/template.php`
+The active file-backed template runtime is `core/classes/template.php`.
 
 New template work should target the modern runtime and theme HTML files under `templates/`.
 The modern engine supports automatic CSS and JS injection for components placed in `partials/` (e.g., `{% component 'modal' %}` auto-loads `modal.css` and `modal.js` at compile time).
+
+> [!NOTE]
+> The current repository snapshot does not contain an active `core/template.php` runtime file.
 
 ### Themes
 
@@ -187,9 +196,10 @@ Themes currently present in the repository:
 
 - `admin`
 - `default`
-- `default_old`
 - `lite`
 - `simple`
+
+If your installation contains older theme directories not present in the current repository, review them manually before upgrade.
 
 ---
 
@@ -259,7 +269,7 @@ rm -rf storage/cache/*
 Review:
 
 - `lang/*.php`
-- `admin/lang/*.php`
+- `setup/lang/*.php`
 - module-specific language files
 
 ---

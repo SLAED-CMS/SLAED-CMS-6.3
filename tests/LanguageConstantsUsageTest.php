@@ -51,6 +51,7 @@ final class LanguageConstantsUsageTest extends TestCase
     {
         $defs = []; // CONST => [file:line, ...]
         $phpFiles = [];
+        $tplFiles = [];
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator(self::$basePath, RecursiveDirectoryIterator::SKIP_DOTS)
         );
@@ -58,7 +59,24 @@ final class LanguageConstantsUsageTest extends TestCase
         $skipDirs = ['vendor', 'tests', '.git', '.reports'];
 
         foreach ($iterator as $file) {
-            if (!$file->isFile() || $file->getExtension() !== 'php') {
+            if (!$file->isFile()) {
+                continue;
+            }
+
+            if ($file->getExtension() === 'html') {
+                $path = $file->getPathname();
+                $rel = str_replace(self::$basePath.DIRECTORY_SEPARATOR, '', $path);
+                $parts = preg_split('#[/\\\\]+#', $rel);
+                if (array_intersect($skipDirs, $parts)) {
+                    continue;
+                }
+                if (str_starts_with(str_replace('\\', '/', $rel), 'templates/')) {
+                    $tplFiles[] = $path;
+                }
+                continue;
+            }
+
+            if ($file->getExtension() !== 'php') {
                 continue;
             }
 
@@ -125,6 +143,23 @@ final class LanguageConstantsUsageTest extends TestCase
                     if (isset($use[$val])) {
                         $use[$val]++;
                     }
+                }
+            }
+        }
+
+        foreach ($tplFiles as $path) {
+            $text = file_get_contents($path);
+            if ($text === false) {
+                continue;
+            }
+
+            if (preg_match_all('/\{\{\{?\s*(_[A-Z0-9_]+)\s*\}\}\}?/', $text, $all) < 1) {
+                continue;
+            }
+
+            foreach ($all[1] as $name) {
+                if (isset($use[$name])) {
+                    $use[$name]++;
                 }
             }
         }

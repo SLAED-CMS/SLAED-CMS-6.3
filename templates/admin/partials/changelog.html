@@ -1,6 +1,6 @@
 <div class="chlog-wrapper">
     <!-- Filter Form -->
-    <form action="{{ aroute }}.php" method="get" class="chlog-filter">
+    <form action="{{ action_url }}" method="get" class="chlog-filter">
         <h3>{{ txt_filter_heading }}</h3>
         <input type="hidden" name="name" value="changelog">
 
@@ -33,7 +33,7 @@
 
         <div class="chlog-filter-actions">
             <button type="submit" class="chlog-btn chlog-btn-primary">{{ txt_filter_btn }}</button>
-            <button type="button" class="chlog-btn chlog-btn-secondary" onclick="window.location.href='{{ aroute }}.php?name=changelog'">{{ txt_reset_btn }}</button>
+            <button type="button" class="chlog-btn chlog-btn-secondary" onclick="window.location.href='{{ reset_url }}'">{{ txt_reset_btn }}</button>
         </div>
     </form>
 

@@ -10,11 +10,14 @@
 | Version | Supported | PHP Version | Status |
 | ------- | --------- | ----------- | ------ |
 | 6.3.x   | Yes       | 8.1+        | Active development |
-| 6.2.x   | No        | Legacy      | End of life |
-| 6.1.x   | No        | Legacy      | Not supported |
-| < 6.0   | No        | Legacy      | Not supported |
+| 6.2.x   | `TODO:`   | Legacy      | `TODO:` Confirm from maintained branches |
+| 6.1.x   | `TODO:`   | Legacy      | `TODO:` Confirm from maintained branches |
+| < 6.0   | `TODO:`   | Legacy      | `TODO:` Confirm from maintained branches |
 
 Only version 6.3.x should be considered for security fixes.
+
+> [!IMPORTANT]
+> The current repository documents the `6.3` code line. It does not provide enough evidence to publish a reliable support matrix for older branches without additional branch-level verification.
 
 ---
 
@@ -85,6 +88,12 @@ Password handling helpers present in the current runtime:
 
 Runtime logs are stored under `storage/logs/`.
 
+The repository also contains runtime-generated data under:
+
+- `storage/cache/`
+- `storage/sitemap/`
+- `storage/backup/`
+
 ### Access Control
 
 The codebase contains dedicated admin and module access checks, including patterns such as:
@@ -92,6 +101,9 @@ The codebase contains dedicated admin and module access checks, including patter
 - `isAdmin()`
 - `isAdmin(true)`
 - `is_admin_modul()`
+- `is_moder()`
+
+Module availability and visibility are also influenced by runtime config and database-driven module state.
 
 ---
 
@@ -106,6 +118,14 @@ The codebase contains dedicated admin and module access checks, including patter
 ### Configuration
 
 Review the active configuration files under `config/` and keep secrets out of public access.
+
+Relevant runtime files present in the repository include:
+
+- `config/db.php`
+- `config/global.php`
+- `config/security.php`
+- `config/modules.php`
+- `config/scheduler.php`
 
 ### Server Hardening
 
@@ -158,6 +178,7 @@ When changing code:
 - protect state-changing actions with CSRF tokens where applicable
 - avoid adding raw HTML or SQL paths without a clear reason
 - prefer existing security helpers over ad hoc checks
+- review `storage/logs/` after changing state-changing admin flows when practical
 
 See also [CONTRIBUTING.md](CONTRIBUTING.md).
 

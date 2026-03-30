@@ -594,7 +594,6 @@ define('_SCHEDULER_SYSTEM','Systemowy');
 define('_SCHEDULER_CUSTOM','Wlasny');
 define('_SCHEDULER_PRIO','Priorytet');
 define('_SCHEDULER_PRIOTIP','Im mniejsza liczba, tym wczesniej zadanie zostanie uruchomione.');
-define('_SCHEDULER_PRIODUP','Zadanie z takim priorytetem juz istnieje.');
 define('_SCHEDULER_LOCK','Maks. czas wykonania, sek.');
 define('_SCHEDULER_UNLOCK','Odblokuj');
 define('_SCHEDULER_RUN','Uruchom teraz');

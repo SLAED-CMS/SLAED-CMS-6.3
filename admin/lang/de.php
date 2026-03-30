@@ -594,7 +594,6 @@ define('_SCHEDULER_SYSTEM','System');
 define('_SCHEDULER_CUSTOM','Benutzerdefiniert');
 define('_SCHEDULER_PRIO','Prioritaet');
 define('_SCHEDULER_PRIOTIP','Je kleiner die Zahl, desto frueher wird der Job ausgefuehrt.');
-define('_SCHEDULER_PRIODUP','Ein Job mit dieser Prioritaet existiert bereits.');
 define('_SCHEDULER_LOCK','Max. Ausfuehrungszeit, Sek.');
 define('_SCHEDULER_UNLOCK','Entsperren');
 define('_SCHEDULER_RUN','Jetzt starten');

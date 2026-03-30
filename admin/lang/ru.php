@@ -594,7 +594,6 @@ define('_SCHEDULER_SYSTEM','Системный');
 define('_SCHEDULER_CUSTOM','Пользовательский');
 define('_SCHEDULER_PRIO','Приоритет');
 define('_SCHEDULER_PRIOTIP','Чем меньше число, тем раньше будет запуск.');
-define('_SCHEDULER_PRIODUP','Задание с таким приоритетом уже существует.');
 define('_SCHEDULER_LOCK','Макс. время выполнения, сек.');
 define('_SCHEDULER_UNLOCK','Снять блокировку');
 define('_SCHEDULER_RUN','Запустить');

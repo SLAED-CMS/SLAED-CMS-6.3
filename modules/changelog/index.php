@@ -56,13 +56,13 @@ function changelog(): void {
     }
 
     $cont = $tpl->getHtmlPart('changelog', [
-        'action' => 'index',
-        'name' => $conf['name'],
+        'action_url' => 'index.php?name='.$conf['name'],
         'search' => chlogEsc($filters['search']),
         'author' => chlogEsc($filters['author']),
         'file' => chlogEsc($filters['file']),
         'datefrom' => chlogEsc($filters['since']),
         'dateto' => chlogEsc($filters['until']),
+        'reset_url' => 'index.php?name='.$conf['name'],
         'totcount' => $totcount,
         'totcom' => $totcom,
         'page' => $page,

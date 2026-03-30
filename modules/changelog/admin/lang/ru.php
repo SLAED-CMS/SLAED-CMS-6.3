@@ -31,8 +31,6 @@ define('_CHLOG_EXPORT_TXT', 'Экспорт TXT');
 define('_CHLOG_EXPORT_MD', 'Экспорт Markdown');
 define('_CHLOG_SOURCE', 'Источник');
 define('_CHLOG_SOURCE_TITLE', 'Источник changelog');
-define('_CHLOG_SOURCE_LOCAL', 'Локальный Git');
-define('_CHLOG_SOURCE_GITHUB', 'GitHub API');
 define('_CHLOG_GH_OWNER', 'GitHub owner');
 define('_CHLOG_GH_REPO', 'GitHub repository');
 define('_CHLOG_GH_TOKEN', 'GitHub token');

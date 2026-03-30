@@ -13,6 +13,16 @@
 
 SLAED CMS is a modular content management system with a legacy runtime, a modernized database layer, multi-language support, and an actively evolving template stack. The current codebase contains both stable legacy subsystems and newer runtime components used for ongoing modernization work.
 
+The repository entrypoints and active runtime files currently include:
+
+- `index.php` for frontend routing
+- `admin.php` for the admin entry runtime
+- `setup.php` for installation
+- `core/system.php` as the main frontend bootstrap
+- `core/admin.php` as the shared admin runtime helper layer
+- `core/classes/pdo.php` as the database wrapper
+- `core/classes/template.php` as the active template runtime
+
 ---
 
 ## Quick Start
@@ -38,13 +48,16 @@ http://localhost/slaed-cms/
 ## System Requirements
 
 - **PHP:** 8.1+
-- **Database:** MySQL 8.0+ or MariaDB 10+
+- **Database:** PDO MySQL-compatible server required by the current runtime
 - **Web Server:** Apache, Nginx, IIS, or another PHP-capable web server
-- **Extensions:** PDO, GD, mbstring, JSON
+- **Extensions:** PDO and JSON are required by the current runtime; image-related flows use GD functions
 - **Encoding:** UTF-8 / utf8mb4
 
 > [!NOTE]
 > Some development documentation and modernization work target newer PHP releases, but the current Composer requirement is `>=8.1`.
+
+> [!IMPORTANT]
+> `TODO:` Confirm the minimum supported MySQL and MariaDB server versions before documenting a version-specific deployment guarantee.
 
 ---
 
@@ -54,11 +67,24 @@ http://localhost/slaed-cms/
 
 1. Download or clone the repository.
 2. Extract files into the web root.
-3. Create a MySQL or MariaDB database.
+3. Create a database for the installation.
 4. Import the base schema from `setup/sql/table.sql`.
 5. Review the files in `config/` and adjust local settings as needed.
 6. Open `http://yoursite.com/setup.php` and complete the setup flow.
 7. Delete `setup.php`.
+
+Current SQL files present in `setup/sql/`:
+
+- `table.sql`
+- `insert.sql`
+- `table_update4_1.sql`
+- `table_update4_2.sql`
+- `table_update4_3.sql`
+- `table_update5_0.sql`
+- `table_update5_1.sql`
+- `table_update6_0.sql`
+- `table_update6_2.sql`
+- `table_update6_3.sql`
 
 ### Permissions
 
@@ -84,6 +110,9 @@ Quick commands:
 ./vendor/bin/phpstan analyse
 ./vendor/bin/php-cs-fixer fix --dry-run --diff --using-cache=no --config=.php-cs-fixer.dist.php <paths>
 php -l path/to/file.php
+composer test
+composer analyse
+composer quality
 ```
 
 ---
@@ -92,12 +121,14 @@ php -l path/to/file.php
 
 - **Backend:** PHP 8.1+
 - **Database:** `Database` class in `core/classes/pdo.php` with prepared statements and `getSql*` methods
-- **Legacy Template Layer:** `core/template.php`
-- **Modern Template Runtime:** `core/classes/template.php`
+- **Template Runtime:** `core/classes/template.php`
 - **Editors / JS Plugins:** CKEditor, TinyMCE, CodeMirror, jQuery, htmx, Bootstrap and other bundled plugin directories under `plugins/`
 - **Content Parsing:** `filterMarkdown()` in `core/system.php`
 - **Security Helpers:** `getVar()`, `getSiteToken()`, `checkSiteToken()`, `getPassHash()`, `checkPassHash()`
 - **Languages:** 6 bundled locale files in `lang/`
+
+> [!NOTE]
+> The current repository does not contain an active `core/template.php` runtime file. Template rendering is handled through the `Template` class in `core/classes/template.php`.
 
 ---
 
@@ -110,7 +141,8 @@ php -l path/to/file.php
 - User groups, roles, and permissions
 - Prepared-statement database layer
 - Caching and logging directories under `storage/`
-- Legacy and modern template runtimes available side by side during migration
+- Central frontend head assembly through `setHead()` and final page rendering through `setFoot()`
+- Runtime-generated sitemap data under `storage/sitemap/`
 
 ### Content and Modules
 
@@ -125,11 +157,27 @@ Bundled themes currently present in the repository:
 
 - `templates/admin`
 - `templates/default`
-- `templates/default_old`
 - `templates/lite`
 - `templates/simple`
 
 `templates/simple` is the minimal modern theme structure used for current template runtime work.
+
+### Routing and Entry Flow
+
+Frontend requests are routed from `index.php` by `go`, `name`, `op`, and optional `file` parameters. Standard module requests resolve to `modules/<name>/<file>.php`, while special direct flows include RSS, OpenSearch, XSL, generated CSS, generated JavaScript, and numeric helper endpoints.
+
+Admin requests enter through `admin.php`, which loads `admin/index.php` and then resolves admin handlers from `admin/modules/*.php` and `modules/*/admin/`.
+
+### SEO and Head Assembly
+
+Frontend SEO data is assembled centrally in `core/system.php` through `setHead()`.
+
+Confirmed current behavior:
+
+- canonical URLs are built centrally from normalized route parameters
+- `setHead(['canon' => '...'])` overrides the automatic canonical URL
+- `setHead(['robots' => 'noindex, follow'])` overrides the default robots meta value
+- Open Graph and schema URL fields are built from the same central URL logic
 
 ---
 
@@ -142,7 +190,6 @@ slaed-cms/
 ├── config/                # Runtime configuration files
 ├── core/                  # Core runtime
 │   ├── system.php         # Main bootstrap/runtime layer
-│   ├── template.php       # Legacy template layer
 │   ├── security.php       # Security helpers
 │   └── classes/
 │       ├── pdo.php        # Database class
@@ -151,6 +198,7 @@ slaed-cms/
 ├── modules/               # Frontend modules
 ├── plugins/               # Bundled JS/editor/plugin assets
 ├── setup/                 # Installation and SQL files
+├── sound/                 # Bundled sound assets
 ├── storage/               # Cache, logs, backups, sitemap data
 ├── templates/             # Themes and template trees
 ├── tests/                 # PHPUnit and validation tests
@@ -165,8 +213,9 @@ slaed-cms/
 ## Development Notes
 
 - Legacy code and modernized code coexist in the current repository.
-- `core/template.php` remains the legacy template layer.
 - New template work targets `core/classes/template.php`, the shared `$tpl` runtime object, and HTML files under `templates/*`.
+- Current active theme directories are `admin`, `default`, `lite`, and `simple`.
+- Current frontend module directories include `account`, `content`, `faq`, `files`, `forum`, `help`, `links`, `media`, `news`, `pages`, `search`, `shop`, `sitemap`, `users`, `voting`, and additional module folders under `modules/`.
 - Public documentation aims to describe the current repository state, not a future fully completed migration.
 
 For contribution rules and coding conventions, see [CONTRIBUTING.md](CONTRIBUTING.md).

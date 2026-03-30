@@ -1887,12 +1887,65 @@ function updateStatsTrack(string $request, int $guest): void {
     }
 }
 
+# Normalize current request parameters for public SEO URLs
+function filterCanonicalParams(): array {
+    $vars = [];
+    $name = getVar('get', 'name', 'var');
+    if ($name !== '') $vars['name'] = $name;
+    $op = getVar('get', 'op', 'var');
+    if ($op !== '') $vars['op'] = $op;
+    $id = getVar('get', 'id', 'num');
+    if ($id) $vars['id'] = (string)$id;
+    $cat = getVar('get', 'cat', 'num');
+    if ($cat) $vars['cat'] = (string)$cat;
+    $num = getVar('get', 'num', 'num');
+    if ($num > 1) $vars['num'] = (string)$num;
+    $let = getVar('get', 'let', 'let');
+    if ($let !== '') $vars['let'] = $let;
+    return $vars;
+}
+
+# Build one public site URL from normalized route parameters
+function getPublicUrl(array $vars = []): string {
+ global $conf;
+    $base = rtrim((string)($conf['homeurl'] ?? ''), '/');
+    if ($vars === []) return $base;
+    $path = ltrim(getSeoUrl($vars), '/');
+    return $base.'/'.$path;
+}
+
+# Resolve canonical URL and robots defaults for the current frontend request
+function getSeoRoute(array $seo = []): array {
+    $vars = filterCanonicalParams();
+    $name = $vars['name'] ?? '';
+    $robot = trim((string)($seo['robots'] ?? ''));
+    $canon = trim((string)($seo['canon'] ?? ''));
+    $iscanon = $name !== 'search';
+    if ($robot === '') {
+        $robot = ($name === 'search') ? 'noindex, follow' : 'index, follow';
+    }
+    if ($canon !== '') {
+        if (!preg_match('#^https?://#i', $canon)) {
+            $base = rtrim((string)($GLOBALS['conf']['homeurl'] ?? ''), '/');
+            $canon = $base.'/'.ltrim($canon, '/');
+        }
+    } elseif ($iscanon) {
+        $canon = getPublicUrl($vars);
+    }
+    return [
+        'robot' => $robot,
+        'canon' => $canon,
+        'iscanon' => $iscanon && $canon !== '',
+        'siteurl' => getPublicUrl($vars),
+    ];
+}
+
 # Format head
 function setHead(array $seo = []): void {
     global $home, $conf, $user, $name, $theme, $op, $tpl, $adminpage, $adminvars, $sitepage, $sitevars;
     $name = $name ?? '';
     $ctime = time();
-    $request = getenv('REQUEST_URI');
+    $request = $_SERVER['REQUEST_URI'] ?? getenv('REQUEST_URI') ?: '';
     if ($conf['session']) {
         $track = updateSessionTrack($ctime, $request, $name);
         $uname = $track['uname'];
@@ -1935,6 +1988,7 @@ function setHead(array $seo = []): void {
     $strlink = $stscript = '';
     $sep = urldecode($conf['defis']);
     if (!defined('ADMIN_FILE')) {
+        $seomap = getSeoRoute($seo);
         $atime  = date('Y-m-d H:i:s');
         $time   = $seo['time']   ?? $atime;
         $mtime  = $time;
@@ -1944,8 +1998,7 @@ function setHead(array $seo = []): void {
         $img    = ($seo['img'] ?? '') ?: $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'];
         $ctitle = $seo['ctitle'] ?? '';
         $author = $seo['author'] ?? $conf['sitename'];
-        $url = ($conf['rewrite']) ? urldecode(substr($request, 1)) : urldecode(str_replace('index.php?', '', substr($request, 1)));
-        $purl = ($conf['rewrite']) ? $conf['homeurl'].'/'.htmlspecialchars($url) : (($home) ? $conf['homeurl'] : $conf['homeurl'].'/index.php?'.htmlspecialchars($url));
+        $purl = $seomap['siteurl'];
         $type = 'article';
         if ($home) {
             $title = $conf['sitename'].' '.$sep.' '.$conf['slogan'];
@@ -1979,17 +2032,17 @@ function setHead(array $seo = []): void {
         $strmeta .= '<title>'.$title.'</title>'."\n"
         .'<meta name="author" content="'.$conf['sitename'].'">'."\n"
         .'<meta name="description" content="'.$desc.'">'."\n"
-        .'<meta name="robots" content="index, follow">'."\n"
+        .'<meta name="robots" content="'.$seomap['robot'].'">'."\n"
         .'<meta name="revisit-after" content="1 days">'."\n"
         .'<meta name="rating" content="general">'."\n"
         .'<meta name="generator" content="SLAED CMS">'."\n";
-        $seofrom = ['[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]', '[headline]', '[author]'];
-        $seoto   = [$conf['homeurl'], $conf['sitename'], $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'], _LOCALE, date('c', strtotime($time)), date('c', strtotime($mtime)), $title, $desc, $img, $ctitle, $type, $purl, $headline, $author];
+        $from = ['[homeurl]', '[site]', '[logo]', '[loc]', '[time]', '[mtime]', '[title]', '[desc]', '[img]', '[ctitle]', '[type]', '[url]', '[headline]', '[author]'];
+        $into = [$conf['homeurl'], $conf['sitename'], $conf['homeurl'].'/templates/'.$theme.'/images/logos/'.$conf['site_logo'], _LOCALE, date('c', strtotime($time)), date('c', strtotime($mtime)), $title, $desc, $img, $ctitle, $type, $purl, $headline, $author];
         if (!empty($conf['agraph']) && !empty($conf['graph'])) {
-            $strmeta .= str_replace($seofrom, $seoto, $conf['graph']);
+            $strmeta .= str_replace($from, $into, $conf['graph']);
         }
         $strlink .= getHtmlHeadLink('shortcut icon', 'templates/'.$theme.'/favicon.png')."\n";
-        if (strpos($conf['homeurl'], getHost()) !== false) $strlink .= getHtmlHeadLink('canonical', $purl)."\n";
+        if ($seomap['iscanon']) $strlink .= getHtmlHeadLink('canonical', $seomap['canon'])."\n";
         if ($conf['rss']['act']) {
             $fieldc = explode('||', $conf['rss']['rss']);
             foreach ($fieldc as $val) {
@@ -2005,7 +2058,7 @@ function setHead(array $seo = []): void {
     }
     $strlink .= doCss();
     if (!defined('ADMIN_FILE') && !empty($conf['aschema']) && !empty($conf['schema'])) {
-        $stscript = str_replace($seofrom, $seoto, $conf['schema']);
+        $stscript = str_replace($from, $into, $conf['schema']);
     }
     $script = (defined('ADMIN_FILE') || empty($conf['script_b'])) ? doScript()."\n".$stscript : $stscript;
     if (defined('ADMIN_FILE')) {
@@ -3074,7 +3127,7 @@ function addSitemapTask(bool $force = false): array {
             if (count($info) > 0) {
                 foreach ($info as $key => $val) {
                     if ($conf['sitemap']['gen_m']) {
-                        $map_m .= '<url><loc>'.$conf['homeurl'].'/index.php?name='.$key.'</loc>';
+                        $map_m .= '<url><loc>'.getPublicUrl(['name' => $key]).'</loc>';
                         $map_m .= $conf['sitemap']['dat_m'] ? '<lastmod>'.$date.'</lastmod>' : '';
                         $map_m .= $conf['sitemap']['fr_m'] ? '<changefreq>'.$conf['sitemap']['fr_m'].'</changefreq>' : '';
                         $map_m .= $conf['sitemap']['pr_m'] ? '<priority>'.$conf['sitemap']['pr_m'].'</priority>' : '';
@@ -3082,7 +3135,11 @@ function addSitemapTask(bool $force = false): array {
                     }
                     foreach ($info[$key] as $key2 => $val2) {
                         if ($conf['sitemap']['gen_p'] && $info[$key][$key2][0]) {
-                            $map_p .= '<url><loc>'.$conf['homeurl'].'/index.php?name='.$info[$key][$key2][4].'&amp;op=view&amp;id='.$info[$key][$key2][0].'</loc>';
+                            $map_p .= '<url><loc>'.getPublicUrl([
+                                'name' => $info[$key][$key2][4],
+                                'op' => 'view',
+                                'id' => $info[$key][$key2][0],
+                            ]).'</loc>';
                             $map_p .= $conf['sitemap']['dat_p'] ? '<lastmod>'.format_time($info[$key][$key2][3], 'Y-m-d').'</lastmod>' : '';
                             $map_p .= $conf['sitemap']['fr_p'] ? '<changefreq>'.$conf['sitemap']['fr_p'].'</changefreq>' : '';
                             $map_p .= $conf['sitemap']['pr_p'] ? '<priority>'.$conf['sitemap']['pr_p'].'</priority>' : '';
@@ -3094,7 +3151,7 @@ function addSitemapTask(bool $force = false): array {
                     while (list($cid, $cmodul, $title, $parentid) = $db->getSqlRow($result)) {
                         $cd[$cid] = [$cid, $parentid, $title, $cmodul];
                         if ($conf['sitemap']['gen_c']) {
-                            $map_c .= '<url><loc>'.$conf['homeurl'].'/index.php?name='.$cmodul.'&amp;cat='.$cid.'</loc>';
+                            $map_c .= '<url><loc>'.getPublicUrl(['name' => $cmodul, 'cat' => $cid]).'</loc>';
                             $map_c .= $conf['sitemap']['dat_c'] ? '<lastmod>'.$date.'</lastmod>' : '';
                             $map_c .= $conf['sitemap']['fr_c'] ? '<changefreq>'.$conf['sitemap']['fr_c'].'</changefreq>' : '';
                             $map_c .= $conf['sitemap']['pr_c'] ? '<priority>'.$conf['sitemap']['pr_c'].'</priority>' : '';
@@ -3106,15 +3163,15 @@ function addSitemapTask(bool $force = false): array {
             if ($conf['sitemap']['txt']) {
                 $buffer = '<ol class="sl_list">';
                 foreach ($htm as $key => $val) {
-                    $buffer .= '<li><a href="index.php?name='.$key.'" title="'.getModuleName($key).'">'.getModuleName($key).'</a>';
+                    $buffer .= '<li><a href="'.getSeoUrl(['name' => $key]).'" title="'.getModuleName($key).'">'.getModuleName($key).'</a>';
                     if (count($htm[$key]) > 0) {
                         $cat = '';
                         foreach ($htm[$key] as $key2 => $val2) {
-                            $cat .= (isset($cd[$key2][2])) ? '<li><a href="index.php?name='.$key.'&amp;cat='.$key2.'" title="'.$cd[$key2][2].'">'.$cd[$key2][2].'</a>' : '';
+                            $cat .= (isset($cd[$key2][2])) ? '<li><a href="'.getSeoUrl(['name' => $key, 'cat' => $key2]).'" title="'.$cd[$key2][2].'">'.$cd[$key2][2].'</a>' : '';
                             if (count($htm[$key][$key2]) > 0) {
                                 $view = $pub = '';
                                 foreach ($htm[$key][$key2] as $key3 => $val3) {
-                                    $view .= $htm[$key][$key2][$key3][0] ? '<li><a href="index.php?name='.$key.'&amp;op=view&amp;id='.$htm[$key][$key2][$key3][0].'" title="'.$htm[$key][$key2][$key3][1].'">'.$htm[$key][$key2][$key3][1].'</a></li>' : '';
+                                    $view .= $htm[$key][$key2][$key3][0] ? '<li><a href="'.getSeoUrl(['name' => $key, 'op' => 'view', 'id' => $htm[$key][$key2][$key3][0]]).'" title="'.$htm[$key][$key2][$key3][1].'">'.$htm[$key][$key2][$key3][1].'</a></li>' : '';
                                 }
                                 $pub .= $view ? '<ol class="sl_sublist_two">'.$view.'</ol>' : '';
                             }
@@ -3128,7 +3185,7 @@ function addSitemapTask(bool $force = false): array {
                 file_put_contents(SITEMAP_DIR.'/sitemap.txt', $buffer);
             }
             if ($conf['sitemap']['gen_h']) {
-                $map_h = '<url><loc>'.$conf['homeurl'].'/index.php</loc>';
+                $map_h = '<url><loc>'.getPublicUrl().'</loc>';
                 $map_h .= ($conf['sitemap']['dat_h']) ? '<lastmod>'.$date.'</lastmod>' : '';
                 $map_h .= ($conf['sitemap']['fr_h']) ? '<changefreq>'.$conf['sitemap']['fr_h'].'</changefreq>' : '';
                 $map_h .= ($conf['sitemap']['pr_h']) ? '<priority>'.$conf['sitemap']['pr_h'].'</priority>' : '';
@@ -3149,10 +3206,6 @@ function addSitemapTask(bool $force = false): array {
                     $cont = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
                     $cont .= ($conf['sitemap']['xsl'] && file_exists(SITEMAP_DIR.'/sitemap.xsl')) ? '<?xml-stylesheet type="text/xsl" href="'.$conf['homeurl'].'/index.php?go=xsl"?>'."\n" : '';
                     $cont .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n".$urls.'</urlset>';
-                    if ($conf['rewrite']) {
-                        $cont = str_replace($conf['homeurl'].'/', '', $cont);
-                        $cont = preg_replace('#<loc>(.*?)</loc>#is','<loc>'.$conf['homeurl'].'/\\1</loc>', $cont);
-                    }
                     $file = 'sitemap-'.$i.'.xml';
                     file_put_contents($file, $cont);
                     $i++;

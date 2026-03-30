@@ -31,8 +31,6 @@ define('_CHLOG_EXPORT_TXT', 'Export TXT');
 define('_CHLOG_EXPORT_MD', 'Export Markdown');
 define('_CHLOG_SOURCE', 'Quelle');
 define('_CHLOG_SOURCE_TITLE', 'Changelog-Quelle');
-define('_CHLOG_SOURCE_LOCAL', 'Lokales Git');
-define('_CHLOG_SOURCE_GITHUB', 'GitHub API');
 define('_CHLOG_GH_OWNER', 'GitHub Owner');
 define('_CHLOG_GH_REPO', 'GitHub Repository');
 define('_CHLOG_GH_TOKEN', 'GitHub Token');

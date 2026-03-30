@@ -594,7 +594,6 @@ define('_SCHEDULER_SYSTEM','System');
 define('_SCHEDULER_CUSTOM','Custom');
 define('_SCHEDULER_PRIO','Priority');
 define('_SCHEDULER_PRIOTIP','The lower the number, the earlier the job runs.');
-define('_SCHEDULER_PRIODUP','A job with this priority already exists.');
 define('_SCHEDULER_LOCK','Max execution time, sec.');
 define('_SCHEDULER_UNLOCK','Unlock');
 define('_SCHEDULER_RUN','Run now');

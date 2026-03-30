@@ -594,7 +594,6 @@ define('_SCHEDULER_SYSTEM','Системний');
 define('_SCHEDULER_CUSTOM','Користувацький');
 define('_SCHEDULER_PRIO','Пріоритет');
 define('_SCHEDULER_PRIOTIP','Чим менше число, тим раніше буде запуск.');
-define('_SCHEDULER_PRIODUP','Завдання з таким пріоритетом вже існує.');
 define('_SCHEDULER_LOCK','Макс. час виконання, сек.');
 define('_SCHEDULER_UNLOCK','Зняти блокування');
 define('_SCHEDULER_RUN','Запустити');

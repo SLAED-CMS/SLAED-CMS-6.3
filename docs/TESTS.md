@@ -14,6 +14,12 @@ Configuration files:
 - `phpstan.neon`
 - `.php-cs-fixer.dist.php`
 
+Composer scripts currently present in `composer.json`:
+
+- `composer test`
+- `composer analyse`
+- `composer quality`
+
 ## Installation
 Install dev dependencies first:
 
@@ -26,6 +32,8 @@ If Composer is not in PATH:
 ```bash
 php composer.phar install
 ```
+
+If you use the Composer scripts instead of direct binaries, they resolve to the current repository toolchain defined in `composer.json`.
 
 ## Core Commands
 

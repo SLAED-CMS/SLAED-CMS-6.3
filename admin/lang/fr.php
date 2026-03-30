@@ -594,7 +594,6 @@ define('_SCHEDULER_SYSTEM','Systeme');
 define('_SCHEDULER_CUSTOM','Personnalise');
 define('_SCHEDULER_PRIO','Priorite');
 define('_SCHEDULER_PRIOTIP','Plus le nombre est petit, plus la tâche s\'exécute tôt.');
-define('_SCHEDULER_PRIODUP','Une tâche avec cette priorité existe déjà.');
 define('_SCHEDULER_LOCK','Duree max. d\'execution, sec.');
 define('_SCHEDULER_UNLOCK','Debloquer');
 define('_SCHEDULER_RUN','Executer');
