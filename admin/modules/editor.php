@@ -48,9 +48,11 @@ function getRobotsTemplate(): string {
 }
 
 function getRobotsButton(string $template): string {
-    $label = htmlspecialchars(_EROBSTD, ENT_QUOTES, 'UTF-8');
-    $value = htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8');
-    return '<input type="button" value="'.$label.'" class="sl_but_green" data-robots-template="'.$value.'" onclick="var src = this.getAttribute(\'data-robots-template\'); var code = document.getElementById(\'code\'); if (!code || !src) return; code.value = JSON.parse(src); if (window.editor && typeof window.editor.setValue === \'function\') { window.editor.setValue(code.value); window.editor.focus(); }">';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-editor-robots-button', [
+        'label' => _EROBSTD,
+        'data_value' => htmlspecialchars(json_encode($template, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8'),
+    ]);
 }
 
 function isHtmxReq(): bool {
@@ -67,7 +69,7 @@ function getEditbox(string $file, string $info, string $warn, string $mtype, str
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
     if ($warn) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $warn]);
     $noteHtml = ($note !== '') ? $tpl->getHtmlFrag('alert', ['type' => $noteType, 'text' => $note]) : '';
-    $cont .= '<div id="repeditornote">'.$noteHtml.'</div>';
+    $cont .= $tpl->getHtmlFrag('admin-editor-note-panel', ['content_html' => $noteHtml]);
     $hide = getTplHiddenInput('name', 'editor').getTplHiddenInput('op', 'save').getTplHiddenInput('editor', $edit).getTplHiddenInput('file', $file);
     $rows = getTplAdminFormWide(textarea_code('code', 'template', 'sl_form', $mtype, $text));
     $buttons = ($extra !== '') ? $extra.' '.getTplAdminSubmitButton(_SAVE) : getTplAdminSubmitButton(_SAVE);
@@ -86,7 +88,7 @@ function getEditorView(string $edit, string $note = '', string $noteType = 'info
 }
 
 function renderEditorPage(string $edit, string $note = '', string $noteType = 'info'): void {
-    $html = '<div id="repeditor">'.getEditorView($edit, $note, $noteType).'</div>';
+    $html = $tpl->getHtmlFrag('admin-editor-root-panel', ['content_html' => getEditorView($edit, $note, $noteType)]);
     if (isHtmxReq()) {
         echo $html;
         return;

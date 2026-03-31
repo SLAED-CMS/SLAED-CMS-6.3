@@ -1,0 +1,1 @@
+<input type="button" value="{{ label }}" class="sl_but_green" data-robots-template="{{{ data_value }}}" onclick="var src=this.getAttribute('data-robots-template');var code=document.getElementById('code');if(!code||!src)return;code.value=JSON.parse(src);if(window.editor&&typeof window.editor.setValue==='function'){window.editor.setValue(code.value);window.editor.focus();}">
