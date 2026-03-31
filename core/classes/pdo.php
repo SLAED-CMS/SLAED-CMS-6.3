@@ -109,12 +109,16 @@ class Database {
         $this->sqltime += $ttime;
         $cvar = explode(',', $conf['variables']);
         if ($cvar[8]) {
+            global $tpl;
             $color = ($ttime > 0.01) ? 'sl_red' : 'sl_green';
             $iquery = htmlspecialchars($this->filterSqlQuery($query, $params));
-            $this->qtime .= '<span class="'.$color.'">'.$ttime.'</span> '._SEC.'. - ['.$type.'] - '.$iquery.';';
+            if ($tpl instanceof Template) {
+                $this->qtime .= $tpl->getHtmlFrag('pdo-query-time', ['color' => $color, 'time' => $ttime, 'sec_label' => _SEC, 'type' => $type, 'query' => $iquery]);
+            } else {
+                $this->qtime .= '['.$color.'] '.$ttime.' '._SEC.'. - ['.$type.'] - '.$iquery.';'.PHP_EOL;
+            }
         }
         if ($this->qresult) {
-            if ($cvar[8]) $this->qtime .= '<br>';
             $this->qnum++;
             unset($this->qrow[$this->qid], $this->qrowset[$this->qid]);
             return $this->qresult;
@@ -123,7 +127,11 @@ class Database {
                 $error = $this->getSqlError();
                 $errmsg = htmlspecialchars($error['message']);
                 $errinfo = $error['sqlstate'].' / '.$error['code'];
-                $this->qtime .= ' <span class="sl_red">'._ERROR.': '.$errinfo.' - '.$errmsg.'</span><br>';
+                if ($tpl instanceof Template) {
+                    $this->qtime .= $tpl->getHtmlFrag('pdo-error-badge', ['error_label' => _ERROR, 'errinfo' => $errinfo, 'errmsg' => $errmsg]);
+                } else {
+                    $this->qtime .= ' '._ERROR.': '.$errinfo.' - '.$errmsg.PHP_EOL;
+                }
                 if (function_exists('addSqlLog')) {
                     $loginfo = $ttime.' '._SEC.'. - ['.$type.'] - '.$error['sqlstate'].'/'.$error['code'];
                     addSqlLog($loginfo, $error['message'], $this->filterSqlQuery($query, $params));

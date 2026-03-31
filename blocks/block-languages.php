@@ -9,7 +9,7 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $conf, $locale;
+global $conf, $locale, $tpl;
 $handle = opendir('lang');
 while (false !== ($file = readdir($handle))) {
 	if (preg_match("/^(.+)\.php/", $file, $matches)) {
@@ -19,22 +19,30 @@ while (false !== ($file = readdir($handle))) {
 closedir($handle);
 sort($langlist);
 if ($conf['flags'] == 1) {
-	$content = '<div style="text-align: center;">';
+	$flags_html = '';
 	for ($i = 0; $i < count($langlist); $i++) {
 		if ($langlist[$i] != '') {
 			$altlang = getLangName($langlist[$i]);
-			$content .= '<a href="index.php?newlang='.$langlist[$i].'"><img src="'.img_find('lang/'.$langlist[$i].'.png').'" alt="'.$altlang.'" title="'.$altlang.'"></a>';
+			$flags_html .= $tpl->getHtmlFrag('block-languages-flag-item', [
+				'url'   => 'index.php?newlang='.$langlist[$i],
+				'src'   => img_find('lang/'.$langlist[$i].'.png'),
+				'alt'   => $altlang,
+				'title' => $altlang,
+			]);
 		}
 	}
-	$content .= '</div>';
+	$content = $tpl->getHtmlFrag('block-languages-flags', ['flags_html' => $flags_html]);
 } else {
-	$content = '<form action="index.php" method="get"><select name="newlanguage" OnChange="top.location.href=this.options[this.selectedIndex].value" style="width: 250px;" class="sl_field">';
-	for ($i=0; $i < count($langlist); $i++) {
+	$options_html = '';
+	for ($i = 0; $i < count($langlist); $i++) {
 		if ($langlist[$i] != '') {
-			$content .= '<option value="index.php?newlang='.$langlist[$i].'" ';
-			if ($langlist[$i] == $locale) $content .= ' selected';
-			$content .= '>'.getLangName($langlist[$i])."</option>\n";
+			$selected = ($langlist[$i] == $locale) ? ' selected' : '';
+			$options_html .= $tpl->getHtmlFrag('block-languages-option', [
+				'url'      => 'index.php?newlang='.$langlist[$i],
+				'label'    => getLangName($langlist[$i]),
+				'selected' => $selected,
+			]);
 		}
 	}
-	$content .= '</select></form>';
+	$content = $tpl->getHtmlFrag('block-languages-select', ['options_html' => $options_html]);
 }

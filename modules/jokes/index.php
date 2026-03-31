@@ -150,7 +150,7 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname ?: _ANONYM,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], '<option value="">'._HOMECAT.'</option>'),
+            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], $tpl->getHtmlFrag('form-option', ['value' => '', 'selected' => '', 'label' => _HOMECAT])),
             'hometext' => textarea('1', 'joke', $joke, $conf['name'], '10', _JOKE, '1'),
             'captcha' => getCaptcha(1),
             'submit' => ad_save('', '', 'send'),

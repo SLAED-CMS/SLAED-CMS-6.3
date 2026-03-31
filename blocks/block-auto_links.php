@@ -9,12 +9,21 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $db;
+global $db, $tpl;
 $content = '';
 $result = $db->getSqlQuery('SELECT id, title, intro FROM '.PREFIX_DB."_auto_links WHERE hits != '0' ORDER BY hits DESC LIMIT 0,".intval($conf['auto_links']['limit']).'');
-while(list($a_id, $a_site, $a_description) = $db->getSqlRow($result)) {
+while (list($a_id, $a_site, $a_description) = $db->getSqlRow($result)) {
 	$a_site = cutstr($a_site, $conf['auto_links']['strip']);
 	$title = filterText(cutstr(filterReplaceText(filterMarkdown($a_description, '', false), ''), 250), 1);
-	$content .= '<table class="sl_table_block"><tr><td><a href="index.php?name=auto_links&amp;op=view&amp;id='.$a_id.'" target="_blank" title="'.$title.'" >'.$a_site.'</a></td></tr></table>';
+	$content .= $tpl->getHtmlFrag('block-list-item', [
+		'url'         => 'index.php?name=auto_links&amp;op=view&amp;id='.$a_id,
+		'title'       => $title,
+		'label'       => $a_site,
+		'target_attr' => ' target="_blank"',
+	]);
 }
-$content .= '<p class="sl_center"><a href="index.php?name=auto_links&amp;op=add" title="'._A_LINKS.'" class="sl_but_blue">'._ADD.'</a></p>';
+$content .= $tpl->getHtmlFrag('block-center-link', [
+	'url'   => 'index.php?name=auto_links&amp;op=add',
+	'title' => _A_LINKS,
+	'label' => _ADD,
+]);

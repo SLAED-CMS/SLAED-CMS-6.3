@@ -33,7 +33,7 @@ function contact(): void {
             while ([$id, $aname, $atitle] = $db->getSqlRow($result)) {
                 $aname = substr($aname, 0, 25);
                 $atitle = substr($atitle, 0, 50);
-                $asend .= '<option value="'.$id.'">'.$aname.' - '.$atitle.'</option>';
+                $asend .= $tpl->getHtmlFrag('contact-admin-option', ['value' => $id, 'label' => $aname.' - '.$atitle]);
             }
         }
     }
@@ -81,7 +81,7 @@ function contact(): void {
                 $to = $conf['adminmail'];
             }
             $subject = $conf['sitename'].' - '._FEEDBACK;
-            $msg = $conf['sitename'].' - '._FEEDBACK.'<br><br>'._SENDERNAME.': '.$sname.'<br>'._SENDEREMAIL.': '.$semail.'<br><br>'._MESSAGE.': '.$message;
+            $msg = $tpl->getHtmlFrag('contact-email-body', ['sitename' => $conf['sitename'], 'feedback_label' => _FEEDBACK, 'sender_label' => _SENDERNAME, 'sname' => $sname, 'email_label' => _SENDEREMAIL, 'semail' => $semail, 'message_label' => _MESSAGE, 'message' => $message]);
             addMail($to, $semail, $subject, $msg, 1, 1);
             update_points(5);
             $meta = getTplMetaRefresh('index.php', 5);

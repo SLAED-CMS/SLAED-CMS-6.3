@@ -352,18 +352,14 @@ function database(): void {
         $db->getSqlQuery('FLUSH TABLES');
         $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 1]);
 
-        $info = _OPTIMIZE.': '.$conf['db']['name']
-                  .'<br>'._TOTALSPACE.': '.filterSize($total)
-                  .'<br>'._TOTALFREE.': '.filterSize($sumfree);
+        $info = _OPTIMIZE.': '.$conf['db']['name'].getTplAdminTipLine(_TOTALSPACE, filterSize($total)).getTplAdminTipLine(_TOTALFREE, filterSize($sumfree));
 
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
 
     } elseif ($type === 'repair') {
         $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 2]);
 
-        $info = _REPAIR.': '.$conf['db']['name']
-                  .'<br>'._TOTALSPACE.': '.filterSize($total)
-                  .'<br>'._TOTALFREE.': '.filterSize($sumfree);
+        $info = _REPAIR.': '.$conf['db']['name'].getTplAdminTipLine(_TOTALSPACE, filterSize($total)).getTplAdminTipLine(_TOTALFREE, filterSize($sumfree));
 
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
     }

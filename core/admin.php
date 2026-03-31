@@ -577,7 +577,7 @@ function getAdminCategoryList(string $modul = '', int $obj = 0): string {
             $mdn = ($next) ? 'go=5&amp;op=updateAdminCategoryOrder&amp;id='.$id.'&amp;cid='.$next.'&amp;typ='.$ordernp.'&amp;mod='.$modul.'&amp;ordern='.$ordern : '';
             $rows[] = adminCategoryRow([
                 'id' => (string) $id,
-                'title_html' => adminTitleTipLabel(_DESCRIPTION.': '.$descript.'<br>'._CATEGORIES.': '.$subcat.$clang, $title, cutstr($title, 50)),
+                'title_html' => adminTitleTipLabel(_DESCRIPTION.': '.$descript.getTplAdminTipLine(_CATEGORIES, $subcat).$clang, $title, cutstr($title, 50)),
                 'content_count' => (string) $pnum,
                 'active_html' => $active,
                 'image_html' => $img,
@@ -683,7 +683,7 @@ function getAdminBlockList(): string {
         $exp = intval($expire - time());
         $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
         $blang = getTplAdminLangHint($lang);
-        $ttip = adminTitleTip(_NAME.': '.$title.'<br>'._PURCHASED.': '.$exp.$blang).cutstr(getConst($title), 15);
+        $ttip = adminTitleTip(_NAME.': '.$title.getTplAdminTipLine(_PURCHASED, $exp).$blang).cutstr(getConst($title), 15);
         if ($bpos == 'l') {
             $bpos = adminNoteLabel(_LEFTBLOCK, _LEFT);
         } elseif ($bpos == 'r') {

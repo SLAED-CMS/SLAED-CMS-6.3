@@ -7,10 +7,14 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $db;
+global $db, $tpl;
 $strip = 20;
 $result = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB."_pages WHERE time <= now() AND status != '0' ORDER BY time DESC LIMIT 5");
-while(list($pid, $title) = $db->getSqlRow($result)) {
-	$linkstrip = cutstr($title, $strip);
-	$content .= '<table class="sl_table_block"><tr><td><a href="index.php?name=pages&amp;op=view&amp;id='.$pid.'" title="'.$title.'">'.$linkstrip.'</a></td></tr></table>';
+while (list($pid, $title) = $db->getSqlRow($result)) {
+	$content .= $tpl->getHtmlFrag('block-list-item', [
+		'url'         => 'index.php?name=pages&amp;op=view&amp;id='.$pid,
+		'title'       => $title,
+		'label'       => cutstr($title, $strip),
+		'target_attr' => '',
+	]);
 }

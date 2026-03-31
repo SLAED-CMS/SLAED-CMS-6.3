@@ -125,7 +125,7 @@ if ($bcookie == 'block') {
                 if (time() <= (int)$binfo[2]) {
                     if ((!$binfo[1] && getIpMatch($iptbase, $cidr)) || ($binfo[1] && getIpMatch($iptbase, $cidr) && $uagt == $binfo[1])) {
                         setCookies($conf['security']['blocker_cookie'], $binfo[2], 'block');
-                        $btext = _BANN_INFO.'<br>'._BANN_TERM.': '.getTimeLeft($binfo[2]).'<br>'._BANN_REAS.': '.$binfo[3];
+                        $btext = _BANN_INFO.'. '._BANN_TERM.': '.getTimeLeft($binfo[2]).'. '._BANN_REAS.': '.$binfo[3];
                         setExit($btext);
                     }
                 }
@@ -142,7 +142,7 @@ if ($bcookie == 'block') {
                 if (time() <= (int)$uinfo[1]) {
                     if ($tus == $uinfo[0]) {
                         setCookies($conf['security']['blocker_cookie'], $uinfo[1], 'block');
-                        $utext = _BANN_INFO.'<br>'._BANN_TERM.': '.getTimeLeft($uinfo[1]).'<br>'._BANN_REAS.': '.$uinfo[2];
+                        $utext = _BANN_INFO.'. '._BANN_TERM.': '.getTimeLeft($uinfo[1]).'. '._BANN_REAS.': '.$uinfo[2];
                         setExit($utext);
                     }
                 }
@@ -593,21 +593,19 @@ function setExit(string $msg, string $typ = ''): never {
     $theme = getTheme();
     $tpl = new Template($theme);
     $text = $tpl->getHtmlFrag('alert', ['text' => $msg, 'is_warn' => true]);
-    $jump = ($typ !== '') ? '<meta http-equiv="refresh" content="5; url='.($conf['homeurl'] ?? '').'/index.php">'.PHP_EOL : '';
-    $meta = '<meta name="author" content="'.($conf['sitename'] ?? '').'">'.PHP_EOL
-        .'<meta name="generator" content="SLAED CMS '.($conf['version'] ?? '').'">'.PHP_EOL
-        .$jump;
+    $jump = ($typ !== '') ? $tpl->getHtmlFrag('meta-refresh', ['secs' => '5', 'url' => ($conf['homeurl'] ?? '').'/index.php']).PHP_EOL : '';
+    $meta = $tpl->getHtmlFrag('head-meta-base', ['author' => $conf['sitename'] ?? '', 'generator' => 'SLAED CMS '.($conf['version'] ?? '')]).PHP_EOL.$jump;
     $license = base64_decode((string)($conf['lic_h'] ?? '')).date('Y').base64_decode((string)($conf['lic_f'] ?? ''));
     $themedir = 'templates/'.$theme;
     $linksrc = [];
     if (is_file(BASE_DIR.'/'.$themedir.'/favicon.png')) {
-        $linksrc[] = '<link rel="shortcut icon" href="'.$themedir.'/favicon.png">';
+        $linksrc[] = $tpl->getHtmlFrag('head-link-icon', ['href' => $themedir.'/favicon.png']);
     } elseif (is_file(BASE_DIR.'/'.$themedir.'/favicon.ico')) {
-        $linksrc[] = '<link rel="shortcut icon" href="'.$themedir.'/favicon.ico">';
+        $linksrc[] = $tpl->getHtmlFrag('head-link-icon', ['href' => $themedir.'/favicon.ico']);
     }
     foreach (['theme.css', 'system.css', 'blocks.css'] as $asset) {
         if (is_file(BASE_DIR.'/'.$themedir.'/'.$asset)) {
-            $linksrc[] = '<link rel="stylesheet" href="'.$themedir.'/'.$asset.'">';
+            $linksrc[] = $tpl->getHtmlFrag('head-link-css', ['href' => $themedir.'/'.$asset]);
         }
     }
     $links = implode(PHP_EOL, $linksrc);
@@ -1060,13 +1058,19 @@ function getDuration(int $sec): string {
     return ($hours == 0) ? (($min == 0) ? $seconds.' '._SEC.'.' : $min.' '._MIN.'. '.$seconds.' '._SEC.'.') : $hours.' '._HOUR.'. '.$minutes.' '._MIN.'. '.$seconds.' '._SEC.'.';
 }
 
-# Return HTML span showing remaining time until a Unix timestamp expires
+# Return time-remaining badge: styled HTML span when template available, plain text otherwise
 function getTimeLeft(int $time): string {
+    global $tpl;
     $now = time();
     $end = date(_DATESTRING, $time);
     $expire = $time - $now;
     $days = round($expire / 86400, 3).' '._DAYS;
-    return ($now < $time) ? '<span title="'.getDuration($expire).'" class="sl_green sl_note">'.$days.' - '.$end.'</span>' : '<span class="sl_red">'.$end.' - '._END.'</span>';
+    if ($tpl instanceof Template) {
+        return ($now < $time)
+            ? $tpl->getHtmlFrag('security-time-active', ['duration' => getDuration($expire), 'days' => $days, 'end' => $end])
+            : $tpl->getHtmlFrag('security-time-expired', ['end' => $end, 'expired_label' => _END]);
+    }
+    return ($now < $time) ? $days.' - '.$end : $end.' - '._END;
 }
 
 # Add an outgoing HTML email (base64-encoded); appends IP/browser info when $id is truthy
@@ -1077,7 +1081,14 @@ function addMail(string $email, string $smail, string $subject, string $message,
     $subject = '=?'._CHARSET.'?b?'.base64_encode(filterText($subject)).'?=';
     $pr = $pr ?: 3;
     $agent = getAgent();
-    $message = (!$id) ? $message : $message.'<br><br>'._IP.': '.getIp().'<br>'._BROWSER.': '.$agent.'<br>'._HASH.': '.md5($agent);
+    if ($id) {
+        global $tpl;
+        if ($tpl instanceof Template) {
+            $message .= $tpl->getHtmlFrag('security-mail-trace', ['ip_label' => _IP, 'ip' => getIp(), 'browser_label' => _BROWSER, 'browser' => $agent, 'hash_label' => _HASH, 'hash' => md5($agent)]);
+        } else {
+            $message .= PHP_EOL._IP.': '.getIp().PHP_EOL._BROWSER.': '.$agent.PHP_EOL._HASH.': '.md5($agent);
+        }
+    }
     $mheader = "MIME-Version: 1.0\n"
     .'Content-Type: text/html; charset='._CHARSET."\n"
     ."Content-Transfer-Encoding: base64\n"
@@ -1095,7 +1106,7 @@ function addMail(string $email, string $smail, string $subject, string $message,
 
 # Log a hack attempt: block IP, send alert email, append to hack.log, then exit
 function addHackReport(string $msg): void {
-    global $user, $conf;
+    global $user, $conf, $tpl;
     $msg = filterText(substr($msg, 0, 500));
     $url = filterText(getenv('REQUEST_URI'));
     $refer = getReferer();
@@ -1115,7 +1126,12 @@ function addHackReport(string $msg): void {
     }
     if ($conf['security']['mail']) {
         $subject = $conf['sitename'].' - '._SECURITY;
-        $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._HACK.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$luser.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$dtime;
+        if ($tpl instanceof Template) {
+            $refHtml = ($refer) ? $tpl->getHtmlFrag('br-line', ['label' => _REFERER, 'value' => $refer]) : '';
+            $mmsg = $tpl->getHtmlFrag('security-report-email', ['sitename' => $conf['sitename'], 'security_label' => _SECURITY, 'event_label' => _HACK, 'message' => $msg, 'ip_label' => _IP, 'ip' => $ip, 'user_label' => _USER, 'user' => $luser, 'url_label' => _URL, 'url' => $url, 'referer_html' => $refHtml, 'browser_label' => _BROWSER, 'browser' => $agent, 'date_label' => _DATE, 'date' => $dtime]);
+        } else {
+            $mmsg = $conf['sitename'].' - '._SECURITY.PHP_EOL._HACK.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime;
+        }
         addMail($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
     }
     if ($conf['security']['write_h']) {
@@ -1141,7 +1157,7 @@ function addHackReport(string $msg): void {
 
 # Log a security warning: send alert email, append to warn.log, then exit
 function addWarnReport(string $msg): void {
-    global $user, $conf;
+    global $user, $conf, $tpl;
     $msg = filterText(substr($msg, 0, 500));
     $url = filterText(getenv('REQUEST_URI'));
     $refer = getReferer();
@@ -1152,7 +1168,12 @@ function addWarnReport(string $msg): void {
     $luser = (is_array($user) && isset($user[1])) ? substr((string)$user[1], 0, 25) : substr(_ANONYM, 0, 25);
     if ($conf['security']['mail_w']) {
         $subject = $conf['sitename'].' - '._SECURITY;
-        $mmsg = $conf['sitename'].' - '._SECURITY.'<br><br>'._WARN.': '.$msg.'<br>'._IP.': '.$ip.'<br>'._USER.': '.$luser.'<br>'._URL.': '.$url.$ref.'<br>'._BROWSER.': '.$agent.'<br>'._DATE.': '.$dtime;
+        if ($tpl instanceof Template) {
+            $refHtml = ($refer) ? $tpl->getHtmlFrag('br-line', ['label' => _REFERER, 'value' => $refer]) : '';
+            $mmsg = $tpl->getHtmlFrag('security-report-email', ['sitename' => $conf['sitename'], 'security_label' => _SECURITY, 'event_label' => _WARN, 'message' => $msg, 'ip_label' => _IP, 'ip' => $ip, 'user_label' => _USER, 'user' => $luser, 'url_label' => _URL, 'url' => $url, 'referer_html' => $refHtml, 'browser_label' => _BROWSER, 'browser' => $agent, 'date_label' => _DATE, 'date' => $dtime]);
+        } else {
+            $mmsg = $conf['sitename'].' - '._SECURITY.PHP_EOL._WARN.': '.$msg.PHP_EOL._IP.': '.$ip.PHP_EOL._USER.': '.$luser.PHP_EOL._URL.': '.$url.$ref.PHP_EOL._BROWSER.': '.$agent.PHP_EOL._DATE.': '.$dtime;
+        }
         addMail($conf['adminmail'], $conf['adminmail'], $subject, $mmsg, 0, 1);
     }
     if ($conf['security']['write_w']) {

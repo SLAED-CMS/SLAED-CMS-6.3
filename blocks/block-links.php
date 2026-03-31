@@ -9,21 +9,33 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $db;
+global $db, $tpl;
 $strip = 40;
-$content = '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th style="width: 50%;">Новые сайты</th><th>Лучшие сайты</th></tr></thead><tbody class="sl_table_list_body">';
+$head_html = '<th style="width: 50%;">Новые сайты</th><th>Лучшие сайты</th>';
 
 // Last added links
-$content .='<tr><td>';
+$col1 = '';
 $result = $db->getSqlQuery('SELECT id, title, description FROM '.PREFIX_DB."_links WHERE status != '0' ORDER BY time DESC LIMIT 0,10");
-while(list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
-	$content .= '<table><tr><td><a href="index.php?name=links&amp;op=view&amp;id='.$l_lid.'" title="'.filterText(cutstr(filterReplaceText(filterMarkdown($l_description, 'links', false), 'links'), 250), 1).'">'.cutstr($l_title, $strip).'</a></td></tr></table>';
+while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
+	$col1 .= $tpl->getHtmlFrag('block-inner-list-item', [
+		'url'   => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
+		'title' => filterText(cutstr(filterReplaceText(filterMarkdown($l_description, 'links', false), 'links'), 250), 1),
+		'label' => cutstr($l_title, $strip),
+	]);
 }
 
 // Last best links
-$content .='</td><td>';
+$col2 = '';
 $result = $db->getSqlQuery('SELECT id, title, description FROM '.PREFIX_DB."_links WHERE status != '0' ORDER BY tvotes DESC LIMIT 0,10");
-while(list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
-	$content .= '<table><tr><td><a href="index.php?name=links&amp;op=view&amp;id='.$l_lid.'" title="'.filterText(cutstr(filterReplaceText(filterMarkdown($l_description, 'links', false), 'links'), 250), 1).'">'.cutstr($l_title, $strip).'</a></td></tr></table>';
+while (list($l_lid, $l_title, $l_description) = $db->getSqlRow($result)) {
+	$col2 .= $tpl->getHtmlFrag('block-inner-list-item', [
+		'url'   => 'index.php?name=links&amp;op=view&amp;id='.$l_lid,
+		'title' => filterText(cutstr(filterReplaceText(filterMarkdown($l_description, 'links', false), 'links'), 250), 1),
+		'label' => cutstr($l_title, $strip),
+	]);
 }
-$content .= '</td></tr></tbody></table>';
+
+$content = $tpl->getHtmlFrag('block-multi-col-table', [
+	'head_html' => $head_html,
+	'body_html' => '<td>'.$col1.'</td><td>'.$col2.'</td>',
+]);

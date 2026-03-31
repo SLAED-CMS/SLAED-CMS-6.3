@@ -198,7 +198,7 @@ function config(): void {
     $rows .= getTplAdminFormRow(_SCRIPTCOMP, radio_form($conf['script_c'], 'script_c'));
     $rows .= getTplAdminFormRow(_SCRIPTASIN, radio_form($conf['script_a'], 'script_a'));
     $rows .= getTplAdminFormRow(_SCRIPTBOT, radio_form($conf['script_b'], 'script_b'));
-    $html = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DIR.': config/cache<br>'._FILE_M.': '.$ival.'<br>'._FILE_S.': '.filterSize($name)]);
+    $html = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DIR.': config/cache'.getTplAdminTipLine(_FILE_M, (string)$ival).getTplAdminTipLine(_FILE_S, filterSize($name))]);
     $tabf = getTplAdminTabContent(getTplAdminTabName('config', 5), $html.getTplAdminRowsTable($rows));
 
     $rows = '';

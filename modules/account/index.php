@@ -159,10 +159,11 @@ function finnewuser(): void {
             } else {
                 $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label' => str_replace('&amp;', '&', $finishlink), 'target' => ' target="_blank"']);
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
-                $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
+                $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).$tpl->getHtmlFrag('br-br', [])._IFYOUDIDNOTASK, $conf['mtemp']);
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
                 $meta = getTplMetaRefresh('index.php', 30);
-                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.'<br><br>'._FINISHUSERCONF.'<br><br>'._THANKSUSER, 'meta' => $meta]);
+                $brbr = $tpl->getHtmlFrag('br-br', []);
+                $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.$brbr._FINISHUSERCONF.$brbr._THANKSUSER, 'meta' => $meta]);
             }
             echo $cont;
             setFoot();
@@ -779,7 +780,7 @@ function passmail(): void {
         } else {
             $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'label' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'target' => '']);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
-            $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
+            $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).$tpl->getHtmlFrag('br-br', [])._IFYOUDIDNOTASK, $conf['mtemp']);
             addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
             setRedirect('index.php?name='.$conf['name'].'&op=passlost&email='.$email);
         }

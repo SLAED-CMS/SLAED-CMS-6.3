@@ -334,7 +334,7 @@ function add(): void {
             if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
                 $table = explode('`', $string);
                 if ($id == 1) $ident = $db->getSqlQuery('DROP TABLE '.$table[1]);
-                $info .= _TABLE.': '.$table[1].' - '._STATUS.': '.getTplAdminStatusBadge((bool)$ident, _OK, _ERROR).'<br>';
+                $info .= getTplAdminInfoLine(_TABLE.': '.$table[1].' - '._STATUS, getTplAdminStatusBadge((bool)$ident, _OK, _ERROR));
             }
         }
         $infos = $ttitle.': '.$mod.'<br><br>'.$info;

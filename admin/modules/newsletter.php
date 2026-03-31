@@ -33,7 +33,7 @@ function newsletter(): void {
                 'id_text' => (string)$id,
                 'send_text' => $sended.' '._NLUSER,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._TIMENL.': '.getDuration($sendtime)).$title,
+                'title_html' => adminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_TIMENL, getDuration($sendtime))).$title,
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);

@@ -32,7 +32,7 @@ function content(): void {
             $actions = getTplMenuItems($citems);
             $cont .= $tpl->getHtmlFrag('content-list-basic', [
                 'id' => $id,
-                'tip' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).'<br>'._READS.': '.$counter),
+                'tip' => title_tip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_READS, (string)$counter)),
                 'href' => $href,
                 'title_attr' => $title,
                 'title_text' => $title,
@@ -65,7 +65,7 @@ function view(): void {
             }
         }
         $fields = fields_out($field, $conf['name']);
-        $fields = ($fields) ? '<br><br>'.$fields : '';
+        $fields = ($fields) ? $tpl->getHtmlFrag('br-br', []).$fields : '';
         $hometext = $body.$fields;
         $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);

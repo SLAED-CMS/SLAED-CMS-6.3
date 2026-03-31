@@ -96,7 +96,7 @@ function admins(): void {
             'label' => _ONDELETE,
             'title' => _ONDELETE,
         ]);
-        $tip = _REG.': '.format_time((string)$rdate, _TIMESTRING).'<br>'._LAST_VISIT.': '.format_time((string)$vdate, _TIMESTRING);
+        $tip = _REG.': '.format_time((string)$rdate, _TIMESTRING).getTplAdminTipLine(_LAST_VISIT, format_time((string)$vdate, _TIMESTRING));
         $acts = adminMenuItems([$edit, $drop]);
         $cells = $tpl->getHtmlFrag('admin-admins-table-cells', [
             'actions_html' => $acts,

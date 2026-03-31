@@ -9,7 +9,8 @@ if (!defined('BLOCK_FILE')) {
     exit;
 }
 
-$mods_1 = '<tr><td><a href="index.php" title="'._HOME.'" class="sl_modul">'._HOME.'</a></td></tr>';
+global $tpl;
+$mods_1 = $tpl->getHtmlFrag('block-module-item', ['url' => 'index.php', 'title' => _HOME]);
 $mods_2 = '';
 $mods_3 = '';
 $mods_4 = '';
@@ -24,17 +25,17 @@ foreach ($mod_list as $m_title => $info) {
     $m_title2 = getModuleName($m_title);
     if ($inmenu == 1 && $active == 1 && $view != 2) {
         if ((is_moder($m_title) && $view == 2) || $view != 2) {
-            $mods_1 .= '<tr><td><a href="index.php?name='.$m_title.'" title="'.$m_title2.'" class="sl_modul">'.$m_title2.'</a></td></tr>';
+            $mods_1 .= $tpl->getHtmlFrag('block-module-item', ['url' => 'index.php?name='.$m_title, 'title' => $m_title2]);
         }
     } elseif (is_moder($m_title) && $inmenu == 0 && $active == 1) {
-        $mods_2 .= '<tr><td><a href="index.php?name='.$m_title.'" class="sl_modul">'.$m_title2.'</a></td></tr>';
+        $mods_2 .= $tpl->getHtmlFrag('block-module-item', ['url' => 'index.php?name='.$m_title, 'title' => $m_title2]);
     } elseif (is_moder($m_title) && $active == 0) {
-        $mods_3 .= '<tr><td><a href="index.php?name='.$m_title.'" class="sl_modul">'.$m_title2.'</a></td></tr>';
+        $mods_3 .= $tpl->getHtmlFrag('block-module-item', ['url' => 'index.php?name='.$m_title, 'title' => $m_title2]);
     } elseif (is_moder($m_title) && $view == 2) {
-        $mods_4 .= '<tr><td><a href="index.php?name='.$m_title.'" class="sl_modul">'.$m_title2.'</a></td></tr>';
+        $mods_4 .= $tpl->getHtmlFrag('block-module-item', ['url' => 'index.php?name='.$m_title, 'title' => $m_title2]);
     }
 }
-$mods_2 = ($mods_2) ? '<tr><td><b>'._INVISIBLEMODULES.'</b><br>'._ACTIVEBUTNOTSEE.'</td></tr>'.$mods_2 : '';
-$mods_3 = ($mods_3) ? '<tr><td><b>'._NOACTIVEMODULES.'</b><br>'._FORADMINTESTS.'</td></tr>'.$mods_3 : '';
-$mods_4 = ($mods_4) ? '<tr><td><b>'._ADMINS.'</b><br>'._FORADMINTESTS.'</td></tr>'.$mods_4 : '';
-$content = '<table class="sl_table_block">'.$mods_1.$mods_2.$mods_3.$mods_4.'</table>';
+$mods_2 = ($mods_2) ? $tpl->getHtmlFrag('block-module-section', ['title' => _INVISIBLEMODULES, 'desc' => _ACTIVEBUTNOTSEE]).$mods_2 : '';
+$mods_3 = ($mods_3) ? $tpl->getHtmlFrag('block-module-section', ['title' => _NOACTIVEMODULES, 'desc' => _FORADMINTESTS]).$mods_3 : '';
+$mods_4 = ($mods_4) ? $tpl->getHtmlFrag('block-module-section', ['title' => _ADMINS, 'desc' => _FORADMINTESTS]).$mods_4 : '';
+$content = $tpl->getHtmlFrag('block-modules-table', ['rows_html' => $mods_1.$mods_2.$mods_3.$mods_4]);

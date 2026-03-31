@@ -7,4 +7,8 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-$content = '<form action="index.php?name=search" method="post"><table class="sl_table_block"><tr><td><input type="text" name="word" maxlength="100" class="sl_field" placeholder="'._SEARCH.'" required></td><td><input type="submit" title="'._SEARCH.'" value="'._OK.'" class="sl_but_blue"></td></tr></table></form>';
+global $tpl;
+$content = $tpl->getHtmlFrag('block-search-form', [
+	'search_label' => _SEARCH,
+	'ok_label'     => _OK,
+]);

@@ -7,6 +7,7 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
+global $tpl;
 $path = 'uploads/screens/thumb';
 $dir = opendir($path);
 while (false !== ($file = readdir($dir))) {
@@ -14,11 +15,16 @@ while (false !== ($file = readdir($dir))) {
 }
 closedir($dir);
 
-$content = '<div id="wrap" style="vertical-align: middle;">';
+$items_html = '';
 $sarray = array_rand($ban, count($ban));
 shuffle($sarray);
 foreach ($sarray as $val) {
-	$content .= (!$s) ? '<a rel="group" title="Лучшие сайты системы" href="uploads/screens/'.$ban[$val].'" class="screens"><img src="uploads/screens/thumb/'.$ban[$val].'"></a>' : '<a rel="group" title="Лучшие сайты системы" href="uploads/screens/'.$ban[$val].'" class="screens"></a>';
+	$img_html = (!$s) ? '<img src="uploads/screens/thumb/'.$ban[$val].'">' : '';
+	$items_html .= $tpl->getHtmlFrag('block-img-item', [
+		'title'    => 'Лучшие сайты системы',
+		'href'     => 'uploads/screens/'.$ban[$val],
+		'img_html' => $img_html,
+	]);
 	$s++;
 }
-$content .= '</div>';
+$content = $tpl->getHtmlFrag('block-img-wrap', ['items_html' => $items_html]);

@@ -24,10 +24,11 @@ function order(): void {
     if ($conf['order']['an']) {
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-        $rows = getTplFormAddRow(_OR_2.':', '<input type="email" name="mail" value="'.$mail.'" maxlength="255" class="sl_field '.$conf['style'].'" placeholder="'._OR_2.'" required>');
+        $rows = getTplFormAddRow(_OR_2.':', getTplEmailInput('mail', $mail, 'sl_field '.$conf['style'], 'maxlength="255" placeholder="'._OR_2.'" required'));
         $rows .= fields_in($field, $conf['name']);
         $rows .= getTplFormAddRow(_OR_3.':', textarea('1', 'note', $note, $conf['name'], 5, _OR_3));
-        $cont .= '<h2>'._OR_1.'</h2>'.$tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _OR_1]);
+        $cont .= $tpl->getHtmlFrag('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
@@ -58,14 +59,26 @@ function send(): void {
                 $infos = fields_out($field, $conf['name']);
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._ORDER;
-                $msg = $conf['sitename'].' - '._ORDER.'<br><br><b>'._PERSONALINFO.'</b><br><br>'._OR_2.': '.$mail.'<br>'.$infos.'<br>'._OR_3.': '.$note;
+                $msg = $tpl->getHtmlFrag('order-email-admin', [
+                    'sitename'           => $conf['sitename'],
+                    'order_label'        => _ORDER,
+                    'personalinfo_label' => _PERSONALINFO,
+                    'email_label'        => _OR_2,
+                    'email'              => $mail,
+                    'info_html'          => $infos,
+                    'note_label'         => _OR_3,
+                    'note'               => $note,
+                ]);
                 addMail($amail, $mail, $subject, $msg, 1, 1);
             }
             if (!$conf['order']['pr']) {
                 $amail = ($conf['order']['mail']) ? $conf['order']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._ORDER;
-                $msg = $conf['sitename'].' - '._ORDER.'<br><br>';
-                $msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'], 'all', false), 'all');
+                $msg = $tpl->getHtmlFrag('money-email-confirm', [
+                    'sitename'     => $conf['sitename'],
+                    'money_label'  => _ORDER,
+                    'content_html' => filterReplaceText(filterMarkdown($conf['order']['sendinfo'], 'all', false), 'all'),
+                ]);
                 addMail($mail, $amail, $subject, $msg, 0, 3);
             }
             update_points(34);

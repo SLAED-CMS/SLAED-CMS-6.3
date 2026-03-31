@@ -9,6 +9,7 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
+global $tpl;
 $path = img_find('banners/random');
 $dir = opendir($path);
 while (false !== ($file = readdir($dir))) {
@@ -17,4 +18,9 @@ while (false !== ($file = readdir($dir))) {
 closedir($dir);
 $i = mt_rand(0, count($ban) - 1);
 $url = preg_split('#-#', $ban[$i]);
-$content = '<a href="https://'.str_replace(['_', '+'], ['/', '?'], $url[0]).'" target="_blank" title="SLAED CMS"><img src="'.img_find('banners/random/'.$ban[$i]).'" style="width: 468px; height: 60px; border: 0;" alt="SLAED CMS"></a>';
+$content = $tpl->getHtmlFrag('block-banner-random', [
+	'url'   => 'https://'.str_replace(['_', '+'], ['/', '?'], $url[0]),
+	'title' => 'SLAED CMS',
+	'src'   => img_find('banners/random/'.$ban[$i]),
+	'alt'   => 'SLAED CMS',
+]);

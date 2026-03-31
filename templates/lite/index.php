@@ -41,7 +41,7 @@ function setTemplateForum(): string {
 
 # Provide head-time variables for the lite theme layout
 function getThemeHeadVars(): array {
-    global $db, $conf;
+    global $db, $conf, $tpl;
     $mname = $conf['name'] ? getModuleName($conf['name']) : '';
     $fcat = (int)getVar('get', 'cat', 'num', 0);
     $cname = ($fcat && !empty($conf['files'])) ? catlink($conf['name'], $fcat, $conf['files']['defis'], $mname) : '';
@@ -49,12 +49,10 @@ function getThemeHeadVars(): array {
     $random = mt_rand(0, (int)$count);
     [$fid, $title] = $db->getSqlRow($db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_faq ORDER BY id DESC LIMIT '.$random.', 1'));
     $ftitle = htmlspecialchars((string)$title, ENT_QUOTES, 'UTF-8');
-    $faq = '<a class="ico i_fav" href="index.php?name=faq&amp;op=view&amp;id='.(int)$fid.'" title="'.$ftitle.'">'.$ftitle.'</a>';
+    $faq = $tpl->getHtmlFrag('lite-faq-random-link', ['url' => 'index.php?name=faq&amp;op=view&amp;id='.(int)$fid, 'title' => $ftitle, 'label' => $ftitle]);
     $head = '';
     if ($mname !== '' || $cname !== '') {
-        $head = '<a class="ico i_rss2" href="index.php?name=rss_info" title="RSS информер"><span class="thide">Чтение RSS каналов</span></a>'
-            .'<h1 class="font">'.$mname.'</h1>'
-            .'<b class="breadcrumbs">'.$cname.'</b>';
+        $head = $tpl->getHtmlFrag('lite-head-banner', ['module' => $mname, 'category' => $cname]);
     }
     return [
         'season' => setTemplateSeason(),

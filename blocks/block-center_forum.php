@@ -9,7 +9,7 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $db, $conf;
+global $db, $conf, $tpl;
 
 # Количество сообщений в блоке
 $blimit = '15';
@@ -18,14 +18,30 @@ $bclos = '97, 98';
 
 $bwhere = ($bclos) ? 'cid NOT IN ('.$bclos.') AND' : '';
 $ordern = (is_moder('forum')) ? '' : "AND time <= now() AND status > '1'";
-$buffer = '';
+$rows_html = '';
 $result = $db->getSqlQuery('SELECT id, uid, name, title, time, body, comments, counter, luid, lname, lpost, ltime, status FROM '.PREFIX_DB.'_forum WHERE '.$bwhere." pid = '0' ".$ordern.' ORDER BY ltime DESC LIMIT 0, '.$blimit);
 while (list($id, $uid, $uname, $title, $time, $hometext, $comments, $counter, $luid, $lname, $lpost, $ltime, $status) = $db->getSqlRow($result)) {
 	$thref = getSeoUrl(['name' => 'forum', 'op' => 'view', 'id' => $id, 'title' => $title]);
 	if (!($conf['rewrite'] ?? false)) $thref .= '&amp;last';
 	$post = ($uid) ? user_info($uname) : $uname;
 	$lposter = ($luid) ? user_info($lname) : $lname;
-	$class = ($status <= 1 || $time > date('Y-m-d H:i:s')) ? ' class="sl_hidden"' : '';
-	$buffer .= '<tr class="forum-line"><td'.$class.'><a href="'.$thref.'#'.$lpost.'" title="'.$title.'">'.cutstr($title, 50).'</a></td><td>'.$post.'</td><td>'.$comments.'</td><td>'.$counter.'</td><td>'.$lposter.'</td></tr>';
+	$class_attr = ($status <= 1 || $time > date('Y-m-d H:i:s')) ? 'class="sl_hidden"' : '';
+	$rows_html .= $tpl->getHtmlFrag('block-center-forum-row', [
+		'class_attr'  => $class_attr,
+		'url'         => $thref.'#'.$lpost,
+		'title'       => $title,
+		'label'       => cutstr($title, 50),
+		'poster_html' => $post,
+		'comments'    => $comments,
+		'counter'     => $counter,
+		'lposter_html'=> $lposter,
+	]);
 }
-$content .= '<table class="sl_table_list_sort"><thead><tr class="forum-table-head"><th>'._NEWTOPICS.'</th><th>'._POSTER.'</th><th class="fl-col-num">'._REPLIES.'</th><th class="fl-col-num">'._VIEWS.'</th><th>'._LASTPOSTER.'</th></tr></thead><tbody>'.$buffer.'</tbody></table>';
+$content .= $tpl->getHtmlFrag('block-center-forum-table', [
+	'newtopics'  => _NEWTOPICS,
+	'poster'     => _POSTER,
+	'replies'    => _REPLIES,
+	'views'      => _VIEWS,
+	'lastposter' => _LASTPOSTER,
+	'rows_html'  => $rows_html,
+]);

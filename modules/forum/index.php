@@ -51,26 +51,48 @@ function forum(): void {
         foreach ($rows as $val) {
             if ($val[4] == $id && is_acess($val[10])) {
                 if ($id) {
-                    $cont = (!$cnt) ? $tpl->getHtmlFrag('forum-cat-wrap', ['open' => true, 'heading' => '<a href="index.php?name='.$conf['name'].'" title="'._FORUM.'">'._FORUM.'</a> '.urldecode($conf['forum']['defis']).' <a href="index.php?name='.$mod.'&amp;cat='.$rows[0][0].'" title="'.$rows[0][1].'">'.$rows[0][1].'</a>', 'col_forum' => _FORUM, 'col_topics' => _NEWTOPICS, 'col_messages' => cutstr(_MESSAGES, 5, 1), 'col_last' => _LASTMESSAGE]) : '';
-                    $ttit = ($val[2]) ? $val[2] : $val[1];
-                    $tlink = ($val[5] || is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'.$ttit.'">'.$val[1].'</a>' : $val[1];
-                    if (!$val[5]) {
-                        $imglink = ($val[3]) ? '<img src="'.img_find('categories/'.$val[3]).'" alt="'._FCLOSED.'" title="'._FCLOSED.'" class="sl_hidden">' : '<span title="'._FCLOSED.'" class="sl_f_clos"></span>';
-                        $timg = (is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'._FCLOSED.'">'.$imglink.'</a>' : $imglink;
-                    } elseif ($val[21] > $ulast) {
-                        $imglink = ($val[3]) ? '<img src="'.img_find('categories/'.$val[3]).'" alt="'._ISNEWPOST.'" title="'._ISNEWPOST.'">' : '<span title="'._ISNEWPOST.'" class="sl_f_new"></span>';
-                        $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'._ISNEWPOST.'">'.$imglink.'</a>';
+                    if (!$cnt) {
+                        $h1 = $tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$conf['name'], 'title' => _FORUM, 'label' => _FORUM]);
+                        $h2 = $tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$rows[0][0], 'title' => $rows[0][1], 'label' => $rows[0][1]]);
+                        $heading = $h1.' '.urldecode($conf['forum']['defis']).' '.$h2;
+                        $cont = $tpl->getHtmlFrag('forum-cat-wrap', ['open' => true, 'heading' => $heading, 'col_forum' => _FORUM, 'col_topics' => _NEWTOPICS, 'col_messages' => cutstr(_MESSAGES, 5, 1), 'col_last' => _LASTMESSAGE]);
                     } else {
-                        $imglink = ($val[3]) ? '<img src="'.img_find('categories/'.$val[3]).'" alt="'._NONEWPOST.'" title="'._NONEWPOST.'" class="sl_hidden">' : '<span title="'._NONEWPOST.'" class="sl_f_old"></span>';
-                        $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'._NONEWPOST.'">'.$imglink.'</a>';
+                        $cont = '';
+                    }
+                    $ttit = ($val[2]) ? $val[2] : $val[1];
+                    $tlink = ($val[5] || is_moder($conf['name'])) ? $tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$val[0], 'title' => $ttit, 'label' => $val[1]]) : $val[1];
+                    $cat_url = 'index.php?name='.$mod.'&amp;cat='.$val[0];
+                    if (!$val[5]) {
+                        if ($val[3]) {
+                            $imglink = $tpl->getHtmlFrag('forum-status-img', ['src' => img_find('categories/'.$val[3]), 'label' => _FCLOSED, 'cls' => 'sl_hidden']);
+                            $timg = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('forum-status-img-link', ['href' => $cat_url, 'title' => _FCLOSED, 'icon_html' => $imglink]) : $imglink;
+                        } else {
+                            $timg = (is_moder($conf['name'])) ? getTplForumIcon($cat_url, _FCLOSED, 'sl_f_clos') : $tpl->getHtmlFrag('forum-status-icon', ['label' => _FCLOSED, 'class' => 'sl_f_clos']);
+                        }
+                    } elseif ($val[21] > $ulast) {
+                        if ($val[3]) {
+                            $imglink = $tpl->getHtmlFrag('forum-status-img', ['src' => img_find('categories/'.$val[3]), 'label' => _ISNEWPOST, 'cls' => '']);
+                            $timg = $tpl->getHtmlFrag('forum-status-img-link', ['href' => $cat_url, 'title' => _ISNEWPOST, 'icon_html' => $imglink]);
+                        } else {
+                            $timg = getTplForumIcon($cat_url, _ISNEWPOST, 'sl_f_new');
+                        }
+                    } else {
+                        if ($val[3]) {
+                            $imglink = $tpl->getHtmlFrag('forum-status-img', ['src' => img_find('categories/'.$val[3]), 'label' => _NONEWPOST, 'cls' => 'sl_hidden']);
+                            $timg = $tpl->getHtmlFrag('forum-status-img-link', ['href' => $cat_url, 'title' => _NONEWPOST, 'icon_html' => $imglink]);
+                        } else {
+                            $timg = getTplForumIcon($cat_url, _NONEWPOST, 'sl_f_old');
+                        }
                     }
                     if ($val[9]) {
                         $data = _DATE.': '.format_time($val[21], _TIMESTRING);
-                        $topic = ($val[5]) ? _TOPIC.': <a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'title' => $val[17]]).'" title="'.$val[17].'">'.cutstr($val[17], 14).'</a>' : _TOPIC.': '.cutstr($val[17], 14);
+                        $topic_href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'title' => $val[17]]);
+                        $topic_link = ($val[5]) ? $tpl->getHtmlFrag('breadcrumb-link', ['href' => $topic_href, 'title' => $val[17], 'label' => cutstr($val[17], 14)]) : cutstr($val[17], 14);
+                        $topic = _TOPIC.': '.$topic_link;
                         $post = ($val[18]) ? user_info($val[19]) : $val[19];
                         $post = _POSTER.': '.$post;
                         $lid = ($val[20]) ? $val[20] : $val[9];
-                        $lpost = ($val[5]) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $val[9], 'title' => $val[17]]).'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
+                        $lpost = ($val[5]) ? getTplForumIcon($topic_href.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last') : $tpl->getHtmlFrag('forum-status-icon', ['label' => _LASTMESSAGE, 'class' => 'sl_f_last']);
                     } else {
                         $data = _NO_INFO;
                         $topic = $post = $lpost = '';
@@ -78,28 +100,44 @@ function forum(): void {
                     $cont .= $tpl->getHtmlFrag('forum-cat-basic', ['icon' => $timg, 'link' => $tlink, 'desc' => $val[2], 'topics' => $val[7], 'posts' => $val[8], 'date' => $data, 'last_topic' => $topic, 'last_post' => $post, 'last_link' => $lpost]);
                     echo $cont;
                 } else {
-                    $cont = $tpl->getHtmlFrag('forum-cat-wrap', ['open' => true, 'heading' => '<a href="index.php?name='.$mod.'&amp;cat='.$val[0].'" title="'.$val[1].'">'.$val[1].'</a>', 'col_forum' => _FORUM, 'col_topics' => _NEWTOPICS, 'col_messages' => cutstr(_MESSAGES, 5, 1), 'col_last' => _LASTMESSAGE]);
+                    $heading = $tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$val[0], 'title' => $val[1], 'label' => $val[1]]);
+                    $cont = $tpl->getHtmlFrag('forum-cat-wrap', ['open' => true, 'heading' => $heading, 'col_forum' => _FORUM, 'col_topics' => _NEWTOPICS, 'col_messages' => cutstr(_MESSAGES, 5, 1), 'col_last' => _LASTMESSAGE]);
                     foreach ($rows as $valb) {
                         if ($val[0] == $valb[4] && is_acess($valb[10])) {
                             $ttit = ($valb[2]) ? $valb[2] : $valb[1];
-                            $tlink = ($valb[5] || is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$valb[0].'" title="'.$ttit.'">'.$valb[1].'</a>' : $valb[1];
+                            $tlink = ($valb[5] || is_moder($conf['name'])) ? $tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$valb[0], 'title' => $ttit, 'label' => $valb[1]]) : $valb[1];
+                            $cat_url = 'index.php?name='.$mod.'&amp;cat='.$valb[0];
                             if (!$valb[5]) {
-                                $imglink = ($valb[3]) ? '<img src="'.img_find('categories/'.$valb[3]).'" alt="'._FCLOSED.'" title="'._FCLOSED.'" class="sl_hidden">' : '<span title="'._FCLOSED.'" class="sl_f_clos"></span>';
-                                $timg = (is_moder($conf['name'])) ? '<a href="index.php?name='.$mod.'&amp;cat='.$valb[0].'" title="'._FCLOSED.'">'.$imglink.'</a>' : $imglink;
+                                if ($valb[3]) {
+                                    $imglink = $tpl->getHtmlFrag('forum-status-img', ['src' => img_find('categories/'.$valb[3]), 'label' => _FCLOSED, 'cls' => 'sl_hidden']);
+                                    $timg = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('forum-status-img-link', ['href' => $cat_url, 'title' => _FCLOSED, 'icon_html' => $imglink]) : $imglink;
+                                } else {
+                                    $timg = (is_moder($conf['name'])) ? getTplForumIcon($cat_url, _FCLOSED, 'sl_f_clos') : $tpl->getHtmlFrag('forum-status-icon', ['label' => _FCLOSED, 'class' => 'sl_f_clos']);
+                                }
                             } elseif ($valb[21] > $ulast) {
-                                $imglink = ($valb[3]) ? '<img src="'.img_find('categories/'.$valb[3]).'" alt="'._ISNEWPOST.'" title="'._ISNEWPOST.'">' : '<span title="'._ISNEWPOST.'" class="sl_f_new"></span>';
-                                $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$valb[0].'" title="'._ISNEWPOST.'">'.$imglink.'</a>';
+                                if ($valb[3]) {
+                                    $imglink = $tpl->getHtmlFrag('forum-status-img', ['src' => img_find('categories/'.$valb[3]), 'label' => _ISNEWPOST, 'cls' => '']);
+                                    $timg = $tpl->getHtmlFrag('forum-status-img-link', ['href' => $cat_url, 'title' => _ISNEWPOST, 'icon_html' => $imglink]);
+                                } else {
+                                    $timg = getTplForumIcon($cat_url, _ISNEWPOST, 'sl_f_new');
+                                }
                             } else {
-                                $imglink = ($valb[3]) ? '<img src="'.img_find('categories/'.$valb[3]).'" alt="'._NONEWPOST.'" title="'._NONEWPOST.'" class="sl_hidden">' : '<span title="'._NONEWPOST.'" class="sl_f_old"></span>';
-                                $timg = '<a href="index.php?name='.$mod.'&amp;cat='.$valb[0].'" title="'._NONEWPOST.'">'.$imglink.'</a>';
+                                if ($valb[3]) {
+                                    $imglink = $tpl->getHtmlFrag('forum-status-img', ['src' => img_find('categories/'.$valb[3]), 'label' => _NONEWPOST, 'cls' => 'sl_hidden']);
+                                    $timg = $tpl->getHtmlFrag('forum-status-img-link', ['href' => $cat_url, 'title' => _NONEWPOST, 'icon_html' => $imglink]);
+                                } else {
+                                    $timg = getTplForumIcon($cat_url, _NONEWPOST, 'sl_f_old');
+                                }
                             }
                             if ($valb[9]) {
                                 $data = _DATE.': '.format_time($valb[21], _TIMESTRING);
-                                $topic = ($valb[5]) ? _TOPIC.': <a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $valb[9], 'title' => $valb[17]]).'" title="'.$valb[17].'">'.cutstr($valb[17], 14).'</a>' : _TOPIC.': '.cutstr($valb[17], 14);
+                                $topic_href = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $valb[9], 'title' => $valb[17]]);
+                                $topic_link = ($valb[5]) ? $tpl->getHtmlFrag('breadcrumb-link', ['href' => $topic_href, 'title' => $valb[17], 'label' => cutstr($valb[17], 14)]) : cutstr($valb[17], 14);
+                                $topic = _TOPIC.': '.$topic_link;
                                 $post = ($valb[18]) ? user_info($valb[19]) : $valb[19];
                                 $post = _POSTER.': '.$post;
                                 $lid = ($valb[20]) ? $valb[20] : $valb[9];
-                                $lpost = ($valb[5]) ? '<a href="'.getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $valb[9], 'title' => $valb[17]]).'&amp;last=1#'.$lid.'" title="'._LASTMESSAGE.'"><span title="'._LASTMESSAGE.'" class="sl_f_last"></span></a>' : '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
+                                $lpost = ($valb[5]) ? getTplForumIcon($topic_href.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last') : $tpl->getHtmlFrag('forum-status-icon', ['label' => _LASTMESSAGE, 'class' => 'sl_f_last']);
                             } else {
                                 $data = _NO_INFO;
                                 $topic = $post = $lpost = '';
@@ -130,34 +168,37 @@ function forum(): void {
                     $offset = ($num-1) * $listnum;
                     $offset = intval($offset);
                     $query = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.body, s.comments, s.counter, s.score, s.ratings, s.ip, s.luid, s.lname, s.lpost, s.ltime, s.status, c.id, c.title, c.intro, c.img, u.name FROM '.PREFIX_DB.'_forum AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid=c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid=u.id) '.$ordern.' '.$lang.' ORDER BY s.status DESC, s.ltime DESC LIMIT '.$offset.', '.$listnum, $lpars);
-                    $newbt = ($istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][0].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
-                    $cont = $tpl->getHtmlFrag('forum-list-wrap', ['open' => true, 'button' => $newbt, 'cat' => '<a href="index.php?name='.$mod.'&amp;cat='.$rows[0][0].'" title="'.$rows[0][1].'">'.$rows[0][1].'</a>']);
+                    $newbt = ($istopic)
+                        ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][0], 'title' => _NEWTOPIC, 'class' => 'sl_but', 'label' => _OPEN])
+                        : $tpl->getHtmlFrag('span-btn', ['title' => sprintf(_ACINFOT, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _OPEN]);
+                    $cat_link = $tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$mod.'&amp;cat='.$rows[0][0], 'title' => $rows[0][1], 'label' => $rows[0][1]]);
+                    $cont = $tpl->getHtmlFrag('forum-list-wrap', ['open' => true, 'button' => $newbt, 'cat' => $cat_link]);
                     if ($db->getSqlRowCount($query) > 0) {
                         $mark = 0;
                         $cont .= $tpl->getHtmlFrag('forum-list-basic-wrap', ['open' => true, 'col_topics' => _NEWTOPICS, 'col_posts' => _POSTS, 'col_poster' => _POSTER, 'col_views' => cutstr(_TVIEWS, 5, 1), 'col_last' => _LASTMESSAGE]);
-                        $cont .= ($ismod) ? '<form action="index.php?name='.$conf['name'].'" method="post">' : '';
+                        $cont .= ($ismod) ? $tpl->getHtmlFrag('forum-mod-form-open', ['action' => 'index.php?name='.$conf['name']]) : '';
                         while ([$id, $cid, $uname, $title, $time, $hometext, $comments, $counter, $score, $ratings, $ipsend, $luid, $lname, $lid, $ltime, $status, $cat, $ctitle, $cdesc, $cimg, $nick] = $db->getSqlRow($query)) {
                             $thref = getSeoUrl(['name' => $conf['name'], 'op' => 'view', 'id' => $id, 'title' => $title, 'ctitle' => $ctitle]);
                             $view = 0;
                             if (!$status && is_moder($conf['name'])) {
                                 $timg = getTplForumIcon($thref, $title, 'sl_t_clos_m', _TOPICM);
-                                $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
+                                $tlink = $tpl->getHtmlFrag('breadcrumb-link', ['href' => $thref, 'title' => $title, 'label' => $title]);
                                 $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 1) {
                                 if (is_moder($conf['name'])) {
                                     $timg = getTplForumIcon($thref, $title, 'sl_t_clos_a', _TOPICA);
-                                    $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
+                                    $tlink = $tpl->getHtmlFrag('breadcrumb-link', ['href' => $thref, 'title' => $title, 'label' => $title]);
                                     $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 } else {
-                                    $timg = '<span title="'._TOPICA.'" class="sl_t_clos_a"></span>';
+                                    $timg = $tpl->getHtmlFrag('forum-status-icon', ['label' => _TOPICA, 'class' => 'sl_t_clos_a']);
                                     $tlink = $title;
-                                    $lpost = '<span title="'._LASTMESSAGE.'" class="sl_f_last"></span>';
+                                    $lpost = $tpl->getHtmlFrag('forum-status-icon', ['label' => _LASTMESSAGE, 'class' => 'sl_f_last']);
                                 }
                                 $view = 1;
                             } elseif ($status == 2) {
                                 $timg = getTplForumIcon($thref, $title, 'sl_t_clos_n', _TOPICN);
-                                $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
+                                $tlink = $tpl->getHtmlFrag('breadcrumb-link', ['href' => $thref, 'title' => $title, 'label' => $title]);
                                 $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 3 && $time <= date('Y-m-d H:i:s')) {
@@ -166,17 +207,17 @@ function forum(): void {
                                 } else {
                                     $timg = ($comments > $conf['forum']['pop']) ? getTplForumIcon($thref, $title, 'sl_t_pold', _TPOP) : getTplForumIcon($thref, $title, 'sl_t_old', _NONEWPOST);
                                 }
-                                $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
+                                $tlink = $tpl->getHtmlFrag('breadcrumb-link', ['href' => $thref, 'title' => $title, 'label' => $title]);
                                 $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 3 && $time > date('Y-m-d H:i:s') && is_moder($conf['name'])) {
                                 $timg = getTplForumIcon($thref, $title, 'sl_t_clos_p', _TOPICP);
-                                $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
+                                $tlink = $tpl->getHtmlFrag('breadcrumb-link', ['href' => $thref, 'title' => $title, 'label' => $title]);
                                 $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             } elseif ($status == 4 || $status == 5) {
                                 $timg = ($status == 4) ? getTplForumIcon($thref, $title, 'sl_t_hot', _THOT) : getTplForumIcon($thref, $title, 'sl_t_announ', _TANNOUN);
-                                $tlink = '<a href="'.$thref.'" title="'.$title.'">'.$title.'</a>';
+                                $tlink = $tpl->getHtmlFrag('breadcrumb-link', ['href' => $thref, 'title' => $title, 'label' => $title]);
                                 $lpost = getTplForumIcon($thref.'&amp;last=1#'.$lid, _LASTMESSAGE, 'sl_f_last');
                                 $view = 1;
                             }
@@ -184,7 +225,9 @@ function forum(): void {
                             $post = ($nick) ? user_info($nick) : $uname.' ('._ANONYM.')';
                             $lposter = ($luid) ? _POSTER.': '.user_info($lname) : _POSTER.': '.$lname;
                             if ($ismod) {
-                                $checkb = (!$mark) ? '<br>'._CHECKALL." <input type=\"checkbox\" name=\"markcheck\" id=\"markcheck\" OnClick=\"CheckBox('#markcheck', '.sl_check')\"> | <input type=\"checkbox\" name=\"id[]\" class=\"sl_check\" value=\"".$id.'">' : ' <input type="checkbox" name="id[]" class="sl_check" value="'.$id.'">';
+                                $checkb = (!$mark)
+                                    ? $tpl->getHtmlFrag('forum-mod-checkall', ['all_label' => _CHECKALL, 'id' => (string)$id])
+                                    : $tpl->getHtmlFrag('forum-mod-check', ['id' => (string)$id]);
                                 $mark++;
                             } else {
                                 $checkb = '';
@@ -193,7 +236,11 @@ function forum(): void {
                         }
                         $cont .= $tpl->getHtmlFrag('forum-list-basic-wrap', []);
                         if ($ismod) {
-                            $selmm = tmoder(1).getTplHiddenInput('op', 'move').getTplHiddenInput('cat', (string)$cat).' <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+                            $selmm = tmoder(1)
+                                .getTplHiddenInput('op', 'move')
+                                .getTplHiddenInput('cat', (string)$cat)
+                                .$tpl->getHtmlFrag('form-submit-btn', ['label' => _OK, 'class' => 'sl_but_blue'])
+                                .$tpl->getHtmlFrag('form-close', []);
                             $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => $selmm]);
                         }
                     } else {
@@ -202,14 +249,34 @@ function forum(): void {
                     $order = (is_moder($conf['name'])) ? "pid = '0' AND cid = '".$cat."'" : "pid = '0' AND cid = '".$cat."' AND time <= NOW() AND status != '0'";
                     $pnum = setArticleNumbers('forum-pagenum', $conf['name'], $listnum, 'cat='.$cat.'&', 'id', '_forum', 'cid', $order, $conf['forum']['pnum']);
                     $cont .= $tpl->getHtmlFrag('forum-list-wrap', ['button' => $newbt, 'pager' => $pnum]);
-                    $infov = ($isview) ? sprintf(_ACINFOV, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOV, '<b>'._NOTCAN.'</b>');
-                    $infor = ($isread) ? sprintf(_ACINFOR, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOR, '<b>'._NOTCAN.'</b>');
-                    $infot = ($istopic) ? sprintf(_ACINFOT, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOT, '<b>'._NOTCAN.'</b>');
-                    $infop = ($isreply) ? sprintf(_ACINFOP, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOP, '<b>'._NOTCAN.'</b>');
-                    $infoe = ($isedit) ? sprintf(_ACINFOE, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOE, '<b>'._NOTCAN.'</b>');
-                    $infod = ($isdelete) ? sprintf(_ACINFOD, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOD, '<b>'._NOTCAN.'</b>');
-                    $infom = ($ismod) ? sprintf(_ACINFOM, '<b>'._ISCAN.'</b>') : sprintf(_ACINFOM, '<b>'._NOTCAN.'</b>');
-                    $cont .= $tpl->getHtmlFrag('forum-list-info', ['new' => '<span title="'._ISNEWPOST.'" class="sl_t_new">'._ISNEWPOST.'</span>', 'old' => '<span title="'._NONEWPOST.'" class="sl_t_old">'._NONEWPOST.'</span>', 'popular_new' => '<span title="'._TPOPN.'" class="sl_t_pop">'._TPOPN.'</span>', 'popular' => '<span title="'._TPOP.'" class="sl_t_pold">'._TPOP.'</span>', 'announce' => '<span title="'._TANNOUN.'" class="sl_t_announ">'._TANNOUN.'</span>', 'hot' => '<span title="'._THOT.'" class="sl_t_hot">'._THOT.'</span>', 'mod' => '<span title="'._TOPICM.'" class="sl_t_clos_m">'._TOPICM.'</span>', 'admin' => '<span title="'._TOPICA.'" class="sl_t_clos_a">'._TOPICA.'</span>', 'closed' => '<span title="'._TOPICN.'" class="sl_t_clos_n">'._TOPICN.'</span>', 'pinned' => '<span title="'._TOPICP.'" class="sl_t_clos_p">'._TOPICP.'</span>', 'perm_view' => $infov, 'perm_read' => $infor, 'perm_topic' => $infot, 'perm_reply' => $infop, 'perm_edit' => $infoe, 'perm_delete' => $infod, 'perm_mod' => $infom]);
+                    $b_can = $tpl->getHtmlFrag('bold-text', ['text' => _ISCAN]);
+                    $b_not = $tpl->getHtmlFrag('bold-text', ['text' => _NOTCAN]);
+                    $infov = ($isview) ? sprintf(_ACINFOV, $b_can) : sprintf(_ACINFOV, $b_not);
+                    $infor = ($isread) ? sprintf(_ACINFOR, $b_can) : sprintf(_ACINFOR, $b_not);
+                    $infot = ($istopic) ? sprintf(_ACINFOT, $b_can) : sprintf(_ACINFOT, $b_not);
+                    $infop = ($isreply) ? sprintf(_ACINFOP, $b_can) : sprintf(_ACINFOP, $b_not);
+                    $infoe = ($isedit) ? sprintf(_ACINFOE, $b_can) : sprintf(_ACINFOE, $b_not);
+                    $infod = ($isdelete) ? sprintf(_ACINFOD, $b_can) : sprintf(_ACINFOD, $b_not);
+                    $infom = ($ismod) ? sprintf(_ACINFOM, $b_can) : sprintf(_ACINFOM, $b_not);
+                    $cont .= $tpl->getHtmlFrag('forum-list-info', [
+                        'new'         => $tpl->getHtmlFrag('span-btn', ['title' => _ISNEWPOST, 'class' => 'sl_t_new', 'label' => _ISNEWPOST]),
+                        'old'         => $tpl->getHtmlFrag('span-btn', ['title' => _NONEWPOST, 'class' => 'sl_t_old', 'label' => _NONEWPOST]),
+                        'popular_new' => $tpl->getHtmlFrag('span-btn', ['title' => _TPOPN, 'class' => 'sl_t_pop', 'label' => _TPOPN]),
+                        'popular'     => $tpl->getHtmlFrag('span-btn', ['title' => _TPOP, 'class' => 'sl_t_pold', 'label' => _TPOP]),
+                        'announce'    => $tpl->getHtmlFrag('span-btn', ['title' => _TANNOUN, 'class' => 'sl_t_announ', 'label' => _TANNOUN]),
+                        'hot'         => $tpl->getHtmlFrag('span-btn', ['title' => _THOT, 'class' => 'sl_t_hot', 'label' => _THOT]),
+                        'mod'         => $tpl->getHtmlFrag('span-btn', ['title' => _TOPICM, 'class' => 'sl_t_clos_m', 'label' => _TOPICM]),
+                        'admin'       => $tpl->getHtmlFrag('span-btn', ['title' => _TOPICA, 'class' => 'sl_t_clos_a', 'label' => _TOPICA]),
+                        'closed'      => $tpl->getHtmlFrag('span-btn', ['title' => _TOPICN, 'class' => 'sl_t_clos_n', 'label' => _TOPICN]),
+                        'pinned'      => $tpl->getHtmlFrag('span-btn', ['title' => _TOPICP, 'class' => 'sl_t_clos_p', 'label' => _TOPICP]),
+                        'perm_view'   => $infov,
+                        'perm_read'   => $infor,
+                        'perm_topic'  => $infot,
+                        'perm_reply'  => $infop,
+                        'perm_edit'   => $infoe,
+                        'perm_delete' => $infod,
+                        'perm_mod'    => $infom,
+                    ]);
                 } else {
                     $meta = getTplMetaRefresh('index.php?name='.$conf['name'], 5);
                     $cont = $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _NOVIEW, 'meta' => $meta]);
@@ -221,7 +288,11 @@ function forum(): void {
         } else {
             $cont = '';
         }
-        if ($show) $cont .= $tpl->getHtmlFrag('forum-cat-info', ['new' => '<span title="'._ISNEWPOST.'" class="sl_f_new">'._ISNEWPOST.'</span>', 'nonew' => '<span title="'._NONEWPOST.'" class="sl_f_old">'._NONEWPOST.'</span>', 'closed' => '<span title="'._FCLOSED.'" class="sl_f_clos">'._FCLOSED.'</span>']);
+        if ($show) $cont .= $tpl->getHtmlFrag('forum-cat-info', [
+            'new'    => $tpl->getHtmlFrag('span-btn', ['title' => _ISNEWPOST, 'class' => 'sl_f_new', 'label' => _ISNEWPOST]),
+            'nonew'  => $tpl->getHtmlFrag('span-btn', ['title' => _NONEWPOST, 'class' => 'sl_f_old', 'label' => _NONEWPOST]),
+            'closed' => $tpl->getHtmlFrag('span-btn', ['title' => _FCLOSED, 'class' => 'sl_f_clos', 'label' => _FCLOSED]),
+        ]);
         echo $cont;
     } else {
         setHead(['title' => _FORUM]);
@@ -294,34 +365,18 @@ function view(): void {
             'author' => $rows[0][4] ?: $conf['sitename'],
         ]);
         if ($ismod || ($isread && $tstatus > 1)) {
-            $atopic = (is_moder($conf['name']) || $istopic) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'" title="'._NEWTOPIC.'" class="sl_but">'._OPEN.'</a>' : '<span title="'.sprintf(_ACINFOT, _NOTCAN).'" class="sl_but sl_hidden">'._OPEN.'</span>';
-            $areply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'&amp;pid='.$topic.'" title="'._TOPICREPLY.'" class="sl_but">'._REPLY.'</a>' : '<span title="'.sprintf(_ACINFOP, _NOTCAN).'" class="sl_but sl_hidden">'._REPLY.'</span>';
+            $atopic = (is_moder($conf['name']) || $istopic)
+                ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2], 'title' => _NEWTOPIC, 'class' => 'sl_but', 'label' => _OPEN])
+                : $tpl->getHtmlFrag('span-btn', ['title' => sprintf(_ACINFOT, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _OPEN]);
+            $areply = (is_moder($conf['name']) || ($isreply && $tstatus))
+                ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$rows[0][2].'&amp;pid='.$topic, 'title' => _TOPICREPLY, 'class' => 'sl_but', 'label' => _REPLY])
+                : $tpl->getHtmlFrag('span-btn', ['title' => sprintf(_ACINFOP, _NOTCAN), 'class' => 'sl_but sl_hidden', 'label' => _REPLY]);
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
             $favor = getFavoriteButton($topic, $conf['name']);
             $cont = $tpl->getHtmlFrag('forum-view-wrap', ['open' => true, 'atopic' => $atopic, 'areply' => $areply, 'title' => filterTextHighlight($rows[0][5], $word), 'favor' => $favor]);
             foreach ($rows as $val) {
                 $fid = $val[0];
                 $fcat = $val[2];
-                /*
-                $id = $val[0];
-                $pid = $val[1];
-                $cid = $val[2];
-                $uid = $val[3];
-                $name = $val[4];
-                $title = $val[5];
-                $time = $val[6];
-                $hometext = $val[7];
-                $field = $val[8];
-                $comments = $val[9];
-                $counter = $val[10];
-                $score = $val[11];
-                $ratings = $val[12];
-                $ipsend = $val[13];
-                $euid = $val[14];
-                $eip = $val[15];
-                $etime = $val[16];
-                $status = $val[17];
-                */
                 unset($uid, $nick, $rank, $mail, $site, $avatar, $reg, $from, $sig, $view, $point, $warn, $gender, $votes, $total, $gname, $grank, $gcolor);
                 if (!empty($users) && is_array($users)) {
                     foreach ($users as $urow) {
@@ -349,45 +404,76 @@ function view(): void {
                 }
                 $avname = (!empty($nick)) ? $nick : $val[4].' ('._ANONYM.')';
                 $avatar = (!empty($nick)) ? (($avatar && file_exists($conf['users']['adirectory'].'/'.$avatar)) ? $conf['users']['adirectory'].'/'.$avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
-                $date = (($ismod || $conf['forum']['ledit']) && $val[16]) ? '<span title="'._PADD.'" class="sl_t_post">'.format_time($val[6], _TIMESTRING).'</span><span title="'._PEDIT.'" class="sl_t_edit">'.format_time($val[16], _TIMESTRING).'</span>' : '<span title="'._PADD.'" class="sl_t_post">'.format_time($val[6], _TIMESTRING).'</span>';
+                $date = $tpl->getHtmlFrag('span-btn', ['title' => _PADD, 'class' => 'sl_t_post', 'label' => format_time($val[6], _TIMESTRING)]);
+                if (($ismod || $conf['forum']['ledit']) && $val[16]) {
+                    $date .= $tpl->getHtmlFrag('span-btn', ['title' => _PEDIT, 'class' => 'sl_t_edit', 'label' => format_time($val[16], _TIMESTRING)]);
+                }
                 $rating = ($pos == 1) ? getRatingAsync(1, $fid, $conf['name'], $val[12], $val[11], '', 1) : '';
                 $ip = ($ismod && $val[13]) ? user_geo_ip($val[13], 4) : '';
-                $amess = '<a href="#'.$fid.'" title="'._MESSAGE.': '.$pos.'" class="sl_pnum">'.$pos.'</a>';
+                $amess = $tpl->getHtmlFrag('forum-post-anchor', ['id' => (string)$fid, 'title' => _MESSAGE.': '.$pos, 'pos' => (string)$pos]);
                 $rank = (!empty($rank)) ? $rank : '';
                 $trank = (!empty($gname)) ? _GROUP.': '.$gname : _RANK;
-                $rlink = (!empty($grank) && file_exists(img_find('ranks/'.$grank))) ? '<img src="'.img_find('ranks/'.$grank).'" alt="'.$trank.'" title="'.$trank.'">' : '';
+                $rlink = (!empty($grank) && file_exists(img_find('ranks/'.$grank))) ? $tpl->getHtmlFrag('forum-rank-img', ['src' => img_find('ranks/'.$grank), 'title' => $trank]) : '';
                 $rate = (!empty($uid)) ? getRatingAsync(0, $uid, 'account', $votes, $total, $fid, 1) : '';
                 $rwarn = (!empty($warn)) ? _UWARNS.': '.warnings($warn) : '';
-                $group = (!empty($gname)) ? _GROUP.': <span style="color: '.$gcolor.'">'.$gname.'</span>' : '';
+                $group = (!empty($gname)) ? $tpl->getHtmlFrag('forum-group-span', ['label' => _GROUP, 'color' => $gcolor, 'name' => $gname]) : '';
                 $point = ($conf['users']['point'] && !empty($point)) ? _POINTS.': '.$point : '';
                 $regdate = (!empty($reg)) ? _REG.': '.format_time($reg) : _NO_INFO;
                 $gender = (!empty($gender)) ? _GENDER.': '.gender($gender) : '';
                 $from = (!empty($from)) ? _FROM.': '.$from : '';
                 $fields = fields_out($val[8], $conf['name']);
-                $sig = (!empty($sig)) ? '<hr>'.$sig : '';
-                $personal = (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply'])) ? "<a href=\"javascript: InsertCode('name', '".$avname."', '', '', '1');\" title=\""._PERSONAL.'" class="sl_but_blue">'._PERS.'</a>' : '';
-                $privat = ($conf['forum']['privat'] && $conf['privat']['act'] && !empty($nick)) ? '<a href="index.php?name=account&amp;op=privat&amp;uname='.urlencode($nick).'" title="'._SENDMES.'" class="sl_but_green">'._MESSAGE.'</a>' : '';
-                $profil = ($conf['forum']['profil'] && !empty($nick)) ? '<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($nick).'" title="'._PERSONALINFO.'" class="sl_but">'._ACCOUNT.'</a>' : '';
-                $web = ($conf['forum']['web'] && !empty($site)) ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'" class="sl_but">'._SITE.'</a>' : '';
-                
+                $sig = (!empty($sig)) ? $tpl->getHtmlFrag('forum-sig', ['content' => $sig]) : '';
+                $personal = (is_moder($conf['name']) || ($isreply && $tstatus && $conf['forum']['qreply']))
+                    ? $tpl->getHtmlFrag('link-btn', ['href' => "javascript: InsertCode('name', '".$avname."', '', '', '1');", 'title' => _PERSONAL, 'class' => 'sl_but_blue', 'label' => _PERS])
+                    : '';
+                $privat = ($conf['forum']['privat'] && $conf['privat']['act'] && !empty($nick))
+                    ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name=account&amp;op=privat&amp;uname='.urlencode($nick), 'title' => _SENDMES, 'class' => 'sl_but_green', 'label' => _MESSAGE])
+                    : '';
+                $profil = ($conf['forum']['profil'] && !empty($nick))
+                    ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($nick), 'title' => _PERSONALINFO, 'class' => 'sl_but', 'label' => _ACCOUNT])
+                    : '';
+                $web = ($conf['forum']['web'] && !empty($site))
+                    ? $tpl->getHtmlFrag('link-btn-blank', ['href' => $site, 'title' => _DOWNLLINK, 'class' => 'sl_but', 'label' => _SITE])
+                    : '';
+
                 #$warn = "<a href=\"javascript: scroll(0, 0);\" title=\""._WARNM."\">"._WARNM."</a>";
                 #$thank = "<a href=\"javascript: scroll(0, 0);\" title=\""._THANK."\">"._THANK."</a>";
                 $warn = '';
                 $thank = '';
-                
-                $qreply = (is_moder($conf['name']) || ($isreply && $tstatus)) ? '<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$topic.'&amp;qid='.$fid.'" title="'._QREPLY.'" class="sl_but_blue">'._REPLY.'</a>' : '';
-                $edit = ($ismod || ($isedit && $val[3] == intval($user[0]) && $tstatus)) ? '<a href="index.php?go=1&amp;op=updatePost&amp;id='.$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name'].'" hx-get="index.php?go=1&amp;op=updatePost&amp;id='.$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name'].'" hx-target="#repfor'.$fid.'" hx-swap="innerHTML" hx-push-url="false" title="'._ONEDIT.'">'._ONEDIT.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;id='.$fid.'&amp;pid='.$topic.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
-                $edit .= ($ismod || ($isdelete && $val[3] == intval($user[0]))) ? '<a href="index.php?name='.$conf['name'].'&amp;op=delete&amp;cat='.$fcat.'&amp;id='.$fid."\" OnClick=\"return DelCheck(this, '"._DELETE.' &quot;'.$val[5]."&quot;?');\" title=\""._ONDELETE.'">'._ONDELETE.'</a>' : '';
+
+                $qreply = (is_moder($conf['name']) || ($isreply && $tstatus))
+                    ? $tpl->getHtmlFrag('link-btn', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;pid='.$topic.'&amp;qid='.$fid, 'title' => _QREPLY, 'class' => 'sl_but_blue', 'label' => _REPLY])
+                    : '';
+                $edit_href = 'index.php?go=1&amp;op=updatePost&amp;id='.$fid.'&amp;cid='.$fcat.'&amp;typ=1&amp;mod='.$conf['name'];
+                $edit = ($ismod || ($isedit && $val[3] == intval($user[0]) && $tstatus))
+                    ? $tpl->getHtmlFrag('forum-htmx-edit-link', ['href' => $edit_href, 'target' => '#repfor'.$fid, 'title' => _ONEDIT, 'label' => _ONEDIT])
+                      .'||'
+                      .$tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=add&amp;cat='.$fcat.'&amp;id='.$fid.'&amp;pid='.$topic, 'title' => _FULLEDIT, 'label' => _FULLEDIT])
+                      .'||'
+                    : '';
+                $edit .= ($ismod || ($isdelete && $val[3] == intval($user[0])))
+                    ? $tpl->getHtmlFrag('forum-delete-link', [
+                        'href'    => 'index.php?name='.$conf['name'].'&amp;op=delete&amp;cat='.$fcat.'&amp;id='.$fid,
+                        'confirm' => _DELETE.' &quot;'.$val[5].'&quot;?',
+                        'title'   => _ONDELETE,
+                        'label'   => _ONDELETE,
+                      ])
+                    : '';
                 $edit = ($edit) ? add_menu($edit) : '';
                 $hclass = (!$val[17]) ? 'title="'._PCLOSED.'" class="sl_hidden"' : '';
-                $text = ($fields) ? '<div id="repfor'.$fid.'">'.filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>'.filterTextHighlight(filterReplaceText(filterMarkdown('<br><br>'.$fields, $conf['name'], false), $conf['name']), $word) : '<div id="repfor'.$fid.'">'.filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word).'</div>';
+                $body_html = filterTextHighlight(filterReplaceText(filterMarkdown($val[7], $conf['name'], false), $conf['name']), $word);
+                $text = $tpl->getHtmlFrag('forum-post-div', ['id' => (string)$fid, 'content' => $body_html]);
+                if ($fields) $text .= filterTextHighlight(filterReplaceText(filterMarkdown("\n\n".$fields, $conf['name'], false), $conf['name']), $word);
                 $cont .= $tpl->getHtmlFrag('forum-view-basic', ['id' => $fid, 'username' => $avname, 'date' => $date, 'rating' => $rating, 'ip' => $ip, 'post_count' => $amess, 'avatar' => $avatar, 'rank' => $rank, 'rank_link' => $rlink, 'user_rate' => $rate, 'warn' => $rwarn, 'group' => $group, 'points' => $point, 'regdate' => $regdate, 'gender' => $gender, 'from' => $from, 'text' => $text, 'sig' => filterReplaceText(filterMarkdown($sig, $conf['name'], false), $conf['name']), 'btn_personal' => $personal, 'btn_pm' => $privat, 'btn_profile' => $profil, 'btn_web' => $web, 'btn_warn' => $warn, 'btn_thank' => $thank, 'btn_reply' => $qreply, 'btn_edit' => $edit, 'hclass' => $hclass]);
                 if ($conf['forum']['sort']) { $pos++; } else { $pos--; }
             }
             $pnum = setPageNumbers('forum-pagenum', $conf['name'], $numfor, $numpages, $fornum, 'op=view&id='.$topic.'&', $conf['forum']['pnum'], $num);
             $cont .= $tpl->getHtmlFrag('forum-view-wrap', ['atopic' => $atopic, 'areply' => $areply, 'pager' => $pnum]);
             if ($ismod) {
-                $selmm = '<form action="index.php?name='.$conf['name'].'" method="post">'.tmoder(1).' <input type="hidden" name="op" value="move"><input type="hidden" name="cat" value="'.$rows[0][2].'"><input type="hidden" name="id[]" value="'.$topic.'"> <input type="submit" value="'._OK.'" class="sl_but_blue"></form>';
+                $selmm = $tpl->getHtmlFrag('forum-mod-form-open', ['action' => 'index.php?name='.$conf['name']])
+                    .tmoder(1)
+                    .getTplFormSubmit('move', _OK, getTplHiddenInput('cat', (string)$rows[0][2]).getTplHiddenInput('id[]', (string)$topic))
+                    .$tpl->getHtmlFrag('form-close', []);
                 $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _OPMOD.': ', 'content' => $selmm]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);
@@ -411,7 +497,7 @@ function quickreply(int|string|null $id, int|string|null $catid, string $subject
         $rows .= getTplFormAddRow(_TEXT, textarea('1', 'hometext', '', $conf['name'], '10', _TEXT, '1'));
         $rows .= fields_in(isset($field), $conf['name']);
         $hide = getTplHiddenInput('subject', $subject).getTplHiddenInput('pid', (string)$id).getTplHiddenInput('cat', (string)$catid).getTplHiddenInput('posttype', 'save');
-        $rows .= '<tr><td colspan="2" class="sl_center">'.getTplFormSubmit('send', _SEND, $hide).'</td></tr>';
+        $rows .= getTplFormCenterRow(getTplFormSubmit('send', _SEND, $hide));
         $cont = getTplForumReplyForm($conf['name'], $rows);
         return $tpl->getHtmlFrag('forum-all-open', ['title' => _QUICKREPLY]).$cont;
     }
@@ -441,7 +527,7 @@ function move(): void {
                         [$rnpost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
                         $wrnpost = ($rnpost) ? ', posts=posts+'.$rnpost : '';
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics=topics+1'.$wrnpost.', lpost = :val WHERE id IN ('.$rcatids.')', ['val' => $val]);
-            
+
                         $catids = catids($conf['name'], $catid);
                         [$lid] = $db->getSqlRow($db->getSqlQuery('SELECT lpost FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
                         [$npost] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_forum WHERE pid = :val', ['val' => $val]));
@@ -470,7 +556,7 @@ function add(): void {
     $isreply = is_acess($authy);
     $isedit = is_acess($authe);
     $ismod = is_acess($authm);
-    
+
     $form = false;
     $id = getVar('req', 'id', 'num');
     $pid = getVar('req', 'pid', 'num');
@@ -482,7 +568,7 @@ function add(): void {
     $status = 3;
     $time = '';
     $subh = 0;
-    
+
     $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
     [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
 
@@ -512,7 +598,7 @@ function add(): void {
             $id = ($qid) ? $qid : $pid;
             [$ftitle, $ftext, $status] = $db->getSqlRow($db->getSqlQuery('SELECT title, body, status FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
             $form = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
-        
+
         } else {
             $form = true;
         }
@@ -526,7 +612,7 @@ function add(): void {
         $time = getVar('req', 'time', 'time');
         $info = (!empty($ftext)) ? _PUBLICIN.': '.$ftitle : _PUBLICIN.': '.$ctitle;
         $head = _FORUM.' '.$ctitle.' '.$info;
-        
+
     }
     if ($form) {
         setHead(['title' => $head]);
@@ -542,7 +628,7 @@ function add(): void {
         $rows .= fields_in($field, $conf['name']);
         $rows .= ($ismod) ? getTplFormAddRow(_OPMOD, pmoder($status, $subh)).getTplFormAddRow(_CHNGSTORY, datetime(1, 'time', $time, 16, $conf['style'])) : '';
         $hide = getTplHiddenInput('id', (string)$id).getTplHiddenInput('fid', (string)$fid).getTplHiddenInput('pid', (string)$pid).getTplHiddenInput('cat', (string)$catid);
-        $rows .= '<tr><td colspan="2" class="sl_center">'.$hide.ad_save('', '', 'send').'</td></tr>';
+        $rows .= getTplFormCenterRow($hide.ad_save('', '', 'send'));
         $cont .= getTplForumReplyForm($conf['name'], $rows);
     } else {
         $info = ($conf['forum']['add']) ? _NOVIEW : _WARNPF;
@@ -557,28 +643,29 @@ function add(): void {
 }
 
 function tmoder(int $typ): string {
-    global $conf;
+    global $conf, $tpl;
     $mass = [_FMODC => 's0', _FMODCA => 's1', _FMODCR => 's2', _FMODCW => 's3', _FMODCH => 's4', _FMODCO => 's5'];
     $mass = ($typ) ? array_merge($mass, [_DELETE => 'd']) : $mass;
-    $opts = '<optgroup label="'._OPMOD.'" class="sl_label">';
-    foreach ($mass as $vn => $vv) $opts .= '<option value="'.$vv.'">'.$vn.'</option>';
-    $opts .= '</optgroup><optgroup label="'._MOVETO.'" class="sl_label">'.getcat($conf['name'], 0, '', '', '', '1').'</optgroup>';
+    $opts1 = '';
+    foreach ($mass as $vn => $vv) $opts1 .= $tpl->getHtmlFrag('form-option', ['value' => $vv, 'selected' => '', 'label' => $vn]);
+    $opts = $tpl->getHtmlFrag('forum-optgroup', ['label' => _OPMOD, 'class' => 'sl_label', 'options_html' => $opts1]);
+    $opts .= $tpl->getHtmlFrag('forum-optgroup', ['label' => _MOVETO, 'class' => 'sl_label', 'options_html' => getcat($conf['name'], 0, '', '', '', '1')]);
     return getTplFormSelect('tmove', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
 }
 
 function pmoder(int|string $status, int $subh): string {
-    global $conf;
+    global $conf, $tpl;
     $mass = ($subh) ? [_CLOSE => 0, _OPEN => 1] : [_FMODC => 0, _FMODCA => 1, _FMODCR => 2, _FMODCW => 3, _FMODCH => 4, _FMODCO => 5];
     $opts = '';
     foreach ($mass as $vn => $vv) {
         $sel = ($status == $vv) ? ' selected' : '';
-        $opts .= '<option value="'.$vv.'"'.$sel.'>'.$vn.'</option>';
+        $opts .= $tpl->getHtmlFrag('form-option', ['value' => (string)$vv, 'selected' => $sel, 'label' => $vn]);
     }
     return getTplFormSelect('status', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
 }
 
 function send(): void {
-    global $db, $user, $conf, $stop;
+    global $db, $user, $conf, $stop, $tpl;
     $cat = getVar('req', 'cat', 'num');
     $catid = $cat;
     if ($conf['forum']['add'] && $catid) {
@@ -587,7 +674,7 @@ function send(): void {
         $isreply = is_acess($authy);
         $isedit = is_acess($authe);
         $ismod = is_acess($authm);
-        
+
         $fid = getVar('post', 'fid', 'num');
         $id = $fid;
         $pid = getVar('post', 'pid', 'num');
@@ -600,14 +687,14 @@ function send(): void {
         for ($ix = 0; $ix < count($words); $ix++) $size = strlen($words[$ix]);
         $hometext = filterHtml($hometext);
         $status = getVar('post', 'status', 'num', 0);
-        
+
         $field = getVar('post', 'field', 'field');
         $time = ($ismod) ? getVar('req', 'time', 'time') : date('Y-m-d H:i:s');
         $postid = (is_user()) ? intval($user[0]) : 0;
         $ip = getIp();
         $fpid = 0;
         $lpid = 0;
-        
+
         $stop = [];
         if (!$subject) $stop[] = _CERROR;
         if (!$hometext) $stop[] = _CERROR1;
@@ -617,7 +704,7 @@ function send(): void {
         if (!$stop && getVar('post', 'posttype', 'text') == 'save') {
             $where = (is_moder($conf['name'])) ? 'WHERE id = :pid' : 'WHERE id = :pid AND status != \'0\'';
             [$fstatus] = $db->getSqlRow($db->getSqlQuery('SELECT status FROM '.PREFIX_DB.'_forum '.$where, ['pid' => $pid]));
-            
+
             if ($id) {
                 [$fpid, $uid, $ftime] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid, time FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
                 $fpid = ($fpid) ? $fpid : $id;
@@ -629,7 +716,7 @@ function send(): void {
                         $db->getSqlQuery('UPDATE '.PREFIX_DB.'_forum SET title = :subject, time = :ftime, body = :body, field = :field, euid = :postid, eip = :ip, etime = NOW() WHERE id = :id', ['subject' => $subject, 'ftime' => $ftime, 'body' => $hometext, 'field' => $field, 'postid' => $postid, 'ip' => $ip, 'id' => $id]);
                     }
                 }
-            
+
             } else {
                 if ($ismod) {
                     $userinfo = getUserInfo();
@@ -647,11 +734,11 @@ function send(): void {
 
                 if ($pid && $isreply) {
                     $insert = (is_moder($conf['name'])) ? true : (($fstatus > 2) ? true : false);
-                    
+
                 } elseif ($istopic) {
                     $insert = true;
                 }
-                
+
                 if ($insert) {
                     $catids = catids($conf['name'], $catid);
                     $db->getSqlQuery('INSERT INTO '.PREFIX_DB.'_forum (id, pid, cid, uid, name, title, time, body, field, ip, luid, lname, ltime, status) VALUES (NULL, :pid, :catid, :postid, :postname, :subject, :time, :body, :field, :ip, :luid, :lname, :ltime, :status)', ['pid' => $pid, 'catid' => $catid, 'postid' => $postid, 'postname' => $postname, 'subject' => $subject, 'time' => $time, 'body' => $hometext, 'field' => $field, 'ip' => $ip, 'luid' => $postid, 'lname' => $postname, 'ltime' => $time, 'status' => $status]);
@@ -666,7 +753,7 @@ function send(): void {
                                 [$mail, $fsmail] = $db->getSqlRow($db->getSqlQuery('SELECT email, fsmail FROM '.PREFIX_DB.'_users WHERE id = :muid', ['muid' => $muid]));
                                 if ($mail && $fsmail) {
                                     $finurl = $conf['homeurl'].'/index.php?name=forum&amp;op=view&amp;id='.$pid.'#'.$lpid;
-                                    $link = '<a href="'.$finurl.'">'.$finurl.'</a>';
+                                    $link = $tpl->getHtmlFrag('breadcrumb-link', ['href' => $finurl, 'title' => $finurl, 'label' => $finurl]);
                                     $subject = $conf['sitename'].' - '._FORUM;
                                     $message = str_replace('[text]', sprintf(_ADDMAILF, $postname, $link), $conf['mtemp']);
                                     addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
@@ -705,11 +792,11 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
         [$authd, $authm] = $db->getSqlRow($db->getSqlQuery('SELECT pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :catid', ['catid' => $catid]));
         $isdelete = is_acess($authd);
         $ismod = is_acess($authm);
-        
+
         [$pid, $uid] = $db->getSqlRow($db->getSqlQuery('SELECT pid, uid FROM '.PREFIX_DB.'_forum WHERE id = :id', ['id' => $id]));
         if ($ismod || ($isdelete && $uid == intval($user[0]))) {
             $recycle = intval($conf['forum']['recycle']);
-            
+
             if ($recycle && $recycle != $catid) {
                 $rcatids = catids($conf['name'], $recycle);
                 if ($pid) {
@@ -722,7 +809,7 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics+1'.$wrnpost.', lpost = :id WHERE id IN ('.$rcatids.')', ['id' => $id]);
                 }
             }
-            
+
             $catids = catids($conf['name'], $catid);
 
             if ($pid) {
@@ -746,7 +833,7 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_categories SET topics = topics-1'.$wnpost.' WHERE id IN ('.$catids.')');
                 }
             }
-            
+
             if (!$recycle || $recycle == $catid) {
                 if ($uid) {
                     if ($pid) {
@@ -762,9 +849,9 @@ function delete(int|string|null $catid = null, int|string|null $id = null): void
                 }
                 $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_forum WHERE id = :id1 OR pid = :id2', ['id1' => $id, 'id2' => $id]);
             }
-            
+
         }
-        
+
         $lid = ($pid) ? $pid.'&last=1#'.$lid : '';
         $link = ($lid) ? '&op=view&id='.$lid : '&cat='.$catid;
         if (!$hasargs) setRedirect('index.php?name='.$conf['name'].$link);

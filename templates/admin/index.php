@@ -17,10 +17,7 @@ function getAdminHeadVars(): array {
                     $href = $afile.'.php?newlang='.$lfound;
                     $src = img_find('lang/'.$lfound.'_mini.png');
                     $alt = getLangName($lfound);
-                    $langs .= '<a href="'.htmlspecialchars($href, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"><img src="'
-                        .htmlspecialchars($src, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" alt="'
-                        .htmlspecialchars($alt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'" title="'
-                        .htmlspecialchars($alt, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"></a>';
+                    $langs .= $tpl->getHtmlFrag('admin-lang-switch-item', ['href' => $href, 'src' => $src, 'alt' => $alt]);
                 }
             }
         }
@@ -44,12 +41,9 @@ function getAdminHeadVars(): array {
             ];
         }
         foreach ($items as $item) {
-            $menu .= '<li'.(($item['cls'] ?? '') !== '' ? ' class="'.htmlspecialchars((string)$item['cls'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '').'>'
-                .'<a href="'.htmlspecialchars((string)$item['href'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'
-                .(!empty($item['blank']) ? ' target="_blank"' : '')
-                .' title="'.htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"><b>'
-                .htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')
-                .'</b></a></li>';
+            $cls = ($item['cls'] ?? '') !== '' ? 'class="'.htmlspecialchars((string)$item['cls'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"' : '';
+            $target = !empty($item['blank']) ? ' target="_blank"' : '';
+            $menu .= $tpl->getHtmlFrag('admin-menu-item', ['class_attr' => $cls, 'href' => htmlspecialchars((string)$item['href'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), 'target_attr' => $target, 'label' => htmlspecialchars((string)$item['label'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8')]);
         }
         $blocks = getAdminPanelBlocks().admininfo().adminblock();
     } else {

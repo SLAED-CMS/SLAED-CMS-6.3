@@ -173,7 +173,7 @@ function view(): void {
             $title = ($title !== '') ? $title : _MESSAGE.': '.$a;
             $ttext = filterTextHighlight($title, $word);
             $fields = fields_out($field, $conf['name']);
-            $fields = ($fields) ? '<br><br>'.$fields : '';
+            $fields = ($fields) ? $tpl->getHtmlFrag('br-br', []).$fields : '';
             $text = $hometext.$fields;
             $post = ($nick) ? user_info($nick) : _ANONYM;
             $date = ($conf['help']['date']) ? format_time($time) : '';
@@ -305,8 +305,7 @@ function add(): void {
             'lbl_cat' => _CATEGORY,
             'lbl_text' => _TEXT,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'],
-                '<option value="">'._HOMECAT.'</option>'),
+            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], $tpl->getHtmlFrag('form-option', ['value' => '', 'selected' => '', 'label' => _HOMECAT])),
             'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '10', _TEXT, '1'),
             'fields' => fields_in($field, $conf['name']),
             'submit' => ad_save('', '', 'send'),

@@ -31,8 +31,13 @@ function clients(): void {
             elseif (file_exists($tpath.'.bz2')) $tpath .= '.bz2';
             else $tpath = '';
             $dtitle = $tpath ? _CDOWN : _GZIPGEN;
-            $moder = (is_moder($conf['name'])) ? '<a href="'.$afile.'.php?op=clients_add&amp;id='.$id.'" title="'._FULLEDIT.'">'._FULLEDIT.'</a>||' : '';
-            $acont = add_menu($moder.'<a OnClick="HideShow(\'cl'.$i.'\', \'blind\', \'up\', 500);" title="'._CINFO.'">'._CINFO.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod.'" title="'.$dtitle.'">'.$dtitle.'</a>||<a href="index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod.'" title="'._CLIZENS.'">'._CLIZENS.'</a>');
+            $moder = (is_moder($conf['name'])) ? $tpl->getHtmlFrag('breadcrumb-link', ['href' => $afile.'.php?op=clients_add&amp;id='.$id, 'title' => _FULLEDIT, 'label' => _FULLEDIT]).'||' : '';
+            $acont = add_menu(
+                $moder
+                .$tpl->getHtmlFrag('link-btn', ['href' => 'javascript:HideShow(\'cl'.$i.'\',\'blind\',\'up\',500);', 'title' => _CINFO, 'class' => '', 'label' => _CINFO]).'||'
+                .$tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=download&amp;id='.$id.'&amp;pid='.$prod, 'title' => $dtitle, 'label' => $dtitle]).'||'
+                .$tpl->getHtmlFrag('breadcrumb-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=generator&amp;id='.$id.'&amp;pid='.$prod, 'title' => _CLIZENS, 'label' => _CLIZENS])
+            );
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
             $cont .= $tpl->getHtmlFrag('clients-list-basic', [
                 'row_id' => $a,

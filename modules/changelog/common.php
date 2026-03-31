@@ -170,6 +170,7 @@ function chlogGroupCommitsByDate(array $commits): array {
 }
 
 function chlogRenderCommitStats(array $commit, bool $showStats, bool $showFiles): string {
+    global $tpl;
     if (!$showStats || empty($commit['files']) || !is_array($commit['files'])) {
         return '';
     }
@@ -183,21 +184,24 @@ function chlogRenderCommitStats(array $commit, bool $showStats, bool $showFiles)
 
     $filesHtml = '';
     if ($showFiles) {
-        $rows = [];
+        $rows = '';
         foreach ($commit['files'] as $file) {
-            $rows[] = '<div><span class="add">+'.str_pad((string)((int)($file['added'] ?? 0)), 3, ' ', STR_PAD_LEFT).'</span> '
-                .'<span class="del">-'.str_pad((string)((int)($file['deleted'] ?? 0)), 3, ' ', STR_PAD_LEFT).'</span> '
-                .chlogEsc((string)($file['file'] ?? '')).'</div>';
+            $rows .= $tpl->getHtmlFrag('changelog-file-row', [
+                'added'   => str_pad((string)((int)($file['added'] ?? 0)), 3, ' ', STR_PAD_LEFT),
+                'deleted' => str_pad((string)((int)($file['deleted'] ?? 0)), 3, ' ', STR_PAD_LEFT),
+                'file'    => chlogEsc((string)($file['file'] ?? '')),
+            ]);
         }
-        $filesHtml = '<div class="commit-files">'.implode('', $rows).'</div>';
+        $filesHtml = $tpl->getHtmlFrag('changelog-file-list', ['rows_html' => $rows]);
     }
 
-    $statsHtml = '<div class="commit-stats">';
-    $statsHtml .= '<strong>'._CHLOG_CHANGES.':</strong> ';
-    $statsHtml .= '<span class="add">+'.$totadd.'</span> / ';
-    $statsHtml .= '<span class="del">-'.$totdel.'</span> | ';
-    $statsHtml .= '<strong>'.count($commit['files']).' '._CHLOG_FILES.'</strong>';
-    $statsHtml .= '</div>';
+    $statsHtml = $tpl->getHtmlFrag('changelog-stats', [
+        'changes_label' => _CHLOG_CHANGES,
+        'added'         => $totadd,
+        'deleted'       => $totdel,
+        'count'         => count($commit['files']),
+        'files_label'   => _CHLOG_FILES,
+    ]);
 
     return $statsHtml.$filesHtml;
 }
@@ -211,13 +215,13 @@ function chlogRenderCommits(array $commits, array $options = []): string {
 
     foreach ($commits as $commit) {
         if (isset($commit['datehdr'])) {
-            $html .= '<div class="date-header">'.chlogEsc((string)$commit['datehdr']).'</div>';
+            $html .= $tpl->getHtmlFrag('changelog-date-header', ['label' => chlogEsc((string)$commit['datehdr'])]);
             continue;
         }
 
         $bodyHtml = '';
         if (!empty($commit['body']) && $commit['body'] !== CHLOG_COMMIT_END) {
-            $bodyHtml = '<div class="commit-body">'.filterMarkdown((string)$commit['body'], 'changelog', true).'</div>';
+            $bodyHtml = $tpl->getHtmlFrag('changelog-commit-body', ['content' => filterMarkdown((string)$commit['body'], 'changelog', true)]);
         }
 
         $html .= $tpl->getHtmlFrag('basic-changelog-commit', [
@@ -387,17 +391,17 @@ function chlogGhPage(string $owner, string $repo, array $filters, int $perpage, 
             $msg = $errdata['message'] ?? '';
             $error = trim(sprintf(_CHLOG_ERR_GH_API, $httpcode).' '.chlogEsc((string)$msg));
         } else {
-            $error = '<strong>GitHub API Fehler:</strong><br>- HTTP Status: '.$httpcode.'<br>';
+            $error = 'GitHub API Fehler: HTTP Status '.$httpcode.'.';
             if ($httpcode === 403) {
                 if (preg_match('/X-RateLimit-Remaining: (\d+)/i', $header, $m)) {
-                    $error .= '- Rate Limit verbleibend: '.$m[1].'<br>';
+                    $error .= ' Rate Limit verbleibend: '.$m[1].'.';
                 }
                 if (preg_match('/X-RateLimit-Reset: (\d+)/i', $header, $m)) {
-                    $error .= '- Reset um: '.date('H:i:s', intval($m[1])).'<br>';
+                    $error .= ' Reset um: '.date('H:i:s', intval($m[1])).'.';
                 }
             }
             if (isset($errdata['message'])) {
-                $error .= '- Nachricht: '.chlogEsc((string)$errdata['message']);
+                $error .= ' Nachricht: '.chlogEsc((string)$errdata['message']);
             }
         }
         return [];

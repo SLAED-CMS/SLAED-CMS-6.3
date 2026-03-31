@@ -40,7 +40,7 @@ function uploads(): void {
     ], 'sattrs' => $sattrs, 'subtab' => 1, 'sub' => getUploadsSearch(), 'id' => 'uploads']);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     $cont .= checkPerms(BASE_DIR.'/uploads/');
-    $tabone = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': uploads/'.$dir]);
+    $tabone = $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).getTplAdminTipLine(_DIR, 'uploads/'.$dir)]);
     $uphide = getTplHiddenInput('name', 'uploads').getTplHiddenInput('op', 'uploadsave').getTplHiddenInput('dir', $dir);
     $uprows = $tpl->getHtmlFrag('admin-uploads-upload-rows', [
         'execute_label' => _EXECUTE,
@@ -61,7 +61,7 @@ function uploads(): void {
                 $affilesize += $filesize;
             }
         }
-        $tabtwo .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$fdir.'<br>'._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($affilesize)]);
+        $tabtwo .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).getTplAdminTipLine(_DIR, $fdir).getTplAdminTipLine(_FILE_M, (string)$f).getTplAdminTipLine(_FILE_S, filterSize($affilesize))]);
     } else {
         $tabtwo .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }
@@ -78,7 +78,7 @@ function uploads(): void {
                 $atfilesize += $filesize;
             }
         }
-        $tabthr .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).'<br>'._DIR.': '.$tdir.'<br>'._FILE_M.': '.$t.'<br>'._FILE_S.': '.filterSize($atfilesize)]);
+        $tabthr .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MODUL.': '.getModuleName($dir).getTplAdminTipLine(_DIR, $tdir).getTplAdminTipLine(_FILE_M, (string)$t).getTplAdminTipLine(_FILE_S, filterSize($atfilesize))]);
     } else {
         $tabthr .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _NO_INFO]);
     }

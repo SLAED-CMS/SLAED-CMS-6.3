@@ -9,7 +9,7 @@ if (!defined('BLOCK_FILE')) {
 	exit;
 }
 
-global $db;
+global $db, $tpl;
 
 # Количество сообщений в блоке
 $blimit = '3';
@@ -18,11 +18,23 @@ $bclos = '97, 98';
 
 $bwhere = ($bclos) ? 'cid NOT IN ('.$bclos.') AND' : '';
 $ordern = (is_moder('forum')) ? '' : "AND time <= now() AND status > '1'";
-$buffer = '';
+$items_html = '';
 $result = $db->getSqlQuery('SELECT id, title, time, luid, lname, lpost, ltime, status FROM '.PREFIX_DB.'_forum WHERE '.$bwhere." pid = '0' ".$ordern.' ORDER BY ltime DESC LIMIT 0, '.$blimit);
 while (list($id, $title, $time, $luid, $lname, $lpost, $ltime, $status) = $db->getSqlRow($result)) {
 	$lposter = ($luid) ? user_info($lname) : $lname;
-	$class = ($status <= 1 || $time > date('Y-m-d H:i:s')) ? ' class="sl_hidden"' : '';
-	$buffer .= '<li'.$class.'><a href="index.php?name=forum&amp;op=view&amp;id='.$id.'&amp;last#'.$lpost.'" title="'.$title.'">'.cutstr($title, 50).'</a><ul><li title="'._POSTEDBY.'" class="sl_post">'.$lposter.'</li><li title="'._DATE.': '.format_time($ltime, _TIMESTRING).'" class="ico i_date">'.format_time($ltime).'</li></ul></li>';
+	$class_attr = ($status <= 1 || $time > date('Y-m-d H:i:s')) ? 'class="sl_hidden"' : '';
+	$items_html .= $tpl->getHtmlFrag('block-forum-item', [
+		'class_attr'      => $class_attr,
+		'url'             => 'index.php?name=forum&amp;op=view&amp;id='.$id.'&amp;last#'.$lpost,
+		'title'           => $title,
+		'label'           => cutstr($title, 50),
+		'posted_by_label' => _POSTEDBY,
+		'poster_html'     => $lposter,
+		'date_label'      => _DATE.': '.format_time($ltime, _TIMESTRING),
+		'date'            => format_time($ltime),
+	]);
 }
-$content = '<div class="grid"><p title="'._FORUM.'" class="font f_title">'._FORUM.'</p><ul class="list-item">'.$buffer.'</ul></div>';
+$content = $tpl->getHtmlFrag('block-forum-list', [
+	'forum_label' => _FORUM,
+	'items_html'  => $items_html,
+]);

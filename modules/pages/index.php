@@ -159,7 +159,7 @@ function view(): void {
 		$cont = setModuleNavi(['title' => _PAGES]);
 		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
 		if ($conf['pages']['viewcat']) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0);
-		$text = ($bodytext) ? $hometext.'<br><br>'.$bodytext : $hometext;
+		$text = ($bodytext) ? $hometext.$tpl->getHtmlFrag('br-br', []).$bodytext : $hometext;
 		$conpag = explode('[pagebreak]', $text);
 		$pageno = count($conpag);
 		if ($pag > $pageno) $pag = $pageno;
@@ -227,8 +227,7 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'],
-                '<option value="">'._HOMECAT.'</option>'),
+            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], $tpl->getHtmlFrag('form-option', ['value' => '', 'selected' => '', 'label' => _HOMECAT])),
             'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '5', _TEXT, '1'),
             'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
             'captcha' => getCaptcha(1),

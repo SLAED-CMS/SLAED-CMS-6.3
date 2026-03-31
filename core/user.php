@@ -9,21 +9,29 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 # Render the comment list and submission form for an item
 function setComShow(int $id = 0, int $cid = 0): string {
     global $conf, $user, $tpl;
-    $cont = '<a id="comm"></a><div id="repcsave">'.ashowcom($id, $conf['name']).'</div>';
+    $cont = $tpl->getHtmlFrag('account-comment-section', ['comments_html' => ashowcom($id, $conf['name'])]);
     if (!is_user() && $conf['comments']['anonpost'] == 0) {
         $cont .= $tpl->getHtmlFrag('alert', ['text' => _NOANONCOMMENTS, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
     } else {
         $userinfo = getUserInfo();
         if ($cid == 1 || $userinfo['access'] || (!is_user() && $conf['comments']['anonpost'] == 1)) $cont .= $tpl->getHtmlFrag('alert', ['text' => _POSTNOTE, 'meta' => '', 'type' => 'warn', 'is_warn' => true]);
-        $cont .= '<form name="post" id="formcsave" method="post">'
-        .'<table class="sl_table_form">';
         if (is_user()) {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.filterText(substr($user[1], 0, 25)).getTplHiddenInput('name', '').'</td></tr>';
+            $name_field = filterText(substr($user[1], 0, 25)).getTplHiddenInput('name', '');
         } else {
-            $cont .= '<tr><td>'._YOURNAME.':</td><td>'.getTplTextInput('name', _ANONYM, 'sl_field '.$conf['style'], 'maxlength="25"').'</td></tr>';
+            $name_field = getTplTextInput('name', _ANONYM, 'sl_field '.$conf['style'], 'maxlength="25"');
         }
-        $cont .= '<tr><td>'._COMMENT.':</td><td>'.textarea(1, 'text', '', $conf['name'], '5').'</td></tr>'
-        .'<tr><td colspan="2" class="sl_center">'.getCaptcha(1).'<input type="submit" hx-post="index.php?go=1&amp;op=addComment&amp;id='.$id.'&amp;cid='.$cid.'&amp;mod='.$conf['name'].'" hx-include="#formcsave" hx-target="#repcsave" hx-swap="innerHTML" hx-push-url="false" hx-on:click="if (!document.getElementById(\'formcsave\').querySelector(\'[name=&quot;text&quot;]\').value.trim()) { alert(\''._CERROR1.'\'); event.preventDefault(); }" hx-on:htmx:after-request="document.getElementById(\'formcsave\').reset()" value="'._COMMENTREPLY.'" title="'._COMMENTREPLY.'" class="sl_but_blue"></td></tr></table></form>';
+        $cont .= $tpl->getHtmlFrag('account-comment-form', [
+            'name_label'   => _YOURNAME,
+            'name_field'   => $name_field,
+            'comment_label'=> _COMMENT,
+            'textarea_html'=> textarea(1, 'text', '', $conf['name'], '5'),
+            'captcha_html' => getCaptcha(1),
+            'item_id'      => $id,
+            'cid'          => $cid,
+            'mod'          => $conf['name'],
+            'error_msg'    => _CERROR1,
+            'submit_label' => _COMMENTREPLY,
+        ]);
     }
     return $cont;
 }
@@ -45,18 +53,17 @@ function setMessageShow(): string {
                 $body = filterReplaceText(filterMarkdown($body, 'all', false), 'all');
                 $exp = intval($expire - time());
                 $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-                $info = '| '._PURCHASED.': '.$exp.' | <a href="'.$afile.'.php?op=msg_add&amp;id='.$mid.'" title="'._EDIT.'">'._EDIT.'</a> ]</div>';
                 if ($view == 4 && is_moder()) {
-                    $body .= '<div class="sl_center">[ '._VIEW.': '._MVADMIN.' '.$info;
+                    if (is_moder()) $body .= $tpl->getHtmlFrag('account-message-admin-note', ['view_label' => _VIEW, 'view_type' => _MVADMIN, 'purchased_label' => _PURCHASED, 'duration' => $exp, 'edit_url' => $afile.'.php?op=msg_add&amp;id='.$mid, 'edit_label' => _EDIT]);
                     return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
                 } elseif (($view == 3 && is_user()) || ($view == 3 && is_user() && is_moder())) {
-                    if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVUSERS.' '.$info;
+                    if (is_moder()) $body .= $tpl->getHtmlFrag('account-message-admin-note', ['view_label' => _VIEW, 'view_type' => _MVUSERS, 'purchased_label' => _PURCHASED, 'duration' => $exp, 'edit_url' => $afile.'.php?op=msg_add&amp;id='.$mid, 'edit_label' => _EDIT]);
                     return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
                 } elseif (($view == 2 && !is_user()) || ($view == 2 && !is_user() && is_moder())) {
-                    if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVANON.' '.$info;
+                    if (is_moder()) $body .= $tpl->getHtmlFrag('account-message-admin-note', ['view_label' => _VIEW, 'view_type' => _MVANON, 'purchased_label' => _PURCHASED, 'duration' => $exp, 'edit_url' => $afile.'.php?op=msg_add&amp;id='.$mid, 'edit_label' => _EDIT]);
                     return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
                 } elseif ($view == 1) {
-                    if (is_moder()) $body .= '<div class="sl_center">[ '._VIEW.': '._MVALL.' '.$info;
+                    if (is_moder()) $body .= $tpl->getHtmlFrag('account-message-admin-note', ['view_label' => _VIEW, 'view_type' => _MVALL, 'purchased_label' => _PURCHASED, 'duration' => $exp, 'edit_url' => $afile.'.php?op=msg_add&amp;id='.$mid, 'edit_label' => _EDIT]);
                     return $tpl->getHtmlFrag('messagebox', ['title' => $title, 'content' => $body]);
                 }
             }
@@ -67,7 +74,7 @@ function setMessageShow(): string {
 
 # Render the user account navigation menu with icon links
 function getUserNav(): string {
-    global $conf;
+    global $conf, $tpl;
     $uid = intval((getUserInfo() ?? [])['id'] ?? 0);
     if ($conf['name'] !== 'account') getLang('account');
 
@@ -98,11 +105,16 @@ function getUserNav(): string {
     $navs[] = [_CHANGE, _CHANGE,       'index.php?name=account&amp;op=edithome',           'account/preferences.png'];
     $navs[] = [_LOGOUT, _LOGOUT,       'index.php?name=account&amp;op=logout',             'account/exit.png'];
 
-    $cont = '';
+    $items_html = '';
     foreach ($navs as [$titl, $itit, $link, $icon]) {
-        $cont .= '<div class="sl_catflex-box"><a href="'.$link.'" title="'.$itit.'"><img src="'.img_find($icon).'" alt="'.$itit.'" title="'.$itit.'"><br>'.$titl.'</a></div>';
+        $items_html .= $tpl->getHtmlFrag('account-nav-item', [
+            'url'   => $link,
+            'title' => $itit,
+            'icon'  => img_find($icon),
+            'label' => $titl,
+        ]);
     }
-    return '<div class="sl_catflex-cont">'.$cont.'</div>';
+    return $tpl->getHtmlFrag('account-nav', ['items_html' => $items_html]);
 }
 
 # Check if the logged-in user meets the group or points requirement for a module
@@ -195,7 +207,7 @@ function addComment() {
         if ($status) numcom($id, $mod, 0, $postid);
         [$lcom_id] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_comment WHERE cid = :cid AND uid = :uid ORDER BY id DESC LIMIT 1', ['cid' => $id, 'uid' => $postid]));
         $finishlink = $conf['homeurl'].'/index.php?name='.$mod.'&amp;op=view&amp;id='.$id.'#'.$lcom_id;
-        $clink = '<a href="'.$finishlink.'">'.$finishlink.'</a>';
+        $clink = $tpl->getHtmlFrag('account-mail-link', ['href' => $finishlink, 'target' => '', 'title' => '', 'label' => $finishlink]);
         addAdminMail($conf['comments']['addmail'], $mod, $postname, getModuleName($mod), 1, $clink);
         echo ashowcom($id, $mod);
     } else {
@@ -291,22 +303,17 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
         }
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout = u.id) WHERE p.uidin = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._TITLE.'</th><th>'._PRSE.'</th><th>'._DATE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
+            $rows_html = '';
             while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
-                if ($status) {
-                    $ititle = _PROLD;
-                    $hidden = ' sl_hidden';
-                } else {
-                    $ititle = _PRNEW;
-                    $hidden = '';
-                }
-                $title = '<span title="'.$ititle.'" class="sl_m_in'.$hidden.'"></span><a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'.$title.'">'.cutstr($title, 35).'</a>';
-                $post = ($user_name) ? user_info($user_name) : _ANONYM;
-                $date = format_time($date, _TIMESTRING);
-                $func = add_menu('<a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?go=1&amp;op=setPrivateMessageSaved&amp;id='.$id.'" hx-get="index.php?go=1&amp;op=setPrivateMessageSaved&amp;id='.$id.'" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._SAVE.'">'._SAVE.'</a>||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>');
-                $cont .= '<tr><td>'.$title.'</td><td>'.$post.'</td><td>'.$date.'</td><td>'.$func.'</td></tr>';
+                $ititle = $status ? _PROLD : _PRNEW;
+                $icon_class = 'sl_m_in'.($status ? ' sl_hidden' : '');
+                $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=1';
+                $title_html = $tpl->getHtmlFrag('account-pm-icon-link', ['status_title' => $ititle, 'icon_class' => $icon_class, 'url' => $url, 'target_id' => 'repprmessin', 'full_title' => $title, 'short_title' => cutstr($title, 35)]);
+                $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
+                $func = add_menu('<a href="'.$url.'" hx-get="'.$url.'" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?go=1&amp;op=setPrivateMessageSaved&amp;id='.$id.'" hx-get="index.php?go=1&amp;op=setPrivateMessageSaved&amp;id='.$id.'" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._SAVE.'">'._SAVE.'</a>||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=1" hx-target="#repprmessin" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>');
+                $rows_html .= $tpl->getHtmlFrag('account-pm-list-row', ['title_html' => $title_html, 'user_html' => $post_html, 'date' => format_time($date, _TIMESTRING), 'func_html' => $func]);
             }
-            $cont .= '</tbody></table>';
+            $cont .= $tpl->getHtmlFrag('account-pm-list-table', ['col_title' => _TITLE, 'col_user' => _PRSE, 'col_date' => _DATE, 'col_func' => _FUNCTIONS, 'rows_html' => $rows_html]);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
@@ -315,24 +322,18 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
     } elseif ($typ == 2) {
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidin = u.id) WHERE p.uidout = :uid AND p.status <= 1 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._TITLE.'</th><th>'._PRRE.'</th><th>'._DATE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
+            $rows_html = '';
             while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
-                if ($status) {
-                    $ititle = _PROLD;
-                    $hidden = ' sl_hidden';
-                    $del = '';
-                } else {
-                    $ititle = _PROUTNEW;
-                    $hidden = '';
-                    $del = '||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2" hx-target="#repprmessou" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>';
-                }
-                $title = '<span title="'.$ititle.'" class="sl_m_out'.$hidden.'"></span><a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2" hx-target="#repprmessou" hx-swap="innerHTML" hx-push-url="false" title="'.$title.'">'.cutstr($title, 35).'</a>';
-                $post = ($user_name) ? user_info($user_name) : _ANONYM;
-                $date = format_time($date, _TIMESTRING);
-                $func = add_menu('<a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2" hx-target="#repprmessou" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>'.$del);
-                $cont .= '<tr><td>'.$title.'</td><td>'.$post.'</td><td>'.$date.'</td><td>'.$func.'</td></tr>';
+                $ititle = $status ? _PROLD : _PROUTNEW;
+                $icon_class = 'sl_m_out'.($status ? ' sl_hidden' : '');
+                $del = $status ? '' : '||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=2" hx-target="#repprmessou" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>';
+                $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=2&amp;typ=4&amp;mod=2';
+                $title_html = $tpl->getHtmlFrag('account-pm-icon-link', ['status_title' => $ititle, 'icon_class' => $icon_class, 'url' => $url, 'target_id' => 'repprmessou', 'full_title' => $title, 'short_title' => cutstr($title, 35)]);
+                $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
+                $func = add_menu('<a href="'.$url.'" hx-get="'.$url.'" hx-target="#repprmessou" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>'.$del);
+                $rows_html .= $tpl->getHtmlFrag('account-pm-list-row', ['title_html' => $title_html, 'user_html' => $post_html, 'date' => format_time($date, _TIMESTRING), 'func_html' => $func]);
             }
-            $cont .= '</tbody></table>';
+            $cont .= $tpl->getHtmlFrag('account-pm-list-table', ['col_title' => _TITLE, 'col_user' => _PRRE, 'col_date' => _DATE, 'col_func' => _FUNCTIONS, 'rows_html' => $rows_html]);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
@@ -353,15 +354,15 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
         if ($fstatus) $cont .= $tpl->getHtmlFrag('alert', ['text' => $messinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
         $result = $db->getSqlQuery('SELECT p.id, p.uidin, p.uidout, p.title, p.time, p.status, u.name FROM '.PREFIX_DB.'_privat AS p LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uidout=u.id) WHERE p.uidin = :uid AND p.status = 2 ORDER BY p.time DESC LIMIT '.intval($offset).', '.intval($newlistnum), ['uid' => $uid]);
         if ($db->getSqlRowCount($result) > 0) {
-            $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._TITLE.'</th><th>'._PRSE.'</th><th>'._DATE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
+            $rows_html = '';
             while ([$id, $uidin, $uidout, $title, $date, $status, $user_name] = $db->getSqlRow($result)) {
-            $title = '<span title="'._PRMOVE.'" class="sl_m_save"></span><a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3" hx-target="#repprmesssa" hx-swap="innerHTML" hx-push-url="false" title="'.$title.'">'.cutstr($title, 35).'</a>';
-                $post = ($user_name) ? user_info($user_name) : _ANONYM;
-                $date = format_time($date, _TIMESTRING);
-                $func = add_menu('<a href="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3" hx-get="index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3" hx-target="#repprmesssa" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3" hx-target="#repprmesssa" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>');
-                $cont .= '<tr><td>'.$title.'</td><td>'.$post.'</td><td>'.$date.'</td><td>'.$func.'</td></tr>';
+                $url = 'index.php?go=1&amp;op=getPrivateMessageView&amp;id='.$id.'&amp;cid=1&amp;typ=4&amp;mod=3';
+                $title_html = $tpl->getHtmlFrag('account-pm-icon-link', ['status_title' => _PRMOVE, 'icon_class' => 'sl_m_save', 'url' => $url, 'target_id' => 'repprmesssa', 'full_title' => $title, 'short_title' => cutstr($title, 35)]);
+                $post_html = ($user_name) ? user_info($user_name) : _ANONYM;
+                $func = add_menu('<a href="'.$url.'" hx-get="'.$url.'" hx-target="#repprmesssa" hx-swap="innerHTML" hx-push-url="false" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3" hx-get="index.php?go=1&amp;op=deletePrivateMessage&amp;id='.$id.'&amp;typ=3" hx-target="#repprmesssa" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>');
+                $rows_html .= $tpl->getHtmlFrag('account-pm-list-row', ['title_html' => $title_html, 'user_html' => $post_html, 'date' => format_time($date, _TIMESTRING), 'func_html' => $func]);
             }
-            $cont .= '</tbody></table>';
+            $cont .= $tpl->getHtmlFrag('account-pm-list-table', ['col_title' => _TITLE, 'col_user' => _PRSE, 'col_date' => _DATE, 'col_func' => _FUNCTIONS, 'rows_html' => $rows_html]);
         } else {
             $cont .= $tpl->getHtmlFrag('alert', ['text' => _NO_INFO, 'meta' => '', 'type' => 'info', 'is_warn' => false]);
         }
@@ -399,22 +400,22 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
                 $result = $db->getSqlQuery('SELECT u.id, u.name, u.rank, u.email, u.website, u.avatar, u.regdate, u.origin, u.sig, u.viewmail, u.points, u.warnings, u.gender, u.votes, u.tvotes, g.name, g.rank, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON ((g.extra=1 AND u.grp=g.id) OR (g.extra!=1 AND u.points>=g.points)) WHERE u.id = :uidout ORDER BY g.extra DESC, g.points DESC', ['uidout' => $uidout]);
                 [$user_id, $user_name, $user_rank, $user_email, $user_website, $user_avatar, $user_regdate, $user_from, $user_sig, $user_viewemail, $user_points, $user_warnings, $user_gender, $user_votes, $user_totalvotes, $user_gname, $user_grank, $user_gcolor] = $db->getSqlRow($result);
                 $avname = ($user_name) ? $user_name : $com_name.' ('._ANONYM.')';
-                $date = '<span title="'._PADD.'" class="sl_t_post">'.format_time($date, _TIMESTRING).'</span>';
+                $date = $tpl->getHtmlFrag('comment-date', ['title' => _PADD, 'text' => format_time($date, _TIMESTRING)]);
                 $ip = (is_moder($conf['name'])) ? user_geo_ip($ip_sender, 4) : '';
                 $avatar = ($user_name) ? (($user_avatar && file_exists($conf['users']['adirectory'].'/'.$user_avatar)) ? $conf['users']['adirectory'].'/'.$user_avatar : $conf['users']['adirectory'].'/default/00.gif') : $conf['users']['adirectory'].'/default/0.gif';
                 $rank = ($user_rank) ? $user_rank : '';
                 $trank = ($user_gname) ? _GROUP.': '.$user_gname : _RANK;
-                $rlink = ($user_grank && file_exists(img_find('ranks/'.$user_grank))) ? '<img src="'.img_find('ranks/'.$user_grank).'" alt="'.$trank.'" title="'.$trank.'">' : '';
+                $rlink = ($user_grank && file_exists(img_find('ranks/'.$user_grank))) ? $tpl->getHtmlFrag('comment-rank-image', ['src' => img_find('ranks/'.$user_grank), 'title' => $trank]) : '';
                 $rate = getRatingAsync(0, $user_id, $conf['name'], $user_votes, $user_totalvotes, $com_id, 1);
                 $rwarn = ($user_warnings) ? _UWARNS.': '.warnings($user_warnings) : '';
-                $group = ($user_gname) ? _GROUP.': <span style="color: '.$user_gcolor.'">'.$user_gname.'</span>' : '';
+                $group = ($user_gname) ? $tpl->getHtmlFrag('comment-meta-color', ['label' => _GROUP, 'color' => $user_gcolor, 'value' => $user_gname]) : '';
                 $point = ($conf['users']['point'] && $user_points) ? _POINTS.': '.$user_points : '';
                 $regdate = ($user_regdate) ? _REG.': '.format_time($user_regdate) : _NO_INFO;
                 $gender = ($user_gender) ? _GENDER.': '.gender($user_gender) : '';
                 $from = ($user_from) ? _FROM.': '.$user_from : '';
-                $sig = ($user_sig) ? '<hr>'.$user_sig : '';
-                $profil = ($conf['privat']['profil'] && $user_name) ? '<a href="index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name).'" title="'._PERSONALINFO.'" class="sl_but">'._ACCOUNT.'</a>' : '';
-                $web = ($conf['privat']['web'] && $user_website) ? '<a href="'.$user_website.'" target="_blank" title="'._DOWNLLINK.'" class="sl_but">'._SITE.'</a>' : '';
+                $sig = ($user_sig) ? $tpl->getHtmlFrag('comment-signature', ['content' => $user_sig]) : '';
+                $profil = ($conf['privat']['profil'] && $user_name) ? $tpl->getHtmlFrag('account-user-button', ['url' => 'index.php?name=account&amp;op=view&amp;uname='.urlencode($user_name), 'title' => _PERSONALINFO, 'label' => _ACCOUNT, 'target_attr' => '']) : '';
+                $web = ($conf['privat']['web'] && $user_website) ? $tpl->getHtmlFrag('account-user-button', ['url' => $user_website, 'title' => _DOWNLLINK, 'label' => _SITE, 'target_attr' => ' target="_blank"']) : '';
                 
 
                 
@@ -432,12 +433,19 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
             $rcontent = ($stext) ? $stext : (($body ?? '') ? '[quote]'.$body.'[/quote]' : '');
             
             $idp = ($id) ? '2' : '1';
-            $cont .= '<form name="post" id="form'.$prmid.'" method="post">'
-            .'<table class="sl_table_form">'
-            .'<tr><td>'._PRRE.':</td><td>'.getUserSearch('name', $rpost, '25', $conf['style'], '1').'</td></tr>'
-            .'<tr><td>'._TITLE.':</td><td><input type="text" name="title" value="'.$rtitle.'" maxlength="100" class="sl_field '.$conf['style'].'"></td></tr>'
-            .'<tr><td>'._MESSAGE.':</td><td>'.textarea($idp, 'text', $rcontent, $conf['name'], '15').'</td></tr>'
-            ."<tr><td colspan=\"2\" class=\"sl_center\"><input type=\"submit\" hx-post=\"index.php?go=1&amp;op=addPrivateMessage\" hx-include=\"#form".$prmid."\" hx-target=\"#rep".$prmid."\" hx-swap=\"innerHTML\" hx-push-url=\"false\" hx-on:click=\"if (!document.getElementById('form".$prmid."').querySelector('[name=&quot;name&quot;]').value.trim()) { alert('"._CERROR6."'); event.preventDefault(); }\" value=\""._SEND.'" title="'._SEND.'" class="sl_but_blue"></td></tr></table></form>';
+            $cont .= $tpl->getHtmlFrag('account-privat-message-form', [
+                'error_msg' => _CERROR6,
+                'form_id' => 'form'.$prmid,
+                'message_label' => _MESSAGE,
+                'recipient_html' => getUserSearch('name', $rpost, '25', $conf['style'], '1'),
+                'recipient_label' => _PRRE,
+                'rep_id' => 'rep'.$prmid,
+                'send_label' => _SEND,
+                'style' => $conf['style'],
+                'textarea_html' => textarea($idp, 'text', $rcontent, $conf['name'], '15'),
+                'title_label' => _TITLE,
+                'title_value' => $rtitle,
+            ]);
         }
     }
     if ($obj) { return $cont; }
@@ -489,7 +497,7 @@ function addPrivateMessage() {
                 [$id] = $db->getSqlRow($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_privat WHERE uidin = :uidin AND uidout = :uidout ORDER BY id DESC LIMIT 1', ['uidin' => $uidin, 'uidout' => $uidout]));
                 $uname = filterText(substr($user[1], 0, 25));
                 $finishlink = $conf['homeurl'].'/index.php?name=account&amp;op=privat&amp;id='.$id.'#prmess';
-                $link = '<a href="'.$finishlink.'">'.$finishlink.'</a>';
+                $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $finishlink, 'target' => '', 'title' => '', 'label' => $finishlink]);
                 $subject = $conf['sitename'].' - '._PRIVAT;
                 $message = str_replace('[text]', sprintf(_PRNEWMAIL, $uname, $link), $conf['mtemp']);
                 addMail($user_email, $conf['adminmail'], $subject, $message, 0, 3);
@@ -534,20 +542,21 @@ function deletePrivateMessage() {
 
 # Render the favorites toggle button for an item (on/off/limit-reached state)
 function getFavoriteButton(?int $fid, string $mod): string {
-    global $db, $conf, $user;
+    global $db, $conf, $user, $tpl;
     $fid = (int)$fid;
     $uid = (is_user()) ? intval($user[0]) : 0;
     if ($conf['favorites']['favact'] && $uid && $fid > 0) {
         [$fav] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid AND fid = :fid AND modul = :modul', ['uid' => $uid, 'fid' => $fid, 'modul' => $mod]));
         if ($fav) {
-            $content = '<span title="'._FAVOR.'" class="sl_favor sl_favor_on"></span>';
+            $content = $tpl->getHtmlFrag('account-favorite-on', ['label' => _FAVOR]);
         } else {
             [$fav_num] = $db->getSqlRow($db->getSqlQuery('SELECT COUNT(id) FROM '.PREFIX_DB.'_favorites WHERE uid = :uid', ['uid' => $uid]));
             if ($fav_num >= $conf['favorites']['favorites']) {
-                $fav_exit = sprintf(_FAVOR_EXIT, $conf['favorites']['favorites']);
-                $content = '<span title="'.$fav_exit.'" class="sl_favor sl_favor_off"></span>';
+                $content = $tpl->getHtmlFrag('account-favorite-off', ['label' => sprintf(_FAVOR_EXIT, $conf['favorites']['favorites'])]);
             } else {
-                $content = '<span id="rep'.$fid.$mod.'"><a href="index.php?go=1&amp;op=addFavorite&amp;id='.$fid.'&amp;mod='.$mod.'" hx-get="index.php?go=1&amp;op=addFavorite&amp;id='.$fid.'&amp;mod='.$mod.'" hx-target="#rep'.$fid.$mod.'" hx-swap="outerHTML" hx-push-url="false" title="'._FAVOR_ADD.'" class="sl_favor"></a></span>';
+                $rep_id = 'rep'.$fid.$mod;
+                $url = 'index.php?go=1&amp;op=addFavorite&amp;id='.$fid.'&amp;mod='.$mod;
+                $content = $tpl->getHtmlFrag('account-favorite-add', ['rep_id' => $rep_id, 'url' => $url, 'title' => _FAVOR_ADD]);
             }
         }
     }
@@ -645,20 +654,18 @@ function getFavoriteList(int $obj = 0): string {
     }
     $cont = $tpl->getHtmlFrag('alert', ['text' => $favinfo, 'meta' => '', 'type' => $fstatus, 'is_warn' => $fstatus !== 'info']);
     if ($ffmassiv) {
-        $cont .= '<table class="sl_table_list"><thead class="sl_table_list_head"><tr><th>'._ID.'</th><th>'._TITLE.'</th><th>'._FUNCTIONS.'</th></tr></thead><tbody class="sl_table_list_body">';
+        $rows_html = '';
         foreach ($ffmassiv as $key => $val) {
             $id = $val[0];
             $fid = $val[1];
             $modul = $val[2];
             $title = $val[3];
             $surl = 'index.php?name='.$modul.'&amp;op=view&amp;id='.$fid;
-            $cont .= '<tr id="'.$a.'">'
-            .'<td><a href="#'.$a.'" title="'.$a.'" class="sl_pnum">'.$a.'</a></td>'
-            .'<td><a href="'.$surl.'" title="'.$title.'">'.cutstr($title, 100).'</a></td>'
-            .'<td>'.add_menu('<a href="index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'" title="'._SHOW.'">'._SHOW.'</a>||<a href="index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'" rel="sidebar" title="'.$title.'">'._S_FAVORITEN.'</a>||<a href="index.php?go=1&amp;op=deleteFavorite&amp;id='.$id.'" hx-get="index.php?go=1&amp;op=deleteFavorite&amp;id='.$id.'" hx-target="#repfavorliste" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>').'</td>';
+            $func = add_menu('<a href="'.$surl.'" title="'._SHOW.'">'._SHOW.'</a>||<a href="'.$surl.'" rel="sidebar" title="'.$title.'">'._S_FAVORITEN.'</a>||<a href="index.php?go=1&amp;op=deleteFavorite&amp;id='.$id.'" hx-get="index.php?go=1&amp;op=deleteFavorite&amp;id='.$id.'" hx-target="#repfavorliste" hx-swap="innerHTML" hx-push-url="false" title="'._DELETE.'">'._DELETE.'</a>');
+            $rows_html .= $tpl->getHtmlFrag('account-favorites-row', ['row_id' => $a, 'url' => $surl, 'title' => $title, 'label' => cutstr($title, 100), 'func_html' => $func]);
             $a++;
         }
-        $cont .= '</tbody></table>';
+        $cont .= $tpl->getHtmlFrag('account-favorites-table', ['col_id' => _ID, 'col_title' => _TITLE, 'col_func' => _FUNCTIONS, 'rows_html' => $rows_html]);
         $numpages = ceil($fav_num / $newlistnum);
         $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['nump'], $cid, '0', 1, 'getFavoriteList', 'favorliste', 0, '', '');
     } else {

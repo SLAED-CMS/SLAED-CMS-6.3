@@ -281,8 +281,8 @@ function view(): void {
         if ($conf['news']['viewcat'])
             $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
         $fields = fields_out($field, $conf['name']);
-        $fields = ($fields) ? '<br><br>'.$fields : '';
-        $text = (!$bodytext) ? $hometext.$fields : $hometext.'<br><br>'.$bodytext.$fields;
+        $fields = ($fields) ? $tpl->getHtmlFrag('br-br', []).$fields : '';
+        $text = (!$bodytext) ? $hometext.$fields : $hometext.$tpl->getHtmlFrag('br-br', []).$bodytext.$fields;
         $conpag = explode('[pagebreak]', $text);
         $pageno = count($conpag);
         if ($pag > $pageno) $pag = $pageno;
@@ -295,7 +295,7 @@ function view(): void {
         $iso = ($conf['news']['date']) ? date('c', strtotime($time)) : '';
         $rating = getRatingAsync(1, $id, $conf['name'], $ratings, $score, '');
         $favorites = getFavoriteButton($id, $conf['name']);
-        $voting = ($vote) ? '<div id="rep'.$conf['name'].'">'.getVotingView($vote, $conf['name']).'</div><hr>' : '';
+        $voting = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($vote, $conf['name'])]) : '';
         $ask = str_replace(["\\", "'"], ["\\\\", "\\'"], _DELETE.' &quot;'.$title.'&quot;?');
         $cont .= getTplContentView([
             'is_moder' => is_moder($conf['name']),
@@ -427,7 +427,7 @@ function add(): void {
             'username' => is_user() ? filterText(substr($user[1], 0, 25)) : '',
             'postname' => $postname,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'],'<option value="">'._HOMECAT.'</option>'),
+            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], $tpl->getHtmlFrag('form-option', ['value' => '', 'selected' => '', 'label' => _HOMECAT])),
             'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '5', _TEXT, '1'),
             'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
             'fields' => fields_in($field, $conf['name']),
