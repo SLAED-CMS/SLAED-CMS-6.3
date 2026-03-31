@@ -162,7 +162,7 @@ function add(): void {
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 1,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', $stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if ($desc) $cont .= preview($name, $desc, '', '', 'auto_links');
     $rows = $tpl->getHtmlFrag('admin-auto-links-add-rows', [
         'desc_html' => textarea('1', 'desc', $desc, 'auto_links', '5', _A_LINKS_TEXT, '1'),

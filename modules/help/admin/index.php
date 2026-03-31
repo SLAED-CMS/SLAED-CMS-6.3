@@ -76,14 +76,14 @@ function view(): void {
         $fields = ($fields) ? '<br><br>'.$fields : '';
         $text = $hometext.$fields;
         $post = $nick ? user_info($nick) : _ANONYM;
-        $post = '<span title="'._POSTEDBY.'" class="sl_post">'.$post.'</span>';
-        $date = '<span title="'._CHNGSTORY.'" class="sl_date">'.format_time($time, _TIMESTRING).'</span>';
-        $comm = ($a) ? '<a href="#'.$id.'" title="'._MESSAGE.': '.$a.'" class="sl_pnum">'.$a.'</a>' : '';
+        $post = getTplSpan('sl_post', $post, _POSTEDBY);
+        $date = getTplSpan('sl_date', format_time($time, _TIMESTRING), _CHNGSTORY);
+        $comm = ($a) ? getTplAdminTextLink('#'.$id, (string)$a, '', _MESSAGE.': '.$a, 'sl_pnum') : '';
         $rating = ($haid && $huid != $haid) ? getRatingAsync(0, $id, 'help', $ratings, $score, '') : '';
         if (!$pid) {
             $cdesc = ($cdesc) ? $cdesc : $ctitle;
-            $ctitle = ($ctitle) ? '<span title="'.$cdesc.'" class="sl_cat">'.cutstr($ctitle, 15).'</span>' : '';
-            $reads =  '<span title="'._READS.'" class="sl_views">'.$counter.'</span>';
+            $ctitle = ($ctitle) ? getTplSpan('sl_cat', cutstr($ctitle, 15), $cdesc) : '';
+            $reads = getTplSpan('sl_views', (string)$counter, _READS);
         } else {
             $ctitle = '';
             $reads =  '';
@@ -140,7 +140,7 @@ function add(): void {
     $status = getVar('post', 'status', 'num', 0) ? getVar('post', 'status', 'num', 0) : ($status ?? 0);
     setHead();
     $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
     $rows = $tpl->getHtmlFrag('admin-help-add-rows', [
         'cat_html' => getcat('help', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),

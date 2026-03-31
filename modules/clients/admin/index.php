@@ -69,10 +69,7 @@ function add(): void {
     }
     setHead();
     $cont = setAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stop) {
-        $stopText = is_array($stop) ? implode('<br>', $stop) : $stop;
-        $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stopText]);
-    }
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     $hide = getTplHiddenInput('name', 'clients');
     $rows = $tpl->getHtmlFrag('admin-clients-add-rows', [

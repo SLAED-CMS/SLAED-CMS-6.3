@@ -204,7 +204,7 @@ function clientadd(): void {
         'subtab' => 1,
         'legacy' => 3,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $cppi = 0;
     $frows = '';
     if ($partner) {
@@ -456,7 +456,7 @@ function productadd(): void {
         'subtab' => 1,
         'legacy' => 2,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $ptextpre = ($vote)
         ? $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($vote, 'shop')]).getTplHrLine().$ptext
         : $ptext;
@@ -712,7 +712,7 @@ function partneradd(): void {
         'subtab' => 1,
         'legacy' => 3,
     ]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $parrows = '';
     if ($paid) {
         $nick = ($nick) ? user_info($nick) : _ANONYM;

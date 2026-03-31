@@ -63,7 +63,7 @@ function news(): void {
                 'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
             ]));
         }
-        $selms = _CHECKOP.': '.edit_list('news', 'typ', '').' <input type="submit" value="'._OK.'" class="sl_but_blue">';
+        $selms = _CHECKOP.': '.edit_list('news', 'typ', '').' '.getTplAdminSubmitButton(_OK);
         $numpt = setArticleNumbers('pagenum', '', $anum, $field, 'id', '_news', '', 'status = \''.$status.'\'', $anump);
         $bottom = $tpl->getHtmlFrag('list-bottom', ['pager' => $numpt, 'select' => $selms]);
         $cont .= getTplAdminListForm(getTplAdminTable($head, $rows), $bottom, $hide);
@@ -111,7 +111,7 @@ function add(): void {
     }
     setHead();
     $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => implode('<br>', (array)$stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $homepre = ($vote) ? '<div id="repnews">'.getVotingView($vote, 'news').'</div><hr>'.$hometext : $hometext;
     if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
@@ -120,23 +120,21 @@ function add(): void {
     $asso = '';
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parent, title');
     if ($db->getSqlRowCount($result2) > 0) {
-        $asso = '<table class="sl_form"><tr>';
+        $rows_html = '<tr>';
         $a = 0;
         while ([$cid, $ctitle] = $db->getSqlRow($result2)) {
-            if ($a == 2) {
-                $asso .= '</tr><tr>';
-                $a = 0;
-            }
+            if ($a === 2) { $rows_html .= '</tr><tr>'; $a = 0; }
             $check = '';
             if ($associated && is_array($associated)) {
                 foreach ($associated as $val) {
                     if ((int)$val === (int)$cid) $check = ' checked';
                 }
             }
-            $asso .= '<td><input type="checkbox" name="associated[]" value="'.$cid.'"'.$check.'> '.$ctitle.'</td>';
+            $rows_html .= $tpl->getHtmlFrag('admin-news-asso-cell', ['cid' => $cid, 'ctitle' => $ctitle, 'checked' => $check]);
             $a++;
         }
-        $asso .= '</tr></table>';
+        $rows_html .= '</tr>';
+        $asso = $tpl->getHtmlFrag('admin-news-asso-table', ['rows_html' => $rows_html]);
     }
     $rows .= $tpl->getHtmlFrag('admin-news-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
