@@ -644,6 +644,72 @@ function getTplAdminHintLabel(string $label, string $hint): string {
     return $label.':<div class="sl_small">'.$hint.'</div>';
 }
 
+# Return a standalone sl_small note div for admin form rows that have no label
+function getTplAdminSmallNote(string $text): string {
+    return '<div class="sl_small">'.$text.'</div>';
+}
+
+# Join non-empty stop/error messages into a single HTML string separated by line breaks
+function getStopText(array $stop): string {
+    return implode('<br>', array_filter($stop, 'strlen'));
+}
+
+# Return an anchor tag for use inside raw HTML slots such as alert text or tooltip content
+# href must be pre-encoded by the caller; label and optional title/class are HTML-escaped here
+function getTplAdminTextLink(string $href, string $label, string $target = '', string $title = '', string $class = ''): string {
+    $attrs = '';
+    if ($class !== '') $attrs .= ' class="'.htmlspecialchars($class, ENT_QUOTES, 'UTF-8').'"';
+    if ($target !== '') $attrs .= ' target="'.htmlspecialchars($target, ENT_QUOTES, 'UTF-8').'"';
+    if ($title !== '') $attrs .= ' title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"';
+    return '<a href="'.$href.'"'.$attrs.'>'.htmlspecialchars($label, ENT_QUOTES, 'UTF-8').'</a>';
+}
+
+# Return one line-break-prefixed key-value pair for building tooltip content_html strings
+function getTplAdminTipLine(string $key, string $val): string {
+    return '<br>'.$key.': '.$val;
+}
+
+# Return one label-value line with a trailing line break for building info block content strings
+function getTplAdminInfoLine(string $label, string $value): string {
+    return $label.': '.$value.'<br>';
+}
+
+# Build the head_html string for getTplAdminTable from an array of column labels
+# Each entry is either a plain string (sortable) or [label, 'nosort'] (non-sortable column)
+function getTplAdminTableHead(array $cols): string {
+    $html = '';
+    foreach ($cols as $col) {
+        if (is_array($col)) {
+            $html .= '<th data-sort-method="none">'.$col[0].'</th>';
+        } else {
+            $html .= '<th>'.$col.'</th>';
+        }
+    }
+    return $html;
+}
+
+# Build the cells_html string for getTplAdminTableRow from an array of already-rendered cell contents
+function getTplAdminTableCells(array $cells): string {
+    $html = '';
+    foreach ($cells as $cell) {
+        $html .= '<td>'.$cell.'</td>';
+    }
+    return $html;
+}
+
+# Return an inline span with a CSS class and optional title attribute; raw_content is not escaped
+function getTplSpan(string $class, string $raw_content, string $title = ''): string {
+    $t = ($title !== '') ? ' title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"' : '';
+    return '<span class="'.htmlspecialchars($class, ENT_QUOTES, 'UTF-8').'"'.$t.'>'.$raw_content.'</span>';
+}
+
+# Return an inline status badge span (sl_green / sl_red) for use inside raw HTML slots
+function getTplAdminStatusBadge(bool $state, string $yes, string $no): string {
+    $cls = $state ? 'sl_green' : 'sl_red';
+    $lbl = htmlspecialchars($state ? $yes : $no, ENT_QUOTES, 'UTF-8');
+    return '<span class="'.$cls.'">'.$lbl.'</span>';
+}
+
 # Return an inline language hint string for admin title tips; empty string when multilingual is off or lang is empty
 function getTplAdminLangHint(string $lang): string {
     global $conf;
