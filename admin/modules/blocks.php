@@ -21,7 +21,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
     $rows = getTplAdminFormRow(getTplAdminHintLabel(_TITLE, _ADDCONST), getTplTextInput('title', '', 'sl_form', 'maxlength="60" placeholder="'._TITLE.'" required'));
     $rows .= getTplAdminFormRow(_RSSFILE.':', getTplTextInput('url', '', 'sl_form', 'placeholder="'._RSSFILE.'"'));
-    $rows .= getTplAdminFormRow('<div class="sl_small">'._RSSLINESINFO.' '._RSSINFO.'</div>', getTplSelect('headline', getTplOption('0', _CUSTOM, true).rss_select(), 'sl_form'));
+    $rows .= getTplAdminFormRow(getTplAdminSmallNote(_RSSLINESINFO.' '._RSSINFO), getTplSelect('headline', getTplOption('0', _CUSTOM, true).rss_select(), 'sl_form'));
     $rows .= getTplAdminFormRow(getTplAdminHintLabel(_REFRESHTIME, _REFINFO), getTplBlockRefresh());
     $bfopts = getTplOption('', _NONE, true);
     $files = scandir('blocks');

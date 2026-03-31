@@ -259,7 +259,11 @@ function add(): void {
         .getTplAdminFormRow(_BIRTHDAY.':', datetime(2, 'birth', $birth, 10, 'sl_form'))
         .getTplAdminFormRow(_GENDER.':', get_gender('gender', $gender, 'sl_form'));
     $check = (getVar('cookie', 'sl_close_9', 'num') == 0) ? '' : ' checked';
-    $mailblock = '<div id="sl_close_9">'.getTplAdminForm('', getTplAdminFormRow(getTplAdminHintLabel(_MAIL_TEXT, _MAIL_PASS_INFO), textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''), 'sl_form')).'</div>';
+    $mailblock = $tpl->getHtmlFrag('admin-admins-mail-panel', [
+        'mail_info'    => _MAIL_PASS_INFO,
+        'mail_label'   => _MAIL_TEXT,
+        'textarea_html' => textarea('3', 'mailtext', replace_break(str_replace('[text]', _FOLLOWINGMEM."\n\n"._NICKNAME.': [login]\n'._PASSWORD.': [pass]', $conf['mtemp'])), 'account', '10', _MAIL_TEXT, ''),
+    ]);
     $rows .= $tpl->getHtmlFrag('admin-account-add-tail-rows', [
         'check_attr' => $check,
         'fields_html' => fields_in($field, 'account'),

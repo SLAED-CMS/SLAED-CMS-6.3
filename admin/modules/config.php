@@ -77,9 +77,9 @@ function config(): void {
         $opts .= getTplOption((string)$ival, '0.'.$ival, $ival == $conf['quality']);
         $ival++;
     }
-    $rows .= getTplAdminFormRow(_CAPQUALITY.': <div class="sl_small">'._CAPQUALITYI.'</div>', getTplSelect('quality', $opts, 'sl_conf'));
-    $rows .= getTplAdminFormRow(_CAPKEY.': <div class="sl_small">'._CAPKEYI.'</div>', getTplTextInput('capkey', (string)$conf['capkey'], 'sl_conf', 'maxlength="255" placeholder="'._CAPKEY.'"'));
-    $rows .= getTplAdminFormRow(_CAPSECKEY.': <div class="sl_small">'._CAPKEYI.'</div>', getTplTextInput('capsec', (string)$conf['capsec'], 'sl_conf', 'maxlength="255" placeholder="'._CAPSECKEY.'"'));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_CAPQUALITY, _CAPQUALITYI), getTplSelect('quality', $opts, 'sl_conf'));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_CAPKEY, _CAPKEYI), getTplTextInput('capkey', (string)$conf['capkey'], 'sl_conf', 'maxlength="255" placeholder="'._CAPKEY.'"'));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_CAPSECKEY, _CAPKEYI), getTplTextInput('capsec', (string)$conf['capsec'], 'sl_conf', 'maxlength="255" placeholder="'._CAPSECKEY.'"'));
     $rows .= getTplAdminFormWide(getTplHrLine());
     $rows .= getTplAdminFormRow(_EDITOR.':', redaktor('2', 'redaktor', 'sl_conf', $conf['redaktor'], 0));
     $list = timezone_identifiers_list();
@@ -130,9 +130,9 @@ function config(): void {
     $rows .= getTplAdminFormRow(_SEOCTITLE, radio_form($conf['ctitle'] ?? 1, 'ctitle'));
     $rows .= getTplAdminFormWide(getTplHrLine());
     $rows .= getTplAdminFormRow(_OGRAPH, radio_form($conf['agraph'] ?? 1, 'agraph'));
-    $rows .= getTplAdminFormRow(_OGRAPHT.'<div class="sl_small">'._TPLVARS.'</div>', getTplTextarea('graph', $conf['graph'] ?? '', 'sl_conf', 'placeholder="'._OGRAPHT.'"', 65, 8));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_OGRAPHT, _TPLVARS), getTplTextarea('graph', $conf['graph'] ?? '', 'sl_conf', 'placeholder="'._OGRAPHT.'"', 65, 8));
     $rows .= getTplAdminFormRow(_SCHEMA, radio_form($conf['aschema'] ?? 1, 'aschema'));
-    $rows .= getTplAdminFormRow(_SCHEMAT.'<div class="sl_small">'._TPLVARS.'</div>', getTplTextarea('schema', $conf['schema'] ?? '', 'sl_conf', 'placeholder="'._SCHEMAT.'"', 65, 15));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_SCHEMAT, _TPLVARS), getTplTextarea('schema', $conf['schema'] ?? '', 'sl_conf', 'placeholder="'._SCHEMAT.'"', 65, 15));
     $tabb = getTplAdminTabContent(getTplAdminTabName('config', 1), getTplAdminRowsTable($rows));
 
     $list = is_dir('lang') ? scandir('lang') : [];
@@ -160,7 +160,7 @@ function config(): void {
         'sl_conf'));
     $rows .= getTplAdminFormRow(_CENSORREPLACE.':', getTplTextInput('censor_r', (string)$conf['censor_r'], 'sl_conf', 'maxlength="10" placeholder="'._CENSORREPLACE.'" required'));
     $rows .= getTplAdminFormRow(getTplAdminHintLabel(_CENSOR, _NOKOMA), getTplTextarea('censor_l', $conf['censor_l'], 'sl_conf', 'placeholder="'._CENSOR.'" required'));
-    $rows .= getTplAdminFormRow(_CLICABLE.'<div class="sl_small">'._CLICABLEINFO.'</div>', radio_form($conf['clickable'], 'clickable'));
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_CLICABLE, _CLICABLEINFO), radio_form($conf['clickable'], 'clickable'));
     $tabd = getTplAdminTabContent(getTplAdminTabName('config', 3), getTplAdminRowsTable($rows));
 
     $rows = '';
