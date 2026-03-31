@@ -28,7 +28,7 @@ function news(): void {
     if ($db->getSqlRowCount($result) > 0) {
         $hide = getTplHiddenInput('name', 'news').getTplHiddenInput('op', 'actions').getTplHiddenInput('refer', '1');
         $head = $tpl->getHtmlFrag('admin-article-list-head', [
-            'checkall_html' => '<th data-sort-method="none"><input type="checkbox" name="markcheck" id="markcheck" title="'._CHECKALL.'" OnClick="CheckBox(\'#markcheck\', \'.sl_check\')"></th>',
+            'checkall_html' => $tpl->getHtmlFrag('th-nosort', ['content' => $tpl->getHtmlFrag('form-checkall', ['title' => _CHECKALL])]),
             'functions_label' => _FUNCTIONS,
             'id_label' => _ID,
             'postedby_label' => _POSTEDBY,
@@ -56,11 +56,11 @@ function news(): void {
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
                 'actions_html' => $acts,
-                'checkbox_html' => '<td><input type="checkbox" name="id[]" class="sl_check" value="'.$id.'"></td>',
+                'checkbox_html' => $tpl->getHtmlFrag('td-check', ['id' => (string)$id]),
                 'id_text' => (string)$id,
                 'post_html' => $post,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $selms = _CHECKOP.': '.edit_list('news', 'typ', '').' '.getTplAdminSubmitButton(_OK);
@@ -112,7 +112,7 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
-    $homepre = ($vote) ? '<div id="repnews">'.getVotingView($vote, 'news').'</div><hr>'.$hometext : $hometext;
+    $homepre = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'repnews', 'content' => getVotingView($vote, 'news')]).$hometext : $hometext;
     if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _PAGENOTE]);
     $hide = getTplHiddenInput('name', 'news');
@@ -120,10 +120,10 @@ function add(): void {
     $asso = '';
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parent, title');
     if ($db->getSqlRowCount($result2) > 0) {
-        $rows_html = '<tr>';
+        $rows_html = $tpl->getHtmlFrag('tr-open', []);
         $a = 0;
         while ([$cid, $ctitle] = $db->getSqlRow($result2)) {
-            if ($a === 2) { $rows_html .= '</tr><tr>'; $a = 0; }
+            if ($a === 2) { $rows_html .= $tpl->getHtmlFrag('tr-close', []).$tpl->getHtmlFrag('tr-open', []); $a = 0; }
             $check = '';
             if ($associated && is_array($associated)) {
                 foreach ($associated as $val) {
@@ -133,7 +133,7 @@ function add(): void {
             $rows_html .= $tpl->getHtmlFrag('admin-news-asso-cell', ['cid' => $cid, 'ctitle' => $ctitle, 'checked' => $check]);
             $a++;
         }
-        $rows_html .= '</tr>';
+        $rows_html .= $tpl->getHtmlFrag('tr-close', []);
         $asso = $tpl->getHtmlFrag('admin-news-asso-table', ['rows_html' => $rows_html]);
     }
     $rows .= $tpl->getHtmlFrag('admin-news-add-rows', [
@@ -143,7 +143,7 @@ function add(): void {
         'associated_label_html' => getTplAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI),
         'body_html' => textarea('2', 'bodytext', $bodytext, 'news', '15', _ENDTEXT, '0'),
         'body_label' => _ENDTEXT.':',
-        'cat_html' => getcat('news', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_html' => getcat('news', $cat, 'cat', 'sl_form', getTplOption('', _HOMECAT)),
         'cat_label' => _CATEGORY.':',
         'field_html' => fields_in($field, 'news'),
         'fix_html' => radio_form($fix, 'fix'),

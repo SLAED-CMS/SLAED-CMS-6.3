@@ -44,7 +44,7 @@ function content(): void {
                 'id_text' => (string)$id,
                 'reads_text' => (string)$counter,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.'<br>'._ORTYPEURL.': '.$conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id, $title, cutstr($title, 50)),
+                'title_html' => adminTitleTipLabel(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.getTplAdminTipLine(_ORTYPEURL, $conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id), $title, cutstr($title, 50)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -74,7 +74,7 @@ function add(): void {
     setHead();
     $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    $fields = ($field) ? '<br><br>'.fields_out($field, 'content') : '';
+    $fields = ($field) ? $tpl->getHtmlFrag('br-br', []).fields_out($field, 'content') : '';
     if ($body) $cont .= preview($title, $body, '', $field, 'content');
     $rows = '';
     $rows .= getTplAdminFormRow(_TITLE.':', getTplTextInput('title', $title, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'));

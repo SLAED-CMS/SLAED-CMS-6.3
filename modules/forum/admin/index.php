@@ -76,7 +76,7 @@ function config(): void {
         '_c35' => _C_35,
         'pnum' => $conf['forum']['pnum'] ?? 0,
         '_fo5' => _FO_5,
-        's_recycle' => getcat('forum', $conf['forum']['recycle'] ?? 0, 'recycle', 'sl_conf', '<option value="0">'._NO.'</option>'),
+        's_recycle' => getcat('forum', $conf['forum']['recycle'] ?? 0, 'recycle', 'sl_conf', getTplOption('0', _NO)),
         '_sort' => _SORT,
         's_sort' => $sort_sel,
         '_allowanonpost' => _ALLOWANONPOST,

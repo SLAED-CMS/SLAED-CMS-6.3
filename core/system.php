@@ -4654,9 +4654,7 @@ function categorySelect(string $selectName, string $class, string $title, string
 }
 
 function categorySelectOption(string $value, string $label, bool $selected = false): string {
-    return '<option value="'.htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'
-        .($selected ? ' selected' : '')
-        .'>'.$label.'</option>';
+    return getTplOption($value, $label, $selected);
 }
 
 function breadcrumbLink(string $href, string $title, string $label): string {
@@ -5001,23 +4999,28 @@ function add_menu(string $links): string {
 
 # Format title tips
 function title_tip(mixed $data): string {
-    $data = is_array($data) ? implode('<br>', $data) : $data;
-    $tip = '<nav class="sl_tip"><div>'.$data.'</div></nav>';
-    return $tip;
+    global $tpl;
+    $content = is_array($data) ? implode($tpl->getHtmlFrag('br', []), $data) : $data;
+    return $tpl->getHtmlFrag('title-tip', ['content' => $content]);
 }
 
 # Admin status
 function ad_status(mixed $link, mixed $id, string $typ = '', string $text = ''): string {
+    global $tpl;
     if ($typ) {
-        $cont = ($id) ? '<span title="'._PROLD.'" class="sl_n_act"></span>' : '<span title="'._PROUTNEW.'" class="sl_n_deact"></span>';
+        return ($id)
+            ? $tpl->getHtmlFrag('span-btn', ['title' => _PROLD, 'class' => 'sl_n_act', 'label' => ''])
+            : $tpl->getHtmlFrag('span-btn', ['title' => _PROUTNEW, 'class' => 'sl_n_deact', 'label' => '']);
     } elseif ($link) {
         $deact = ($text) ? _DEACTIVATE.': '.$text : _DEACTIVATE;
         $act = ($text) ? _ACTIVATE.': '.$text : _ACTIVATE;
-        $cont = ($id == 1) ? '<a href="'.$link.'" title="'.$deact.'">'.$deact.'</a>' : '<a href="'.$link.'" title="'.$act.'">'.$act.'</a>';
-    } else {
-        $cont = ($id == 1) ? '<span title="'._ACT.'" class="sl_n_act"></span>' : '<span title="'._DEACT.'" class="sl_n_deact"></span>';
+        return ($id == 1)
+            ? $tpl->getHtmlFrag('link-btn', ['href' => $link, 'title' => $deact, 'class' => '', 'label' => $deact])
+            : $tpl->getHtmlFrag('link-btn', ['href' => $link, 'title' => $act, 'class' => '', 'label' => $act]);
     }
-    return $cont;
+    return ($id == 1)
+        ? $tpl->getHtmlFrag('span-btn', ['title' => _ACT, 'class' => 'sl_n_act', 'label' => ''])
+        : $tpl->getHtmlFrag('span-btn', ['title' => _DEACT, 'class' => 'sl_n_deact', 'label' => '']);
 }
 
 # Add mailto

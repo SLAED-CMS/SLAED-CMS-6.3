@@ -311,7 +311,7 @@ function search(): void {
                 'date_text' => format_time((string)$time, _TIMESTRING),
                 'hits_text' => (string)intval($hits),
                 'modul_html' => $hmod,
-                'word_html' => adminTitleTip(_MODUL.': '.htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8').'<br>'._DATE.': '.format_time((string)$time, _TIMESTRING)).$hword,
+                'word_html' => adminTitleTip(_MODUL.': '.htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8').getTplAdminTipLine(_DATE, format_time((string)$time, _TIMESTRING))).$hword,
             ]));
         }
         $html = getTplAdminTable($head, $rows);

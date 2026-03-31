@@ -57,7 +57,7 @@ function faq(): void {
                 'id_text' => (string)$id,
                 'post_html' => $post,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -98,7 +98,7 @@ function add(): void {
         'acomm_label' => _COMMENTS.':',
         'answer_html' => textarea('1', 'hometext', $hometext, 'faq', '10', _ANSWER, '1'),
         'answer_label' => _ANSWER.':',
-        'cat_html' => getcat('faq', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_html' => getcat('faq', $cat, 'cat', 'sl_form', getTplOption('', _HOMECAT)),
         'cat_label' => _CATEGORY.':',
         'ihome_html' => radio_form($ihome, 'ihome'),
         'ihome_label' => _PUBHOME,

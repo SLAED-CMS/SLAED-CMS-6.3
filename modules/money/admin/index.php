@@ -52,7 +52,7 @@ function money(): void {
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-money-list-row', [
                 'actions_html' => $acts,
                 'date_text' => format_time($time, _TIMESTRING),
-                'email_html' => adminTitleTip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
+                'email_html' => adminTitleTip($infos.$tpl->getHtmlFrag('br', [])._COMMENT.': '.$note.$tpl->getHtmlFrag('br-br', [])._BROWSER.': '.$agent).anti_spam($email),
                 'id_text' => (string)$id,
                 'ip_html' => user_geo_ip($ip, 4),
                 'status_html' => ad_status('', $status),
@@ -94,7 +94,7 @@ function add(): void {
         $infos = '';
         foreach ($form as $val) {
             if ($val != '') {
-                $infos .= $val.': '.($intro[$i] ?? '').'<br>';
+                $infos .= getTplAdminInfoLine($val, $intro[$i] ?? '');
                 $i++;
             }
         }
@@ -197,7 +197,7 @@ function invoice(): void {
     $infos = '';
     foreach ($form as $val) {
         if ($val != '') {
-            $infos .= $val.': '.($intro[$i] ?? '').'<br>';
+            $infos .= getTplAdminInfoLine($val, $intro[$i] ?? '');
             $i++;
         }
     }
@@ -210,7 +210,7 @@ function invoice(): void {
 }
 
 function activate(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_money SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
@@ -218,7 +218,7 @@ function activate(): void {
         [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
         $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._MONEY;
-        $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
+        $msg = ($conf['sitename'] ?? '').' - '._MONEY.$tpl->getHtmlFrag('br-br', []);
         $msg .= filterReplaceText(filterMarkdown($conf['money']['sendinfo'] ?? '', 'all', false), 'all');
         addMail($email, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=money&send=1');

@@ -44,7 +44,7 @@ function info(): void {
         'lbl_tip' => _RSS_INFO_TIP,
         'mods_options' => $modsOptions,
         'lbl_categories' => _CATEGORIES,
-        'catselect' => getcat($mod, $cat, 'cat', $conf['style'], '<option value="" selected>'._RSS_INFO_ALL.'</option>'),
+        'catselect' => getcat($mod, $cat, 'cat', $conf['style'], getTplOption('', _RSS_INFO_ALL, true)),
         'lbl_amount' => _RSS_INFO_MENG,
         'num_options' => $numOptions,
         'lbl_code' => _CODE,

@@ -386,6 +386,33 @@ function getTplFormSelect(string $name, string $opts, string $clas = '', string 
     ]);
 }
 
+# Render a search result title link with highlighted text and new-badge
+function getTplSearchResultTitle(string $url, string $title, string $word, string $time): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('search-result-title', [
+        'url'               => $url,
+        'title'             => $title,
+        'highlighted_title' => filterTextHighlight($title, $word),
+        'new_badge'         => new_graphic($time),
+    ]);
+}
+
+# Render a centered submit row inside a form table
+function getTplFormCenterRow(string $content): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('form-center-row', ['content_html' => $content]);
+}
+
+# Render one select option with optional selected state
+function getTplSelectOption(string $value, string $label, bool $selected = false): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('form-option', [
+        'value'    => $value,
+        'label'    => $label,
+        'selected' => $selected ? ' selected' : '',
+    ]);
+}
+
 # Render one forum topic icon link from href, topic title, icon class and optional status label
 function getTplForumIcon(string $href, string $title, string $icon, string $lbl = ''): string {
     global $tpl;
@@ -641,48 +668,58 @@ function getTplBlockView(int $selected = 0): string {
 
 # Return a label string with an inline sl_small help-text div for admin form rows
 function getTplAdminHintLabel(string $label, string $hint): string {
-    return $label.':<div class="sl_small">'.$hint.'</div>';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-hint-label', ['label' => $label, 'hint' => $hint]);
 }
 
 # Return a standalone sl_small note div for admin form rows that have no label
 function getTplAdminSmallNote(string $text): string {
-    return '<div class="sl_small">'.$text.'</div>';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-small-note', ['text' => $text]);
 }
 
 # Join non-empty stop/error messages into a single HTML string separated by line breaks
 function getStopText(array $stop): string {
-    return implode('<br>', array_filter($stop, 'strlen'));
+    global $tpl;
+    $sep = $tpl->getHtmlFrag('br', []);
+    return implode($sep, array_filter($stop, 'strlen'));
 }
 
 # Return an anchor tag for use inside raw HTML slots such as alert text or tooltip content
 # href must be pre-encoded by the caller; label and optional title/class are HTML-escaped here
 function getTplAdminTextLink(string $href, string $label, string $target = '', string $title = '', string $class = ''): string {
-    $attrs = '';
-    if ($class !== '') $attrs .= ' class="'.htmlspecialchars($class, ENT_QUOTES, 'UTF-8').'"';
-    if ($target !== '') $attrs .= ' target="'.htmlspecialchars($target, ENT_QUOTES, 'UTF-8').'"';
-    if ($title !== '') $attrs .= ' title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"';
-    return '<a href="'.$href.'"'.$attrs.'>'.htmlspecialchars($label, ENT_QUOTES, 'UTF-8').'</a>';
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-text-link', [
+        'href'   => $href,
+        'label'  => $label,
+        'cls'    => $class,
+        'target' => $target,
+        'title'  => $title,
+    ]);
 }
 
 # Return one line-break-prefixed key-value pair for building tooltip content_html strings
 function getTplAdminTipLine(string $key, string $val): string {
-    return '<br>'.$key.': '.$val;
+    global $tpl;
+    return $tpl->getHtmlFrag('br-line', ['label' => $key, 'value' => $val]);
 }
 
 # Return one label-value line with a trailing line break for building info block content strings
 function getTplAdminInfoLine(string $label, string $value): string {
-    return $label.': '.$value.'<br>';
+    global $tpl;
+    return $tpl->getHtmlFrag('info-line', ['label' => $label, 'value' => $value]);
 }
 
 # Build the head_html string for getTplAdminTable from an array of column labels
 # Each entry is either a plain string (sortable) or [label, 'nosort'] (non-sortable column)
 function getTplAdminTableHead(array $cols): string {
+    global $tpl;
     $html = '';
     foreach ($cols as $col) {
         if (is_array($col)) {
-            $html .= '<th data-sort-method="none">'.$col[0].'</th>';
+            $html .= $tpl->getHtmlFrag('th-nosort', ['content' => $col[0]]);
         } else {
-            $html .= '<th>'.$col.'</th>';
+            $html .= $tpl->getHtmlFrag('th', ['content' => $col]);
         }
     }
     return $html;
@@ -690,31 +727,35 @@ function getTplAdminTableHead(array $cols): string {
 
 # Build the cells_html string for getTplAdminTableRow from an array of already-rendered cell contents
 function getTplAdminTableCells(array $cells): string {
+    global $tpl;
     $html = '';
     foreach ($cells as $cell) {
-        $html .= '<td>'.$cell.'</td>';
+        $html .= $tpl->getHtmlFrag('td', ['content' => $cell]);
     }
     return $html;
 }
 
 # Return an inline span with a CSS class and optional title attribute; raw_content is not escaped
 function getTplSpan(string $class, string $raw_content, string $title = ''): string {
-    $t = ($title !== '') ? ' title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"' : '';
-    return '<span class="'.htmlspecialchars($class, ENT_QUOTES, 'UTF-8').'"'.$t.'>'.$raw_content.'</span>';
+    global $tpl;
+    return $tpl->getHtmlFrag('span-raw', ['class' => $class, 'content' => $raw_content, 'title' => $title]);
 }
 
 # Return an inline status badge span (sl_green / sl_red) for use inside raw HTML slots
 function getTplAdminStatusBadge(bool $state, string $yes, string $no): string {
-    $cls = $state ? 'sl_green' : 'sl_red';
-    $lbl = htmlspecialchars($state ? $yes : $no, ENT_QUOTES, 'UTF-8');
-    return '<span class="'.$cls.'">'.$lbl.'</span>';
+    global $tpl;
+    return $tpl->getHtmlFrag('span-btn', [
+        'class' => $state ? 'sl_green' : 'sl_red',
+        'label' => $state ? $yes : $no,
+        'title' => '',
+    ]);
 }
 
 # Return an inline language hint string for admin title tips; empty string when multilingual is off or lang is empty
 function getTplAdminLangHint(string $lang): string {
     global $conf;
     if ($conf['multilingual'] != 1) return '';
-    return '<br>'._LANGUAGE.': '.($lang ? getLangName($lang) : _ALL);
+    return getTplAdminTipLine(_LANGUAGE, $lang ? getLangName($lang) : _ALL);
 }
 
 # Render one money calculator form with a JS function name, to-currency label and currency code
@@ -759,31 +800,32 @@ function getTplAdminSection(string $label): string {
 
 # Render a <link rel="stylesheet"> tag for an external CSS file
 function getHtmlCssLink(string $href): string {
-    return '<link rel="stylesheet" href="'.$href.'">';
+    global $tpl;
+    return $tpl->getHtmlFrag('head-link-css', ['href' => $href]);
 }
 
 # Render an inline <style> block
 function getHtmlCssInline(string $css): string {
-    return '<style type="text/css">'.$css.'</style>';
+    global $tpl;
+    return $tpl->getHtmlFrag('style-inline', ['css' => $css]);
 }
 
 # Render a <script src="..."> tag, optionally with async attribute string ('async ' or '')
 function getHtmlScriptSrc(string $src, string $async = ''): string {
-    return '<script '.$async.'src="'.$src.'"></script>';
+    global $tpl;
+    return $tpl->getHtmlFrag('script-src', ['src' => $src, 'async' => $async]);
 }
 
 # Render an inline <script> block
 function getHtmlScriptInline(string $js): string {
-    return '<script>'.$js.'</script>';
+    global $tpl;
+    return $tpl->getHtmlFrag('script-inline', ['js' => $js]);
 }
 
 # Render a generic <link> head tag with optional type and title attributes
 function getHtmlHeadLink(string $rel, string $href, string $type = '', string $title = ''): string {
-    $tag = '<link rel="'.$rel.'"';
-    if ($type !== '') $tag .= ' type="'.$type.'"';
-    if ($title !== '') $tag .= ' title="'.htmlspecialchars($title, ENT_QUOTES, 'UTF-8').'"';
-    $tag .= ' href="'.$href.'">';
-    return $tag;
+    global $tpl;
+    return $tpl->getHtmlFrag('head-link-generic', ['rel' => $rel, 'href' => $href, 'type' => $type, 'title' => $title]);
 }
 
 # Render a safe link action item for getTplMenuItems()

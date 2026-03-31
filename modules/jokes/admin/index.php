@@ -57,7 +57,7 @@ function jokes(): void {
                 'id_text' => (string)$jokeid,
                 'post_html' => $post,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($date, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -91,7 +91,7 @@ function add(): void {
     if (!empty($joke)) $cont .= preview($title, $joke, '', '', 'all');
     $hide = getTplHiddenInput('name', 'jokes');
     $rows = $tpl->getHtmlFrag('admin-jokes-add-rows', [
-        'cat_html' => getcat('jokes', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_html' => getcat('jokes', $cat, 'cat', 'sl_form', getTplOption('', _HOMECAT)),
         'cat_label' => _CATEGORY.':',
         'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
         'date_label' => _CHNGSTORY.':',

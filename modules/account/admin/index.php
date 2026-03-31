@@ -91,7 +91,7 @@ function account(): void {
                 'email_html' => filterTextHighlight($mail, $chng),
                 'id_html' => filterTextHighlight($uid, $chng),
                 'ip_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng),
-                'nickname_html' => adminTitleTip(_HASH.': '.md5($agent).'<br>'._LAST_VISIT.': '.format_time($last, _TIMESTRING).'<br>'._SPEC_GROUP.': '.$sgroup.'<br>'._SITE.': '.filterTextHighlight($web,$chng).'<br>'._GENDER.': '.gender($gender).'<br>'._POINTS.': '.$point).filterTextHighlight(user_info($name), $chng),
+                'nickname_html' => adminTitleTip(_HASH.': '.md5($agent).getTplAdminTipLine(_LAST_VISIT, format_time($last, _TIMESTRING)).getTplAdminTipLine(_SPEC_GROUP, $sgroup).getTplAdminTipLine(_SITE, filterTextHighlight($web,$chng)).getTplAdminTipLine(_GENDER, gender($gender)).getTplAdminTipLine(_POINTS, $point)).filterTextHighlight(user_info($name), $chng),
                 'reg_text' => format_time($reg, _TIMESTRING),
             ]));
         }

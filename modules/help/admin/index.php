@@ -50,7 +50,7 @@ function help(): void {
                 'id_text' => (string)$id,
                 'post_html' => $post,
                 'status_html' => ad_status('', $stat),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -73,7 +73,7 @@ function view(): void {
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $title = ($title) ? $title : _MESSAGE.': '.$a;
         $fields = fields_out($field, 'help');
-        $fields = ($fields) ? '<br><br>'.$fields : '';
+        $fields = ($fields) ? $tpl->getHtmlFrag('br-br', []).$fields : '';
         $text = $hometext.$fields;
         $post = $nick ? user_info($nick) : _ANONYM;
         $post = getTplSpan('sl_post', $post, _POSTEDBY);
@@ -143,7 +143,7 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
     $rows = $tpl->getHtmlFrag('admin-help-add-rows', [
-        'cat_html' => getcat('help', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_html' => getcat('help', $cat, 'cat', 'sl_form', getTplOption('', _HOMECAT)),
         'cat_label' => _CATEGORY.':',
         'field_html' => fields_in($field, 'help'),
         'hometext_html' => textarea('1', 'hometext', $hometext, 'help', '10', _TEXT, '1'),
@@ -164,7 +164,7 @@ function add(): void {
 }
 
 function save(): void {
-    global $db, $afile, $admin, $conf, $stop;
+    global $db, $afile, $admin, $conf, $stop, $tpl;
     $id = getVar('post', 'id', 'num', 0);
     $pid = getVar('post', 'pid', 'num', 0);
     $uid = getVar('post', 'uid', 'num', 0);
@@ -196,7 +196,7 @@ function save(): void {
                 if ($db->getSqlRowCount($result) == 1) {
                     [$mail] = $db->getSqlRow($result);
                     $finishlink = ($conf['homeurl'] ?? '').'/index.php?name=help&amp;op=view&amp;id='.$pid;
-                    $link = '<a href="'.$finishlink.'">'.$finishlink.'</a>';
+                    $link = $tpl->getHtmlFrag('admin-action-link', ['href' => $finishlink, 'title' => '', 'label' => $finishlink]);
                     $subject = ($conf['sitename'] ?? '').' - '._HELP;
                     $message = str_replace('[text]', sprintf(_ADDMAILU, substr($admin[1] ?? '', 0, 25), _HELP, $link), $conf['mtemp'] ?? '');
                     addMail($mail, $conf['adminmail'] ?? '', $subject, $message, 0, 3);

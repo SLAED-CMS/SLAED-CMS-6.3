@@ -65,7 +65,7 @@ function files(): void {
                 'id_text' => (string)$id,
                 'post_html' => $post,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($date, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -107,7 +107,7 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=files', 'name=files&amp;op=add', 'name=files&amp;status=1', 'name=files&amp;status=2', 'name=files&amp;op=config', 'name=files&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCFILES, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if ($description) $cont .= preview($title, $description, $bodytext, '', 'files');
-    $link = ($url) ? '<a href="'.$url.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
+    $link = ($url) ? getTplAdminTextLink($url, _URL, '_blank', _DOWNLLINK) : _URL;
     $directory = '';
     $path = $conf['files']['path'] ?? 'uploads/files';
     if (file_exists($url)) {
@@ -129,7 +129,7 @@ function add(): void {
         'acomm_label' => _COMMENTS.':',
         'bodytext_html' => textarea('2', 'bodytext', $bodytext, 'files', '15', _ENDTEXT, '0'),
         'bodytext_label' => _ENDTEXT.':',
-        'cat_html' => getcat('files', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_html' => getcat('files', $cid, 'cid', 'sl_form', getTplOption('', _HOMECAT)),
         'cat_label' => _CATEGORY.':',
         'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
         'date_label' => _CHNGSTORY.':',

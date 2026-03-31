@@ -66,7 +66,7 @@ function media(): void {
                 'id_text' => (string)$id,
                 'post_html' => $post,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($date, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -162,7 +162,7 @@ function add(): void {
     }
     $rows = $tpl->getHtmlFrag('admin-media-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
-        'cat_html' => getcat('media', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_html' => getcat('media', $cid, 'cid', 'sl_form', getTplOption('', _HOMECAT)),
         'comments_label' => _COMMENTS.':',
         'createdby_value' => $createdby,
         'date_label' => _CHNGSTORY.':',

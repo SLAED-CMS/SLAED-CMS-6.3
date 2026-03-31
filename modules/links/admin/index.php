@@ -65,7 +65,7 @@ function links(): void {
                 'postedby_html' => $post,
                 'site_html' => domain($url),
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($date, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 50)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($date, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 50)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -102,13 +102,13 @@ function add(): void {
     $cont = setAdminNavi(['ops' => ['name=links', 'name=links&amp;op=add', 'name=links&amp;status=1', 'name=links&amp;status=2', 'name=links&amp;op=config', 'name=links&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _BROCLINKS, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if (!empty($description)) $cont .= preview($title, $description, $bodytext, '', 'links');
-    $link = (!empty($site) && $site !== 'http://') ? '<a href="'.$site.'" target="_blank" title="'._DOWNLLINK.'">'._URL.'</a>' : _URL;
+    $link = (!empty($site) && $site !== 'http://') ? getTplAdminTextLink($site, _URL, '_blank', _DOWNLLINK) : _URL;
     $rows = $tpl->getHtmlFrag('admin-links-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
         'acomm_label' => _COMMENTS.':',
         'bodytext_html' => textarea('2', 'bodytext', $bodytext, 'links', '15', _ENDTEXT, '0'),
         'bodytext_label' => _ENDTEXT.':',
-        'cat_html' => getcat('links', $cid, 'cid', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_html' => getcat('links', $cid, 'cid', 'sl_form', getTplOption('', _HOMECAT)),
         'cat_label' => _CATEGORY.':',
         'date_html' => datetime(1, 'date', $date, 16, 'sl_form'),
         'date_label' => _CHNGSTORY.':',

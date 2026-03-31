@@ -41,7 +41,7 @@ function order(): void {
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-order-list-row', [
                 'actions_html' => $acts,
                 'date_text' => format_time($date, _TIMESTRING),
-                'email_html' => adminTitleTip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
+                'email_html' => adminTitleTip($infos.$tpl->getHtmlFrag('br', [])._COMMENT.': '.$note.$tpl->getHtmlFrag('br-br', [])._BROWSER.': '.$agent).anti_spam($email),
                 'id_text' => (string)$id,
                 'ip_html' => user_geo_ip($ip, 4),
                 'status_html' => ad_status('', $status),
@@ -126,7 +126,7 @@ function delete(int $did = 0): void {
 }
 
 function activate(): void {
-    global $db, $afile, $conf;
+    global $db, $afile, $conf, $tpl;
         $act = getVar('get', 'act', 'num', 0);
     $id = getVar('get', 'id', 'num', 0);
     $db->getSqlQuery('UPDATE '.PREFIX_DB.'_order SET status = :act WHERE id = :id', ['act' => $act, 'id' => $id]);
@@ -134,7 +134,7 @@ function activate(): void {
         [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
         $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._ORDER;
-        $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
+        $msg = ($conf['sitename'] ?? '').' - '._ORDER.$tpl->getHtmlFrag('br-br', []);
         $msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'] ?? '', 'all', false), 'all');
         addMail($email, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=order&send=1');

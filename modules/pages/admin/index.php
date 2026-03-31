@@ -57,7 +57,7 @@ function pages(): void {
                 'id_text' => (string)$id,
                 'post_html' => $post,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($time, _TIMESTRING).'<br>'._IP.': '.$ip, $title, cutstr($title, 60)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -99,7 +99,7 @@ function add(): void {
         'acomm_label' => _COMMENTS.':',
         'body_html' => textarea('2', 'bodytext', $bodytext, 'pages', '15', _ENDTEXT, '0'),
         'body_label' => _ENDTEXT.':',
-        'cat_html' => getcat('pages', $cat, 'cat', 'sl_form', '<option value="">'._HOMECAT.'</option>'),
+        'cat_html' => getcat('pages', $cat, 'cat', 'sl_form', getTplOption('', _HOMECAT)),
         'cat_label' => _CATEGORY.':',
         'hometext_html' => textarea('1', 'hometext', $hometext, 'pages', '5', _TEXT, '1'),
         'hometext_label' => _TEXT.':',

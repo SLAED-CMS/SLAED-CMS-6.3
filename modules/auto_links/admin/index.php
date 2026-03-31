@@ -268,7 +268,7 @@ function config(): void {
         'num_value' => (string)$conf['auto_links']['num'],
         'nump_label' => _C_35.':',
         'nump_value' => (string)$conf['auto_links']['nump'],
-        'preview_html' => '<img src="'.$path.$conf['auto_links']['img'].'" id="picture" alt="'._SITELOGO.'">',
+        'preview_html' => $tpl->getHtmlFrag('img-preview', ['src' => $path.$conf['auto_links']['img'], 'alt' => _SITELOGO]),
         'preview_label' => _A_2.':',
         'save_label' => _SAVECHANGES,
         'strip_label' => _A_4.':',

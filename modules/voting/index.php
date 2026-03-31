@@ -24,7 +24,7 @@ function voting(): void {
 			$comm = ($acomm && $comm) ? $comm : _NO;
 			$vote = array_sum(explode('|', $answer));
 			$type = ($typ == '1') ? _VOPEN : _VCLOSE;
-			$report = _CHNGSTORY.': '.format_time($date, _TIMESTRING).'<br>'._ENDDATE.': '.format_time($enddate, _TIMESTRING).'<br>'._TYPE.': '.$type;
+			$report = _CHNGSTORY.': '.format_time($date, _TIMESTRING).getTplAdminTipLine(_ENDDATE, format_time($enddate, _TIMESTRING)).getTplAdminTipLine(_TYPE, $type);
 			$admin = (is_moder($conf['name'])) ? getTplMenuItems([
 				getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
 				getTplDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$stitle.'"?', _ONDELETE, _ONDELETE),
@@ -64,7 +64,7 @@ function view(): void {
 			'time' => $date,
 			'author' => $conf['sitename'],
 		]);
-		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('voting-basic', ['content' => '<div id="rep'.$conf['name'].'">'.getVotingView($id, $conf['name']).'</div>']);
+		$cont = $tpl->getHtmlFrag('title', ['title' => _VOTING]).$tpl->getHtmlFrag('voting-basic', ['content' => $tpl->getHtmlFrag('post-div', ['id' => 'rep'.$conf['name'], 'content' => getVotingView($id, $conf['name'])])]);
 		if ($acomm) $cont .= setComShow($id, $acomm);
 	} else {
 		setHead(['title' => _VOTING]);

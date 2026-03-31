@@ -22,45 +22,19 @@ function money(): void {
     $cont = $tpl->getHtmlFrag('title', ['title' => _MONEY]);
     $cont .= ($conf['money']['an']) ? $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MO_5.': '.$conf['money']['bal'].' EUR']) : $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _MO_11]);
     $cont .= filterReplaceText(filterMarkdown(str_replace(['[proz]', '[kurs]', '[kurs2]'], [$conf['money']['proz'], $conf['money']['kurs'], $conf['money']['kurs2']], $conf['money']['text']), 'all', false), 'all');
-    $cont .= '<script>
-    function Rechner(form) {
-        a = form.a.value;
-        b = a/100 * '.$conf['money']['kurs'].' * (100-'.$conf['money']['proz'].");
-        b = (Math.round(b * 100) / 100).toString();
-        b += (b.indexOf('.') == -1) ? '.00' : '00';
-        form.total.value = b.substring(0, b.indexOf('.') + 3);
-    }
-    </script>";
-    $cont .= '<script>
-    function Rechner1(form) {
-        a = form.a.value;
-        b = a/100 * '.$conf['money']['kurs2'].' * (100-'.$conf['money']['proz'].");
-        b = (Math.round(b * 100) / 100).toString();
-        b += (b.indexOf('.') == -1) ? '.00' : '00';
-        form.total.value = b.substring(0, b.indexOf('.') + 3);
-    }
-    </script>";
-    $cont .= '<script>
-    function Rechner2(form) {
-        a = form.a.value;
-        b = a/100 * (100-'.$conf['money']['proz'].");
-        b = (Math.round(b * 100) / 100).toString();
-        b += (b.indexOf('.') == -1) ? '.00' : '00';
-        form.total.value = b.substring(0, b.indexOf('.') + 3);
-    }
-    </script>";
-    $cont .= '<h2>'._MO_1.'</h2>'
-    .getTplMoneyCalcForm('Rechner', _MO_3.' Z:', 'USD')
-    .getTplMoneyCalcForm('Rechner1', _MO_3.' R:', 'RUB')
-    .getTplMoneyCalcForm('Rechner2', _MO_3.' E:', 'EUR');
+    $cont .= $tpl->getHtmlFrag('money-calc-scripts', ['kurs' => $conf['money']['kurs'], 'kurs2' => $conf['money']['kurs2'], 'proz' => $conf['money']['proz']]);
+    $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_1]);
+    $cont .= getTplMoneyCalcForm('Rechner', _MO_3.' Z:', 'USD')
+        .getTplMoneyCalcForm('Rechner1', _MO_3.' R:', 'RUB')
+        .getTplMoneyCalcForm('Rechner2', _MO_3.' E:', 'EUR');
     if ($conf['money']['an']) {
         $sum = getVar('post', 'sum', 'num');
         $intro = getVar('post', 'intro', 'array', []);
         $note = getVar('post', 'note', 'text');
         if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
         $rows = '';
-        $rows .= getTplFormAddRow(_MO_7.':', getTplNumberInput('sum', $sum, 'sl_field '.$conf['style'], 'placeholder="'._MO_7.'" required'));
-        $rows .= getTplFormAddRow(_MO_8.':', '<input type="email" name="email" value="'.$email.'" class="sl_field '.$conf['style'].'" placeholder="'._MO_8.'" required>');
+        $rows .= getTplFormAddRow(_MO_7.':', getTplNumberInput($sum, 'sum', 'sl_field '.$conf['style'], 'placeholder="'._MO_7.'" required'));
+        $rows .= getTplFormAddRow(_MO_8.':', getTplEmailInput('email', $email, 'sl_field '.$conf['style'], 'placeholder="'._MO_8.'" required'));
         $form = explode(',', $conf['money']['form']);
         $i = 0;
         foreach ($form as $val) {
@@ -70,7 +44,8 @@ function money(): void {
             }
         }
         $rows .= getTplFormAddRow(_MO_9.':', textarea('1', 'note', $note, $conf['name'], 5, _MO_9));
-        $cont .= '<h2>'._MO_6.'</h2>'.$tpl->getHtmlFrag('form-add', [
+        $cont .= $tpl->getHtmlFrag('heading-2', ['text' => _MO_6]);
+        $cont .= $tpl->getHtmlFrag('form-add', [
             'captcha' => getCaptcha(1),
             'extrafields' => $rows,
             'name' => $conf['name'],
@@ -120,25 +95,34 @@ function send(): void {
                 $i = 0;
                 foreach ($form as $val) {
                     if ($val != '') {
-                        $sinfo .= $val.': '.filterHtml($intro[$i] ?? '', 1).'<br>';
+                        $sinfo .= getTplAdminInfoLine($val, filterHtml($intro[$i] ?? '', 1));
                         $i++;
                     }
                 }
                 $amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._MONEY;
-                $msg = $conf['sitename'].' - '._MONEY.'<br><br>';
-                $msg .= '<b>'._PERSONALINFO.'</b><br><br>';
-                $msg .= _MO_7.': '.$sum.'<br>';
-                $msg .= _MO_8.': '.$email.'<br>';
-                $msg .= $sinfo.'<br>';
-                $msg .= _MO_9.': '.$note;
+                $msg = $tpl->getHtmlFrag('money-email-order', [
+                    'sitename'           => $conf['sitename'],
+                    'money_label'        => _MONEY,
+                    'personalinfo_label' => _PERSONALINFO,
+                    'amount_label'       => _MO_7,
+                    'amount'             => $sum,
+                    'email_label'        => _MO_8,
+                    'email'              => $email,
+                    'sinfo_html'         => $sinfo,
+                    'note_label'         => _MO_9,
+                    'note'               => $note,
+                ]);
                 addMail($amail, $email, $subject, $msg, 1, 1);
             }
             if (!$conf['money']['pr']) {
                 $amail = ($conf['money']['mail']) ? $conf['money']['mail'] : $conf['adminmail'];
                 $subject = $conf['sitename'].' - '._MONEY;
-                $msg = $conf['sitename'].' - '._MONEY.'<br><br>';
-                $msg .= filterReplaceText(filterMarkdown($conf['money']['sendinfo'], 'all', false), 'all');
+                $msg = $tpl->getHtmlFrag('money-email-confirm', [
+                    'sitename'    => $conf['sitename'],
+                    'money_label' => _MONEY,
+                    'content_html' => filterReplaceText(filterMarkdown($conf['money']['sendinfo'], 'all', false), 'all'),
+                ]);
                 addMail($email, $amail, $subject, $msg, 0, 3);
             }
             setHead(['title' => _MONEY]);

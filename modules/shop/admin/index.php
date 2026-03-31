@@ -143,7 +143,7 @@ function clients(): void {
                 'date_text' => $cenddate,
                 'id_text' => (string)$cid,
                 'nickname_html' => $nick,
-                'product_html' => adminTitleTipLabel(_ID.': '.$a.'<br>'._DATE.': '.date(_TIMESTRING, $cregdate).'<br>'._CLIENTNAME.': '.filterTextHighlight($cname, $csearch).'<br>'._CLIENTADRES.': '.$caddr.'<br>'._CLIENTPHONE.': '.$cphone.'<br>'._EMAIL.': '.$cemail.'<br>'._NOTE.': '.$cinfo, $ptitle, cutstr($ptitle, 40)),
+                'product_html' => adminTitleTipLabel(_ID.': '.$a.getTplAdminTipLine(_DATE, date(_TIMESTRING, $cregdate)).getTplAdminTipLine(_CLIENTNAME, filterTextHighlight($cname, $csearch)).getTplAdminTipLine(_CLIENTADRES, $caddr).getTplAdminTipLine(_CLIENTPHONE, $cphone).getTplAdminTipLine(_EMAIL, $cemail).getTplAdminTipLine(_NOTE, $cinfo), $ptitle, cutstr($ptitle, 40)),
                 'site_html' => filterTextHighlight(domain($cwebsite), $csearch),
                 'status_html' => ad_status('', $cactive),
             ]));
@@ -405,7 +405,7 @@ function products(): void {
                 'is_checked' => false,
                 'price_text' => $pprice.' '.$conf['shop']['valute'],
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.'<br>'._DATE.': '.format_time($ptime ?? '', _TIMESTRING), $ptitle, cutstr($ptitle, 60)),
+                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($ptime ?? '', _TIMESTRING)), $ptitle, cutstr($ptitle, 60)),
                 'value_attr' => (string)$pid,
             ]));
         }
@@ -650,7 +650,7 @@ function partners(): void {
                     adminDeleteAction($afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
                 ]),
                 'id_text' => (string)$paid,
-                'nickname_html' => adminTitleTip(_CLIENTNAME.': '.$paname.'<br>'._CLIENTADRES.': '.$paaddr.'<br>'._CLIENTPHONE.': '.$paphone.'<br>'._EMAIL.': '.$paemail).$nick,
+                'nickname_html' => adminTitleTip(_CLIENTNAME.': '.$paname.getTplAdminTipLine(_CLIENTADRES, $paaddr).getTplAdminTipLine(_CLIENTPHONE, $paphone).getTplAdminTipLine(_EMAIL, $paemail)).$nick,
                 'partnerbek_text' => $pabek.' '.$conf['shop']['valute'],
                 'partnerrest_text' => $parest.' '.$conf['shop']['valute'],
                 'reg_text' => date(_TIMESTRING, $paregdate),
