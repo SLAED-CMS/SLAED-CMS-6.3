@@ -32,7 +32,7 @@ function lang(): void {
 
     setHead();
     $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
-    $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th data-sort-method="none">'._STATUS.'</th><th data-sort-method="none">'._FUNCTIONS.'</th>';
+    $head = getTplAdminTableHead([_ID, _NAME, _MODUL, _VIEW, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
     $rows = '';
     $sys_admin = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', _FULLEDIT, _ADMIN);
     $sys_modul = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit', _FULLEDIT, _MODUL);
@@ -132,7 +132,7 @@ function fileedit(): void {
         $n = $idx + 1;
         $valc = isset($cnst_arr[$idx]) ? $cnst_arr[$idx] : '';
         if ($i !== 0) $rows .= getTplAdminFormWide(getTplHrLine());
-        $rows .= getTplAdminFormRow(_CONST.':', getTplTextInput('cnst[]', $valc, 'sl_form', 'placeholder="'._CONST.'"').' <a href="#'.$n.'" title="'._ID.': '.$n.'" class="sl_pnum">'.$n.'</a>', 'id="'.$n.'"');
+        $rows .= getTplAdminFormRow(_CONST.':', getTplTextInput('cnst[]', $valc, 'sl_form', 'placeholder="'._CONST.'"').' '.getTplAdminTextLink('#'.$n, (string)$n, '', _ID.': '.$n, 'sl_pnum'), 'id="'.$n.'"');
         $cj = count($lng_cn);
         for ($j = 0; $j < $cj; $j++) {
             $val = ($valc) ? trim(str_replace('\"', '&quot;', $lng_arr[$lng_cn[$j]][$cnst_arr[$idx]])) : '';

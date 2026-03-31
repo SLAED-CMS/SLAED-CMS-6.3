@@ -27,11 +27,12 @@ function sitemap(): void {
             fclose($handle);
         }
         $size = filesize($cfile);
-        $acont .= _FILE.': '.$cfile.'<br>'._DATE.': '.date(_TIMESTRING, filemtime($cfile)).'<br>'._SIZE.': '.filterSize($size).'<br>'._URLS.': '.$n.'<br><br>';
+        $acont .= getTplAdminInfoLine(_FILE, $cfile).getTplAdminInfoLine(_DATE, date(_TIMESTRING, filemtime($cfile))).getTplAdminInfoLine(_SIZE, filterSize($size)).getTplAdminInfoLine(_URLS, (string)$n).'<br>';
         $f++;
         $asize += $size;
     }
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': <a href="'.$conf['homeurl'].'/'.$file.'" target="_blank" title="'._SITEMAP.'">'.$conf['homeurl'].'/'.$file.'</a><br><br>'.$acont._FILE_M.': '.$f.'<br>'._FILE_S.': '.filterSize($asize)]);
+    $slink = getTplAdminTextLink($conf['homeurl'].'/'.$file, $conf['homeurl'].'/'.$file, '_blank', _SITEMAP);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': '.$slink.'<br><br>'.$acont.getTplAdminInfoLine(_FILE_M, (string)$f).getTplAdminInfoLine(_FILE_S, filterSize($asize))]);
     $hide = getTplHiddenInput('name', 'sitemap').getTplHiddenInput('op', 'add');
     $rows = $tpl->getHtmlFrag('admin-sitemap-editor-rows', [
         'code_html' => textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)),

@@ -629,7 +629,7 @@ function getCpuDetails(): array {
 
 # Formats boolean status into colored HTML badges used by monitor status indicators
 function getStatusHtml(?bool $state): string {
-    if ($state === null) return '<span class="sl_muted">N/A</span>';
+    if ($state === null) return getTplSpan('sl_muted', 'N/A');
     return adminFlagBox($state, 'On', 'Off');
 }
 

@@ -106,7 +106,7 @@ function modules(): void {
         if ($ta === $tb) return strnatcasecmp($a, $b);
         return $ta <=> $tb;
     });
-    $head = '<th>'._ID.'</th><th>'._NAME.'</th><th>'._MODUL.'</th><th>'._VIEW.'</th><th>'._GROUP.'</th><th data-sort-method="none">'._STATUS.'</th><th data-sort-method="none">'._FUNCTIONS.'</th>';
+    $head = getTplAdminTableHead([_ID, _NAME, _MODUL, _VIEW, _GROUP, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
     $rows = '';
     $a = 1;
     foreach ($mods as $title => $mod) {
@@ -334,7 +334,7 @@ function add(): void {
             if (preg_match('/CREATE|ALTER|DELETE|DROP|UPDATE/i', $string)) {
                 $table = explode('`', $string);
                 if ($id == 1) $ident = $db->getSqlQuery('DROP TABLE '.$table[1]);
-                $info .= _TABLE.': '.$table[1].' - '._STATUS.': '.(($ident) ? '<span class="sl_green">'._OK.'</span>' : '<span class="sl_red">'._ERROR.'</span>').'<br>';
+                $info .= _TABLE.': '.$table[1].' - '._STATUS.': '.getTplAdminStatusBadge((bool)$ident, _OK, _ERROR).'<br>';
             }
         }
         $infos = $ttitle.': '.$mod.'<br><br>'.$info;
