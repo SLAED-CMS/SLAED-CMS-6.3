@@ -56,9 +56,6 @@ function checkAdminlast(int $aid): bool {
     return intval($count) <= 1;
 }
 
-function getAdmintext(array $stop): string {
-    return implode('<br>', array_filter($stop, 'strlen'));
-}
 
 
 function admins(): void {
@@ -145,7 +142,7 @@ function add(): void {
     $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
     setHead();
     $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => getAdmintext($stop)]);
+    if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => getStopText($stop)]);
     $hide = $tpl->getHtmlFrag('admin-admins-form-hidden', [
         'admin_id' => $aid,
         'token' => htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8'),

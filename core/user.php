@@ -498,7 +498,7 @@ function addPrivateMessage() {
         $info = sprintf(_PRSENDED, $postname);
         return getPrivateMessageView(0, '', $info, 4);
     } else {
-        $stop = ($stop) ? implode('<br>', (array)$stop) : _ERROR;
+        $stop = ($stop) ? getStopText((array)$stop) : _ERROR;
         return getPrivateMessageView(0, $stop, '', 4);
     }
 }
