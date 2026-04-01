@@ -1,0 +1,27 @@
+<script>
+function Rechner(form) {
+    a = form.a.value;
+    b = a/100 * {{ kurs }} * (100-{{ proz }});
+    b = (Math.round(b * 100) / 100).toString();
+    b += (b.indexOf('.') == -1) ? '.00' : '00';
+    form.total.value = b.substring(0, b.indexOf('.') + 3);
+}
+</script>
+<script>
+function Rechner1(form) {
+    a = form.a.value;
+    b = a/100 * {{ kurs2 }} * (100-{{ proz }});
+    b = (Math.round(b * 100) / 100).toString();
+    b += (b.indexOf('.') == -1) ? '.00' : '00';
+    form.total.value = b.substring(0, b.indexOf('.') + 3);
+}
+</script>
+<script>
+function Rechner2(form) {
+    a = form.a.value;
+    b = a/100 * (100-{{ proz }});
+    b = (Math.round(b * 100) / 100).toString();
+    b += (b.indexOf('.') == -1) ? '.00' : '00';
+    form.total.value = b.substring(0, b.indexOf('.') + 3);
+}
+</script>

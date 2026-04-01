@@ -1,0 +1,13 @@
+{% if show_admins %}
+<table class="sl_table_block"><tr><td><a OnClick="HideShow('{{ admins_toggle_id }}', 'slide', 'up', 500);" title="{{ readmore_title }}" class="sl_plus">{{ admins_label }}:</a></td><td class="sl_right">{{ admins_count }}</td></tr></table>
+<table id="{{ admins_toggle_id }}" class="sl_table_block sl_none">{{{ admins_rows_html }}}</table>
+{% endif %}
+<table class="sl_table_block"><tr><td><a OnClick="HideShow('{{ members_toggle_id }}', 'slide', 'up', 500);" title="{{ readmore_title }}" class="sl_plus">{{ members_label }}:</a></td><td class="sl_right">{{ members_count }}</td></tr></table>
+<table id="{{ members_toggle_id }}" class="sl_table_block sl_none">{{{ members_rows_html }}}</table>
+<table class="sl_table_block"><tr><td><a OnClick="HideShow('{{ bots_toggle_id }}', 'slide', 'up', 500);" title="{{ readmore_title }}" class="sl_plus">{{ bots_label }}:</a></td><td class="sl_right">{{ bots_count }}</td></tr></table>
+<table id="{{ bots_toggle_id }}" class="sl_table_block sl_none">{{{ bots_rows_html }}}</table>
+<table class="sl_table_block"><tr><td><a OnClick="HideShow('{{ visitors_toggle_id }}', 'slide', 'up', 500);" title="{{ readmore_title }}" class="sl_plus">{{ visitors_label }}:</a></td><td class="sl_right">{{ visitors_count }}</td></tr></table>
+<table id="{{ visitors_toggle_id }}" class="sl_table_block sl_none">{{{ visitors_rows_html }}}</table>
+<table class="sl_table_block"><tr><td>{{ overall_label }}:</td><td class="sl_right">{{ overall_count }}</td></tr></table>
+<hr>
+<table class="sl_table_block"><tr><td class="sl_center"><a href="index.php?{{{ update_query }}}" hx-get="index.php?{{{ update_query }}}" hx-target="#rep{{ update_target }}" hx-swap="innerHTML" hx-push-url="false" title="{{ update_title }}" class="sl_but_green">{{ update_label }}</a></td></tr></table>

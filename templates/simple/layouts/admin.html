@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+{{{ meta }}}
+{{{ links }}}
+<link rel="stylesheet" href="plugins/codemirror/lib/codemirror.css">
+<link rel="stylesheet" href="plugins/codemirror/addon/hint/show-hint.css">
+{{{ scripts }}}
+</head>
+<body>
+    <div class="wrapper">
+        <div class="wraptop"></div>
+        <div class="wrapmid">
+            <div class="header">
+                <div class="lcolomn leftside"><h1><a href="//slaed.net" target="_blank" class="thide" title="SLAED CMS">SLAED CMS</a></h1></div>
+                <div class="rcolomn midside">
+                    <div class="toolbar">
+                        <div>
+                            <ul class="reset">{{{ menu }}}</ul>
+                            <span class="rcolomn language">{{{ admin_langs }}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="vsep">
+                <div class="vsep">
+                    <div class="container">
+                        <div class="lcolomn leftside">{{{ admin_blocks }}}</div>
+                        <div class="rcolomn midside">{% block content %}{% endblock %}</div>
+                        <div class="clr"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="footer">
+                <div class="copyright">{% if time_html %}{{{ time_html }}}<br>{% endif %}{{{ license }}}</div>
+                <span>{{{ foot_html }}}</span>
+            </div>
+        </div>
+        <div class="wrapfoot"></div>
+        {{{ debug_html }}}
+    </div>
+</body>
+</html>

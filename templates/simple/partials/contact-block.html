@@ -1,0 +1,19 @@
+<div id="block-feedback" class="dropdown">
+    <a OnClick="HideShow('f-form', 'slide', 'right', 500);" title="{{ feedback }}" class="btn-feedback"><b class="font">{{ feedback }}</b></a>
+    <form id="f-form" class="dropdown-form" action="index.php?name=contact" method="post">
+        <ul class="block-feedback-form clrfix">
+            <li class="bff-col1">
+                <textarea name="message" class="sl_field" rows="5" cols="65" placeholder="{{ text }}" required></textarea>
+            </li>
+            <li class="bff-col2">
+                <input type="text" name="sname" class="sl_field" placeholder="{{ pname }}" required>
+                <input type="email" name="semail" class="sl_field" placeholder="{{ email }}" required>
+                {{{ captcha }}}
+                <input type="hidden" name="token" value="{{ token }}">
+                <input type="hidden" name="op" value="contact">
+                <input type="hidden" name="send" value="1">
+                <button type="submit" class="sl_but_blue">{{ send }}</button>
+            </li>
+        </ul>
+    </form>
+</div>

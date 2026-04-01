@@ -1,0 +1,13 @@
+<audio src="{{ audio_src }}" autoplay="autoplay" preload="auto"></audio>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+	var unreadCount = {{ unread_count }};
+	var title = document.title;
+	var prefixedTitle = "(" + unreadCount + ") " + title;
+	var showCounter = false;
+	setInterval(function() {
+		document.title = showCounter ? prefixedTitle : title;
+		showCounter = !showCounter;
+	}, 1000);
+});
+</script>

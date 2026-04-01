@@ -1,0 +1,8 @@
+<div class="basecont">
+    <div class="bpad">
+        <div class="tabpad">
+            <form name="{{ form_name }}" action="{{ action_url }}" method="{{ form_method }}"{% if form_attr %} {{{ form_attr }}}{% endif %}>{{{ hidden_html }}}<table class="{% if table_class %}{{ table_class }}{% else %}sl_table_form{% endif %}">{{{ rows_html }}}</table></form>
+        </div>
+    </div>
+    <div class="hsep"></div>
+</div>
