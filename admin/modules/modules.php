@@ -24,7 +24,7 @@ function modules(): void {
         'type_label' => _TYPE,
     ]));
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
+    $cont = getTplAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
     if (isset($infos)) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $infos]);
     $config = false;
     $modlist = [];
@@ -125,7 +125,7 @@ function modules(): void {
             $who_view = _MVADMIN;
         }
         $typel = ($type == 0) ? 'tools' : 'people-fill';
-        $titlel = ($menu == 0) ? adminTitleTip(_NO_SICHT).$lang : $lang;
+        $titlel = ($menu == 0) ? getTplAdminTitleTip(_NO_SICHT).$lang : $lang;
         if ($group != 0) {
             $grp = $db->getSqlRow($db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_groups WHERE id = :id', ['id' => $group]));
             $group_name = $grp['name'];
@@ -176,9 +176,9 @@ function modules(): void {
             $dbu = '';
             $sqluimg = '';
         }
-        $acts = adminMenuItems([
+        $acts = getTplAdminActionMenu([
             ad_status($afile.'.php?name=modules&amp;op=status&amp;mod='.$title.'&amp;act='.$act, $active),
-            adminLinkAction($afile.'.php?name=modules&amp;op=edit&amp;mod='.$title, _FULLEDIT, _FULLEDIT),
+            getTplLinkAction($afile.'.php?name=modules&amp;op=edit&amp;mod='.$title, _FULLEDIT, _FULLEDIT),
             $sqlimg,
             $sqluimg,
         ]);
@@ -228,7 +228,7 @@ function edit(): void {
         'type_label' => _TYPE,
     ]));
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
+    $cont = getTplAdminNavi(['ops' => ['name=modules'.$typelink, 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'sub' => $search]);
     $hide = getTplHiddenInput('mod', $mod).getTplHiddenInput('name', 'modules').getTplHiddenInput('op', 'save');
     $rows = '';
     $rows .= getTplAdminFormRow(_LANGUAGE.':', getTplTextInput('lang', $lang, 'sl_conf', 'maxlength="50" placeholder="'._LANGUAGE.'"'));
@@ -343,7 +343,7 @@ function add(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=modules', 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=modules', 'name=modules&amp;op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
     setAdminInfoPage($cont);
 }
 

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('rss')) die('Illegal file access')
 function rss(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['', '', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'id' => 'rss']);
+    $cont = getTplAdminNavi(['ops' => ['', '', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'id' => 'rss']);
     $cont .= checkPerms(CONFIG_DIR.'/rss.php');
     $content = '';
     $fieldc = explode('||', $conf['rss']['rss']);
@@ -86,7 +86,7 @@ function save(): void {
     setRedirect($afile.'.php?name=rss');
 }
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=rss', 'name=rss', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=rss', 'name=rss', 'name=rss&amp;op=info'], 'tabs' => [_RSS, _PREFERENCES, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 function privat(): void {
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     echo $cont.getTplAdminPlaceholder('repadminPrivateList', getAdminPrivateList(1));
     setFoot();
 }
@@ -17,7 +17,7 @@ function privat(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/privat.php');
     $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -79,7 +79,7 @@ function save(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=privat', 'name=privat&amp;op=config', 'name=privat&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

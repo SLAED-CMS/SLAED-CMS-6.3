@@ -61,7 +61,7 @@ function isHtmxReq(): bool {
 
 function getEditbox(string $file, string $info, string $warn, string $mtype, string $edit, int $tab, bool $trim = false, string $extra = '', string $fallback = '', string $note = '', string $noteType = 'info'): string {
     global $afile, $tpl;
-    $cont = setAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => $tab]);
+    $cont = getTplAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => $tab]);
     $text = getEdittxt($file, $trim);
     $text = normalizeRawEditorText($file, $text);
     if ($text === '' && $fallback !== '') $text = $fallback;
@@ -115,7 +115,7 @@ function robots(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => 4]);
+    $cont = getTplAdminNavi(['ops' => ['name=editor', 'name=editor&amp;op=editheader', 'name=editor&amp;op=htaccess', 'name=editor&amp;op=robots', 'name=editor&amp;op=info'], 'tabs' => [_EFUNCN, _EHEADN, _EHTN, _ERON, _INFO], 'tab' => 4]);
     setAdminInfoPage($cont);
 }
 

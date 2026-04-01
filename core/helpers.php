@@ -192,6 +192,18 @@ function getTplAdminAjaxAction(string $target, string $query, string $title, str
     ]);
 }
 
+# Render a safe HTMX GET action item for getTplMenuItems()
+function getTplAjaxAction(string $target, string $query, string $title, string $label, string $clas = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('comment-action-ajax', [
+        'target' => $target,
+        'query'  => $query,
+        'title'  => $title,
+        'label'  => $label,
+        'class'  => $clas,
+    ]);
+}
+
 # Render one shared admin delete action item with JS confirm text
 function getTplAdminDeleteAction(string $href, string $text, string $title, string $label): string {
     global $tpl;
@@ -252,9 +264,10 @@ function getTplHiddenInput(string $name, string $valu): string {
 # Render one shared admin text input with optional class and extra attributes
 function getTplTextInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-text-input', [
+    return $tpl->getHtmlFrag('admin-input', [
         'input_attr' => $attr,
         'input_class' => $clas,
+        'itype' => 'text',
         'name_attr' => $name,
         'value_attr' => $valu,
     ]);
@@ -263,9 +276,10 @@ function getTplTextInput(string $name, string $valu, string $clas = 'sl_form', s
 # Render one shared admin number input with optional class and extra attributes
 function getTplNumberInput(int|string $valu, string $name, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-number-input', [
+    return $tpl->getHtmlFrag('admin-input', [
         'input_attr' => $attr,
         'input_class' => $clas,
+        'itype' => 'number',
         'name_attr' => $name,
         'value_attr' => (string)$valu,
     ]);
@@ -274,9 +288,10 @@ function getTplNumberInput(int|string $valu, string $name, string $clas = 'sl_fo
 # Render one shared admin url input with optional class and extra attributes
 function getTplUrlInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-url-input', [
+    return $tpl->getHtmlFrag('admin-input', [
         'input_attr' => $attr,
         'input_class' => $clas,
+        'itype' => 'url',
         'name_attr' => $name,
         'value_attr' => $valu,
     ]);
@@ -285,9 +300,10 @@ function getTplUrlInput(string $name, string $valu, string $clas = 'sl_form', st
 # Render one shared admin email input with optional class and extra attributes
 function getTplEmailInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-email-input', [
+    return $tpl->getHtmlFrag('admin-input', [
         'input_attr' => $attr,
         'input_class' => $clas,
+        'itype' => 'email',
         'name_attr' => $name,
         'value_attr' => $valu,
     ]);
@@ -318,8 +334,7 @@ function getTplImagePreview(string $src, string $alt, string $id = 'picture'): s
 
 # Render one shared admin horizontal separator line
 function getTplHrLine(): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-hr-line', []);
+    return '<hr>';
 }
 
 # Render one shared admin tab-content wrapper from a tab id and prepared inner markup
@@ -533,7 +548,7 @@ function getTplAdminBlockGrid(array $where = []): string {
     $wide = intval(100 / $cols);
     $mods = getBlockModules();
     foreach ($mods as $name) {
-        if (($idx - 1) % $cols === 0) $rows .= $tpl->getHtmlFrag('admin-blocks-view-row-open', []);
+        if (($idx - 1) % $cols === 0) $rows .= '<tr>';
         $rows .= $tpl->getHtmlFrag('admin-blocks-view-module-cell', [
             'checked'    => in_array($name, $where),
             'label_text' => getModuleName($name),
@@ -541,7 +556,7 @@ function getTplAdminBlockGrid(array $where = []): string {
             'name_attr'  => $name,
             'width_num'  => $wide,
         ]);
-        if ($idx % $cols === 0) $rows .= $tpl->getHtmlFrag('admin-blocks-view-row-close', []);
+        if ($idx % $cols === 0) $rows .= '</tr>';
         $idx++;
     }
     $home_on  = in_array('home', $where);
@@ -554,7 +569,7 @@ function getTplAdminBlockGrid(array $where = []): string {
         ['flyfix',    in_array('flyfix',    $where),              _FLY_FIX],
     ];
     for ($i = 0; $i < count($specials); $i += 2) {
-        $rows .= $tpl->getHtmlFrag('admin-blocks-view-row-open', []);
+        $rows .= '<tr>';
         $rows .= $tpl->getHtmlFrag('admin-blocks-view-special-cell', [
             'checked'    => $specials[$i][1],
             'label_text' => $specials[$i][2],
@@ -565,7 +580,7 @@ function getTplAdminBlockGrid(array $where = []): string {
             'label_text' => $specials[$i + 1][2],
             'value_attr' => $specials[$i + 1][0],
         ]);
-        $rows .= $tpl->getHtmlFrag('admin-blocks-view-row-close', []);
+        $rows .= '</tr>';
     }
     return $tpl->getHtmlFrag('admin-blocks-view-grid', ['rows_html' => $rows]);
 }
@@ -616,7 +631,7 @@ function getTplCategorySelect(string $path, string $selected = ''): string {
 # Render a categories image preview tag from a full image path
 function getTplCategoryPreview(string $src): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-category-img-preview', [
+    return $tpl->getHtmlFrag('img-preview', [
         'alt' => _IMG,
         'src' => $src,
     ]);
@@ -681,7 +696,7 @@ function getTplAdminSmallNote(string $text): string {
 # Join non-empty stop/error messages into a single HTML string separated by line breaks
 function getStopText(array $stop): string {
     global $tpl;
-    $sep = $tpl->getHtmlFrag('br', []);
+    $sep = '<br>';
     return implode($sep, array_filter($stop, 'strlen'));
 }
 
@@ -1015,4 +1030,121 @@ function getTplAdminFilePreview(int $index, string $path, bool $hasImage): strin
 # Render a composite title-tip block joined with a note label from tooltip, title and label texts
 function getTplAdminTipLabel(string $tip, string $title, string $label): string {
     return getTplAdminTitleTip($tip).getTplAdminNoteLabel($title, $label);
+}
+
+# Render one admin collapsible panel from a panel id, title and prepared content markup
+function getTplAdminPanel(string $pid, string $title, string $cont): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-panel', [
+        'pid'   => $pid,
+        'title' => $title,
+        'cont'  => $cont,
+    ]);
+}
+
+# Render one admin tab list open tag from an id and a CSS class
+function getTplAdminTabOpen(string $id, string $cls): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-list-open', [
+        'list_class' => $cls,
+        'list_id' => $id,
+    ]);
+}
+
+# Render one admin tab list close tag
+function getTplAdminTabClose(): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-list-close', []);
+}
+
+# Render one admin tab link from href, label, selected state and optional rel and attr strings
+function getTplAdminTabLink(string $href, string $label, bool $isel = false, string $rel = '', string $attr = ''): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-tab-link', [
+        'attrs' => $attr,
+        'href' => $href,
+        'is_selected' => $isel,
+        'label' => $label,
+        'rel' => $rel,
+    ]);
+}
+
+# Render one admin info count badge with a red or green CSS class based on value
+function getTplAdminInfoCount(int|string $cnt): string {
+    global $tpl;
+    if (!is_numeric($cnt)) return '-';
+    $css = ((int)$cnt >= 1) ? 'sl_red' : 'sl_green';
+    return $tpl->getHtmlFrag('admin-info-count', [
+        'count_text' => (string)$cnt,
+        'css_class' => $css,
+    ]);
+}
+
+# Render one admin info panel row from href, title, label and count value
+function getTplAdminInfoRow(string $href, string $title, string $label, int|string $cnt): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-info-row', [
+        'count_html' => getTplAdminInfoCount($cnt),
+        'href' => $href,
+        'label' => $label,
+        'title' => $title,
+    ]);
+}
+
+# Render one admin info panel table from an array of pre-rendered row strings
+function getTplAdminInfoTable(array $rows): string {
+    global $tpl;
+    return $tpl->getHtmlFrag('admin-info-table', [
+        'rows_html' => implode('', $rows),
+    ]);
+}
+
+# Render the admin module navigation header with tabs and optional subtabs
+function getTplAdminNavi(array $par): string {
+    global $afile, $conf, $tpl;
+    $ttl = _ADMINMENU;
+    $ico = 'components.png';
+    $name = getVar('req', 'name', 'var');
+    if ($name !== '' && isset($conf['modules'][$name]) && is_array($conf['modules'][$name])) {
+        $lang = trim($conf['modules'][$name]['lang'] ?? '');
+        if ($lang !== '') $ttl = defined($lang) ? constant($lang) : $lang;
+        $img = basename(trim($conf['modules'][$name]['img'] ?? ''));
+        if ($img !== '' && file_exists(BASE_DIR.'/templates/admin/images/admin/'.$img)) $ico = $img;
+    }
+    $ops    = $par['ops']    ?? [];
+    $tabs   = $par['tabs']   ?? [];
+    $sops   = $par['sops']   ?? [];
+    $sattrs = $par['sattrs'] ?? [];
+    $stabs  = $par['stabs']  ?? [];
+    $sub    = $par['sub']    ?? '';
+    $act    = $par['tab']    ?? 0;
+    $hassub = (bool)($par['subtab'] ?? false);
+    $actsub = $par['legacy'] ?? 0;
+    $mtab   = $par['id']     ?? 'menutab';
+    $cnt = getTplAdminTabOpen($mtab, 'tabmenu');
+    $scnt = '';
+    $k = 0;
+    foreach ($tabs as $tab) {
+        if ($tab === '') { $k++; continue; }
+        if ($hassub && !empty($stabs)) {
+            $scnt = getTplAdminTabOpen($mtab.'s', 'tabsubmenu');
+            $l = 0;
+            foreach ($stabs as $stab) {
+                if ($stab === '') { $l++; continue; }
+                $hrefsub = !empty($sops[$l]) ? $afile.'.php?'.$sops[$l] : '#';
+                $relsub = !empty($sops[$l]) ? '' : getTplAdminTabName($mtab, $l, true);
+                $attrsub = $sattrs[$l] ?? '';
+                $scnt .= getTplAdminTabLink($hrefsub, $stab, $l === $actsub, $relsub, $attrsub);
+                $l++;
+            }
+            $scnt .= getTplAdminTabClose();
+        }
+        $href = !empty($ops[$k]) ? $afile.'.php?'.$ops[$k] : '#';
+        $rel = !empty($ops[$k]) ? '' : getTplAdminTabName($mtab, $k);
+        $cnt .= getTplAdminTabLink($href, $tab, $k === $act, $rel);
+        $k++;
+    }
+    $cnt .= getTplAdminTabClose();
+    if ($scnt !== '') $cnt .= $scnt;
+    return $tpl->getHtmlFrag('title', ['title' => $ttl, 'icon' => $ico, 'subtitle' => $sub, 'content' => $cnt]);
 }

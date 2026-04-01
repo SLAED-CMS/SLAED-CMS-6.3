@@ -50,7 +50,7 @@ function referers(): void {
     $ordsc = ($order == 1) ? 'ASC' : 'DESC';
     $result = $db->getSqlQuery('SELECT Count('.$count.') AS hits, uid, name, ip, referer, url, time FROM '.PREFIX_DB.'_referer GROUP BY '.$count.' ORDER BY '.$ordby.' '.$ordsc);
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'sub' => getRefererSearch()]);
+    $cont = getTplAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'sub' => getRefererSearch()]);
     if ($db->getSqlRowCount($result) > 0) {
         $a = 0;
         $massiv = [];
@@ -72,7 +72,7 @@ function referers(): void {
                 $words = engines_word($massiv[$i][4]) ?: _NO;
                 $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-referers-list-row', [
                     'hits_text' => (string)$massiv[$i][0],
-                    'ip_html' => adminTitleTip(_NICKNAME.': '.$name.getTplAdminTipLine(_DATE, format_time($massiv[$i][6], _TIMESTRING))).$massiv[$i][3],
+                    'ip_html' => getTplAdminTitleTip(_NICKNAME.': '.$name.getTplAdminTipLine(_DATE, format_time($massiv[$i][6], _TIMESTRING))).$massiv[$i][3],
                     'referer_text' => domain($massiv[$i][4], 30),
                     'search_attr' => $words,
                     'search_text' => cutstr($words, 25),
@@ -93,7 +93,7 @@ function referers(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
+    $cont = getTplAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
     $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -137,7 +137,7 @@ function delete(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 3, 'sub' => getRefererSearch()]);
+    $cont = getTplAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete', 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 3, 'sub' => getRefererSearch()]);
     setAdminInfoPage($cont);
 }
 

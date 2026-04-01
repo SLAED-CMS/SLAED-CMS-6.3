@@ -31,13 +31,13 @@ function lang(): void {
     }
 
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $head = getTplAdminTableHead([_ID, _NAME, _MODUL, _VIEW, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
     $rows = '';
-    $sys_admin = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', _FULLEDIT, _ADMIN);
-    $sys_modul = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit', _FULLEDIT, _MODUL);
+    $sys_admin = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', _FULLEDIT, _ADMIN);
+    $sys_modul = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit', _FULLEDIT, _MODUL);
     $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
-        'actions_html' => adminMenuItems([$sys_admin, $sys_modul]),
+        'actions_html' => getTplAdminActionMenu([$sys_admin, $sys_modul]),
         'id_value' => '1',
         'module_label' => _SYSTEM,
         'module_name' => _ALL,
@@ -57,10 +57,10 @@ function lang(): void {
         $view = $who_view[$mod[$i]] ?? _MVALL;
         $mod_path = BASE_DIR.'/modules/'.$mod[$i];
         $acts = [];
-        if (is_dir($mod_path.'/admin/lang')) $acts[] = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', _FULLEDIT, _ADMIN);
-        if (is_dir($mod_path.'/lang')) $acts[] = adminLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], _FULLEDIT, _MODUL);
+        if (is_dir($mod_path.'/admin/lang')) $acts[] = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', _FULLEDIT, _ADMIN);
+        if (is_dir($mod_path.'/lang')) $acts[] = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], _FULLEDIT, _MODUL);
         $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
-            'actions_html' => adminMenuItems($acts),
+            'actions_html' => getTplAdminActionMenu($acts),
             'id_value' => (string)$a,
             'module_label' => getModuleName($mod[$i]),
             'module_name' => $mod[$i],
@@ -76,7 +76,7 @@ function lang(): void {
 function fileedit(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO]]);
     $mod = getVar('get', 'mod', 'var', '');
     $typ = getVar('get', 'typ', 'var', '');
     $page = getVar('get', 'page', 'num', 1);
@@ -213,7 +213,7 @@ function save(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = getTplSelect('lang', language($conf['lang']['lang'], 1), 'sl_conf');
     $confv = $tpl->getHtmlFrag('form-conf', [
@@ -248,7 +248,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

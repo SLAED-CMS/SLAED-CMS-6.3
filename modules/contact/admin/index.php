@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('contact')) die('Illegal file acce
 function contact(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO]]);
     $cont .= checkPerms(CONFIG_DIR.'/contact.php');
     $rows = $tpl->getHtmlFrag('admin-contact-config-rows', [
         'admins_html' => radio_form($conf['contact']['admins'], 'admins'),
@@ -35,7 +35,7 @@ function save(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=contact', 'name=contact&amp;op=info'], 'tabs' => [_PREFERENCES, _INFO], 'tab' => 1]);
     setAdminInfoPage($cont);
 }
 

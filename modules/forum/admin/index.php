@@ -27,14 +27,14 @@ function forum(): void {
         }
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO]]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHIN]);
     $head = getTplAdminTableHead([_ID, _FORUM, _NEWTOPICS, _MESSAGES, [_STATUS, 'nosort']]);
     $rows = '';
     $query = $db->getSqlQuery('SELECT id, title, intro, status, topics, posts FROM '.PREFIX_DB.'_categories WHERE modul = \'forum\' ORDER BY ordern');
     while ([$id, $title, $intro, $state, $topics, $posts] = $db->getSqlRow($query)) {
         $detail = ($intro) ? $intro : _NO;
-        $link = adminTitleTip(_DESCRIPTION.': '.$detail).getTplAdminTextLink('index.php?name=forum&amp;cat='.$id, cutstr($title, 60), '_blank', $title, 'sl_note');
+        $link = getTplAdminTitleTip(_DESCRIPTION.': '.$detail).getTplAdminTextLink('index.php?name=forum&amp;cat='.$id, cutstr($title, 60), '_blank', $title, 'sl_note');
         $cols = getTplAdminTableCells([$id, $link, $topics, $posts, ad_status('', $state)]);
         $rows .= getTplAdminTableRow($cols);
     }
@@ -46,7 +46,7 @@ function forum(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SYNCHINF]);
     $cont .= checkPerms(CONFIG_DIR.'/forum.php');
     $sort_sel = getTplSelect('sort',
@@ -127,7 +127,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=forum', 'name=forum&amp;op=config', 'name=forum&amp;op=info'], 'tabs' => [_SYNCH, _PREFERENCES, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

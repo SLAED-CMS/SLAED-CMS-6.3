@@ -197,7 +197,7 @@ function getSearchlink(int $sort = 3, int $order = 2, int $num = 1, string $find
 }
 
 function getSearchnavi(string $sub = '', int $tab = 0): string {
-    return setAdminNavi([
+    return getTplAdminNavi([
         'ops' => ['name=search', 'name=search&amp;op=toplist', 'name=search&amp;op=config', 'name=search&amp;op=delete', 'name=search&amp;op=info'],
         'tabs' => [_HOME, _SEARCHTOP, _PREFERENCES, _DELETE, _INFO],
         'sub' => $sub,
@@ -305,13 +305,13 @@ function search(): void {
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $find, $fmod);
             $drop = getTplAdminSearchDrop($id, $afile.'.php?name=search', $sort, $order, $num, $find, $fmod, $show);
-            $edit = adminLinkAction($afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, _FULLEDIT, _FULLEDIT);
+            $edit = getTplLinkAction($afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, _FULLEDIT, _FULLEDIT);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-search-list-row', [
-                'actions_html' => adminMenuItems([$edit, $drop]),
+                'actions_html' => getTplAdminActionMenu([$edit, $drop]),
                 'date_text' => format_time((string)$time, _TIMESTRING),
                 'hits_text' => (string)intval($hits),
                 'modul_html' => $hmod,
-                'word_html' => adminTitleTip(_MODUL.': '.htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8').getTplAdminTipLine(_DATE, format_time((string)$time, _TIMESTRING))).$hword,
+                'word_html' => getTplAdminTitleTip(_MODUL.': '.htmlspecialchars($mlab, ENT_QUOTES, 'UTF-8').getTplAdminTipLine(_DATE, format_time((string)$time, _TIMESTRING))).$hword,
             ]));
         }
         $html = getTplAdminTable($head, $rows);
@@ -367,9 +367,9 @@ function toplist(): void {
             $hword = filterTextHighlight($show, $find);
             $link = getSearchlink($sort, $order, $num, $show, $fmod ?? '', 'toplist');
             $drop = getTplAdminSearchDrop($id, $afile.'.php?name=search', $sort, $order, $num, $find ?? '', $fmod ?? '', $show);
-            $edit = adminLinkAction($afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, _FULLEDIT, _FULLEDIT);
+            $edit = getTplLinkAction($afile.'.php?'.$link.'&amp;op=edit&amp;id='.$id, _FULLEDIT, _FULLEDIT);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-search-list-row', [
-                'actions_html' => adminMenuItems([$edit, $drop]),
+                'actions_html' => getTplAdminActionMenu([$edit, $drop]),
                 'date_text' => format_time((string)$time, _TIMESTRING),
                 'hits_text' => (string)intval($hits),
                 'modul_html' => $hmod,

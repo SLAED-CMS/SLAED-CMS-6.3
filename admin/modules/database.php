@@ -164,7 +164,7 @@ function getSqltable(array $items): string {
     foreach ($items as $row) {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
-        $status = adminFlagBox((bool)$row['ok'], _OK, _ERROR.' - '.$row['error']);
+        $status = getTplAdminFlagBox((bool)$row['ok'], _OK, _ERROR.' - '.$row['error']);
         $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-database-sql-row', [
             'db_sql_text' => $sql,
             'id_value' => (string)(int)$row['num'],
@@ -190,7 +190,7 @@ function getSqlsum(array $items, string $mode, string $name): string {
             if (!$stop) $stop = (int)$row['num'];
         }
     }
-    $stat = adminFlagBox($bad === 0, _OK, _ERROR);
+    $stat = getTplAdminFlagBox($bad === 0, _OK, _ERROR);
     $mval = ($mode === 'dump') ? _DB_RUNMODE : _DB_PARSEMODE;
     $text = $tpl->getHtmlFrag('admin-database-summary', [
         'blocks_label' => _DB_BLOCKS,
@@ -217,7 +217,7 @@ function database(): void {
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
         setHead();
-        $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
+        $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
         echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _ERROR]);
         setFoot();
         return;
@@ -265,8 +265,8 @@ function database(): void {
 
         // Free space display
         $freetag = $tabeng === 'InnoDB'
-            ? $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_hidden', 'label_text' => filterSize($tabfree)])
-            : $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => $tabfree ? 'sl_red' : 'sl_green', 'label_text' => filterSize($tabfree)]);
+            ? $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_hidden', 'label_text' => filterSize($tabfree)])
+            : $tpl->getHtmlFrag('admin-flag-box', ['css_class' => $tabfree ? 'sl_red' : 'sl_green', 'label_text' => filterSize($tabfree)]);
 
         // --- Status / actions depending on mode ---
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
@@ -277,28 +277,28 @@ function database(): void {
             $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
 
             if (!$oresult) {
-                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_red', 'label_text' => _ERROR]);
+                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_red', 'label_text' => _ERROR]);
             } elseif ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_green', 'label_text' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_green', 'label_text' => _OPTIMIZED]);
             } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
-                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_red', 'label_text' => _ALREADYOPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_red', 'label_text' => _ALREADYOPTIMIZED]);
             } else {
-                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_green', 'label_text' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_green', 'label_text' => _OPTIMIZED]);
             }
 
         } elseif ($type === 'repair') {
             if ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => 'sl_hidden', 'label_text' => _NO]);
+                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_hidden', 'label_text' => _NO]);
             } else {
                 $rresult = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
-                $stattag = $tpl->getHtmlFrag('admin-database-status-tag', ['css_class' => $rresult ? 'sl_green' : 'sl_red', 'label_text' => $rresult ? _OK : _ERROR]);
+                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => $rresult ? 'sl_green' : 'sl_red', 'label_text' => $rresult ? _OK : _ERROR]);
             }
 
         } else {
             // Default view with actions
-            $stattag = adminMenuItems([
-                adminDeleteAction($afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1', _CLEAN.' "'.$name.'"?', _CLEAN, _CLEAN),
-                adminDeleteAction($afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+            $stattag = getTplAdminActionMenu([
+                getTplAdminDeleteAction($afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1', _CLEAN.' "'.$name.'"?', _CLEAN, _CLEAN),
+                getTplAdminDeleteAction($afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
             ]);
         }
 
@@ -344,20 +344,20 @@ function database(): void {
 
     // Navigation + Info-Boxen
     if (empty($type)) {
-        $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
+        $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _OPTTEXT]);
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _REPTEXT]);
 
     } elseif ($type === 'optimize') {
         $db->getSqlQuery('FLUSH TABLES');
-        $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 1]);
+        $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 1]);
 
         $info = _OPTIMIZE.': '.$conf['db']['name'].getTplAdminTipLine(_TOTALSPACE, filterSize($total)).getTplAdminTipLine(_TOTALFREE, filterSize($sumfree));
 
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
 
     } elseif ($type === 'repair') {
-        $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 2]);
+        $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 2]);
 
         $info = _REPAIR.': '.$conf['db']['name'].getTplAdminTipLine(_TOTALSPACE, filterSize($total)).getTplAdminTipLine(_TOTALFREE, filterSize($sumfree));
 
@@ -375,7 +375,7 @@ function dump(): void {
     $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 3]);
     if (($action === 'parse' || $action === 'dump') && !checkSiteToken(getVar('post', 'token', 'raw', ''), 'db')) {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => 'Security token mismatch']);
     } elseif ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
@@ -436,7 +436,7 @@ function dump(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 4]);
+    $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 4]);
     setAdminInfoPage($cont);
 }
 

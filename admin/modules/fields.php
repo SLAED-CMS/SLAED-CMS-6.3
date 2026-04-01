@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function fields(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['', '', '', '', '', '', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'id' => 'fields']);
+    $cont = getTplAdminNavi(['ops' => ['', '', '', '', '', '', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'id' => 'fields']);
     $cont .= checkPerms(CONFIG_DIR.'/fields.php');
     $mods = ['account', 'content', 'forum', 'help', 'news', 'order'];
     $content = '';
@@ -52,7 +52,7 @@ function fields(): void {
                 'xid' => (string)$k,
             ]);
         }
-        $content .= $tpl->getHtmlFrag('admin-fields-tab-content', [
+        $content .= $tpl->getHtmlFrag('admin-tab-content', [
             'items_html' => $tabcontent,
             'tab_id' => getTplAdminTabName('fields', $k),
         ]);
@@ -88,7 +88,7 @@ function save(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'tab' => 6]);
+    $cont = getTplAdminNavi(['ops' => ['name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields', 'name=fields&amp;op=info'], 'tabs' => [_ACCOUNT, _CONTENT, _FORUM, _HELP, _NEWS, _ORDER, _INFO], 'tab' => 6]);
     setAdminInfoPage($cont);
 }
 

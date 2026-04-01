@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('money')) die('Illegal file access
 function money(): void {
     global $db, $afile, $conf, $tpl;
         setHead();
-    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _MA_15]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['money']['anum'] ?? 25;
@@ -43,16 +43,16 @@ function money(): void {
                     $i++;
                 }
             }
-            $acts = adminMenuItems([
+            $acts = getTplAdminActionMenu([
                 ad_status($afile.'.php?name=money&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status),
-                adminLinkAction($afile.'.php?name=money&amp;op=invoice&amp;id='.$id.'&amp;rnum='.$r, _RECHN_B, _RECHN_B),
-                adminLinkAction($afile.'.php?name=money&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=money&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
+                getTplLinkAction($afile.'.php?name=money&amp;op=invoice&amp;id='.$id.'&amp;rnum='.$r, _RECHN_B, _RECHN_B),
+                getTplLinkAction($afile.'.php?name=money&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=money&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-money-list-row', [
                 'actions_html' => $acts,
                 'date_text' => format_time($time, _TIMESTRING),
-                'email_html' => adminTitleTip($infos.$tpl->getHtmlFrag('br', [])._COMMENT.': '.$note.$tpl->getHtmlFrag('br-br', [])._BROWSER.': '.$agent).anti_spam($email),
+                'email_html' => getTplAdminTitleTip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
                 'id_text' => (string)$id,
                 'ip_html' => user_geo_ip($ip, 4),
                 'status_html' => ad_status('', $status),
@@ -86,7 +86,7 @@ function add(): void {
         $time = getVar('req', 'time', 'time');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if ($intro) {
         $form = explode(',', $conf['money']['form'] ?? '');
@@ -218,7 +218,7 @@ function activate(): void {
         [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_money WHERE id = :id', ['id' => $id]));
         $amail = ($conf['money']['mail'] ?? '') ? $conf['money']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._MONEY;
-        $msg = ($conf['sitename'] ?? '').' - '._MONEY.$tpl->getHtmlFrag('br-br', []);
+        $msg = ($conf['sitename'] ?? '').' - '._MONEY.'<br><br>';
         $msg .= filterReplaceText(filterMarkdown($conf['money']['sendinfo'] ?? '', 'all', false), 'all');
         addMail($email, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=money&send=1');
@@ -229,7 +229,7 @@ function activate(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/money.php');
     $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -300,7 +300,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=money', 'name=money&amp;op=add', 'name=money&amp;op=config', 'name=money&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     setAdminInfoPage($cont);
 }
 

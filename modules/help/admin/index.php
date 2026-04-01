@@ -17,12 +17,12 @@ function help(): void {
         $status = '1';
         $field = 'name=help&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 1]);
+        $cont = getTplAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 1]);
     } else {
         $status = '0';
         $field = 'name=help&amp;';
         $refer = '';
-        $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -40,9 +40,9 @@ function help(): void {
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : _ANONYM;
             $stat = ($stat) ? 0 : 1;
-            $acts = adminMenuItems([
-                adminLinkAction($afile.'.php?name=help&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW),
-                adminDeleteAction($afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+            $acts = getTplAdminActionMenu([
+                getTplLinkAction($afile.'.php?name=help&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW),
+                getTplAdminDeleteAction($afile.'.php?name=help&amp;op=delete&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-help-list-row', [
                 'actions_html' => $acts,
@@ -50,7 +50,7 @@ function help(): void {
                 'id_text' => (string)$id,
                 'post_html' => $post,
                 'status_html' => ad_status('', $stat),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
+                'title_html' => getTplAdminTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -67,13 +67,13 @@ function view(): void {
     $vid = intval(getVar('get', 'id', 'num', 0) ?? 0);
     $result = $db->getSqlQuery('SELECT s.id, s.pid, s.uid, s.aid, s.title, s.time, s.body, s.field, s.counter, s.score, s.ratings, c.title, c.intro, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.aid = u.id) WHERE s.id = :id1 OR s.pid = :id2 AND s.time <= now() ORDER BY s.time ASC', ['id1' => $vid, 'id2' => $vid]);
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     $html = '';
     $a = 0;
     while ([$id, $pid, $huid, $haid, $title, $time, $hometext, $field, $counter, $score, $ratings, $ctitle, $cdesc, $nick] = $db->getSqlRow($result)) {
         $title = ($title) ? $title : _MESSAGE.': '.$a;
         $fields = fields_out($field, 'help');
-        $fields = ($fields) ? $tpl->getHtmlFrag('br-br', []).$fields : '';
+        $fields = ($fields) ? '<br><br>'.$fields : '';
         $text = $hometext.$fields;
         $post = $nick ? user_info($nick) : _ANONYM;
         $post = getTplSpan('sl_post', $post, _POSTEDBY);
@@ -88,9 +88,9 @@ function view(): void {
             $ctitle = '';
             $reads =  '';
         }
-        $admin = adminMenuItems([
-            adminLinkAction($afile.'.php?name=help&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-            adminDeleteAction($afile.'.php?name=help&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+        $admin = getTplAdminActionMenu([
+            getTplLinkAction($afile.'.php?name=help&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+            getTplAdminDeleteAction($afile.'.php?name=help&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
         ]);
         $html .= $tpl->getHtmlFrag('basic', ['ctitle' => $ctitle, 'id' => $id, 'title' => $title, 'text' => filterReplaceText(filterMarkdown($text, 'help', false), 'help'), 'post' => $post, 'date' => $date, 'reads' => $reads, 'comm' => $comm, 'rating' => $rating, 'admin' => $admin]);
         $a++;
@@ -139,7 +139,7 @@ function add(): void {
     }
     $status = getVar('post', 'status', 'num', 0) ? getVar('post', 'status', 'num', 0) : ($status ?? 0);
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO]]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if (!empty($hometext)) $cont .= preview($subject, $hometext, '', $field, 'help');
     $rows = $tpl->getHtmlFrag('admin-help-add-rows', [
@@ -224,7 +224,7 @@ function delete(int $fid = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/help.php');
     $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -286,7 +286,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=help', 'name=help&amp;status=1', 'name=help&amp;op=config', 'name=help&amp;op=info'], 'tabs' => [_HOME, _CLOSED, _PREFERENCES, _INFO], 'tab' => 3]);
     setAdminInfoPage($cont);
 }
 

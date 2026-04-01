@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('order')) die('Illegal file access
 function order(): void {
     global $db, $afile, $conf, $tpl;
         setHead();
-    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     if (getVar('get', 'send', 'num', 0)) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _OR_8]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['order']['anum'] ?? 25;
@@ -33,15 +33,15 @@ function order(): void {
         while ([$id, $email, $info, $note, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $infos = fields_out($info, 'order');
-            $acts = adminMenuItems([
+            $acts = getTplAdminActionMenu([
                 ad_status($afile.'.php?name=order&amp;op=activate&amp;id='.$id.'&amp;act='.$act, $status),
-                adminLinkAction($afile.'.php?name=order&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=order&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
+                getTplLinkAction($afile.'.php?name=order&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=order&amp;op=delete&amp;id='.$id, _DELETE.' "'._ID.': '.$id.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-order-list-row', [
                 'actions_html' => $acts,
                 'date_text' => format_time($date, _TIMESTRING),
-                'email_html' => adminTitleTip($infos.$tpl->getHtmlFrag('br', [])._COMMENT.': '.$note.$tpl->getHtmlFrag('br-br', [])._BROWSER.': '.$agent).anti_spam($email),
+                'email_html' => getTplAdminTitleTip($infos.'<br>'._COMMENT.': '.$note.'<br><br>'._BROWSER.': '.$agent).anti_spam($email),
                 'id_text' => (string)$id,
                 'ip_html' => user_geo_ip($ip, 4),
                 'status_html' => ad_status('', $status),
@@ -73,7 +73,7 @@ function add(): void {
         $date = getVar('req', 'date', 'time');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if ($field) $cont .= preview($email, $field, _COMMENT.': '.$note, '', 'all');
     $hide = getTplHiddenInput('name', 'order');
@@ -134,7 +134,7 @@ function activate(): void {
         [$email] = $db->getSqlRow($db->getSqlQuery('SELECT email FROM '.PREFIX_DB.'_order WHERE id = :id', ['id' => $id]));
         $amail = ($conf['order']['mail'] ?? '') ? $conf['order']['mail'] : ($conf['adminmail'] ?? '');
         $subject = ($conf['sitename'] ?? '').' - '._ORDER;
-        $msg = ($conf['sitename'] ?? '').' - '._ORDER.$tpl->getHtmlFrag('br-br', []);
+        $msg = ($conf['sitename'] ?? '').' - '._ORDER.'<br><br>';
         $msg .= filterReplaceText(filterMarkdown($conf['order']['sendinfo'] ?? '', 'all', false), 'all');
         addMail($email, $amail, $subject, $msg, 0, 3);
         setRedirect($afile.'.php?name=order&send=1');
@@ -145,7 +145,7 @@ function activate(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/order.php');
     $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -195,7 +195,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=order', 'name=order&amp;op=add', 'name=order&amp;op=config', 'name=order&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     setAdminInfoPage($cont);
 }
 

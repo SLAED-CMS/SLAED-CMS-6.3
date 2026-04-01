@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('clients')) die('Illegal file acce
 function clients(): void {
     global $db, $afile, $stop, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
@@ -27,10 +27,10 @@ function clients(): void {
         while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;
             $time = (file_exists('uploads/clients/'.$url)) ? date(_TIMESTRING, filemtime('uploads/clients/'.$url)) : _NO_INFO;
-            $acts = adminMenuItems([
+            $acts = getTplAdminActionMenu([
                 ad_status($afile.'.php?name=clients&amp;op=status&amp;id='.$id.'&amp;act='.$act, $status),
-                adminLinkAction($afile.'.php?name=clients&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=clients&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+                getTplLinkAction($afile.'.php?name=clients&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=clients&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-clients-list-row', [
                 'actions_html' => $acts,
@@ -68,7 +68,7 @@ function add(): void {
         $status = getVar('post', 'status', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     $hide = getTplHiddenInput('name', 'clients');
@@ -138,7 +138,7 @@ function status(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=clients', 'name=clients&amp;op=add', 'name=clients&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

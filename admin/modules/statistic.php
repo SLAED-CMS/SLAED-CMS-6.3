@@ -32,7 +32,7 @@ function statistic(): void {
     $file = getVar('post', 'file', 'text');
     $pfile = $file ? '&amp;file='.$file : '';
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
+    $cont = getTplAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(COUNTER_DIR);
     $cont .= checkPerms(COUNTER_DIR.'/statistic');
     $statv = $tpl->getHtmlFrag('admin-statistic-image', [
@@ -127,7 +127,7 @@ function add(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
+    $cont = getTplAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
     $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -159,7 +159,7 @@ function save(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2, 'sub' => getStatisticSearch()]);
+    $cont = getTplAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 2, 'sub' => getStatisticSearch()]);
     setAdminInfoPage($cont);
 }
 

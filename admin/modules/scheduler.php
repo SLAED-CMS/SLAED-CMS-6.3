@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function scheduler(): void {
     global $afile, $conf, $tpl;
     $jobs = getSchedulerJobs();
-    $navi = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+    $navi = getTplAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $cont = '';
     $seclink = ' '.getTplAdminTextLink($afile.'.php?name=security&amp;op=config', _SCHEDULER_WARN_GO).'.';
     $cont .= (!$conf['security']['log_b']) ? $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _SCHEDULER_WARN_DB.$seclink]) : '';
@@ -55,7 +55,7 @@ function scheduler(): void {
         $aops = ['run' => _SCHEDULER_RUN, 'unlock' => _SCHEDULER_UNLOCK];
         if (($job['type'] ?? '') === 'custom') $aops['del'] = _DELETE;
         $aforms = '';
-        $acts = [adminLinkAction($afile.'.php?name=scheduler&amp;op=add&amp;job='.$name, _EDIT, _EDIT)];
+        $acts = [getTplLinkAction($afile.'.php?name=scheduler&amp;op=add&amp;job='.$name, _EDIT, _EDIT)];
         foreach ($aops as $aop => $alabel) {
             $aid = 'sch'.$aop.$name;
             $aforms .= $tpl->getHtmlFrag('admin-scheduler-action-form', [
@@ -70,13 +70,13 @@ function scheduler(): void {
             ]);
         }
         $cols = $tpl->getHtmlFrag('admin-scheduler-list-row', [
-            'actions_html' => adminMenuItems($acts),
+            'actions_html' => getTplAdminActionMenu($acts),
             'forms_html' => $aforms,
             'next_run' => $nextr,
             'priority_value' => (string)($job['priority'] ?? '100'),
             'result_label' => $stat,
             'status_html' => ad_status('', (int)$isactive),
-            'title_html' => adminTitleTipLabel($tip, $title, cutstr($title, 22)),
+            'title_html' => getTplAdminTipLabel($tip, $title, cutstr($title, 22)),
         ]);
         $rows .= getTplAdminTableRow($cols);
     }
@@ -124,7 +124,7 @@ function add(string $name = ''): void {
     $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_SAVE), '', 'sl_center');
     $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     setHead();
-    $navi = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+    $navi = getTplAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     echo $navi.$cont;
     setFoot();
 }
@@ -204,7 +204,7 @@ function delete(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=scheduler', 'name=scheduler&amp;op=add', 'name=scheduler&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

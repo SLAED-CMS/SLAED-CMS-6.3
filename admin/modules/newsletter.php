@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function newsletter(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
         $head = $tpl->getHtmlFrag('admin-newsletter-list-head', [
@@ -24,16 +24,16 @@ function newsletter(): void {
         while ([$id, $title, $mails, $sended, $time, $endtime] = $db->getSqlRow($result)) {
             $sendtime = ($endtime > $time) ? strtotime($endtime) - strtotime($time) : 0;
             $active = ($mails && $sended && $conf['newsletter']['active']) ? 1 : 0;
-            $acts = adminMenuItems([
-                adminLinkAction($afile.'.php?name=newsletter&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id, _DELETE.' &quot;'.$title.'&quot;?', _ONDELETE, _ONDELETE),
+            $acts = getTplAdminActionMenu([
+                getTplLinkAction($afile.'.php?name=newsletter&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id, _DELETE.' &quot;'.$title.'&quot;?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-newsletter-list-row', [
                 'actions_html' => $acts,
                 'id_text' => (string)$id,
                 'send_text' => $sended.' '._NLUSER,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_TIMENL, getDuration($sendtime))).$title,
+                'title_html' => getTplAdminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_TIMENL, getDuration($sendtime))).$title,
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -57,7 +57,7 @@ function add(): void {
         $mails = getVar('post', 'mails', '', '');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     [$num] = $db->getSqlRow($db->getSqlQuery('SELECT Count(id) FROM '.PREFIX_DB.'_users'));
@@ -232,7 +232,7 @@ function delete(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
     $confv = $tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -262,7 +262,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     setAdminInfoPage($cont);
 }
 

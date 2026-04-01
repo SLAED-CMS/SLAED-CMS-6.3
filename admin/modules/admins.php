@@ -61,7 +61,7 @@ function checkAdminlast(int $aid): bool {
 function admins(): void {
     global $db, $afile, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     if (getVar('get', 'send', 'num')) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MAIL_SEND]);
     if ($msg = trim(getVar('get', 'msg', 'text', ''))) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $msg]);
     $head = $tpl->getHtmlFrag('admin-admins-table-head', [
@@ -97,12 +97,12 @@ function admins(): void {
             'title' => _ONDELETE,
         ]);
         $tip = _REG.': '.format_time((string)$rdate, _TIMESTRING).getTplAdminTipLine(_LAST_VISIT, format_time((string)$vdate, _TIMESTRING));
-        $acts = adminMenuItems([$edit, $drop]);
+        $acts = getTplAdminActionMenu([$edit, $drop]);
         $cells = $tpl->getHtmlFrag('admin-admins-table-cells', [
             'actions_html' => $acts,
             'email_html' => mailto($email),
             'language_text' => $lang,
-            'name_html' => adminTitleTip($tip).$show,
+            'name_html' => getTplAdminTitleTip($tip).$show,
             'rank_text' => (string)$title,
             'super_text' => ((int)$super === 1) ? _YES : _NO,
         ]);
@@ -141,7 +141,7 @@ function add(): void {
     $hint = $aid ? $tpl->getHtmlFrag('admin-admins-password-hint', ['hint_text' => _ADMINPASSKEEP]) : '';
     $check = (getVar('cookie', 'sl_close_9', 'num', 0) == 0) ? '' : ' checked';
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => getStopText($stop)]);
     $hide = $tpl->getHtmlFrag('admin-admins-form-hidden', [
         'admin_id' => $aid,
@@ -169,7 +169,7 @@ function add(): void {
     foreach (getAdminmods() as $name) {
         $size = intval(100 / $cols);
         if (($indx - 1) % $cols == 0) {
-            $perm .= $tpl->getHtmlFrag('admin-admins-permission-row-open', []);
+            $perm .= '<tr>';
             $open = true;
         }
         $perm .= $tpl->getHtmlFrag('admin-admins-permission-cell', [
@@ -180,7 +180,7 @@ function add(): void {
             'width_num' => $size,
         ]);
         if ($indx % $cols == 0) {
-            $perm .= $tpl->getHtmlFrag('admin-admins-permission-row-close', []);
+            $perm .= '</tr>';
             $open = false;
         }
         $indx++;
@@ -189,7 +189,7 @@ function add(): void {
         $perm .= $tpl->getHtmlFrag('admin-admins-permission-empty', []);
         $indx++;
     }
-    if ($open) $perm .= $tpl->getHtmlFrag('admin-admins-permission-row-close', []);
+    if ($open) $perm .= '</tr>';
     $perm = $tpl->getHtmlFrag('admin-admins-permissions', [
         'cells_html' => $perm,
         'cols_num' => $cols,
@@ -238,7 +238,7 @@ function save(): void {
     global $db, $afile, $conf, $stop, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
-        $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+        $cont = getTplAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
         echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _TOKENMISS]);
         setFoot();
         return;
@@ -311,7 +311,7 @@ function delete(): void {
     global $db, $afile, $tpl;
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
         setHead();
-        $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+        $cont = getTplAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
         echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _TOKENMISS]);
         setFoot();
         return;
@@ -335,7 +335,7 @@ function delete(): void {
 
 function info(): void {
     global $tpl;
-    $cont = setAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

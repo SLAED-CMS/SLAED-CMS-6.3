@@ -18,11 +18,11 @@ function whois(): void {
     if ($status == 1) {
         $status = 0;
         $field = 'name=whois&amp;status=1&amp;';
-        $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
     } else {
         $status = 1;
         $field = 'name=whois&amp;';
-        $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
     }
 
     $result = $db->getSqlQuery('SELECT w.id, w.name, w.ip, w.time, w.domain, w.host, w.dc, w.body, w.sdomain, w.shost, w.sdc, u.name FROM '.PREFIX_DB.'_whois AS w LEFT JOIN '.PREFIX_DB.'_users AS u ON (w.uid = u.id) WHERE status = :status ORDER BY w.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
@@ -42,12 +42,12 @@ function whois(): void {
             $hometext = $hometext ?: _NO;
             $host = $host ? domain($host) : _NO_INFO;
             $dc = $dc ? domain($dc) : _NO_INFO;
-            $acts = adminMenuItems([
+            $acts = getTplAdminActionMenu([
                 ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=1&amp;refer=1', $statusDomain, '', _SITE),
                 ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=2&amp;refer=1', $statusHost, '', _HOST),
                 ad_status($afile.'.php?name=whois&amp;op=toggle&amp;id='.$id.'&amp;fid=3&amp;refer=1', $statusDc, '', _DC),
-                adminLinkAction($afile.'.php?name=whois&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$domain.'"?', _ONDELETE, _ONDELETE),
+                getTplLinkAction($afile.'.php?name=whois&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=whois&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$domain.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-whois-list-row', [
                 'actions_html' => $acts,
@@ -58,7 +58,7 @@ function whois(): void {
                 'host_html' => $host,
                 'host_status_html' => ad_status('', $statusHost),
                 'id_text' => (string)$id,
-                'postedby_html' => adminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_IP, $ipSender).getTplAdminTipLine(_COMMENT, $hometext)).$post,
+                'postedby_html' => getTplAdminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_IP, $ipSender).getTplAdminTipLine(_COMMENT, $hometext)).$post,
             ]));
         }
         $cont .= getTplAdminTable($head, $rows, 'sl_table_list');
@@ -106,7 +106,7 @@ function add(): void {
         $hometext = getVar('post', 'hometext', 'text', '');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $rows = $tpl->getHtmlFrag('admin-whois-add-rows', [
         'comment_value' => $hometext,
@@ -162,7 +162,7 @@ function delete(int $id = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/whois.php');
     $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -200,7 +200,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = getTplAdminNavi(['ops' => ['name=whois', 'name=whois&amp;op=add', 'name=whois&amp;status=1', 'name=whois&amp;op=config', 'name=whois&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
     setAdminInfoPage($cont);
 }
 

@@ -61,7 +61,7 @@ function clients(): void {
         $sqlstatus = 'status != \'2\'';
         $field = 'name=shop&amp;op=clients&amp;';
         $refer = '';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
             'sub'    => $box,
@@ -74,7 +74,7 @@ function clients(): void {
         $sqlstatus = 'status = \'1\'';
         $field = 'name=shop&amp;op=clients&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
             'sub'    => $box,
@@ -87,7 +87,7 @@ function clients(): void {
         $sqlstatus = 'status = \'0\'';
         $field = 'name=shop&amp;op=clients&amp;status=2&amp;';
         $refer = '&amp;refer=1';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
             'sub'    => $box,
@@ -100,7 +100,7 @@ function clients(): void {
         $sqlstatus = 'status = \'2\'';
         $field = 'name=shop&amp;op=clients&amp;';
         $refer = '&amp;refer=1';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'   => $_ops,
             'tabs'  => $_lang,
             'sub'   => $box,
@@ -135,15 +135,15 @@ function clients(): void {
                 $nick = _ANONYM;
             }
             $trows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-clients-row', [
-                'actions_html' => adminMenuItems([
+                'actions_html' => getTplAdminActionMenu([
                     ad_status($afile.'.php?name=shop&op=clientset&amp;id='.$cid.$refer, $cactive),
-                    adminLinkAction($afile.'.php?name=shop&op=clientadd&amp;cid='.$cid, _FULLEDIT, _FULLEDIT),
-                    adminDeleteAction($afile.'.php?name=shop&op=clientdel&amp;id='.$cid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+                    getTplLinkAction($afile.'.php?name=shop&op=clientadd&amp;cid='.$cid, _FULLEDIT, _FULLEDIT),
+                    getTplAdminDeleteAction($afile.'.php?name=shop&op=clientdel&amp;id='.$cid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
                 ]),
                 'date_text' => $cenddate,
                 'id_text' => (string)$cid,
                 'nickname_html' => $nick,
-                'product_html' => adminTitleTipLabel(_ID.': '.$a.getTplAdminTipLine(_DATE, date(_TIMESTRING, $cregdate)).getTplAdminTipLine(_CLIENTNAME, filterTextHighlight($cname, $csearch)).getTplAdminTipLine(_CLIENTADRES, $caddr).getTplAdminTipLine(_CLIENTPHONE, $cphone).getTplAdminTipLine(_EMAIL, $cemail).getTplAdminTipLine(_NOTE, $cinfo), $ptitle, cutstr($ptitle, 40)),
+                'product_html' => getTplAdminTipLabel(_ID.': '.$a.getTplAdminTipLine(_DATE, date(_TIMESTRING, $cregdate)).getTplAdminTipLine(_CLIENTNAME, filterTextHighlight($cname, $csearch)).getTplAdminTipLine(_CLIENTADRES, $caddr).getTplAdminTipLine(_CLIENTPHONE, $cphone).getTplAdminTipLine(_EMAIL, $cemail).getTplAdminTipLine(_NOTE, $cinfo), $ptitle, cutstr($ptitle, 40)),
                 'site_html' => filterTextHighlight(domain($cwebsite), $csearch),
                 'status_html' => ad_status('', $cactive),
             ]));
@@ -195,7 +195,7 @@ function clientadd(): void {
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $box = buildShopSearchBox();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'    => $_ops,
         'tabs'   => $_lang,
         'sub'    => $box,
@@ -346,7 +346,7 @@ function products(): void {
         $sqlstatus = 'status=0';
         $field = 'name=shop&amp;op=products&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
             'sub'    => $box,
@@ -360,7 +360,7 @@ function products(): void {
         $sqlstatus = 'status=1';
         $field = 'name=shop&amp;op=products&amp;';
         $refer = '&amp;refer=1';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'   => $_ops,
             'tabs'  => $_lang,
             'sub'   => $box,
@@ -385,27 +385,27 @@ function products(): void {
         while([$pid, $pcid, $ptime, $ptitle, $pprice, $pvote, $pactive, $ctitle] = $db->getSqlRow($result)) {
             $ctitle = ($pcid) ? $ctitle : _NO;
             if ($pactive && time() >= strtotime($ptime)) {
-                $view = adminLinkAction('index.php?name=shop&amp;op=view&amp;id='.$pid, _MVIEW, _MVIEW);
+                $view = getTplLinkAction('index.php?name=shop&amp;op=view&amp;id='.$pid, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
-            $vote = ($pvote) ? adminLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$pvote, _EDITVOTE, _EDITVOTE) : '';
+            $vote = ($pvote) ? getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$pvote, _EDITVOTE, _EDITVOTE) : '';
             $typ = ($pactive) ? '0' : '1';
             $prows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-products-row', [
-                'actions_html' => adminMenuItems([
+                'actions_html' => getTplAdminActionMenu([
                     $view,
                     $vote,
                     ad_status($afile.'.php?name=shop&op=productops&amp;typ=a'.$typ.'&amp;id='.$pid.$refer, $pactive),
-                    adminLinkAction($afile.'.php?name=shop&op=productadd&amp;id='.$pid, _FULLEDIT, _FULLEDIT),
-                    adminDeleteAction($afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer, _DELETE.' "'.$ptitle.'"?', _ONDELETE, _ONDELETE),
+                    getTplLinkAction($afile.'.php?name=shop&op=productadd&amp;id='.$pid, _FULLEDIT, _FULLEDIT),
+                    getTplAdminDeleteAction($afile.'.php?name=shop&op=productops&amp;typ=d&amp;id='.$pid.$refer, _DELETE.' "'.$ptitle.'"?', _ONDELETE, _ONDELETE),
                 ]),
                 'id_text' => (string)$pid,
                 'is_checked' => false,
                 'price_text' => $pprice.' '.$conf['shop']['valute'],
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($ptime ?? '', _TIMESTRING)), $ptitle, cutstr($ptitle, 60)),
+                'title_html' => getTplAdminTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($ptime ?? '', _TIMESTRING)), $ptitle, cutstr($ptitle, 60)),
                 'value_attr' => (string)$pid,
             ]));
         }
@@ -446,7 +446,7 @@ function productadd(): void {
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $box = buildShopSearchBox();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'    => $_ops,
         'tabs'   => $_lang,
         'sub'    => $box,
@@ -468,7 +468,7 @@ function productadd(): void {
         $assocrows = '';
         while ([$id, $title] = $db->getSqlRow($result2)) {
             if ($a == 2) {
-                $assocrows .= $tpl->getHtmlFrag('admin-blocks-view-row-close', []).$tpl->getHtmlFrag('admin-blocks-view-row-open', []);
+                $assocrows .= '</tr>'.'<tr>';
                 $a = 0;
             }
             $isch = false;
@@ -480,7 +480,7 @@ function productadd(): void {
             ]);
             $a++;
         }
-        $assocrows = $tpl->getHtmlFrag('admin-blocks-view-row-open', []).$assocrows.$tpl->getHtmlFrag('admin-blocks-view-row-close', []);
+        $assocrows = '<tr>'.$assocrows.'</tr>';
         $associnner = $tpl->getHtmlFrag('admin-shop-assoc-table', ['rows_html' => $assocrows]);
         $parows .= getTplAdminFormRow(getTplAdminHintLabel(_ASSOTOPIC, _ASSOTOPICI), $associnner);
     }
@@ -583,7 +583,7 @@ function partners(): void {
         $sqlstatus = 'status=1';
         $field = 'name=shop&amp;op=partners&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
             'sub'    => $box,
@@ -597,7 +597,7 @@ function partners(): void {
         $sqlstatus = 'status=0';
         $field = 'name=shop&amp;op=partners&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
             'sub'    => $box,
@@ -611,7 +611,7 @@ function partners(): void {
         $sqlstatus = 'status=2';
         $field = 'name=shop&amp;op=partners&amp;';
         $refer = '&amp;refer=1';
-        $navi = setAdminNavi([
+        $navi = getTplAdminNavi([
             'ops'   => $_ops,
             'tabs'  => $_lang,
             'sub'   => $box,
@@ -643,14 +643,14 @@ function partners(): void {
                 $nick = _ANONYM;
             }
             $parows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-shop-partners-row', [
-                'actions_html' => adminMenuItems([
+                'actions_html' => getTplAdminActionMenu([
                     ad_status($afile.'.php?name=shop&op=partnerset&amp;id='.$paid.$refer, $paactive),
-                    adminLinkAction($afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid, _MVIEW, _MVIEW),
-                    adminLinkAction($afile.'.php?name=shop&op=partneradd&amp;paid='.$paid, _FULLEDIT, _FULLEDIT),
-                    adminDeleteAction($afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+                    getTplLinkAction($afile.'.php?name=shop&op=partnerinfo&amp;paid='.$paid, _MVIEW, _MVIEW),
+                    getTplLinkAction($afile.'.php?name=shop&op=partneradd&amp;paid='.$paid, _FULLEDIT, _FULLEDIT),
+                    getTplAdminDeleteAction($afile.'.php?name=shop&op=partnerdel&amp;id='.$paid.$refer, _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
                 ]),
                 'id_text' => (string)$paid,
-                'nickname_html' => adminTitleTip(_CLIENTNAME.': '.$paname.getTplAdminTipLine(_CLIENTADRES, $paaddr).getTplAdminTipLine(_CLIENTPHONE, $paphone).getTplAdminTipLine(_EMAIL, $paemail)).$nick,
+                'nickname_html' => getTplAdminTitleTip(_CLIENTNAME.': '.$paname.getTplAdminTipLine(_CLIENTADRES, $paaddr).getTplAdminTipLine(_CLIENTPHONE, $paphone).getTplAdminTipLine(_EMAIL, $paemail)).$nick,
                 'partnerbek_text' => $pabek.' '.$conf['shop']['valute'],
                 'partnerrest_text' => $parest.' '.$conf['shop']['valute'],
                 'reg_text' => date(_TIMESTRING, $paregdate),
@@ -702,7 +702,7 @@ function partneradd(): void {
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $box = buildShopSearchBox();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'    => $_ops,
         'tabs'   => $_lang,
         'sub'    => $box,
@@ -805,7 +805,7 @@ function partnerinfo(): void {
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $box = buildShopSearchBox();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'    => $_ops,
         'tabs'   => $_lang,
         'sub'    => $box,
@@ -938,7 +938,7 @@ function export(): void {
         $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
         $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
         $box = buildShopSearchBox();
-        $cont = setAdminNavi([
+        $cont = getTplAdminNavi([
             'ops'    => $_ops,
             'tabs'   => $_lang,
             'sub'    => $box,
@@ -1008,7 +1008,7 @@ function config(): void {
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $box = buildShopSearchBox();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => $_ops,
         'tabs' => $_lang,
         'sub'  => $box,
@@ -1159,7 +1159,7 @@ function info(): void {
     $_ops  = ['name=shop&amp;op=clients', 'name=shop&amp;op=products', 'name=shop&amp;op=partners', 'name=shop&amp;op=export', 'name=shop&amp;op=config', 'name=shop&amp;op=info'];
     $_lang = [_CLIENTS, _PRODUCTS, _PARTNERS, _EXPORT.' / '._IMPORT, _PREFERENCES, _INFO];
     $box = buildShopSearchBox();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => $_ops,
         'tabs' => $_lang,
         'sub'  => $box,

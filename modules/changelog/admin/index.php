@@ -18,7 +18,7 @@ function changelog(): void {
     setHead();
 
     $_exporten = $conf['changelog']['exporten'] ?? true;
-    $cont = setAdminNavi($_exporten ? [
+    $cont = getTplAdminNavi($_exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
     ] : [
@@ -94,7 +94,7 @@ function config(): void {
     global $afile, $conf, $tpl;
     setHead();
     $_exporten = $conf['changelog']['exporten'] ?? true;
-    $cont = setAdminNavi($_exporten ? [
+    $cont = getTplAdminNavi($_exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
         'tab'  => 1,
@@ -149,7 +149,7 @@ function configsave(): void {
     if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'changelog')) {
         setHead();
         $_exporten = $conf['changelog']['exporten'] ?? true;
-        $cont = setAdminNavi($_exporten ? [
+        $cont = getTplAdminNavi($_exporten ? [
             'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
             'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
             'tab'  => 1,
@@ -200,7 +200,7 @@ function export(): void {
 function info(): void {
     global $conf;
     $_exporten = $conf['changelog']['exporten'] ?? true;
-    $cont = setAdminNavi($_exporten ? [
+    $cont = getTplAdminNavi($_exporten ? [
         'ops'  => ['name=changelog', 'name=changelog&amp;op=config', 'name=changelog&amp;op=export&amp;id=txt', 'name=changelog&amp;op=export&amp;id=md', 'name=changelog&amp;op=info'],
         'tabs' => [_HOME, _PREFERENCES, _CHLOG_EXPORT_TXT, _CHLOG_EXPORT_MD, _INFO],
         'tab'  => 4,

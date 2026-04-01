@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('content')) die('Illegal file acce
 function content(): void {
     global $db, $afile, $conf, $tpl;
         setHead();
-    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $num = getVar('get', 'num', 'num', 1);
     $anum = $conf['content']['anum'] ?? 10;
     $anump = $conf['content']['anump'] ?? 10;
@@ -27,16 +27,16 @@ function content(): void {
         $rows = '';
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             if (time() >= strtotime($time)) {
-                $view = adminLinkAction('index.php?name=content&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
+                $view = getTplLinkAction('index.php?name=content&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
-            $acts = adminMenuItems([
+            $acts = getTplAdminActionMenu([
                 $view,
-                adminLinkAction($afile.'.php?name=content&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=content&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+                getTplLinkAction($afile.'.php?name=content&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=content&amp;op=delete&amp;id='.$id, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-content-list-row', [
                 'actions_html' => $acts,
@@ -44,7 +44,7 @@ function content(): void {
                 'id_text' => (string)$id,
                 'reads_text' => (string)$counter,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.getTplAdminTipLine(_ORTYPEURL, $conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id), $title, cutstr($title, 50)),
+                'title_html' => getTplAdminTipLabel(_URL.': '.$conf['homeurl'].'/index.php?name=content&amp;op=view&amp;id='.$id.getTplAdminTipLine(_ORTYPEURL, $conf['homeurl'].'/index.php?go=rss&amp;name=content&amp;id='.$id), $title, cutstr($title, 50)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -72,9 +72,9 @@ function add(): void {
         $refresh = getVar('post', 'refresh', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
-    $fields = ($field) ? $tpl->getHtmlFrag('br-br', []).fields_out($field, 'content') : '';
+    $fields = ($field) ? '<br><br>'.fields_out($field, 'content') : '';
     if ($body) $cont .= preview($title, $body, '', $field, 'content');
     $rows = '';
     $rows .= getTplAdminFormRow(_TITLE.':', getTplTextInput('title', $title, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'));
@@ -137,7 +137,7 @@ function delete(int $cid = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/content.php');
     $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -172,7 +172,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     setAdminInfoPage($cont);
 }
 

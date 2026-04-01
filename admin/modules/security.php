@@ -24,7 +24,7 @@ $labels = [
 function security(): void {
     global $afile, $labels, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
+    $cont = getTplAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $head = $tpl->getHtmlFrag('admin-security-list-head', [
         'date_label' => _DATE,
@@ -40,16 +40,16 @@ function security(): void {
             $title = $labels[$name];
             $path = LOGS_DIR.'/'.$file;
             $filesize = filesize($path);
-            $acts = adminMenuItems([
-                adminLinkAction($afile.'.php?name=security&amp;op=logview&amp;file='.$name, _INFO, _INFO),
-                adminLinkAction($afile.'.php?name=security&amp;op=download&amp;file='.$name, _DOWN, _DOWN),
-                adminDeleteAction($afile.'.php?name=security&amp;op=delete&amp;file='.$name, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+            $acts = getTplAdminActionMenu([
+                getTplLinkAction($afile.'.php?name=security&amp;op=logview&amp;file='.$name, _INFO, _INFO),
+                getTplLinkAction($afile.'.php?name=security&amp;op=download&amp;file='.$name, _DOWN, _DOWN),
+                getTplAdminDeleteAction($afile.'.php?name=security&amp;op=delete&amp;file='.$name, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-security-list-row', [
                 'actions_html' => $acts,
                 'date_text' => date(_TIMESTRING, filemtime($path)),
                 'size_text' => filterSize($filesize),
-                'title_html' => adminTitleTip(_FILE.': storage/logs/'.$file).$title,
+                'title_html' => getTplAdminTitleTip(_FILE.': storage/logs/'.$file).$title,
             ]));
         }
     }
@@ -61,7 +61,7 @@ function security(): void {
 function logview(): void {
     global $labels, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
+    $cont = getTplAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $file = getVar('get', 'file', 'var');
     if ($file) {
         $title = $labels[$file];
@@ -93,7 +93,7 @@ function banlist(): void {
     $hash = getVar('req', 'hash', 'text');
     $cidr = getVar('req', 'cidr', 'text');
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 1, 'subtab' => 1, 'id' => 'security']);
+    $cont = getTplAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 1, 'subtab' => 1, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     if (getVar('get', 'send', 'var')) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _MAIL_SEND]);
     $tabone = '';
@@ -108,11 +108,11 @@ function banlist(): void {
                 if ($tcidr === false) continue;
                 [$tip, $tmask] = explode('/', $tcidr, 2);
                 $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-security-ban-ip-row', [
-                    'actions_html' => adminMenuItems([adminDeleteAction($afile.'.php?name=security&amp;op=bansave&amp;cidr='.urlencode($tcidr).'&amp;hash='.urlencode($binfo[1]).'&amp;time='.(int)$binfo[2].'&amp;id=1', _DELETE.' "'.$tcidr.'"?', _ONDELETE, _ONDELETE)]),
+                    'actions_html' => getTplAdminActionMenu([getTplAdminDeleteAction($afile.'.php?name=security&amp;op=bansave&amp;cidr='.urlencode($tcidr).'&amp;hash='.urlencode($binfo[1]).'&amp;time='.(int)$binfo[2].'&amp;id=1', _DELETE.' "'.$tcidr.'"?', _ONDELETE, _ONDELETE)]),
                     'cidr_text' => '/'.$tmask,
                     'date_text' => getTimeLeft((int)$binfo[2]),
                     'hash_text' => $binfo[1],
-                    'ip_html' => adminTitleTip(_BANN_REAS.': '.$binfo[3]).user_geo_ip($tip, 4),
+                    'ip_html' => getTplAdminTitleTip(_BANN_REAS.': '.$binfo[3]).user_geo_ip($tip, 4),
                 ]));
             }
         }
@@ -123,7 +123,7 @@ function banlist(): void {
             'hash_label' => _HASH,
             'ip_label' => _IP,
         ]), $rows, 'sl_table_list_sort');
-        $tabone .= $tpl->getHtmlFrag('admin-security-tab-divider', []);
+        $tabone .= '<hr>';
     }
     $tabone .= $tpl->getHtmlFrag('admin-security-ban-ip-form', [
         'add_label' => _ADD,
@@ -148,7 +148,7 @@ function banlist(): void {
             if ($val != '') {
                 $binfo = explode('|', $val);
                 $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-security-ban-user-row', [
-                    'actions_html' => adminMenuItems([adminDeleteAction($afile.'.php?name=security&amp;op=bansave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3', _DELETE.' "'.$binfo[0].'"?', _ONDELETE, _ONDELETE)]),
+                    'actions_html' => getTplAdminActionMenu([getTplAdminDeleteAction($afile.'.php?name=security&amp;op=bansave&amp;name='.$binfo[0].'&amp;time='.$binfo[1].'&amp;id=3', _DELETE.' "'.$binfo[0].'"?', _ONDELETE, _ONDELETE)]),
                     'date_text' => getTimeLeft($binfo[1]),
                     'info_text' => $binfo[2],
                     'name_html' => user_info($binfo[0]),
@@ -161,7 +161,7 @@ function banlist(): void {
             'info_label' => _BANN_REAS,
             'name_label' => _NICKNAME,
         ]), $rows, 'sl_table_list_sort');
-        $tabtwo .= $tpl->getHtmlFrag('admin-security-tab-divider', []);
+        $tabtwo .= '<hr>';
     }
     $name = getVar('get', 'name', 'name');
     $cookie = $conf['user_c'].'-close-security';
@@ -183,7 +183,7 @@ function banlist(): void {
         'time_label' => _TIME.':',
         'time_value' => (string)$time,
     ]);
-    $banv = $tpl->getHtmlFrag('admin-security-ban-tabs', [
+    $banv = $tpl->getHtmlFrag('admin-uploads-config-tabs', [
         'tab_one_id' => getTplAdminTabName('security', 0, true),
         'tab_two_id' => getTplAdminTabName('security', 1, true),
         'tab_one_html' => $tabone,
@@ -245,7 +245,7 @@ function bansave(): void {
 function passwd(): void {
     global $conf, $afile, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 2, 'id' => 'security']);
+    $cont = getTplAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 2, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $cont .= (!$conf['security']['login'] || !$conf['security']['password']) ? $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _SEC_AUTH_INFO]) : $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _SEC_AUTH_OK]);
     $hide = $tpl->getHtmlFrag('admin-security-pass-hidden-op');
@@ -301,7 +301,7 @@ function passsave(): void {
 function config(): void {
     global $conf, $afile, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 3, 'id' => 'security']);
+    $cont = getTplAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 3, 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
     $ainfo = sprintf(_ADMIN_FILE_INFO, strtolower(getPass('10')));
     $floodhtml = getTplSelect('flood',
@@ -443,7 +443,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 4, 'id' => 'security']);
+    $cont = getTplAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'tab' => 4, 'id' => 'security']);
     setAdminInfoPage($cont);
 }
 

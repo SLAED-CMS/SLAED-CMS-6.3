@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function messages(): void {
     global $db, $afile, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
         $head = $tpl->getHtmlFrag('admin-messages-list-head', [
@@ -38,10 +38,10 @@ function messages(): void {
             $lang = (!$lang) ? _ALL : $lang;
             $exp = intval($expire - time());
             $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
-            $acts = adminMenuItems([
+            $acts = getTplAdminActionMenu([
                 ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active),
-                adminLinkAction($afile.'.php?name=messages&amp;op=add&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=messages&amp;op=delete&amp;id='.$mid, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+                getTplLinkAction($afile.'.php?name=messages&amp;op=add&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=messages&amp;op=delete&amp;id='.$mid, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-messages-list-row', [
                 'actions_html' => $acts,
@@ -79,7 +79,7 @@ function add(): void {
         $lang = getVar('post', 'lang', 'var');
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => $stop]);
     if ($body) $cont .= preview($title, $body, '', '', 'all');
     $hide = getTplHiddenInput('mid', (string)$mid).getTplHiddenInput('name', 'messages').getTplHiddenInput('op', 'save').getTplHiddenInput('posttype', 'save');
@@ -165,7 +165,7 @@ function delete(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

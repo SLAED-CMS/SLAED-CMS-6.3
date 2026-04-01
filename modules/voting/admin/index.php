@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('voting')) die('Illegal file acces
 function voting(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $num = getVar('get', 'num', 'num', 1);
     $offset = ($num - 1) * $conf['voting']['anum'];
     $offset = intval($offset);
@@ -27,17 +27,17 @@ function voting(): void {
         $rows = '';
         while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
-                $view = (!$modul) ? adminLinkAction('index.php?name=voting&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW) : '';
+                $view = (!$modul) ? getTplLinkAction('index.php?name=voting&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW) : '';
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
             $type = ($typ == '1') ? _VOPEN : _VCLOSE;
-            $acts = adminMenuItems([
+            $acts = getTplAdminActionMenu([
                 $view,
-                adminLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+                getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=voting&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
             $langtext = '';
             if ($conf['multilingual'] == 1) $langtext = getLangName((!$lang) ? _ALL : $lang);
@@ -49,7 +49,7 @@ function voting(): void {
                 'modul_text' => $mod,
                 'show_lang' => $conf['multilingual'] == 1,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CHNGSTORY.': '.format_time($date, _TIMESTRING).getTplAdminTipLine(_ENDDATE, format_time($enddate, _TIMESTRING)).getTplAdminTipLine(_TYPE, $type), $title, cutstr($title, 60)),
+                'title_html' => getTplAdminTipLabel(_CHNGSTORY.': '.format_time($date, _TIMESTRING).getTplAdminTipLine(_ENDDATE, format_time($enddate, _TIMESTRING)).getTplAdminTipLine(_TYPE, $type), $title, cutstr($title, 60)),
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -84,7 +84,7 @@ function add(): void {
         $status = getVar('post', 'status', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => $stop]);
     if ($id) $cont .= $tpl->getHtmlFrag('admin-voting-preview-box', ['voting_html' => getVotingView($id, 'voting')]);
     $hide = getTplHiddenInput('name', 'voting');
@@ -204,7 +204,7 @@ function delete(int $id = 0): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/voting.php');
     $bval = (string)($conf['voting']['block'] ?? '0');
     $block_sel = getTplSelect('block',
@@ -255,7 +255,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=voting', 'name=voting&amp;op=add', 'name=voting&amp;op=config', 'name=voting&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 3]);
     setAdminInfoPage($cont);
 }
 

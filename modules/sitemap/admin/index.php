@@ -10,7 +10,7 @@ function sitemap(): void {
     global $afile, $conf, $tpl;
     setHead();
     $file = 'sitemap.xml';
-    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO]]);
+    $cont = getTplAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO]]);
     $cont .= checkPerms(BASE_DIR.'/'.$file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $f = $asize = 0;
@@ -27,12 +27,12 @@ function sitemap(): void {
             fclose($handle);
         }
         $size = filesize($cfile);
-        $acont .= getTplAdminInfoLine(_FILE, $cfile).getTplAdminInfoLine(_DATE, date(_TIMESTRING, filemtime($cfile))).getTplAdminInfoLine(_SIZE, filterSize($size)).getTplAdminInfoLine(_URLS, (string)$n).$tpl->getHtmlFrag('br', []);
+        $acont .= getTplAdminInfoLine(_FILE, $cfile).getTplAdminInfoLine(_DATE, date(_TIMESTRING, filemtime($cfile))).getTplAdminInfoLine(_SIZE, filterSize($size)).getTplAdminInfoLine(_URLS, (string)$n).'<br>';
         $f++;
         $asize += $size;
     }
     $slink = getTplAdminTextLink($conf['homeurl'].'/'.$file, $conf['homeurl'].'/'.$file, '_blank', _SITEMAP);
-    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': '.$slink.$tpl->getHtmlFrag('br-br', []).$acont.getTplAdminInfoLine(_FILE_M, (string)$f).getTplAdminInfoLine(_FILE_S, filterSize($asize))]);
+    $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _SITEMAP.': '.$slink.'<br><br>'.$acont.getTplAdminInfoLine(_FILE_M, (string)$f).getTplAdminInfoLine(_FILE_S, filterSize($asize))]);
     $hide = getTplHiddenInput('name', 'sitemap').getTplHiddenInput('op', 'add');
     $rows = $tpl->getHtmlFrag('admin-sitemap-editor-rows', [
         'code_html' => textarea_code('code', '', 'sl_form', 'application/xml', str_replace('&', '&amp;', $conts)),
@@ -53,7 +53,7 @@ function xsledit(): void {
     global $afile, $tpl;
     setHead();
     $file = SITEMAP_DIR.'/sitemap.xsl';
-    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms($file);
     $conts = is_readable($file) ? file_get_contents($file) : '';
     $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => sprintf(_XSL_INFO, $file)]);
@@ -80,7 +80,7 @@ function xslsave(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/sitemap.php');
     $frs = ['0' => _NO, 'always' => _ALWAYS, 'hourly' => _HOURLY, 'daily' => _DAILY, 'weekly' => _WEEKLY, 'monthly' => _MONTHLY, 'yearly' => _YEARLY, 'never' => _NEVER];
     $h = $m = $c = $popt = '';
@@ -190,7 +190,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=sitemap', 'name=sitemap&amp;op=xsledit', 'name=sitemap&amp;op=config', 'name=sitemap&amp;op=info'], 'tabs' => [_HOME, _TEMPLATE, _PREFERENCES, _INFO], 'tab' => 3]);
     setAdminInfoPage($cont);
 }
 

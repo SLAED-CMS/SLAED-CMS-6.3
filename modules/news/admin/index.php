@@ -17,12 +17,12 @@ function news(): void {
         $status = '0';
         $field = 'name=news&amp;status=1&amp;';
         $refer = '&amp;refer=1';
-        $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
+        $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 2]);
     } else {
         $status = '1';
         $field = 'name=news&amp;';
         $refer = '';
-        $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
+        $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO]]);
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
@@ -41,18 +41,18 @@ function news(): void {
             $ip = ($ip) ? user_geo_ip($ip, 4) : _NO;
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);
             if ($status && time() >= strtotime($time)) {
-                $view = adminLinkAction('index.php?name=news&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
+                $view = getTplLinkAction('index.php?name=news&amp;op=view&amp;id='.$id, _MVIEW, _MVIEW);
                 $active = '1';
             } else {
                 $view = '';
                 $active = '0';
             }
-            $vote = ($vote) ? adminLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$vote, _EDITVOTE, _EDITVOTE) : '';
-            $acts = adminMenuItems([
+            $vote = ($vote) ? getTplLinkAction($afile.'.php?name=voting&amp;op=add&amp;id='.$vote, _EDITVOTE, _EDITVOTE) : '';
+            $acts = getTplAdminActionMenu([
                 $view,
                 $vote,
-                adminLinkAction($afile.'.php?name=news&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+                getTplLinkAction($afile.'.php?name=news&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=news&amp;op=actions&amp;typ=d&amp;id='.$id.$refer, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-article-list-row', [
                 'actions_html' => $acts,
@@ -60,7 +60,7 @@ function news(): void {
                 'id_text' => (string)$id,
                 'post_html' => $post,
                 'status_html' => ad_status('', $active),
-                'title_html' => adminTitleTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
+                'title_html' => getTplAdminTipLabel(_CATEGORY.': '.$ctitle.getTplAdminTipLine(_DATE, format_time($time, _TIMESTRING)).getTplAdminTipLine(_IP, $ip), $title, cutstr($title, 60)),
             ]));
         }
         $selms = _CHECKOP.': '.edit_list('news', 'typ', '').' '.getTplAdminSubmitButton(_OK);
@@ -110,7 +110,7 @@ function add(): void {
         $fix = getVar('post', 'fix', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 1]);
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => getStopText((array)$stop)]);
     $homepre = ($vote) ? $tpl->getHtmlFrag('div-hr', ['id' => 'repnews', 'content' => getVotingView($vote, 'news')]).$hometext : $hometext;
     if ($homepre) $cont .= preview($subject, $homepre, $bodytext, $field, 'news');
@@ -120,10 +120,10 @@ function add(): void {
     $asso = '';
     $result2 = $db->getSqlQuery('SELECT id, title FROM '.PREFIX_DB.'_categories WHERE modul = \'news\' ORDER BY parent, title');
     if ($db->getSqlRowCount($result2) > 0) {
-        $rows_html = $tpl->getHtmlFrag('tr-open', []);
+        $rows_html = '<tr>';
         $a = 0;
         while ([$cid, $ctitle] = $db->getSqlRow($result2)) {
-            if ($a === 2) { $rows_html .= $tpl->getHtmlFrag('tr-close', []).$tpl->getHtmlFrag('tr-open', []); $a = 0; }
+            if ($a === 2) { $rows_html .= '</tr>'.'<tr>'; $a = 0; }
             $check = '';
             if ($associated && is_array($associated)) {
                 foreach ($associated as $val) {
@@ -133,8 +133,8 @@ function add(): void {
             $rows_html .= $tpl->getHtmlFrag('admin-news-asso-cell', ['cid' => $cid, 'ctitle' => $ctitle, 'checked' => $check]);
             $a++;
         }
-        $rows_html .= $tpl->getHtmlFrag('tr-close', []);
-        $asso = $tpl->getHtmlFrag('admin-news-asso-table', ['rows_html' => $rows_html]);
+        $rows_html .= '</tr>';
+        $asso = $tpl->getHtmlFrag('admin-shop-assoc-table', ['rows_html' => $rows_html]);
     }
     $rows .= $tpl->getHtmlFrag('admin-news-add-rows', [
         'acomm_html' => com_access('acomm', $acomm, 'sl_form'),
@@ -251,7 +251,7 @@ function actions(int|array $ids = 0, string $vtyp = ''): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
+    $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 3]);
     $cont .= checkPerms(CONFIG_DIR.'/news.php');
     $cont .= getTplBox($tpl->getHtmlFrag('form-conf', [
         'route' => $afile,
@@ -358,7 +358,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
+    $cont = getTplAdminNavi(['ops' => ['name=news', 'name=news&amp;op=add', 'name=news&amp;status=1', 'name=news&amp;op=config', 'name=news&amp;op=info'], 'tabs' => [_HOME, _ADD, _NEW, _PREFERENCES, _INFO], 'tab' => 4]);
     setAdminInfoPage($cont);
 }
 

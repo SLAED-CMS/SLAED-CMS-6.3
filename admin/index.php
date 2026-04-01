@@ -103,7 +103,7 @@ function getAdminPanel(): void {
                     );
                 }
             }
-            $content .= $tpl->getHtmlFrag('panel-admin', ['title' => _MODULESADMIN, 'content' => $cont, 'panelid' => 'sl_close_1']);
+            $content .= getTplAdminPanel('sl_close_1', _MODULESADMIN, $cont);
         }
         $count = 1;
         $cont = '';
@@ -124,7 +124,7 @@ function getAdminPanel(): void {
                 }
             }
         }
-        $content .= $tpl->getHtmlFrag('panel-admin', ['title' => _MODULESADMIN, 'content' => $cont, 'panelid' => 'sl_close_2']);
+        $content .= getTplAdminPanel('sl_close_2', _MODULESADMIN, $cont);
     }
     echo $content;
     setFoot();

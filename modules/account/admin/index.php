@@ -14,7 +14,7 @@ function account(): void {
     setHead();
     $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => getTplAdminAccountSearch($_search, $_chng),
@@ -79,19 +79,19 @@ function account(): void {
         ]);
         $rows = '';
         while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->getSqlRow($res)) {
-            $sgroup = $gname ? adminColorLabel($gcolor, $gname) : _NO;
+            $sgroup = $gname ? getTplAdminColorLabel($gcolor, $gname) : _NO;
             $web = $site ? domain($site, 40) : _NO;
-            $acts = adminMenuItems([
-                adminLinkAction($afile.'.php?name=account&amp;op=add&amp;id='.$uid, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip, _BANIPSENDER.' "'.$ip.'"?', _BANIPSENDER, _BANIPSENDER),
-                adminDeleteAction($afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+            $acts = getTplAdminActionMenu([
+                getTplLinkAction($afile.'.php?name=account&amp;op=add&amp;id='.$uid, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=security&amp;op=banlist&amp;new_ip='.$ip, _BANIPSENDER.' "'.$ip.'"?', _BANIPSENDER, _BANIPSENDER),
+                getTplAdminDeleteAction($afile.'.php?name=account&amp;op=delete&amp;id='.$uid.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-account-list-row', [
                 'actions_html' => $acts,
                 'email_html' => filterTextHighlight($mail, $chng),
                 'id_html' => filterTextHighlight($uid, $chng),
                 'ip_html' => filterTextHighlight(user_geo_ip($ip, 4), $chng),
-                'nickname_html' => adminTitleTip(_HASH.': '.md5($agent).getTplAdminTipLine(_LAST_VISIT, format_time($last, _TIMESTRING)).getTplAdminTipLine(_SPEC_GROUP, $sgroup).getTplAdminTipLine(_SITE, filterTextHighlight($web,$chng)).getTplAdminTipLine(_GENDER, gender($gender)).getTplAdminTipLine(_POINTS, $point)).filterTextHighlight(user_info($name), $chng),
+                'nickname_html' => getTplAdminTitleTip(_HASH.': '.md5($agent).getTplAdminTipLine(_LAST_VISIT, format_time($last, _TIMESTRING)).getTplAdminTipLine(_SPEC_GROUP, $sgroup).getTplAdminTipLine(_SITE, filterTextHighlight($web,$chng)).getTplAdminTipLine(_GENDER, gender($gender)).getTplAdminTipLine(_POINTS, $point)).filterTextHighlight(user_info($name), $chng),
                 'reg_text' => format_time($reg, _TIMESTRING),
             ]));
         }
@@ -162,7 +162,7 @@ function add(): void {
     setHead();
     $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => getTplAdminAccountSearch($_search, $_chng),
@@ -361,7 +361,7 @@ function newuser(): void {
     setHead();
     $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => getTplAdminAccountSearch($_search, $_chng),
@@ -381,9 +381,9 @@ function newuser(): void {
         ]);
         $rows = '';
         while ([$uid, $name, $mail, $pass, $reg, $check] = $db->getSqlRow($result)) {
-            $acts = adminMenuItems([
+            $acts = getTplAdminActionMenu([
                 ad_status($conf['homeurl'].'/index.php?name=account&amp;op=activate&amp;user='.urlencode($name).'&amp;num='.$check, 0),
-                adminDeleteAction($afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+                getTplAdminDeleteAction($afile.'.php?name=account&amp;op=newdrop&amp;id='.$uid.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-account-newuser-row', [
                 'actions_html' => $acts,
@@ -408,7 +408,7 @@ function pointreset(): void {
     setHead();
     $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => getTplAdminAccountSearch($_search, $_chng),
@@ -449,7 +449,7 @@ function config(): void {
     setHead();
     $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => getTplAdminAccountSearch($_search, $_chng),
@@ -583,7 +583,7 @@ function info(): void {
     global $afile, $tpl;
     $_search = (int)getVar('post', 'search');
     $_chng = getVar('post', 'chng');
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=account', 'name=account&amp;op=add', 'name=account&amp;op=newuser', 'name=account&amp;op=pointreset', 'name=account&amp;op=config', 'name=account&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NEW_USER, _NULLPOINTS, _PREFERENCES, _INFO],
         'sub'  => getTplAdminAccountSearch($_search, $_chng),

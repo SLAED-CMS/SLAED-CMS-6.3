@@ -9,7 +9,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 function replace(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi(['ops' => ['', '', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'id' => 'replace']);
+    $cont = getTplAdminNavi(['ops' => ['', '', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'id' => 'replace']);
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _REPLACEINFO]);
     $cont .= checkPerms(CONFIG_DIR.'/replace.php');
     $mods = ['content', 'news'];
@@ -40,7 +40,7 @@ function replace(): void {
                     'xid' => (string)$k,
                 ]);
             }
-            $content .= $tpl->getHtmlFrag('admin-replace-tab-content', [
+            $content .= $tpl->getHtmlFrag('admin-tab-content', [
                 'items_html' => $items,
                 'tab_id' => getTplAdminTabName('replace', $k),
             ]);
@@ -74,7 +74,7 @@ function save(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=replace', 'name=replace', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'tab' => 2]);
+    $cont = getTplAdminNavi(['ops' => ['name=replace', 'name=replace', 'name=replace&amp;op=info'], 'tabs' => [_CONTENT, _NEWS, _INFO], 'tab' => 2]);
     setAdminInfoPage($cont);
 }
 

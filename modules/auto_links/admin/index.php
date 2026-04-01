@@ -10,7 +10,7 @@ if (!defined('ADMIN_FILE') || !is_admin_modul('auto_links')) die('Illegal file a
 function auto_links(): void {
     global $db, $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
     ]);
@@ -29,17 +29,17 @@ function auto_links(): void {
         ]);
         $rows = '';
         while ([$id, $name, $url, $hits, $outs, $added] = $db->getSqlRow($result)) {
-            $acts = adminMenuItems([
-                $hits ? adminLinkAction($afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id, _MVIEW, _MVIEW) : '',
-                adminLinkAction($afile.'.php?name=auto_links&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                adminDeleteAction($afile.'.php?name=auto_links&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+            $acts = getTplAdminActionMenu([
+                $hits ? getTplLinkAction($afile.'.php?name=auto_links&amp;op=stats&amp;id='.$id, _MVIEW, _MVIEW) : '',
+                getTplLinkAction($afile.'.php?name=auto_links&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
+                getTplAdminDeleteAction($afile.'.php?name=auto_links&amp;op=delete&amp;id='.$id.'&amp;refer=1', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-auto-links-list-row', [
                 'actions_html' => $acts,
                 'hits_text' => (string)$hits,
                 'id_text' => (string)$id,
                 'outs_text' => (string)$outs,
-                'sitename_html' => adminTitleTipLabel(_REG.': '.format_time($added, _TIMESTRING), $name, cutstr($name, 40)),
+                'sitename_html' => getTplAdminTipLabel(_REG.': '.format_time($added, _TIMESTRING), $name, cutstr($name, 40)),
                 'siteurl_text' => domain($url),
             ]));
         }
@@ -97,7 +97,7 @@ function stats(): void {
             'sort_label' => _SORTE.':',
         ]));
     }
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'sub'  => $box,
@@ -125,7 +125,7 @@ function stats(): void {
                     'hits_text' => (string)$list[$i][0],
                     'in_url_text' => domain($list[$i][5], 15),
                     'ip_html' => user_geo_ip($list[$i][3], 4),
-                    'nickname_html' => adminTitleTip(_DATE.': '.date(_TIMESTRING, $list[$i][6])).$name,
+                    'nickname_html' => getTplAdminTitleTip(_DATE.': '.date(_TIMESTRING, $list[$i][6])).$name,
                     'ref_url_text' => domain($list[$i][4], 35),
                 ]));
             }
@@ -157,7 +157,7 @@ function add(): void {
         $outs = getVar('post', 'outs', 'num', 0);
     }
     setHead();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 1,
@@ -238,7 +238,7 @@ function zerodel(): void {
 function config(): void {
     global $afile, $conf, $tpl;
     setHead();
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 4,
@@ -296,7 +296,7 @@ function configsave(): void {
 }
 
 function info(): void {
-    $cont = setAdminNavi([
+    $cont = getTplAdminNavi([
         'ops'  => ['name=auto_links', 'name=auto_links&amp;op=add', 'name=auto_links&amp;op=hitreset', 'name=auto_links&amp;op=zerodel', 'name=auto_links&amp;op=config', 'name=auto_links&amp;op=info'],
         'tabs' => [_HOME, _ADD, _NULLHITS, _NOINDEL, _PREFERENCES, _INFO],
         'tab'  => 5,

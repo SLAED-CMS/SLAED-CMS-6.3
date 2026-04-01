@@ -630,7 +630,7 @@ function getCpuDetails(): array {
 # Formats boolean status into colored HTML badges used by monitor status indicators
 function getStatusHtml(?bool $state): string {
     if ($state === null) return getTplSpan('sl_muted', 'N/A');
-    return adminFlagBox($state, 'On', 'Off');
+    return getTplAdminFlagBox($state, 'On', 'Off');
 }
 
 # Queries database runtime health metrics and returns normalized diagnostics for monitor output
@@ -1118,7 +1118,7 @@ function getMonitorServerStats(): array {
     $srvport = getServerValue('SERVER_PORT', 'N/A');
     $https = strtolower(getServerValue('HTTPS', ''));
     $ishttps = ($https === 'on' || $https === '1') || ((int)$srvport === 443);
-    $srvhttps = adminFlagBox($ishttps, 'enabled', 'disabled');
+    $srvhttps = getTplAdminFlagBox($ishttps, 'enabled', 'disabled');
     $loaded = get_loaded_extensions();
     $ext_dir = ini_get('extension_dir');
     $off = [];
@@ -1210,7 +1210,7 @@ function getMonitorRuntimeStats(object $db, ?array $snapshot): array {
     if ($reqtime <= 0) $reqtime = microtime(true);
     $extras = getMonitorRuntimeExtras();
     $islowdisk = ($disktot > 0 && (($diskfree / $disktot) * 100) < 10);
-    $diskwarn = adminFlagBox(!$islowdisk, 'Normal', 'Low free space');
+    $diskwarn = getTplAdminFlagBox(!$islowdisk, 'Normal', 'Low free space');
     return [
         'diskio' => getDiskIoMetrics(),
         'disktotal' => $disktot,
@@ -1375,7 +1375,7 @@ function setMonitorPage(object $db, array $conf, string $afile, ?array $snapshot
     global $tpl;
     $ctx = getMonitorDashboardContext($db, $conf, $snapshot);
     $vars = getMonitorTemplateVars($snapshot, $ctx, $conf, $db, $afile);
-    $navi = setAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO]]);
+    $navi = getTplAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO]]);
     echo $navi.getTplBox($tpl->getHtmlFrag('basic-monitor', $vars));
 }
 
@@ -1389,7 +1389,7 @@ function monitor(): void {
 
 # Renders monitor information page with standard admin info block and navigation tabs
 function info(): void {
-    $cont = setAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
+    $cont = getTplAdminNavi(['ops' => ['name=monitor', 'name=monitor&op=info'], 'tabs' => [_HOME, _INFO], 'tab' => 1]);
     setAdminInfoPage($cont);
 }
 
