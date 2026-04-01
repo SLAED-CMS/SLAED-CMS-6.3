@@ -194,7 +194,7 @@ function view(): void {
         $cont = setModuleNavi(['title' => _LINKS]);
         if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['links']['defis'], _LINKS)]);
         if ($conf['links']['viewcat']) $cont .= setCategories($conf['name'], $conf['links']['subcat'], $conf['links']['catdesc'], 0);
-        $text = ($bodytext) ? $description.$tpl->getHtmlFrag('br-br', []).$bodytext : $description;
+        $text = ($bodytext) ? $description.'<br><br>'.$bodytext : $description;
         $cdesc = $cdesc ?: $ctitle;
         $ctitle = ($ctitle) ? $tpl->getHtmlFrag('category-link', ['href' => $chref, 'title' => $cdesc, 'text' => cutstr($ctitle, 15)]) : '';
         $cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';

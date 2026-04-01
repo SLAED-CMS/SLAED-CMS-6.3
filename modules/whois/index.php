@@ -33,7 +33,7 @@ function mwhois(): void {
 	$exmas = ['ru', 'com', 'net', 'org', 'biz', 'info', 'name', 'us', 'de', 'in', 'co.in', 'firm.in', 'gen.in', 'ind.in', 'net.in', 'org.in', 'com.ru', 'net.ru', 'org.ru', 'pp.ru', 'spb.ru', 'msk.ru', 'ws', 'cn'];
 	foreach ($exmas as $val) {
 		if ($val != '') {
-			$domainoptOptions .= $tpl->getHtmlFrag('whois-option', ['is_selected' => $val == $ext, 'value' => $val, 'label' => '.'.$val]);
+			$domainoptOptions .= getTplSelectOption((string)$val, (string)'.'.$val, (bool)($val == $ext));
 		}
 	}
 	

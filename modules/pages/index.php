@@ -159,7 +159,7 @@ function view(): void {
 		$cont = setModuleNavi(['title' => _PAGES]);
 		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $conf['pages']['defis'], _PAGES)]);
 		if ($conf['pages']['viewcat']) $cont .= setCategories($conf['name'], $conf['pages']['subcat'], $conf['pages']['catdesc'], 0);
-		$text = ($bodytext) ? $hometext.$tpl->getHtmlFrag('br-br', []).$bodytext : $hometext;
+		$text = ($bodytext) ? $hometext.'<br><br>'.$bodytext : $hometext;
 		$conpag = explode('[pagebreak]', $text);
 		$pageno = count($conpag);
 		if ($pag > $pageno) $pag = $pageno;

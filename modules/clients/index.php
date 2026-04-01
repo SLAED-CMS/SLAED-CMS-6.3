@@ -51,7 +51,7 @@ function clients(): void {
             $i++;
             $a++;
         }
-        $cont .= $tpl->getHtmlFrag('table-close').$conts;
+        $cont .= '</tbody></table>'.$conts;
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
     }

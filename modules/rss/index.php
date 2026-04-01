@@ -25,14 +25,14 @@ function info(): void {
     $mods = ['faq' => _FAQ, 'files' => _FILES, 'links' => _LINKS, 'media' => _MEDIA, 'news' => _NEWS, 'pages' => _PAGES, 'shop' => _SHOP];
     foreach ($mods as $key => $val) {
         if (is_active($key)) {
-            $modsOptions .= $tpl->getHtmlFrag('rss-option', ['is_selected' => $key == $mod, 'value' => $key, 'label' => $val]);
+            $modsOptions .= getTplSelectOption((string)$key, (string)$val, (bool)($key == $mod));
         }
     }
     $numOptions = '';
     $lim = 1;
     while ($lim <= $conf['rss']['max']) {
         $rsslim = ($num) ? $num : $conf['rss']['min'];
-        $numOptions .= $tpl->getHtmlFrag('rss-option', ['is_selected' => $lim == $rsslim, 'value' => $lim, 'label' => _RSS_INFO_MENG.' - '.$lim]);
+        $numOptions .= getTplSelectOption((string)$lim, (string)_RSS_INFO_MENG.' - '.$lim, (bool)($lim == $rsslim));
         $lim++;
     }
     setHead(['title' => _RSS, 'desc' => _RSS_INFO_TEXT]);

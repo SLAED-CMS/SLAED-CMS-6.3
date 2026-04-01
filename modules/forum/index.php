@@ -240,7 +240,7 @@ function forum(): void {
                                 .getTplHiddenInput('op', 'move')
                                 .getTplHiddenInput('cat', (string)$cat)
                                 .$tpl->getHtmlFrag('form-submit-btn', ['label' => _OK, 'class' => 'sl_but_blue'])
-                                .$tpl->getHtmlFrag('form-close', []);
+                                .'</form>';
                             $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _CHECKOP, 'content' => $selmm]);
                         }
                     } else {
@@ -473,7 +473,7 @@ function view(): void {
                 $selmm = $tpl->getHtmlFrag('forum-mod-form-open', ['action' => 'index.php?name='.$conf['name']])
                     .tmoder(1)
                     .getTplFormSubmit('move', _OK, getTplHiddenInput('cat', (string)$rows[0][2]).getTplHiddenInput('id[]', (string)$topic))
-                    .$tpl->getHtmlFrag('form-close', []);
+                    .'</form>';
                 $cont .= $tpl->getHtmlFrag('forum-view-change', ['title' => _OPMOD.': ', 'content' => $selmm]);
             }
             if (is_moder($conf['name']) || ($isreply && $tstatus)) $cont .= quickreply($topic, $rows[0][2], $rows[0][5]);

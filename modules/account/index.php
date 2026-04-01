@@ -159,10 +159,10 @@ function finnewuser(): void {
             } else {
                 $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $finishlink, 'title' => _ACTIVATIONSUB, 'label' => str_replace('&amp;', '&', $finishlink), 'target' => ' target="_blank"']);
                 $subject = $conf['sitename'].' - '._ACTIVATIONSUB;
-                $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).$tpl->getHtmlFrag('br-br', [])._IFYOUDIDNOTASK, $conf['mtemp']);
+                $message = str_replace('[text]', sprintf(_PASSFSEND, $mail, $conf['sitename'], $link, $nick, $pass).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
                 addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
                 $meta = getTplMetaRefresh('index.php', 30);
-                $brbr = $tpl->getHtmlFrag('br-br', []);
+                $brbr = '<br><br>';
                 $cont = $tpl->getHtmlFrag('title', ['title' => _ACCOUNTCREATED]).$tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _YOUAREREGISTERED.$brbr._FINISHUSERCONF.$brbr._THANKSUSER, 'meta' => $meta]);
             }
             echo $cont;
@@ -780,7 +780,7 @@ function passmail(): void {
         } else {
             $link = $tpl->getHtmlFrag('account-mail-link', ['href' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'title' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'label' => $conf['homeurl'].'/index.php?name='.$conf['name'].'&amp;op=passlost&amp;code='.$subpass.'&amp;email='.$email, 'target' => '']);
             $subject = $conf['sitename'].' - '._CODEFOR.' '.$nick;
-            $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).$tpl->getHtmlFrag('br-br', [])._IFYOUDIDNOTASK, $conf['mtemp']);
+            $message = str_replace('[text]', sprintf(_PASSCSEND, $nick, $conf['sitename'], $subpass, $link).'<br><br>'._IFYOUDIDNOTASK, $conf['mtemp']);
             addMail($mail, $conf['adminmail'], $subject, $message, 0, 3);
             setRedirect('index.php?name='.$conf['name'].'&op=passlost&email='.$email);
         }
@@ -850,7 +850,7 @@ function edithome(): void {
         if ($conf['users']['news'] == 1) {
             $xusnum = 3;
             while ($xusnum <= 20) {
-                $story .= $tpl->getHtmlFrag('account-select-option', ['is_selected' => $xusnum == $userinfo['storynum'], 'value' => $xusnum, 'label' => $xusnum]);
+                $story .= getTplSelectOption((string)$xusnum, (string)$xusnum, (bool)($xusnum == $userinfo['storynum']));
                 $xusnum++;
             }
         }
@@ -861,7 +861,7 @@ function edithome(): void {
             foreach ($list ?: [] as $file) {
                 if ($file === '.' || $file === '..' || $file === 'admin') continue;
                 if (!is_dir('templates/'.$file)) continue;
-                $theme .= $tpl->getHtmlFrag('account-select-option', ['is_selected' => $file == $userinfo['theme'], 'value' => $file, 'label' => $file]);
+                $theme .= getTplSelectOption((string)$file, (string)$file, (bool)($file == $userinfo['theme']));
                 $tcount++;
             }
         }

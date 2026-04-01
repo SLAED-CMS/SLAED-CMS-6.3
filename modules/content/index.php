@@ -40,7 +40,7 @@ function content(): void {
                 'actions' => $actions,
             ]);
         }
-        $cont .= $tpl->getHtmlFrag('table-close');
+        $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', $conf['name'], $limit, '', 'id', '_content', '', '', $nump);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -65,7 +65,7 @@ function view(): void {
             }
         }
         $fields = fields_out($field, $conf['name']);
-        $fields = ($fields) ? $tpl->getHtmlFrag('br-br', []).$fields : '';
+        $fields = ($fields) ? '<br><br>'.$fields : '';
         $hometext = $body.$fields;
         $seodesc = cutstr(trim(strip_tags(filterReplaceText(filterMarkdown($hometext, $conf['name'], false), $conf['name']))), 160);
         $seoimg = getImgText($hometext, '', false);

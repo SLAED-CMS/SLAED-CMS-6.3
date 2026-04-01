@@ -274,20 +274,20 @@ function add(): void {
         $linksRows = '';
         $y = $date['year'] - 100;
         while($y <= ($date['year'] + 1)) {
-            $yearOptions .= $tpl->getHtmlFrag('media-select-option', ['is_selected' => $y == $year, 'value' => $y, 'label' => $y]);
+            $yearOptions .= getTplSelectOption((string)$y, (string)$y, (bool)($y == $year));
             $y++;
         }
         $langOptions = '';
         foreach (explode(',', (string)($conf['media']['lang'] ?? '')) as $val) {
-            $langOptions .= $tpl->getHtmlFrag('media-select-option', ['is_selected' => $val === $lang && $val !== '', 'value' => $val, 'label' => $val]);
+            $langOptions .= getTplSelectOption((string)$val, (string)$val, (bool)($val === $lang && $val !== ''));
         }
         $formatOptions = '';
         foreach (explode(',', (string)($conf['media']['format'] ?? '')) as $val) {
-            $formatOptions .= $tpl->getHtmlFrag('media-select-option', ['is_selected' => $val === $format && $val !== '', 'value' => $val, 'label' => $val]);
+            $formatOptions .= getTplSelectOption((string)$val, (string)$val, (bool)($val === $format && $val !== ''));
         }
         $qualityOptions = '';
         foreach (explode(',', (string)($conf['media']['quality'] ?? '')) as $val) {
-            $qualityOptions .= $tpl->getHtmlFrag('media-select-option', ['is_selected' => $val === $quality && $val !== '', 'value' => $val, 'label' => $val]);
+            $qualityOptions .= getTplSelectOption((string)$val, (string)$val, (bool)($val === $quality && $val !== ''));
         }
         $i = 0;
         while($i < $conf['media']['links']) {

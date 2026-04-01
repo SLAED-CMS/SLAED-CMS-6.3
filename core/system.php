@@ -4295,15 +4295,7 @@ function editorInsertAction(string $command, string $value, string $id, string $
 }
 
 function getEditorAsyncAction(string $target, string $query, string $title, string $label): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-action-ajax', [
-        'load_id' => '0',
-        'target' => $target,
-        'query' => $query,
-        'title' => $title,
-        'label' => $label,
-        'class' => '',
-    ]);
+    return getTplAjaxAction($target, $query, $title, $label);
 }
 
 function editorActionMenu(array $items): string {
@@ -4446,16 +4438,7 @@ function commentActionJs(string $href, string $title, string $label, string $cla
 }
 
 function getCommentAsyncAction(string $target, string $query, string $title, string $label, string $class = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-action-ajax', [
-        'load_id' => '1',
-        'target' => $target,
-        'query' => $query,
-        'title' => $title,
-        'label' => $label,
-        'class' => $class,
-        'error_text' => '',
-    ]);
+    return getTplAjaxAction($target, $query, $title, $label, $class);
 }
 
 function commentActionDelete(string $href, string $confirmText, string $title, string $label): string {
@@ -4697,16 +4680,7 @@ function votingActionLink(string $href, string $title, string $label, string $cl
 }
 
 function getVotingAsyncAction(string $target, string $query, string $title, string $label, string $class = '', string $errorText = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('comment-action-ajax', [
-        'load_id' => '1',
-        'target' => $target,
-        'query' => $query,
-        'title' => $title,
-        'label' => $label,
-        'class' => $class,
-        'error_text' => $errorText,
-    ]);
+    return getTplAjaxAction($target, $query, $title, $label, $class);
 }
 
 function votingActionDelete(string $href, string $confirmText, string $title, string $label): string {
@@ -5000,7 +4974,7 @@ function add_menu(string $links): string {
 # Format title tips
 function title_tip(mixed $data): string {
     global $tpl;
-    $content = is_array($data) ? implode($tpl->getHtmlFrag('br', []), $data) : $data;
+    $content = is_array($data) ? implode('<br>', $data) : $data;
     return $tpl->getHtmlFrag('title-tip', ['content' => $content]);
 }
 

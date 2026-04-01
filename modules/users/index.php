@@ -39,7 +39,7 @@ function users(): void {
             ]);
             $count++;
         }
-        $cont .= $tpl->getHtmlFrag('table-close');
+        $cont .= '</tbody></table>';
         $cont .= setArticleNumbers('pagenum', $conf['name'], $lim, '', 'id', '_users', '', '', '5');
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);
@@ -60,7 +60,7 @@ function rules(): void {
         $a = $i + 1;
         $cont .= $tpl->getHtmlFrag('users-rules-basic', ['row_id' => $a, 'type_text' => $p[$i], 'description_text' => $d[$i], 'points_text' => $points[$i]]);
     }
-    $cont .= $tpl->getHtmlFrag('table-close');
+    $cont .= '</tbody></table>';
     $cont .= setNaviLower($conf['name']);
     echo $cont;
     setFoot();
@@ -94,7 +94,7 @@ function stats(): void {
                 'extra_text' => $extra,
             ]);
         }
-        $cont .= $tpl->getHtmlFrag('table-close');
+        $cont .= '</tbody></table>';
         $cont .= setNaviLower($conf['name']);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _NO_INFO]);

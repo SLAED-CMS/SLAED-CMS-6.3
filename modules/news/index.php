@@ -281,8 +281,8 @@ function view(): void {
         if ($conf['news']['viewcat'])
             $cont .= setCategories($conf['name'], $conf['news']['subcat'], $conf['news']['catdesc'], 0);
         $fields = fields_out($field, $conf['name']);
-        $fields = ($fields) ? $tpl->getHtmlFrag('br-br', []).$fields : '';
-        $text = (!$bodytext) ? $hometext.$fields : $hometext.$tpl->getHtmlFrag('br-br', []).$bodytext.$fields;
+        $fields = ($fields) ? '<br><br>'.$fields : '';
+        $text = (!$bodytext) ? $hometext.$fields : $hometext.'<br><br>'.$bodytext.$fields;
         $conpag = explode('[pagebreak]', $text);
         $pageno = count($conpag);
         if ($pag > $pageno) $pag = $pageno;

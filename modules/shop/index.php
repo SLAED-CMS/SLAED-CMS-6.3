@@ -184,7 +184,7 @@ function view(): void {
 		if ($cid) $cont .= $tpl->getHtmlFrag('cat-navi', ['crumbs' => catlink($conf['name'], $cid, $defis, _SHOP)]);
 		if ($conf['shop']['viewcat']) $cont .= setCategories($conf['name'], $conf['shop']['subcat'], $conf['shop']['catdesc'], 0);
 		$cont .= $tpl->getHtmlFrag('shop-kasse-content', ['has_outer' => true, 'content' => getCartSummary()]);
-		if ($bodytext) $text .= $tpl->getHtmlFrag('br-br', []).$bodytext;
+		if ($bodytext) $text .= '<br><br>'.$bodytext;
 		$cdesc = $cdesc ?: $ctitle;
 		$cimg = ($cimg) ? $tpl->getHtmlFrag('category-image', ['href' => $chref, 'title' => $cdesc, 'src' => img_find('categories/'.$cimg)]) : '';
 		$post = '';
@@ -283,7 +283,7 @@ function kasse(): void {
 			if ($conf['shop']['mailsend']) {
 				$amail = ($conf['shop']['mail']) ? $conf['shop']['mail'] : $conf['adminmail'];
 				$subject = $conf['sitename'].' - '._C_TITLE;
-				$brbr = $tpl->getHtmlFrag('br-br', []);
+				$brbr = '<br><br>';
 				$msg = $conf['sitename'].' - '._C_TITLE.$brbr;
 				$msg .= $pinfo.$brbr;
 				$msg .= $tpl->getHtmlFrag('bold-text', ['text' => _PERSONALINFO]).$brbr;
@@ -360,7 +360,7 @@ function clients(): void {
 				$rechn = $tpl->getHtmlFrag('shop-rechn-link', ['href' => 'index.php?name='.$conf['name'].'&amp;op=rech&amp;id='.$cid, 'title' => _RECHN_B, 'label' => _RECHN_B]);
 				$cont .= $tpl->getHtmlFrag('shop-client-row', ['id' => $cid, 'tip' => title_tip(getTplAdminTipLine(_PREIS, $pprice.' '.$conf['shop']['valute']).$website.$note), 'title' => $stitle, 'title_text' => cutstr($stitle, 35), 'date' => $cenddate, 'status' => ad_status('', $cactive), 'actions' => $rechn]);
 			}
-			$cont .= $tpl->getHtmlFrag('table-close', []);
+			$cont .= '</tbody></table>';
 		}
 		$cont .= filterReplaceText(filterMarkdown($conf['shop']['userinfo'], $conf['name'], false), $conf['name']);
 		echo $cont;
@@ -445,7 +445,7 @@ function partners(): void {
 						$content .= $tpl->getHtmlFrag('shop-partner-row', ['id' => $cid, 'user' => user_info($nick), 'tip' => title_tip(getTplAdminTipLine(_PREIS, $pprice.' '.$conf['shop']['valute']).getTplAdminTipLine(_DATE, date(_TIMESTRING, $cregdate))), 'title' => $stitle, 'title_text' => cutstr($stitle, 35), 'percent' => $proz.' %', 'sum' => $partsum.' '.$conf['shop']['valute']]);
 						$a++;
 					}
-					$cont .= $tpl->getHtmlFrag('shop-partners-open', ['head_id' => _ID, 'head_user' => _NICKNAME, 'head_product' => _PRODUCT, 'head_percent' => _PERCENT, 'head_sum' => _SUM]).$content.$tpl->getHtmlFrag('table-close', []);
+					$cont .= $tpl->getHtmlFrag('shop-partners-open', ['head_id' => _ID, 'head_user' => _NICKNAME, 'head_product' => _PRODUCT, 'head_percent' => _PERCENT, 'head_sum' => _SUM]).$content.'</tbody></table>';
 				}
 				$cont .= $tpl->getHtmlFrag('shop-partners-summary', ['head_clients' => _CLIENTEN, 'head_webmoney' => _WEBMONEY, 'head_paypal' => _PAYPAL, 'head_total' => _PARTNERGES, 'head_rest' => _PARTNERREST, 'head_paid' => _PARTNERBEK, 'clients' => $a, 'webmoney' => $pawebmoney, 'paypal' => $papaypal, 'total' => $partsumges.' '.$conf['shop']['valute'], 'rest' => $parest.' '.$conf['shop']['valute'], 'paid' => $pabek.' '.$conf['shop']['valute']]);
 				$cont .= $tpl->getHtmlFrag('alert', ['is_warn' => false, 'text' => _C_26.': '.str_replace('[id]', $uid, $conf['shop']['partlink'])]);

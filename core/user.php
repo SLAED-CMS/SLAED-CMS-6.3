@@ -455,7 +455,7 @@ function getPrivateMessageView(int $obj = 0, string $stop = '', string $info = '
 
 # Validate and send a new private message; returns the updated inbox view
 function addPrivateMessage() {
-    global $db, $user, $conf;
+    global $db, $user, $conf, $tpl;
     $postname = filterText(substr(getVar('post', 'name',  'raw', ''), 0, 25));
     $title    = trim(getVar('post', 'title', 'raw', ''));
     $text     = trim(getVar('post', 'text',  'raw', ''));

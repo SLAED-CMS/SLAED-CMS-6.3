@@ -1,8 +1,0 @@
-<form action="index.php?name={{ name }}" method="post">
-<table class="sl_table_form">
-<tr><td>{{ lbl_yourname }}:</td><td><input type="text" name="{{ nick_field }}" value="{{ sname }}" class="sl_field {{ style }}" placeholder="{{ lbl_yourname }}" required></td></tr>
-<tr><td>{{ lbl_youremail }}:</td><td><input type="email" name="semail" value="{{ semail }}" class="sl_field {{ style }}" placeholder="{{ lbl_youremail }}" required></td></tr>
-<tr><td>{{ lbl_friendname }}:</td><td><input type="text" name="fname" value="{{ fname }}" class="sl_field {{ style }}" placeholder="{{ lbl_friendname }}" required></td></tr>
-<tr><td>{{ lbl_friendemail }}:</td><td><input type="email" name="femail" value="{{ femail }}" class="sl_field {{ style }}" placeholder="{{ lbl_friendemail }}" required></td></tr>
-<tr><td colspan="2" class="sl_center">{{{ captcha }}}<input type="hidden" name="token" value="{{{ token }}}"><input type="hidden" name="op" value="send"><input type="submit" value="{{ submit_label }}" class="sl_but_blue"></td></tr>
-</table></form>

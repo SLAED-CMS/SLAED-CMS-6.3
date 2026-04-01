@@ -173,7 +173,7 @@ function view(): void {
             $title = ($title !== '') ? $title : _MESSAGE.': '.$a;
             $ttext = filterTextHighlight($title, $word);
             $fields = fields_out($field, $conf['name']);
-            $fields = ($fields) ? $tpl->getHtmlFrag('br-br', []).$fields : '';
+            $fields = ($fields) ? '<br><br>'.$fields : '';
             $text = $hometext.$fields;
             $post = ($nick) ? user_info($nick) : _ANONYM;
             $date = ($conf['help']['date']) ? format_time($time) : '';
