@@ -772,10 +772,49 @@ function getSiteToken(string $scope = 'ajax'): string {
     return hash_hmac('sha256', $data, (string)($conf['sitekey'] ?? ''));
 }
 
-# Validates a CSRF token for the given scope using timing-safe comparison.
-function checkSiteToken(string $tok, string $scope = 'ajax'): bool {
+# Return CSRF token from request context:
+# 1) Header `X-CSRF-Token` (HTMX/global)
+# 2) Header `X-XSRF-Token`
+# 3) `token` param (POST/GET/REQUEST)
+function getRequestToken(): string {
+    $tok = '';
+
+    $h1 = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? getenv('HTTP_X_CSRF_TOKEN') ?: '';
+    if (is_string($h1) && $h1 !== '') $tok = trim($h1);
+
+    if ($tok === '') {
+        $h2 = $_SERVER['HTTP_X_XSRF_TOKEN'] ?? getenv('HTTP_X_XSRF_TOKEN') ?: '';
+        if (is_string($h2) && $h2 !== '') $tok = trim($h2);
+    }
+
+    if ($tok === '') {
+        $p = filter_input(INPUT_POST, 'token', FILTER_UNSAFE_RAW);
+        if (is_string($p) && $p !== '') $tok = trim($p);
+    }
+
+    if ($tok === '') {
+        $g = filter_input(INPUT_GET, 'token', FILTER_UNSAFE_RAW);
+        if (is_string($g) && $g !== '') $tok = trim($g);
+    }
+
+    if ($tok === '' && isset($_REQUEST['token']) && is_string($_REQUEST['token'])) {
+        $tok = trim($_REQUEST['token']);
+    }
+
+    return $tok;
+}
+
+# Validates CSRF token for a scope using timing-safe comparison.
+# Smart behavior:
+# - if `$tok` is empty, auto-read token from request (header/param)
+# - accepts exact scope token
+# - for scoped checks, accepts global `ajax` token as fallback
+function checkSiteToken(string $tok = '', string $scope = 'ajax'): bool {
+    if ($tok === '') $tok = getRequestToken();
     if ($tok === '') return false;
-    return hash_equals(getSiteToken($scope), $tok);
+    if (hash_equals(getSiteToken($scope), $tok)) return true;
+    if ($scope !== 'ajax' && hash_equals(getSiteToken('ajax'), $tok)) return true;
+    return false;
 }
 
 # Return external HTTP referer URL, or empty string if internal/invalid/unknown
