@@ -139,17 +139,18 @@ function getTplOption(string $valu, string $text, bool $isel = false): string {
 function getTplAdminFlagBox(bool $state, string $yes, string $no): string {
     global $tpl;
     return $tpl->getHtmlFrag('admin-flag-box', [
-        'css_class' => $state ? 'sl_green' : 'sl_red',
-        'label_text' => $state ? $yes : $no,
+        'class' => $state ? 'sl_green' : 'sl_red',
+        'label' => $state ? $yes : $no,
     ]);
 }
 
 # Render one shared admin note label with a plain-text title attribute
 function getTplAdminNoteLabel(string $title, string $label): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-note-label', [
-        'label_text' => $label,
-        'title_attr' => $title,
+    return $tpl->getHtmlFrag('span-btn', [
+        'class' => 'sl_note',
+        'label' => $label,
+        'title' => $title,
     ]);
 }
 
@@ -164,7 +165,7 @@ function getTplAdminDangerText(string $text): string {
 # Render one shared admin title-tip popup from prepared inner markup
 function getTplAdminTitleTip(string $cont): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-title-tip', [
+    return $tpl->getHtmlFrag('title-tip', [
         'content_html' => $cont,
     ]);
 }
@@ -183,7 +184,7 @@ function getTplAdminAjaxAction(string $target, string $query, string $title, str
     global $tpl;
     $route = $query;
     if (!str_contains($route, 'token=')) $route .= '&amp;token='.getSiteToken();
-    return $tpl->getHtmlFrag('admin-action-ajax', [
+    return $tpl->getHtmlFrag('comment-action-ajax', [
         'class' => $clas,
         'label' => $label,
         'query' => $route,
@@ -732,7 +733,7 @@ function getTplAdminTableHead(array $cols): string {
     $html = '';
     foreach ($cols as $col) {
         if (is_array($col)) {
-            $html .= $tpl->getHtmlFrag('th-nosort', ['content' => $col[0]]);
+            $html .= $tpl->getHtmlFrag('th', ['content' => $col[0], 'nosort' => true]);
         } else {
             $html .= $tpl->getHtmlFrag('th', ['content' => $col]);
         }
@@ -1046,8 +1047,8 @@ function getTplAdminPanel(string $pid, string $title, string $cont): string {
 function getTplAdminTabOpen(string $id, string $cls): string {
     global $tpl;
     return $tpl->getHtmlFrag('admin-tab-list-open', [
-        'list_class' => $cls,
-        'list_id' => $id,
+        'class' => $cls,
+        'id' => $id,
     ]);
 }
 
@@ -1061,11 +1062,10 @@ function getTplAdminTabClose(): string {
 function getTplAdminTabLink(string $href, string $label, bool $isel = false, string $rel = '', string $attr = ''): string {
     global $tpl;
     return $tpl->getHtmlFrag('admin-tab-link', [
-        'attrs' => $attr,
         'href' => $href,
-        'is_selected' => $isel,
         'label' => $label,
         'rel' => $rel,
+        'selected' => $isel,
     ]);
 }
 
@@ -1075,8 +1075,8 @@ function getTplAdminInfoCount(int|string $cnt): string {
     if (!is_numeric($cnt)) return '-';
     $css = ((int)$cnt >= 1) ? 'sl_red' : 'sl_green';
     return $tpl->getHtmlFrag('admin-info-count', [
-        'count_text' => (string)$cnt,
-        'css_class' => $css,
+        'class' => $css,
+        'count' => (string)$cnt,
     ]);
 }
 
