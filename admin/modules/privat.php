@@ -24,7 +24,7 @@ function config(): void {
         'module' => 'privat',
         'op' => 'save',
         'save' => _SAVECHANGES,
-        'fields' => '',
+        'fields' => getTplHiddenInput('token', $token),
         '_c33' => _C_33,
         'num' => $conf['privat']['num'],
         '_c34' => _C_34,

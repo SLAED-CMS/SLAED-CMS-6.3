@@ -59,7 +59,7 @@ function config(): void {
         'module' => 'comments',
         'op' => 'save',
         'save' => _SAVECHANGES,
-        'fields' => '',
+        'fields' => getTplHiddenInput('token', $token),
         '_c33' => _C_33,
         'num' => $conf['comments']['num'],
         '_c34' => _C_34,

@@ -54,6 +54,7 @@ function template(): void {
                         'route' => $afile,
                         'save_label' => _SAVECHANGES,
                         'templ' => $templ,
+                        'token' => $token,
                     ]);
                     $i++;
                 }
@@ -99,6 +100,7 @@ function style(): void {
                         'route' => $afile,
                         'save_label' => _SAVECHANGES,
                         'templ' => $templ,
+                        'token' => $token,
                     ]);
                     $i++;
                 }

@@ -189,7 +189,7 @@ function save(): void {
                 if ($db->getSqlRowCount($result) == 1) {
                     [$mail] = $db->getSqlRow($result);
                     $finishlink = ($conf['homeurl'] ?? '').'/index.php?name=help&amp;op=view&amp;id='.$pid;
-                    $link = $tpl->getHtmlFrag('admin-action-link', ['href' => $finishlink, 'title' => '', 'label' => $finishlink]);
+                    $link = $tpl->getHtmlFrag('comment-action-link', ['href' => $finishlink, 'title' => '', 'label' => $finishlink, 'class' => '', 'target' => '']);
                     $subject = ($conf['sitename'] ?? '').' - '._HELP;
                     $message = str_replace('[text]', sprintf(_ADDMAILU, substr($admin[1] ?? '', 0, 25), _HELP, $link), $conf['mtemp'] ?? '');
                     addMail($mail, $conf['adminmail'] ?? '', $subject, $message, 0, 3);

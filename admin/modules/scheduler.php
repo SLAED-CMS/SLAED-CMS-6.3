@@ -61,7 +61,7 @@ function scheduler(): void {
             $aforms .= $tpl->getHtmlFrag('admin-scheduler-action-form', [
                 'action_url' => $afile.'.php',
                 'form_id' => $aid,
-                'hidden_html' => getTplHiddenInput('name', 'scheduler').getTplHiddenInput('op', $aop).getTplHiddenInput('job', $name).getTplHiddenInput('token', getSiteToken('scheduler')),
+                'hidden_html' => getTplHiddenInput('name', 'scheduler').getTplHiddenInput('op', $aop).getTplHiddenInput('job', $name),
             ]);
             $acts[] = $tpl->getHtmlFrag('admin-scheduler-action-link', [
                 'form_id' => $aid,
@@ -106,7 +106,7 @@ function add(string $name = ''): void {
     $readonly = $isnew ? '' : ' readonly';
     $cont = checkPerms(CONFIG_DIR.'/scheduler.php');
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
-    $hide = getTplHiddenInput('name', 'scheduler').getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken('scheduler'));
+    $hide = getTplHiddenInput('name', 'scheduler').getTplHiddenInput('op', 'save');
     $rows = '';
     $rows .= getTplAdminFormRow(_SCHEDULER_JOBKEY.':', getTplTextInput('job', $key, 'sl_form', 'maxlength="32"'.$readonly.' required'));
     $rows .= getTplAdminFormRow(_TITLE.':', getTplTextInput('title', (string)$job['title'], 'sl_form', 'maxlength="100" required'));
@@ -131,7 +131,6 @@ function add(string $name = ''): void {
 
 function save(): void {
     global $conf, $afile;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'scheduler')) { setRedirect($afile.'.php?name=scheduler'); return; }
     $rawname = getVar('post', 'job', 'var', '');
     $name = preg_replace('#[^a-z]#', '', strtolower($rawname));
     $type = getVar('post', 'type', 'var', 'custom');
@@ -169,7 +168,6 @@ function save(): void {
 function run(): void {
     global $afile;
     $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'scheduler')) { setRedirect($afile.'.php?name=scheduler'); return; }
     $jobs = getSchedulerJobs();
     if ($name === '' || !isset($jobs[$name]) || (int)($jobs[$name]['manual'] ?? 0) !== 1) { setRedirect($afile.'.php?name=scheduler'); return; }
     addSchedulerRun($name, 'manual');
@@ -179,7 +177,6 @@ function run(): void {
 function unlock(): void {
     global $afile;
     $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'scheduler')) { setRedirect($afile.'.php?name=scheduler'); return; }
     if ($name !== '') {
         $state = getSchedulerState($name);
         $state['running'] = 0; $state['started_at'] = 0;
@@ -192,7 +189,6 @@ function unlock(): void {
 function delete(): void {
     global $conf, $afile;
     $name = preg_replace('#[^a-z]#', '', strtolower(getVar('post', 'job', 'var', '')));
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'scheduler')) { setRedirect($afile.'.php?name=scheduler'); return; }
     $jobs = $conf['scheduler']['jobs'] ?? [];
     if ($name !== '' && isset($jobs[$name]) && (($jobs[$name]['type'] ?? '') === 'custom')) {
         unset($jobs[$name]);

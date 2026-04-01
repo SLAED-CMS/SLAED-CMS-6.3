@@ -73,7 +73,6 @@ function admins(): void {
         'super_label' => _SUPERUSER,
     ]);
     $rows = '';
-    $token = htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8');
     $result = $db->getSqlQuery(
         'SELECT id, name, title, email, lang, regdate, lastvis, super FROM '.PREFIX_DB.'_admins ORDER BY id'
     );
@@ -83,12 +82,13 @@ function admins(): void {
         $drop = $tpl->getHtmlFrag('admin-admins-delete-form', [
             'action_url' => $afile.'.php?name=admins&amp;op=delete',
             'admin_id' => $aid,
-            'token' => $token,
         ]);
-        $edit = $tpl->getHtmlFrag('admin-action-link', [
+        $edit = $tpl->getHtmlFrag('comment-action-link', [
             'href' => $afile.'.php?name=admins&amp;op=add&amp;id='.$aid,
             'label' => _FULLEDIT,
             'title' => _FULLEDIT,
+            'class' => '',
+            'target' => '',
         ]);
         $drop .= $tpl->getHtmlFrag('admin-admins-delete-link', [
             'admin_id' => $aid,
@@ -145,7 +145,6 @@ function add(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => getStopText($stop)]);
     $hide = $tpl->getHtmlFrag('admin-admins-form-hidden', [
         'admin_id' => $aid,
-        'token' => htmlspecialchars(getSiteToken('admins'), ENT_QUOTES, 'UTF-8'),
     ]);
     $mailt = textarea(
         '1',
@@ -236,13 +235,6 @@ function add(): void {
 
 function save(): void {
     global $db, $afile, $conf, $stop, $tpl;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
-        setHead();
-        $cont = getTplAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
     $aid = getVar('post', 'aid', 'num', 0);
     $name = getVar('post', 'aname', 'name', '');
     $title = getVar('post', 'title', 'title', '');
@@ -309,13 +301,6 @@ function save(): void {
 
 function delete(): void {
     global $db, $afile, $tpl;
-    if (!checkSiteToken(getVar('post', 'token', 'raw', ''), 'admins')) {
-        setHead();
-        $cont = getTplAdminNavi(['ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _TOKENMISS]);
-        setFoot();
-        return;
-    }
     $aid = getVar('post', 'aid', 'num', 0);
     if (!$aid) {
         setRedirect($afile.'.php?name=admins');

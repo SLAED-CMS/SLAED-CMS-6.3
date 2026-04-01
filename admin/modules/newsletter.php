@@ -20,7 +20,7 @@ function newsletter(): void {
             $active = ($mails && $sended && $conf['newsletter']['active']) ? 1 : 0;
             $acts = getTplAdminActionMenu([
                 getTplLinkAction($afile.'.php?name=newsletter&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id, _DELETE.' &quot;'.$title.'&quot;?', _ONDELETE, _ONDELETE),
+                getTplAdminDeleteAction($afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id.''.$token, _DELETE.' &quot;'.$title.'&quot;?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-newsletter-list-row', [
                 'actions_html' => $acts,
@@ -233,7 +233,7 @@ function config(): void {
         'module' => 'newsletter',
         'op' => 'configsave',
         'save' => _SAVECHANGES,
-        'fields' => '',
+        'fields' => getTplHiddenInput('token', $token),
         '_nlsend' => _NLSEND,
         '_nlsendi' => _NLSENDI,
         'r_active' => radio_form($conf['newsletter']['active'], 'active'),

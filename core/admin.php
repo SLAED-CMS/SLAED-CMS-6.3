@@ -448,7 +448,7 @@ function scatacess($auth) {
 }
 
 # Render the admin block list as an HTML table with reorder controls, expiry state and action links
-function getAdminBlockList(): string {
+function getAdminBlockList(string $token = ''): string {
     global $db, $afile;
     $rows = [];
     $result = $db->getSqlQuery('SELECT a.id, a.bkey, a.title, a.url, a.bpos, a.weight, a.status, a.lang, a.bfile, a.view, a.expire, a.action, b.id, b.bpos, b.weight, c.id, c.bpos, c.weight FROM '.PREFIX_DB.'_blocks AS a LEFT JOIN '.PREFIX_DB.'_blocks AS b ON (b.bpos = a.bpos AND b.weight = a.weight-1) LEFT JOIN '.PREFIX_DB.'_blocks AS c ON (c.bpos = a.bpos AND c.weight = a.weight+1) ORDER BY a.bpos, a.weight');
@@ -813,7 +813,7 @@ function getAdminInfo(): string {
         }
         return '';
     };
-    if ($conf['adminfo'] && $id && checkSiteToken(getVar('post', 'token', 'raw', ''), 'admininfo')) {
+    if ($conf['adminfo'] && $id) {
         $type    = getVar('post', 'type', 'num', 0);
         $name    = filterWord(getVar('post', 'name', 'text', ''));
         $content = filterHtml(trim(getVar('post', 'text', 'raw', '')));
@@ -856,8 +856,7 @@ function getAdminInfo(): string {
             'action_url' => $afile.'.php?name='.$name.'&op=info',
             'hidden_html' => getTplHiddenInput('id', '1')
                 .getTplHiddenInput('type', (string)$type)
-                .getTplHiddenInput('name', $name)
-                .getTplHiddenInput('token', getSiteToken('admininfo')),
+                .getTplHiddenInput('name', $name),
             'textarea_html' => textarea('1', 'text', $thefile, 'info', '25'),
             'submit_label' => _SAVECHANGES,
             'submit_title' => _SAVECHANGES,

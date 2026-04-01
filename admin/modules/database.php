@@ -376,9 +376,7 @@ function dump(): void {
     $action = getVar('post', 'action', 'var', '');
     setHead();
     $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 3]);
-    if (($action === 'parse' || $action === 'dump') && !checkSiteToken(getVar('post', 'token', 'raw', ''), 'db')) {
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => 'Security token mismatch']);
-    } elseif ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
+    if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
         $subst = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
         $parsed = getSqlbatch(stripslashes($string));
         if ($parsed['error'] !== '') {
@@ -425,7 +423,7 @@ function dump(): void {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DBINFO]);
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DBWARN]);
     }
-    $fhide = getTplHiddenInput('name', 'database').getTplHiddenInput('op', 'dump').getTplHiddenInput('type', 'dump').getTplHiddenInput('token', getSiteToken('db'));
+    $fhide = getTplHiddenInput('name', 'database').getTplHiddenInput('op', 'dump').getTplHiddenInput('type', 'dump');
     $frows = getTplAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
     $frows .= getTplAdminFormWide($tpl->getHtmlFrag('admin-database-dump-actions', [
         'execute_label' => _EXECUTE,

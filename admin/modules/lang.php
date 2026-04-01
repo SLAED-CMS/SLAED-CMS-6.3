@@ -221,7 +221,7 @@ function config(): void {
         'module' => 'lang',
         'op' => 'configsave',
         'save' => _SAVECHANGES,
-        'fields' => '',
+        'fields' => getTplHiddenInput('token', $token),
         '_langkey' => _LANGKEY,
         'key' => $conf['lang']['key'],
         '_langtr' => _LANGTR,

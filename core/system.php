@@ -1983,8 +1983,7 @@ function setHead(array $seo = []): void {
     }
     if (defined('ADMIN_FILE') && ($conf['lic_h'] != 'UG93ZXJlZCBieSA8YSBocmVmPSJodHRwczovL3NsYWVkLm5ldCIgdGFyZ2V0PSJfYmxhbmsiIHRpdGxlPSJTTEFFRCBDTVMiPlNMQUVEIENNUzwvYT4gJmNvcHk7IDIwMDUt' || $conf['lic_f'] != 'IFNMQUVELiBBbGwgcmlnaHRzIHJlc2VydmVkLg==')) setExit(_NO_LICENSE);
     $licens = base64_decode($conf['lic_h']).date('Y').base64_decode($conf['lic_f']);
-    $strmeta = '<meta charset="'._CHARSET.'">'."\n"
-        .'<meta name="htmx-config" content=\'{"defaultHXHeaders":{"X-CSRF-Token":"'.getSiteToken('ajax').'"}}\'>'."\n";
+    $strmeta = '<meta charset="'._CHARSET.'">'."\n";
     $strlink = $stscript = '';
     $sep = urldecode($conf['defis']);
     if (!defined('ADMIN_FILE')) {
@@ -3948,7 +3947,7 @@ function getUserSessionAdminInfo(string $id = ''): string {
             'update_title' => _UPDATE,
             'update_label' => _UPDATE,
             'update_target' => 'sainfo',
-            'update_query' => 'go=1&amp;op=getUserSessionAdminInfo&amp;token='.getSiteToken(),
+            'update_query' => 'go=1&amp;op=getUserSessionAdminInfo',
         ]);
         if ($id) { return $content_who; } else { echo $content_who; }
     }
@@ -4438,7 +4437,6 @@ function pagerDots(): string {
 function getAsyncPagerLink(string $loadId, string $targetId, string $query, string $title, string $label, string $class = ''): string {
  global $tpl;
     $route = $query;
-    if (str_contains($route, 'go=5') && !str_contains($route, 'token=')) $route .= '&amp;token='.getSiteToken();
     return $tpl->getHtmlFrag('pager-link', [
         'href' => '',
         'load_id' => $loadId,

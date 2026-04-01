@@ -134,7 +134,7 @@ function config(): void {
         'module' => 'statistic',
         'op' => 'save',
         'save' => _SAVECHANGES,
-        'fields' => '',
+        'fields' => getTplHiddenInput('token', $token),
         '_statbet' => _STATBET,
         'bet' => $conf['statistic']['bet'],
         '_statshi' => _STATSHI,

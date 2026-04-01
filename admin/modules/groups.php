@@ -28,7 +28,7 @@ function groups(): void {
             $acts = getTplAdminActionMenu([
                 getTplLinkAction($userlink, _MVIEW, _MVIEW),
                 getTplLinkAction($afile.'.php?name=groups&amp;op=add&amp;id='.$grid, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=groups&amp;op=delete&amp;id='.$grid, _DELETE.' "'.$grname.'"?', _ONDELETE, _ONDELETE),
+                getTplAdminDeleteAction($afile.'.php?name=groups&amp;op=delete&amp;id='.$grid.''.$token, _DELETE.' "'.$grname.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-groups-list-row', [
                 'actions_html' => $acts,

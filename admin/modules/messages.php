@@ -31,9 +31,9 @@ function messages(): void {
             $exp = intval($expire - time());
             $exp = ($exp > 0) ? getDuration($exp) : _UNLIMITED;
             $acts = getTplAdminActionMenu([
-                ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act, $active),
+                ad_status($afile.'.php?name=messages&amp;op=status&amp;id='.$mid.'&amp;act='.$act.''.$token, $active),
                 getTplLinkAction($afile.'.php?name=messages&amp;op=add&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
-                getTplAdminDeleteAction($afile.'.php?name=messages&amp;op=delete&amp;id='.$mid, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
+                getTplAdminDeleteAction($afile.'.php?name=messages&amp;op=delete&amp;id='.$mid.''.$token, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
             $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-messages-list-row', [
                 'actions_html' => $acts,

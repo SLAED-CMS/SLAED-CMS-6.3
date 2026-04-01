@@ -26,10 +26,9 @@ function uploads(): void {
     global $afile, $conf, $stop, $tpl;
     $dir = getVar('post', 'dir', 'var', '');
     if ($dir === '') $dir = getVar('get', 'dir', 'var', $conf['uploads']['dir']);
-    $token = getSiteToken();
     $sattrs = [
-        ' hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=1&amp;dir='.$dir.'&amp;token='.$token.'" hx-target="#repf1" hx-swap="innerHTML" hx-push-url="false"',
-        ' hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=2&amp;dir='.$dir.'&amp;token='.$token.'" hx-target="#repf2" hx-swap="innerHTML" hx-push-url="false"',
+        ' hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=1&amp;dir='.$dir.''.$token.'" hx-target="#repf1" hx-swap="innerHTML" hx-push-url="false"',
+        ' hx-get="index.php?go=5&amp;op=getAdminUploadFiles&amp;id=2&amp;dir='.$dir.''.$token.'" hx-target="#repf2" hx-swap="innerHTML" hx-push-url="false"',
         '',
     ];
     setHead();
