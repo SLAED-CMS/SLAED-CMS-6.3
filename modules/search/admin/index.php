@@ -288,13 +288,7 @@ function search(): void {
     $cont = getSearchnavi(getSearchbox('search'));
     $cont .= getSearchsum($where, $pars);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-search-list-head', [
-            'date_label' => _DATE,
-            'functions_label' => _FUNCTIONS,
-            'hits_label' => _HITS,
-            'modul_label' => _MODUL,
-            'word_label' => _SWORD,
-        ]);
+        $head = getTplAdminTableHead([_SWORD, _MODUL, _HITS, _DATE, [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $word, $mod, $time, $hits] = $db->getSqlRow($result)) {
             $show = htmlspecialchars((string)$word, ENT_QUOTES, 'UTF-8');
@@ -350,13 +344,7 @@ function toplist(): void {
     $cont = getSearchnavi(getSearchbox('toplist'), 1);
     $cont .= getSearchsum($where, $pars);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-search-list-head', [
-            'date_label' => _DATE,
-            'functions_label' => _FUNCTIONS,
-            'hits_label' => _HITS,
-            'modul_label' => _MODUL,
-            'word_label' => _SWORD,
-        ]);
+        $head = getTplAdminTableHead([_SWORD, _MODUL, _HITS, _DATE, [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $word, $mod, $time, $hits] = $db->getSqlRow($result)) {
             $show = htmlspecialchars((string)$word, ENT_QUOTES, 'UTF-8');

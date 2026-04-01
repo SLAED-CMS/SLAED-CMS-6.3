@@ -19,14 +19,7 @@ function auto_links(): void {
     $offset = ($num - 1) * $conf['auto_links']['anum'];
     $result = $db->getSqlQuery('SELECT id, title, url, hits, outs, added FROM '.PREFIX_DB.'_auto_links ORDER BY hits ASC LIMIT '.$offset.', '.$conf['auto_links']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-auto-links-list-head', [
-            'functions_label' => _FUNCTIONS,
-            'hits_label' => _HITS,
-            'id_label' => _ID,
-            'outs_label' => _OUTS,
-            'sitename_label' => _SITENAME,
-            'siteurl_label' => _SITEURL,
-        ]);
+        $head = getTplAdminTableHead([_ID, _SITENAME, _SITEURL, _HITS, _OUTS, [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $name, $url, $hits, $outs, $added] = $db->getSqlRow($result)) {
             $acts = getTplAdminActionMenu([

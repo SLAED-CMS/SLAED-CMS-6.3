@@ -32,14 +32,7 @@ function media(): void {
     }
     $result = $db->getSqlQuery('SELECT m.id, m.cid, m.name, m.title, m.subtitle, m.time, m.ip, c.title, u.name FROM '.PREFIX_DB.'_media AS m LEFT JOIN '.PREFIX_DB.'_categories AS c ON (m.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (m.uid = u.id) WHERE m.status = :status ORDER BY m.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-article-list-head', [
-            'checkall_html' => '',
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'postedby_label' => _POSTEDBY,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $subtitle, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $title = ($subtitle) ? $title.' / '.$subtitle : $title;

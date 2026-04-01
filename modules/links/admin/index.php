@@ -32,14 +32,7 @@ function links(): void {
     }
     $result = $db->getSqlQuery('SELECT l.id, l.cid, l.name, l.title, l.url, l.time, l.ip, c.title, u.name FROM '.PREFIX_DB.'_links AS l LEFT JOIN '.PREFIX_DB.'_categories AS c ON (l.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (l.uid = u.id) WHERE l.status = :status ORDER BY l.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-links-list-head', [
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'postedby_label' => _POSTEDBY,
-            'siteurl_label' => _SITEURL,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _SITEURL, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $url, $date, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $post = $nick ? user_info($nick) : ($uname ?: _ANONYM);

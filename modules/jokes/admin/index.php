@@ -26,14 +26,7 @@ function jokes(): void {
     }
     $result = $db->getSqlQuery('SELECT j.id, j.name, j.time, j.title, j.cid, j.ip, c.title, u.name FROM '.PREFIX_DB.'_jokes AS j LEFT JOIN '.PREFIX_DB.'_categories AS c ON (j.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (j.uid = u.id) WHERE j.status = :status ORDER BY j.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-article-list-head', [
-            'checkall_html' => '',
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'postedby_label' => _POSTEDBY,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$jokeid, $uname, $date, $title, $cat, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cat) ? $ctitle : _NO;

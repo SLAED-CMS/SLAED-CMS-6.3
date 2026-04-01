@@ -26,14 +26,7 @@ function pages(): void {
     }
     $result = $db->getSqlQuery('SELECT p.id, p.cid, p.name, p.title, p.time, p.ip, t.title, u.name FROM '.PREFIX_DB.'_pages AS p LEFT JOIN '.PREFIX_DB.'_categories AS t ON (p.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (p.uid = u.id) WHERE p.status = :status ORDER BY p.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-article-list-head', [
-            'checkall_html' => '',
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'postedby_label' => _POSTEDBY,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;

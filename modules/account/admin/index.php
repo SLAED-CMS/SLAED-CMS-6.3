@@ -69,14 +69,7 @@ function account(): void {
     $sql = 'SELECT u.id, u.name, u.email, u.website, u.regdate, u.lastvis, u.points, u.ip, u.gender, u.agent, g.name, g.color FROM '.PREFIX_DB.'_users AS u LEFT JOIN '.PREFIX_DB.'_groups AS g ON (g.id = u.grp) WHERE '.$where.' '.$order.' LIMIT :offset, :limit';
     $res = $db->getSqlQuery($sql,$params);
     if ($db->getSqlRowCount($res) > 0) {
-        $head = $tpl->getHtmlFrag('admin-account-list-head', [
-            'email_label' => _EMAIL,
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'ip_label' => _IP,
-            'nickname_label' => _NICKNAME,
-            'reg_label' => _REG,
-        ]);
+        $head = getTplAdminTableHead([_ID, _NICKNAME, _IP, _EMAIL, _REG, [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$uid, $name, $mail, $site, $reg, $last, $point, $ip, $gender, $agent, $gname, $gcolor] = $db->getSqlRow($res)) {
             $sgroup = $gname ? getTplAdminColorLabel($gcolor, $gname) : _NO;

@@ -13,15 +13,7 @@ function messages(): void {
     $cont = getTplAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-messages-list-head', [
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'lang_label' => _LANGUAGE,
-            'purchased_label' => _PURCHASED,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-            'view_label' => _VIEW,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _PURCHASED, _VIEW, _LANGUAGE, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$mid, $title, $body, $expire, $active, $view, $lang] = $db->getSqlRow($result)) {
             if (($expire && $expire < time()) || (!$active && $expire)) $db->getSqlQuery('UPDATE '.PREFIX_DB.'_message SET status = :active, expire = :expire WHERE id = :mid', ['active' => 0, 'expire' => 0, 'mid' => $mid]);

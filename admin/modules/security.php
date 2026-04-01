@@ -26,12 +26,7 @@ function security(): void {
     setHead();
     $cont = getTplAdminNavi(['ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'], 'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO], 'sops' => ['', ''], 'stabs' => [_BANNED_IP, _BANNED_USERS], 'id' => 'security']);
     $cont .= checkPerms(CONFIG_DIR.'/security.php');
-    $head = $tpl->getHtmlFrag('admin-security-list-head', [
-        'date_label' => _DATE,
-        'functions_label' => _FUNCTIONS,
-        'size_label' => _SIZE,
-        'title_label' => _TITLE,
-    ]);
+    $head = getTplAdminTableHead([_TITLE, _SIZE, _DATE, [_FUNCTIONS, 'nosort']]);
     $rows = '';
     $files = is_dir(LOGS_DIR) ? scandir(LOGS_DIR) : [];
     foreach ($files as $file) {

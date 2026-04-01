@@ -58,13 +58,7 @@ function referers(): void {
             $massiv[] = [$hits, $uid, $name, $ip, $referer, $url, $date];
             $a++;
         }
-        $head = $tpl->getHtmlFrag('admin-referers-list-head', [
-            'hits_label' => _HITS,
-            'id_label' => _ID,
-            'ip_label' => _IP,
-            'referers_label' => _REFERERS,
-            'sword_label' => _SWORD,
-        ]);
+        $head = getTplAdminTableHead([_IP, _HITS, _REFERERS, _SWORD, [_ID, 'nosort']]);
         $rows = '';
         for ($i = $offset; $i < $tnum; $i++) {
             if (isset($massiv[$i]) && $massiv[$i] != '') {

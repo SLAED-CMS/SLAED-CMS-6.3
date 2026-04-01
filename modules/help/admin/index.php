@@ -26,14 +26,7 @@ function help(): void {
     }
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.title, s.time, s.comments, s.ip, s.status, c.title, u.name FROM '.PREFIX_DB.'_help AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.pid = \'0\' AND s.status = :status ORDER BY s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-help-list-head', [
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'messages_label' => cutstr(_MESSAGES, 4, 1),
-            'postedby_label' => _POSTEDBY,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _POSTEDBY, cutstr(_MESSAGES, 4, 1), [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $cid, $title, $time, $comments, $ip, $stat, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;

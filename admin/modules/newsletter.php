@@ -13,13 +13,7 @@ function newsletter(): void {
     $cont = getTplAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, mails, send, time, endtime FROM '.PREFIX_DB.'_newsletter ORDER BY id');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-newsletter-list-head', [
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'nlend_label' => _NLEND,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _NLEND, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $title, $mails, $sended, $time, $endtime] = $db->getSqlRow($result)) {
             $sendtime = ($endtime > $time) ? strtotime($endtime) - strtotime($time) : 0;

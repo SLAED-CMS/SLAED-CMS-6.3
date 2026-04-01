@@ -858,7 +858,7 @@ function getTplLinkAction(string $href, string $title, string $label): string {
 # Render a safe delete action item with JS confirm for getTplMenuItems()
 function getTplDeleteAction(string $href, string $confirmText, string $title, string $label): string {
     global $tpl;
-    return $tpl->getHtmlFrag('comment-action-delete', [
+    return $tpl->getHtmlFrag('action-delete', [
         'href' => $href,
         'confirm_text' => $confirmText,
         'title' => $title,

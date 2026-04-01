@@ -21,15 +21,7 @@ function money(): void {
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
-        $head = $tpl->getHtmlFrag('admin-money-list-head', [
-            'date_label' => _DATE,
-            'email_label' => _EMAIL,
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'ip_label' => _IP,
-            'status_label' => _STATUS,
-            'sum_label' => _SUM,
-        ]);
+        $head = getTplAdminTableHead([_ID, _SUM, _EMAIL, _IP, _DATE, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         $form = explode(',', $conf['money']['form'] ?? '');
         while ([$id, $sum, $email, $intro, $note, $ip, $agent, $time, $status] = $db->getSqlRow($result)) {

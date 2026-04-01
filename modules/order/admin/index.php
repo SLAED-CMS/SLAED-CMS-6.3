@@ -21,14 +21,7 @@ function order(): void {
         $r = $numstories;
         if ($numstories > $offset) $r -= $offset;
         $numpages = ceil($numstories / $anum);
-        $head = $tpl->getHtmlFrag('admin-order-list-head', [
-            'date_label' => _DATE,
-            'email_label' => _EMAIL,
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'ip_label' => _IP,
-            'status_label' => _STATUS,
-        ]);
+        $head = getTplAdminTableHead([_ID, _EMAIL, _IP, _DATE, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $email, $info, $note, $ip, $agent, $date, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;

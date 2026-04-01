@@ -26,14 +26,7 @@ function faq(): void {
     }
     $result = $db->getSqlQuery('SELECT f.id, f.cid, f.name, f.title, f.time, f.ip, t.title, u.name FROM '.PREFIX_DB.'_faq AS f LEFT JOIN '.PREFIX_DB.'_categories AS t ON (f.cid = t.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (f.uid = u.id) WHERE f.status = :status ORDER BY f.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-article-list-head', [
-            'checkall_html' => '',
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'postedby_label' => _POSTEDBY,
-            'status_label' => _STATUS,
-            'title_label' => _QUESTION,
-        ]);
+        $head = getTplAdminTableHead([_ID, _QUESTION, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;

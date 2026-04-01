@@ -145,20 +145,10 @@ function modules(): void {
             }
             if ($install) {
                 $dbc = '<i class="bi bi-database-fill-dash"></i> ';
-                $sqlimg = $tpl->getHtmlFrag('admin-modules-db-action', [
-                    'confirm_text' => _DB_DELETE.' "'.$title.'"?',
-                    'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1',
-                    'label' => _DB_DELETE,
-                    'title' => _DB_DELETE,
-                ]);
+                $sqlimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1', _DB_DELETE.' "'.$title.'"?', _DB_DELETE, _DB_DELETE);
             } else {
                 $dbc = '<i class="bi bi-database-fill-add"></i> ';
-                $sqlimg = $tpl->getHtmlFrag('admin-modules-db-action', [
-                    'confirm_text' => _DB_INSTALL.' "'.$title.'"?',
-                    'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2',
-                    'label' => _DB_INSTALL,
-                    'title' => _DB_INSTALL,
-                ]);
+                $sqlimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2', _DB_INSTALL.' "'.$title.'"?', _DB_INSTALL, _DB_INSTALL);
             }
         } else {
             $dbc = '';
@@ -166,12 +156,7 @@ function modules(): void {
         }
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
             $dbu = '<i class="bi bi-database-fill-gear bi-green" title="'._DB_UPDATE.'"></i> ';
-            $sqluimg = $tpl->getHtmlFrag('admin-modules-db-action', [
-                'confirm_text' => _DB_UPDATE.' "'.$title.'"?',
-                'href' => $afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3',
-                'label' => _DB_UPDATE,
-                'title' => _DB_UPDATE,
-            ]);
+            $sqluimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3', _DB_UPDATE.' "'.$title.'"?', _DB_UPDATE, _DB_UPDATE);
         } else {
             $dbu = '';
             $sqluimg = '';

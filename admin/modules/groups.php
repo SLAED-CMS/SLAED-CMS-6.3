@@ -13,15 +13,7 @@ function groups(): void {
     $cont = getTplAdminNavi(['ops' => ['name=groups', 'name=groups&amp;op=add', 'name=groups&amp;op=points', 'name=groups&amp;op=info'], 'tabs' => [_HOME, _ADD, _POINTS, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, name, intro, points, extra, rank, color FROM '.PREFIX_DB.'_groups ORDER BY points, extra');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-groups-list-head', [
-            'functions_label' => _FUNCTIONS,
-            'group_label' => _GROUP,
-            'id_label' => _ID,
-            'points_label' => _POINTS,
-            'rank_label' => _RANK,
-            'spec_label' => cutstr(_SPEC, 4, 1),
-            'users_label' => cutstr(_USERSCOUNT, 5, 1),
-        ]);
+        $head = getTplAdminTableHead([_ID, [_RANK, 'nosort'], _GROUP, _POINTS, cutstr(_USERSCOUNT, 5, 1), cutstr(_SPEC, 4, 1), [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$grid, $grname, $description, $points, $extra, $rank, $color] = $db->getSqlRow($result)) {
             if (intval($extra)) {

@@ -27,14 +27,7 @@ function news(): void {
     $result = $db->getSqlQuery('SELECT s.id, s.cid, s.name, s.title, s.time, s.vote, s.ip, c.title, u.name FROM '.PREFIX_DB.'_news AS s LEFT JOIN '.PREFIX_DB.'_categories AS c ON (s.cid = c.id) LEFT JOIN '.PREFIX_DB.'_users AS u ON (s.uid = u.id) WHERE s.status = :status ORDER BY s.fix DESC, s.time DESC LIMIT '.$offset.', '.$anum, ['status' => $status]);
     if ($db->getSqlRowCount($result) > 0) {
         $hide = getTplHiddenInput('name', 'news').getTplHiddenInput('op', 'actions').getTplHiddenInput('refer', '1');
-        $head = $tpl->getHtmlFrag('admin-article-list-head', [
-            'checkall_html' => $tpl->getHtmlFrag('th-nosort', ['content' => $tpl->getHtmlFrag('form-checkall', ['title' => _CHECKALL])]),
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'postedby_label' => _POSTEDBY,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _POSTEDBY, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]).$tpl->getHtmlFrag('th-nosort', ['content' => $tpl->getHtmlFrag('form-checkall', ['title' => _CHECKALL])]);
         $rows = '';
         while ([$id, $cid, $uname, $title, $time, $vote, $ip, $ctitle, $nick] = $db->getSqlRow($result)) {
             $ctitle = ($cid) ? $ctitle : _NO;

@@ -16,14 +16,7 @@ function content(): void {
     $offset = ($num - 1) * $anum;
     $result = $db->getSqlQuery('SELECT id, title, time, counter FROM '.PREFIX_DB.'_content ORDER BY id DESC LIMIT '.$offset.', '.$anum);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-content-list-head', [
-            'date_label' => _DATE,
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'reads_label' => cutstr(_READS, 4, 1),
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $head = getTplAdminTableHead([_ID, _TITLE, _DATE, cutstr(_READS, 4, 1), [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $title, $time, $counter] = $db->getSqlRow($result)) {
             if (time() >= strtotime($time)) {

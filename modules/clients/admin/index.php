@@ -13,16 +13,7 @@ function clients(): void {
     if ($stop) $cont .= $tpl->getHtmlFrag('alert', ['is_warn' => true, 'text' => _CERROR]);
     $result = $db->getSqlQuery('SELECT id, title, body, url, num, hits, pid, status FROM '.PREFIX_DB.'_clients_down');
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-clients-list-head', [
-            'date_label' => _CDATE,
-            'functions_label' => _FUNCTIONS,
-            'hits_label' => _CLOADS,
-            'id_label' => _ID,
-            'prod_label' => _ID,
-            'status_label' => _STATUS,
-            'title_label' => _CTITLE,
-            'version_label' => _CVERSION,
-        ]);
+        $head = getTplAdminTableHead([_ID, _CTITLE, _CVERSION, _CDATE, _ID, _CLOADS, [_STATUS, 'nosort'], [_FUNCTIONS, 'nosort']]);
         $rows = '';
         while ([$id, $title, $body, $url, $num, $hits, $prod, $status] = $db->getSqlRow($result)) {
             $act = ($status) ? 0 : 1;

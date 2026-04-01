@@ -15,15 +15,12 @@ function voting(): void {
     $offset = intval($offset);
     $result = $db->getSqlQuery('SELECT id, modul, time, enddate, title, lang, typ FROM '.PREFIX_DB.'_voting ORDER BY id DESC LIMIT '.$offset.', '.$conf['voting']['anum']);
     if ($db->getSqlRowCount($result) > 0) {
-        $head = $tpl->getHtmlFrag('admin-voting-list-head', [
-            'functions_label' => _FUNCTIONS,
-            'id_label' => _ID,
-            'lang_label' => _LANGUAGE,
-            'modul_label' => _MODUL,
-            'show_lang' => $conf['multilingual'] == 1,
-            'status_label' => _STATUS,
-            'title_label' => _TITLE,
-        ]);
+        $cols = [_ID, _TITLE];
+        if ($conf['multilingual'] == 1) $cols[] = _LANGUAGE;
+        $cols[] = _MODUL;
+        $cols[] = [_STATUS, 'nosort'];
+        $cols[] = [_FUNCTIONS, 'nosort'];
+        $head = getTplAdminTableHead($cols);
         $rows = '';
         while ([$id, $modul, $date, $enddate, $title, $lang, $typ] = $db->getSqlRow($result)) {
             if (time() >= strtotime($date) && time() <= strtotime($enddate)) {
