@@ -2699,77 +2699,6 @@ function setCategories(string $mod, int $sub, bool $desc, string $id = ''): stri
     }
     return '';
 }
-
-# Generation of article numbers
-function setArticleNumbers(string $name, string $mod, int $limit, string $url, string $cntfld, string $tbl, string $catfld = '', string $where = '', int $maxpg = 10, array $params = []): string {
-    global $db, $conf, $locale;
-    if (!defined('ADMIN_FILE') && $catfld && $where) {
-        if ($conf['multilingual']) {
-            $lng_where = 'WHERE modul = :mod AND (lang = :loc OR lang = \'\')';
-            $lng_params = ['mod' => $mod, 'loc' => $locale];
-        } else {
-            $lng_where = 'WHERE modul = :mod';
-            $lng_params = ['mod' => $mod];
-        }
-        $res = $db->getSqlQuery('SELECT id, pread FROM '.PREFIX_DB.'_categories '.$lng_where.' ORDER BY id', $lng_params);
-        $catid = [];
-        while (list($cid, $auth) = $db->getSqlRow($res)) {
-            if (is_acess($auth)) $catid[] = (int)$cid;
-        }
-        $where = (!empty($catid)) ? ' WHERE '.$catfld.' IN ('.implode(', ',$catid).') AND '.$where : ' WHERE '.$where;
-    } else {
-        $where = $where ? ' WHERE '.$where : '';
-    }
-    $sql = 'SELECT COUNT('.$cntfld.') FROM '.PREFIX_DB.$tbl.$where;
-    list($cnt) = $db->getSqlRow($db->getSqlQuery($sql,$params));
-    $cnt = (int)$cnt;
-    $pages = $cnt > 0 ? (int)ceil($cnt / $limit) : 1;
-    return setPageNumbers($name, $mod, $cnt, $pages, $limit, $url, $maxpg);
-}
-
-# Generation of page numbers
-function setPageNumbers(string $frag, string $mod, int $count, int $pages, int $limit, string $url = '', int $maxpg = 8, int $num = 0, string $anchor = '', string $n = 'num'): string {
-    global $afile, $tpl;
-    $num  = $num ?: getVar('get', $n, 'num', 1);
-    $nnum = $maxpg + 1;
-    $url = html_entity_decode($url, ENT_QUOTES, 'UTF-8');
-    if ($pages > 1) {
-        $cont = '';
-        if ($num > 1) {
-            $prev  = $num - 1;
-            $prevHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $prev]).$anchor : $afile.'.php?'.$url.$n.'='.$prev.$anchor;
-            $cprev = pagerLink($prevHref, _BACK, _BACK, 'sl_num');
-        } else {
-            $cprev = pagerCurrent(_BACK, _BACK, 'sl_num');
-        }
-        for ($i = 1; $i < $pages+1; $i++) {
-            if ($i == $num) {
-                $cont .= pagerCurrent((string)$i, (string)$i);
-            } else {
-                if ((($i > ($num - $maxpg)) && ($i < ($num + $maxpg))) || ($i == $pages) || ($i == 1)) {
-                    $href = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $i]).$anchor : $afile.'.php?'.$url.$n.'='.$i.$anchor;
-                    $cont .= pagerLink($href, (string)$i, (string)$i);
-                }
-            }
-            if ($i < $pages) {
-                if (($i > ($num - $nnum)) && ($i < ($num + $maxpg))) $cont .= ' ';
-                if (($num > $nnum) && ($i == 1)) $cont .= pagerDots();
-                if (($num < ($pages - $maxpg)) && ($i == ($pages - 1))) $cont .= pagerDots();
-            }
-        }
-        if ($num < $pages) {
-            $next  = $num + 1;
-            $nextHref = (!defined('ADMIN_FILE')) ? getSeoUrl(['name' => $mod, $url.$n => $next]).$anchor : $afile.'.php?'.$url.$n.'='.$next.$anchor;
-            $cnext = pagerLink($nextHref, _NEXT, _NEXT, 'sl_num');
-        } else {
-            $cnext = pagerCurrent(_NEXT, _NEXT, 'sl_num');
-        }
-        $data = ['overall' => _OVERALL, 'count' => $count, 'by' => _BY, 'pages' => $pages, 'page_s' => _PAGE_S, 'page' => $limit, 'perpage' => _PERPAGE, 'pager' => $cont, 'prev' => $cprev, 'next' => $cnext];
-        return $tpl->getHtmlFrag($frag, $data);
-    }
-    return '';
-}
-
 # Browser caching
 function setCache($id=''): void {
     header('Content-Type: text/html; charset='._CHARSET);
@@ -2804,53 +2733,6 @@ function setScript(): void {
 function setCss(): void {
     header('Content-type: text/css');
     readfile('config/cache/'.md5(getTheme().'style').'.txt');
-}
-
-# Build module navigation — defaults from $conf[$conf['name']], any $p key overrides
-function setModuleNavi(array $p): string {
-    global $conf, $tpl;
-    $mconf = $conf[$conf['name']] ?? [];
-    $cat = getVar('get', 'cat', 'num');
-    $cpar = $cat ? ['cat' => $cat] : [];
-    $title = $p['title'] ?? '';
-    $htitle = $p['htitle'] ?? $title;
-    $bop = $p['bop'] ?? 'best';
-    $always = $p['always'] ?? false;
-    $addquest = $p['addquest'] ?? true;
-    $showrate = $always || !empty($mconf['rate']);
-    $canadd = (is_user() && ($mconf['add'] ?? 0) == 1)
-           || (!is_user() && $addquest && ($mconf['addquest'] ?? 0) == 1);
-    return $tpl->getHtmlFrag('navi', [
-        'title' => $title,
-        'htitle' => $htitle,
-        'lbl_home' => _HOME,
-        'home_href' => $p['home_href'] ?? getSeoUrl(['name' => $conf['name']]),
-        'best_href' => $p['best_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => $bop]) : ''),
-        'lbl_best' => $p['btitle'] ?? _BEST,
-        'pop_href' => $p['pop_href'] ?? ($showrate ? getSeoUrl(['name' => $conf['name']] + $cpar + ['op' => 'pop']) : ''),
-        'lbl_pop' => $p['ptitle'] ?? _POP,
-        'liste_href' => $p['liste_href'] ?? getSeoUrl(['name' => $conf['name'], 'op' => 'liste']),
-        'lbl_liste' => _LIST,
-        'add_href' => $p['add_href'] ?? ($canadd ? getSeoUrl(['name' => $conf['name'], 'op' => 'add']) : ''),
-        'lbl_add' => _ADD,
-        'catshow' => $p['catshow'] ?? $cat,
-        'lbl_catvorh' => _CATVORH,
-        'lbl_cats' => _CATEGORIES,
-    ]);
-}
-
-# Set bottom navigation
-function setNaviLower(string $mod): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('navi-lower', [
-        'back_title' => _BACK,
-        'back_label' => _BACK,
-        'home_href' => 'index.php?name='.$mod,
-        'home_title' => _PAGEHOME,
-        'home_label' => _PAGEHOME,
-        'top_title' => _PAGETOP,
-        'top_label' => _PAGETOP,
-    ]);
 }
 
 # Load configuration file or directory and return chmod warning if needed
