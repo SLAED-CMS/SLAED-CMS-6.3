@@ -9,6 +9,7 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 class Template {
     protected string $theme = 'default';
     protected string $base = '';
+    protected string $shared = '';
     protected string $cache = '';
     protected array $blocks = [];
     protected array $slots = [];
@@ -23,6 +24,7 @@ class Template {
         $root = defined('BASE_DIR') ? BASE_DIR : dirname(__DIR__, 2);
         $root = str_replace('\\', '/', rtrim($root, '\\/'));
         $this->base = $root.'/templates/'.$this->theme;
+        $this->shared = $root.'/templates/shared';
         $this->cache = $root.'/storage/cache/templates/'.$this->theme;
     }
 
@@ -208,10 +210,12 @@ class Template {
         return $out;
     }
 
-    # Build the absolute template file path for a valid type and name
+    # Build the absolute template file path, falling back to shared if not in theme
     protected function getFile(string $type, string $name): string {
         if (!$this->checkType($type) || !$this->checkName($name)) return '';
-        return $this->base.'/'.$type.'/'.$name.'.html';
+        $path = $this->base.'/'.$type.'/'.$name.'.html';
+        if (is_file($path)) return $path;
+        return $this->shared.'/'.$type.'/'.$name.'.html';
     }
 
     # Load the raw template code when the resolved file is valid
@@ -634,15 +638,23 @@ class Template {
         return in_array($type, ['pages', 'partials', 'fragments', 'layouts'], true);
     }
 
-    # Verify that the target file exists as a regular file inside the theme base path
+    # Verify that the target file exists inside the theme base or shared base path
     protected function checkFile(string $file): bool {
         if ($file === '' || is_link($file) || !file_exists($file) || !is_file($file)) return false;
-        $base = realpath($this->base);
         $path = realpath($file);
-        if ($base === false || $path === false || is_link($path)) return false;
-        $base = rtrim(str_replace('\\', '/', $base), '/');
+        if ($path === false || is_link($path)) return false;
         $path = str_replace('\\', '/', $path);
-        return str_starts_with($path, $base.'/');
+        $base = realpath($this->base);
+        if ($base !== false) {
+            $base = rtrim(str_replace('\\', '/', $base), '/');
+            if (str_starts_with($path, $base.'/')) return true;
+        }
+        $shared = realpath($this->shared);
+        if ($shared !== false) {
+            $shared = rtrim(str_replace('\\', '/', $shared), '/');
+            if (str_starts_with($path, $shared.'/')) return true;
+        }
+        return false;
     }
 
     # Validate static include paths inside the current theme
