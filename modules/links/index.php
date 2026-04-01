@@ -300,7 +300,7 @@ function add(): void {
             'postname' => $postname,
             'emailval' => $mail,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], $tpl->getHtmlFrag('form-option', ['value' => '', 'selected' => '', 'label' => _HOMECAT])),
+            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], getTplSelectOption('', _HOMECAT)),
             'hometext' => textarea('1', 'description', $description, $conf['name'], '5', _TEXT, '1'),
             'bodytext' => textarea('2', 'bodytext', $bodytext, $conf['name'], '15', _ENDTEXT, '0'),
             'siteval' => $site,

@@ -322,7 +322,7 @@ function add(): void {
             'postname' => $postname,
             'title' => $title,
             'subtitle' => $subtitle,
-            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], $tpl->getHtmlFrag('form-option', ['value' => '', 'selected' => '', 'label' => _HOMECAT])),
+            'catselect' => getcat($conf['name'], $cid, 'cid', $conf['style'], getTplSelectOption('', _HOMECAT)),
             'year_options' => $yearOptions,
             'director' => $director,
             'roles' => $roles,

@@ -60,7 +60,7 @@ function send(): void {
     if (checkCaptcha(2)) $stop[] = _SECCODEINCOR;
     if (!$stop) {
         $subject = $conf['sitename'].' - '._INTSITE;
-        $siteLink = $tpl->getHtmlFrag('recommend-mail-link', ['href' => $conf['homeurl'], 'title' => $conf['sitename'], 'label' => $conf['homeurl']]);
+        $siteLink = $tpl->getHtmlFrag('files-external-link', ['href' => $conf['homeurl'], 'title' => $conf['sitename'], 'label' => $conf['homeurl']]);
         $message = $tpl->getHtmlFrag('recommend-mail-message', [
             'hello' => _HELLO,
             'friend_name' => $fname,

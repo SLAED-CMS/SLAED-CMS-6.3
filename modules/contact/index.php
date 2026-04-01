@@ -33,7 +33,7 @@ function contact(): void {
             while ([$id, $aname, $atitle] = $db->getSqlRow($result)) {
                 $aname = substr($aname, 0, 25);
                 $atitle = substr($atitle, 0, 50);
-                $asend .= $tpl->getHtmlFrag('contact-admin-option', ['value' => $id, 'label' => $aname.' - '.$atitle]);
+                $asend .= getTplSelectOption((string)$id, $aname.' - '.$atitle);
             }
         }
     }

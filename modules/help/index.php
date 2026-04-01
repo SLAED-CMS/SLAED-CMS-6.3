@@ -305,7 +305,7 @@ function add(): void {
             'lbl_cat' => _CATEGORY,
             'lbl_text' => _TEXT,
             'titleval' => $title,
-            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], $tpl->getHtmlFrag('form-option', ['value' => '', 'selected' => '', 'label' => _HOMECAT])),
+            'catselect' => getcat($conf['name'], $cid, 'catid', $conf['style'], getTplSelectOption('', _HOMECAT)),
             'hometext' => textarea('1', 'hometext', $hometext, $conf['name'], '10', _TEXT, '1'),
             'fields' => fields_in($field, $conf['name']),
             'submit' => ad_save('', '', 'send'),

@@ -647,7 +647,7 @@ function tmoder(int $typ): string {
     $mass = [_FMODC => 's0', _FMODCA => 's1', _FMODCR => 's2', _FMODCW => 's3', _FMODCH => 's4', _FMODCO => 's5'];
     $mass = ($typ) ? array_merge($mass, [_DELETE => 'd']) : $mass;
     $opts1 = '';
-    foreach ($mass as $vn => $vv) $opts1 .= $tpl->getHtmlFrag('form-option', ['value' => $vv, 'selected' => '', 'label' => $vn]);
+    foreach ($mass as $vn => $vv) $opts1 .= getTplSelectOption($vv, $vn);
     $opts = $tpl->getHtmlFrag('forum-optgroup', ['label' => _OPMOD, 'class' => 'sl_label', 'options_html' => $opts1]);
     $opts .= $tpl->getHtmlFrag('forum-optgroup', ['label' => _MOVETO, 'class' => 'sl_label', 'options_html' => getcat($conf['name'], 0, '', '', '', '1')]);
     return getTplFormSelect('tmove', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
@@ -658,8 +658,7 @@ function pmoder(int|string $status, int $subh): string {
     $mass = ($subh) ? [_CLOSE => 0, _OPEN => 1] : [_FMODC => 0, _FMODCA => 1, _FMODCR => 2, _FMODCW => 3, _FMODCH => 4, _FMODCO => 5];
     $opts = '';
     foreach ($mass as $vn => $vv) {
-        $sel = ($status == $vv) ? ' selected' : '';
-        $opts .= $tpl->getHtmlFrag('form-option', ['value' => (string)$vv, 'selected' => $sel, 'label' => $vn]);
+        $opts .= getTplSelectOption((string)$vv, $vn, $status == $vv);
     }
     return getTplFormSelect('status', $opts, 'sl_field '.$conf['style'], 'title="'._CHECKOP.'"');
 }
