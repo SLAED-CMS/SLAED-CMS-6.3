@@ -129,19 +129,16 @@ function config(): void {
     setHead();
     $cont = getTplAdminNavi(['ops' => ['name=statistic', 'name=statistic&amp;op=config', 'name=statistic&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1, 'sub' => getStatisticSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/statistic.php');
-    $confv = $tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'statistic',
-        'op' => 'save',
-        'save' => _SAVECHANGES,
-        'fields' => getTplHiddenInput('token', $token),
-        '_statbet' => _STATBET,
-        'bet' => $conf['statistic']['bet'],
-        '_statshi' => _STATSHI,
-        'shi' => $conf['statistic']['shi'],
-        '_statact' => _STATACT,
-        'r_stat' => radio_form($conf['statistic']['stat'], 'stat'),
-        'statistic' => true,
+    $rows = [
+        ['label_html' => _STATBET, 'field_html' => getTplNumberInput((string)$conf['statistic']['bet'], 'bet', 'sl_conf')],
+        ['label_html' => _STATSHI, 'field_html' => getTplNumberInput((string)$conf['statistic']['shi'], 'shi', 'sl_conf')],
+        ['label_html' => _STATACT, 'field_html' => radio_form($conf['statistic']['stat'], 'stat')],
+    ];
+    $confv = $tpl->getHtmlFrag('config-div', [
+        'action_url' => $afile.'.php',
+        'hidden_html' => getTplHiddenInput('name', 'statistic').getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken()),
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.getTplBox($confv);
     setFoot();

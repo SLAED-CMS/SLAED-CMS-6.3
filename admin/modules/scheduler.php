@@ -69,16 +69,14 @@ function scheduler(): void {
                 'title' => $alabel,
             ]);
         }
-        $cols = $tpl->getHtmlFrag('admin-scheduler-list-row', [
-            'actions_html' => getTplAdminActionMenu($acts),
-            'forms_html' => $aforms,
-            'next_run' => $nextr,
-            'priority_value' => (string)($job['priority'] ?? '100'),
-            'result_label' => $stat,
-            'status_html' => ad_status('', (int)$isactive),
-            'title_html' => getTplAdminTipLabel($tip, $title, cutstr($title, 22)),
-        ]);
-        $rows .= getTplAdminTableRow($cols);
+        $rows .= getTplAdminTableRow(getTplAdminTableCells([
+            getTplAdminTipLabel($tip, $title, cutstr($title, 22)),
+            $nextr,
+            $stat,
+            (string)($job['priority'] ?? '100'),
+            ad_status('', (int)$isactive),
+            $aforms.getTplAdminActionMenu($acts),
+        ]));
     }
     $cont .= getTplAdminTable($head, $rows);
     setHead();

@@ -151,26 +151,19 @@ function deleteDblock(): void {
 }
 
 function getSqltable(array $items): string {
-    global $tpl;
     if (!$items) return '';
-    $head = $tpl->getHtmlFrag('admin-database-sql-head', [
-        'db_sql_label' => _DB_SQL,
-        'id_label' => _ID,
-        'status_label' => _STATUS,
-        'table_label' => _TABLE,
-        'type_label' => _TYPE,
-    ]);
+    $head = getTplAdminTableHead([_ID, _TYPE, _TABLE, [_DB_SQL, 'nosort'], [_STATUS, 'nosort']]);
     $rows = '';
     foreach ($items as $row) {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
         $status = getTplAdminFlagBox((bool)$row['ok'], _OK, _ERROR.' - '.$row['error']);
-        $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-database-sql-row', [
-            'db_sql_text' => $sql,
-            'id_value' => (string)(int)$row['num'],
-            'status_html' => $status,
-            'table_label' => $tab,
-            'type_label' => htmlspecialchars($row['type']),
+        $rows .= getTplAdminTableRow(getTplAdminTableCells([
+            (string)(int)$row['num'],
+            htmlspecialchars($row['type']),
+            $tab,
+            $sql,
+            $status,
         ]));
     }
     return getTplAdminTable($head, $rows);
@@ -192,20 +185,15 @@ function getSqlsum(array $items, string $mode, string $name): string {
     }
     $stat = getTplAdminFlagBox($bad === 0, _OK, _ERROR);
     $mval = ($mode === 'dump') ? _DB_RUNMODE : _DB_PARSEMODE;
-    $text = $tpl->getHtmlFrag('admin-database-summary', [
-        'blocks_label' => _DB_BLOCKS,
-        'blocks_value' => (string)$all,
-        'errors_label' => _DB_ERRORS,
-        'errors_value' => (string)$bad,
-        'inquiry_label' => _INQUIRY,
-        'mode_label' => _DB_MODE,
-        'mode_text' => $mval,
-        'name_text' => $name,
-        'ok_value' => (string)$good,
-        'status_html' => $stat,
-        'status_label' => _STATUS,
-        'stop_html' => $stop ? _DB_STOP.': '.$stop : '',
-    ]);
+    $text = getTplAdminInfoLine(_INQUIRY, $name)
+        .getTplAdminInfoLine(_DB_MODE, $mval)
+        .getTplAdminInfoLine(_DB_BLOCKS, (string)$all)
+        .getTplAdminInfoLine('OK', (string)$good)
+        .getTplAdminInfoLine(_DB_ERRORS, (string)$bad)
+        .getTplAdminInfoLine(_STATUS, $stat);
+    if ($stop) {
+        $text .= getTplAdminInfoLine(_DB_STOP, (string)$stop);
+    }
     return $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $text]);
 }
 
@@ -233,17 +221,7 @@ function database(): void {
     $allrows = 0;
     $item = 0;
 
-    $dbhead = $tpl->getHtmlFrag('admin-database-table-head', [
-        'actions_label' => $headtag,
-        'collation_label' => _DBCOLL,
-        'date_label' => _DATE,
-        'dbfree_label' => _DBFREE,
-        'id_label' => _ID,
-        'rows_label' => _ROWS,
-        'size_label' => _SIZE,
-        'table_label' => _TABLE,
-        'type_label' => _TYPE,
-    ]);
+    $dbhead = getTplAdminTableHead([_ID, _TABLE, _TYPE, _DBCOLL, _ROWS, _DATE, _SIZE, [_DBFREE, 'nosort'], [$headtag, 'nosort']]);
     $dbrows = '';
 
     foreach ($tables as $info) {
@@ -304,24 +282,29 @@ function database(): void {
 
         $item++;
 
-        $dbrows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-database-list-row', [
-            'collation_name' => $tabloc,
-            'created_text' => format_time($crtime, _TIMESTRING),
-            'free_html' => $freetag,
-            'id_value' => (string)$item,
-            'rows_count' => (string)$rows,
-            'size_text' => filterSize($tabsize),
-            'status_html' => $stattag,
-            'table_name' => $name,
-            'type_name' => $tabeng,
+        $dbrows .= getTplAdminTableRow(getTplAdminTableCells([
+            (string)$item,
+            $name,
+            $tabeng,
+            $tabloc,
+            (string)$rows,
+            format_time($crtime, _TIMESTRING),
+            filterSize($tabsize),
+            $freetag,
+            $stattag,
         ]));
     }
 
-    $dbrows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-database-total-row', [
-        'free_text' => filterSize($sumfree),
-        'id_value' => (string)$item,
-        'rows_count' => (string)$allrows,
-        'size_text' => filterSize($total),
+    $dbrows .= getTplAdminTableRow(getTplAdminTableCells([
+        '<strong>'.(string)$item.'</strong>',
+        '&nbsp;',
+        '&nbsp;',
+        '&nbsp;',
+        '<strong>'.(string)$allrows.'</strong>',
+        '&nbsp;',
+        '<strong>'.filterSize($total).'</strong>',
+        '<strong>'.filterSize($sumfree).'</strong>',
+        '&nbsp;',
     ]), '', 'data-sort-method="none"');
     $content = getTplAdminTable($dbhead, $dbrows);
 
@@ -425,10 +408,22 @@ function dump(): void {
     }
     $fhide = getTplHiddenInput('name', 'database').getTplHiddenInput('op', 'dump').getTplHiddenInput('type', 'dump');
     $frows = getTplAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
-    $frows .= getTplAdminFormWide($tpl->getHtmlFrag('admin-database-dump-actions', [
-        'execute_label' => _EXECUTE,
-        'parse_label' => _DB_PARSE,
-    ]), '', 'sl_center');
+    $actions = $tpl->getHtmlFrag('admin-input', [
+        'itype' => 'submit',
+        'name_attr' => 'action',
+        'value_attr' => 'parse',
+        'input_class' => 'sl_but_blue',
+        'input_attr' => '',
+    ]);
+    $actions .= ' ';
+    $actions .= $tpl->getHtmlFrag('admin-input', [
+        'itype' => 'submit',
+        'name_attr' => 'action',
+        'value_attr' => 'dump',
+        'input_class' => 'sl_but_blue',
+        'input_attr' => '',
+    ]);
+    $frows .= getTplAdminFormWide($actions, '', 'sl_center');
     echo $cont.getTplBox(getTplAdminForm($afile.'.php', $frows, $fhide, 'sl_table_edit'));
     setFoot();
 }

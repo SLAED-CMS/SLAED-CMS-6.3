@@ -22,12 +22,12 @@ function newsletter(): void {
                 getTplLinkAction($afile.'.php?name=newsletter&amp;op=add&amp;id='.$id, _FULLEDIT, _FULLEDIT),
                 getTplAdminDeleteAction($afile.'.php?name=newsletter&amp;op=delete&amp;id='.$id.''.$token, _DELETE.' &quot;'.$title.'&quot;?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-newsletter-list-row', [
-                'actions_html' => $acts,
-                'id_text' => (string)$id,
-                'send_text' => $sended.' '._NLUSER,
-                'status_html' => ad_status('', $active),
-                'title_html' => getTplAdminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_TIMENL, getDuration($sendtime))).$title,
+            $rows .= getTplAdminTableRow(getTplAdminTableCells([
+                (string)$id,
+                getTplAdminTitleTip(_DATE.': '.format_time($time, _TIMESTRING).getTplAdminTipLine(_TIMENL, getDuration($sendtime))).$title,
+                $sended.' '._NLUSER,
+                ad_status('', $active),
+                $acts,
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -228,18 +228,15 @@ function config(): void {
     setHead();
     $cont = getTplAdminNavi(['ops' => ['name=newsletter', 'name=newsletter&amp;op=add', 'name=newsletter&amp;op=config', 'name=newsletter&amp;op=info'], 'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO], 'tab' => 2]);
     $cont .= checkPerms(CONFIG_DIR.'/newsletter.php');
-    $confv = $tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'newsletter',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => getTplHiddenInput('token', $token),
-        '_nlsend' => _NLSEND,
-        '_nlsendi' => _NLSENDI,
-        'r_active' => radio_form($conf['newsletter']['active'], 'active'),
-        '_nlcount' => _NLCOUNT,
-        'count' => $conf['newsletter']['count'],
-        'newsletter' => true,
+    $rows = [
+        ['label_html' => getTplAdminHintLabel(_NLSEND, _NLSENDI), 'field_html' => radio_form($conf['newsletter']['active'], 'active')],
+        ['label_html' => _NLCOUNT, 'field_html' => getTplNumberInput((string)$conf['newsletter']['count'], 'count', 'sl_conf')],
+    ];
+    $confv = $tpl->getHtmlFrag('config-div', [
+        'action_url' => $afile.'.php',
+        'hidden_html' => getTplHiddenInput('name', 'newsletter').getTplHiddenInput('op', 'configsave').getTplHiddenInput('token', getSiteToken()),
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.getTplBox($confv);
     setFoot();

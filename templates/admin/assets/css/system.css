@@ -713,6 +713,102 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 .sl_table_conf td:first-child { width: 60%; }
 .sl_table_conf td { padding: 4px; vertical-align: top; }
 
+/* Конфигурация на div-верстке */
+.sl-config-form { display: block; }
+.sl-config-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 12px;
+}
+.sl-config-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e8ebee;
+    background-color: #fff;
+}
+.sl-config-item:hover {
+    background-color: #f1f6f9;
+}
+.sl-config-grid > .sl-config-item:last-child {
+    border-bottom: 0;
+}
+.sl-config-label {
+    font-weight: normal;
+    line-height: 1.35;
+}
+.sl-config-label .sl_small {
+    margin: 4px 0 0 0;
+}
+.sl-config-label span {
+    display: inline-block;
+}
+.sl-config-field .sl_conf,
+.sl-config-field .sl_form,
+.sl-config-field textarea,
+.sl-config-field select {
+    width: 100%;
+    max-width: 100%;
+}
+.sl-config-field label {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 14px;
+    white-space: nowrap;
+}
+.sl-config-field label input {
+    margin-right: 6px;
+}
+.sl-config-item-full {
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+.sl-config-item-full .sl-config-label:empty {
+    display: none;
+}
+.sl-config-item-full .sl-config-field textarea {
+    min-height: 150px;
+}
+.sl-config-module-separated {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #d8dde3;
+}
+.sl-config-module {
+    padding: 8px 10px;
+    border: 1px solid #e8ebee;
+    border-radius: 4px;
+    background-color: #fbfcfd;
+}
+.sl-config-module .sl-config-item {
+    padding-left: 0;
+    padding-right: 0;
+    background-color: transparent;
+}
+.sl-config-module .sl-config-item:hover {
+    background-color: #f1f6f9;
+}
+.sl-config-module .sl-config-item-static:hover {
+    background-color: transparent;
+}
+.sl-config-module .sl-config-item:first-child {
+    padding-top: 0;
+}
+.sl-config-module .sl-config-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+}
+.sl-config-actions {
+    padding-top: 8px;
+    text-align: center;
+}
+@media (max-width: 900px) {
+    .sl-config-item { grid-template-columns: 1fr; gap: 8px; }
+}
+
 /* Оформление таблиц вывода информации, комментариев */
 .sl_table_basic { width: 100%; margin-bottom: 3px; }
 .sl_table_basic td { padding: 4px; border: 1px solid #e8ebee; border-radius: 3px; }

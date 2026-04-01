@@ -11,6 +11,7 @@ function modules(): void {
     global $conf, $db, $afile, $infos, $tpl;
     $mtype = getVar('req', 'type', 'num', 2);
     $mtype = in_array($mtype, [2, 1, 0], true) ? $mtype : 2;
+    $token = '&amp;token='.getSiteToken();
     $typelink = ($mtype !== 2) ? '&amp;type='.$mtype : '';
     $search = getTplAdminSearchBox($tpl->getHtmlFrag('admin-modules-type-search', [
         'action_url' => $afile.'.php?name=modules',
@@ -144,10 +145,10 @@ function modules(): void {
                 }
             }
             if ($install) {
-                $dbc = '<i class="bi bi-database-fill-dash"></i> ';
+                $dbc = $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => 'database-fill-dash']);
                 $sqlimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=1'.$token, _DB_DELETE.' "'.$title.'"?', _DB_DELETE, _DB_DELETE);
             } else {
-                $dbc = '<i class="bi bi-database-fill-add"></i> ';
+                $dbc = $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => 'database-fill-add']);
                 $sqlimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=2'.$token, _DB_INSTALL.' "'.$title.'"?', _DB_INSTALL, _DB_INSTALL);
             }
         } else {
@@ -155,7 +156,7 @@ function modules(): void {
             $sqlimg = '';
         }
         if (file_exists('modules/'.$title.'/sql/update.sql')) {
-            $dbu = '<i class="bi bi-database-fill-gear bi-green" title="'._DB_UPDATE.'"></i> ';
+            $dbu = $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => 'database-fill-gear', 'icon_class' => 'bi-green', 'title' => _DB_UPDATE]);
             $sqluimg = getTplAdminDeleteAction($afile.'.php?name=modules&amp;op=add&amp;mod='.$title.'&amp;id=3'.$token, _DB_UPDATE.' "'.$title.'"?', _DB_UPDATE, _DB_UPDATE);
         } else {
             $dbu = '';
@@ -167,17 +168,15 @@ function modules(): void {
             $sqlimg,
             $sqluimg,
         ]);
-        $cols = $tpl->getHtmlFrag('admin-modules-list-row', [
+        $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-modules-list-row', [
             'actions_html' => $acts,
             'db_html' => $dbc.$dbu,
             'group_label' => $group_name,
-            'icon_name' => $typel,
             'id_value' => (string)$a,
             'module_name' => $title,
-            'title_html' => $titlel,
+            'title_html' => $tpl->getHtmlFrag('bootstrap-icon', ['icon_name' => $typel]).' '.$titlel,
             'view_label' => $who_view,
-        ]);
-        $rows .= getTplAdminTableRow($cols);
+        ]));
         $a++;
     }
 

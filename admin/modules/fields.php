@@ -16,7 +16,7 @@ function fields(): void {
     $k = 0;
     foreach ($mods as $val) {
         $fieldc = explode('||', $conf['fields'][$val]);
-        $tabcontent = '';
+        $rows = [];
         for ($c = 0; $c < 10; $c++) {
             preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $fieldc[$c], $out);
             $fieldname = [_FIELDINPUT, _FIELDAREA, _FIELDSELECT, _FIELDTIME, _FIELDDATE];
@@ -32,30 +32,29 @@ function fields(): void {
             }
             $field2 = getTplSelect('field4'.$k.'[]', $fopts2, 'sl_conf');
             $b = $c + 1;
-            $tabcontent .= $tpl->getHtmlFrag('admin-fields-field-block', [
-                'block_id' => 'fi'.$k.$c,
-                'content_value' => $out[2] ?? '',
-                'display_attr' => (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '',
-                'field_html' => $field,
-                'field2_html' => $field2,
-                'hr_html' => ($c == '0') ? '' : getTplHrLine(),
-                'next_block_id' => 'fi'.$k.$b,
-                'content_placeholder' => _CONTENT,
-                'content_label' => _CONTENT.':',
-                'field_label' => _FIELD.': '.$b,
-                'name_label' => _NAME.':',
-                'name_placeholder' => _NAME,
-                'name_value' => $out[1] ?? '',
-                'type_label' => _TYPE.':',
-                'uses_label' => _USES.':',
-                'title_attr' => _ADD,
-                'xid' => (string)$k,
-            ]);
+            $rows[] = [
+                'raw_html' => $tpl->getHtmlFrag('admin-fields-field-block', [
+                    'block_id' => 'fi'.$k.$c,
+                    'content_value' => $out[2] ?? '',
+                    'display_attr' => (empty($out[1]) && $c != 0) ? ' class="sl_none"' : '',
+                    'field_html' => $field,
+                    'field2_html' => $field2,
+                    'hr_html' => ($c == '0') ? '' : getTplHrLine(),
+                    'next_block_id' => 'fi'.$k.$b,
+                    'content_placeholder' => _CONTENT,
+                    'content_label' => _CONTENT.':',
+                    'field_label' => _FIELD.': '.$b,
+                    'name_label' => _NAME.':',
+                    'name_placeholder' => _NAME,
+                    'name_value' => $out[1] ?? '',
+                    'type_label' => _TYPE.':',
+                    'uses_label' => _USES.':',
+                    'title_attr' => _ADD,
+                    'xid' => (string)$k,
+                ]),
+            ];
         }
-        $content .= $tpl->getHtmlFrag('admin-tab-content', [
-            'items_html' => $tabcontent,
-            'tab_id' => getTplAdminTabName('fields', $k),
-        ]);
+        $content .= getTplAdminTabContent(getTplAdminTabName('fields', $k), $tpl->getHtmlFrag('config-div-content', ['rows' => $rows]));
         $k++;
     }
     $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _FIELDINFO]);

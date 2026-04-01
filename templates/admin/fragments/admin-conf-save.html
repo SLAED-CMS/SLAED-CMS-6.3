@@ -1,1 +1,8 @@
-<form action="{{ action_url }}" method="post">{{{ content_html }}}<table class="sl_table_conf"><tr><td class="sl_center"><input type="hidden" name="name" value="{{ mod_name }}"><input type="hidden" name="op" value="{{ op_value }}"><input type="submit" value="{{ submit_label }}" class="sl_but_blue"></td></tr></table></form>
+<form action="{{ action_url }}" method="post">
+    {{{ content_html }}}
+    <input type="hidden" name="name" value="{{ mod_name }}">
+    <input type="hidden" name="op" value="{{ op_value }}">
+    <div class="sl-config-actions">
+        <input type="submit" value="{{ submit_label }}" class="sl_but_blue">
+    </div>
+</form>

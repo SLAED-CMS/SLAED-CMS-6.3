@@ -64,13 +64,12 @@ function referers(): void {
             if (isset($massiv[$i]) && $massiv[$i] != '') {
                 $name = ($massiv[$i][1]) ? user_info($massiv[$i][2]) : $massiv[$i][2];
                 $words = engines_word($massiv[$i][4]) ?: _NO;
-                $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-referers-list-row', [
-                    'hits_text' => (string)$massiv[$i][0],
-                    'ip_html' => getTplAdminTitleTip(_NICKNAME.': '.$name.getTplAdminTipLine(_DATE, format_time($massiv[$i][6], _TIMESTRING))).$massiv[$i][3],
-                    'referer_text' => domain($massiv[$i][4], 30),
-                    'search_attr' => $words,
-                    'search_text' => cutstr($words, 25),
-                    'url_text' => domain($massiv[$i][5], 30),
+                $rows .= getTplAdminTableRow(getTplAdminTableCells([
+                    getTplAdminTitleTip(_NICKNAME.': '.$name.getTplAdminTipLine(_DATE, format_time($massiv[$i][6], _TIMESTRING))).$massiv[$i][3],
+                    domain($massiv[$i][5], 30),
+                    domain($massiv[$i][4], 30),
+                    getTplSpan('sl_note', cutstr($words, 25), $words),
+                    (string)$massiv[$i][0],
                 ]));
             }
         }
@@ -89,23 +88,18 @@ function config(): void {
     setHead();
     $cont = getTplAdminNavi(['ops' => ['name=referers', 'name=referers&amp;op=config', 'name=referers&amp;op=delete'.$token, 'name=referers&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _DELETE, _INFO], 'tab' => 1, 'sub' => getRefererSearch()]);
     $cont .= checkPerms(CONFIG_DIR.'/referers.php');
-    $confv = $tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'referers',
-        'op' => 'save',
-        'save' => _SAVECHANGES,
-        'fields' => getTplHiddenInput('token', $token),
-        '_c34' => _C_34,
-        'anum' => $conf['referers']['anum'],
-        '_c36' => _C_36,
-        'anump' => $conf['referers']['anump'],
-        '_refer_t' => _REFER_T,
-        'refer_t' => intval($conf['referers']['refer_t'] / 86400),
-        '_refer' => _REFER,
-        'r_refer' => radio_form($conf['referers']['refer'], 'refer'),
-        '_referb' => _REFERB,
-        'r_referb' => radio_form($conf['referers']['referb'], 'referb'),
-        'referers' => true,
+    $rows = [
+        ['label_html' => _C_34, 'field_html' => getTplNumberInput((string)$conf['referers']['anum'], 'anum', 'sl_conf')],
+        ['label_html' => _C_36, 'field_html' => getTplNumberInput((string)$conf['referers']['anump'], 'anump', 'sl_conf')],
+        ['label_html' => _REFER_T, 'field_html' => getTplNumberInput((string)intval($conf['referers']['refer_t'] / 86400), 'refer_t', 'sl_conf')],
+        ['label_html' => _REFER, 'field_html' => radio_form($conf['referers']['refer'], 'refer')],
+        ['label_html' => _REFERB, 'field_html' => radio_form($conf['referers']['referb'], 'referb')],
+    ];
+    $confv = $tpl->getHtmlFrag('config-div', [
+        'action_url' => $afile.'.php',
+        'hidden_html' => getTplHiddenInput('name', 'referers').getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken()),
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.getTplBox($confv);
     setFoot();

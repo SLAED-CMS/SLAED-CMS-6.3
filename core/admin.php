@@ -208,7 +208,7 @@ function admininfo() {
             $newRows = [];
             if (is_active('account') && is_admin_modul('account')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_users_temp'));
-                $newRows[] = adminInfoRow($afile.'.php?name=account&op=newuser', _NEW_USER, _USERS, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=account&op=newuser', _NEW_USER, _USERS, $num);
             }
             if (is_active('album') && is_admin_modul('album')) {
                 #$num = $db->getSqlRowCount($db->getSqlQuery("SELECT pid FROM ".PREFIX_DB."_album_pictures_newpicture"));
@@ -217,58 +217,58 @@ function admininfo() {
             }
             if (is_active('faq') && is_admin_modul('faq')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_faq WHERE status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=faq&status=1', _FAQ, _FAQ, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=faq&status=1', _FAQ, _FAQ, $num);
             }
             if (is_active('files') && is_admin_modul('files')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=files&status=1', _FILES, _FILES, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=files&status=1', _FILES, _FILES, $num);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_files WHERE status = '2'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=files&status=2', _BROCFILES, _BROCFILES, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=files&status=2', _BROCFILES, _BROCFILES, $num);
             }
             if (is_active('help') && is_admin_modul('help')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_help WHERE pid = '0' AND status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=help', _HELP, _HELP, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=help', _HELP, _HELP, $num);
             }
             if (is_active('jokes') && is_admin_modul('jokes')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_jokes WHERE status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=jokes&status=1', _JOKES, _JOKES, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=jokes&status=1', _JOKES, _JOKES, $num);
             }
             if (is_active('links') && is_admin_modul('links')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=links&status=1', _LINKS, _LINKS, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=links&status=1', _LINKS, _LINKS, $num);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_links WHERE status = '2'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=links&status=2', _BROCLINKS, _BROCLINKS, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=links&status=2', _BROCLINKS, _BROCLINKS, $num);
             }
             if (is_active('media') && is_admin_modul('media')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=media&status=1', _MEDIA, _MEDIA, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=media&status=1', _MEDIA, _MEDIA, $num);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_media WHERE status = '2'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=media&status=2', _BROCMFILES, _BROCMFILES, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=media&status=2', _BROCMFILES, _BROCMFILES, $num);
             }
             if (is_active('news') && is_admin_modul('news')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_news WHERE status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=news&status=1', _NEWS, _NEWS, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=news&status=1', _NEWS, _NEWS, $num);
             }
             if (is_active('pages') && is_admin_modul('pages')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_pages WHERE status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=pages&status=1', _PAGES, _PAGES, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=pages&status=1', _PAGES, _PAGES, $num);
             }
             if (is_active('shop') && is_admin_modul('shop')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_clients WHERE status = '2'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=shop&op=clients', _CLIENTS, _CLIENTS, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=shop&op=clients', _CLIENTS, _CLIENTS, $num);
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_partners WHERE status = '2'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=shop&op=partners', _PARTNERS, _PARTNERS, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=shop&op=partners', _PARTNERS, _PARTNERS, $num);
             }
             if (is_active('whois') && is_admin_modul('whois')) {
                 $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_whois WHERE status = '0'"));
-                $newRows[] = adminInfoRow($afile.'.php?name=whois&status=1', _WHOIS, _WHOIS, $num);
+                $newRows[] = getTplAdminInfoRow($afile.'.php?name=whois&status=1', _WHOIS, _WHOIS, $num);
             }
-            $ablocks = $tpl->getHtmlFrag('block-left', ['title' => _NEW, 'content' => adminInfoTable($newRows), 'id' => '3', 'close' => _OPCL]);
+            $ablocks = $tpl->getHtmlFrag('block-left', ['title' => _NEW, 'content' => getTplAdminInfoTable($newRows), 'id' => '3', 'close' => _OPCL]);
             
             $waitingRows = [];
             $num = $db->getSqlRowCount($db->getSqlQuery('SELECT id FROM '.PREFIX_DB."_comment WHERE status = '0'"));
-            $waitingRows[] = adminInfoRow($afile.'.php?name=comments&status=1', _COMMENTS, _COMMENTS, $num);
-            $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _WAITINGCONT, 'content' => adminInfoTable($waitingRows), 'id' => '4', 'close' => _OPCL]);
+            $waitingRows[] = getTplAdminInfoRow($afile.'.php?name=comments&status=1', _COMMENTS, _COMMENTS, $num);
+            $ablocks .= $tpl->getHtmlFrag('block-left', ['title' => _WAITINGCONT, 'content' => getTplAdminInfoTable($waitingRows), 'id' => '4', 'close' => _OPCL]);
             
         }
         $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
@@ -593,18 +593,18 @@ function getAdminFavoriteList(int $obj = 0): string {
                 $modul = $val[2];
                 $title = $val[3];
                 $uname = ($val[4]) ? user_info($val[4]) : _ANONYM;
-                $rows[] = adminFavoritesRow([
+                $rows[] = getTplAdminFavoriteRow([
                     'id' => (string) $id,
-                    'title_html' => adminNoteLabel($title, cutstr($title, 60)),
+                    'title_html' => getTplAdminNoteLabel($title, cutstr($title, 60)),
                     'module_label' => getModuleName($modul),
                     'posted_by_html' => $uname,
-                    'functions_html' => adminMenuItems([
-                        adminLinkAction('index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid, _MVIEW, _MVIEW),
-                        adminAjaxAction('adminFavoriteList', 'go=5&amp;op=deleteAdminFavorite&amp;id='.$id, _ONDELETE, _ONDELETE),
+                    'functions_html' => getTplAdminActionMenu([
+                        getTplLinkAction('index.php?name='.$modul.'&amp;op=view&amp;id='.$fid.'#'.$fid, _MVIEW, _MVIEW),
+                        getTplAdminAjaxAction('adminFavoriteList', 'go=5&amp;op=deleteAdminFavorite&amp;id='.$id, _ONDELETE, _ONDELETE),
                     ]),
                 ]);
             }
-            $cont = adminFavoritesTable(implode('', $rows));
+            $cont = getTplAdminFavoriteTable(implode('', $rows));
             $numpages = ceil($fav_num / $newlistnum);
             $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['favorites']['anump'], $cid, '0', 5, 'getAdminFavoriteList', 'adminFavoriteList', 0, '', '');
         } else {
@@ -642,19 +642,19 @@ function getAdminPrivateList(int $obj = 0): string {
             $unse = ($user_se) ? user_info($user_se) : _ANONYM;
             $date = format_time($date, _TIMESTRING);
             $info = filterReplaceText(filterMarkdown($body, 'privat', false), 'privat');
-            $rows[] = adminPrivateRow([
+            $rows[] = getTplAdminPrivateRow([
                 'id' => (string) $id,
-                'title_html' => adminTitleTipLabel($info, $title, cutstr($title, 30)),
+                'title_html' => getTplAdminTitleTip($info).getTplAdminNoteLabel($title, cutstr($title, 30)),
                 'sender_html' => $unse,
                 'receiver_html' => $unre,
                 'date_value' => $date,
                 'status_html' => ad_status('', $status, 1),
-                'functions_html' => adminMenuItems([
-                    adminAjaxAction('adminPrivateList', 'go=5&amp;op=deleteAdminPrivate&amp;id='.$id, _ONDELETE, _ONDELETE),
+                'functions_html' => getTplAdminActionMenu([
+                    getTplAdminAjaxAction('adminPrivateList', 'go=5&amp;op=deleteAdminPrivate&amp;id='.$id, _ONDELETE, _ONDELETE),
                 ]),
             ]);
         }
-        $cont = adminPrivateTable(implode('', $rows));
+        $cont = getTplAdminPrivateTable(implode('', $rows));
         $numpages = ceil($fav_num / $newlistnum);
         $cont .= getAsyncPager('pagenum', $fav_num, $numpages, $newlistnum, $conf['privat']['anump'], $cid, '0', 5, 'getAdminPrivateList', 'adminPrivateList', 0, '', '');
     } else {
@@ -852,7 +852,7 @@ function getAdminInfo(): string {
     }
     $html = filterReplaceText(filterMarkdown($thefile, 'info', false), 'info');
     if ($conf['adminfo']) {
-        $html .= adminInfoForm([
+        $html .= getTplAdminInfoForm([
             'action_url' => $afile.'.php?name='.$name.'&op=info',
             'hidden_html' => getTplHiddenInput('id', '1')
                 .getTplHiddenInput('type', (string)$type)

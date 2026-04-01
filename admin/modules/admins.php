@@ -212,7 +212,7 @@ function add(): void {
         'mail_checked' => $check !== '',
         'mail_panel_html' => $mailc,
         'mail_send_label' => _MAIL_SENDE,
-        'nickname_html' => get_user_search('aname', (string)$name, 25, 'sl_form', '1'),
+        'nickname_html' => getUserSearch('aname', (string)$name, 25, 'sl_form', '1'),
         'nickname_label' => _NICKNAME,
         'password_hint_html' => $hint,
         'password_label' => _PASSWORD,

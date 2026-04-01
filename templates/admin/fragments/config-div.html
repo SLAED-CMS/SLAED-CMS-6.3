@@ -1,0 +1,11 @@
+<form action="{{ action_url }}" method="post" class="sl-config-form">
+    {{{ hidden_html }}}
+    <div class="sl-config-grid">
+        {% for row in rows %}
+            {% include 'fragments/config-div-item.html' with row %}
+        {% endfor %}
+    </div>
+    <div class="sl-config-actions">
+        <input type="submit" value="{{ submit_label }}" class="sl_but_blue">
+    </div>
+</form>

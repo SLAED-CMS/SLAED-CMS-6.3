@@ -81,8 +81,32 @@ function getTplBox(string $cont): string {
 }
 
 # Render one shared admin rows-only table wrapper with a configurable table class
-function getTplAdminRowsTable(string $rows, string $type = 'sl_table_conf'): string {
+function getTplAdminRowsTable(array|string $rows, string $type = 'sl_table_conf'): string {
     global $tpl;
+    if (is_array($rows)) {
+        $html = '';
+        foreach ($rows as $row) {
+            if (!is_array($row) || $row === []) continue;
+            if (!empty($row['raw_html'])) {
+                $html .= (string)$row['raw_html'];
+                continue;
+            }
+            if (array_key_exists('content_html', $row)) {
+                $html .= $tpl->getHtmlFrag('admin-form-wide', [
+                    'cell_class' => $row['cell_class'] ?? '',
+                    'content_html' => $row['content_html'] ?? '',
+                    'row_class' => $row['row_class'] ?? '',
+                ]);
+                continue;
+            }
+            $html .= $tpl->getHtmlFrag('admin-form-row', [
+                'field_html' => $row['field_html'] ?? '',
+                'label_html' => $row['label_html'] ?? '',
+                'row_class' => $row['row_class'] ?? '',
+            ]);
+        }
+        $rows = $html;
+    }
     return $tpl->getHtmlFrag('admin-rows-table', [
         'rows_html' => $rows,
         'table_class' => $type,

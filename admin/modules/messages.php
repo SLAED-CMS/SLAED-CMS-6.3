@@ -8,7 +8,7 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function messages(): void {
-    global $db, $afile, $tpl;
+    global $db, $afile, $tpl, $token;
     setHead();
     $cont = getTplAdminNavi(['ops' => ['name=messages', 'name=messages&amp;op=add', 'name=messages&amp;op=info'], 'tabs' => [_HOME, _ADD, _INFO]]);
     $result = $db->getSqlQuery('SELECT id, title, body, expire, status, view, lang FROM '.PREFIX_DB.'_message ORDER BY id');
@@ -35,15 +35,14 @@ function messages(): void {
                 getTplLinkAction($afile.'.php?name=messages&amp;op=add&amp;id='.$mid, _FULLEDIT, _FULLEDIT),
                 getTplAdminDeleteAction($afile.'.php?name=messages&amp;op=delete&amp;id='.$mid.''.$token, _DELETE.' "'.$title.'"?', _ONDELETE, _ONDELETE),
             ]);
-            $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-messages-list-row', [
-                'actions_html' => $acts,
-                'id_text' => (string)$mid,
-                'lang_text' => getLangName($lang),
-                'purchased_text' => $exp,
-                'status_html' => ad_status('', $active),
-                'title_attr' => $title,
-                'title_text' => cutstr($title, 35),
-                'view_text' => $mview,
+            $rows .= getTplAdminTableRow(getTplAdminTableCells([
+                (string)$mid,
+                getTplSpan('sl_note', cutstr($title, 35), $title),
+                $exp,
+                $mview,
+                getLangName($lang),
+                ad_status('', $active),
+                $acts,
             ]));
         }
         $cont .= getTplAdminTable($head, $rows);
@@ -92,22 +91,15 @@ function add(): void {
     foreach ($privs as $key => $value) {
         $privopts .= getTplOption((string)($key + 1), $value, $view == ($key + 1));
     }
-    $rows = $tpl->getHtmlFrag('admin-messages-add-rows', [
-        'active_html' => radio_form($active, 'status'),
-        'active_label' => _ACTIVATE2,
-        'body_html' => textarea('1', 'body', $body, 'all', '10', _TEXT, '1'),
-        'body_label' => _TEXT.':',
-        'expire_html' => $expire_text,
-        'expire_label_html' => getTplAdminHintLabel(_EXPIRATION, _CONFINES),
-        'lang_html' => $langsel,
-        'lang_label' => _LANGUAGE.':',
-        'newexpire_value' => (string)$newexpire,
-        'save_label' => _SAVE,
-        'title_label' => _TITLE.':',
-        'title_value' => $title,
-        'view_html' => getTplSelect('view', $privopts, 'sl_form'),
-        'view_label' => _VIEWPRIV,
-    ]);
+    $rows = getTplAdminFormRow(_TITLE.':', getTplTextInput('title', $title, 'sl_form', 'maxlength="100" placeholder="'._TITLE.'" required'));
+    $rows .= getTplAdminFormRow(_TEXT.':', textarea('1', 'body', $body, 'all', '10', _TEXT, '1'));
+    if ($langsel) {
+        $rows .= getTplAdminFormRow(_LANGUAGE.':', $langsel);
+    }
+    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_EXPIRATION, _CONFINES), $expire_text);
+    $rows .= getTplAdminFormRow(_VIEWPRIV, getTplSelect('view', $privopts, 'sl_form'));
+    $rows .= getTplAdminFormRow(_ACTIVATE2, radio_form($active, 'status'));
+    $rows .= getTplAdminFormWide(getTplHiddenInput('newexpire', (string)$newexpire).getTplAdminSubmitButton(_SAVE), '', 'sl_center');
     $cont .= getTplAdminForm($afile.'.php', $rows, $hide);
     echo $cont;
     setFoot();

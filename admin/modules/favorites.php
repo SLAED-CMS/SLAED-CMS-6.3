@@ -19,25 +19,19 @@ function config(): void {
     setHead();
     $cont = getTplAdminNavi(['ops' => ['name=favorites', 'name=favorites&amp;op=config', 'name=favorites&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/favorites.php');
-    $confv = $tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'favorites',
-        'op' => 'save',
-        'save' => _SAVECHANGES,
-        'fields' => getTplHiddenInput('token', $token),
-        '_c33' => _C_33,
-        'num' => $conf['favorites']['num'],
-        '_c34' => _C_34,
-        'anum' => $conf['favorites']['anum'],
-        '_c35' => _C_35,
-        'nump' => $conf['favorites']['nump'],
-        '_c36' => _C_36,
-        'anump' => $conf['favorites']['anump'],
-        '_favor_umax' => _FAVOR_UMAX,
-        'favorites' => $conf['favorites']['favorites'],
-        '_favor_act' => _FAVOR_ACT,
-        'r_favact' => radio_form($conf['favorites']['favact'], 'favact'),
-        'favorites' => true,
+    $rows = [
+        ['label_html' => _C_33, 'field_html' => getTplNumberInput((string)$conf['favorites']['num'], 'num', 'sl_conf')],
+        ['label_html' => _C_34, 'field_html' => getTplNumberInput((string)$conf['favorites']['anum'], 'anum', 'sl_conf')],
+        ['label_html' => _C_35, 'field_html' => getTplNumberInput((string)$conf['favorites']['nump'], 'nump', 'sl_conf')],
+        ['label_html' => _C_36, 'field_html' => getTplNumberInput((string)$conf['favorites']['anump'], 'anump', 'sl_conf')],
+        ['label_html' => _FAVOR_UMAX, 'field_html' => getTplNumberInput((string)$conf['favorites']['favorites'], 'favorites', 'sl_conf')],
+        ['label_html' => _FAVOR_ACT, 'field_html' => radio_form($conf['favorites']['favact'], 'favact')],
+    ];
+    $confv = $tpl->getHtmlFrag('config-div', [
+        'action_url' => $afile.'.php',
+        'hidden_html' => getTplHiddenInput('name', 'favorites').getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken()),
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.getTplBox($confv);
     setFoot();

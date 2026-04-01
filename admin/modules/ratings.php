@@ -14,26 +14,32 @@ function ratings(): void {
     $cont .= checkPerms(CONFIG_DIR.'/ratings.php');
     $mods = ['account', 'faq', 'files', 'forum', 'help', 'jokes', 'links', 'media', 'news', 'pages', 'shop'];
     $i = 0;
-    $content = '';
+    $rows = [];
     foreach ($mods as $val) {
         $con = explode('|', $conf['ratings'][$val]);
-        $content .= $tpl->getHtmlFrag('admin-ratings-module-block', [
-            'index_text' => (string)$i,
-            'in_html' => radio_form($con[1], $i.'in'),
-            'module_name' => getModuleName($val),
-            'module_text' => $val,
-            'show_hr' => $i != 0,
-            'time_value' => (string)intval($con[0] / 86400),
-            'view_html' => radio_form($con[2], $i.'view'),
-        ]);
+        $rows[] = [
+            'has_raw_html' => 1,
+            'raw_html' => $tpl->getHtmlFrag('admin-ratings-module-block', [
+                'in_label' => _C_21,
+                'index_text' => (string)$i,
+                'in_html' => radio_form($con[1], $i.'in'),
+                'module_label' => _MODUL.':',
+                'module_name' => getModuleName($val),
+                'module_text' => $val,
+                'show_hr' => $i != 0,
+                'time_label' => _VOTING_TIME.':',
+                'time_value' => (string)intval($con[0] / 86400),
+                'view_label' => _C_22,
+                'view_html' => radio_form($con[2], $i.'view'),
+            ]),
+        ];
         $i++;
     }
-    $confv = $tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'ratings',
-        'op' => 'save',
-        'save' => _SAVECHANGES,
-        'fields' => $content,
+    $confv = $tpl->getHtmlFrag('config-div', [
+        'action_url' => $afile.'.php',
+        'hidden_html' => getTplHiddenInput('name', 'ratings').getTplHiddenInput('op', 'save'),
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.getTplBox($confv);
     setFoot();

@@ -1,1 +1,18 @@
-{% if show_hr %}<tr><td colspan="2" class="sl_center"><hr></td></tr>{% endif %}<tr><td>{{ _MODUL }}:</td><td><span title="{{ _MODUL }}: {{ module_text }}" class="sl_note">{{ module_name }}</span></td></tr><tr><td>{{ _VOTING_TIME }}:</td><td><input type="number" name="time[]" value="{{ time_value }}" class="sl_conf" placeholder="{{ _VOTING_TIME }}" required></td></tr><tr><td>{{ _C_21 }}</td><td>{{{ in_html }}}</td></tr><tr><td>{{ _C_22 }}</td><td>{{{ view_html }}}</td></tr>
+<div class="sl-config-module{% if show_hr %} sl-config-module-separated{% endif %}">
+    <div class="sl-config-item sl-config-item-static">
+        <div class="sl-config-label">{{ module_label }}</div>
+        <div class="sl-config-field"><span title="{{ module_label }} {{ module_text }}" class="sl_note">{{ module_name }}</span></div>
+    </div>
+    <div class="sl-config-item">
+        <div class="sl-config-label">{{ time_label }}</div>
+        <div class="sl-config-field"><input type="number" name="time[]" value="{{ time_value }}" class="sl_conf" placeholder="{{ time_label }}" required></div>
+    </div>
+    <div class="sl-config-item">
+        <div class="sl-config-label">{{ in_label }}</div>
+        <div class="sl-config-field">{{{ in_html }}}</div>
+    </div>
+    <div class="sl-config-item">
+        <div class="sl-config-label">{{ view_label }}</div>
+        <div class="sl-config-field">{{{ view_html }}}</div>
+    </div>
+</div>

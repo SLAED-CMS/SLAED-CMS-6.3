@@ -36,13 +36,13 @@ function lang(): void {
     $rows = '';
     $sys_admin = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;typ=admin', _FULLEDIT, _ADMIN);
     $sys_modul = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit', _FULLEDIT, _MODUL);
-    $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
-        'actions_html' => getTplAdminActionMenu([$sys_admin, $sys_modul]),
-        'id_value' => '1',
-        'module_label' => _SYSTEM,
-        'module_name' => _ALL,
-        'status_html' => ad_status('', 1),
-        'view_label' => _MVALL,
+    $rows .= getTplAdminTableRow(getTplAdminTableCells([
+        '1',
+        _SYSTEM,
+        _ALL,
+        _MVALL,
+        ad_status('', 1),
+        getTplAdminActionMenu([$sys_admin, $sys_modul]),
     ]));
     $mod = [];
     $files = scandir(BASE_DIR.'/modules');
@@ -59,13 +59,13 @@ function lang(): void {
         $acts = [];
         if (is_dir($mod_path.'/admin/lang')) $acts[] = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i].'&amp;typ=admin', _FULLEDIT, _ADMIN);
         if (is_dir($mod_path.'/lang')) $acts[] = getTplLinkAction($afile.'.php?name=lang&amp;op=fileedit&amp;mod='.$mod[$i], _FULLEDIT, _MODUL);
-        $rows .= getTplAdminTableRow($tpl->getHtmlFrag('admin-lang-list-row', [
-            'actions_html' => getTplAdminActionMenu($acts),
-            'id_value' => (string)$a,
-            'module_label' => getModuleName($mod[$i]),
-            'module_name' => $mod[$i],
-            'status_html' => ad_status('', $act),
-            'view_label' => $view,
+        $rows .= getTplAdminTableRow(getTplAdminTableCells([
+            (string)$a,
+            getModuleName($mod[$i]),
+            $mod[$i],
+            $view,
+            ad_status('', $act),
+            getTplAdminActionMenu($acts),
         ]));
     }
     $cont .= getTplAdminTable($head, $rows);
@@ -216,20 +216,17 @@ function config(): void {
     $cont = getTplAdminNavi(['ops' => ['name=lang', 'name=lang&amp;op=config', 'name=lang&amp;op=info'], 'tabs' => [_HOME, _PREFERENCES, _INFO], 'tab' => 1]);
     $cont .= checkPerms(CONFIG_DIR.'/lang.php');
     $s_lang = getTplSelect('lang', language($conf['lang']['lang'], 1), 'sl_conf');
-    $confv = $tpl->getHtmlFrag('form-conf', [
-        'route' => $afile,
-        'module' => 'lang',
-        'op' => 'configsave',
-        'save' => _SAVECHANGES,
-        'fields' => getTplHiddenInput('token', $token),
-        '_langkey' => _LANGKEY,
-        'key' => $conf['lang']['key'],
-        '_langtr' => _LANGTR,
-        's_lang' => $s_lang,
-        '_langcount' => _LANGCOUNT,
-        'count' => $conf['lang']['count'],
-        'per_page' => $conf['lang']['per_page'] ?? 100,
-        'lang' => true,
+    $rows = [
+        ['label_html' => _LANGKEY, 'field_html' => getTplTextInput('key', (string)$conf['lang']['key'], 'sl_conf')],
+        ['label_html' => _LANGTR, 'field_html' => $s_lang],
+        ['label_html' => _LANGCOUNT, 'field_html' => getTplNumberInput((string)$conf['lang']['count'], 'count', 'sl_conf')],
+        ['label_html' => 'Per page', 'field_html' => getTplNumberInput((string)($conf['lang']['per_page'] ?? 100), 'per_page', 'sl_conf')],
+    ];
+    $confv = $tpl->getHtmlFrag('config-div', [
+        'action_url' => $afile.'.php',
+        'hidden_html' => getTplHiddenInput('name', 'lang').getTplHiddenInput('op', 'configsave').getTplHiddenInput('token', getSiteToken()),
+        'rows' => $rows,
+        'submit_label' => _SAVECHANGES,
     ]);
     echo $cont.getTplBox($confv);
     setFoot();
