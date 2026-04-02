@@ -408,7 +408,7 @@ function dump(): void {
     }
     $fhide = getTplHiddenInput('name', 'database').getTplHiddenInput('op', 'dump').getTplHiddenInput('type', 'dump');
     $frows = getTplAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
-    $actions = $tpl->getHtmlFrag('admin-input', [
+    $actions = $tpl->getHtmlFrag('input', [
         'itype' => 'submit',
         'name_attr' => 'action',
         'value_attr' => 'parse',
@@ -416,7 +416,7 @@ function dump(): void {
         'input_attr' => '',
     ]);
     $actions .= ' ';
-    $actions .= $tpl->getHtmlFrag('admin-input', [
+    $actions .= $tpl->getHtmlFrag('input', [
         'itype' => 'submit',
         'name_attr' => 'action',
         'value_attr' => 'dump',
