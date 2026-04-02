@@ -1,0 +1,10 @@
+<select name="posttype" class="sl_field">
+{% for item in options %}
+    {% include 'fragments/save-action-item.html' with item %}
+{% endfor %}
+</select>
+{% if hasname %}
+<input type="hidden" name="{{ nameattr }}" value="{{ valueattr }}">
+{% endif %}
+<input type="hidden" name="op" value="{{ opattr }}">
+<input type="submit" value="{{ submit_label }}" class="sl_but_blue">

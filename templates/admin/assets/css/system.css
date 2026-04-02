@@ -166,7 +166,8 @@ thead tr th[data-sort-method="none"]::after { content: none; }
 	left: 0;
 	z-index: 100;
 	float: left;
-	min-width: 300px;
+	width: max-content;
+	max-width: 520px;
 	padding: 10px;
 	margin: 2px 0 0 0;
 	list-style: none;
@@ -809,6 +810,74 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
     .sl-config-item { grid-template-columns: 1fr; gap: 8px; }
 }
 
+/* Add/edit forms on div-based layout */
+.sl-add-form { display: block; }
+.sl-add-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-bottom: 12px;
+}
+.sl-add-item {
+    display: grid;
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+    padding: 8px 10px;
+    border-bottom: 1px solid #e8ebee;
+    background-color: #fff;
+}
+.sl-add-item:hover {
+    background-color: #f1f6f9;
+}
+.sl-add-grid > .sl-add-item:last-child {
+    border-bottom: 0;
+}
+.sl-add-label {
+    font-weight: normal;
+    line-height: 1.35;
+}
+.sl-add-label .sl_small {
+    margin: 4px 0 0 0;
+}
+.sl-add-label span {
+    display: inline-block;
+}
+.sl-add-field .sl_conf,
+.sl-add-field .sl_form,
+.sl-add-field .sl_field,
+.sl-add-field textarea,
+.sl-add-field select {
+    width: 100%;
+    max-width: 100%;
+}
+.sl-add-field label {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 14px;
+    white-space: nowrap;
+}
+.sl-add-field label input {
+    margin-right: 6px;
+}
+.sl-add-item-full {
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+.sl-add-item-full .sl-add-label:empty {
+    display: none;
+}
+.sl-add-item-full .sl-add-field textarea {
+    min-height: 180px;
+}
+.sl-add-actions {
+    padding-top: 8px;
+    text-align: center;
+}
+@media (max-width: 900px) {
+    .sl-add-item { grid-template-columns: 1fr; gap: 8px; }
+}
+
 /* Оформление таблиц вывода информации, комментариев */
 .sl_table_basic { width: 100%; margin-bottom: 3px; }
 .sl_table_basic td { padding: 4px; border: 1px solid #e8ebee; border-radius: 3px; }
@@ -821,3 +890,43 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 	border-radius: 3px;
 }
 .sl_table_basic th:last-child { text-align: right; }
+
+/* Preview content blocks */
+.sl-preview {
+    background-color: #fff;
+    border: 1px solid #dee3e8;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.sl-preview-head {
+    padding: 9px 12px;
+    font-weight: bold;
+    color: #4d5d70;
+    background: linear-gradient(180deg, #f9fbfd 0%, #eef3f7 100%);
+    border-bottom: 1px solid #dee3e8;
+}
+.sl-preview-body {
+    display: grid;
+    gap: 0;
+}
+.sl-preview-title,
+.sl-preview-section {
+    padding: 12px;
+    background-color: #fff;
+    border-bottom: 1px solid #e8ebee;
+    line-height: 1.55;
+}
+.sl-preview-body > :last-child {
+    border-bottom: 0;
+}
+.sl-preview-title {
+    font-weight: bold;
+    color: #2b3440;
+}
+.sl-preview-meta {
+    color: #59697a;
+    background-color: #fafcfd;
+}
+.sl-preview-meta > div + div {
+    margin-top: 6px;
+}

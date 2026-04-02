@@ -984,3 +984,30 @@ ol.sl_sublist_two li:hover:before { box-shadow: none; margin-right: 5px; }
 	align-items: center;
 }
 .sl_catflex-inbox div { padding: 0 3px 0 0; text-align: left; }
+
+/* Preview content blocks */
+.sl-preview {
+	padding: 0;
+	margin: 0 0 15px 0;
+	background-color: #fff;
+	border: 1px solid #e2e7ec;
+	border-radius: 6px;
+	overflow: hidden;
+}
+.sl-preview-head {
+	padding: 10px 14px;
+	font-weight: bold;
+	color: #465769;
+	background: linear-gradient(180deg, #f8fbfd 0%, #eef3f7 100%);
+	border-bottom: 1px solid #e2e7ec;
+}
+.sl-preview-body { display: grid; gap: 0; }
+.sl-preview-title, .sl-preview-section {
+	padding: 14px;
+	line-height: 1.6;
+	border-bottom: 1px solid #edf1f4;
+}
+.sl-preview-body > :last-child { border-bottom: 0; }
+.sl-preview-title { font-weight: bold; color: #25313d; }
+.sl-preview-meta { background-color: #fafcfd; color: #5d6b79; }
+.sl-preview-meta > div + div { margin-top: 6px; }

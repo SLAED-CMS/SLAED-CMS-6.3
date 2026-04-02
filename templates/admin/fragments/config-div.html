@@ -1,5 +1,7 @@
 <form action="{{ action_url }}" method="post" class="sl-config-form">
-    {{{ hidden_html }}}
+    {% for item in hidden %}
+    {% include 'fragments/config-div-hidden.html' with item %}
+    {% endfor %}
     <div class="sl-config-grid">
         {% for row in rows %}
             {% include 'fragments/config-div-item.html' with row %}

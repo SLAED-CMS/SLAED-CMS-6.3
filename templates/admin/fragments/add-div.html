@@ -1,0 +1,15 @@
+<form action="{{ action_url }}" method="post" class="sl-add-form">
+    {% for item in hidden %}
+    {% include 'fragments/add-div-hidden.html' with item %}
+    {% endfor %}
+    <div class="sl-add-grid">
+        {% for row in rows %}
+            {% include 'fragments/add-div-item.html' with row %}
+        {% endfor %}
+    </div>
+    {% if actions %}
+    <div class="sl-add-actions">
+        {% include 'fragments/save-action.html' with actions %}
+    </div>
+    {% endif %}
+</form>
