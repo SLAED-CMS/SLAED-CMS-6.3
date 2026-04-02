@@ -4885,14 +4885,12 @@ function mailto(string $mail): string {
 
 # Add save button
 function ad_save(string $name = '', string $val = '', string $op = '', string $noPreview = ''): string {
-    $cont = '<select name="posttype" class="sl_field">';
-    if (!$noPreview) $cont .= '<option value="preview">'._PREVIEW.'</option>';
-    $cont .= '<option value="save">'._SEND.'</option>';
-    $cont .= ($val) ? '<option value="delete">'._DELETE.'</option></select>' : '</select>';
-    $cont .= ($name && $val) ? getTplHiddenInput($name, $val) : '';
-    $cont .= getTplHiddenInput('op', $op)
-    .' <input type="submit" value="'._OK.'" class="sl_but_blue">';
-    return $cont;
+    return getTplSaveAction([
+        'name' => $name,
+        'valu' => $val,
+        'op' => $op,
+        'noprev' => $noPreview,
+    ]);
 }
 
 # Find img
@@ -4996,18 +4994,13 @@ function rss_load(mixed $bid): void {
 
 # Preview
 if (!function_exists('preview')) {
-    function preview(string $title = '', string $texta = '', string $textb = '', string $textc = '', string $mod = ''): string {
-        global $tpl;
-        $titleHtml = $title ? '<b>'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b>' : '';
-        $bodyA = $texta ? filterReplaceText(filterMarkdown($texta, $mod, false), $mod) : '';
-        $bodyB = $textb ? filterReplaceText(filterMarkdown($textb, $mod, false), $mod) : '';
-        $bodyC = $textc ? fields_out(filterReplaceText(filterMarkdown($textc, $mod, false), $mod), $mod) : '';
-        return $tpl->getHtmlPart('preview', [
-            'title' => _PREVIEW,
-            'title_html' => $titleHtml,
-            'body_a' => $bodyA,
-            'body_b' => $bodyB,
-            'body_c' => $bodyC,
+    function preview(string $title = '', string $texta = '', string $textb = '', string $field = '', string $mod = ''): string {
+        return getTplPreviewContent([
+            'title' => $title,
+            'texta' => $texta,
+            'textb' => $textb,
+            'field' => $field,
+            'mod' => $mod,
         ]);
     }
 }
@@ -5649,13 +5642,11 @@ function catmids(string $modul, string $field): string {
 function cutstr(mixed $strip, int $size, string $type = ''): string {
     $strip = (string)$strip;
     $size = (int)$size;
-    if (!$type) {
-        $end = '...';
-    } elseif ($type == '1') {
-        $end = '.';
-    } elseif ($type == '2') {
-        $end = '';
-    }
+    $end = match ($type) {
+        '1' => '.',
+        '2' => '',
+        default => '...',
+    };
     if (mb_strlen($strip, 'utf-8') > $size) $strip = mb_substr($strip, 0, $size, 'utf-8').$end;
     return $strip;
 }
