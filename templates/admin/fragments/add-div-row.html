@@ -1,4 +1,4 @@
-<div class="sl-add-item{% if row_class %} {{ row_class }}{% endif %}">
+<div class="sl-add-item{% if is_full %} sl-add-item-full{% endif %}{% if row_class %} {{ row_class }}{% endif %}">
     <div class="sl-add-label">{{{ label_html }}}</div>
     <div class="sl-add-field">{{{ field_html }}}</div>
 </div>

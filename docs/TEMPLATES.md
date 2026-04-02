@@ -67,6 +67,86 @@ templates/<theme>/
 
 Common active layout files in bundled themes include `layouts/app.html` and `layouts/home.html`.
 
+## Admin Theme Storage Hierarchy
+
+For `templates/admin`, the storage hierarchy should be treated from larger composition units to smaller reusable contracts:
+
+1. `layouts/`
+- full page shells
+
+2. `pages/`
+- complete pages bound to routes or final screen outputs
+
+3. `partials/`
+- large composed sections of a page
+- suitable for panel-like, section-like, or feature-level blocks
+
+4. `fragments/`
+- reusable UI contracts and low/mid-level building blocks
+- should not become a dump for page-sized or section-sized compositions
+
+5. `assets/`
+- CSS, JS, vendor assets
+
+## Admin Fragment Hierarchy
+
+New admin fragments should be organized by UI structure, not by module scenario names like `add`, `edit`, or `config`.
+
+Recommended logical ladder:
+
+1. `form`
+- top-level `<form>` contract
+
+2. layout families and structural blocks
+- `div-*`
+- `table-*`
+- `tabs-*`
+
+3. structural children
+- rows
+- items
+- hidden fields
+- actions
+- submit blocks
+
+4. controls
+- `input`
+- `textarea`
+- `select`
+- `select-option`
+- `checkbox`
+- `radio`
+- `button`
+
+Practical implication:
+
+- `add`, `edit`, and `config` should converge on the same structural form contracts
+- naming should describe HTML structure and UI role, not module-specific business meaning
+- tables should remain a separate family from div-based form layouts
+
+## Admin Naming Direction
+
+For the new admin fragment layer:
+
+- prefer neutral structural names
+- prefer naming from larger container to smaller child
+- keep form layout contracts separate from page partials
+- keep table contracts separate from form contracts
+
+Current direction:
+
+- `form`
+- `div-*`
+- `table-*`
+- `tabs-*`
+- control-level fragments such as `input`, `textarea`, `checkbox`
+
+Avoid for new base contracts:
+
+- module-prefixed names like `admin-foo-*`
+- scenario-prefixed names like `add-*`, `edit-*`, `config-*` when the contract is actually generic
+- mixing page-sized sections into `fragments/`
+
 ## Runtime Syntax
 The current `Template` runtime supports:
 - escaped output: `{{ var }}`
@@ -159,7 +239,6 @@ Behavior:
 For active repository template guidance, use:
 
 - `docs/TEMPLATE_STATUS.md`
-- `docs/RAW_SLOTS_ADMIN.md`
 
 For current runtime status, use:
 - `docs/TEMPLATE_STATUS.md`

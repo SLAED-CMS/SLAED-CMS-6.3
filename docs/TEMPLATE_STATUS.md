@@ -73,7 +73,8 @@ The remaining migration pressure is primarily in PHP-side data preparation, raw 
 
 ## Limits
 - no advanced expression language
-- no named include arguments
+- no complex named include arguments as a supported baseline
+- simple context passing with `with item` / `with row` is supported and already used
 - no deep inheritance chains
 - project-wide migration is still incomplete
 

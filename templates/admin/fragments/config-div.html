@@ -2,12 +2,8 @@
     {% for item in hidden %}
     {% include 'fragments/config-div-hidden.html' with item %}
     {% endfor %}
-    <div class="sl-config-grid">
-        {% for row in rows %}
-            {% include 'fragments/config-div-item.html' with row %}
-        {% endfor %}
-    </div>
+    {% include 'fragments/config-div-content.html' %}
     <div class="sl-config-actions">
-        <input type="submit" value="{{ submit_label }}" class="sl_but_blue">
+        {% include 'fragments/add-div-submit.html' %}
     </div>
 </form>

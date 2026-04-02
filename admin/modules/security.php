@@ -111,25 +111,50 @@ function banlist(): void {
         $tabone .= getTplAdminTable(getTplAdminTableHead([_IP, _IP_CIDR, _HASH, _DATE, [_FUNCTIONS, 'nosort']]), $rows, 'sl_table_list_sort');
         $tabone .= '<hr>';
     }
-    $hide = getTplHiddenInput('op', 'bansave').getTplHiddenInput('id', '2').getTplHiddenInput('token', getSiteToken());
-    $rows = getTplAdminFormRow(
-        $tpl->getHtmlFrag('label-hint', ['label' => _IP_CIDR.':', 'hint' => _IP_CIDR_TIP]),
-        getTplTextarea('cidr', $cidr)
-    );
-    $rows .= getTplAdminFormRow(
-        _HASH.':',
-        getTplTextInput('hash', $hash)
-    );
-    $rows .= getTplAdminFormRow(
-        _TIME.':',
-        getTplNumberInput((string)$time, 'time')
-    );
-    $rows .= getTplAdminFormRow(
-        _BANN_REAS.':',
-        getTplTextarea('info', $info)
-    );
-    $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_ADD), '', 'sl_center');
-    $tabone .= getTplAdminForm($afile.'.php?name=security', $rows, $hide);
+    $iprows = [
+        [
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _IP_CIDR, 'hint' => _IP_CIDR_TIP]),
+            'field_html' => $tpl->getHtmlFrag('add-div-textarea', [
+                'name_attr' => 'cidr',
+                'value_text' => $cidr,
+            ]),
+        ],
+        [
+            'label_html' => _HASH.':',
+            'field_html' => $tpl->getHtmlFrag('add-div-input', [
+                'itype' => 'text',
+                'name_attr' => 'hash',
+                'placeholder_text' => _HASH,
+                'value_attr' => $hash,
+            ]),
+        ],
+        [
+            'label_html' => _TIME.':',
+            'field_html' => $tpl->getHtmlFrag('add-div-input', [
+                'is_required' => true,
+                'itype' => 'number',
+                'name_attr' => 'time',
+                'placeholder_text' => _TIME,
+                'value_attr' => (string)$time,
+            ]),
+        ],
+        [
+            'label_html' => _BANN_REAS.':',
+            'field_html' => $tpl->getHtmlFrag('add-div-textarea', [
+                'name_attr' => 'info',
+                'value_text' => $info,
+            ]),
+        ],
+    ];
+    $tabone .= $tpl->getHtmlFrag('add-div', [
+        'action_url' => $afile.'.php?name=security&op=bansave',
+        'hidden' => [
+            ['nameattr' => 'id', 'valueattr' => '2'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $iprows,
+        'submit_label' => _ADD,
+    ]);
     $tabtwo = '';
     $busers = explode('||', $conf['security']['blocker_user']);
     if ($conf['security']['blocker_user']) {
@@ -148,31 +173,83 @@ function banlist(): void {
         $tabtwo .= getTplAdminTable(getTplAdminTableHead([_NICKNAME, _BANN_REAS, _DATE, [_FUNCTIONS, 'nosort']]), $rows, 'sl_table_list_sort');
         $tabtwo .= '<hr>';
     }
-    $name = getVar('get', 'name', 'name');
+    $name = getVar('get', 'uname', 'name');
     $cookie = $conf['user_c'].'-close-security';
     $check = (getCookies('close-security') == '0') ? '' : ' checked';
-    $tabtwo .= $tpl->getHtmlFrag('admin-security-ban-user-form', [
-        'add_label' => _ADD,
-        'check_attr' => $check,
-        'cookie_id' => $cookie,
-        'info_label' => _BANN_REAS.':',
-        'info_placeholder' => _BANN_REAS,
-        'info_value' => $info,
-        'mail_label' => _MAIL_SENDE,
-        'mailtext_hint' => _MAIL_INFO,
-        'mailtext_html' => textarea('1', 'mailtext', replace_break(str_replace('[text]', _BANN_INFO.PHP_EOL.PHP_EOL._BANN_TERM.': [time]'.PHP_EOL._BANN_REAS.': [info]', $conf['mtemp'])), 'all', '10'),
-        'mailtext_label' => _MAIL_TEXT.':',
-        'name_html' => getUserSearch('name', $name, 25, 'sl_form', '1'),
-        'name_label' => _NICKNAME.':',
-        'route' => $afile,
-        'time_label' => _TIME.':',
-        'time_value' => (string)$time,
+    $mailtext = replace_break(str_replace('[text]', _BANN_INFO.PHP_EOL.PHP_EOL._BANN_TERM.': [time]'.PHP_EOL._BANN_REAS.': [info]', $conf['mtemp']));
+    $userrows = [
+        [
+            'label_html' => _NICKNAME.':',
+            'field_html' => $tpl->getHtmlFrag('add-div-user-search', [
+                'input_id' => 'name',
+                'list_id' => 'name_list',
+                'maxlength_num' => 25,
+                'minlength_num' => (int)$conf['search']['slet'],
+                'placeholder_text' => _NICKNAME,
+                'token_attr' => getSiteToken(),
+                'value_attr' => $name,
+            ]),
+        ],
+        [
+            'label_html' => _TIME.':',
+            'field_html' => $tpl->getHtmlFrag('add-div-input', [
+                'is_required' => true,
+                'itype' => 'number',
+                'name_attr' => 'time',
+                'placeholder_text' => _TIME,
+                'value_attr' => (string)$time,
+            ]),
+        ],
+        [
+            'label_html' => _BANN_REAS.':',
+            'field_html' => $tpl->getHtmlFrag('add-div-textarea', [
+                'input_attr' => 'placeholder="'._BANN_REAS.'" required',
+                'name_attr' => 'info',
+                'value_text' => $info,
+            ]),
+        ],
+        [
+            'label_html' => _MAIL_SENDE,
+            'field_html' => $tpl->getHtmlFrag('add-div-check', [
+                'input_attr' => 'OnClick="CloseOpen(\''.$cookie.'\', 0);"',
+                'is_checked' => $check !== '',
+                'name_attr' => 'mail',
+                'value_attr' => '1',
+            ]),
+        ],
+        [
+            'label_html' => $tpl->getHtmlFrag('label-hint', ['label' => _MAIL_TEXT, 'hint' => _MAIL_INFO]),
+            'field_html' => $tpl->getHtmlFrag('add-div-collapse', [
+                'content_html' => $tpl->getHtmlFrag('add-div-textarea', [
+                    'name_attr' => 'mailtext',
+                    'rows_num' => 10,
+                    'value_text' => $mailtext,
+                ]),
+                'target_id' => $cookie,
+            ]),
+            'is_full' => true,
+        ],
+    ];
+    $tabtwo .= $tpl->getHtmlFrag('add-div', [
+        'action_url' => $afile.'.php?name=security&op=bansave',
+        'hidden' => [
+            ['nameattr' => 'id', 'valueattr' => '4'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $userrows,
+        'submit_label' => _ADD,
     ]);
-    $banv = $tpl->getHtmlFrag('admin-uploads-config-tabs', [
-        'tab_one_id' => getTplAdminTabName('security', 0, true),
-        'tab_two_id' => getTplAdminTabName('security', 1, true),
-        'tab_one_html' => $tabone,
-        'tab_two_html' => $tabtwo,
+    $banv = $tpl->getHtmlFrag('tabs-panels', [
+        'panels' => [
+            [
+                'panel_id' => getTplAdminTabName('security', 0, true),
+                'content_html' => $tabone,
+            ],
+            [
+                'panel_id' => getTplAdminTabName('security', 1, true),
+                'content_html' => $tabtwo,
+            ],
+        ],
     ]);
     $banv .= getTplAdminTabsSetup('securitys');
     echo $cont.getTplBox($banv);

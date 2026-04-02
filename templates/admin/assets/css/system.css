@@ -833,6 +833,12 @@ a.sl_pnum:hover { background-color: #5ab8fd; }
 .sl-add-grid > .sl-add-item:last-child {
     border-bottom: 0;
 }
+.sl-add-grid > .sl-add-item:nth-last-child(2) {
+    border-bottom: 0;
+}
+.sl-add-grid > .sl-add-item:last-child:hover {
+    background-color: #fff;
+}
 .sl-add-label {
     font-weight: normal;
     line-height: 1.35;
