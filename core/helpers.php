@@ -8,6 +8,216 @@ if (!defined('FUNC_FILE')) die('Illegal file access');
 
 # Temporary home for new helper functions while shared APIs are stabilized
 
+# New, stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates
+# Build add-div rows from dynamic module field definitions without table markup
+function getTplAddFieldRows(array $data = []): array {
+    global $conf, $tpl;
+    $field = $data['field'] ?? '';
+    $mod = $data['mod'] ?? '';
+    $mod = strtolower($mod);
+    if (is_array($field)) $field = filterFields($field);
+    $vals = explode('|', $field ?? '');
+    $defs = explode('||', $conf['fields'][$mod] ?? '');
+    $rows = [];
+    $pos = 0;
+    foreach ($defs as $item) {
+        if ($item == '') {
+            $pos++;
+            continue;
+        }
+        preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $item, $out);
+        if (($out[1] ?? '0') == '0') {
+            $pos++;
+            continue;
+        }
+        $text = !empty($vals[$pos]) ? $vals[$pos] : ($out[2] ?? '');
+        $need = (($out[4] ?? '0') == '1') ? ' required' : '';
+        $type = $out[3] ?? '';
+        if ($type == '1') {
+            $dval = $text ? getConst($text) : '';
+            $html = $tpl->getHtmlFrag('add-field', [
+                'input_attr' => 'placeholder="'.$dval.'"'.$need,
+                'input_type' => 'text',
+                'is_select' => false,
+                'is_textarea' => false,
+                'name_attr' => 'field[]',
+                'value_attr' => $dval,
+            ]);
+        } elseif ($type == '2') {
+            $html = $tpl->getHtmlFrag('add-field', [
+                'cols_num' => 15,
+                'input_attr' => $need,
+                'is_select' => false,
+                'is_textarea' => true,
+                'name_attr' => 'field[]',
+                'rows_num' => 5,
+                'value_text' => $text,
+            ]);
+        } elseif ($type == '3') {
+            $opts = '';
+            $list = explode(',', $out[2] ?? '');
+            foreach ($list as $name) {
+                if ($name == '') continue;
+                $safe = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $opts .= '<option value="'.$safe.'"'.(($name == $text) ? ' selected' : '').'>'.$safe.'</option>';
+            }
+            $html = $tpl->getHtmlFrag('add-field', [
+                'empty_label' => _NO,
+                'is_select' => true,
+                'is_textarea' => false,
+                'name_attr' => 'field[]',
+                'options_html' => $opts,
+                'select_attr' => $need,
+            ]);
+        } elseif ($type == '4') {
+            $html = getTplAddDateTime(['name' => 'field[]', 'time' => $text, 'with' => true, 'max' => 16]);
+        } elseif ($type == '5') {
+            $html = getTplAddDateTime(['name' => 'field[]', 'time' => $text, 'with' => false, 'max' => 10]);
+        } else {
+            $html = '';
+        }
+        if ($html != '') $rows[] = ['label_html' => getConst($out[1]).':', 'field_html' => $html];
+        $pos++;
+    }
+    return $rows;
+}
+
+# Render one shared add-div date or datetime control with hidden canonical value field
+function getTplAddDateTime(array $data = []): string {
+    global $tpl;
+    $name = $data['name'] ?? '';
+    $time = $data['time'] ?? '';
+    $with = $data['with'] ?? true;
+    $max = $data['max'] ?? 16;
+    $attr = $data['attr'] ?? '';
+    $time = $time ? substr($time, 0, $max) : ($with ? date('Y-m-d H:i') : date('Y-m-d'));
+    static $fieldid = 0;
+    $fieldid++;
+    $type = $with ? 'datetime-local' : 'date';
+    $pvalu = $with ? str_replace(' ', 'T', substr($time, 0, 16)) : substr($time, 0, 10);
+    $hid = 'sl_datetime_hidden_'.$fieldid;
+    $pid = 'sl_datetime_picker_'.$fieldid;
+    $phold = $with ? 'YYYY-MM-DD HH:MM' : 'YYYY-MM-DD';
+    return $tpl->getHtmlFrag('add-datetime', [
+        'hidden_id' => $hid,
+        'max_num' => $max,
+        'name_attr' => $name,
+        'picker_attr' => $attr,
+        'picker_id' => $pid,
+        'picker_name' => $pid,
+        'picker_type' => $type,
+        'picker_value' => $pvalu,
+        'placeholder_text' => $phold,
+        'value_attr' => $time,
+    ]);
+}
+
+# Render one shared refresh-time select with fixed interval choices
+function getTplRefreshTimeSelect(array $data = []): string {
+    global $tpl;
+    $valu = $data['valu'] ?? '3600';
+    $name = $data['name'] ?? 'refresh';
+    $valu = ($valu === '' || $valu === '0' || $valu === 0) ? '3600' : (string)$valu;
+    $opts = '';
+    $times = [
+        '900' => '15 '._MIN.'.',
+        '1800' => '30 '._MIN.'.',
+        '3600' => '1 '._HOUR.'.',
+        '18000' => '5 '._HOUR.'.',
+        '36000' => '10 '._HOUR.'.',
+        '86400' => '24 '._HOUR.'.',
+    ];
+    foreach ($times as $value => $label) {
+        $opts .= '<option value="'.htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'"'.(($valu === $value) ? ' selected' : '').'>'.htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</option>';
+    }
+    return $tpl->getHtmlFrag('refresh-select-time', [
+        'name_attr' => $name,
+        'options_html' => $opts,
+    ]);
+}
+
+# Render preview field rows from dynamic module field definitions
+function getTplViewFieldRows(array $data = []): string {
+    global $conf, $tpl;
+    $field = $data['field'] ?? '';
+    $mod = $data['mod'] ?? '';
+    $mod = strtolower($mod);
+    if (is_array($field)) $field = filterFields($field);
+    if (!$field || !$mod) return '';
+    $vals = explode('|', (string)$field);
+    $defs = explode('||', $conf['fields'][$mod] ?? '');
+    $rows = '';
+    $pos = 0;
+    foreach ($defs as $item) {
+        if ($item == '' || empty($vals[$pos])) {
+            $pos++;
+            continue;
+        }
+        preg_match('#(.*)\|(.*)\|(.*)\|(.*)#i', $item, $out);
+        if (($out[1] ?? '0') != '0') {
+            $valu = $vals[$pos];
+            $type = $out[3] ?? '';
+            if ($type == '2') {
+                $valu = filterReplaceText(filterMarkdown($valu, $mod, false), $mod);
+            } else {
+                $valu = htmlspecialchars((string)$valu, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+            }
+            $rows .= $tpl->getHtmlFrag('view-field', [
+                'label_text' => getConst($out[1]).':',
+                'value_html' => $valu,
+            ]);
+        }
+        $pos++;
+    }
+    return $rows;
+}
+
+# Render one full preview block from prepared source texts and dynamic fields
+function getTplPreviewContent(array $data = []): string {
+    global $tpl;
+    $title = $data['title'] ?? '';
+    $texta = $data['texta'] ?? '';
+    $textb = $data['textb'] ?? '';
+    $field = $data['field'] ?? '';
+    $mod = $data['mod'] ?? '';
+    if ($title === '' && $texta === '' && $textb === '' && $field === '') return '';
+    $titlhtml = $title ? '<b>'.htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</b>' : '';
+    $bodya = $texta ? filterReplaceText(filterMarkdown($texta, $mod, false), $mod) : '';
+    $bodyb = $textb ? filterReplaceText(filterMarkdown($textb, $mod, false), $mod) : '';
+    $bodyc = $field ? getTplViewFieldRows(['field' => $field, 'mod' => $mod]) : '';
+    return $tpl->getHtmlPart('preview-content', [
+        'title' => _PREVIEW,
+        'title_html' => $titlhtml,
+        'body_a' => $bodya,
+        'body_b' => $bodyb,
+        'body_c' => $bodyc,
+    ]);
+}
+
+# Render one save-action select with hidden values and submit button
+function getTplSaveAction(array $data = []): string {
+    global $tpl;
+    $name = $data['name'] ?? '';
+    $valu = $data['valu'] ?? '';
+    $op = $data['op'] ?? '';
+    $noprev = !empty($data['noprev']);
+    $isvalu = $valu !== '' && $valu !== null;
+    $opts = [];
+    if (!$noprev) $opts[] = ['valueattr' => 'preview', 'labeltext' => _PREVIEW];
+    $opts[] = ['valueattr' => 'save', 'labeltext' => _SEND];
+    if ($isvalu) $opts[] = ['valueattr' => 'delete', 'labeltext' => _DELETE];
+    return $tpl->getHtmlFrag('save-action', [
+        'hasname' => $name !== '' && $isvalu,
+        'nameattr' => $name,
+        'opattr' => $op,
+        'options' => $opts,
+        'submit_label' => _OK,
+        'valueattr' => (string)$valu,
+    ]);
+}
+
+# End of new, stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates
+
 # Build one ajax query string from named params and skip empty values
 function getAjaxQuery(array $data): string {
     $list = [];
@@ -21,7 +231,7 @@ function getAjaxQuery(array $data): string {
 # Render one shared admin table wrapper from prepared header and row markup
 function getTplAdminTable(string $head, string $rows, string $type = 'sl_table_list_sort'): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-table', [
+    return $tpl->getHtmlFrag('table', [
         'head_html' => $head,
         'rows_html' => $rows,
         'table_class' => $type,
@@ -31,7 +241,7 @@ function getTplAdminTable(string $head, string $rows, string $type = 'sl_table_l
 # Render one admin table row from prepared cell markup
 function getTplAdminTableRow(string $cells, string $type = '', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-table-row', [
+    return $tpl->getHtmlFrag('table-row', [
         'cells_html' => $cells,
         'row_attr' => $attr,
         'row_class' => $type,
@@ -289,7 +499,7 @@ function getTplHiddenInput(string $name, string $valu): string {
 # Render one shared admin text input with optional class and extra attributes
 function getTplTextInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-input', [
+    return $tpl->getHtmlFrag('input', [
         'input_attr' => $attr,
         'input_class' => $clas,
         'itype' => 'text',
@@ -301,7 +511,7 @@ function getTplTextInput(string $name, string $valu, string $clas = 'sl_form', s
 # Render one shared admin number input with optional class and extra attributes
 function getTplNumberInput(int|string $valu, string $name, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-input', [
+    return $tpl->getHtmlFrag('input', [
         'input_attr' => $attr,
         'input_class' => $clas,
         'itype' => 'number',
@@ -313,7 +523,7 @@ function getTplNumberInput(int|string $valu, string $name, string $clas = 'sl_fo
 # Render one shared admin url input with optional class and extra attributes
 function getTplUrlInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-input', [
+    return $tpl->getHtmlFrag('input', [
         'input_attr' => $attr,
         'input_class' => $clas,
         'itype' => 'url',
@@ -325,7 +535,7 @@ function getTplUrlInput(string $name, string $valu, string $clas = 'sl_form', st
 # Render one shared admin email input with optional class and extra attributes
 function getTplEmailInput(string $name, string $valu, string $clas = 'sl_form', string $attr = ''): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-input', [
+    return $tpl->getHtmlFrag('input', [
         'input_attr' => $attr,
         'input_class' => $clas,
         'itype' => 'email',
@@ -709,7 +919,7 @@ function getTplBlockView(int $selected = 0): string {
 # Return a label string with an inline sl_small help-text div for admin form rows
 function getTplAdminHintLabel(string $label, string $hint): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-hint-label', ['label' => $label, 'hint' => $hint]);
+    return $tpl->getHtmlFrag('label-hint', ['label' => $label, 'hint' => $hint]);
 }
 
 # Return a standalone sl_small note div for admin form rows that have no label
