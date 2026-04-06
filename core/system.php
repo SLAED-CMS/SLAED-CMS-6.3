@@ -4212,89 +4212,6 @@ function editorFilesTable(string $rowsHtml): string {
     ]);
 }
 
-function editorToolbarButton(string $onclick, string $class, string $title, string $onMouseOver = ''): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-toolbar-button', [
-        'onclick' => $onclick,
-        'onmouseover' => $onMouseOver,
-        'class' => $class,
-        'title' => $title,
-    ]);
-}
-
-function editorToolbarSeparator(): string {
-    return '<div class="sl_bb_sep"></div>';
-}
-
-function editorDropPanel(string $buttonHtml, string $contentHtml): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-drop-panel', [
-        'button_html' => $buttonHtml,
-        'content_html' => $contentHtml,
-    ]);
-}
-
-function editorBbShell(string $topHtml, string $textareaHtml, string $bottomHtml, string $uploadHtml): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-bb-shell', [
-        'top_html' => $topHtml,
-        'textarea_html' => $textareaHtml,
-        'bottom_html' => $bottomHtml,
-        'upload_html' => $uploadHtml,
-    ]);
-}
-
-function editorUploadPanel(string $panelId, string $contentHtml, string $replyId): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-upload-panel', [
-        'panel_id' => $panelId,
-        'content_html' => $contentHtml,
-        'reply_id' => $replyId,
-    ]);
-}
-
-function editorInfoPanel(string $panelId, string $content): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-info-panel', [
-        'panel_id' => $panelId,
-        'content' => $content,
-    ]);
-}
-
-function editorSmiliesPanel(string $panelId, string $itemsHtml): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-smilies-panel', [
-        'panel_id' => $panelId,
-        'items_html' => $itemsHtml,
-    ]);
-}
-
-function editorTranslatePanel(string $panelId): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-translate-panel', [
-        'panel_id' => $panelId,
-    ]);
-}
-
-function editorTextPanel(string $panelId, string $editorId, string $fonts, string $colors, string $sizes): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-text-panel', [
-        'panel_id' => $panelId,
-        'editor_id' => $editorId,
-        'fonts_html' => $fonts,
-        'colors_html' => $colors,
-        'sizes_html' => $sizes,
-    ]);
-}
-
-function editorCodePanel(string $panelId, string $editorId, string $codes): string {
- global $tpl;
-    return $tpl->getHtmlFrag('editor-code-panel', [
-        'panel_id' => $panelId,
-        'editor_id' => $editorId,
-        'codes_html' => $codes,
-    ]);
-}
 
 function commentActionLink(string $href, string $title, string $label, string $class = '', string $target = ''): string {
  global $tpl;
@@ -5244,9 +5161,11 @@ function getUserList(): void {
     $name = [];
     if ($let) {
         $result = $db->getSqlQuery('SELECT name FROM '.PREFIX_DB.'_users WHERE name LIKE :name ORDER BY name ASC', ['name' => $let.'%']);
-        while(list($user_name) = $db->getSqlRow($result)) $name[]= '"'.$user_name.'"';
+        while (list($user_name) = $db->getSqlRow($result)) $name[] = $user_name;
     }
-    echo '['.implode(', ', $name).']';
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($name, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
 }
 
 # Autocomplete user name
@@ -5919,123 +5838,7 @@ function textarea(string $id, string $name, string $var, string $mod, int $rows,
     $editor = (isset($admin[3])) ? intval(substr($admin[3], 0, 1)) : 0;
     if ((defined('ADMIN_FILE') && $editor == 1) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 1)) {
         $code = ($id == 1) ? getHtmlScriptSrc('plugins/system/insert-code.js') : '';
-        $topHtml = '<div class="sl_pos_right">'
-            .editorToolbarButton("RowsTextarea(1, '".$id."')", 'sl_bb_plus', _EPLUS)
-            .editorToolbarButton("RowsTextarea(0, '".$id."')", 'sl_bb_minus', _EMINUS)
-            .'</div>'
-            .editorToolbarButton("InsertCode('b', '', '', '', '".$id."')", 'sl_bb_b', _EBOLD)
-            .editorToolbarButton("InsertCode('i', '', '', '', '".$id."')", 'sl_bb_i', _EITALIC)
-            .editorToolbarButton("InsertCode('u', '', '', '', '".$id."')", 'sl_bb_u', _EUNDERLINE)
-            .editorToolbarButton("InsertCode('s', '', '', '', '".$id."')", 'sl_bb_s', _ESTRIKET)
-            .editorToolbarButton("InsertCode('li', '', '', '', '".$id."')", 'sl_bb_li', _ELI)
-            .editorToolbarButton("InsertCode('hr', '', '', '', '".$id."')", 'sl_bb_hr', _EHR)
-            .editorToolbarSeparator()
-            .editorToolbarButton("InsertCode('left', '', '', '', '".$id."')", 'sl_bb_left', _ELEFT)
-            .editorToolbarButton("InsertCode('center', '', '', '', '".$id."')", 'sl_bb_center', _ECENTER)
-            .editorToolbarButton("InsertCode('right', '', '', '', '".$id."')", 'sl_bb_right', _ERIGHT)
-            .editorToolbarButton("InsertCode('justify', '', '', '', '".$id."')", 'sl_bb_justify', _EYUSTIFY)
-            .editorToolbarSeparator()
-            .editorToolbarButton("InsertCode('hide', '', '', '', '".$id."')", 'sl_bb_hide', _HIDE)
-            .editorToolbarButton("InsertCode('url', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')", 'sl_bb_link', _EURL)
-            .editorToolbarButton("InsertCode('mail', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')", 'sl_bb_mail', _EEMAIL)
-            .editorToolbarButton("InsertCode('img', '"._JINFO."', '"._JTYPE."', '"._JERROR."', '".$id."')", 'sl_bb_img', _EIMG)
-            .editorToolbarButton("InsertCode('quote', '"._JQUOTE."', '', '', '".$id."')", 'sl_bb_quote', _EQUOTE, 'CopyText();');
-        $textareaHtml = '<textarea id="'.$id.'" name="'.$name.'" cols="65" rows="'.$rows."\" OnKeyPress=\"TransliteFeld(this, event)\" OnSelect=\"FieldName(this, '".$id."')\" OnClick=\"FieldName(this, '".$id."')\" OnKeyUp=\"FieldName(this, '".$id."')\" class=\"sl_field".$style.'"'.$placeholder.$required.'>'.replace_break($desc).'</textarea>';
-        $bottomHtml = '<div class="sl_pos_right">'
-            .editorDropPanel(
-                editorToolbarButton("HideShow('i-form-".$id."', 'blind', 'up', 500);", 'sl_bb_info', _INFO),
-                editorInfoPanel('i-form-'.$id, _INFO_BB.' '.$conf['version'])
-            )
-            .'</div>';
-            if ((defined('ADMIN_FILE') && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) {
-                $bottomHtml .= editorToolbarButton("HideShow('af-form-".$id."', 'slide', 'up', 500); htmx.ajax('GET', 'index.php?go=1&op=getEditorFiles&id=".$id.'&dir='.$mod."', {target:'#repf".$id."', swap:'innerHTML'}); return false;", 'sl_bb_file', _EUPLOAD);
-            }
-            $smilies = '';
-                $i = 1;
-                $smdir = img_find('smilies');
-                if (!is_dir($smdir)) {
-                    foreach (['templates/admin/images/smilies', 'templates/lite/images/smilies'] as $fdir) {
-                        if (is_dir($fdir)) {
-                            $smdir = $fdir;
-                            break;
-                        }
-                    }
-                }
-                $slist = is_dir($smdir) ? scandir($smdir) : false;
-                if ($slist !== false) {
-                foreach ($slist as $entry) {
-                    if (preg_match("#(\.gif)$#i", $entry) && $entry != '.' && $entry != '..') {
-                        $i = ($i < 10) ? '0'.$i : $i;
-                        $smsrc = is_file($smdir.'/'.$i.'.gif') ? $smdir.'/'.$i.'.gif' : img_find('smilies/'.$i.'.gif');
-                        $smilies .= ' <img src="'.$smsrc."\" OnClick=\"InsertCode('smilies', ' *".$i."', '', '', '".$id."');\" style=\"cursor: pointer; margin: 3px 2px 0px 0px;\" alt=\""._SMILIE.' - '.$i.'" title="'._SMILIE.' - '.$i.'">';
-                        $i++;
-                    }
-                }
-                }
-            $bottomHtml .= editorDropPanel(
-                editorToolbarButton("HideShow('s-form-".$id."', 'blind', 'up', 500);", 'sl_bb_smile', _ESMILIE),
-                editorSmiliesPanel('s-form-'.$id, $smilies)
-            );
-        if ($stloc == 'ru') {
-            $bottomHtml .= editorDropPanel(
-                editorToolbarButton("HideShow('l-form-".$id."', 'blind', 'up', 500); changelanguage();", 'sl_bb_translate', _EAUTOTR),
-                editorTranslatePanel('l-form-'.$id)
-            );
-            $bottomHtml .= editorToolbarButton('translateAlltoCyrillic()', 'sl_bb_translit', _ERUS)
-                .editorToolbarButton('translateAlltoLatin()', 'sl_bb_trans', _ELAT);
-        }
-        $fonts = '<option value="">'._FONT.'</option>';
-        $font = ['Arial', 'Courier', 'Mistral', 'Impact', 'Sans Serif', 'Tahoma', 'Helvetica', 'Verdana'];
-        foreach ($font as $val) if ($val != '') $fonts .= '<option style="font-family: '.$val.';" value="'.$val.'">'.$val.'</option>';
-
-        $colors = '<option value="">'._ECOLOR.'</option>';
-        $color = ['black', 'gray', 'silver', 'white', 'maroon', 'red', 'orangered', 'orange', 'yellow', 'purple', 'fuchsia', 'violet', 'darkgreen', 'green', 'lime', 'navy', 'blue', 'teal', 'aqua'];
-        foreach ($color as $val) if ($val != '') $colors .= '<option style="background: '.$val.';" value="'.$val.'">'.$val.'</option>';
-
-        $fsizes = '<option value="">'._ESIZE.'</option>';
-        $fsize = ['8', '10', '12', '14', '16', '18', '20', '22', '24', '26', '28', '30', '32'];
-        foreach ($fsize as $val) if ($val != '') $fsizes .= '<option value="'.$val.'">'.$val.'</option>';
-
-        $fcodes = '<option value="">'._CODE.'</option>';
-        $fcode = ['Bash', 'Cpp', 'CSharp', 'Css', 'Delphi', 'Diff', 'Groovy', 'Java', 'JScript', 'Php', 'Plain', 'Python', 'Ruby', 'Scala', 'Sql', 'Vb', 'Xml'];
-        foreach ($fcode as $val) if ($val != '') $fcodes .= '<option value="'.strtolower($val).'">'.$val.'</option>';
-
-        $bottomHtml .= editorDropPanel(
-            editorToolbarButton("HideShow('t-form-".$id."', 'blind', 'up', 500);", 'sl_bb_text', _TEXT),
-            editorTextPanel('t-form-'.$id, (string) $id, $fonts, $colors, $fsizes)
-        );
-        $bottomHtml .= editorDropPanel(
-            editorToolbarButton("HideShow('c-form-".$id."', 'blind', 'up', 500);", 'sl_bb_code', _CODE),
-            editorCodePanel('c-form-'.$id, (string) $id, $fcodes)
-        );
-        if (isAdmin()) {
-            $bottomHtml .= editorToolbarSeparator()
-            .editorToolbarButton("InsertCode('usehtml', '', '', '', '".$id."')", 'sl_bb_html', _EUSEHTML)
-            .editorToolbarButton("InsertCode('usephp', '', '', '', '".$id."')", 'sl_bb_php', _EUSEPHP);
-            $conf['name'] = (!empty($conf['name'])) ? $conf['name'] : '';
-            if ($op == 'faq_add' || $op == 'news_add' || $op == 'page_add' || $conf['name'] == 'faq' || $conf['name'] == 'news' || $conf['name'] == 'page') {
-                $bottomHtml .= editorToolbarButton("InsertCode('pagebreak', '', '', '', '".$id."')", 'sl_bb_break', _EBREAK);
-            }
-        }
-        $uploadHtml = '';
-        if ((defined('ADMIN_FILE') && ($con[10] ?? 0) == 1) || (is_user() && ($con[10] ?? 0) == 1) || (!is_user() && ($con[11] ?? 0) == 1)) {
-            $uploadInner = '';
-            if ($id == 1) {
-                $uinfo = '<div class="ico sl_info sl_left"><b>'._UPLOADINFO.'</b><br>'._FTYPE.': '.str_replace(',', ', ', $con[0]).'<br>'._FSIZEALL.': '.filterSize($con[1]).'<br>'._FSIZE.': '.filterSize($con[2]).'<br>'._AWIDTH.': '.$con[3].' px<br>'._AHEIGHT.': '.$con[4].' px<br>'._FILEUP.': '.$con[5].'<br>'.'</div>';
-                $uploadInner .= '<div id="msg">'.$uinfo.'</div>
-                <div class="sl_pos_center">
-                <form id="formfile'.$id.'" hx-post="index.php?go=4&amp;mod='.$mod.'&amp;userid='.intval($user[0] ?? 0).'" hx-encoding="multipart/form-data" hx-target="#msg" hx-swap="innerHTML" hx-trigger="change from:#file_upload" hx-on:htmx:before-request="document.getElementById(&quot;msg&quot;).innerHTML=&quot;&lt;div class=\&quot;sl_loading\&quot;&gt;&lt;/div&gt;&lt;br&gt;&quot;" hx-on:htmx:after-request="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&amp;op=getEditorFiles&amp;id='.$id.'&amp;dir='.$mod.'&quot;, {target:&quot;#repf'.$id.'&quot;, swap:&quot;innerHTML&quot;});">
-                <input type="hidden" name="token" value="'.htmlspecialchars(getSiteToken('upload'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'">
-                <input type="file" id="file_upload" name="file[]" multiple="multiple" class="sl_field">
-                </form>
-                <input type="button" value="'._UPDATE.'" OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$id.'&dir='.$mod.'&quot;, {target:&quot;#repf'.$id.'&quot;, swap:&quot;innerHTML&quot;}); return false;" class="sl_but_green"></div>';
-            } else {
-                $uploadInner .= '<div class="sl_pos_center"><input type="button" value="'._UPDATE.'" OnClick="htmx.ajax(&quot;GET&quot;, &quot;index.php?go=1&op=getEditorFiles&id='.$id.'&dir='.$mod.'&quot;, {target:&quot;#repf'.$id.'&quot;, swap:&quot;innerHTML&quot;}); return false;" class="sl_but_green"></div>';
-            }
-            $uploadInner .= '<div id="repf'.$id.'" style="margin: 5px;"></div>';
-            $uploadHtml = editorUploadPanel('af-form-'.$id, $uploadInner, 'repf'.$id);
-        }
-        $code .= editorBbShell($topHtml, $textareaHtml, $bottomHtml, $uploadHtml);
+        $code .= getTplBbEditor(['id' => $id, 'name' => $name, 'value' => $desc, 'rows' => $rows, 'style' => $style, 'placeholder' => $placeholder, 'required' => $required, 'stloc' => $stloc, 'mod' => $mod, 'con' => $con]);
     } elseif ((defined('ADMIN_FILE') && $editor == 2) || (!defined('ADMIN_FILE') && $conf['redaktor'] == 2)) {
         static $jscript;
         if (defined('ADMIN_FILE') && $editor == 2) {

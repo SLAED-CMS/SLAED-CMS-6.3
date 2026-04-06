@@ -142,8 +142,8 @@
         if (typeof window.Tablesort === 'undefined') return;
         var list = [];
         var root = node && node.nodeType ? node : document;
-        var tables = root.querySelectorAll ? root.querySelectorAll('.sl_table_list_sort') : [];
-        if (root.nodeType === 1 && root.classList && root.classList.contains('sl_table_list_sort')) {
+        var tables = root.querySelectorAll ? root.querySelectorAll('[data-sl-table-sort]') : [];
+        if (root.nodeType === 1 && root.hasAttribute && root.hasAttribute('data-sl-table-sort')) {
             list.push(root);
         }
         for (var i = 0; i < tables.length; i++) {

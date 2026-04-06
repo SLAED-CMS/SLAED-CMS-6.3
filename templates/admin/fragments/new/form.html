@@ -1,0 +1,15 @@
+<form action="{{{ action_url }}}" method="post" class="sl-div-form">
+    {% for item in hidden %}
+    {% include 'fragments/new/hidden.html' with item %}
+    {% endfor %}
+    {% include 'fragments/new/div.html' %}
+    {% if submit_label %}
+    <div class="sl-div-actions">
+        {% include 'fragments/new/submit.html' %}
+    </div>
+    {% elseif actions %}
+    <div class="sl-div-actions">
+        {% include 'fragments/save-action.html' with actions %}
+    </div>
+    {% endif %}
+</form>

@@ -1,0 +1,4 @@
+<div id="{{ id }}" class="sl-tabs{% if class_attr %} {{ class_attr }}{% endif %}"{% if is_runtime %} data-sl-tabs-init="{{ id }}"{% endif %}>
+    {% if tabs_html %}<ul class="sl-tabs-nav{% if is_subtabs %} sl-tabs-nav-sub{% endif %}">{{{ tabs_html }}}</ul>{% endif %}
+    {% if content_html %}<div class="sl-tabs-content">{{{ content_html }}}</div>{% endif %}
+</div>

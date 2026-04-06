@@ -53,7 +53,7 @@ function setExit(string $msg, string $typ = ''): never {
     } elseif (is_file($basedir.'/'.$themedir.'/favicon.ico')) {
         $linksrc[] = $tpl->getHtmlFrag('head-link-icon', ['href' => $themedir.'/favicon.ico']);
     }
-    foreach (['theme.css', 'system.css', 'blocks.css'] as $asset) {
+    foreach (['theme.css', 'system.css', 'new.css', 'blocks.css'] as $asset) {
         if (is_file($basedir.'/'.$themedir.'/'.$asset)) {
             $linksrc[] = $tpl->getHtmlFrag('head-link-css', ['href' => $themedir.'/'.$asset]);
         }

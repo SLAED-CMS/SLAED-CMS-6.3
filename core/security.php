@@ -603,7 +603,7 @@ function setExit(string $msg, string $typ = ''): never {
     } elseif (is_file(BASE_DIR.'/'.$themedir.'/favicon.ico')) {
         $linksrc[] = $tpl->getHtmlFrag('head-link-icon', ['href' => $themedir.'/favicon.ico']);
     }
-    foreach (['theme.css', 'system.css', 'blocks.css'] as $asset) {
+    foreach (['theme.css', 'system.css', 'new.css', 'blocks.css'] as $asset) {
         if (is_file(BASE_DIR.'/'.$themedir.'/'.$asset)) {
             $linksrc[] = $tpl->getHtmlFrag('head-link-css', ['href' => $themedir.'/'.$asset]);
         }
@@ -1097,19 +1097,13 @@ function getDuration(int $sec): string {
     return ($hours == 0) ? (($min == 0) ? $seconds.' '._SEC.'.' : $min.' '._MIN.'. '.$seconds.' '._SEC.'.') : $hours.' '._HOUR.'. '.$minutes.' '._MIN.'. '.$seconds.' '._SEC.'.';
 }
 
-# Return time-remaining badge: styled HTML span when template available, plain text otherwise
+# Return one formatted remaining-time string
 function getTimeLeft(int $time): string {
-    global $tpl;
     $now = time();
     $end = date(_DATESTRING, $time);
     $expire = $time - $now;
     $days = round($expire / 86400, 3).' '._DAYS;
-    if ($tpl instanceof Template) {
-        return ($now < $time)
-            ? $tpl->getHtmlFrag('security-time-active', ['duration' => getDuration($expire), 'days' => $days, 'end' => $end])
-            : $tpl->getHtmlFrag('security-time-expired', ['end' => $end, 'expired_label' => _END]);
-    }
-    return ($now < $time) ? $days.' - '.$end : $end.' - '._END;
+    return ($now < $time) ? getDuration($expire).' ('.$days.') - '.$end : $end.' - '._END;
 }
 
 # Add an outgoing HTML email (base64-encoded); appends IP/browser info when $id is truthy
