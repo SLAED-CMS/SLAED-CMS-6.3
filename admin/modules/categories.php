@@ -60,7 +60,7 @@ function add(): void {
     $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', '', 1));
     $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', '', 1));
     $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', '', 2));
-    $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'addsave');
+    $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'addsave').getTplHiddenInput('token', getSiteToken());
     $formv = getTplCatForm('post',
         getTplCatTab(getTplAdminTabName('adds', 0, true), $rows0)
         .getTplCatTab(getTplAdminTabName('adds', 1, true), $rows1)
@@ -106,7 +106,7 @@ function subadd(): void {
         $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', '', 1));
         $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', '', 1));
         $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', '', 2));
-        $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'addsave');
+        $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'addsave').getTplHiddenInput('token', getSiteToken());
         $formv = getTplCatForm('post2',
             getTplCatTab(getTplAdminTabName('subadds', 0, true), $rows0)
             .getTplCatTab(getTplAdminTabName('subadds', 1, true), $rows1)
@@ -130,7 +130,7 @@ function addedit(): void {
     setHead();
     $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'sub' => getTplAdminCatSearch($modul)]);
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'edit');
+        $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'edit').getTplHiddenInput('token', getSiteToken());
         $rows = $tpl->getHtmlFrag('admin-categories-editpick-rows', [
             'category_html' => getcat($modul, 0, 'cid', 'sl_form'),
             'category_label' => _CATEGORY.':',
@@ -182,7 +182,7 @@ function edit(): void {
     $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', $pedit, 1));
     $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', $pdelete, 1));
     $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', $pmod, 2));
-    $hide = getTplHiddenInput('id', (string)$cid).getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'save');
+    $hide = getTplHiddenInput('id', (string)$cid).getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken());
     $formv = getTplCatForm('post',
         getTplCatTab(getTplAdminTabName('edits', 0, true), $rows0)
         .getTplCatTab(getTplAdminTabName('edits', 1, true), $rows1)
@@ -195,7 +195,16 @@ function edit(): void {
 }
 
 function addsave(): void {
-    global $db, $conf, $afile;
+    global $db, $conf, $afile, $tpl;
+    if (!checkSiteToken()) {
+        setHead();
+        $modul = getVar('post', 'modul', 'var', 'forum');
+        $modlink = '&amp;modul='.$modul;
+        $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 1, 'sub' => getTplAdminCatSearch($modul)]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        setFoot();
+        return;
+    }
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');
     $description = getVar('post', 'description', 'text');
@@ -228,7 +237,16 @@ function addsave(): void {
 }
 
 function save(): void {
-    global $db, $conf, $afile;
+    global $db, $conf, $afile, $tpl;
+    if (!checkSiteToken()) {
+        setHead();
+        $modul = getVar('post', 'modul', 'var', 'forum');
+        $modlink = '&amp;modul='.$modul;
+        $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'sub' => getTplAdminCatSearch($modul)]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        setFoot();
+        return;
+    }
     $id = getVar('post', 'id', 'num');
     $modul = getVar('post', 'modul', 'var');
     $title = getVar('post', 'title', 'title');

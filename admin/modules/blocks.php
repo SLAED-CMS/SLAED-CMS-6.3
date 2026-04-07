@@ -6,91 +6,258 @@
 
 if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
-
 function blocks(): void {
     global $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO]]);
-    echo $cont.getTplAdminPlaceholder('repajax_block', getAdminBlockList());
+    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO]]);
+    echo $cont.getTplAdminPlaceholder('repajax_block', getAdminBlockList(getSiteToken()));
     setFoot();
 }
 
 function add(): void {
     global $db, $conf, $afile, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-    $rows = getTplAdminFormRow(getTplAdminHintLabel(_TITLE, _ADDCONST), getTplTextInput('title', '', 'sl_form', 'maxlength="60" placeholder="'._TITLE.'" required'));
-    $rows .= getTplAdminFormRow(_RSSFILE.':', getTplTextInput('url', '', 'sl_form', 'placeholder="'._RSSFILE.'"'));
-    $rows .= getTplAdminFormRow(getTplAdminSmallNote(_RSSLINESINFO.' '._RSSINFO), getTplSelect('headline', getTplOption('0', _CUSTOM, true).rss_select(), 'sl_form'));
-    $rows .= getTplAdminFormRow(getTplAdminHintLabel(_REFRESHTIME, _REFINFO), getTplBlockRefresh());
-    $bfopts = getTplOption('', _NONE, true);
+    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+    $rows = [
+        [
+            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _TITLE.':', 'hint' => _ADDCONST]),
+            'field_html' => $tpl->getHtmlFrag('new/input', [
+                'itype' => 'text',
+                'is_required' => true,
+                'maxlength_num' => 60,
+                'name_attr' => 'title',
+                'placeholder_text' => _TITLE,
+                'value_attr' => '',
+            ]),
+        ],
+        [
+            'label_html' => _RSSFILE.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', [
+                'itype' => 'url',
+                'name_attr' => 'url',
+                'placeholder_text' => _RSSFILE,
+                'value_attr' => '',
+            ]),
+        ],
+        [
+            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _RSSC.':', 'hint' => _RSSLINESINFO.' '._RSSINFO]),
+            'field_html' => $tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'headline',
+                'options_html' => $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => '0',
+                    'label_text' => _CUSTOM,
+                    'is_selected' => true,
+                ]).rss_select(),
+            ]),
+        ],
+        [
+            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _REFRESHTIME.':', 'hint' => _REFINFO]),
+            'field_html' => $tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'refresh',
+                'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.'])
+                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => true])
+                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.'])
+                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.'])
+                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.']),
+            ]),
+        ],
+    ];
+    $bfopts = $tpl->getHtmlFrag('new/select-option', ['value_attr' => '', 'label_text' => _NONE, 'is_selected' => true]);
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
             if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
-                $bfopts .= getTplOption($file, $matches[0]);
+                $bfopts .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => $file,
+                    'label_text' => $matches[0],
+                ]);
             }
         }
     }
-    $rows .= $tpl->getHtmlFrag('admin-blocks-add-rows', [
-        'action_html' => getTplBlockAction(),
-        'afterexpiration_label' => _AFTEREXPIRATION.':',
-        'activate_html' => radio_form(1, 'status'),
-        'activate_label' => _ACTIVATE2,
-        'bfile_html' => getTplSelect('bfile', $bfopts, 'sl_form'),
-        'bfile_label_html' => getTplAdminHintLabel(_FILENAME, _FILENAMEIN),
-        'blockview_html' => getTplAdminBlockGrid(),
-        'blockview_label' => _BLOCK_VIEW.':',
-        'content_html' => textarea('1', 'content', '', 'all', '15', _CONTENT, ''),
-        'content_label' => _CONTENT.':',
-        'expiration_label_html' => getTplAdminHintLabel(_EXPIRATION, _CONFINES),
-        'expiration_placeholder' => _EXPIRATION,
-        'language_html' => $conf['multilingual'] == 1 ? getTplAdminFormRow(_LANGUAGE.':', getTplSelect('lang', language(), 'sl_form')) : '',
-        'position_html' => getTplBlockPosition(),
-        'position_label' => _POSITION.':',
+    $viewItems = '';
+    foreach (getBlockModules() as $mod) {
+        $viewItems .= $tpl->getHtmlFrag('new/label-item', [
+            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+                'name_attr' => 'blockwhere[]',
+                'value_attr' => $mod,
+            ]),
+            'label_html' => $tpl->getHtmlFrag('new/title-tip', [
+                'label_text' => getModuleName($mod),
+                'title_text' => _MODUL.': '.$mod,
+            ]),
+        ]);
+    }
+    foreach ([
+        ['value' => 'ihome', 'label' => _HOME],
+        ['value' => 'home', 'label' => _INHOME],
+        ['value' => 'all', 'label' => _BLOCK_ALL],
+        ['value' => 'otricanie', 'label' => _DENYING],
+        ['value' => 'infly', 'label' => _INFLY],
+        ['value' => 'flyfix', 'label' => _FLY_FIX],
+    ] as $item) {
+        $viewItems .= $tpl->getHtmlFrag('new/label-item', [
+            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+                'name_attr' => 'blockwhere[]',
+                'value_attr' => $item['value'],
+            ]),
+            'label_html' => $item['label'],
+        ]);
+    }
+    $rows[] = [
+        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _FILENAME.':', 'hint' => _FILENAMEIN]),
+        'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'bfile',
+            'options_html' => $bfopts,
+        ]),
+    ];
+    $rows[] = [
+        'label_html' => _CONTENT.':',
+        'field_html' => $tpl->getHtmlFrag('new/textarea', [
+            'name_attr' => 'content',
+            'rows_num' => 15,
+            'value_text' => '',
+        ]),
+        'is_full' => true,
+    ];
+    $rows[] = [
+        'label_html' => _POSITION.':',
+        'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'bpos',
+            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'l', 'label_text' => _LEFT])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'r', 'label_text' => _RIGHT])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'b', 'label_text' => _BANNERUP])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN]),
+        ]),
+    ];
+    $rows[] = [
+        'label_html' => _BLOCK_VIEW.':',
+        'field_html' => $tpl->getHtmlFrag('new/radio-group', ['items_html' => $viewItems]),
+        'is_full' => true,
+    ];
+    if ($conf['multilingual'] == 1) {
+        $rows[] = [
+            'label_html' => _LANGUAGE.':',
+            'field_html' => $tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'lang',
+                'options_html' => language(),
+            ]),
+        ];
+    }
+    $rows[] = [
+        'label_html' => _ACTIVATE2,
+        'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '1', 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+    ];
+    $rows[] = [
+        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _EXPIRATION.':', 'hint' => _CONFINES]),
+        'field_html' => $tpl->getHtmlFrag('new/input', [
+            'itype' => 'number',
+            'is_required' => true,
+            'name_attr' => 'expire',
+            'placeholder_text' => _EXPIRATION,
+            'value_attr' => '0',
+        ]),
+    ];
+    $rows[] = [
+        'label_html' => _AFTEREXPIRATION.':',
+        'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'action',
+            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'r', 'label_text' => _DELETE]),
+        ]),
+    ];
+    $rows[] = [
+        'label_html' => _VIEWPRIV,
+        'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'view',
+            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => true])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MVUSERS])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _MVADMIN])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _MVANON]),
+        ]),
+    ];
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=blocks&amp;op=addsave',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'blocks'],
+            ['nameattr' => 'op', 'valueattr' => 'addsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
         'submit_label' => _CREATEBLOCK,
-        'viewpriv_html' => getTplBlockView(),
-        'viewpriv_label' => _VIEWPRIV,
-    ]);
-    $hide = getTplHiddenInput('name', 'blocks').getTplHiddenInput('op', 'addsave');
-    echo $cont.getTplAdminForm($afile.'.php', $rows, $hide);
+    ])]);
     setFoot();
 }
 
 function fileadd(): void {
     global $afile, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 2]);
+    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 2]);
     $cont .= checkPerms(BASE_DIR.'/blocks/');
-    $hide = getTplHiddenInput('name', 'blocks').getTplHiddenInput('op', 'filecode');
-    $rows = $tpl->getHtmlFrag('admin-blocks-fileadd-rows', [
-        'createblock_label' => _CREATEBLOCK,
-        'filename_label' => _FILENAME.':',
-        'filename_placeholder' => _FILENAME,
-        'type_label' => _TYPE.':',
-    ]);
-    echo $cont.getTplBox(getTplAdminForm($afile.'.php', $rows, $hide));
+    $rows = [
+        [
+            'label_html' => _FILENAME.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', [
+                'itype' => 'text',
+                'is_required' => true,
+                'maxlength_num' => 200,
+                'name_attr' => 'bf',
+                'placeholder_text' => _FILENAME,
+                'value_attr' => '',
+            ]),
+        ],
+        [
+            'label_html' => _TYPE.':',
+            'field_html' => getTplRadioGroup(['name' => 'flag', 'value' => 'php', 'options' => [['value' => 'php', 'label' => 'PHP'], ['value' => 'html', 'label' => 'HTML']]]),
+        ],
+    ];
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=blocks&amp;op=filecode',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'blocks'],
+            ['nameattr' => 'op', 'valueattr' => 'filecode'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _CREATEBLOCK,
+    ])]);
     setFoot();
 }
 
 function fileedit(): void {
     global $db, $afile, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
     $opts = '';
     $files = scandir('blocks');
     foreach ($files as $file) {
         if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) $opts .= getTplOption($file, $matches[0]);
+            if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_blocks WHERE bfile = :file', ['file' => $file])) == 0) {
+                $opts .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => $file,
+                    'label_text' => $matches[0],
+                ]);
+            }
         }
     }
-    $hide = getTplHiddenInput('name', 'blocks').getTplHiddenInput('op', 'filecode');
-    $rows = $tpl->getHtmlFrag('admin-blocks-fileedit-rows', [
-        'bf_html' => getTplSelect('bf', $opts, 'sl_form'),
-        'editblock_label' => _EDITBLOCK,
-        'filename_label' => _FILENAME.':',
-    ]);
-    echo $cont.getTplBox(getTplAdminForm($afile.'.php', $rows, $hide));
+    $rows = [[
+        'label_html' => _FILENAME.':',
+        'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'bf',
+            'options_html' => $opts,
+        ]),
+    ]];
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=blocks&amp;op=filecode',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'blocks'],
+            ['nameattr' => 'op', 'valueattr' => 'filecode'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _EDITBLOCK,
+    ])]);
     setFoot();
 }
 
@@ -110,6 +277,13 @@ function fix(): void {
 
 function addsave(): void {
     global $db, $afile, $tpl;
+    if (!checkSiteToken()) {
+        setHead();
+        $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        setFoot();
+        return;
+    }
     $title = getVar('post', 'title', 'title', '');
     $content = getVar('post', 'content', 'text', '');
     $url = getVar('post', 'url', 'url', '');
@@ -118,7 +292,8 @@ function addsave(): void {
     $refresh = getVar('post', 'refresh', 'num', 0);
     $headline = getVar('post', 'headline', 'url', '');
     $lang = getVar('post', 'lang', 'var', '');
-    $bfile = getVar('post', 'bfile', 'var', '');
+    $bfile = getVar('post', 'bfile', 'text', '');
+    $bfile = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bfile) ? $bfile : '';
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
@@ -138,10 +313,10 @@ function addsave(): void {
     }
     if (($content == '') && ($bfile == '')) {
         setHead();
-        $cont = getTplAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _RSSFAIL]).getTplBox($tpl->getHtmlFrag('admin-blocks-back-box', [
-            'goback_label' => _GOBACK,
-        ]));
+        $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _RSSFAIL]).$tpl->getHtmlPart('box', [
+            'content_html' => _GOBACK,
+        ]);
         setFoot();
     } else {
         if ($expire == '' || $expire == 0) {
@@ -164,19 +339,32 @@ function addsave(): void {
 
 function filecode(): void {
     global $db, $afile, $tpl;
-    $bf = getVar('post', 'bf', 'var', '');
+    if (!checkSiteToken()) {
+        setHead();
+        $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        setFoot();
+        return;
+    }
+    $bf = getVar('post', 'bf', 'text', '');
     if ($bf != '') {
         $flag = getVar('post', 'flag', 'var', '');
         if ($flag) {
             $flaged = $flag;
-            $bf = str_replace(['block-', '.php'], '', $bf);
+            $bf = preg_replace('/[^a-z0-9_\-]/i', '', str_replace(['block-', '.php'], '', $bf));
             $bf = 'block-'.$bf.'.php';
         } else {
+            $bf = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
+            if ($bf === '') {
+                setRedirect($afile.'.php?name=blocks&op=logview');
+                return;
+            }
             $bfstr = file_get_contents('blocks/'.$bf);
             if (strpos($bfstr, 'BLOCKHTML') === false) {
                 $flaged = 'php';
-                preg_match('/<\?php.*if.*\(\!defined\(\"BLOCK_FILE\"\)\).*exit;.*?}(.*)\?>/is', $bfstr, $out);
-                unset($out[0]);
+                $code = preg_replace('/\A<\?php.*?if\s*\(\s*!defined\(\s*[\'"]BLOCK_FILE[\'"]\s*\)\s*\)\s*\{.*?\}\s*/is', '', $bfstr);
+                $code = preg_replace('/\?>\s*\z/is', '', (string)$code);
+                $out = [1 => $code];
             } else {
                 $flaged = 'html';
                 preg_match('/<<<BLOCKHTML(.*)BLOCKHTML;/is', $bfstr, $out);
@@ -184,24 +372,39 @@ function filecode(): void {
             }
         }
         setHead();
-        $cont = getTplAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
+        $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 3]);
         $cont .= checkPerms(BASE_DIR.'/blocks/');
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _BLOCK.': '.$bf]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _BLOCK.': '.$bf]);
         if (file_exists('blocks/'.$bf)) {
             $cont .= checkPerms(BASE_DIR.'/blocks/'.$bf);
-            $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _B_FEDIT]);
+            $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _B_FEDIT]);
         }
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _EINFOPHP]);
-        $hide = getTplHiddenInput('bf', $bf)
-        .getTplHiddenInput('flag', $flaged)
-        .getTplHiddenInput('name', 'blocks')
-        .getTplHiddenInput('op', 'filecodesave');
-        $rows = $tpl->getHtmlFrag('admin-blocks-filecode-rows', [
-            'code_html' => textarea_code('code', 'blocktext', 'sl_form', 'text/x-php', trim($out[1])),
-            'goback_label' => _GOBACK,
-            'save_label' => _SAVE,
-        ]);
-        echo $cont.getTplBox(getTplAdminForm($afile.'.php', $rows, $hide, 'sl_table_edit'));
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _EINFOPHP]);
+        $rows = [[
+            'label_html' => _FILENAME.':',
+            'field_html' => htmlspecialchars($bf, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+        ], [
+            'label_html' => _CONTENT.':',
+            'field_html' => getTplCodeEditor([
+                'id' => 'code',
+                'name' => 'blocktext',
+                'mode' => 'text/x-php',
+                'text' => trim($out[1] ?? ''),
+            ]),
+            'is_full' => true,
+        ]];
+        echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php?name=blocks&amp;op=filecodesave',
+            'hidden' => [
+                ['nameattr' => 'bf', 'valueattr' => $bf],
+                ['nameattr' => 'flag', 'valueattr' => $flaged],
+                ['nameattr' => 'name', 'valueattr' => 'blocks'],
+                ['nameattr' => 'op', 'valueattr' => 'filecodesave'],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ],
+            'rows' => $rows,
+            'submit_label' => _SAVE,
+        ])]);
         setFoot();
     } else {
         setRedirect($afile.'.php?name=blocks&op=logview');
@@ -210,8 +413,12 @@ function filecode(): void {
 
 function filecodesave(): void {
     global $afile;
+    if (!checkSiteToken()) {
+        setRedirect($afile.'.php?name=blocks&op=fileedit');
+    }
     $blocktext = filter_input(INPUT_POST, 'blocktext', FILTER_UNSAFE_RAW);
-    $bf = getVar('post', 'bf', 'var', '');
+    $bf = getVar('post', 'bf', 'text', '');
+    $bf = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bf) ? $bf : '';
     if ($blocktext && $bf) {
         if ($handle = fopen('blocks/'.$bf, 'wb')) {
             $html_b = '';
@@ -231,7 +438,7 @@ function filecodesave(): void {
 function edit(): void {
     global $afile, $conf, $db, $tpl;
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
+    $cont = getTplAdminTabs(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 1]);
     $bid = getVar('get', 'id', 'num');
     [$bkey, $title, $content, $url, $bpos, $weight, $active, $refresh, $lang, $bfile, $view, $expire, $action, $which] = $db->getSqlRow($db->getSqlQuery('SELECT bkey, title, content, url, bpos, weight, status, refresh, lang, bfile, view, expire, action, which FROM '.PREFIX_DB.'_blocks WHERE id = :bid', ['bid' => $bid]));
     if ($url != '') {
@@ -241,60 +448,194 @@ function edit(): void {
     } else {
         $type = '('._BLOCKHTML.')';
     }
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _BLOCK.': '.$title.' '.$type]);
-    $rows = getTplAdminFormRow(getTplAdminHintLabel(_TITLE, _ADDCONST), getTplTextInput('title', $title, 'sl_form', 'maxlength="50" placeholder="'._TITLE.'" required'));
+    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => false, 'text' => _BLOCK.': '.$title.' '.$type]);
+    $rows = [[
+        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _TITLE.':', 'hint' => _ADDCONST]),
+        'field_html' => $tpl->getHtmlFrag('new/input', [
+            'itype' => 'text',
+            'is_required' => true,
+            'maxlength_num' => 50,
+            'name_attr' => 'title',
+            'placeholder_text' => _TITLE,
+            'value_attr' => (string)$title,
+        ]),
+    ]];
     if ($bfile != '') {
         $bfopts = '';
         $files = scandir('blocks');
         foreach ($files as $file) {
             if (preg_match('/^block\-(.+)\.php/', $file, $matches)) {
-                $bfopts .= getTplOption($file, $matches[0], $bfile == $file);
+                $bfopts .= $tpl->getHtmlFrag('new/select-option', [
+                    'value_attr' => $file,
+                    'label_text' => $matches[0],
+                    'is_selected' => $bfile == $file,
+                ]);
             }
         }
-        $rows .= getTplAdminFormRow(_FILENAME.':', getTplSelect('bfile', $bfopts, 'sl_form'));
+        $rows[] = [
+            'label_html' => _FILENAME.':',
+            'field_html' => $tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'bfile',
+                'options_html' => $bfopts,
+            ]),
+        ];
     } elseif ($url != '') {
-        $rows .= getTplAdminFormRow(_RSSFILE.':', getTplTextInput('url', $url, 'sl_form', 'maxlength="200" placeholder="'._RSSFILE.'"'));
-        $rows .= getTplAdminFormRow(_REFRESHTIME.':', getTplBlockRefresh((string)$refresh));
+        $rows[] = [
+            'label_html' => _RSSFILE.':',
+            'field_html' => $tpl->getHtmlFrag('new/input', [
+                'itype' => 'url',
+                'name_attr' => 'url',
+                'placeholder_text' => _RSSFILE,
+                'value_attr' => (string)$url,
+            ]),
+        ];
+        $rows[] = [
+            'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _REFRESHTIME.':', 'hint' => _REFINFO]),
+            'field_html' => $tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'refresh',
+                'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '1800', 'label_text' => '30 '._MIN.'.', 'is_selected' => (string)$refresh === '1800'])
+                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3600', 'label_text' => '1 '._HOUR, 'is_selected' => (string)$refresh === '3600'])
+                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '18000', 'label_text' => '5 '._HOUR.'.', 'is_selected' => (string)$refresh === '18000'])
+                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '36000', 'label_text' => '10 '._HOUR.'.', 'is_selected' => (string)$refresh === '36000'])
+                    .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '86400', 'label_text' => '24 '._HOUR.'.', 'is_selected' => (string)$refresh === '86400']),
+            ]),
+        ];
     } else {
-        $rows .= getTplAdminFormRow(_CONTENT.':', textarea('1', 'content', $content, 'all', '15', _CONTENT, ''));
+        $rows[] = [
+            'label_html' => _CONTENT.':',
+            'field_html' => $tpl->getHtmlFrag('new/textarea', [
+                'name_attr' => 'content',
+                'rows_num' => 15,
+                'value_text' => (string)$content,
+            ]),
+            'is_full' => true,
+        ];
     }
-    $rows .= getTplAdminFormRow(_POSITION.':', getTplBlockPosition((string)$bpos));
-    $rows .= getTplAdminFormRow(_BLOCK_VIEW.':', getTplAdminBlockGrid(explode(',', $which ?? '')));
-    if ($conf['multilingual'] == 1) $rows .= getTplAdminFormRow(_LANGUAGE.':', getTplSelect('lang', language($lang), 'sl_form'));
+    $rows[] = [
+        'label_html' => _POSITION.':',
+        'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'bpos',
+            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'l', 'label_text' => _LEFT, 'is_selected' => (string)$bpos === 'l'])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'c', 'label_text' => _CENTERUP, 'is_selected' => (string)$bpos === 'c'])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _CENTERDOWN, 'is_selected' => (string)$bpos === 'd'])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'r', 'label_text' => _RIGHT, 'is_selected' => (string)$bpos === 'r'])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'b', 'label_text' => _BANNERUP, 'is_selected' => (string)$bpos === 'b'])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'f', 'label_text' => _BANNERDOWN, 'is_selected' => (string)$bpos === 'f']),
+        ]),
+    ];
+    $where = explode(',', (string)($which ?? ''));
+    $viewItems = '';
+    foreach (getBlockModules() as $mod) {
+        $viewItems .= $tpl->getHtmlFrag('new/label-item', [
+            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+                'is_checked' => in_array($mod, $where),
+                'name_attr' => 'blockwhere[]',
+                'value_attr' => $mod,
+            ]),
+            'label_html' => $tpl->getHtmlFrag('new/title-tip', [
+                'label_text' => getModuleName($mod),
+                'title_text' => _MODUL.': '.$mod,
+            ]),
+        ]);
+    }
+    $homeOn = in_array('home', $where);
+    foreach ([
+        ['value' => 'ihome', 'label' => _HOME, 'checked' => in_array('ihome', $where)],
+        ['value' => 'home', 'label' => _INHOME, 'checked' => $homeOn],
+        ['value' => 'all', 'label' => _BLOCK_ALL, 'checked' => in_array('all', $where) && !$homeOn],
+        ['value' => 'otricanie', 'label' => _DENYING, 'checked' => in_array('otricanie', $where)],
+        ['value' => 'infly', 'label' => _INFLY, 'checked' => in_array('infly', $where)],
+        ['value' => 'flyfix', 'label' => _FLY_FIX, 'checked' => in_array('flyfix', $where)],
+    ] as $item) {
+        $viewItems .= $tpl->getHtmlFrag('new/label-item', [
+            'input_html' => $tpl->getHtmlFrag('new/checkbox', [
+                'is_checked' => $item['checked'],
+                'name_attr' => 'blockwhere[]',
+                'value_attr' => $item['value'],
+            ]),
+            'label_html' => $item['label'],
+        ]);
+    }
+    $rows[] = [
+        'label_html' => _BLOCK_VIEW.':',
+        'field_html' => $tpl->getHtmlFrag('new/radio-group', ['items_html' => $viewItems]),
+        'is_full' => true,
+    ];
+    if ($conf['multilingual'] == 1) {
+        $rows[] = [
+            'label_html' => _LANGUAGE.':',
+            'field_html' => $tpl->getHtmlFrag('new/select', [
+                'name_attr' => 'lang',
+                'options_html' => language((string)$lang),
+            ]),
+        ];
+    }
     if ($expire != 0) {
         $newexpire = 0;
         $oldexpire = $expire;
         $expire = intval($expire - time());
         $exp_day = $expire / 86400;
-        $expire_text = getTplHiddenInput('expire', (string)$oldexpire)._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
+        $expireText = $tpl->getHtmlFrag('new/hidden', ['nameattr' => 'expire', 'valueattr' => (string)$oldexpire])
+            ._PURCHASED.': '.getDuration($expire).' ('.round($exp_day, 3).' '._DAYS.')';
     } else {
         $newexpire = 1;
-        $expire_text = getTplNumberInput(0, 'expire', 'sl_form', 'placeholder="'._EXPIRATION.'" required');
+        $expireText = $tpl->getHtmlFrag('new/input', [
+            'itype' => 'number',
+            'is_required' => true,
+            'name_attr' => 'expire',
+            'placeholder_text' => _EXPIRATION,
+            'value_attr' => '0',
+        ]);
     }
-    $rows .= $tpl->getHtmlFrag('admin-blocks-edit-rows', [
-        'action_html' => getTplBlockAction((string)$action),
-        'afterexpiration_label' => _AFTEREXPIRATION.':',
-        'activate_html' => radio_form($active, 'status'),
-        'activate_label' => _ACTIVATE2,
-        'expiration_html' => $expire_text,
-        'expiration_label_html' => getTplAdminHintLabel(_EXPIRATION, _CONFINES),
-        'viewpriv_html' => getTplBlockView((int)$view),
-        'viewpriv_label' => _VIEWPRIV,
-    ]);
-    $hide = getTplHiddenInput('oldposition', $bpos)
-        .getTplHiddenInput('bid', (string)$bid)
-        .getTplHiddenInput('newexpire', (string)$newexpire)
-        .getTplHiddenInput('bkey', $bkey)
-        .getTplHiddenInput('weight', (string)$weight)
-        .getTplHiddenInput('name', 'blocks')
-        .getTplHiddenInput('op', 'editsave');
-    $rows .= getTplAdminFormWide(getTplAdminSubmitButton(_SAVE), '', 'sl_center');
-    echo $cont.getTplAdminForm($afile.'.php', $rows, $hide);
+    $rows[] = [
+        'label_html' => _ACTIVATE2,
+        'field_html' => getTplRadioGroup(['name' => 'status', 'value' => (string)(int)$active, 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]]),
+    ];
+    $rows[] = [
+        'label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _EXPIRATION.':', 'hint' => _CONFINES]),
+        'field_html' => $expireText,
+    ];
+    $rows[] = [
+        'label_html' => _AFTEREXPIRATION.':',
+        'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'action',
+            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => 'd', 'label_text' => _DEACTIVATE, 'is_selected' => (string)$action === 'd'])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => 'r', 'label_text' => _DELETE, 'is_selected' => (string)$action === 'r']),
+        ]),
+    ];
+    $rows[] = [
+        'label_html' => _VIEWPRIV,
+        'field_html' => $tpl->getHtmlFrag('new/select', [
+            'name_attr' => 'view',
+            'options_html' => $tpl->getHtmlFrag('new/select-option', ['value_attr' => '0', 'label_text' => _MVALL, 'is_selected' => (int)$view === 0])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '1', 'label_text' => _MVUSERS, 'is_selected' => (int)$view === 1])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '2', 'label_text' => _MVADMIN, 'is_selected' => (int)$view === 2])
+                .$tpl->getHtmlFrag('new/select-option', ['value_attr' => '3', 'label_text' => _MVANON, 'is_selected' => (int)$view === 3]),
+        ]),
+    ];
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php?name=blocks&amp;op=editsave',
+        'hidden' => [
+            ['nameattr' => 'oldposition', 'valueattr' => (string)$bpos],
+            ['nameattr' => 'bid', 'valueattr' => (string)$bid],
+            ['nameattr' => 'newexpire', 'valueattr' => (string)$newexpire],
+            ['nameattr' => 'bkey', 'valueattr' => (string)$bkey],
+            ['nameattr' => 'weight', 'valueattr' => (string)$weight],
+            ['nameattr' => 'name', 'valueattr' => 'blocks'],
+            ['nameattr' => 'op', 'valueattr' => 'editsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'rows' => $rows,
+        'submit_label' => _SAVE,
+    ])]);
     setFoot();
 }
 
 function editsave(): void {
     global $db, $afile;
+    if (!checkSiteToken()) {
+        setRedirect($afile.'.php?name=blocks');
+    }
     $newexpire = getVar('post', 'newexpire', 'num', 0);
     $bid = getVar('post', 'bid', 'num');
     $bkey = getVar('post', 'bkey', 'var', '');
@@ -307,7 +648,8 @@ function editsave(): void {
     $refresh = getVar('post', 'refresh', 'num', 0);
     $weight = getVar('post', 'weight', 'num', 0);
     $lang = getVar('post', 'lang', 'var', '');
-    $bfile = getVar('post', 'bfile', 'var', '');
+    $bfile = getVar('post', 'bfile', 'text', '');
+    $bfile = preg_match('/^block\-[a-z0-9_\-]+\.php$/i', $bfile) ? $bfile : '';
     $view = getVar('post', 'view', 'num', 0);
     $expire = getVar('post', 'expire', 'num', 0);
     $action = getVar('post', 'action', 'var', '');
@@ -428,8 +770,7 @@ function delete(): void {
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 5]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage(['ops' => ['name=blocks', 'name=blocks&amp;op=add', 'name=blocks&amp;op=fileadd', 'name=blocks&amp;op=fileedit', 'name=blocks&amp;op=fix', 'name=blocks&amp;op=info'], 'tabs' => [_HOME, _ADDNEWBLOCK, _ADDNEWFILEBLOCK, _EDITBLOCK, _FIX, _INFO], 'tab' => 5]);
 }
 
 switch ($op) {

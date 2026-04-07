@@ -115,6 +115,41 @@
 .sl-div-field label input {
     margin-right: 6px;
 }
+.sl-div-item-full .sl-div-field {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+.sl-div-item-full .sl-radio-group {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px 20px;
+    width: 100%;
+    min-width: 0;
+}
+.sl-div-item-full .sl-radio {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin: 0;
+    white-space: normal;
+}
+.sl-div-item-full .sl-radio input {
+    flex: 0 0 auto;
+    margin: 2px 0 0;
+}
+.sl-div-item-full .sl-radio .sl-note {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
 .sl-user-search {
     display: flex;
     align-items: center;
@@ -141,8 +176,12 @@
     padding-top: 8px;
     text-align: center;
 }
+@media (max-width: 1200px) {
+    .sl-div-item-full .sl-radio-group { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 900px) {
     .sl-div-item { grid-template-columns: 1fr; gap: 8px; }
+    .sl-div-item-full .sl-radio-group { grid-template-columns: 1fr; }
 }
 
 /* Alert boxes */
