@@ -508,7 +508,7 @@ function setTplAdminInfoPage(array $data = []): void {
     $name = filterWord(getVar('get', 'name', 'text', ''));
     $ops = $data['ops'] ?? [];
     $tabs = $data['tabs'] ?? [];
-    $tab = (int)($data['tab'] ?? 0);
+    $tab = array_key_exists('tab', $data) ? (int)$data['tab'] : ($tabs ? count($tabs) - 1 : 0);
     $mod = $data['mod'] ?? 'info';
     $action = $data['action_url'] ?? ($afile.'.php?name='.$name.'&amp;op=info');
     $save = $data['save_flag'] ?? 'save_info';

@@ -403,7 +403,6 @@ function delete(): void {
 function info(): void {
     setTplAdminInfoPage([
         'ops' => ['name=admins', 'name=admins&amp;op=add', 'name=admins&amp;op=info'],
-        'tab' => 2,
         'tabs' => [_HOME, _ADD, _INFO],
     ]);
 }

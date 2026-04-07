@@ -251,10 +251,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    $ops = ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'];
     setTplAdminInfoPage([
-        'ops' => $ops,
-        'tab' => 3,
+        'ops' => ['name=content', 'name=content&amp;op=add', 'name=content&amp;op=config', 'name=content&amp;op=info'],
         'tabs' => [_HOME, _ADD, _PREFERENCES, _INFO],
     ]);
 }
