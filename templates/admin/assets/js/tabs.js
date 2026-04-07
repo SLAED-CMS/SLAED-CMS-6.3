@@ -31,6 +31,16 @@ function setAdminTabs(group) {
             window.sessionStorage.setItem(save, String(list.indexOf(link)));
         } catch (err) {
         }
+        var infos = document.querySelectorAll('[data-sl-tab-info-link="' + saveGroup + '"]');
+        for (var j = 0; j < infos.length; j++) {
+            var info = infos[j];
+            try {
+                var url = new URL(info.href, window.location.href);
+                url.searchParams.set('tab', String(list.indexOf(link)));
+                info.href = url.toString();
+            } catch (err) {
+            }
+        }
     };
     for (var i = 0; i < list.length; i++) {
         list[i].setAttribute('role', 'tab');
@@ -53,8 +63,10 @@ function setAdminTabs(group) {
         if (pane) pane.setAttribute('role', 'tabpanel');
     }
     var idx = -1;
+    var attr = parseInt(root.getAttribute('data-sl-tabs-index'), 10);
+    if (!isNaN(attr) && list[attr]) idx = attr;
     try {
-        idx = parseInt(window.sessionStorage.getItem(save), 10);
+        if (idx < 0) idx = parseInt(window.sessionStorage.getItem(save), 10);
     } catch (err) {
     }
     if (isNaN(idx) || !list[idx]) idx = list.findIndex(function (item) {
