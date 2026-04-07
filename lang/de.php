@@ -503,6 +503,7 @@ define('_UWARNS','Warnungen');
 define('_VCLINFO','Vielen Dank für die Teilnahme an der Abstimmung! Diese Umfrage ist geschlossen, die Ergebnisse sind nur Administration des Projektes.');
 define('_VCLOSE','Geschlossener Umfrage');
 define('_VERSION','Version');
+define('_TPLMISS','Vorlagenfehler! Die in der Funktion angegebene Vorlage fehlt im aktiven Theme-Verzeichnis: %1$s. Empfohlener Dateiname: %2$s.html');
 define('_VIEW','Zu sehen für');
 define('_VIEWS','Aufr.');
 define('_VOPEN','Öffentliche Umfrage');

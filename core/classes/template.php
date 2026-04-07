@@ -274,13 +274,23 @@ class Template {
         }
     }
 
-    # Return a compact HTML comment for missing templates in dev mode only
+    # Return a visible dev-only template error block with one safe fallback
     protected function getTemplateDebugComment(string $type, string $name, string $reason): string {
         if (!$this->isDevMode()) return '';
-        $type = htmlspecialchars(($type !== '') ? $type : 'unknown', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $name = htmlspecialchars(($name !== '') ? $name : '[empty]', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        $reason = htmlspecialchars($reason, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-        return sprintf('<!-- template-error: theme=%s type=%s name=%s reason=%s -->', $this->theme, $type, $name, $reason);
+        $type = ($type !== '') ? $type : 'unknown';
+        $name = ($name !== '') ? $name : '[empty]';
+        $path = 'templates/'.$this->theme.'/'.$type;
+        $file = basename($name).'.html';
+        if (str_contains($name, '/')) $path .= '/'.dirname($name);
+        $text = defined('_TPLMISS')
+            ? sprintf(_TPLMISS, $path, basename($name))
+            : 'Template file not found: '.$path.'/'.$file;
+        $file = $this->getFile('fragments', 'new/alert');
+        if ($file && $this->checkFile($file)) {
+            $code = $this->getCode('fragments', 'new/alert');
+            if ($code !== '') return $this->getView($this->filterCode($code), ['is_warn' => true, 'text' => $this->getSafe($text)], true);
+        }
+        return $this->getSafe($text);
     }
 
     # Cache dev_mode so template diagnostics stay cheap

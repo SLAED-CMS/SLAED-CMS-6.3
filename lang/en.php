@@ -503,6 +503,7 @@ define('_UWARNS','Warnings');
 define('_VCLINFO','Thank you for participating in the voting! The survey is closed, the results are only available to the administration of the project.');
 define('_VCLOSE','Poll closed');
 define('_VERSION','Version');
+define('_TPLMISS','Template connection error! The template referenced in the function is missing in the active theme directory: %1$s. Recommended file name: %2$s.html');
 define('_VIEW','Visible to');
 define('_VIEWS','Rev.');
 define('_VOPEN','Open survey');

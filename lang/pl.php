@@ -503,6 +503,7 @@ define('_UWARNS','Ostrzeżenia');
 define('_VCLINFO','Dziękujemy za udział w ankiecie! Ta ankieta jest zamknięta, wyniki są dostępne wyłącznie administracji projektu.');
 define('_VCLOSE','Kryty ankieta');
 define('_VERSION','Wersja');
+define('_TPLMISS','Błąd ładowania szablonu! Szablon wskazany w funkcji nie istnieje w katalogu aktywnego motywu: %1$s. Zalecana nazwa pliku: %2$s.html');
 define('_VIEW','Kto widzi');
 define('_VIEWS','Itp.');
 define('_VOPEN','Odkryty ankieta');
