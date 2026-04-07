@@ -457,7 +457,6 @@ define('_SEC_URL_POST','Übergabe der Verweisungen durch POST zu untersagen?');
 define('_SEC_VIEW','PHP-Fehlermeldungen');
 define('_SEC_VIEW_1','Alle Fehler außer Benachrichtigungen anzeigen');
 define('_SEC_VIEW_2','Alle Fehler anzeigen');
-define('_SEC_VIEW_JAVA','Mitteilungen von den JavaScripts Fehlern zeigen?');
 define('_SEC_WARN_BLOCK','Angreifende sperren?');
 define('_SEC_WARN_STAT','Statistik der untersagten Handlungen führen?');
 define('_SELLANGUAGE','Sprache Ihrer Seite');

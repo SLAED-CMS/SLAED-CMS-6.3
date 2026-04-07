@@ -457,7 +457,6 @@ define('_SEC_URL_POST','Zablokować przyjmowanie linki z POST?');
 define('_SEC_VIEW','Komunikaty o błędach PHP');
 define('_SEC_VIEW_1','Zgłoś wszystkie błędy z wyjątkiem powiadomień');
 define('_SEC_VIEW_2','Zgłoś wszystkie błędy');
-define('_SEC_VIEW_JAVA','Pokazuj komunikaty o JavaScripts błędach?');
 define('_SEC_WARN_BLOCK','Zablokuj napastników?');
 define('_SEC_WARN_STAT','Prowadzenie statystyk czynów zabronionych?');
 define('_SELLANGUAGE','Język standardowy');

@@ -457,7 +457,6 @@ define('_SEC_URL_POST','To forbid transfer of references through POST?');
 define('_SEC_VIEW','PHP error messages');
 define('_SEC_VIEW_1','Report all errors except notifications');
 define('_SEC_VIEW_2','Report all errors');
-define('_SEC_VIEW_JAVA','To show JavaScripts error messages?');
 define('_SEC_WARN_BLOCK','To block attacking?');
 define('_SEC_WARN_STAT','To conduct statistics of the forbidden actions?');
 define('_SELLANGUAGE','Select the Language for your Site');

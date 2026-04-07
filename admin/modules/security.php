@@ -515,7 +515,6 @@ function config(): void {
         ['label_html' => _SEC_LOG_DS.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'sess_d', 'value_attr' => intval($conf['security']['sess_d'] / 60)])],
         ['label_html' => _SEC_LOG_DB.':', 'field_html' => $tpl->getHtmlFrag('new/input', ['itype' => 'number', 'name_attr' => 'sess_b', 'value_attr' => intval($conf['security']['sess_b'] / 60)])],
         ['label_html' => _SEC_DB, 'field_html' => getTplRadioGroup(['name' => 'log_b', 'value' => $conf['security']['log_b'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
-        ['label_html' => _SEC_VIEW_JAVA, 'field_html' => getTplRadioGroup(['name' => 'error_java', 'value' => $conf['security']['error_java'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_STAT, 'field_html' => getTplRadioGroup(['name' => 'error_log', 'value' => $conf['security']['error_log'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_URL_GET, 'field_html' => getTplRadioGroup(['name' => 'url_get', 'value' => $conf['security']['url_get'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
         ['label_html' => _SEC_URL_POST, 'field_html' => getTplRadioGroup(['name' => 'url_post', 'value' => $conf['security']['url_post'], 'options' => [['value' => '1', 'label' => _YES], ['value' => '0', 'label' => _NO]]])],
@@ -587,7 +586,6 @@ function configsave(): void {
         'sess_d' => $sess_d,
         'sess_b' => $sess_b,
         'log_b' => getVar('post', 'log_b', 'num'),
-        'error_java' => getVar('post', 'error_java', 'num'),
         'error_log' => getVar('post', 'error_log', 'num'),
         'url_get' => getVar('post', 'url_get', 'num'),
         'url_post' => getVar('post', 'url_post', 'num'),
@@ -614,10 +612,8 @@ function configsave(): void {
 }
 
 function info(): void {
-    $ops = ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'];
     setTplAdminInfoPage([
-        'ops' => $ops,
-        'tab' => 4,
+        'ops' => ['name=security', 'name=security&amp;op=banlist', 'name=security&amp;op=passwd', 'name=security&amp;op=config', 'name=security&amp;op=info'],
         'tabs' => [_HOME, _BANNED, _SEC_PASS, _PREFERENCES, _INFO],
     ]);
 }

@@ -16,7 +16,6 @@ return [
 tests/
 vendor/',
         'error' => '2',
-        'error_java' => '0',
         'error_log' => '1',
         'flood' => '0',
         'flood_t' => '1',

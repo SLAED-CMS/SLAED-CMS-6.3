@@ -2851,7 +2851,6 @@ function doScript(): string {
     $sfile = 'config/cache/'.md5($theme.'script').'.txt';
     $entries = explode(',', $conf['script_f']);
     $entries = is_array($entries) ? $entries : [];
-    $entries = (!$conf['security']['error_java']) ? array_merge($entries, ['plugins/system/block-error.js']) : $entries;
     $array = array_merge(getAssetFiles($entries, 'js'), getThemeAssets($theme, 'js'));
     $array = array_values(array_unique($array));
     if (!defined('ADMIN_FILE')) {

@@ -457,7 +457,6 @@ define('_SEC_URL_POST','Заборонити брати посилання че�
 define('_SEC_VIEW','Повідомлення про помилки PHP');
 define('_SEC_VIEW_1','Звіт про всі помилки, крім повідомлень');
 define('_SEC_VIEW_2','Звіт про всі помилки');
-define('_SEC_VIEW_JAVA','Показувати повідомлення про JavaScripts помилки?');
 define('_SEC_WARN_BLOCK','Блокувати нападаючих?');
 define('_SEC_WARN_STAT','Вести статистику заборонених дій?');
 define('_SELLANGUAGE','Стандартний мова');

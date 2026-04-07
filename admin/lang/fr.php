@@ -457,7 +457,6 @@ define('_SEC_URL_POST',"Refuser d'accepter la référence à travers le POST?");
 define('_SEC_VIEW',"Messages d'erreur PHP");
 define('_SEC_VIEW_1',"Signaler toutes les erreurs à l'exception des notifications");
 define('_SEC_VIEW_2','Signaler toutes les erreurs');
-define('_SEC_VIEW_JAVA','Afficher les messages sur les JavaScripts erreur?');
 define('_SEC_WARN_BLOCK','Bloquer les attaquants?');
 define('_SEC_WARN_STAT',"Les statistiques d'action interdite?");
 define('_SELLANGUAGE','Standard langue');
