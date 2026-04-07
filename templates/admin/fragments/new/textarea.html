@@ -1,1 +1,1 @@
-<textarea name="{{ name_attr }}" cols="{% if cols_num %}{{ cols_num }}{% else %}65{% endif %}" rows="{% if rows_num %}{{ rows_num }}{% else %}5{% endif %}"{% if input_attr %} {{{ input_attr }}}{% endif %}>{{ value_text }}</textarea>
+<textarea name="{{ name_attr }}" cols="{% if cols_num %}{{ cols_num }}{% else %}65{% endif %}" rows="{% if rows_num %}{{ rows_num }}{% else %}5{% endif %}"{% if is_config %} class="sl-select-config"{% endif %}{% if is_required %} required{% endif %}{% if input_attr %} {{{ input_attr }}}{% endif %}>{{ value_text }}</textarea>

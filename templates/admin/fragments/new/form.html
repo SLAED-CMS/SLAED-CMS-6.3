@@ -2,7 +2,12 @@
     {% for item in hidden %}
     {% include 'fragments/new/hidden.html' with item %}
     {% endfor %}
+    {% if rows %}
     {% include 'fragments/new/div.html' %}
+    {% endif %}
+    {% if content_html %}
+    {{{ content_html }}}
+    {% endif %}
     {% if submit_label %}
     <div class="sl-div-actions">
         {% include 'fragments/new/submit.html' %}
