@@ -151,22 +151,37 @@ function deleteDblock(): void {
 }
 
 function getSqltable(array $items): string {
+    global $tpl;
     if (!$items) return '';
-    $head = getTplAdminTableHead([_ID, _TYPE, _TABLE, [_DB_SQL, 'nosort'], [_STATUS, 'nosort']]);
-    $rows = '';
+    $rows = [];
     foreach ($items as $row) {
         $sql = htmlspecialchars(cutstr(preg_replace('/\s+/', ' ', trim($row['sql'])), 160));
         $tab = ($row['table'] !== '') ? htmlspecialchars($row['table']) : _NO;
-        $status = getTplAdminFlagBox((bool)$row['ok'], _OK, _ERROR.' - '.$row['error']);
-        $rows .= getTplAdminTableRow(getTplAdminTableCells([
-            (string)(int)$row['num'],
-            htmlspecialchars($row['type']),
-            $tab,
-            $sql,
-            $status,
-        ]));
+        $status = $tpl->getHtmlFrag('new/inline-badge', [
+            'class' => $row['ok'] ? 'sl_green' : 'sl_red',
+            'label' => $row['ok'] ? _OK : _ERROR.' - '.$row['error'],
+        ]);
+        $rows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            'cells' => [
+                ['content_html' => (string)(int)$row['num']],
+                ['content_html' => htmlspecialchars($row['type'])],
+                ['content_html' => $tab],
+                ['content_html' => $sql],
+                ['content_html' => $status],
+            ],
+        ])]);
     }
-    return getTplAdminTable($head, $rows);
+    return $tpl->getHtmlFrag('new/table', [
+        'head' => [
+            ['content' => _ID],
+            ['content' => _TYPE],
+            ['content' => _TABLE],
+            ['content' => _DB_SQL, 'nosort' => true],
+            ['content' => _STATUS, 'nosort' => true],
+        ],
+        'rows_html' => implode('', $rows),
+        'disable_sort' => true,
+    ]);
 }
 
 function getSqlsum(array $items, string $mode, string $name): string {
@@ -183,30 +198,33 @@ function getSqlsum(array $items, string $mode, string $name): string {
             if (!$stop) $stop = (int)$row['num'];
         }
     }
-    $stat = getTplAdminFlagBox($bad === 0, _OK, _ERROR);
     $mval = ($mode === 'dump') ? _DB_RUNMODE : _DB_PARSEMODE;
-    $text = getTplAdminInfoLine(_INQUIRY, $name)
-        .getTplAdminInfoLine(_DB_MODE, $mval)
-        .getTplAdminInfoLine(_DB_BLOCKS, (string)$all)
-        .getTplAdminInfoLine('OK', (string)$good)
-        .getTplAdminInfoLine(_DB_ERRORS, (string)$bad)
-        .getTplAdminInfoLine(_STATUS, $stat);
+    $lines = [
+        _INQUIRY.': '.$name,
+        _DB_MODE.': '.$mval,
+        _DB_BLOCKS.': '.$all,
+        'OK: '.$good,
+        _DB_ERRORS.': '.$bad,
+        _STATUS.': '.($bad === 0 ? _OK : _ERROR),
+    ];
     if ($stop) {
-        $text .= getTplAdminInfoLine(_DB_STOP, (string)$stop);
+        $lines[] = _DB_STOP.': '.$stop;
     }
-    return $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $text]);
+    return $tpl->getHtmlFrag('new/alert', ['lines' => $lines]);
 }
 
 
 function database(): void {
     global $db, $conf, $afile, $tpl;
     $type = getVar('get', 'type', 'var');
+    $ops = ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
+    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
     $headtag = ($type === 'optimize' || $type === 'repair') ? _STATUS : _FUNCTIONS;
     $dbname = preg_replace('#[^a-zA-Z0-9_]#', '', (string)($conf['db']['name'] ?? ''));
     if ($dbname === '') {
         setHead();
-        $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
-        echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _ERROR]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _ERROR]);
         setFoot();
         return;
     }
@@ -221,8 +239,7 @@ function database(): void {
     $allrows = 0;
     $item = 0;
 
-    $dbhead = getTplAdminTableHead([_ID, _TABLE, _TYPE, _DBCOLL, _ROWS, _DATE, _SIZE, [_DBFREE, 'nosort'], [$headtag, 'nosort']]);
-    $dbrows = '';
+    $dbrows = [];
 
     foreach ($tables as $info) {
         $name = $info['Name'];
@@ -243,8 +260,8 @@ function database(): void {
 
         // Free space display
         $freetag = $tabeng === 'InnoDB'
-            ? $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_hidden', 'label_text' => filterSize($tabfree)])
-            : $tpl->getHtmlFrag('admin-flag-box', ['css_class' => $tabfree ? 'sl_red' : 'sl_green', 'label_text' => filterSize($tabfree)]);
+            ? $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_hidden', 'label' => filterSize($tabfree)])
+            : $tpl->getHtmlFrag('new/inline-badge', ['class' => $tabfree ? 'sl_red' : 'sl_green', 'label' => filterSize($tabfree)]);
 
         // --- Status / actions depending on mode ---
         if (!preg_match('#^[a-zA-Z0-9_]+$#', (string)$name)) {
@@ -255,58 +272,89 @@ function database(): void {
             $oresult = $db->getSqlQuery('OPTIMIZE TABLE `'.$dbname.'`.`'.$name.'`');
 
             if (!$oresult) {
-                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_red', 'label_text' => _ERROR]);
+                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_red', 'label' => _ERROR]);
             } elseif ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_green', 'label_text' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_green', 'label' => _OPTIMIZED]);
             } elseif ($tabeng === 'MyISAM' && !$info['Data_free']) {
-                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_red', 'label_text' => _ALREADYOPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_red', 'label' => _ALREADYOPTIMIZED]);
             } else {
-                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_green', 'label_text' => _OPTIMIZED]);
+                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_green', 'label' => _OPTIMIZED]);
             }
 
         } elseif ($type === 'repair') {
             if ($tabeng === 'InnoDB') {
-                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => 'sl_hidden', 'label_text' => _NO]);
+                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => 'sl_hidden', 'label' => _NO]);
             } else {
                 $rresult = $db->getSqlQuery('REPAIR TABLE `'.$dbname.'`.`'.$name.'`');
-                $stattag = $tpl->getHtmlFrag('admin-flag-box', ['css_class' => $rresult ? 'sl_green' : 'sl_red', 'label_text' => $rresult ? _OK : _ERROR]);
+                $stattag = $tpl->getHtmlFrag('new/inline-badge', ['class' => $rresult ? 'sl_green' : 'sl_red', 'label' => $rresult ? _OK : _ERROR]);
             }
 
         } else {
             // Default view with actions
-            $stattag = getTplAdminActionMenu([
-                getTplAdminDeleteAction($afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1', _CLEAN.' "'.$name.'"?', _CLEAN, _CLEAN),
-                getTplAdminDeleteAction($afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2', _DELETE.' "'.$name.'"?', _ONDELETE, _ONDELETE),
+            $stattag = $tpl->getHtmlFrag('new/row-actions', [
+                'trigger_label' => _EDITOR,
+                'items' => [[
+                    'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=1',
+                    'label' => _CLEAN,
+                    'title' => _CLEAN,
+                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._CLEAN.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                ], [
+                    'href' => $afile.'.php?name=database&amp;op=delete&amp;tb='.$name.'&amp;id=2',
+                    'label' => _ONDELETE,
+                    'title' => _ONDELETE,
+                    'onclick_attr' => 'OnClick="return DelCheck(this, \''._DELETE.' &quot;'.htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'&quot;?\');"',
+                ]],
             ]);
         }
 
         $item++;
 
-        $dbrows .= getTplAdminTableRow(getTplAdminTableCells([
-            (string)$item,
-            $name,
-            $tabeng,
-            $tabloc,
-            (string)$rows,
-            format_time($crtime, _TIMESTRING),
-            filterSize($tabsize),
-            $freetag,
-            $stattag,
-        ]));
+        $dbrows[] = $tpl->getHtmlFrag('new/table-row', ['cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            'cells' => [
+                ['content_html' => (string)$item],
+                ['content_html' => $name],
+                ['content_html' => $tabeng],
+                ['content_html' => $tabloc],
+                ['content_html' => (string)$rows],
+                ['content_html' => format_time($crtime, _TIMESTRING)],
+                ['content_html' => filterSize($tabsize)],
+                ['content_html' => $freetag],
+                ['content_html' => $stattag],
+            ],
+        ])]);
     }
 
-    $dbrows .= getTplAdminTableRow(getTplAdminTableCells([
-        '<strong>'.(string)$item.'</strong>',
-        '&nbsp;',
-        '&nbsp;',
-        '&nbsp;',
-        '<strong>'.(string)$allrows.'</strong>',
-        '&nbsp;',
-        '<strong>'.filterSize($total).'</strong>',
-        '<strong>'.filterSize($sumfree).'</strong>',
-        '&nbsp;',
-    ]), '', 'data-sort-method="none"');
-    $content = getTplAdminTable($dbhead, $dbrows);
+    $dbrows[] = $tpl->getHtmlFrag('new/table-row', [
+        'row_attr' => 'data-sort-method="none"',
+        'cells_html' => $tpl->getHtmlFrag('new/table-cells', [
+            'cells' => [
+                ['content_html' => '<strong>'.(string)$item.'</strong>'],
+                ['content_html' => '&nbsp;'],
+                ['content_html' => '&nbsp;'],
+                ['content_html' => '&nbsp;'],
+                ['content_html' => '<strong>'.(string)$allrows.'</strong>'],
+                ['content_html' => '&nbsp;'],
+                ['content_html' => '<strong>'.filterSize($total).'</strong>'],
+                ['content_html' => '<strong>'.filterSize($sumfree).'</strong>'],
+                ['content_html' => '&nbsp;'],
+            ],
+        ]),
+    ]);
+    $content = $tpl->getHtmlFrag('new/table', [
+        'head' => [
+            ['content' => _ID],
+            ['content' => _TABLE],
+            ['content' => _TYPE],
+            ['content' => _DBCOLL],
+            ['content' => _ROWS],
+            ['content' => _DATE],
+            ['content' => _SIZE],
+            ['content' => _DBFREE, 'nosort' => true],
+            ['content' => $headtag, 'nosort' => true],
+        ],
+        'rows_html' => implode('', $dbrows),
+        'disable_sort' => true,
+    ]);
 
     // After OPTIMIZE: Totals to recalculate info box
     if ($type === 'optimize') {
@@ -327,27 +375,31 @@ function database(): void {
 
     // Navigation + Info-Boxen
     if (empty($type)) {
-        $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO]]);
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _OPTTEXT]);
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _REPTEXT]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _OPTTEXT]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _REPTEXT]);
 
     } elseif ($type === 'optimize') {
         $db->getSqlQuery('FLUSH TABLES');
-        $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 1]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 1]);
 
-        $info = _OPTIMIZE.': '.$conf['db']['name'].getTplAdminTipLine(_TOTALSPACE, filterSize($total)).getTplAdminTipLine(_TOTALFREE, filterSize($sumfree));
-
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['lines' => [
+            _OPTIMIZE.': '.$conf['db']['name'],
+            _TOTALSPACE.': '.filterSize($total),
+            _TOTALFREE.': '.filterSize($sumfree),
+        ]]);
 
     } elseif ($type === 'repair') {
-        $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 2]);
+        $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 2]);
 
-        $info = _REPAIR.': '.$conf['db']['name'].getTplAdminTipLine(_TOTALSPACE, filterSize($total)).getTplAdminTipLine(_TOTALFREE, filterSize($sumfree));
-
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => $info]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['lines' => [
+            _REPAIR.': '.$conf['db']['name'],
+            _TOTALSPACE.': '.filterSize($total),
+            _TOTALFREE.': '.filterSize($sumfree),
+        ]]);
     }
 
-    echo $cont.getTplBox($content);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $content]);
 
     setFoot();
 }
@@ -357,13 +409,15 @@ function dump(): void {
     $type = getVar('post', 'type', 'var', '');
     $string = getVar('post', 'string', 'raw', '');
     $action = getVar('post', 'action', 'var', '');
+    $ops = ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'];
+    $tabs = [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO];
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 3]);
+    $cont = getTplAdminTabs(['ops' => $ops, 'tabs' => $tabs, 'tab' => 3]);
     if ($type === 'dump' && !empty($string) && ($action === 'parse' || $action === 'dump')) {
         $subst = ['{prefix}' => $conf['db']['prefix'], '{engine}' => $conf['db']['engine'], '{charset}' => $conf['db']['charset'], '{collate}' => $conf['db']['collate']];
         $parsed = getSqlbatch(stripslashes($string));
         if ($parsed['error'] !== '') {
-            $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => htmlspecialchars($parsed['error'])]);
+            $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => htmlspecialchars($parsed['error'])]);
         } else {
             $items = [];
             foreach ($parsed['statements'] as $query) {
@@ -372,7 +426,7 @@ function dump(): void {
             $reslist = [];
             if ($action === 'dump') {
                 if (!checkDblock()) {
-                    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => 'Another migration run is already active']);
+                    $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => 'Another migration run is already active']);
                 } else {
                     addDblog('START blocks='.count($items));
                     try {
@@ -400,37 +454,41 @@ function dump(): void {
                 }
             }
             $cont .= getSqlsum($reslist, $action, $conf['db']['name']);
-            $cont .= getTplBox(getSqltable($reslist));
+            $cont .= $tpl->getHtmlPart('box', ['content_html' => getSqltable($reslist)]);
         }
     } else {
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _DBINFO]);
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'warn', 'text' => _DBWARN]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _DBINFO]);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _DBWARN]);
     }
-    $fhide = getTplHiddenInput('name', 'database').getTplHiddenInput('op', 'dump').getTplHiddenInput('type', 'dump');
-    $frows = getTplAdminFormWide(textarea_code('code', 'string', 'sl_form', 'text/x-mysql', stripslashes($string)));
-    $actions = $tpl->getHtmlFrag('input', [
-        'itype' => 'submit',
-        'name_attr' => 'action',
-        'value_attr' => 'parse',
-        'input_class' => 'sl_but_blue',
-        'input_attr' => '',
+    $form = $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'database'],
+            ['nameattr' => 'op', 'valueattr' => 'dump'],
+            ['nameattr' => 'type', 'valueattr' => 'dump'],
+        ],
+        'content_html' =>
+            getTplCodeEditor([
+                'id' => 'code',
+                'name' => 'string',
+                'mode' => 'text/x-mysql',
+                'text' => stripslashes($string),
+            ])
+            .$tpl->getHtmlPart('box', ['content_html' =>
+                $tpl->getHtmlFrag('new/input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => 'parse', 'input_attr' => 'class="sl_but_blue"'])
+                .' '
+                .$tpl->getHtmlFrag('new/input', ['itype' => 'submit', 'name_attr' => 'action', 'value_attr' => 'dump', 'input_attr' => 'class="sl_but_blue"'])
+            ]),
     ]);
-    $actions .= ' ';
-    $actions .= $tpl->getHtmlFrag('input', [
-        'itype' => 'submit',
-        'name_attr' => 'action',
-        'value_attr' => 'dump',
-        'input_class' => 'sl_but_blue',
-        'input_attr' => '',
-    ]);
-    $frows .= getTplAdminFormWide($actions, '', 'sl_center');
-    echo $cont.getTplBox(getTplAdminForm($afile.'.php', $frows, $fhide, 'sl_table_edit'));
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $form]);
     setFoot();
 }
 
 function info(): void {
-    $cont = getTplAdminNavi(['ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'], 'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO], 'tab' => 4]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=database', 'name=database&amp;type=optimize', 'name=database&amp;type=repair', 'name=database&amp;op=dump', 'name=database&amp;op=info'],
+        'tabs' => [_HOME, _OPTIMIZE, _REPAIR, _INQUIRY, _INFO],
+    ]);
 }
 
 function delete(): void {
