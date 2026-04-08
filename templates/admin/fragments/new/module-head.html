@@ -7,6 +7,14 @@
                 {% if subtitle_html %}<div class="sl-module-head-subtitle">{{{ subtitle_html }}}</div>{% endif %}
             </div>
         </div>
-        {% if tabs_html %}<ul class="sl-tabs-nav sl-tabs-nav-main">{{{ tabs_html }}}</ul>{% endif %}
+        {% if tabs_html %}
+        <ul class="sl-tabs-nav sl-tabs-nav-main"
+            {% if tabs_id %}id="{{ tabs_id }}"{% endif %}
+            {% if is_runtime %}{% if tabs_id %}data-sl-tabs-init="{{ tabs_id }}"{% endif %}{% endif %}
+            {% if tabs_index %}data-sl-tabs-index="{{ tabs_index }}"{% endif %}
+            {% if tabs_sync_selector %}data-sl-tabs-sync="{{ tabs_sync_selector }}"{% endif %}>
+            {{{ tabs_html }}}
+        </ul>
+        {% endif %}
     </div>
 </div>

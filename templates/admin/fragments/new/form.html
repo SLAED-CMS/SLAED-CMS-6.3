@@ -1,4 +1,4 @@
-<form action="{{{ action_url }}}" method="post" class="sl-div-form">
+<form action="{{{ action_url }}}" method="post" class="sl-div-form"{% if form_attr %} {{{ form_attr }}}{% endif %}>
     {% for item in hidden %}
     {% include 'fragments/new/hidden.html' with item %}
     {% endfor %}
