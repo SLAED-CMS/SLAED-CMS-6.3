@@ -491,13 +491,19 @@ function getTplAdminTabs(array $data = []): string {
             'href' => (string)($link['href'] ?? '#'),
             'is_active' => !empty($link['is_active']),
             'label' => (string)($link['label'] ?? ''),
+            'link_attr' => (string)($link['link_attr'] ?? ''),
+            'rel' => (string)($link['rel'] ?? ''),
             'title' => (string)($link['title'] ?? ($link['label'] ?? '')),
         ]);
     }
     return $tpl->getHtmlFrag('new/module-head', [
         'icon' => $icon,
+        'is_runtime' => !empty($data['is_runtime']),
         'subtitle_html' => $subtitle,
+        'tabs_id' => (string)($data['tabs_id'] ?? ($data['id'] ?? '')),
+        'tabs_index' => array_key_exists('tabs_index', $data) ? (string)$data['tabs_index'] : (array_key_exists('tab', $data) ? (string)$data['tab'] : ''),
         'tabs_html' => $tabs,
+        'tabs_sync_selector' => (string)($data['tabs_sync_selector'] ?? ''),
         'title' => $title,
     ]);
 }
@@ -648,6 +654,20 @@ function getTplCodeEditor(array $data = []): string {
         (string)($data['mode'] ?? 'text/plain'),
         (string)($data['text'] ?? '')
     );
+}
+
+# Render one shared admin move-controls block with HTMX transport
+function getTplMoveControls(string $target, string $up = '', string $down = ''): string {
+    global $tpl;
+    $up = ($up && !str_contains($up, 'token=')) ? $up.'&amp;token='.getSiteToken() : $up;
+    $down = ($down && !str_contains($down, 'token=')) ? $down.'&amp;token='.getSiteToken() : $down;
+    return $tpl->getHtmlFrag('new/move-controls', [
+        'down_query' => $down,
+        'down_title' => _BLOCKDOWN,
+        'target' => $target,
+        'up_query' => $up,
+        'up_title' => _BLOCKUP,
+    ]);
 }
 
 # End of new, stable helper functions for building admin and frontend HTML from prepared data cuts and shared templates

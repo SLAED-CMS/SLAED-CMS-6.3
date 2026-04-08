@@ -161,7 +161,7 @@ function getTplOption(string $valu, string $text, bool $isel = false): string {
 # Render one shared admin state flag label from a boolean state and yes/no labels
 function getTplAdminFlagBox(bool $state, string $yes, string $no): string {
     global $tpl;
-    return $tpl->getHtmlFrag('admin-flag-box', [
+    return $tpl->getHtmlFrag('new/inline-badge', [
         'class' => $state ? 'sl_green' : 'sl_red',
         'label' => $state ? $yes : $no,
     ]);
@@ -236,20 +236,6 @@ function getTplAdminDeleteAction(string $href, string $text, string $title, stri
         'href' => $href,
         'label' => $label,
         'title' => $title,
-    ]);
-}
-
-# Render one shared admin move-controls block with HTMX transport
-function getTplAdminMoveControls(string $target, string $up = '', string $down = ''): string {
-    global $tpl;
-    $up = ($up && !str_contains($up, 'token=')) ? $up.'&amp;token='.getSiteToken() : $up;
-    $down = ($down && !str_contains($down, 'token=')) ? $down.'&amp;token='.getSiteToken() : $down;
-    return $tpl->getHtmlFrag('admin-move-controls', [
-        'down_query' => $down,
-        'down_title' => _BLOCKDOWN,
-        'target' => $target,
-        'up_query' => $up,
-        'up_title' => _BLOCKUP,
     ]);
 }
 
@@ -919,110 +905,6 @@ function getTplMenuItems(array $items): string {
         'editor_label' => _EDITOR,
         'items_html' => implode('', array_map(static fn($item) => getTplMenuItem($item), $items)),
     ]);
-}
-
-# Render the admin category list table header and rows from prepared row markup
-function getTplAdminCategoryTable(string $rows): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-category-table', [
-        'id_label' => _ID,
-        'category_label' => _CATEGORY,
-        'content_label' => cutstr(_CONTENT, 3, 1),
-        'subcategory_label' => cutstr(_SUBCATEGORY, 3, 1),
-        'image_label' => cutstr(_IMG, 2, 1),
-        'weight_label' => _WEIGHT,
-        'status_label' => _STATUS,
-        'functions_label' => _FUNCTIONS,
-        'rows_html' => $rows,
-    ]);
-}
-
-# Render one admin category list row from a prepared data map
-function getTplAdminCategoryRow(array $row): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-category-row', $row);
-}
-
-# Render the admin block list table header and rows from prepared row markup
-function getTplAdminBlockTable(string $rows): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-block-table', [
-        'id_label' => _ID,
-        'title_label' => _TITLE,
-        'type_label' => _TYPE,
-        'view_label' => _VIEW,
-        'position_label' => _POSITION,
-        'weight_label' => _WEIGHT,
-        'status_label' => _STATUS,
-        'functions_label' => _FUNCTIONS,
-        'rows_html' => $rows,
-    ]);
-}
-
-# Render one admin block list row from a prepared data map
-function getTplAdminBlockRow(array $row): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-block-row', $row);
-}
-
-# Render the admin favorites list table header and rows from prepared row markup
-function getTplAdminFavoriteTable(string $rows): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-favorites-table', [
-        'id_label' => _ID,
-        'title_label' => _TITLE,
-        'module_label' => _MODUL,
-        'posted_by_label' => _POSTEDBY,
-        'functions_label' => _FUNCTIONS,
-        'rows_html' => $rows,
-    ]);
-}
-
-# Render one admin favorites list row from a prepared data map
-function getTplAdminFavoriteRow(array $row): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-favorites-row', $row);
-}
-
-# Render the admin private messages list table header and rows from prepared row markup
-function getTplAdminPrivateTable(string $rows): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-private-table', [
-        'id_label' => _ID,
-        'title_label' => _TITLE,
-        'sender_label' => _PRSE,
-        'receiver_label' => _PRRE,
-        'date_label' => _DATE,
-        'status_label' => _STATUS,
-        'functions_label' => _FUNCTIONS,
-        'rows_html' => $rows,
-    ]);
-}
-
-# Render one admin private message list row from a prepared data map
-function getTplAdminPrivateRow(array $row): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-private-row', $row);
-}
-
-# Render the admin upload files list table header and rows from prepared row markup
-function getTplAdminFilesTable(string $rows): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-files-table', [
-        'image_label' => cutstr(_IMG, 4, 1),
-        'file_label' => _FILE,
-        'date_label' => _DATE,
-        'size_label' => _SIZE,
-        'dimensions_label' => _WIDTH.' x '._HEIGHT,
-        'functions_label' => _FUNCTIONS,
-        'rows_html' => $rows,
-    ]);
-}
-
-# Render one admin upload files list row from a prepared data map
-function getTplAdminFilesRow(array $row): string {
-    global $tpl;
-    return $tpl->getHtmlFrag('admin-files-row', $row);
 }
 
 # Render the admin info text edit form from a data map with action, hidden fields and textarea
