@@ -8,18 +8,56 @@ if (!defined('ADMIN_FILE') || !isAdmin(true)) die('Illegal file access');
 
 
 function categories(): void {
-    global $tpl;
+    global $afile, $tpl;
     $modul = getVar('req', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
+    $token = '&amp;token='.getSiteToken();
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'categories'],
+        ],
+        'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+    ])]);
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'sub' => getTplAdminCatSearch($modul)]);
-    echo $cont.$tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _INFOCATDEL]).getTplAdminPlaceholder('repajax_cat', getAdminCategoryList($modul, 1));
+    $cont = getTplAdminTabs([
+        'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+        'subtitle_html' => $subtitle,
+    ]);
+    echo $cont
+        .$tpl->getHtmlFrag('new/alert', ['text' => _INFOCATDEL])
+        .$tpl->getHtmlPart('box', [
+            'box_id' => 'repajax_cat',
+            'content_html' => getAdminCategoryList($modul, 1),
+        ]);
     setFoot();
 }
 
 function fix(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $modul = getVar('req', 'modul', 'var', 'forum');
+    $modlink = '&amp;modul='.$modul;
+    $token = '&amp;token='.getSiteToken();
+    if (!checkSiteToken()) {
+        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+            ],
+            'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        ])]);
+        setHead();
+        $cont = getTplAdminTabs([
+            'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink],
+            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+            'tab' => 4,
+            'subtitle_html' => $subtitle,
+        ]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        setFoot();
+        return;
+    }
     $result = $db->getSqlQuery('SELECT id FROM '.PREFIX_DB.'_categories WHERE modul = :modul ORDER BY ordern ASC', ['modul' => $modul]);
     $ordern = 0;
     while ([$id] = $db->getSqlRow($result)) {
@@ -33,42 +71,84 @@ function add(): void {
     global $conf, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
+    $token = '&amp;token='.getSiteToken();
     $path = 'templates/'.$conf['theme'].'/images/categories/';
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'categories'],
+        ],
+        'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+    ])]);
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 1, 'subtab' => 1, 'sub' => getTplAdminCatSearch($modul), 'id' => 'add']);
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
-    $hint = _ACESSI.' '._CTRLINFO;
-    $rows0 = $tpl->getHtmlFrag('admin-categories-add-rows', [
-        'activate_html' => radio_form('', 'status'),
-        'activate_label' => _ACTIVATE2,
-        'description_label' => _DESCRIPTION.':',
-        'description_placeholder' => _DESCRIPTION,
-        'img_html' => getTplCategorySelect($path),
-        'img_label' => _IMG.':',
-        'lang_html' => $conf['multilingual'] == 1 ? getTplAdminFormRow(_LANGUAGE.':', getTplSelect('lang', language(), 'sl_form')) : '',
-        'modul_html' => cat_modul('modul', 'sl_form', $modul),
-        'modul_label' => _MODUL.':',
-        'preview_html' => getTplCategoryPreview($path.'no.png'),
-        'preview_label' => _PREVIEW.':',
-        'title_label' => _TITLE.':',
-        'title_placeholder' => _TITLE,
+    $cont = getTplAdminTabs([
+        'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+        'tab' => 1,
+        'subtitle_html' => $subtitle,
     ]);
-    $rows1 = getTplCatPermRow(_CAN.' '._AUTH_VIEW, $hint, catacess('pview', 'sl_form', '', 0));
-    $rows1 .= getTplCatPermRow(_CAN.' '._AUTH_READ, $hint, catacess('pread', 'sl_form', '', 0));
-    $rows2 = getTplCatPermRow(_CAN.' '._AUTH_POST, $hint, catacess('ppost', 'sl_form', '', 0));
-    $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_REPLY, $hint, catacess('preply', 'sl_form', '', 0));
-    $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', '', 1));
-    $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', '', 1));
-    $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', '', 2));
-    $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'addsave').getTplHiddenInput('token', getSiteToken());
-    $formv = getTplCatForm('post',
-        getTplCatTab(getTplAdminTabName('adds', 0, true), $rows0)
-        .getTplCatTab(getTplAdminTabName('adds', 1, true), $rows1)
-        .getTplCatTab(getTplAdminTabName('adds', 2, true), $rows2)
-        .getTplAdminTabsSetup('adds')
-        .getTplCatSubmitRow($hide, _ADD)
-    );
-    echo $cont.getTplBox($formv);
+    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _CACESSI]);
+    $hint = _ACESSI.' '._CTRLINFO;
+    $yesno = [
+        ['value' => '1', 'label' => _YES],
+        ['value' => '0', 'label' => _NO],
+    ];
+    $rows0 = [
+        ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '0', 'options' => $yesno])],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', [
+            'itype' => 'text',
+            'name_attr' => 'title',
+            'value_attr' => '',
+            'maxlength_num' => 255,
+            'placeholder_text' => _TITLE,
+            'is_required' => true,
+        ])],
+        ['label_html' => _DESCRIPTION.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', [
+            'name_attr' => 'description',
+            'value_text' => '',
+            'is_config' => true,
+        ])],
+        ['label_html' => _IMG.':', 'field_html' => getTplCategorySelect($path)],
+        ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.'no.png')],
+        ['label_html' => _MODUL.':', 'field_html' => cat_modul('modul', 'sl_form', $modul)],
+    ];
+    if ($conf['multilingual'] == 1) {
+        $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => getTplSelect('lang', language(), 'sl_form')];
+    }
+    $rows1 = [
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl_form', '', 0)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_READ, 'hint' => $hint]), 'field_html' => catacess('pread', 'sl_form', '', 0)],
+    ];
+    $rows2 = [
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_POST, 'hint' => $hint]), 'field_html' => catacess('ppost', 'sl_form', '', 0)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_REPLY, 'hint' => $hint]), 'field_html' => catacess('preply', 'sl_form', '', 0)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_EDIT, 'hint' => $hint]), 'field_html' => catacess('pedit', 'sl_form', '', 1)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl_form', '', 1)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl_form', '', 2)],
+    ];
+    $tabs = $tpl->getHtmlFrag('new/tabs', [
+        'id' => 'categories-add',
+        'is_runtime' => true,
+        'is_subtabs' => true,
+        'tabs_html' =>
+            $tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'is_active' => true, 'label' => _CATEGORY, 'rel' => 'categories-add-panel-0', 'title' => _CATEGORY])
+            .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-add-panel-1', 'title' => _ACESS])
+            .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-add-panel-2', 'title' => _ACESSF]),
+        'content_html' =>
+            $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-add-panel-0', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows0])])
+            .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-add-panel-1', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows1])])
+            .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-add-panel-2', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows2])]),
+    ]);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'content_html' => $tabs,
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'categories'],
+            ['nameattr' => 'op', 'valueattr' => 'addsave'],
+            ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+        ],
+        'submit_label' => _ADD,
+    ])]);
     setFoot();
 }
 
@@ -76,47 +156,100 @@ function subadd(): void {
     global $db, $conf, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
+    $token = '&amp;token='.getSiteToken();
     $path = 'templates/'.$conf['theme'].'/images/categories/';
     setHead();
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 2, 'subtab' => 1, 'sub' => getTplAdminCatSearch($modul), 'id' => 'subadd']);
-        $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
-        $hint = _ACESSI.' '._CTRLINFO;
-        $rows0 = $tpl->getHtmlFrag('admin-categories-subadd-rows', [
-            'activate_html' => radio_form('', 'status'),
-            'activate_label' => _ACTIVATE2,
-            'category_html' => getcat($modul, 0, 'cid', 'sl_form'),
-            'category_label' => _CATEGORY.':',
-            'description_label' => _DESCRIPTION.':',
-            'description_placeholder' => _DESCRIPTION,
-            'img_html' => getTplCategorySelect($path),
-            'img_label' => _IMG.':',
-            'lang_html' => $conf['multilingual'] == 1 ? getTplAdminFormRow(_LANGUAGE.':', getTplSelect('lang', language(), 'sl_form')) : '',
-            'modul_html' => cat_modul('modul', 'sl_form', $modul),
-            'modul_label' => _MODUL.':',
-            'preview_html' => getTplCategoryPreview($path.'no.png'),
-            'preview_label' => _PREVIEW.':',
-            'title_label' => _TITLE.':',
-            'title_placeholder' => _TITLE,
+        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+            ],
+            'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        ])]);
+        $cont = getTplAdminTabs([
+            'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink],
+            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+            'tab' => 2,
+            'subtitle_html' => $subtitle,
         ]);
-        $rows1 = getTplCatPermRow(_CAN.' '._AUTH_VIEW, $hint, catacess('pview', 'sl_form', '', 0));
-        $rows1 .= getTplCatPermRow(_CAN.' '._AUTH_READ, $hint, catacess('pread', 'sl_form', '', 0));
-        $rows2 = getTplCatPermRow(_CAN.' '._AUTH_POST, $hint, catacess('ppost', 'sl_form', '', 0));
-        $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_REPLY, $hint, catacess('preply', 'sl_form', '', 0));
-        $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', '', 1));
-        $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', '', 1));
-        $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', '', 2));
-        $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'addsave').getTplHiddenInput('token', getSiteToken());
-        $formv = getTplCatForm('post2',
-            getTplCatTab(getTplAdminTabName('subadds', 0, true), $rows0)
-            .getTplCatTab(getTplAdminTabName('subadds', 1, true), $rows1)
-            .getTplCatTab(getTplAdminTabName('subadds', 2, true), $rows2)
-            .getTplAdminTabsSetup('subadds')
-            .getTplCatSubmitRow($hide, _ADD)
-        );
-        $cont .= getTplBox($formv);
+        $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _CACESSI]);
+        $hint = _ACESSI.' '._CTRLINFO;
+        $yesno = [
+            ['value' => '1', 'label' => _YES],
+            ['value' => '0', 'label' => _NO],
+        ];
+        $rows0 = [
+            ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => '0', 'options' => $yesno])],
+            ['label_html' => _CATEGORY.':', 'field_html' => getcat($modul, 0, 'cid', 'sl_form')],
+            ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', [
+                'itype' => 'text',
+                'name_attr' => 'title',
+                'value_attr' => '',
+                'maxlength_num' => 255,
+                'placeholder_text' => _TITLE,
+                'is_required' => true,
+            ])],
+            ['label_html' => _DESCRIPTION.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', [
+                'name_attr' => 'description',
+                'value_text' => '',
+                'is_config' => true,
+            ])],
+            ['label_html' => _IMG.':', 'field_html' => getTplCategorySelect($path)],
+            ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.'no.png')],
+            ['label_html' => _MODUL.':', 'field_html' => cat_modul('modul', 'sl_form', $modul)],
+        ];
+        if ($conf['multilingual'] == 1) {
+            $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => getTplSelect('lang', language(), 'sl_form')];
+        }
+        $rows1 = [
+            ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl_form', '', 0)],
+            ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_READ, 'hint' => $hint]), 'field_html' => catacess('pread', 'sl_form', '', 0)],
+        ];
+        $rows2 = [
+            ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_POST, 'hint' => $hint]), 'field_html' => catacess('ppost', 'sl_form', '', 0)],
+            ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_REPLY, 'hint' => $hint]), 'field_html' => catacess('preply', 'sl_form', '', 0)],
+            ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_EDIT, 'hint' => $hint]), 'field_html' => catacess('pedit', 'sl_form', '', 1)],
+            ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl_form', '', 1)],
+            ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl_form', '', 2)],
+        ];
+        $tabs = $tpl->getHtmlFrag('new/tabs', [
+            'id' => 'categories-subadd',
+            'is_runtime' => true,
+            'is_subtabs' => true,
+            'tabs_html' =>
+                $tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'is_active' => true, 'label' => _CATEGORY, 'rel' => 'categories-subadd-panel-0', 'title' => _CATEGORY])
+                .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-subadd-panel-1', 'title' => _ACESS])
+                .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-subadd-panel-2', 'title' => _ACESSF]),
+            'content_html' =>
+                $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-subadd-panel-0', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows0])])
+                .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-subadd-panel-1', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows1])])
+                .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-subadd-panel-2', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows2])]),
+        ]);
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'content_html' => $tabs,
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+                ['nameattr' => 'op', 'valueattr' => 'addsave'],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ],
+            'submit_label' => _ADD,
+        ])]);
     } else {
-        $navi = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 2, 'sub' => getTplAdminCatSearch($modul)]);
+        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+            ],
+            'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        ])]);
+        $navi = getTplAdminTabs([
+            'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink],
+            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+            'tab' => 2,
+            'subtitle_html' => $subtitle,
+        ]);
         $cont = $navi.$tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
     }
     echo $cont;
@@ -127,16 +260,35 @@ function addedit(): void {
     global $db, $afile, $tpl;
     $modul = getVar('get', 'modul', 'var', 'forum');
     $modlink = '&amp;modul='.$modul;
+    $token = '&amp;token='.getSiteToken();
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'categories'],
+        ],
+        'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+    ])]);
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'sub' => getTplAdminCatSearch($modul)]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+        'tab' => 3,
+        'subtitle_html' => $subtitle,
+    ]);
     if ($db->getSqlRowCount($db->getSqlQuery('SELECT * FROM '.PREFIX_DB.'_categories WHERE modul = :modul', ['modul' => $modul])) > 0) {
-        $hide = getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'edit').getTplHiddenInput('token', getSiteToken());
-        $rows = $tpl->getHtmlFrag('admin-categories-editpick-rows', [
-            'category_html' => getcat($modul, 0, 'cid', 'sl_form'),
-            'category_label' => _CATEGORY.':',
-            'edit_label' => _EDIT,
-        ]);
-        $cont .= getTplBox(getTplAdminForm($afile.'.php', $rows, $hide));
+        $cont .= $tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+                ['nameattr' => 'op', 'valueattr' => 'edit'],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ],
+            'rows' => [[
+                'label_html' => _CATEGORY.':',
+                'field_html' => getcat($modul, 0, 'cid', 'sl_form'),
+            ]],
+            'submit_label' => _EDIT,
+        ])]);
     } else {
         $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => sprintf(_ERROR_SUBCAT, getModuleName($modul))]);
     }
@@ -151,56 +303,113 @@ function edit(): void {
     $result = $db->getSqlQuery('SELECT modul, title, intro, img, lang, parent, status, pview, pread, ppost, preply, pedit, pdelete, pmod FROM '.PREFIX_DB.'_categories WHERE id = :cid', ['cid' => $cid]);
     [$modul, $title, $desc, $imgcat, $lang, $parent, $status, $pview, $pread, $ppost, $preply, $pedit, $pdelete, $pmod] = $db->getSqlRow($result);
     $modlink = '&amp;modul='.$modul;
+    $token = '&amp;token='.getSiteToken();
+    $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'hidden' => [
+            ['nameattr' => 'name', 'valueattr' => 'categories'],
+        ],
+        'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+    ])]);
     setHead();
-    $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'subtab' => 1, 'sub' => getTplAdminCatSearch($modul), 'id' => 'edit']);
-    $cont .= $tpl->getHtmlFrag('alert', ['type' => 'info', 'text' => _CACESSI]);
+    $cont = getTplAdminTabs([
+        'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+        'tab' => 3,
+        'subtitle_html' => $subtitle,
+    ]);
+    $cont .= $tpl->getHtmlFrag('new/alert', ['text' => _CACESSI]);
     $hint = _ACESSI.' '._CTRLINFO;
     $imgcat = (!$imgcat) ? 'no.png' : $imgcat;
-    $rows0 = $tpl->getHtmlFrag('admin-categories-edit-rows', [
-        'activate_html' => radio_form($status, 'status'),
-        'activate_label' => _ACTIVATE2,
-        'category_html' => $parent != 0 ? getTplAdminFormRow(_CATEGORY.':', getcat($modul, $parent, 'parent', 'sl_form')) : '',
-        'description_label' => _DESCRIPTION.':',
-        'description_placeholder' => _DESCRIPTION,
-        'description_value' => $desc,
-        'hidden_parent_html' => $parent == 0 ? getTplHiddenInput('parent', '0') : '',
-        'img_html' => getTplCategorySelect($path, $imgcat === 'no.png' ? '' : $imgcat),
-        'img_label' => _IMG.':',
-        'lang_html' => $conf['multilingual'] == 1 ? getTplAdminFormRow(_LANGUAGE.':', getTplSelect('lang', language($lang), 'sl_form')) : '',
-        'modul_html' => cat_modul('modul', 'sl_form', $modul),
-        'modul_label' => _MODUL.':',
-        'preview_html' => getTplCategoryPreview($path.$imgcat),
-        'preview_label' => _PREVIEW.':',
-        'title_label' => _TITLE.':',
-        'title_placeholder' => _TITLE,
-        'title_value' => $title,
+    $yesno = [
+        ['value' => '1', 'label' => _YES],
+        ['value' => '0', 'label' => _NO],
+    ];
+    $rows0 = [
+        ['label_html' => _ACTIVATE2, 'field_html' => getTplRadioGroup(['name' => 'status', 'value' => $status, 'options' => $yesno])],
+        ['label_html' => _TITLE.':', 'field_html' => $tpl->getHtmlFrag('new/input', [
+            'itype' => 'text',
+            'name_attr' => 'title',
+            'value_attr' => (string)$title,
+            'maxlength_num' => 255,
+            'placeholder_text' => _TITLE,
+            'is_required' => true,
+        ])],
+        ['label_html' => _DESCRIPTION.':', 'field_html' => $tpl->getHtmlFrag('new/textarea', [
+            'name_attr' => 'description',
+            'value_text' => (string)$desc,
+            'is_config' => true,
+        ])],
+        ['label_html' => _IMG.':', 'field_html' => getTplCategorySelect($path, $imgcat === 'no.png' ? '' : $imgcat)],
+        ['label_html' => _PREVIEW.':', 'field_html' => getTplCategoryPreview($path.$imgcat)],
+        ['label_html' => _MODUL.':', 'field_html' => cat_modul('modul', 'sl_form', $modul)],
+    ];
+    if ($parent != 0) {
+        $rows0[] = ['label_html' => _CATEGORY.':', 'field_html' => getcat($modul, $parent, 'parent', 'sl_form')];
+    }
+    if ($conf['multilingual'] == 1) {
+        $rows0[] = ['label_html' => _LANGUAGE.':', 'field_html' => getTplSelect('lang', language($lang), 'sl_form')];
+    }
+    $rows1 = [
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_VIEW, 'hint' => $hint]), 'field_html' => catacess('pview', 'sl_form', $pview, 0)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_READ, 'hint' => $hint]), 'field_html' => catacess('pread', 'sl_form', $pread, 0)],
+    ];
+    $rows2 = [
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_POST, 'hint' => $hint]), 'field_html' => catacess('ppost', 'sl_form', $ppost, 0)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_REPLY, 'hint' => $hint]), 'field_html' => catacess('preply', 'sl_form', $preply, 0)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_EDIT, 'hint' => $hint]), 'field_html' => catacess('pedit', 'sl_form', $pedit, 1)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_DELETE, 'hint' => $hint]), 'field_html' => catacess('pdelete', 'sl_form', $pdelete, 1)],
+        ['label_html' => $tpl->getHtmlFrag('new/label-hint', ['label' => _CAN.' '._AUTH_MOD, 'hint' => $hint]), 'field_html' => catacess('pmod', 'sl_form', $pmod, 2)],
+    ];
+    $tabs = $tpl->getHtmlFrag('new/tabs', [
+        'id' => 'categories-edit',
+        'is_runtime' => true,
+        'is_subtabs' => true,
+        'tabs_html' =>
+            $tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'is_active' => true, 'label' => _CATEGORY, 'rel' => 'categories-edit-panel-0', 'title' => _CATEGORY])
+            .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _ACESS, 'rel' => 'categories-edit-panel-1', 'title' => _ACESS])
+            .$tpl->getHtmlFrag('new/tabs-link', ['href' => '#', 'label' => _ACESSF, 'rel' => 'categories-edit-panel-2', 'title' => _ACESSF]),
+        'content_html' =>
+            $tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-edit-panel-0', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows0])])
+            .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-edit-panel-1', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows1])])
+            .$tpl->getHtmlFrag('new/tabs-panel', ['panel_id' => 'categories-edit-panel-2', 'content_html' => $tpl->getHtmlFrag('new/div', ['rows' => $rows2])]),
     ]);
-    $rows1 = getTplCatPermRow(_CAN.' '._AUTH_VIEW, $hint, catacess('pview', 'sl_form', $pview, 0));
-    $rows1 .= getTplCatPermRow(_CAN.' '._AUTH_READ, $hint, catacess('pread', 'sl_form', $pread, 0));
-    $rows2 = getTplCatPermRow(_CAN.' '._AUTH_POST, $hint, catacess('ppost', 'sl_form', $ppost, 0));
-    $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_REPLY, $hint, catacess('preply', 'sl_form', $preply, 0));
-    $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_EDIT, $hint, catacess('pedit', 'sl_form', $pedit, 1));
-    $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_DELETE, $hint, catacess('pdelete', 'sl_form', $pdelete, 1));
-    $rows2 .= getTplCatPermRow(_CAN.' '._AUTH_MOD, $hint, catacess('pmod', 'sl_form', $pmod, 2));
-    $hide = getTplHiddenInput('id', (string)$cid).getTplHiddenInput('name', 'categories').getTplHiddenInput('op', 'save').getTplHiddenInput('token', getSiteToken());
-    $formv = getTplCatForm('post',
-        getTplCatTab(getTplAdminTabName('edits', 0, true), $rows0)
-        .getTplCatTab(getTplAdminTabName('edits', 1, true), $rows1)
-        .getTplCatTab(getTplAdminTabName('edits', 2, true), $rows2)
-        .getTplAdminTabsSetup('edits')
-        .getTplCatSubmitRow($hide, _SAVECHANGES)
-    );
-    echo $cont.getTplBox($formv);
+    echo $cont.$tpl->getHtmlPart('box', ['content_html' => $tpl->getHtmlFrag('new/form', [
+        'action_url' => $afile.'.php',
+        'content_html' => $tabs,
+        'hidden' => array_merge(
+            [
+                ['nameattr' => 'id', 'valueattr' => (string)$cid],
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+                ['nameattr' => 'op', 'valueattr' => 'save'],
+                ['nameattr' => 'token', 'valueattr' => getSiteToken()],
+            ],
+            $parent == 0 ? [['nameattr' => 'parent', 'valueattr' => '0']] : []
+        ),
+        'submit_label' => _SAVECHANGES,
+    ])]);
     setFoot();
 }
 
 function addsave(): void {
     global $db, $conf, $afile, $tpl;
     if (!checkSiteToken()) {
-        setHead();
         $modul = getVar('post', 'modul', 'var', 'forum');
         $modlink = '&amp;modul='.$modul;
-        $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 1, 'sub' => getTplAdminCatSearch($modul)]);
+        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+            ],
+            'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        ])]);
+        setHead();
+        $cont = getTplAdminTabs([
+            'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink],
+            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+            'tab' => 1,
+            'subtitle_html' => $subtitle,
+        ]);
         echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
         setFoot();
         return;
@@ -239,10 +448,22 @@ function addsave(): void {
 function save(): void {
     global $db, $conf, $afile, $tpl;
     if (!checkSiteToken()) {
-        setHead();
         $modul = getVar('post', 'modul', 'var', 'forum');
         $modlink = '&amp;modul='.$modul;
-        $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 3, 'sub' => getTplAdminCatSearch($modul)]);
+        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+            ],
+            'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        ])]);
+        setHead();
+        $cont = getTplAdminTabs([
+            'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$modlink, 'name=categories&amp;op=info'.$modlink],
+            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+            'tab' => 3,
+            'subtitle_html' => $subtitle,
+        ]);
         echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
         setFoot();
         return;
@@ -278,18 +499,41 @@ function save(): void {
 }
 
 function delete(): void {
-    global $db, $afile;
+    global $db, $afile, $tpl;
     $id = getVar('get', 'id', 'num');
+    $modul = getVar('req', 'modul', 'var', 'forum');
+    $modlink = '&amp;modul='.$modul;
+    $token = '&amp;token='.getSiteToken();
+    if (!checkSiteToken()) {
+        $subtitle = $tpl->getHtmlPart('searchbox', ['searchbox' => $tpl->getHtmlFrag('new/form', [
+            'action_url' => $afile.'.php',
+            'hidden' => [
+                ['nameattr' => 'name', 'valueattr' => 'categories'],
+            ],
+            'content_html' => _MODUL.': '.cat_modul('modul', '', $modul, true),
+        ])]);
+        setHead();
+        $cont = getTplAdminTabs([
+            'ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink],
+            'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+            'tab' => 3,
+            'subtitle_html' => $subtitle,
+        ]);
+        echo $cont.$tpl->getHtmlFrag('new/alert', ['is_warn' => true, 'text' => _TOKENMISS]);
+        setFoot();
+        return;
+    }
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE id = :id', ['id' => $id]);
     $db->getSqlQuery('DELETE FROM '.PREFIX_DB.'_categories WHERE parent = :id', ['id' => $id]);
-    setRedirect($afile.'.php?name=categories', true);
+    setRedirect($afile.'.php?name=categories&modul='.$modul, true);
 }
 
 function info(): void {
     $modul = getVar('req', 'modul', 'var', 'forum');
-    $modlink = '&amp;modul='.$modul;
-    $cont = getTplAdminNavi(['ops' => ['name=categories'.$modlink, 'name=categories&amp;op=add'.$modlink, 'name=categories&amp;op=subadd'.$modlink, 'name=categories&amp;op=addedit'.$modlink, 'name=categories&amp;op=fix'.$token.$modlink, 'name=categories&amp;op=info'.$modlink], 'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO], 'sops' => ['', '', ''], 'stabs' => [_CATEGORY, _ACESS, _ACESSF], 'tab' => 5, 'sub' => getTplAdminCatSearch($modul)]);
-    setAdminInfoPage($cont);
+    setTplAdminInfoPage([
+        'ops' => ['name=categories&amp;modul='.$modul, 'name=categories&amp;op=add&amp;modul='.$modul, 'name=categories&amp;op=subadd&amp;modul='.$modul, 'name=categories&amp;op=addedit&amp;modul='.$modul, 'name=categories&amp;op=fix&amp;token='.getSiteToken().'&amp;modul='.$modul, 'name=categories&amp;op=info&amp;modul='.$modul],
+        'tabs' => [_HOME, _ADDCATEGORY, _ADDSUBCATEGORY, _EDIT, _FIX, _INFO],
+    ]);
 }
 
 switch ($op) {
