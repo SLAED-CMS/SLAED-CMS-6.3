@@ -5,7 +5,9 @@ function setAdminTabs(group) {
     if (!list.length) return;
     var saveGroup = root.getAttribute('data-sl-tabs-init') || root.id || 'tabs';
     var save = 'slaed-admin-tabs:'+saveGroup;
+    var syncSelector = root.getAttribute('data-sl-tabs-sync');
     var pick = function (link) {
+        var index = list.indexOf(link);
         var rel = link.getAttribute('data-sl-tab-target');
         if (!rel) return;
         for (var i = 0; i < list.length; i++) {
@@ -28,15 +30,21 @@ function setAdminTabs(group) {
             }
         }
         try {
-            window.sessionStorage.setItem(save, String(list.indexOf(link)));
+            window.sessionStorage.setItem(save, String(index));
         } catch (err) {
+        }
+        if (syncSelector) {
+            var syncNodes = document.querySelectorAll(syncSelector);
+            for (var k = 0; k < syncNodes.length; k++) {
+                if ('value' in syncNodes[k]) syncNodes[k].value = String(index);
+            }
         }
         var infos = document.querySelectorAll('[data-sl-tab-info-link="' + saveGroup + '"]');
         for (var j = 0; j < infos.length; j++) {
             var info = infos[j];
             try {
                 var url = new URL(info.href, window.location.href);
-                url.searchParams.set('tab', String(list.indexOf(link)));
+                url.searchParams.set('tab', String(index));
                 info.href = url.toString();
             } catch (err) {
             }
